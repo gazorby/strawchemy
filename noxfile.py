@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 import nox
@@ -10,10 +11,36 @@ if TYPE_CHECKING:
 PYTHON_VERSIONS = ["3.12"]
 PYRIGHT_PYTHON_PYLANCE_VERSION: Literal["latest-release", "latest-prerelease"] = "latest-release"
 PYRIGHT_PYTHON_FORCE_VERSION: str | None = None
+COMMON_PYTEST_OPTIONS = [
+    "--cov",
+    "src",
+    "--cov-append",
+    "--cov-report",
+    "term-missing",
+    "-n",
+    "2",
+    "--showlocals",
+]
+
+here = Path(__file__).parent
 
 
 nox.options.error_on_external_run = True
 nox.options.default_venv_backend = "uv"
+
+
+@nox.session(name="unit", python=PYTHON_VERSIONS, tags=["tests"])
+def unit_tests(session: Session) -> None:
+    (here / ".coverage").unlink(missing_ok=True)
+    session.run_install(
+        "uv",
+        "sync",
+        "--all-extras",
+        "--group=test",
+        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+    )
+    test_files: list[str] = session.posargs or []
+    session.run("pytest", *COMMON_PYTEST_OPTIONS, "-vv", *test_files)
 
 
 @nox.session(name="pyright", python=PYTHON_VERSIONS, tags=["lint"])
@@ -21,8 +48,8 @@ def pyright(session: Session) -> None:
     session.run_install(
         "uv",
         "sync",
-        "--group=lint",
         "--all-extras",
+        "--group=lint",
         env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
     )
     env = {"PYRIGHT_PYTHON_PYLANCE_VERSION": PYRIGHT_PYTHON_PYLANCE_VERSION}

@@ -19,3 +19,15 @@
 💡 Tip
 
 Pull requests and commits all need to follow the Conventional Commit format
+
+## Creating a new release
+
+1. **Increment the version** in pyproject.toml.
+
+   Note: The version should follow [semantic versioning](https://semver.org/) and [PEP 440](https://www.python.org/dev/peps/pep-0440/).
+
+2. Commit your changes and push to `main`
+
+3. Go to [Actions](https://github.com/gazorby/strawchemy/actions) and approve the release workflow
+
+   Check that the workflow runs successfully

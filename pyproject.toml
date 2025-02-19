@@ -21,6 +21,7 @@ test = [
     "pytest-cov",
     "pytest-asyncio>=0.24",
     "pytest-pretty",
+    "pytest-xdist",
 ]
 
 [project.optional-dependencies]
@@ -40,7 +41,7 @@ replace = "{new_version}"
 search = "{current_version}"
 serialize = ["{major}.{minor}.{patch}"]
 sign_tags = false
-tag = false
+tag = true
 tag_message = "build(release): v{new_version}"
 tag_name = "v{new_version}"
 
