@@ -55,7 +55,7 @@ jobs:
             )'
           ) | tee --append $GITHUB_OUTPUT
 
-  unit-tests:
+  tests:
     name: 🔬 ${{ matrix.session.name }}
     needs: [pre, generate-jobs-tests]
     if: needs.pre.outputs.should_skip != 'true'
@@ -89,15 +89,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nox-${{ matrix.session.session }}-
             ${{ runner.os }}-nox-
-
-      - name: Test resources cache
-        id: data-cache
-        uses: actions/cache@v4
-        with:
-          key: ${{ runner.os }}-test-data-${{ matrix.session.session }}
-          restore-keys: |
-            ${{ runner.os }}-nox-test-data-${{ matrix.session.session }}-
-            ${{ runner.os }}-nox-test-data-
 
       - run: pipx install coverage[toml]
 
