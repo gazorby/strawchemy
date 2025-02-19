@@ -8,6 +8,12 @@ requires-python = ">=3.12"
 dependencies = ["sqlalchemy", "pydantic", "strawberry-graphql"]
 
 [dependency-groups]
+dev = [
+    { include-group = "build" },
+    { include-group = "test" },
+    { include-group = "lint" },
+]
+build = ["bump-my-version"]
 lint = ["pyright", "ruff", "vulture"]
 test = [
     "nox[uv]",
@@ -19,6 +25,41 @@ test = [
 
 [project.optional-dependencies]
 geo = ["GeoAlchemy2", "shapely", "geojson-pydantic"]
+
+[tool.bumpversion]
+allow_dirty = true
+commit = true
+commit_args = "--no-verify"
+current_version = "0.1.0"
+ignore_missing_files = false
+ignore_missing_version = false
+message = "build(release): bump to v{new_version}"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+regex = false
+replace = "{new_version}"
+search = "{current_version}"
+serialize = ["{major}.{minor}.{patch}"]
+sign_tags = false
+tag = false
+tag_message = "build(release): v{new_version}"
+tag_name = "v{new_version}"
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+replace = 'version = "{new_version}"'
+search = 'version = "{current_version}"'
+
+[[tool.bumpversion.files]]
+filename = "uv.lock"
+replace = """
+name = "strawchemy"
+version = "{new_version}"
+"""
+search = """
+name = "strawchemy"
+version = "{current_version}"
+"""
+
 
 [tool.uv]
 default-groups = ["test", "lint"]
@@ -125,6 +166,9 @@ max-complexity = 12
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["TCH001"]
 
 [tool.unasyncd]
 add_editors_note = true

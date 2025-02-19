@@ -90,7 +90,6 @@ build:                                             ## Build the package
 .PHONY: release
 release:                                           ## Bump version and create release tag
 	@echo "${INFO} Preparing for release... 📦"
-	@make docs
 	@make clean
 	@make build
 	@uv lock --upgrade-package strawchemy >/dev/null 2>&1

@@ -15,8 +15,7 @@ from __future__ import annotations
 from types import UnionType
 from typing import Any, Optional, Union, get_args, get_origin
 
-from strawchemy.config import DTO_INFO_KEY
-
+from .constants import DTO_INFO_KEY
 from .types import DTOConfig, DTOFieldConfig, Purpose, PurposeConfig
 
 __all__ = ("config", "field", "is_type_hint_optional")

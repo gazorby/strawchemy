@@ -14,8 +14,6 @@ if TYPE_CHECKING:
     from .sqlalchemy.typing import FilterMap
     from .strawberry.typing import AsyncSessionGetter
 
-DTO_INFO_KEY: str = "dto"
-
 
 @dataclass
 class StrawchemyConfig:

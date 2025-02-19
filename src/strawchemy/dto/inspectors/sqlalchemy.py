@@ -20,8 +20,8 @@ from sqlalchemy.orm import (
     RelationshipProperty,
     registry,
 )
-from strawchemy.config import DTO_INFO_KEY
 from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, ModelInspector
+from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.exceptions import ModelInspectorError
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, DTOMissingType, Purpose
 
