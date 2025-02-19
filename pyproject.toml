@@ -168,7 +168,7 @@ max-complexity = 12
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["TCH001"]
+"tests/*" = ["TCH001", "UP037"]
 
 [tool.unasyncd]
 add_editors_note = true
