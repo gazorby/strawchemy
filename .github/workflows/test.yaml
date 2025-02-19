@@ -166,9 +166,9 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - pre
-      - unit-tests
+      - tests
       - lint
     steps:
       - name: Mark workflow as failed if lint or test did not pass
-        if: needs.unit-tests.result != 'success' || needs.lint.result != 'success'
+        if: needs.tests.result != 'success' || needs.lint.result != 'success'
         run: exit 1
