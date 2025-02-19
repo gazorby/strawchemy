@@ -1,0 +1,73 @@
+default_language_version:
+  python: "3.12"
+
+default_stages:
+  - pre-commit
+  - pre-push
+
+repos:
+  # General hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-toml
+      - id: check-yaml
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+      - id: debug-statements
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.4.1
+    hooks:
+      - id: codespell
+        additional_dependencies:
+          - "tomli"
+        args:
+          - --toml=./pyproject.toml
+
+  # Python specific
+
+  # Commitizen
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.2.2
+    hooks:
+      - id: commitizen
+
+  - repo: https://github.com/provinzkraut/unasyncd
+    rev: v0.8.1
+    hooks:
+      - id: unasyncd
+        additional_dependencies: ["ruff"]
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.9.6
+    hooks:
+      - id: ruff
+        args: [--config=./pyproject.toml, --fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  - repo: local
+    hooks:
+      - id: pyright
+        name: pyright
+        entry: nox -rs pyright --
+        language: python
+        types: [python]
+        require_serial: true
+        additional_dependencies: [nox]
+
+  - repo: local
+    hooks:
+      - id: vulture
+        name: vulture
+        entry: nox -rs vulture --
+        language: python
+        types: [python]
+        require_serial: true
+        additional_dependencies: [nox]

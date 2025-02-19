@@ -1,0 +1,149 @@
+[project]
+name = "strawchemy"
+version = "0.1.0"
+description = "Generate GraphQL api from SQLAlchemy models"
+readme = "README.md"
+authors = [{ name = "gazorby", email = "gazorby@pm.me" }]
+requires-python = ">=3.12"
+dependencies = ["sqlalchemy", "pydantic", "strawberry-graphql"]
+
+[dependency-groups]
+lint = ["pyright", "ruff", "vulture"]
+test = [
+    "nox[uv]",
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio>=0.24",
+    "pytest-pretty",
+]
+
+[project.optional-dependencies]
+geo = ["GeoAlchemy2", "shapely", "geojson-pydantic"]
+
+[tool.uv]
+default-groups = ["test", "lint"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strawchemy"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.pyright]
+venv = ".venv"
+exclude = [
+    "**/__pycache__",
+    "**/.hypothesis",
+    "**/.mypy_cache",
+    "**/.pytest_cache",
+    "**/.ruff_cache",
+    "**/.venv",
+    "**/.tox",
+    "**/.nox",
+    "**/build",
+    "**/dist",
+    "**/node_modules",
+    "**/cdk.out",
+    "**/alembic/versions",
+]
+verboseOutput = true
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+
+reportUnknownMemberType = false
+reportMissingTypeStubs = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportPrivateUsage = false
+reportUnnecessaryTypeIgnoreComment = true
+reportImplicitOverride = true
+reportPropertyTypeMismatch = true
+reportShadowedImports = true
+
+
+[tool.ruff]
+line-length = 120
+fix = true
+target-version = "py311"
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".tox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "tests/codegen/snapshots",
+    "alembic/*  ",
+]
+src = ["src/strawchemy"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "A005",    # flake8-builtins - module {name} shadows a Python standard-library module
+    "D100",    # pydocstyle - missing docstring in public module
+    "D101",    # pydocstyle - missing docstring in public class
+    "D102",    # pydocstyle - missing docstring in public method
+    "D103",    # pydocstyle - missing docstring in public function
+    "D104",    # pydocstyle - missing docstring in public package
+    "D105",    # pydocstyle - missing docstring in magic method
+    "D106",    # pydocstyle - missing docstring in public nested class
+    "D107",    # pydocstyle - missing docstring in __init__
+    "E501",    # pycodestyle - line too long, handled by ruff format
+    "PLR0913", # pylint - too many arguments
+    "ARG002",  # flake8-unused-argument - unused arguments
+    "COM812",  # flake8-commas - Checks for the absence of trailing commas
+    "S101",    # flake8-bandit - Assert statements, investigate
+    "ANN401",  # flake8-annotations - typing Any disallowed in function arguments
+    "FBT",     # flake8-annotations - boolean trap. Try to remove this in the future
+
+]
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.unasyncd]
+add_editors_note = true
+ruff_fix = true
+ruff_format = true
+update_docstrings = true
+cache = true
+
+[tool.unasyncd.files]
+"src/strawchemy/sqlalchemy/repository/_async.py" = "src/strawchemy/sqlalchemy/repository/_sync.py"
+"src/strawchemy/strawberry/repository/_async.py" = "src/strawchemy/strawberry/repository/_sync.py"
+
+[tool.unasyncd.per_file_add_replacements."src/strawchemy/sqlalchemy/repository/_async.py"]
+"strawchemy.sqlalchemy._executor.AsyncQueryExecutor" = "strawchemy.sqlalchemy._executor.SyncQueryExecutor"
+SQLAlchemyGraphQLAsyncRepository = "SQLAlchemyGraphQLSyncRepository"
+"strawchemy.sqlalchemy.typing.AnyAsyncSession" = "strawchemy.sqlalchemy.typing.AnySyncSession"
+
+[tool.unasyncd.per_file_add_replacements."src/strawchemy/strawberry/repository/_async.py"]
+"strawchemy.sqlalchemy.repository.SQLAlchemyGraphQLAsyncRepository" = "strawchemy.sqlalchemy.repository.SQLAlchemyGraphQLSyncRepository"
+"strawchemy.sqlalchemy.typing.AnyAsyncSession" = "strawchemy.sqlalchemy.typing.AnySyncSession"
+"strawchemy.strawberry.typing.AsyncSessionGetter" = "strawchemy.strawberry.typing.SyncSessionGetter"
+StrawchemyAsyncRepository = "StrawchemySyncRepository"
