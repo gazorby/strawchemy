@@ -12,9 +12,11 @@ dev = [
     { include-group = "build" },
     { include-group = "test" },
     { include-group = "lint" },
+    { include-group = "doc" },
 ]
 build = ["bump-my-version"]
 lint = ["pyright", "ruff", "vulture"]
+doc = ["git-cliff>=2.6.1"]
 test = [
     "nox[uv]",
     "pytest",
