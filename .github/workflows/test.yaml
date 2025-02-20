@@ -1,5 +1,8 @@
 name: 🔂 tests
 
+env:
+  COLUMNS: 120 # Makes the error summary table printed by pytest-pretty much easier to read
+
 on:
   push:
     branches: [main, ci/*]
