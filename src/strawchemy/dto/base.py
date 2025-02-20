@@ -26,7 +26,7 @@ from typing import (
 from strawchemy.dto.exceptions import DTOError
 from strawchemy.graph import Node
 
-from .types import DTO_MISSING, DTOConfig, DTOFieldConfig, DTOMissingType, Purpose, PurposeConfig
+from .types import DTO_AUTO, DTO_MISSING, DTOConfig, DTOFieldConfig, DTOMissingType, Purpose, PurposeConfig
 from .utils import config, is_type_hint_optional
 
 if TYPE_CHECKING:
@@ -213,7 +213,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
             self.partial = self.dto_config.partial
         if (alias_ := self.dto_config.alias(self.model_field_name)) is not None:
             self._name = alias_
-        if (type_override_ := self.dto_config.type_map.get(self.type_hint, DTO_MISSING)) is not DTO_MISSING:
+        if (type_override_ := self.dto_config.type_overrides.get(self.type_hint, DTO_MISSING)) is not DTO_MISSING:
             self.type_hint_override = type_override_
 
         if self.partial:
@@ -315,15 +315,22 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         field: DTOFieldDefinition[Any, ModelFieldT],
         dto_config: DTOConfig,
         node: Node[Relation[Any, DTOBaseT], None],
+        has_override: bool,
     ) -> bool:
         """Whether the model field should be excluded from the dto or not."""
-        if dto_config.purpose is Purpose.WRITE and not field.init:
-            return True
         explictly_excluded = node.is_root and field.model_field_name in dto_config.exclude
-        return explictly_excluded or dto_config.purpose not in field.allowed_purposes
+        explicitly_included = node.is_root and field.model_field_name in dto_config.include
+
+        if dto_config.purpose is Purpose.WRITE and not field.init and not explicitly_included:
+            return True
+        if dto_config.include == "all" and not explictly_excluded:
+            return False
+
+        excluded = (explictly_excluded or not explicitly_included) or dto_config.purpose not in field.allowed_purposes
+        return not has_override and excluded
 
     @classmethod
-    def _make_type_hint_required(cls, type_hint: Any) -> Any:
+    def _non_optional_type_hint(cls, type_hint: Any) -> Any:
         origin, args = get_origin(type_hint), get_args(type_hint)
         if origin is None:
             return type_hint
@@ -341,14 +348,14 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     ) -> Any:
         """Recursively resolve the type hint to a valid pydantic type."""
         type_hint = self.type_map.get(field.type_hint, field.type_)
-        overriden_by_type_map = field.type_hint in dto_config.type_map or field.type_hint in self.type_map
+        overriden_by_type_map = field.type_hint in dto_config.type_overrides or field.type_hint in self.type_map
 
         if overriden_by_type_map or field.has_type_override:
             return type_hint
 
         if not field.is_relation:
             if not field.has_type_override and field.complete and is_type_hint_optional(type_hint):
-                type_hint = self._make_type_hint_required(type_hint)
+                type_hint = self._non_optional_type_hint(type_hint)
             return type_hint
 
         relation_model = self.inspector.relation_model(field.model_field)
@@ -396,12 +403,15 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             dto_config.purpose,
             dto_config.partial,
             dto_config.alias_generator,
-            tuple(dto_config.type_map),
-            tuple(dto_config.type_map.values()),
+            tuple(dto_config.type_overrides),
+            tuple(dto_config.type_overrides.values()),
         ]
         if node.is_root:
             config_key.extend(
                 [
+                    tuple(dto_config.annotation_overrides),
+                    tuple(dto_config.annotation_overrides.values()),
+                    tuple(sorted(dto_config.include)),
                     tuple(sorted(dto_config.exclude)),
                     tuple(sorted(dto_config.aliases)),
                     tuple(sorted(dto_config.aliases.values())),
@@ -445,12 +455,16 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
     def clear(self) -> None:
         self.dtos.clear()
+        self._dto_cache.clear()
 
     def type_hint_namespace(self) -> dict[str, Any]:
         return TYPING_NS | self.dtos
 
     def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
         return f"{name}{dto_config.purpose.value.capitalize()}DTO"
+
+    def generate_dto_name(self, model: type[Any], dto_config: DTOConfig, base: type[Any] | None) -> str:
+        return base.__name__ if base else self.dto_name_suffix(model.__name__, dto_config)
 
     def iter_field_definitions(
         self,
@@ -463,21 +477,24 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT], None, None]:
         no_fields = True
-        base_type_hints = {}
+        annotations: dict[str, Any] = dto_config.annotation_overrides
         if base:
             with suppress(NameError):
-                base_type_hints = self.inspector.get_type_hints(base)
-                base.__annotations__ = base_type_hints
+                base.__annotations__ = self.inspector.get_type_hints(base)
+                annotations = base.__annotations__ | dto_config.annotation_overrides
 
         for model_field_name, field_def in self.inspector.field_definitions(model, dto_config):
-            if model_field_name in base_type_hints:
-                no_fields = False
-                field_def.type_ = base_type_hints[model_field_name]
+            has_override = model_field_name in annotations
+            has_auto_override = has_override and annotations[model_field_name] is DTO_AUTO
 
-            if self.should_exclude_field(field_def, dto_config, node):
+            if has_override and annotations[model_field_name] is not DTO_AUTO:
+                no_fields = False
+                field_def.type_ = annotations[model_field_name]
+
+            if self.should_exclude_field(field_def, dto_config, node, has_override):
                 continue
 
-            if model_field_name not in base_type_hints:
+            if not has_override or has_auto_override:
                 no_fields = False
                 field_def.type_ = self._resolve_type(field_def, dto_config, node)
 
@@ -503,7 +520,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     ) -> type[DTOBaseT]:
         """Build a Data transfer object (DTO) from an SQAlchemy model."""
         if not name:
-            name = base.__name__ if base else self.dto_name_suffix(model.__name__, dto_config)
+            name = self.generate_dto_name(model, dto_config, base)
         node = self._node_or_root(model, name, current_node)
         cache_key = self._cache_key(model, dto_config, node)
 

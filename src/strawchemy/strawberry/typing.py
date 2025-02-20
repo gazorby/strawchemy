@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 from strawberry.types.base import WithStrawberryObjectDefinition
 from strawchemy.graphql.dto import StrawchemyDTOAttributes
@@ -19,6 +19,7 @@ __all__ = (
     "SyncSessionGetter",
 )
 
+GraphQLType = Literal["input", "object", "interface"]
 AsyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnyAsyncSession]"
 SyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnySyncSession]"
 FilterStatementCallable: TypeAlias = "Callable[[Info[Any, Any]], Select[tuple[Any]]]"

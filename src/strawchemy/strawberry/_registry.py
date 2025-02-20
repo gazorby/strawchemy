@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from enum import Enum
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ForwardRef, Literal, TypeVar, cast, get_args, get_origin
+from typing import TYPE_CHECKING, Any, ForwardRef, TypeVar, cast, get_args, get_origin
 
 import strawberry
 from strawberry.types import get_object_definition, has_object_definition
@@ -17,12 +18,13 @@ if TYPE_CHECKING:
     from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
     from strawberry.scalars import JSON
     from strawberry.types.base import WithStrawberryObjectDefinition
+    from strawberry.types.field import StrawberryField
     from strawchemy.graphql.filters import AnyGraphQLComparison
+
+    from .typing import GraphQLType
 
 
 __all__ = ("StrawberryRegistry",)
-
-GraphQLType = Literal["input", "object", "interface"]
 
 EnumT = TypeVar("EnumT", bound=Enum)
 
@@ -33,20 +35,38 @@ class StrawberryRegistry:
         self._strawberry_input_types: dict[str, type[StrawberryTypeFromPydantic[Any]]] = {}
         self._strawberry_interface_types: dict[str, type[StrawberryTypeFromPydantic[Any]]] = {}
         self._strawberry_enums: dict[str, type[Enum]] = {}
+        self._field_map: defaultdict[str, list[StrawberryField]] = defaultdict(list)
 
-    def _update_annotation_namespaces(
+    def _update_annotation_namespace(
         self,
         strawberry_type: type[WithStrawberryObjectDefinition | StrawberryTypeFromPydantic[PydanticModel]],
         graphql_type: GraphQLType,
     ) -> None:
         object_definition = get_object_definition(strawberry_type, strict=True)
         for field in object_definition.fields:
-            if not field.type_annotation:
-                continue
-            for type_ in self._inner_types(field.type_annotation.raw_annotation):
-                if not isinstance(type_, ForwardRef | str):
-                    continue
-                field.type_annotation.namespace = self.namespace(graphql_type)
+            field_type_name: str | None = None
+            if field_type_def := get_object_definition(field.type):
+                field_type_name = field_type_def.name
+            if field.type_annotation:
+                for type_ in self._inner_types(field.type_annotation.raw_annotation):
+                    if isinstance(type_, ForwardRef):
+                        field_type_name = type_.__forward_arg__
+                    elif isinstance(type_, str):
+                        field_type_name = type_
+                    else:
+                        continue
+                    field.type_annotation.namespace = self.namespace(graphql_type)
+            if field_type_name:
+                self._field_map[field_type_name].append(field)
+
+    def _register_type(
+        self, type_name: str, strawberry_type: type[Any], graphql_type: GraphQLType, override: bool
+    ) -> None:
+        self._update_annotation_namespace(strawberry_type, graphql_type)
+        self.namespace(graphql_type)[type_name] = strawberry_type
+        if override:
+            for field in self._field_map[type_name]:
+                field.type = strawberry_type
 
     @classmethod
     def _inner_types(cls, typ: Any) -> tuple[Any, ...]:
@@ -84,41 +104,34 @@ class StrawberryRegistry:
         self,
         type_: type[Any],
         name: str,
-        is_input: bool = False,
-        is_interface: bool = False,
+        graphql_type: GraphQLType,
         description: str | None = None,
         directives: Sequence[object] | None = (),
+        override: bool = False,
     ) -> type[Any]:
-        graphql_type: GraphQLType = "object"
-        if is_input:
-            graphql_type = "input"
-        elif is_interface:
-            graphql_type = "interface"
         type_name = name if name else type_.__name__
 
         if has_object_definition(type_):
             return type_
-        if existing := self.namespace(graphql_type).get(type_name):
+        if not override and (existing := self.namespace(graphql_type).get(type_name)):
             return existing
 
         strawberry_type = strawberry.type(
             type_,
             name=type_name,
-            is_input=is_input,
-            is_interface=is_interface,
+            is_input=graphql_type == "input",
+            is_interface=graphql_type == "interface",
             description=description,
             directives=directives,
         )
-        self._update_annotation_namespaces(strawberry_type, graphql_type)
-        self.namespace(graphql_type)[type_name] = strawberry_type
+        self._register_type(type_name, strawberry_type, graphql_type, override)
         return strawberry_type
 
     def register_pydantic(
         self,
         pydantic_type: type[PydanticModel],
         name: str,
-        is_input: bool = False,
-        is_interface: bool = False,
+        graphql_type: GraphQLType,
         all_fields: bool = True,
         fields: list[str] | None = None,
         partial: bool = False,
@@ -127,18 +140,14 @@ class StrawberryRegistry:
         directives: Sequence[object] | None = (),
         use_pydantic_alias: bool = True,
         base: type[Any] | None = None,
+        override: bool = False,
     ) -> type[StrawberryTypeFromPydantic[PydanticModel]]:
-        graphql_type: GraphQLType = "object"
-        if is_input:
-            graphql_type = "input"
-        elif is_interface:
-            graphql_type = "interface"
         type_name = name if name else pydantic_type.__name__
-        strawberry_attr = "_strawberry_input_type" if is_input else "_strawberry_type"
+        strawberry_attr = "_strawberry_input_type" if graphql_type == "input" else "_strawberry_type"
 
         if existing := strawberry_type_from_pydantic(pydantic_type):
             return existing
-        if existing := self.namespace(graphql_type).get(type_name):
+        if not override and (existing := self.namespace(graphql_type).get(type_name)):
             setattr(pydantic_type, strawberry_attr, existing)
             return existing
 
@@ -146,8 +155,8 @@ class StrawberryRegistry:
 
         strawberry_type = strawberry_pydantic.type(
             pydantic_type,
-            is_input=is_input,
-            is_interface=is_interface,
+            is_input=graphql_type == "input",
+            is_interface=graphql_type == "interface",
             all_fields=all_fields,
             fields=fields,
             partial=partial,
@@ -157,8 +166,7 @@ class StrawberryRegistry:
             use_pydantic_alias=use_pydantic_alias,
             partial_fields=partial_fields,
         )(base)
-        self._update_annotation_namespaces(strawberry_type, graphql_type)
-        self.namespace(graphql_type)[type_name] = strawberry_type
+        self._register_type(type_name, strawberry_type, graphql_type, override)
         return strawberry_type
 
     def register_enum(
@@ -182,7 +190,7 @@ class StrawberryRegistry:
             return self.register_pydantic(
                 pydantic_type=comparison_type,
                 name=comparison_type.field_type_name(),
-                is_input=True,
+                graphql_type="input",
                 partial=True,
                 all_fields=False,
                 base=self._geo_base_override,
@@ -192,7 +200,7 @@ class StrawberryRegistry:
             pydantic_type=comparison_type,
             name=comparison_type.field_type_name(),
             description=comparison_type.field_description(),
-            is_input=True,
+            graphql_type="input",
             partial=True,
         )
 

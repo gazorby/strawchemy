@@ -13,7 +13,7 @@ It exports the following:
 from __future__ import annotations
 
 from types import UnionType
-from typing import Any, Optional, Union, get_args, get_origin
+from typing import Any, Literal, Optional, Union, get_args, get_origin
 
 from .constants import DTO_INFO_KEY
 from .types import DTOConfig, DTOFieldConfig, Purpose, PurposeConfig
@@ -21,9 +21,15 @@ from .types import DTOConfig, DTOFieldConfig, Purpose, PurposeConfig
 __all__ = ("config", "field", "is_type_hint_optional")
 
 
-def config(purpose: Purpose, exclude: set[str] | None = None, partial: bool | None = None) -> DTOConfig:
+def config(
+    purpose: Purpose,
+    exclude: set[str] | None = None,
+    include: set[str] | Literal["all"] | None = None,
+    partial: bool | None = None,
+) -> DTOConfig:
     exclude = set() if exclude is None else exclude
-    return DTOConfig(purpose=Purpose(purpose), exclude=exclude, partial=partial)
+    include = set() if include is None else include
+    return DTOConfig(purpose=Purpose(purpose), include=include, exclude=exclude, partial=partial)
 
 
 def field(

@@ -4,13 +4,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
 
-__all__ = ("DTOConfig", "DTOFieldConfig", "Purpose")
+__all__ = ("DTO_AUTO", "DTO_MISSING", "DTOConfig", "DTOFieldConfig", "ExcludeFields", "IncludeFields", "Purpose")
+
+IncludeFields: TypeAlias = list[str] | set[str] | Literal["all"]
+ExcludeFields: TypeAlias = list[str] | set[str]
 
 
 class DTOMissingType:
@@ -20,7 +23,11 @@ class DTOMissingType:
     """
 
 
+class DTOAutoType: ...
+
+
 DTO_MISSING = DTOMissingType()
+DTO_AUTO = DTOAutoType()
 
 
 class Purpose(str, Enum):
@@ -76,12 +83,14 @@ class DTOConfig:
 
     purpose: Purpose
     """Configure the DTO for "read" or "write" operations."""
-    exclude: set[str] = field(default_factory=set)
-    """Explicitly exclude fields from the generated DTO."""
+    include: IncludeFields = field(default_factory=set)
+    """Explicitly include fields from the generated DTO."""
+    exclude: ExcludeFields = field(default_factory=set)
+    """Explicitly exclude fields from the generated DTO. Implies `include="all"`."""
     partial: bool | None = None
     """Make all field optional."""
-    type_map: Mapping[Any, Any] = field(default_factory=dict)
-
+    type_overrides: Mapping[Any, Any] = field(default_factory=dict)
+    annotation_overrides: dict[str, Any] = field(default_factory=dict)
     aliases: Mapping[str, str] = field(default_factory=dict)
 
     alias_generator: Callable[[str], str] | None = None
@@ -90,6 +99,11 @@ class DTOConfig:
         if self.aliases and self.alias_generator is not None:
             msg = "You must set `aliases` or `alias_generator`, not both"
             raise ValueError(msg)
+        if self.include and self.include != "all" and self.exclude:
+            msg = "When using `exclude` you must set `include='all' or leave it unset`"
+            raise ValueError(msg)
+        if self.exclude:
+            self.include = "all"
 
     def alias(self, name: str) -> str | None:
         if self.aliases:
@@ -101,5 +115,11 @@ class DTOConfig:
     @property
     def cache_key(self) -> int:
         return hash(
-            (self.purpose, self.partial, self.alias_generator, tuple(self.type_map), tuple(self.type_map.values()))
+            (
+                self.purpose,
+                self.partial,
+                self.alias_generator,
+                tuple(self.type_overrides),
+                tuple(self.type_overrides.values()),
+            )
         )

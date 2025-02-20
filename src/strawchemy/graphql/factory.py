@@ -14,6 +14,7 @@ allowing for efficient data transfer and filtering in GraphQL queries.
 
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Generator
 from datetime import date, datetime, timedelta
 from decimal import Decimal
@@ -151,8 +152,9 @@ class _EnumDTOFactory(DTOFactory[ModelT, ModelFieldT, EnumDTO]):
         field: DTOFieldDefinition[Any, ModelFieldT],
         dto_config: DTOConfig,
         node: Node[Relation[Any, EnumDTO], None],
+        has_override: bool,
     ) -> bool:
-        return super().should_exclude_field(field, dto_config, node) or field.is_relation
+        return super().should_exclude_field(field, dto_config, node, has_override) or field.is_relation
 
     @override
     def iter_field_definitions(
@@ -224,9 +226,10 @@ class _FunctionArgDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, UnmappedDat
         field: DTOFieldDefinition[Any, ModelFieldT],
         dto_config: DTOConfig,
         node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None],
+        has_override: bool = False,
     ) -> bool:
         return (
-            super().should_exclude_field(field, dto_config, node)
+            super().should_exclude_field(field, dto_config, node, has_override)
             or field.is_relation
             or self.inspector.model_field_type(field) not in self.types
         )
@@ -619,7 +622,10 @@ class TypeDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         self, field_def: DTOFieldDefinition[ModelT, ModelFieldT], dto_config: DTOConfig
     ) -> DTOFieldDefinition[ModelT, ModelFieldT]:
         related_model = self.inspector.relation_model(field_def.model_field)
-        dto = self._aggregation_factory.factory(model=related_model, dto_config=dto_config, parent_field_def=field_def)
+        aggregate_dto_config = dataclasses.replace(dto_config, annotation_overrides={})
+        dto = self._aggregation_factory.factory(
+            model=related_model, dto_config=aggregate_dto_config, parent_field_def=field_def
+        )
         return AggregateFieldDefinition(
             dto_config=dto_config,
             model=dto.__dto_model__,  # pyright: ignore[reportGeneralTypeIssues]
@@ -628,6 +634,10 @@ class TypeDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
             type_hint=dto,
             related_dto=dto,
         )
+
+    @override
+    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
+        return f"{name}{'Input' if dto_config.purpose is Purpose.WRITE else ''}Type"
 
     @override
     def iter_field_definitions(
