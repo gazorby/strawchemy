@@ -39,7 +39,7 @@ jobs:
         env:
           BUMPVERSION_TAG: "true"
         with:
-          args: --new-version=${{ steps.git-cliff.outputs.content }}
+          args: --new-version=${{ steps.git-cliff.outputs.version }}
           github-token: ${{ secrets.GH_TOKEN }}
 
       - name: Manual version bump
