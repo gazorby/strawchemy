@@ -1,6 +1,6 @@
 [project]
 name = "strawchemy"
-version = "0.2.11"
+version = "0.2.12"
 description = "Generate GraphQL API from SQLAlchemy models"
 readme = "README.md"
 authors = [{ name = "gazorby", email = "gazorby@pm.me" }]
@@ -61,7 +61,7 @@ test = [
 allow_dirty = true
 commit = true
 commit_args = "--no-verify"
-current_version = "0.2.11"
+current_version = "0.2.12"
 ignore_missing_files = false
 ignore_missing_version = false
 message = "build(release): bump to v{new_version}"
