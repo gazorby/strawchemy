@@ -63,7 +63,7 @@ jobs:
   tests:
     name: 🔬 ${{ matrix.session.name }}
     needs: [pre, generate-jobs-tests]
-    if: needs.pre.outputs.should_skip != 'true'
+    if: github.ref_type == 'tag' || needs.pre.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -125,7 +125,7 @@ jobs:
   lint:
     name: ✨ Lint
     needs: pre
-    if: needs.pre.outputs.should_skip != 'true'
+    if: github.ref_type == 'tag' || needs.pre.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -177,7 +177,7 @@ jobs:
       - lint
     steps:
       - name: Mark workflow as failed if lint or tests did not pass
-        if: ${{ ! contains(fromJson('["success", "skipped"]'), needs.tests.result) || ! contains(fromJson('["success", "skipped"]'), needs.lint.result) }}
+        if: needs.tests.result != 'success' || needs.lint.result != 'success'
         run: exit 1
       - name: Invoke release workflow
         if: github.ref_type == 'tag'
