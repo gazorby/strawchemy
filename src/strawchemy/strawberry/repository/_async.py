@@ -13,6 +13,7 @@ from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.fields.resolver import StrawberryResolver
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.nodes import SelectedField, Selection
+from strawchemy.exceptions import StrawchemyError
 from strawchemy.graphql.constants import ORDER_BY_KEY
 from strawchemy.graphql.dto import (
     BooleanFilterDTO,
@@ -30,7 +31,6 @@ from strawchemy.strawberry._utils import (
     pydantic_from_strawberry_type,
     strawberry_inner_type,
 )
-from strawchemy.strawberry.exceptions import StrawchemyError
 from strawchemy.utils import camel_to_snake, snake_keys
 
 from ._node import _StrawberryQueryNode

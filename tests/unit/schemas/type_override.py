@@ -11,16 +11,15 @@ from tests.models import Color, Fruit
 strawchemy = Strawchemy()
 
 
-@strawchemy.type(Color)
+@strawchemy.type(Color, include="all")
 class ColorType:
     id: auto
     name: auto
 
 
-@strawchemy.type(Fruit)
+@strawchemy.type(Fruit, override=True)
 class FruitType:
-    id: auto
-    name: auto
+    name: int
 
     @strawberry.field
     def color(self, info: Info, root: Any) -> ColorType:

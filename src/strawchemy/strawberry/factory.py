@@ -23,6 +23,7 @@ from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend, PydanticDTOT
 from strawchemy.dto.base import DTOBackend, DTOBaseT, DTOFactory, DTOFieldDefinition, ModelFieldT, ModelT, Relation
 from strawchemy.dto.types import DTO_AUTO, DTOConfig, DTOMissingType, Purpose
+from strawchemy.exceptions import StrawchemyError
 from strawchemy.graph import Node
 from strawchemy.graphql.dto import (
     AggregateDTO,
@@ -51,7 +52,6 @@ from strawchemy.graphql.typing import DataclassGraphQLDTO, PydanticGraphQLDTO
 from ._instance import MapperModelInstance
 from ._registry import StrawberryRegistry
 from ._utils import pydantic_from_strawberry_type, strawberry_type_from_pydantic
-from .exceptions import StrawchemyError
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
@@ -163,6 +163,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         directives: Sequence[object] | None = (),
         base: type[Any] | None = None,
         override: bool = False,
+        user_defined: bool = False,
     ) -> type[PydanticGraphQLDTOT]:
         self._mapper.registry.register_pydantic(
             dto,
@@ -174,6 +175,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
             name=dto.__name__,
             base=base,
             override=override,
+            user_defined=user_defined,
         )
         return dto
 
@@ -184,6 +186,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         description: str | None = None,
         directives: Sequence[object] | None = (),
         override: bool = False,
+        user_defined: bool = False,
     ) -> type[DataclassGraphQLDTOT]:
         return self._mapper.registry.register_dataclass(
             dto,
@@ -192,6 +195,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
             directives=directives,
             name=dto.__name__,
             override=override,
+            user_defined=user_defined,
         )
 
     def _check_model_instance_attribute(self, base: type[Any]) -> None:
@@ -222,7 +226,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
 
     def _raise_if_name_registered(self, name: str, graphl_type: GraphQLType) -> None:
         if name in self._mapper.registry.namespace(graphl_type):
-            msg = f"Type name {name} is already registered."
+            msg = f"Type {name} is already registered."
             raise StrawchemyError(msg)
 
     @classmethod
@@ -245,14 +249,18 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         directives: Sequence[object] | None = (),
         override: bool = False,
         register_type: bool = True,
+        user_defined: bool = False,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
         graphql_type = self._graphql_type(dto_config)
+        type_name = name or self.generate_dto_name(model, dto_config, base)
         if base:
             self._check_model_instance_attribute(base)
             dto_config = self._resolve_config(dto_config, base)
         if not override:
-            self._raise_if_name_registered(name or self.generate_dto_name(model, dto_config, base), graphql_type)
+            self._raise_if_name_registered(type_name, graphql_type)
+        if not override and (existing := self._mapper.registry.namespace(graphql_type).get(type_name)):
+            return existing
         dto = super().factory(
             model, dto_config, base, name, parent_field_def, current_node, raise_if_no_fields, backend_kwargs, **kwargs
         )
@@ -264,10 +272,16 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
                     description=description,
                     directives=directives,
                     override=override,
+                    user_defined=user_defined,
                 )
             if issubclass(dto, MappedDataclassGraphQLDTO | UnmappedDataclassGraphQLDTO):
                 return self._register_dataclass(
-                    dto, dto_config, description=description, directives=directives, override=override
+                    dto,
+                    dto_config,
+                    description=description,
+                    directives=directives,
+                    override=override,
+                    user_defined=user_defined,
                 )
         return dto
 
@@ -318,6 +332,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
                 directives=directives,
                 query_hook=query_hook,
                 override=override,
+                user_defined=True,
             )
             dto.__strawchemy_query_hook__ = query_hook
             return dto
@@ -357,6 +372,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
                 description=description,
                 directives=directives,
                 override=override,
+                user_defined=True,
             )
 
         return wrapper
@@ -387,6 +403,7 @@ class StrawberryPydanticFactory(_StrawberryFactory[ModelT, ModelFieldT, Pydantic
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
+        override: bool = False,
     ) -> Callable[[type[Any]], type[StrawberryTypeFromPydantic[PydanticDTOT]]]:
         def wrapper(class_: type[Any]) -> type[StrawberryTypeFromPydantic[PydanticDTOT]]:
             return strawberry_type_from_pydantic(
@@ -405,6 +422,8 @@ class StrawberryPydanticFactory(_StrawberryFactory[ModelT, ModelFieldT, Pydantic
                     name=name,
                     description=description,
                     directives=directives,
+                    override=override,
+                    user_defined=True,
                 ),
                 strict=True,
             )
@@ -424,6 +443,7 @@ class StrawberryPydanticFactory(_StrawberryFactory[ModelT, ModelFieldT, Pydantic
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
+        override: bool = False,
     ) -> Callable[[type[Any]], type[StrawberryTypeFromPydantic[MappedPydanticDTO[T]]]]:
         def wrapper(class_: type[Any]) -> type[StrawberryTypeFromPydantic[MappedPydanticDTO[T]]]:
             return get_strawberry_type_from_model(
@@ -442,6 +462,8 @@ class StrawberryPydanticFactory(_StrawberryFactory[ModelT, ModelFieldT, Pydantic
                     name=name,
                     description=description,
                     directives=directives,
+                    override=override,
+                    user_defined=True,
                 )
             )
 
@@ -795,6 +817,7 @@ class StrawberryTypeFactory(
             aggregations=aggregations,
             backend_kwargs=backend_kwargs,
             register_type=False,
+            override=override,
             **kwargs,
         )
         return self._register_dataclass(

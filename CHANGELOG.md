@@ -61,7 +61,7 @@ All notable changes to this project will be documented in this file.
 
 ### ⚙️ Miscellaneous Tasks
 
-- *(bump)* Use personal access toekn to enable ci workflow - ([35f190b](https://github.com/gazorby/strawchemy/commit/35f190b22d113cd9a0d471beea2f62c5bb7f8724))
+- *(bump)* Use personal access token to enable ci workflow - ([35f190b](https://github.com/gazorby/strawchemy/commit/35f190b22d113cd9a0d471beea2f62c5bb7f8724))
 - *(release)* Bump to v0.2.3 - ([c98e0cd](https://github.com/gazorby/strawchemy/commit/c98e0cdc9f62b49704c1b29829640bf79c3d5932))
 ## [0.2.2](https://github.com/gazorby/strawchemy/compare/v0.2.1..v0.2.2) - 2025-02-21
 

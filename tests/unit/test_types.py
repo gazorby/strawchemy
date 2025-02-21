@@ -4,6 +4,7 @@ import textwrap
 from typing import Any
 
 import pytest
+from strawchemy.exceptions import StrawchemyError
 from strawchemy.mapper import Strawchemy
 
 import strawberry
@@ -733,3 +734,69 @@ def test_can_override_fields_with_exclude() -> None:
     '''
 
     assert textwrap.dedent(str(schema)) == textwrap.dedent(expected).strip()
+
+
+def test_type_override() -> None:
+    from .schemas.type_override import Query
+
+    schema = strawberry.Schema(query=Query)
+    expected = '''\
+    """GraphQL type"""
+    type ColorType {
+      id: UUID!
+      fruitsAggregate: FruitAggregate!
+
+      """Fetch object from the FruitType collection by id"""
+      fruits(id: UUID!): FruitType!
+      name: String!
+    }
+
+    """Aggregation fields"""
+    type FruitAggregate {
+      count: Int!
+      sum: FruitSumFields!
+      min: FruitMinMaxFields!
+      max: FruitMinMaxFields!
+      avg: FruitNumericFields!
+      stddev: FruitNumericFields!
+      stddevSamp: FruitNumericFields!
+      stddevPop: FruitNumericFields!
+      variance: FruitNumericFields!
+      varSamp: FruitNumericFields!
+      varPop: FruitNumericFields!
+    }
+
+    type FruitMinMaxFields {
+      name: String!
+      sweetness: Int!
+    }
+
+    type FruitNumericFields {
+      sweetness: Int!
+    }
+
+    type FruitSumFields {
+      name: String!
+      sweetness: Int!
+    }
+
+    """GraphQL type"""
+    type FruitType {
+      name: Int!
+      color: ColorType!
+    }
+
+    type Query {
+      """Fetch object from the FruitType collection by id"""
+      fruit(id: UUID!): FruitType!
+    }
+
+    scalar UUID
+    '''
+
+    assert textwrap.dedent(str(schema)) == textwrap.dedent(expected).strip()
+
+
+def test_multiple_types_error() -> None:
+    with pytest.raises(StrawchemyError, match="Type FruitType is already registered"):
+        from .schemas import multiple_types  # noqa: F401 # pyright: ignore[reportUnusedImport]
