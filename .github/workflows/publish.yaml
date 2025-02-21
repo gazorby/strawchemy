@@ -11,7 +11,7 @@ jobs:
     permissions:
       id-token: write
       contents: write
-    environment: release
+    environment: publish
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
