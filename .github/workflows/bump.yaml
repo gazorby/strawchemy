@@ -43,7 +43,7 @@ jobs:
           BUMPVERSION_TAG: "true"
         with:
           args: --new-version=${{ steps.git-cliff.outputs.version }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PAT }}
 
       - name: Manual version bump
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.releaseType != 'auto' }}
@@ -53,7 +53,7 @@ jobs:
           BUMPVERSION_TAG: "true"
         with:
           args: ${{ inputs.bump-type }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.PAT }}
 
       - name: Check
         if: steps.bump.outputs.bumped == 'true'
