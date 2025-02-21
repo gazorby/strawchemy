@@ -8,7 +8,7 @@ on:
 
 jobs:
   changelog:
-    name: Generate changelog
+    name: Publish and release
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -43,3 +43,4 @@ jobs:
         with:
           body: ${{ steps.git-cliff.outputs.content }}
           generate_release_notes: true
+          token: ${{ secrets.PAT }}
