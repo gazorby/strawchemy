@@ -16,6 +16,8 @@ on:
 
 jobs:
   bump-version:
+    permissions:
+      contents: write
     name: Bump version
     runs-on: ubuntu-latest
     steps:
