@@ -23,10 +23,11 @@ jobs:
         id: git-cliff-repo
         with:
           config: pyproject.toml
-          args: -vv --latest --strip header --github-token ${{ secrets.GITHUB_TOKEN }}
+          args: -vv --latest --strip header
         env:
           OUTPUT: CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate release changelog
         uses: orhun/git-cliff-action@v4
@@ -37,6 +38,7 @@ jobs:
         env:
           OUTPUT: RELEASE_CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Commit
         run: |
