@@ -23,7 +23,7 @@ jobs:
         id: git-cliff-repo
         with:
           config: pyproject.toml
-          args: -vv --latest --strip header
+          args: --verbose
         env:
           OUTPUT: CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
@@ -34,7 +34,7 @@ jobs:
         id: git-cliff-release
         with:
           config: pyproject.toml
-          args: --verbose
+          args: --verbose --latest --strip header
         env:
           OUTPUT: RELEASE_CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
