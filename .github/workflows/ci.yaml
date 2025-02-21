@@ -169,7 +169,7 @@ jobs:
   # Ensure the workflow is successful only if all job in matrixes are successful
   result:
     name: Result
-    if: needs.pre.outputs.should_skip != 'true' && always()
+    if: (github.ref_type == 'tag' || needs.pre.outputs.should_skip != 'true') && always()
     runs-on: ubuntu-latest
     needs:
       - pre
