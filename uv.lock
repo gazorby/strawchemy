@@ -1,5 +1,4 @@
 version = 1
-revision = 1
 requires-python = ">=3.12"
 
 [[package]]
@@ -803,6 +802,7 @@ geo = [
 [package.dev-dependencies]
 build = [
     { name = "bump-my-version" },
+    { name = "git-cliff" },
 ]
 dev = [
     { name = "bump-my-version" },
@@ -843,12 +843,15 @@ requires-dist = [
     { name = "sqlalchemy" },
     { name = "strawberry-graphql" },
 ]
-provides-extras = ["geo"]
 
 [package.metadata.requires-dev]
-build = [{ name = "bump-my-version" }]
+build = [
+    { name = "bump-my-version" },
+    { name = "git-cliff" },
+]
 dev = [
     { name = "bump-my-version" },
+    { name = "git-cliff" },
     { name = "git-cliff", specifier = ">=2.6.1" },
     { name = "nox", extras = ["uv"] },
     { name = "pyright" },

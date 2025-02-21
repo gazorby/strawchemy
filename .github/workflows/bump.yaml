@@ -1,0 +1,58 @@
+name: Bump the version
+
+on:
+  workflow_dispatch:
+    inputs:
+      releaseType:
+        description: "What kind of release is this?"
+        required: false
+        default: "auto"
+        type: choice
+        options:
+          - "auto"
+          - "major"
+          - "minor"
+          - "patch"
+
+jobs:
+  bump-version:
+    name: Bump version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get next version
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.releaseType == 'auto' }}
+        id: git-cliff
+        uses: orhun/git-cliff-action@v4
+        with:
+          config: pyproject.toml
+          args: --unreleased --strip header
+
+      - name: Auto version bump
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.releaseType == 'auto' }}
+        id: auto-version-bump
+        uses: callowayproject/bump-my-version@master
+        env:
+          BUMPVERSION_TAG: "true"
+        with:
+          args: --new-version=${{ steps.git-cliff.outputs.content }}
+          github-token: ${{ secrets.GH_TOKEN }}
+
+      - name: Manual version bump
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.releaseType != 'auto' }}
+        id: manual-version-bump
+        uses: callowayproject/bump-my-version@master
+        env:
+          BUMPVERSION_TAG: "true"
+        with:
+          args: ${{ inputs.bump-type }}
+          github-token: ${{ secrets.GH_TOKEN }}
+
+      - name: Check
+        if: steps.bump.outputs.bumped == 'true'
+        run: |
+          echo "Version was bumped from ${{ steps.bump.outputs.previous-version }} to ${{ steps.bump.outputs.current-version }}!"

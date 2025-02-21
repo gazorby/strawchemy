@@ -1,4 +1,4 @@
-name: 🔂 tests
+name: 🔂 Tests and linting
 
 env:
   COLUMNS: 120 # Makes the error summary table printed by pytest-pretty much easier to read
@@ -22,7 +22,8 @@ jobs:
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
-      - id: skip_check
+      - name: Skip check
+        id: skip_check
         uses: fkirc/skip-duplicate-actions@v5
         with:
           concurrent_skipping: "never"
@@ -38,7 +39,8 @@ jobs:
     outputs:
       sessions: ${{ steps.set-matrix.outputs.sessions }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup nox
         id: setup-nox
@@ -69,7 +71,8 @@ jobs:
         session: ${{ fromJson(needs.generate-jobs-tests.outputs.sessions) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup nox
         id: setup-nox
@@ -81,7 +84,7 @@ jobs:
         id: docker-buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Pip and nox cache
+      - name: Nox cache
         id: cache
         uses: actions/cache@v4
         with:
@@ -93,7 +96,8 @@ jobs:
             ${{ runner.os }}-nox-${{ matrix.session.session }}-
             ${{ runner.os }}-nox-
 
-      - run: pipx install coverage[toml]
+      - name: Install coverage
+        run: pipx install coverage[toml]
 
       - name: Setup uv
         id: setup-uv
@@ -104,7 +108,7 @@ jobs:
 
       - run: nox -r -t tests -s "${{ matrix.session.session }}"
 
-      - name: coverage xml
+      - name: Run coverage
         id: run-coverage
         run: coverage xml -i
         if: ${{ always() }}
@@ -172,6 +176,11 @@ jobs:
       - tests
       - lint
     steps:
-      - name: Mark workflow as failed if lint or test did not pass
+      - name: Mark workflow as failed if lint or tests did not pass
         if: needs.tests.result != 'success' || needs.lint.result != 'success'
         run: exit 1
+      - name: Invoke release workflow
+        if: github.ref_type == 'tag'
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: 🚀 Continuous Deployment

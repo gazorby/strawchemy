@@ -1,9 +1,10 @@
 name: 🚀 Continuous Deployment
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      images:
+        description: Generate changelog and create Github release
 
 jobs:
   changelog:
@@ -12,10 +13,11 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Generate changelog
         uses: orhun/git-cliff-action@v4
         id: git-cliff
@@ -25,6 +27,7 @@ jobs:
         env:
           OUTPUT: CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
+
       - name: Commit
         run: |
           git checkout main
@@ -34,3 +37,9 @@ jobs:
           git add CHANGELOG.md
           git commit -m "build(doc) update changelog"
           git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git main
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: ${{ steps.git-cliff.outputs.content }}
+          generate_release_notes: true
