@@ -16,7 +16,7 @@ labels: "bug"
 ## System Information
 
 - Operating system:
-- Strawberry version (if applicable):
+- Strawchemy version (if applicable):
 
 ## Additional Context
 
