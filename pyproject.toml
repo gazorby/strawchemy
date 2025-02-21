@@ -1,6 +1,6 @@
 [project]
 name = "strawchemy"
-version = "0.2.4"
+version = "0.2.5"
 description = "Generate GraphQL api from SQLAlchemy models"
 readme = "README.md"
 authors = [{ name = "gazorby", email = "gazorby@pm.me" }]
@@ -33,7 +33,7 @@ geo = ["GeoAlchemy2", "shapely", "geojson-pydantic"]
 allow_dirty = true
 commit = true
 commit_args = "--no-verify"
-current_version = "0.2.4"
+current_version = "0.2.5"
 ignore_missing_files = false
 ignore_missing_version = false
 message = "build(release): bump to v{new_version}"
