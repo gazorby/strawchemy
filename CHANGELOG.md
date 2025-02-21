@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.12](https://github.com/gazorby/strawchemy/compare/v0.2.11..v0.2.12) - 2025-02-21
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.2.12 - ([eb32d94](https://github.com/gazorby/strawchemy/commit/eb32d94a6dc85f020a23276a1a963a19a5ccab1a))
+- Create separate environment for cd and publish - ([fbcdf34](https://github.com/gazorby/strawchemy/commit/fbcdf3486fb4643c19153ffac7eb6a600a91f938))
 ## [0.2.11](https://github.com/gazorby/strawchemy/compare/v0.2.10..v0.2.11) - 2025-02-21
 
 ### ⚙️ Miscellaneous Tasks
