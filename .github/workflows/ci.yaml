@@ -177,7 +177,7 @@ jobs:
       - lint
     steps:
       - name: Mark workflow as failed if lint or tests did not pass
-        if: needs.tests.result != 'success' || needs.lint.result != 'success'
+        if: ${{ ! contains(fromJson('["success", "skipped"]'), needs.tests.result) || ! contains(fromJson('["success", "skipped"]'), needs.lint.result) }}
         run: exit 1
       - name: Invoke release workflow
         if: github.ref_type == 'tag'
