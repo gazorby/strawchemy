@@ -34,7 +34,7 @@ jobs:
   generate-jobs-tests:
     name: 💻 Generate test matrix
     needs: pre
-    if: needs.pre.outputs.should_skip != 'true'
+    if: github.ref_type == 'tag' || needs.pre.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     outputs:
       sessions: ${{ steps.set-matrix.outputs.sessions }}
