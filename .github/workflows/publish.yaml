@@ -1,4 +1,4 @@
-name: Latest Release
+name: 📢 Publish and release
 
 on:
   release:
