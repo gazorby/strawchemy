@@ -18,14 +18,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate changelog
+      - name: Generate documentation changelog
         uses: orhun/git-cliff-action@v4
-        id: git-cliff
+        id: git-cliff-repo
         with:
           config: pyproject.toml
-          args: -vv --latest --strip header
+          args: -vv --latest --strip header --github-token ${{ secrets.GITHUB_TOKEN }}
         env:
           OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
+
+      - name: Generate release changelog
+        uses: orhun/git-cliff-action@v4
+        id: git-cliff-release
+        with:
+          config: pyproject.toml
+          args: --verbose
+        env:
+          OUTPUT: RELEASE_CHANGELOG.md
           GITHUB_REPO: ${{ github.repository }}
 
       - name: Commit
@@ -41,6 +51,6 @@ jobs:
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
         with:
-          body: ${{ steps.git-cliff.outputs.content }}
+          body: ${{ steps.git-cliff-release.outputs.content }}
           generate_release_notes: true
           token: ${{ secrets.PAT }}

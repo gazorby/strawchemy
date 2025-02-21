@@ -1,11 +1,42 @@
 [project]
 name = "strawchemy"
 version = "0.2.9"
-description = "Generate GraphQL api from SQLAlchemy models"
+description = "Generate GraphQL API from SQLAlchemy models"
 readme = "README.md"
 authors = [{ name = "gazorby", email = "gazorby@pm.me" }]
-requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python",
+    "Topic :: Software Development",
+    "Typing :: Typed",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Topic :: Database",
+    "Topic :: Database :: Database Engines/Servers",
+]
+requires-python = ">=3.9"
 dependencies = ["sqlalchemy", "pydantic", "strawberry-graphql"]
+keywords = ["sqlalchemy", "strawberry", "graphql", "SQL"]
+license = { text = "MIT" }
+
+[project.urls]
+Changelog = "https://github.com/gazorby/strawchemy/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/gazorby/strawchemy"
+Homepage = "https://github.com/gazorby/strawchemy"
+Issues = "https://github.com/gazorby/strawchemy/issues"
+Repository = "https://github.com/gazorby/strawchemy"
+
+[project.optional-dependencies]
+geo = ["GeoAlchemy2", "shapely", "geojson-pydantic"]
 
 [dependency-groups]
 build = ["bump-my-version", "git-cliff"]
@@ -25,9 +56,6 @@ test = [
     "pytest-pretty",
     "pytest-xdist",
 ]
-
-[project.optional-dependencies]
-geo = ["GeoAlchemy2", "shapely", "geojson-pydantic"]
 
 [tool.bumpversion]
 allow_dirty = true
@@ -204,19 +232,52 @@ All notable changes to this project will be documented in this file.\n
 # template for the changelog body
 # https://keats.github.io/tera/docs/#introduction
 body = """
+{%- macro remote_url() -%}
+  https://github.com/{{ remote.github.owner }}/{{ remote.github.repo }}
+{%- endmacro -%}
+
+{% macro print_commit(commit) -%}
+    - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
+        {% if commit.breaking %}[**breaking**] {% endif %}\
+        {{ commit.message | upper_first }} - \
+        ([{{ commit.id | truncate(length=7, end="") }}]({{ self::remote_url() }}/commit/{{ commit.id }}))\
+{% endmacro -%}
+
 {% if version %}\
-    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+    {% if previous.version %}\
+        ## [{{ version | trim_start_matches(pat="v") }}]\
+          ({{ self::remote_url() }}/compare/{{ previous.version }}..{{ version }}) - {{ timestamp | date(format="%Y-%m-%d") }}
+    {% else %}\
+        ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+    {% endif %}\
 {% else %}\
     ## [unreleased]
 {% endif %}\
+
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | trim | upper_first }}
+    {% for commit in commits
+    | filter(attribute="scope")
+    | sort(attribute="scope") %}
+        {{ self::print_commit(commit=commit) }}
+    {%- endfor %}
     {% for commit in commits %}
-        - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
-            {% if commit.breaking %}[**breaking**] {% endif %}\
-            {{ commit.message | upper_first }}\
-    {% endfor %}
-{% endfor %}\n
+        {%- if not commit.scope -%}
+            {{ self::print_commit(commit=commit) }}
+        {% endif -%}
+    {% endfor -%}
+{% endfor -%}
+{%- if github -%}
+{% if github.contributors | filter(attribute="is_first_time", value=true) | length != 0 %}
+  ## New Contributors ❤️
+{% endif %}\
+{% for contributor in github.contributors | filter(attribute="is_first_time", value=true) %}
+  * @{{ contributor.username }} made their first contribution
+    {%- if contributor.pr_number %} in \
+      [#{{ contributor.pr_number }}]({{ self::remote_url() }}/pull/{{ contributor.pr_number }}) \
+    {%- endif %}
+{%- endfor -%}
+{%- endif %}
 """
 # template for the changelog footer
 footer = """
@@ -265,6 +326,7 @@ commit_parsers = [
     { body = ".*security", group = "<!-- 8 -->🛡️ Security" },
     { message = "^revert", group = "<!-- 9 -->◀️ Revert" },
     { message = ".*", group = "<!-- 10 -->💼 Other" },
+    { body = "$^", skip = true },
 ]
 # filter out the commits that are not matched by commit parsers
 filter_commits = false
@@ -272,3 +334,8 @@ filter_commits = false
 topo_order = false
 # sort the commits inside sections by oldest/newest order
 sort_commits = "oldest"
+
+[tool.git-cliff.remote.github]
+owner = "gazorby"
+repo = "strawchemy"
+token = ""
