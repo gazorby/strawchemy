@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0](https://github.com/gazorby/strawchemy/compare/v0.2.12..v0.3.0) - 2025-02-21
+
+### 🚀 Features
+
+- *(mapping)* Allow strawchemy types to override existing ones - ([c26b495](https://github.com/gazorby/strawchemy/commit/c26b495143049b427311bd76b35af220a159aa1f))
+
+### 📚 Documentation
+
+- Update CONTRIBUTING.md - ([d22f786](https://github.com/gazorby/strawchemy/commit/d22f78617632cf003774b208d019150fd7bf9fd3))
+- Add pull request template - ([efcb329](https://github.com/gazorby/strawchemy/commit/efcb329efa66dc89a30fc263e24389515d356e17))
+- Add SECURITY.md - ([628cd29](https://github.com/gazorby/strawchemy/commit/628cd297e886af7c0e36ef85f3148d771f150633))
+- Update image in SECURITY.md - ([651c4f3](https://github.com/gazorby/strawchemy/commit/651c4f31e86d2cdd66e861cc6aebcda63f5b2b8d))
+- Update bug_report issue template - ([e213df1](https://github.com/gazorby/strawchemy/commit/e213df15832595a8c8695bb4312ad990c8a6571e))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.3.0 - ([6075f54](https://github.com/gazorby/strawchemy/commit/6075f5487462b5fe0595638757a405e758513db5))
+- Create dependabot.yml - ([14d2026](https://github.com/gazorby/strawchemy/commit/14d20260c12de5a63d8a72404fe113c3e9e3e78b))
+- Add issue/pr templates - ([dc99896](https://github.com/gazorby/strawchemy/commit/dc99896724f1deda7a64768743b6e890c3907d91))
 ## [0.2.12](https://github.com/gazorby/strawchemy/compare/v0.2.11..v0.2.12) - 2025-02-21
 
 ### ⚙️ Miscellaneous Tasks
@@ -61,7 +80,7 @@ All notable changes to this project will be documented in this file.
 
 ### ⚙️ Miscellaneous Tasks
 
-- *(bump)* Use personal access token to enable ci workflow - ([35f190b](https://github.com/gazorby/strawchemy/commit/35f190b22d113cd9a0d471beea2f62c5bb7f8724))
+- *(bump)* Use personal access toekn to enable ci workflow - ([35f190b](https://github.com/gazorby/strawchemy/commit/35f190b22d113cd9a0d471beea2f62c5bb7f8724))
 - *(release)* Bump to v0.2.3 - ([c98e0cd](https://github.com/gazorby/strawchemy/commit/c98e0cdc9f62b49704c1b29829640bf79c3d5932))
 ## [0.2.2](https://github.com/gazorby/strawchemy/compare/v0.2.1..v0.2.2) - 2025-02-21
 
