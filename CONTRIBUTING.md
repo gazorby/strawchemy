@@ -22,12 +22,10 @@ Pull requests and commits all need to follow the Conventional Commit format
 
 ## Creating a new release
 
-1. **Increment the version** in pyproject.toml.
+1. Run the [bump workflow](https://github.com/gazorby/strawchemy/actions/workflows/bump.yaml) to bump the version and create a tag.
 
-   Note: The version should follow [semantic versioning](https://semver.org/) and [PEP 440](https://www.python.org/dev/peps/pep-0440/).
+   Note: You can use the `auto` input when running the action to let `git-cliff` figure out the next version number. You can also choose one of `major`, `minor` or `patch`.
 
-2. Commit your changes and push to `main`
+2. Go to [Actions](https://github.com/gazorby/strawchemy/actions) and approve the release workflow
 
-3. Go to [Actions](https://github.com/gazorby/strawchemy/actions) and approve the release workflow
-
-   Check that the workflow runs successfully
+   Check that the release and then the publish workflows run successfully
