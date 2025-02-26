@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, get_type_hints
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -105,21 +106,41 @@ class DTOConfig:
         if self.exclude:
             self.include = "all"
 
+    def with_base_annotations(self, base: type[Any]) -> DTOConfig:
+        """Merge type annotations from a base class into this DTOConfig.
+
+        Args:
+            base: The base class to extract type annotations from
+
+        Returns:
+            A new DTOConfig instance with:
+            - Type annotations from the base class merged into annotation_overrides
+            - Updated include set to include all fields if exclude is specified or include was "all"
+
+        The method handles two cases:
+        1. When include is "all" or exclude is specified: All fields from the base class are included
+        2. When specific fields are included: Only those fields are added to the include set
+        """
+        include: set[str] = set(self.include) if self.include != "all" else set()
+        include_all = self.include == "all" or self.exclude
+        annotation_overrides: dict[str, Any] = self.annotation_overrides
+        try:
+            base_annotations = get_type_hints(base)
+        except NameError:
+            base_annotations = base.__annotations__
+        for name, annotation in base_annotations.items():
+            if not include_all:
+                include.add(name)
+            annotation_overrides[name] = annotation
+        return dataclasses.replace(
+            self,
+            include="all" if include_all else include,
+            annotation_overrides=annotation_overrides,
+        )
+
     def alias(self, name: str) -> str | None:
         if self.aliases:
             return self.aliases.get(name)
         if self.alias_generator is not None:
             return self.alias_generator(name)
         return None
-
-    @property
-    def cache_key(self) -> int:
-        return hash(
-            (
-                self.purpose,
-                self.partial,
-                self.alias_generator,
-                tuple(self.type_overrides),
-                tuple(self.type_overrides.values()),
-            )
-        )
