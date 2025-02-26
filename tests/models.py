@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID, uuid4
 
-from strawchemy import dto
+from strawchemy.dto.utils import PRIVATE, READ_ONLY, WRITE_ONLY
 
 from sqlalchemy import VARCHAR, ForeignKey, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -18,7 +18,7 @@ class UUIDBase(DeclarativeBase):
     __abstract__ = True
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    private: Mapped[str] = mapped_column(info=dto.field(purposes=set()))
+    private: Mapped[str] = mapped_column(info=PRIVATE)
 
 
 class NameDescriptionMixin(DeclarativeBase):
@@ -93,6 +93,13 @@ class Group(UUIDBase):
     users: Mapped[list[User]] = relationship("User", back_populates="group")
 
 
+class Admin(UUIDBase):
+    __tablename__ = "admin"
+
+    name: Mapped[str]
+    password: Mapped[str] = mapped_column(info=WRITE_ONLY)
+
+
 class Tag(UUIDBase):
     __tablename__ = "tag"
 
@@ -103,6 +110,7 @@ class Book(UUIDBase):
     __tablename__ = "book"
 
     title: Mapped[str]
+    isbn: Mapped[str] = mapped_column(info=READ_ONLY)
 
 
 try:
