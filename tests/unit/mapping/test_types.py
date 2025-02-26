@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import textwrap
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from strawchemy.exceptions import StrawchemyError
-from strawchemy.mapper import Strawchemy
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -15,10 +14,8 @@ from strawberry.types.object_type import StrawberryObjectDefinition
 from tests.models import Book as BookModel
 from tests.models import User
 
-
-@pytest.fixture
-def strawchemy() -> Strawchemy[DeclarativeBase, QueryableAttribute[Any]]:
-    return Strawchemy()
+if TYPE_CHECKING:
+    from strawchemy.mapper import Strawchemy
 
 
 def test_type_instance(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]) -> None:
@@ -73,7 +70,7 @@ def test_field_metadata_default(strawchemy: Strawchemy[DeclarativeBase, Queryabl
 
 
 def test_type_resolution_with_resolvers() -> None:
-    from .schemas.custom_resolver import ColorType, Query
+    from tests.unit.schemas.custom_resolver import ColorType, Query
 
     schema = strawberry.Schema(query=Query)
     type_def = schema.get_type_by_name("FruitType")
@@ -84,7 +81,7 @@ def test_type_resolution_with_resolvers() -> None:
 
 
 def test_all_fields() -> None:
-    from .schemas.all_fields import Query
+    from tests.unit.schemas.all_fields import Query
 
     schema = strawberry.Schema(query=Query)
     expected = '''\
@@ -214,7 +211,7 @@ def test_all_fields() -> None:
 
 
 def test_all_fields_override() -> None:
-    from .schemas.all_fields_override import Query
+    from tests.unit.schemas.all_fields_override import Query
 
     schema = strawberry.Schema(query=Query)
 
@@ -345,7 +342,7 @@ def test_all_fields_override() -> None:
 
 
 def test_include_fields() -> None:
-    from .schemas.include_explicit import Query
+    from tests.unit.schemas.include_explicit import Query
 
     schema = strawberry.Schema(query=Query)
     expected = '''\
@@ -364,7 +361,7 @@ def test_include_fields() -> None:
 
 
 def test_exclude_exclude() -> None:
-    from .schemas.exclude_explicit import Query
+    from tests.unit.schemas.exclude_explicit import Query
 
     schema = strawberry.Schema(query=Query)
     expected = '''\
@@ -386,7 +383,7 @@ def test_exclude_exclude() -> None:
 
 
 def test_include_non_existent_fields_ignored() -> None:
-    from .schemas.include_non_existent import Query
+    from tests.unit.schemas.include_non_existent import Query
 
     schema = strawberry.Schema(query=Query)
     expected = '''\
@@ -404,7 +401,7 @@ def test_include_non_existent_fields_ignored() -> None:
 
 
 def test_exclude_non_existent_fields_ignored() -> None:
-    from .schemas.exclude_non_existent import Query
+    from tests.unit.schemas.exclude_non_existent import Query
 
     schema = strawberry.Schema(query=Query)
     expected = '''\
@@ -426,7 +423,7 @@ def test_exclude_non_existent_fields_ignored() -> None:
 
 
 def test_auto_primary_key_resolver() -> None:
-    from .schemas.primary_key_resolver import Query
+    from tests.unit.schemas.primary_key_resolver import Query
 
     schema = strawberry.Schema(query=Query)
     expected = '''\
@@ -454,7 +451,7 @@ def test_auto_primary_key_resolver() -> None:
 
 
 def test_auto_list_resolver() -> None:
-    from .schemas.list_resolver import Query
+    from tests.unit.schemas.list_resolver import Query
 
     schema = strawberry.Schema(query=Query)
     expected = '''\
@@ -482,7 +479,7 @@ def test_auto_list_resolver() -> None:
 
 
 def test_can_override_type_with_exclude() -> None:
-    from .schemas.exclude_and_override_type import Query
+    from tests.unit.schemas.exclude_and_override_type import Query
 
     schema = strawberry.Schema(query=Query)
     expected = '''\
@@ -609,7 +606,7 @@ def test_can_override_type_with_exclude() -> None:
 
 
 def test_can_override_fields_with_exclude() -> None:
-    from .schemas.exclude_and_override_field import Query
+    from tests.unit.schemas.exclude_and_override_field import Query
 
     schema = strawberry.Schema(query=Query)
     expected = '''\
@@ -737,7 +734,7 @@ def test_can_override_fields_with_exclude() -> None:
 
 
 def test_type_override() -> None:
-    from .schemas.type_override import Query
+    from tests.unit.schemas.type_override import Query
 
     schema = strawberry.Schema(query=Query)
     expected = '''\
@@ -798,5 +795,11 @@ def test_type_override() -> None:
 
 
 def test_multiple_types_error() -> None:
-    with pytest.raises(StrawchemyError, match="Type FruitType is already registered"):
-        from .schemas import multiple_types  # noqa: F401 # pyright: ignore[reportUnusedImport]
+    with pytest.raises(
+        StrawchemyError,
+        match=(
+            """Type `FruitType` cannot be auto generated because it's already explicitly declared."""
+            """ Either use `override=True` on the explicit type to use it everywhere, or use override `FruitType` fields where needed"""
+        ),
+    ):
+        from tests.unit.schemas import multiple_types  # noqa: F401 # pyright: ignore[reportUnusedImport]
