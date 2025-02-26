@@ -11,16 +11,7 @@ if TYPE_CHECKING:
 PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 PYRIGHT_PYTHON_PYLANCE_VERSION: Literal["latest-release", "latest-prerelease"] = "latest-release"
 PYRIGHT_PYTHON_FORCE_VERSION: str | None = None
-COMMON_PYTEST_OPTIONS = [
-    "--cov",
-    "src",
-    "--cov-append",
-    "--cov-report",
-    "term-missing",
-    "-n",
-    "2",
-    "--showlocals",
-]
+COMMON_PYTEST_OPTIONS = ["--cov=src", "--cov-append", "--cov-report=xml", "-n=2", "--showlocals"]
 
 here = Path(__file__).parent
 
