@@ -17,7 +17,7 @@ TYPE_DECORATOR_NAMES: list[str] = [
     "filter_input",
     "aggregate_filter_input",
     "order_by_input",
-    "aggregation",
+    "aggregation_type",
 ]
 
 
