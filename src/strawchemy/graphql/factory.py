@@ -37,7 +37,6 @@ from strawchemy.dto.base import (
 )
 from strawchemy.dto.exceptions import DTOError
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOMissingType, ExcludeFields, IncludeFields, Purpose
-from strawchemy.dto.utils import config
 from strawchemy.graph import Node
 from strawchemy.utils import snake_to_camel, snake_to_lower_camel_case
 
@@ -171,25 +170,29 @@ class _EnumDTOFactory(DTOFactory[ModelT, ModelFieldT, EnumDTO]):
         for field in super().iter_field_definitions(name, model, dto_config, base, node, raise_if_no_fields, **kwargs):
             yield GraphQLFieldDefinition.from_field(field)
 
-    def enum_decorator(
+    @override
+    def decorator(
         self,
         model: type[T],
+        purpose: Purpose = Purpose.READ,
         include: IncludeFields | None = None,
         exclude: ExcludeFields | None = None,
         partial: bool = False,
+        type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
         alias_generator: Callable[[str], str] | None = None,
+        **kwargs: Any,
     ) -> Callable[[type[Any]], type[EnumDTO]]:
         return super().decorator(
             model,
-            config(
-                purpose=Purpose.READ,
-                include=include,
-                exclude=exclude,
-                partial=partial,
-                aliases=aliases,
-                alias_generator=alias_generator,
-            ),
+            purpose,
+            include=include,
+            exclude=exclude,
+            partial=partial,
+            aliases=aliases,
+            alias_generator=alias_generator,
+            type_map=type_map,
+            **kwargs,
         )
 
 
@@ -874,9 +877,20 @@ class FilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT
 
     @override
     def decorator(
-        self, model: type[T], dto_config: DTOConfig | Purpose = dto_config_read_partial, **kwargs: Any
+        self,
+        model: type[T],
+        purpose: Purpose,
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool = False,
+        type_map: Mapping[Any, Any] | None = None,
+        aliases: Mapping[str, str] | None = None,
+        alias_generator: Callable[[str], str] | None = None,
+        **kwargs: Any,
     ) -> Callable[[type[Any]], type[GraphQLFilterDTOT]]:
-        return super().decorator(model, dto_config, **kwargs)
+        return super().decorator(
+            model, purpose, include, exclude, partial, type_map, aliases, alias_generator, **kwargs
+        )
 
     @override
     def factory(
@@ -1036,9 +1050,20 @@ class AggregateFilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, Aggregat
 
     @override
     def decorator(
-        self, model: type[T], dto_config: DTOConfig | Purpose = dto_config_read_partial, **kwargs: Any
+        self,
+        model: type[T],
+        purpose: Purpose,
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool = False,
+        type_map: Mapping[Any, Any] | None = None,
+        aliases: Mapping[str, str] | None = None,
+        alias_generator: Callable[[str], str] | None = None,
+        **kwargs: Any,
     ) -> Callable[[type[Any]], type[AggregateFilterDTO[ModelT]]]:
-        return super().decorator(model, dto_config, **kwargs)
+        return super().decorator(
+            model, purpose, include, exclude, partial, type_map, aliases, alias_generator, **kwargs
+        )
 
     def _aggregate_function_type(
         self,

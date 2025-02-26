@@ -55,7 +55,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self.filter_input = self._filter_factory.input
         self.aggregate_filter_input = self._aggregate_filter_factory.input
         self.order_by_input = self._order_by_factory.input
-        self.distinct_on_enum = self._distinct_on_enum_factory.enum_decorator
+        self.distinct_on_enum = self._distinct_on_enum_factory.decorator
         self.input = self._type_factory.input
         self.type = self._type_factory.type
         self.aggregation_type = self._aggregation_factory.type

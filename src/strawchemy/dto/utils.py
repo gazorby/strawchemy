@@ -22,6 +22,9 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
 __all__ = (
+    "PRIVATE",
+    "READ_ONLY",
+    "WRITE_ONLY",
     "config",
     "field",
     "is_type_hint_optional",
@@ -30,11 +33,6 @@ __all__ = (
     "write_all_config",
     "write_all_partial_config",
 )
-
-read_all_config = DTOConfig(Purpose.READ, include="all")
-read_all_partial_config = DTOConfig(Purpose.READ, include="all", partial=True)
-write_all_config = DTOConfig(Purpose.WRITE, include="all")
-write_all_partial_config = DTOConfig(Purpose.WRITE, include="all", partial=True)
 
 
 def config(
@@ -95,3 +93,13 @@ def is_type_hint_optional(type_hint: Any) -> bool:
         args = get_args(type_hint)
         return any(arg is type(None) for arg in args)
     return False
+
+
+read_all_config = DTOConfig(Purpose.READ, include="all")
+read_all_partial_config = DTOConfig(Purpose.READ, include="all", partial=True)
+write_all_config = DTOConfig(Purpose.WRITE, include="all")
+write_all_partial_config = DTOConfig(Purpose.WRITE, include="all", partial=True)
+
+READ_ONLY = field({Purpose.READ})
+WRITE_ONLY = field({Purpose.WRITE})
+PRIVATE = field(set())

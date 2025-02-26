@@ -59,7 +59,7 @@ class MappedDataclassDTO(MappedDTO[ModelT]):
             if (value := override.get(dc_field.name, DTO_MISSING)) and value is not DTO_MISSING:
                 as_model[dc_field.name] = value
                 continue
-            if (field := dc_fields.get(dc_field.name, None)) and not field.init:
+            if (field := dc_fields.get(dc_field.name)) and not field.init:
                 continue
 
             value: ModelT | MappedDataclassDTO[ModelT] | list[ModelT] | list[MappedDataclassDTO[ModelT]]
