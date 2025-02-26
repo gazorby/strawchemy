@@ -82,7 +82,7 @@ jobs:
           python-versions: "3.12"
 
       - name: Set up Docker Buildx
-        if: contains(fromJSON(matrix.session.tags), 'docker')
+        if: contains(matrix.session.tags, 'docker')
         id: docker-buildx
         uses: docker/setup-buildx-action@v3
 
