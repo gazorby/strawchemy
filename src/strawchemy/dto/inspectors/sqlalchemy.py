@@ -50,13 +50,13 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         self._model_type_hints: dict[type[DeclarativeBase], dict[str, Any]] = {}
         event.listens_for(Mapper, "after_mapper_constructed")(self._add_registry_listener)
 
-    def _add_registry_from_mapper(self, mapper: Mapper[Any]) -> None:
+    def _update_mapped_classes(self, mapper: Mapper[Any]) -> None:
         if mapper.registry not in self._registries:
-            self._mapped_classes_map.update(self._mapped_classes_from_registry(mapper.registry))
             self._registries.append(mapper.registry)
+        self._mapped_classes_map |= self._mapped_classes_from_registry(mapper.registry)
 
     def _add_registry_listener(self, mapper: Mapper[Any], class_: type[Any]) -> None:
-        self._add_registry_from_mapper(mapper)
+        self._update_mapped_classes(mapper)
 
     def _mapped_classes_from_registry(self, registry: registry) -> dict[str, type[Any]]:
         return {m.class_.__name__: m.class_ for m in list(registry.mappers)}
@@ -194,7 +194,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         if type_hints := self._model_type_hints.get(type_):
             return type_hints
         if issubclass(type_, DeclarativeBase):
-            self._add_registry_from_mapper(inspect(type_))
+            self._update_mapped_classes(inspect(type_))
         type_hints = get_type_hints(type_, localns=self._localns(type_), include_extras=include_extras)
         self._model_type_hints[type_] = type_hints
         return type_hints
