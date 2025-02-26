@@ -26,7 +26,15 @@ from typing import (
 from strawchemy.dto.exceptions import DTOError
 from strawchemy.graph import Node
 
-from .types import DTO_AUTO, DTO_MISSING, DTOConfig, DTOFieldConfig, DTOMissingType, Purpose, PurposeConfig
+from .types import (
+    DTO_AUTO,
+    DTO_MISSING,
+    DTOConfig,
+    DTOFieldConfig,
+    DTOMissingType,
+    Purpose,
+    PurposeConfig,
+)
 from .utils import config, is_type_hint_optional
 
 if TYPE_CHECKING:
@@ -34,7 +42,13 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-__all__ = ("DTOFactory", "DTOFieldDefinition", "MappedDTO", "MappedDTOProtocol", "ModelInspector")
+__all__ = (
+    "DTOFactory",
+    "DTOFieldDefinition",
+    "MappedDTO",
+    "MappedDTOProtocol",
+    "ModelInspector",
+)
 
 T = TypeVar("T")
 DTOBaseT = TypeVar("DTOBaseT", bound="DTOBase[Any]")
@@ -321,10 +335,10 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         explictly_excluded = node.is_root and field.model_field_name in dto_config.exclude
         explicitly_included = node.is_root and field.model_field_name in dto_config.include
 
-        if dto_config.purpose is Purpose.WRITE and not field.init and not explicitly_included:
-            return True
+        if dto_config.purpose is Purpose.WRITE and not explicitly_included:
+            explictly_excluded = explictly_excluded or not field.init
         if dto_config.include == "all" and not explictly_excluded:
-            return False
+            explicitly_included = True
 
         excluded = (explictly_excluded or not explicitly_included) or dto_config.purpose not in field.allowed_purposes
         return not has_override and excluded
@@ -391,33 +405,41 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         return dto
 
     def _node_or_root(
-        self, model: type[Any], name: str, node: Node[Relation[Any, DTOBaseT], None] | None = None
+        self,
+        model: type[Any],
+        name: str,
+        node: Node[Relation[Any, DTOBaseT], None] | None = None,
     ) -> Node[Relation[Any, DTOBaseT], None]:
         return Node(Relation(model=model, name=name)) if node is None else node
 
     def _cache_key(
-        self, model: type[Any], dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None]
+        self,
+        model: type[Any],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, DTOBaseT], None],
     ) -> Hashable:
-        config_key: list[Hashable] = [
+        base_key: list[Hashable] = [
             self,
             dto_config.purpose,
             dto_config.partial,
             dto_config.alias_generator,
-            tuple(dto_config.type_overrides),
-            tuple(dto_config.type_overrides.values()),
+            tuple(sorted(dto_config.type_overrides, key=repr)),
+            tuple(sorted(dto_config.type_overrides.values(), key=repr)),
         ]
+        node_key: tuple[Any, ...] = ()
         if node.is_root:
-            config_key.extend(
-                [
-                    tuple(dto_config.annotation_overrides),
-                    tuple(dto_config.annotation_overrides.values()),
-                    tuple(sorted(dto_config.include)),
-                    tuple(sorted(dto_config.exclude)),
-                    tuple(sorted(dto_config.aliases)),
-                    tuple(sorted(dto_config.aliases.values())),
-                ]
-            )
-        return (model, tuple(config_key))
+            include = tuple(sorted(dto_config.include)) if dto_config.include != "all" else ()
+            root_key = [
+                *include,
+                *tuple(sorted(dto_config.exclude)),
+                *tuple(sorted(dto_config.aliases)),
+                *tuple(sorted(dto_config.aliases.values())),
+                *tuple(sorted(dto_config.annotation_overrides)),
+                *tuple(sorted(dto_config.annotation_overrides.values(), key=repr)),
+            ]
+            node_key = tuple(root_key)
+        base_key.extend(node_key)
+        return (model, tuple(base_key))
 
     def _factory(
         self,
@@ -448,7 +470,13 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
                 if field_def.self_reference:
                     self_ref_fields.append(field_def)
 
-        dto = self.backend.build(name=name, model=model, field_definitions=_gen(), base=base, **(backend_kwargs or {}))
+        dto = self.backend.build(
+            name=name,
+            model=model,
+            field_definitions=_gen(),
+            base=base,
+            **(backend_kwargs or {}),
+        )
         for field_def in self_ref_fields:
             field_def.related_dto = dto
         return dto
@@ -519,6 +547,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         **kwargs: Any,
     ) -> type[DTOBaseT]:
         """Build a Data transfer object (DTO) from an SQAlchemy model."""
+        dto_config = dto_config.with_base_annotations(base) if base else dto_config
         if not name:
             name = self.generate_dto_name(model, dto_config, base)
         node = self._node_or_root(model, name, current_node)
@@ -530,7 +559,15 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             return dto
 
         dto = self._factory(
-            name, model, dto_config, node, base, parent_field_def, raise_if_no_fields, backend_kwargs, **kwargs
+            name,
+            model,
+            dto_config,
+            node,
+            base,
+            parent_field_def,
+            raise_if_no_fields,
+            backend_kwargs,
+            **kwargs,
         )
 
         dto.__dto_config__ = dto_config

@@ -12,9 +12,9 @@ from .graphql.dto import EnumDTO, MappedDataclassGraphQLDTO, OrderByEnum
 from .graphql.factory import DistinctOnFieldsDTOFactory
 from .strawberry import StrawchemyField
 from .strawberry.factory import (
-    StrawberryAggregateFilterFactory,
-    StrawberryFilterFactory,
-    StrawberryOrderByFactory,
+    StrawberryAggregateFilterInputFactory,
+    StrawberryFilterInputFactory,
+    StrawberryOrderByInputFactory,
     StrawberryRegistry,
     StrawberryRootAggregateTypeFactory,
     StrawberryTypeFactory,
@@ -45,9 +45,9 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self.registry = StrawberryRegistry()
         self.inspector = _StrawberryModelInspector(self.settings.inspector, self.registry)
 
-        self._filter_factory = StrawberryFilterFactory(self)
-        self._aggregate_filter_factory = StrawberryAggregateFilterFactory(self)
-        self._order_by_factory = StrawberryOrderByFactory(self)
+        self._filter_factory = StrawberryFilterInputFactory(self)
+        self._aggregate_filter_factory = StrawberryAggregateFilterInputFactory(self)
+        self._order_by_factory = StrawberryOrderByInputFactory(self)
         self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.inspector)
         self._type_factory = StrawberryTypeFactory(self, dataclass_backend)
         self._aggregation_factory = StrawberryRootAggregateTypeFactory(self, dataclass_backend)
@@ -55,10 +55,10 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self.filter_input = self._filter_factory.input
         self.aggregate_filter_input = self._aggregate_filter_factory.input
         self.order_by_input = self._order_by_factory.input
-        self.distinct_on_enum = self._distinct_on_enum_factory.decorator
+        self.distinct_on_enum = self._distinct_on_enum_factory.enum_decorator
         self.input = self._type_factory.input
         self.type = self._type_factory.type
-        self.aggregation = self._aggregation_factory.type
+        self.aggregation_type = self._aggregation_factory.type
 
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")

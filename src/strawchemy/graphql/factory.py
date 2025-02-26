@@ -36,7 +36,8 @@ from strawchemy.dto.base import (
     Relation,
 )
 from strawchemy.dto.exceptions import DTOError
-from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOMissingType, Purpose
+from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOMissingType, ExcludeFields, IncludeFields, Purpose
+from strawchemy.dto.utils import config
 from strawchemy.graph import Node
 from strawchemy.utils import snake_to_camel, snake_to_lower_camel_case
 
@@ -61,7 +62,7 @@ from .dto import (
 from .typing import AggregateDTOT, FunctionInfo, GraphQLDTOT, GraphQLFilterDTOT
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable
+    from collections.abc import Callable, Generator, Iterable, Mapping
 
     from strawchemy.graph import Node
 
@@ -170,11 +171,26 @@ class _EnumDTOFactory(DTOFactory[ModelT, ModelFieldT, EnumDTO]):
         for field in super().iter_field_definitions(name, model, dto_config, base, node, raise_if_no_fields, **kwargs):
             yield GraphQLFieldDefinition.from_field(field)
 
-    @override
-    def decorator(
-        self, model: type[T], dto_config: DTOConfig | Purpose = dto_config_read_partial, **kwargs: Any
+    def enum_decorator(
+        self,
+        model: type[T],
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool = False,
+        aliases: Mapping[str, str] | None = None,
+        alias_generator: Callable[[str], str] | None = None,
     ) -> Callable[[type[Any]], type[EnumDTO]]:
-        return super().decorator(model, dto_config, **kwargs)
+        return super().decorator(
+            model,
+            config(
+                purpose=Purpose.READ,
+                include=include,
+                exclude=exclude,
+                partial=partial,
+                aliases=aliases,
+                alias_generator=alias_generator,
+            ),
+        )
 
 
 class _CountFieldsDTOFactory(_EnumDTOFactory[ModelT, ModelFieldT]):
@@ -666,7 +682,7 @@ class TypeDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
@@ -746,7 +762,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
             dto_config=dto_config,
             model=model,
             model_field_name=AGGREGATIONS_KEY,
-            type_hint=self._aggregation_factory.factory(model),
+            type_hint=self._aggregation_factory.factory(model, dto_config=dto_config),
             is_relation=False,
             is_aggregate=True,
         )
@@ -758,7 +774,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
@@ -866,7 +882,7 @@ class FilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
@@ -973,7 +989,7 @@ class AggregateDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, AggregateDTOT]
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
@@ -1125,7 +1141,7 @@ class AggregateFilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, Aggregat
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
@@ -1228,9 +1244,7 @@ class OrderByDTOFactory(FilterDTOFactory[ModelT, ModelFieldT, OrderByDTO[ModelT,
 
     @override
     def _aggregation_field(
-        self,
-        field_def: DTOFieldDefinition[ModelT, ModelFieldT],
-        dto_config: DTOConfig,
+        self, field_def: DTOFieldDefinition[ModelT, ModelFieldT], dto_config: DTOConfig
     ) -> DTOFieldDefinition[ModelT, ModelFieldT]:
         related_model = self.inspector.relation_model(field_def.model_field)
         return AggregateFieldDefinition(
@@ -1249,7 +1263,7 @@ class OrderByDTOFactory(FilterDTOFactory[ModelT, ModelFieldT, OrderByDTO[ModelT,
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,

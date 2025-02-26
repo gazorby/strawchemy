@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import dataclasses
 from collections import defaultdict
+from dataclasses import dataclass
 from enum import Enum
-from functools import cached_property
 from typing import TYPE_CHECKING, Any, ForwardRef, TypeVar, cast, get_args, get_origin
 
 import strawberry
+from strawberry.scalars import JSON  # noqa: TC001
 from strawberry.types import get_object_definition, has_object_definition
 from strawchemy.graphql.filters import GeoComparison
 from strawchemy.strawberry import pydantic as strawberry_pydantic
@@ -16,26 +18,45 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
-    from strawberry.scalars import JSON
     from strawberry.types.base import WithStrawberryObjectDefinition
     from strawberry.types.field import StrawberryField
     from strawchemy.graphql.filters import AnyGraphQLComparison
+    from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
 
     from .typing import GraphQLType
 
 
-__all__ = ("StrawberryRegistry",)
+__all__ = ("RegistryTypeInfo", "StrawberryRegistry")
 
 EnumT = TypeVar("EnumT", bound=Enum)
 
 
+class _StrawberryGeoComparison:
+    contains_geometry: JSON | None = strawberry.UNSET
+    within_geometry: JSON | None = strawberry.UNSET
+
+
+@dataclass(frozen=True, eq=True)
+class RegistryTypeInfo:
+    name: str
+    graphql_type: GraphQLType
+    user_defined: bool
+    override: bool
+
+
 class StrawberryRegistry:
     def __init__(self) -> None:
-        self._strawberry_object_types: dict[str, type[StrawberryTypeFromPydantic[Any]]] = {}
+        self._strawberry_object_types: dict[str, type[StrawchemyTypeWithStrawberryObjectDefinition]] = {}
         self._strawberry_input_types: dict[str, type[StrawberryTypeFromPydantic[Any]]] = {}
-        self._strawberry_interface_types: dict[str, type[StrawberryTypeFromPydantic[Any]]] = {}
+        self._strawberry_interface_types: dict[str, type[StrawchemyTypeWithStrawberryObjectDefinition]] = {}
         self._strawberry_enums: dict[str, type[Enum]] = {}
         self._field_map: defaultdict[str, list[StrawberryField]] = defaultdict(list)
+        self._type_infos: set[RegistryTypeInfo] = set()
+
+    def conflicts(self, type_info: RegistryTypeInfo) -> bool:
+        # Type conflict if:
+        # - A user defined type with the same name, that is not marked as override already exists
+        return dataclasses.replace(type_info, user_defined=True, override=False) in self._type_infos
 
     def _update_annotation_namespace(
         self,
@@ -62,12 +83,12 @@ class StrawberryRegistry:
     def _register_type(
         self, type_name: str, strawberry_type: type[Any], graphql_type: GraphQLType, override: bool, user_defined: bool
     ) -> None:
-        self._update_annotation_namespace(strawberry_type, graphql_type)
-        if not user_defined or override:
-            self.namespace(graphql_type)[type_name] = strawberry_type
+        self.namespace(graphql_type)[type_name] = strawberry_type
         if override:
             for field in self._field_map[type_name]:
                 field.type = strawberry_type
+        self._update_annotation_namespace(strawberry_type, graphql_type)
+        self._type_infos.add(RegistryTypeInfo(type_name, graphql_type, user_defined, override))
 
     @classmethod
     def _inner_types(cls, typ: Any) -> tuple[Any, ...]:
@@ -86,14 +107,6 @@ class StrawberryRegistry:
             return (typ,)
         return tuple(cls._inner_types(t)[0] for t in get_args(typ))
 
-    @cached_property
-    def _geo_base_override(self) -> type[Any]:
-        class StrawberryGeoComparison:
-            contains_geometry: JSON | None = strawberry.UNSET
-            within_geometry: JSON | None = strawberry.UNSET
-
-        return StrawberryGeoComparison
-
     def namespace(self, graphql_type: GraphQLType) -> dict[str, type[Any]]:
         if graphql_type == "object":
             return self._strawberry_object_types
@@ -111,7 +124,7 @@ class StrawberryRegistry:
         override: bool = False,
         user_defined: bool = False,
     ) -> type[Any]:
-        type_name = name if name else type_.__name__
+        type_name = name or type_.__name__
 
         if has_object_definition(type_):
             return type_
@@ -145,7 +158,7 @@ class StrawberryRegistry:
         override: bool = False,
         user_defined: bool = False,
     ) -> type[StrawberryTypeFromPydantic[PydanticModel]]:
-        type_name = name if name else pydantic_type.__name__
+        type_name = name or pydantic_type.__name__
         strawberry_attr = "_strawberry_input_type" if graphql_type == "input" else "_strawberry_type"
 
         if existing := strawberry_type_from_pydantic(pydantic_type):
@@ -179,7 +192,7 @@ class StrawberryRegistry:
         description: str | None = None,
         directives: Iterable[object] = (),
     ) -> type[EnumT]:
-        type_name = name if name else f"{enum_type.__name__}Enum"
+        type_name = name or f"{enum_type.__name__}Enum"
         if existing := self._strawberry_enums.get(type_name):
             return cast(type[EnumT], existing)
         strawberry_enum_type = strawberry.enum(cls=enum_type, name=name, description=description, directives=directives)
@@ -196,7 +209,7 @@ class StrawberryRegistry:
                 graphql_type="input",
                 partial=True,
                 all_fields=False,
-                base=self._geo_base_override,
+                base=_StrawberryGeoComparison,
             )
 
         return self.register_pydantic(
@@ -222,3 +235,5 @@ class StrawberryRegistry:
         self._strawberry_input_types.clear()
         self._strawberry_interface_types.clear()
         self._strawberry_enums.clear()
+        self._field_map.clear()
+        self._type_infos.clear()

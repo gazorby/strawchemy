@@ -14,15 +14,23 @@ from typing import (
 from typing_extensions import dataclass_transform
 
 from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
-from strawberry.experimental.pydantic.utils import get_strawberry_type_from_model
 from strawberry.types.auto import StrawberryAuto
 from strawberry.types.field import StrawberryField
 from strawberry.types.object_type import _wrap_dataclass
 from strawberry.utils.typing import type_has_annotation
 from strawchemy.dto.backend.dataclass import DataclassDTOBackend
-from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend, PydanticDTOT
-from strawchemy.dto.base import DTOBackend, DTOBaseT, DTOFactory, DTOFieldDefinition, ModelFieldT, ModelT, Relation
+from strawchemy.dto.backend.pydantic import PydanticDTOBackend, PydanticDTOT
+from strawchemy.dto.base import (
+    DTOBackend,
+    DTOBaseT,
+    DTOFactory,
+    DTOFieldDefinition,
+    ModelFieldT,
+    ModelT,
+    Relation,
+)
 from strawchemy.dto.types import DTO_AUTO, DTOConfig, DTOMissingType, Purpose
+from strawchemy.dto.utils import config, read_all_partial_config
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graph import Node
 from strawchemy.graphql.dto import (
@@ -50,14 +58,16 @@ from strawchemy.graphql.factory import (
 from strawchemy.graphql.typing import DataclassGraphQLDTO, PydanticGraphQLDTO
 
 from ._instance import MapperModelInstance
-from ._registry import StrawberryRegistry
+from ._registry import RegistryTypeInfo, StrawberryRegistry
 from ._utils import pydantic_from_strawberry_type, strawberry_type_from_pydantic
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
-    from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
+    from strawberry.experimental.pydantic.conversion_types import (
+        StrawberryTypeFromPydantic,
+    )
     from strawchemy import Strawchemy
     from strawchemy.dto.types import ExcludeFields, IncludeFields
     from strawchemy.graph import Node
@@ -70,10 +80,10 @@ if TYPE_CHECKING:
 
 __all__ = (
     "StraberryAggregateFactory",
-    "StrawberryAggregateFilterFactory",
-    "StrawberryFilterFactory",
-    "StrawberryOrderByFactory",
-    "StrawberryPydanticFactory",
+    "StrawberryAggregateFilterInputFactory",
+    "StrawberryFilterInputFactory",
+    "StrawberryOrderByInputFactory",
+    "StrawberryPydanticInputFactory",
     "StrawberryTypeFactory",
 )
 
@@ -84,29 +94,28 @@ DataclassGraphQLDTOT = TypeVar("DataclassGraphQLDTOT", bound=DataclassGraphQLDTO
 
 class _StrawberryAggregationInspector(AggregationInspector[ModelT, ModelFieldT]):
     def __init__(
-        self, inspector: GraphQLInspectorProtocol[Any, ModelFieldT], type_registry: StrawberryRegistry | None = None
+        self,
+        inspector: GraphQLInspectorProtocol[Any, ModelFieldT],
+        type_registry: StrawberryRegistry | None = None,
     ) -> None:
         super().__init__(inspector)
         self._strawberry_registry = type_registry or StrawberryRegistry()
 
     @override
     def numeric_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
-        dto = super().numeric_field_type(model, dto_config)
-        if dto:
+        if dto := super().numeric_field_type(model, dto_config):
             return self._strawberry_registry.register_dataclass(dto, dto.__name__, "object")
         return dto
 
     @override
     def sum_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
-        dto = super().sum_field_type(model, dto_config)
-        if dto:
+        if dto := super().sum_field_type(model, dto_config):
             return self._strawberry_registry.register_dataclass(dto, dto.__name__, "object")
         return dto
 
     @override
     def min_max_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
-        dto = super().min_max_field_type(model, dto_config)
-        if dto:
+        if dto := super().min_max_field_type(model, dto_config):
             return self._strawberry_registry.register_dataclass(dto, dto.__name__, "object")
         return dto
 
@@ -114,8 +123,7 @@ class _StrawberryAggregationInspector(AggregationInspector[ModelT, ModelFieldT])
     def arguments_type(
         self, model: type[T], dto_config: DTOConfig, aggregation: AggregationType
     ) -> type[EnumDTO] | None:
-        dto = super().arguments_type(model, dto_config, aggregation)
-        if dto:
+        if dto := super().arguments_type(model, dto_config, aggregation):
             return self._strawberry_registry.register_enum(dto)
         return dto
 
@@ -168,7 +176,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         self._mapper.registry.register_pydantic(
             dto,
             all_fields=all_fields,
-            graphql_type=self._graphql_type(dto_config),
+            graphql_type=self.graphql_type(dto_config),
             partial=bool(dto_config.partial),
             description=description or dto.__strawchemy_description__,
             directives=directives,
@@ -190,7 +198,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
     ) -> type[DataclassGraphQLDTOT]:
         return self._mapper.registry.register_dataclass(
             dto,
-            graphql_type=self._graphql_type(dto_config),
+            graphql_type=self.graphql_type(dto_config),
             description=description or dto.__strawchemy_description__,
             directives=directives,
             name=dto.__name__,
@@ -209,29 +217,27 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
             raise StrawchemyError(msg)
 
     def _resolve_config(self, dto_config: DTOConfig, base: type[Any]) -> DTOConfig:
-        include: set[str] = set(dto_config.include) if dto_config.include != "all" else set()
-        include_all = dto_config.include == "all" or dto_config.exclude
-        annotation_overrides: dict[str, Any] = dto_config.annotation_overrides
+        config = dto_config.with_base_annotations(base)
         for name, annotation in get_type_hints(base, include_extras=True).items():
-            if not include_all:
-                include.add(name)
             if type_has_annotation(annotation, StrawberryAuto):
-                annotation_overrides[name] = DTO_AUTO
+                config.annotation_overrides[name] = DTO_AUTO
                 base.__annotations__.pop(name)
-            else:
-                annotation_overrides[name] = annotation
-        return dataclasses.replace(
-            dto_config, include="all" if include_all else include, annotation_overrides=annotation_overrides
-        )
+        return config
 
-    def _raise_if_name_registered(self, name: str, graphl_type: GraphQLType) -> None:
-        if name in self._mapper.registry.namespace(graphl_type):
-            msg = f"Type {name} is already registered."
+    def _raise_if_type_conflicts(self, name: str, dto_config: DTOConfig, user_defined: bool, override: bool) -> None:
+        if self._mapper.registry.conflicts(
+            RegistryTypeInfo(name, self.graphql_type(dto_config), user_defined, override)
+        ):
+            msg = (
+                f"""Type `{name}` cannot be auto generated because it's already explicitly declared."""
+                """ Either use `override=True` on the explicit type to use it everywhere,"""
+                f""" or use override `{name}` fields where needed."""
+            )
             raise StrawchemyError(msg)
 
     @classmethod
-    def _graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
-        return "input" if dto_config.purpose is Purpose.WRITE else "object"
+    def graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
+        raise NotImplementedError
 
     @override
     def factory(
@@ -252,17 +258,21 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         user_defined: bool = False,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
-        graphql_type = self._graphql_type(dto_config)
         type_name = name or self.generate_dto_name(model, dto_config, base)
         if base:
             self._check_model_instance_attribute(base)
             dto_config = self._resolve_config(dto_config, base)
-        if not override:
-            self._raise_if_name_registered(type_name, graphql_type)
-        if not override and (existing := self._mapper.registry.namespace(graphql_type).get(type_name)):
-            return existing
+        self._raise_if_type_conflicts(type_name, dto_config, user_defined, override)
         dto = super().factory(
-            model, dto_config, base, name, parent_field_def, current_node, raise_if_no_fields, backend_kwargs, **kwargs
+            model,
+            dto_config,
+            base,
+            name,
+            parent_field_def,
+            current_node,
+            raise_if_no_fields,
+            backend_kwargs,
+            **kwargs,
         )
         if register_type:
             if issubclass(dto, UnmappedPydanticGraphQLDTO):
@@ -297,6 +307,11 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
 
+    @classmethod
+    @override
+    def graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
+        return "input" if dto_config.purpose is Purpose.WRITE else "object"
+
     @dataclass_transform(order_default=True, kw_only_default=True)
     def type(
         self,
@@ -312,10 +327,11 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
         directives: Sequence[object] | None = (),
         query_hook: QueryHookCallable[T] | Sequence[QueryHookCallable[T]] | None = None,
         override: bool = False,
+        purpose: Purpose = Purpose.READ,
     ) -> Callable[[type[Any]], type[DataclassGraphQLDTOT]]:
         def wrapper(class_: type[Any]) -> type[DataclassGraphQLDTOT]:
-            config = self._config(
-                Purpose.READ,
+            dto_config = config(
+                purpose,
                 include=include,
                 exclude=exclude,
                 partial=partial,
@@ -325,7 +341,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
             )
             dto = self.factory(
                 model=model,
-                dto_config=config,
+                dto_config=dto_config,
                 base=class_,
                 name=name,
                 description=description,
@@ -353,10 +369,11 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
         description: str | None = None,
         directives: Sequence[object] | None = (),
         override: bool = False,
+        purpose: Purpose = Purpose.WRITE,
     ) -> Callable[[type[Any]], type[DataclassGraphQLDTOT]]:
         def wrapper(class_: type[Any]) -> type[DataclassGraphQLDTOT]:
-            config = self._config(
-                Purpose.WRITE,
+            dto_config = config(
+                purpose,
                 include=include,
                 exclude=exclude,
                 partial=partial,
@@ -366,7 +383,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
             )
             return self.factory(
                 model=model,
-                dto_config=config,
+                dto_config=dto_config,
                 base=class_,
                 name=name,
                 description=description,
@@ -378,7 +395,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
         return wrapper
 
 
-class StrawberryPydanticFactory(_StrawberryFactory[ModelT, ModelFieldT, PydanticDTOT]):
+class StrawberryPydanticInputFactory(_StrawberryFactory[ModelT, ModelFieldT, PydanticDTOT]):
     def __init__(
         self,
         mapper: Strawchemy[ModelT, ModelFieldT],
@@ -390,13 +407,18 @@ class StrawberryPydanticFactory(_StrawberryFactory[ModelT, ModelFieldT, Pydantic
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
         self._mapper = mapper
 
+    @classmethod
+    @override
+    def graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
+        return "input"
+
     @dataclass_transform(order_default=True, kw_only_default=True)
     def input(
         self,
         model: type[T],
         include: IncludeFields | None = None,
         exclude: ExcludeFields | None = None,
-        partial: bool = False,
+        partial: bool = True,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
         alias_generator: Callable[[str], str] | None = None,
@@ -404,20 +426,24 @@ class StrawberryPydanticFactory(_StrawberryFactory[ModelT, ModelFieldT, Pydantic
         description: str | None = None,
         directives: Sequence[object] | None = (),
         override: bool = False,
+        purpose: Purpose = Purpose.READ,
     ) -> Callable[[type[Any]], type[StrawberryTypeFromPydantic[PydanticDTOT]]]:
-        def wrapper(class_: type[Any]) -> type[StrawberryTypeFromPydantic[PydanticDTOT]]:
+        def wrapper(
+            class_: type[Any],
+        ) -> type[StrawberryTypeFromPydantic[PydanticDTOT]]:
+            dto_config = config(
+                purpose,
+                include=include,
+                exclude=exclude,
+                partial=partial,
+                type_map=type_map,
+                alias_generator=alias_generator,
+                aliases=aliases,
+            )
             return strawberry_type_from_pydantic(
                 self.factory(
                     model=model,
-                    dto_config=self._config(
-                        Purpose.WRITE,
-                        include=include,
-                        exclude=exclude,
-                        partial=partial,
-                        type_map=type_map,
-                        alias_generator=alias_generator,
-                        aliases=aliases,
-                    ),
+                    dto_config=dto_config,
                     base=class_,
                     name=name,
                     description=description,
@@ -426,45 +452,6 @@ class StrawberryPydanticFactory(_StrawberryFactory[ModelT, ModelFieldT, Pydantic
                     user_defined=True,
                 ),
                 strict=True,
-            )
-
-        return wrapper
-
-    @dataclass_transform(order_default=True, kw_only_default=True)
-    def type(
-        self,
-        model: type[T],
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool = False,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        override: bool = False,
-    ) -> Callable[[type[Any]], type[StrawberryTypeFromPydantic[MappedPydanticDTO[T]]]]:
-        def wrapper(class_: type[Any]) -> type[StrawberryTypeFromPydantic[MappedPydanticDTO[T]]]:
-            return get_strawberry_type_from_model(
-                self.factory(
-                    model=model,
-                    dto_config=self._config(
-                        Purpose.READ,
-                        include=include,
-                        exclude=exclude,
-                        partial=partial,
-                        type_map=type_map,
-                        alias_generator=alias_generator,
-                        aliases=aliases,
-                    ),
-                    base=class_,
-                    name=name,
-                    description=description,
-                    directives=directives,
-                    override=override,
-                    user_defined=True,
-                )
             )
 
         return wrapper
@@ -524,8 +511,8 @@ class StraberryAggregateFactory(
         )
 
 
-class StrawberryOrderByFactory(
-    StrawberryPydanticFactory[ModelT, ModelFieldT, OrderByDTO[Any, ModelFieldT]],
+class StrawberryOrderByInputFactory(
+    StrawberryPydanticInputFactory[ModelT, ModelFieldT, OrderByDTO[Any, ModelFieldT]],
     OrderByDTOFactory[ModelT, ModelFieldT],
 ):
     def __init__(
@@ -540,7 +527,7 @@ class StrawberryOrderByFactory(
             backend or PydanticDTOBackend(OrderByDTO),
             handle_cycles,
             type_map,
-            aggregation_filter_factory=StrawberryAggregateFilterFactory(
+            aggregation_filter_factory=StrawberryAggregateFilterInputFactory(
                 mapper, handle_cycles=handle_cycles, type_map=type_map
             ),
         )
@@ -566,7 +553,7 @@ class StrawberryOrderByFactory(
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
@@ -642,8 +629,8 @@ class StrawberryOrderByFactory(
         )
 
 
-class StrawberryAggregateFilterFactory(
-    StrawberryPydanticFactory[ModelT, ModelFieldT, AggregateFilterDTO[ModelT]],
+class StrawberryAggregateFilterInputFactory(
+    StrawberryPydanticInputFactory[ModelT, ModelFieldT, AggregateFilterDTO[Any]],
     AggregateFilterDTOFactory[ModelT, ModelFieldT],
 ):
     def __init__(
@@ -744,8 +731,7 @@ class StrawberryTypeFactory(
             aggregation_factory=StraberryAggregateFactory(mapper, handle_cycles=handle_cycles, type_map=type_map),
             **kwargs,
         )
-        self._order_by_factory = StrawberryOrderByFactory(mapper, handle_cycles=handle_cycles, type_map=type_map)
-        self._order_by_dto_config = DTOConfig(Purpose.WRITE, partial=True, include="all")
+        self._order_by_factory = StrawberryOrderByInputFactory(mapper, handle_cycles=handle_cycles, type_map=type_map)
 
     def _dataclass_merge(self, dto: type[MappedDataclassGraphQLDTO[Any]], base: type[Any] | None) -> type[Any]:
         base_dataclass_fields: dict[str, tuple[Any, dataclasses.Field[Any]]] = {}
@@ -757,7 +743,7 @@ class StrawberryTypeFactory(
                 type_annotation = list[Self if field.related_dto is dto else field.related_dto]
                 assert field.related_model
                 order_by = strawberry_type_from_pydantic(
-                    self._order_by_factory.factory(field.related_model, dto_config=self._order_by_dto_config),
+                    self._order_by_factory.factory(field.related_model, read_all_partial_config),
                     strict=True,
                 )
                 dc_field = self._mapper.field(order_by=order_by, root_field=False, graphql_type=type_annotation)
@@ -804,6 +790,7 @@ class StrawberryTypeFactory(
         description: str | None = None,
         directives: Sequence[object] | None = (),
         override: bool = False,
+        user_defined: bool = False,
         **kwargs: Any,
     ) -> type[MappedDataclassGraphQLDTO[Any]]:
         dto = super().factory(
@@ -826,11 +813,12 @@ class StrawberryTypeFactory(
             description=description,
             directives=directives,
             override=override,
+            user_defined=user_defined,
         )
 
 
-class StrawberryFilterFactory(
-    StrawberryPydanticFactory[ModelT, ModelFieldT, BooleanFilterDTO[Any, ModelFieldT]],
+class StrawberryFilterInputFactory(
+    StrawberryPydanticInputFactory[ModelT, ModelFieldT, BooleanFilterDTO[Any, ModelFieldT]],
     FilterDTOFactory[ModelT, ModelFieldT, BooleanFilterDTO[Any, ModelFieldT]],
 ):
     def __init__(
@@ -845,7 +833,7 @@ class StrawberryFilterFactory(
             backend=backend or PydanticDTOBackend(BooleanFilterDTO),
             handle_cycles=handle_cycles,
             type_map=type_map,
-            aggregation_filter_factory=StrawberryAggregateFilterFactory(
+            aggregation_filter_factory=StrawberryAggregateFilterInputFactory(
                 mapper, handle_cycles=handle_cycles, type_map=type_map
             ),
         )
@@ -854,7 +842,7 @@ class StrawberryFilterFactory(
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
