@@ -13,23 +13,49 @@ It exports the following:
 from __future__ import annotations
 
 from types import UnionType
-from typing import Any, Literal, Optional, Union, get_args, get_origin
+from typing import TYPE_CHECKING, Any, Optional, Union, get_args, get_origin
 
 from .constants import DTO_INFO_KEY
-from .types import DTOConfig, DTOFieldConfig, Purpose, PurposeConfig
+from .types import DTOConfig, DTOFieldConfig, ExcludeFields, IncludeFields, Purpose, PurposeConfig
 
-__all__ = ("config", "field", "is_type_hint_optional")
+if TYPE_CHECKING:
+    from collections.abc import Callable, Mapping
+
+__all__ = (
+    "config",
+    "field",
+    "is_type_hint_optional",
+    "read_all_config",
+    "read_all_partial_config",
+    "write_all_config",
+    "write_all_partial_config",
+)
+
+read_all_config = DTOConfig(Purpose.READ, include="all")
+read_all_partial_config = DTOConfig(Purpose.READ, include="all", partial=True)
+write_all_config = DTOConfig(Purpose.WRITE, include="all")
+write_all_partial_config = DTOConfig(Purpose.WRITE, include="all", partial=True)
 
 
 def config(
     purpose: Purpose,
-    exclude: set[str] | None = None,
-    include: set[str] | Literal["all"] | None = None,
-    partial: bool | None = None,
+    include: IncludeFields | None = None,
+    exclude: ExcludeFields | None = None,
+    partial: bool = False,
+    type_map: Mapping[Any, Any] | None = None,
+    aliases: Mapping[str, str] | None = None,
+    alias_generator: Callable[[str], str] | None = None,
 ) -> DTOConfig:
-    exclude = set() if exclude is None else exclude
-    include = set() if include is None else include
-    return DTOConfig(purpose=Purpose(purpose), include=include, exclude=exclude, partial=partial)
+    config = DTOConfig(purpose, partial=partial, alias_generator=alias_generator)
+    if exclude:
+        config.exclude = exclude
+    if include:
+        config.include = include
+    if type_map:
+        config.type_overrides = type_map
+    if aliases:
+        config.aliases = aliases
+    return config
 
 
 def field(
