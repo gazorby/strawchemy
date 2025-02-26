@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from uuid import UUID, uuid4
 
+from strawchemy import dto
+
 from sqlalchemy import VARCHAR, ForeignKey, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -16,6 +18,7 @@ class UUIDBase(DeclarativeBase):
     __abstract__ = True
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    private: Mapped[str] = mapped_column(info=dto.field(purposes=set()))
 
 
 class NameDescriptionMixin(DeclarativeBase):
@@ -47,8 +50,8 @@ class Fruit(UUIDBase):
         return self.name.lower()
 
 
-class TomatoWithRequiredPicture(UUIDBase):
-    __tablename__ = "tomato_with_required_picture"
+class Tomato(UUIDBase):
+    __tablename__ = "tomato"
 
     name: Mapped[str]
 
@@ -107,9 +110,10 @@ try:
 
     geoalchemy_imported = True
 
-    class GeosFieldsModel(UUIDBase):
+    class GeoModel(UUIDBase):
         __tablename__ = "geos_fields"
 
+        point_required: Mapped[WKBElement] = mapped_column(Geometry("POINT"))
         point: Mapped[WKBElement | None] = mapped_column(Geometry("POINT"), nullable=True)
         line_string: Mapped[WKBElement | None] = mapped_column(Geometry("LINESTRING"), nullable=True)
         polygon: Mapped[WKBElement | None] = mapped_column(Geometry("POLYGON"), nullable=True)
