@@ -294,7 +294,10 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
             if self.filter:
                 arguments.append(
                     StrawberryArgument(
-                        FILTER_KEY, None, type_annotation=StrawberryAnnotation(self.filter | None), default=None
+                        python_name="filter_input",
+                        graphql_name=FILTER_KEY,
+                        type_annotation=StrawberryAnnotation(self.filter | None),
+                        default=None,
                     )
                 )
             if self.order_by:
