@@ -32,13 +32,15 @@ from .types import (
     DTOConfig,
     DTOFieldConfig,
     DTOMissingType,
+    ExcludeFields,
+    IncludeFields,
     Purpose,
     PurposeConfig,
 )
 from .utils import config, is_type_hint_optional
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Hashable, Iterable
+    from collections.abc import Callable, Generator, Hashable, Iterable, Mapping
     from typing import Any
 
 
@@ -586,12 +588,29 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         return dto
 
     def decorator(
-        self, model: type[T], dto_config: DTOConfig | Purpose, **kwargs: Any
+        self,
+        model: type[T],
+        purpose: Purpose,
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool = False,
+        type_map: Mapping[Any, Any] | None = None,
+        aliases: Mapping[str, str] | None = None,
+        alias_generator: Callable[[str], str] | None = None,
+        **kwargs: Any,
     ) -> Callable[[type[Any]], type[DTOBaseT]]:
         def wrapper(class_: type[Any]) -> type[DTOBaseT]:
             return self.factory(
                 model=model,
-                dto_config=config(dto_config) if isinstance(dto_config, Purpose) else dto_config,
+                dto_config=config(
+                    purpose=purpose,
+                    include=include,
+                    exclude=exclude,
+                    partial=partial,
+                    type_map=type_map,
+                    aliases=aliases,
+                    alias_generator=alias_generator,
+                ),
                 base=class_,
                 name=class_.__name__,
                 **kwargs,
