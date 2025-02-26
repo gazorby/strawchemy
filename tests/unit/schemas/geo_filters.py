@@ -1,0 +1,21 @@
+from __future__ import annotations
+
+from strawchemy.mapper import Strawchemy
+
+import strawberry
+from tests.models import GeoModel
+
+strawchemy = Strawchemy()
+
+
+@strawchemy.type(GeoModel, include="all")
+class GeosFieldsType: ...
+
+
+@strawchemy.filter_input(GeoModel, include="all")
+class GeosFieldsFilter: ...
+
+
+@strawberry.type
+class Query:
+    geo: GeosFieldsType = strawchemy.field(filter_input=GeosFieldsFilter)
