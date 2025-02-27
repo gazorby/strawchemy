@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from dataclasses import asdict
 from uuid import UUID
 
-from strawchemy.dto.types import DTOConfig, Purpose
-from strawchemy.dto.utils import config
+from strawchemy.dto.constants import DTO_INFO_KEY
+from strawchemy.dto.types import DTOConfig, DTOFieldConfig, Purpose, PurposeConfig
+from strawchemy.dto.utils import config, field
 
 from tests.models import Tomato
 from tests.typing import MappedDataclassFactory
@@ -40,4 +42,23 @@ def test_base_annotations_exclude_override(sqlalchemy_dataclass_factory: MappedD
 
 
 def test_default_config() -> None:
+    assert asdict(DTOConfig(Purpose.READ)) == {
+        "purpose": Purpose.READ,
+        "include": set(),
+        "exclude": set(),
+        "partial": None,
+        "type_overrides": {},
+        "annotation_overrides": {},
+        "aliases": {},
+        "alias_generator": None,
+    }
+
+
+def test_config_function_produces_same_default() -> None:
     assert config(Purpose.READ) == DTOConfig(Purpose.READ)
+
+
+def test_default_field_config() -> None:
+    assert field()[DTO_INFO_KEY] == DTOFieldConfig(
+        purposes={Purpose.READ, Purpose.WRITE}, configs={}, default_config=PurposeConfig()
+    )
