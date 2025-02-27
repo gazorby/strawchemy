@@ -593,7 +593,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         purpose: Purpose,
         include: IncludeFields | None = None,
         exclude: ExcludeFields | None = None,
-        partial: bool = False,
+        partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
         alias_generator: Callable[[str], str] | None = None,

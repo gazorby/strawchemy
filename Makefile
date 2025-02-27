@@ -120,7 +120,7 @@ clean:                                              ## Cleanup temporary build a
 .PHONY: test
 test:                                              ## Run the tests
 	@echo "${INFO} Running test cases... 🧪"
-	@uv run nox -r -t tests
+	@uv run nox -r -t tests -- --cov-report=term-missing:skip-covered -n=auto
 	@echo "${OK} Tests passed ✨"
 
 .PHONY: coverage

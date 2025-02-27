@@ -3,6 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from strawchemy.dto.types import DTOConfig, Purpose
+from strawchemy.dto.utils import config
 
 from tests.models import Tomato
 from tests.typing import MappedDataclassFactory
@@ -36,3 +37,7 @@ def test_base_annotations_exclude_override(sqlalchemy_dataclass_factory: MappedD
     dto = sqlalchemy_dataclass_factory.factory(Tomato, config)
 
     assert dto.__annotations__ == {"name": str, "id": UUID}
+
+
+def test_default_config() -> None:
+    assert config(Purpose.READ) == DTOConfig(Purpose.READ)

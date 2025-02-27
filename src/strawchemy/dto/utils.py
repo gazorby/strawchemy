@@ -39,12 +39,12 @@ def config(
     purpose: Purpose,
     include: IncludeFields | None = None,
     exclude: ExcludeFields | None = None,
-    partial: bool = False,
+    partial: bool | None = None,
     type_map: Mapping[Any, Any] | None = None,
     aliases: Mapping[str, str] | None = None,
     alias_generator: Callable[[str], str] | None = None,
 ) -> DTOConfig:
-    config = DTOConfig(purpose, partial=partial, alias_generator=alias_generator)
+    config = DTOConfig(purpose, alias_generator=alias_generator)
     if exclude:
         config.exclude = exclude
     if include:
@@ -53,6 +53,8 @@ def config(
         config.type_overrides = type_map
     if aliases:
         config.aliases = aliases
+    if partial is not None:
+        config.partial = partial
     return config
 
 

@@ -62,7 +62,7 @@ class PurposeConfig:
     validator: Callable[[Any], Any] | None = None
     """Single argument callables that are defined on the DTO as validators for the field."""
     alias: str | None = None
-    """Customize name of generated pydantic field."""
+    """Customize name of generated DTO field."""
     partial: bool | None = None
 
 
