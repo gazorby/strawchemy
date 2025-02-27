@@ -55,20 +55,18 @@ repos:
 
   - repo: local
     hooks:
-      - id: vulture
-        name: vulture
-        entry: nox -rs vulture --
+      - id: pyright
+        name: pyright
+        entry: uv run pyright
         language: python
         types: [python]
         require_serial: true
-        additional_dependencies: [nox]
 
   - repo: local
     hooks:
-      - id: lint
-        name: lint
-        entry: nox -r -t lint --
+      - id: vulture
+        name: vulture
+        entry: uv run vulture
         language: python
         types: [python]
         require_serial: true
-        additional_dependencies: [nox]

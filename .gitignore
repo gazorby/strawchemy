@@ -50,6 +50,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+junit.xml
 
 # Translations
 *.mo
@@ -176,3 +177,6 @@ cython_debug/
 .unasyncd_cache/
 
 .vscode/launch.json
+
+# Mise
+mise.local.toml
