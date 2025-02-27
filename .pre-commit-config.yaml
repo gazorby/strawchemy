@@ -48,7 +48,8 @@ repos:
     rev: v0.9.6
     hooks:
       - id: ruff
-        args: [--config=./pyproject.toml, --fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi]
+        args: [--fix]
       - id: ruff-format
         types_or: [python, pyi]
 
@@ -57,6 +58,16 @@ repos:
       - id: vulture
         name: vulture
         entry: nox -rs vulture --
+        language: python
+        types: [python]
+        require_serial: true
+        additional_dependencies: [nox]
+
+  - repo: local
+    hooks:
+      - id: lint
+        name: lint
+        entry: nox -r -t lint --
         language: python
         types: [python]
         require_serial: true

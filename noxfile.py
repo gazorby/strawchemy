@@ -8,7 +8,8 @@ import nox
 if TYPE_CHECKING:
     from nox import Session
 
-PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12", "3.13"]
+DEFAULT_PYTHON_VERSION = "3.13"
+SUPPORED_PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 PYRIGHT_PYTHON_PYLANCE_VERSION: Literal["latest-release", "latest-prerelease"] = "latest-release"
 PYRIGHT_PYTHON_FORCE_VERSION: str | None = None
 COMMON_PYTEST_OPTIONS = ["--cov=src", "--cov-append", "--cov-report=xml", "-n=2", "--showlocals"]
@@ -20,7 +21,7 @@ nox.options.error_on_external_run = True
 nox.options.default_venv_backend = "uv"
 
 
-@nox.session(name="unit", python=PYTHON_VERSIONS, tags=["tests"])
+@nox.session(name="unit", python=SUPPORED_PYTHON_VERSIONS, tags=["tests"])
 def unit_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     session.run_install(
@@ -34,7 +35,7 @@ def unit_tests(session: Session) -> None:
     session.run("pytest", *COMMON_PYTEST_OPTIONS, "-vv", *test_files)
 
 
-@nox.session(name="pyright", python=PYTHON_VERSIONS, tags=["lint"])
+@nox.session(name="pyright", python=DEFAULT_PYTHON_VERSION, tags=["lint"])
 def pyright(session: Session) -> None:
     session.run_install(
         "uv",
@@ -50,7 +51,7 @@ def pyright(session: Session) -> None:
     session.run("pyright", *session.posargs, external=True, env=env)
 
 
-@nox.session(name="vulture", python=PYTHON_VERSIONS, tags=["lint"])
+@nox.session(name="vulture", python=DEFAULT_PYTHON_VERSION, tags=["lint"])
 def vulture(session: Session) -> None:
     session.run_install(
         "uv",
