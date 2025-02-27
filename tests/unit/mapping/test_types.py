@@ -159,12 +159,12 @@ def test_all_fields() -> None:
     }
 
     type FruitMinMaxFields {
-      name: String!
-      sweetness: Int!
+      name: String
+      sweetness: Int
     }
 
     type FruitNumericFields {
-      sweetness: Int!
+      sweetness: Int
     }
 
     """Ordering options"""
@@ -178,8 +178,8 @@ def test_all_fields() -> None:
     }
 
     type FruitSumFields {
-      name: String!
-      sweetness: Int!
+      name: String
+      sweetness: Int
     }
 
     """GraphQL type"""
@@ -290,12 +290,12 @@ def test_all_fields_override() -> None:
     }
 
     type FruitMinMaxFields {
-      name: String!
-      sweetness: Int!
+      name: String
+      sweetness: Int
     }
 
     type FruitNumericFields {
-      sweetness: Int!
+      sweetness: Int
     }
 
     """Ordering options"""
@@ -309,8 +309,8 @@ def test_all_fields_override() -> None:
     }
 
     type FruitSumFields {
-      name: String!
-      sweetness: Int!
+      name: String
+      sweetness: Int
     }
 
     """GraphQL type"""
@@ -557,11 +557,11 @@ def test_can_override_type_with_exclude() -> None:
     }
 
     type FruitMinMaxFields {
-      sweetness: Int!
+      sweetness: Int
     }
 
     type FruitNumericFields {
-      sweetness: Int!
+      sweetness: Int
     }
 
     """Ordering options"""
@@ -575,7 +575,7 @@ def test_can_override_type_with_exclude() -> None:
     }
 
     type FruitSumFields {
-      sweetness: Int!
+      sweetness: Int
     }
 
     """GraphQL type"""
@@ -684,11 +684,11 @@ def test_can_override_fields_with_exclude() -> None:
     }
 
     type FruitMinMaxFields {
-      sweetness: Int!
+      sweetness: Int
     }
 
     type FruitNumericFields {
-      sweetness: Int!
+      sweetness: Int
     }
 
     """Ordering options"""
@@ -702,7 +702,7 @@ def test_can_override_fields_with_exclude() -> None:
     }
 
     type FruitSumFields {
-      sweetness: Int!
+      sweetness: Int
     }
 
     """GraphQL type"""
@@ -764,17 +764,17 @@ def test_type_override() -> None:
     }
 
     type FruitMinMaxFields {
-      name: String!
-      sweetness: Int!
+      name: String
+      sweetness: Int
     }
 
     type FruitNumericFields {
-      sweetness: Int!
+      sweetness: Int
     }
 
     type FruitSumFields {
-      name: String!
-      sweetness: Int!
+      name: String
+      sweetness: Int
     }
 
     """GraphQL type"""

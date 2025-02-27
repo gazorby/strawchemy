@@ -445,7 +445,7 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
         sum_fields = self.sum_field_type(model, dto_config)
 
         aggregations: list[OutputFunctionInfo] = [
-            OutputFunctionInfo(function="count", require_arguments=False, output_type=int)
+            OutputFunctionInfo(function="count", require_arguments=False, output_type=int, default=0)
         ]
 
         if sum_fields:
@@ -771,7 +771,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
         )
         field_map[key + nodes.name] = nodes
         field_map[key + aggregations_field.name] = aggregations_field
-        yield from (field for field in (nodes, aggregations_field))
+        yield from iter((nodes, aggregations_field))
 
     @override
     def factory(
@@ -982,6 +982,7 @@ class AggregateDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, AggregateDTOT]
     ) -> type[AggregateDTOT]:
         field_map = field_map if field_map is not None else {}
         model_field = parent_field_def.model_field if parent_field_def else None
+        as_partial_config = dataclasses.replace(dto_config, partial=True)
         field_definitions: list[FunctionFieldDefinition[T, ModelFieldT]] = [
             FunctionFieldDefinition[T, ModelFieldT](
                 dto_config=dto_config,
@@ -992,7 +993,7 @@ class AggregateDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, AggregateDTOT]
                 _function=aggregation,
                 default=aggregation.default,
             )
-            for aggregation in self._aggregation_builder.output_functions(model, dto_config)
+            for aggregation in self._aggregation_builder.output_functions(model, as_partial_config)
         ]
 
         root_key = DTOKey.from_dto_node(node)
