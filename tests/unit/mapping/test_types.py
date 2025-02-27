@@ -120,7 +120,7 @@ def test_all_fields() -> None:
 
     """Aggregation fields"""
     type FruitAggregate {
-      count: Int!
+      count: Int
       sum: FruitSumFields!
       min: FruitMinMaxFields!
       max: FruitMinMaxFields!
@@ -251,7 +251,7 @@ def test_all_fields_override() -> None:
 
     """Aggregation fields"""
     type FruitAggregate {
-      count: Int!
+      count: Int
       sum: FruitSumFields!
       min: FruitMinMaxFields!
       max: FruitMinMaxFields!
@@ -518,7 +518,7 @@ def test_can_override_type_with_exclude() -> None:
 
     """Aggregation fields"""
     type FruitAggregate {
-      count: Int!
+      count: Int
       sum: FruitSumFields!
       min: FruitMinMaxFields!
       max: FruitMinMaxFields!
@@ -645,7 +645,7 @@ def test_can_override_fields_with_exclude() -> None:
 
     """Aggregation fields"""
     type FruitAggregate {
-      count: Int!
+      count: Int
       sum: FruitSumFields!
       min: FruitMinMaxFields!
       max: FruitMinMaxFields!
@@ -750,7 +750,7 @@ def test_type_override() -> None:
 
     """Aggregation fields"""
     type FruitAggregate {
-      count: Int!
+      count: Int
       sum: FruitSumFields!
       min: FruitMinMaxFields!
       max: FruitMinMaxFields!

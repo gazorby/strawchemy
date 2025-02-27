@@ -187,7 +187,7 @@ class RelationFilterDTO(BaseModel, Generic[OrderByDTOT]):
 @dataclass
 class OutputFunctionInfo:
     function: AggregationFunction
-    output_type: type[Any]
+    output_type: Any
     require_arguments: bool = True
     default: Any = DTO_MISSING
 

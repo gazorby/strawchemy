@@ -445,7 +445,9 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
         sum_fields = self.sum_field_type(model, dto_config)
 
         aggregations: list[OutputFunctionInfo] = [
-            OutputFunctionInfo(function="count", require_arguments=False, output_type=int, default=0)
+            OutputFunctionInfo(
+                function="count", require_arguments=False, output_type=int | None if dto_config.partial else int
+            )
         ]
 
         if sum_fields:
