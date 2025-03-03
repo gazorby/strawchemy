@@ -2,6 +2,57 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0](https://github.com/gazorby/strawchemy/compare/v0.3.0..v0.4.0) - 2025-03-03
+
+### 🚀 Features
+
+- *(config)* Add default pagination limit setting - ([808670c](https://github.com/gazorby/strawchemy/commit/808670ccdc7540c6830fd3e3ba13e86c6455079a))
+- *(config)* Enable custom id field name - ([8f05899](https://github.com/gazorby/strawchemy/commit/8f0589949238a021d8f967149e5a5d14f0a7199a))
+- *(dto)* Add READ_ONLY, WRITE_ONLY and PRIVATE shortcuts - ([5da8660](https://github.com/gazorby/strawchemy/commit/5da86608de2a5336ccfb3a5a9eba85769872dd6a))
+- *(dto-config)* Add method to infer include/exclude from base class - ([0ddb6bd](https://github.com/gazorby/strawchemy/commit/0ddb6bd2f8f7e577d54c4529d242bafb6ad2ba8d))
+- *(mapping)* Enable custom defaults for child pagination - ([ed00372](https://github.com/gazorby/strawchemy/commit/ed00372d49f9b0d8b45fe62802a52e3446fd2352))
+- Add pagination switch and defaults - ([c111cc5](https://github.com/gazorby/strawchemy/commit/c111cc58279229c1f47f73af593945b8f5451723))
+
+### 🐛 Bug Fixes
+
+- *(dto)* Partial default value on several places - ([d3d18e8](https://github.com/gazorby/strawchemy/commit/d3d18e85d079e813fdeea29f1d0cf1ecff40fb05))
+- *(dto-factory)* Caching fixes - ([4c1d345](https://github.com/gazorby/strawchemy/commit/4c1d34533eb09aef7ec2a471a7f3c9e969e27c1e))
+- *(root-aggregations)* Ensure aggregations are optional - ([a9be792](https://github.com/gazorby/strawchemy/commit/a9be7927ca5cef8c23e0b9e47c659139906f3e67))
+- *(root-aggregations)* Set count as optional - ([0bada8b](https://github.com/gazorby/strawchemy/commit/0bada8b7028d236755da78527cf33d4b47c0aa96))
+- *(sqlalchemy-inspector)* Mapped classes map not updated - ([6667447](https://github.com/gazorby/strawchemy/commit/66674477a8c222aa40ff38e400149983b72b3026))
+- *(strawchemy-field)* Python name for filter input - ([73cca8b](https://github.com/gazorby/strawchemy/commit/73cca8bba6197a2325a1530bf2363e132b009f6b))
+- Forgot some partial default updates - ([4df92dd](https://github.com/gazorby/strawchemy/commit/4df92dd621ca6cc0b84d9ef3da4271267cc452b3))
+
+### 🚜 Refactor
+
+- *(dto)* Expose factory instance in pydantic_sqlalchemy.py - ([d4b1793](https://github.com/gazorby/strawchemy/commit/d4b1793bd71ad7abee3d35619508953e1efc355e))
+- *(dto)* Add shortcut utilities - ([a3b3a53](https://github.com/gazorby/strawchemy/commit/a3b3a53ffb201df8dbba250b0440daaed460db79))
+- *(dto)* Streamline arguments of factory decorator method - ([33557b1](https://github.com/gazorby/strawchemy/commit/33557b1abf5a014a8948cc11ce93412c95580be4))
+- *(mapping)* Child options - ([e2277ab](https://github.com/gazorby/strawchemy/commit/e2277ab742041429181be152ffca9f3f20337cea))
+- *(pre-commit)* Update config - ([a08c121](https://github.com/gazorby/strawchemy/commit/a08c1216fa065bad1959998d5fdfd433e9e37d00))
+- Wip - ([9817a95](https://github.com/gazorby/strawchemy/commit/9817a9574e05cadea46f5bcf1f1ff8d075579758))
+
+### 🧪 Testing
+
+- *(dto)* Add some config tests - ([b8424ee](https://github.com/gazorby/strawchemy/commit/b8424ee1ce08c1992b9e1e895fe0d63b078cb5e7))
+- *(test_types.py)* Move to unit/mapping - ([6e19a22](https://github.com/gazorby/strawchemy/commit/6e19a227e6ebe4908b5fcefda8092585328f295f))
+- *(unit)* Add test for model field config - ([0a00581](https://github.com/gazorby/strawchemy/commit/0a00581364bd7078c4b5dd2334305f287e2346fe))
+- *(unit)* Add missing fixtures - ([cd0face](https://github.com/gazorby/strawchemy/commit/cd0face5427ec6f1d7bb2e16b8a981c54f43bbf7))
+- *(unit)* Add geo graphql schemas - ([f0bd5bd](https://github.com/gazorby/strawchemy/commit/f0bd5bd4cb0d80611ad4aeb590f314329137deec))
+- *(unit)* Update models - ([0aebc62](https://github.com/gazorby/strawchemy/commit/0aebc624d9f9224c039f858ad5e4cef2069f7690))
+- *(unit)* Model config tests - ([c5cd73c](https://github.com/gazorby/strawchemy/commit/c5cd73c3ee64946460f529393ba44c65663d2a01))
+- *(unit)* Switch to snapshot testing - ([31ff808](https://github.com/gazorby/strawchemy/commit/31ff808c98c83b818b4c35522c934bd9445cb2b9))
+- *(unit)* Use one snapshot file per test - ([7bd9357](https://github.com/gazorby/strawchemy/commit/7bd93577866f65afe6103128cf2c19f476158248))
+- *(vscode)* Set pytestEnabled setting - ([9d1cb8a](https://github.com/gazorby/strawchemy/commit/9d1cb8a8fe96b31b64b56b677f2ba7be1e838805))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(lint)* Add sourcery config - ([0ee4bde](https://github.com/gazorby/strawchemy/commit/0ee4bde598781611c9cae9aa135ce3197bd1e76b))
+- *(lint)* Execute lint sessions on a single default python version - ([60ac239](https://github.com/gazorby/strawchemy/commit/60ac239cb5d59c683f1a03ec240b6a83ba61503f))
+- *(mise)* Add auto-bump task - ([545f3c4](https://github.com/gazorby/strawchemy/commit/545f3c434138413b873ec8c3224fc71fcc4d98dc))
+- *(release)* Bump to v0.4.0 - ([ebdbd58](https://github.com/gazorby/strawchemy/commit/ebdbd5877c78642bdaa11786d19eaf30fb41431a))
+- *(test)* Fix array membership test - ([25e5672](https://github.com/gazorby/strawchemy/commit/25e567299d5dfdcda2e9cc97087d4c104fa4e0de))
+- *(tests)* Upload coverage artifacts - ([bc72252](https://github.com/gazorby/strawchemy/commit/bc72252c1453a015f60f70d7facf57fd3fc7c3d6))
 ## [0.3.0](https://github.com/gazorby/strawchemy/compare/v0.2.12..v0.3.0) - 2025-02-21
 
 ### 🚀 Features
