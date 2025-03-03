@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from .sqlalchemy.typing import QueryHookCallable
     from .strawberry.repository import StrawchemyAsyncRepository, StrawchemySyncRepository
     from .strawberry.typing import FilterStatementCallable
+    from .types import DefaultOffsetPagination
 
 
 T = TypeVar("T")
@@ -83,6 +84,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         filter_input: type[Any] | None = None,
         order_by: type[Any] | None = None,
         distinct_on: type[EnumDTO] | None = None,
+        pagination: bool | DefaultOffsetPagination = False,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
         execution_options: dict[str, Any] | None = None,
@@ -108,6 +110,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         filter_input: type[Any] | None = None,
         order_by: type[Any] | None = None,
         distinct_on: type[EnumDTO] | None = None,
+        pagination: bool | DefaultOffsetPagination = False,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
         execution_options: dict[str, Any] | None = None,
@@ -133,6 +136,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         filter_input: type[Any] | None = None,
         order_by: type[Any] | None = None,
         distinct_on: type[EnumDTO] | None = None,
+        pagination: bool | DefaultOffsetPagination = False,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
         execution_options: dict[str, Any] | None = None,
@@ -164,6 +168,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
             inspector=self.inspector,
             filter_type=filter_input,
             order_by=order_by,
+            pagination=pagination,
             distinct_on=distinct_on,
             root_aggregations=root_aggregations,
             auto_snake_case=self.settings.auto_snake_case,

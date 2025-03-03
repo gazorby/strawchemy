@@ -45,9 +45,8 @@ dev = [
     { include-group = "test" },
     { include-group = "lint" },
     { include-group = "doc" },
+
 ]
-lint = ["pyright", "ruff", "vulture"]
-doc = ["git-cliff>=2.6.1"]
 test = [
     "nox[uv]",
     "pytest",
@@ -55,7 +54,10 @@ test = [
     "pytest-asyncio>=0.24",
     "pytest-pretty",
     "pytest-xdist",
+    "syrupy"
 ]
+lint = ["pyright", "ruff", "vulture"]
+doc = ["git-cliff>=2.6.1"]
 
 [tool.bumpversion]
 allow_dirty = true
@@ -339,3 +341,9 @@ sort_commits = "oldest"
 owner = "gazorby"
 repo = "strawchemy"
 token = ""
+
+[tool.vulture]
+min_confidence = 100
+paths = ["src"]
+sort_by_size = true
+exclude = ["tests/fixtures.py"]

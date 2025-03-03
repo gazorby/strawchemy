@@ -29,6 +29,7 @@ from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.dto.utils import is_type_hint_optional
 from strawchemy.graphql.constants import DISTINCT_ON_KEY, FILTER_KEY, LIMIT_KEY, NODES_KEY, OFFSET_KEY, ORDER_BY_KEY
 from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+from strawchemy.types import DefaultOffsetPagination
 
 from ._utils import dto_model_from_type, strawberry_inner_type
 from .repository import StrawchemyAsyncRepository, StrawchemySyncRepository
@@ -88,6 +89,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         filter_type: type[StrawberryTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
         order_by: type[StrawberryTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
         distinct_on: type[EnumDTO] | None = None,
+        pagination: bool | DefaultOffsetPagination = False,
         root_aggregations: bool = False,
         auto_snake_case: bool = True,
         registry_namespace: dict[str, Any] | None = None,
@@ -121,6 +123,9 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         self.order_by = order_by
         self.distinct_on = distinct_on
         self.query_hook = query_hook
+        self.pagination: DefaultOffsetPagination | Literal[False] = (
+            DefaultOffsetPagination() if pagination is True else pagination
+        )
 
         self._description = description
         self._session_getter = session_getter
@@ -236,6 +241,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
             filter_type=self.filter,
             order_by=self.order_by,
             distinct_on=self.distinct_on,
+            pagination=self.pagination,
             registry_namespace=self.registry_namespace,
             execution_options=self._execution_options,
         )
@@ -283,14 +289,23 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         if self.base_resolver:
             return super().arguments
         if self.is_list:
-            arguments.extend(
-                [
-                    StrawberryArgument(LIMIT_KEY, None, type_annotation=StrawberryAnnotation(int | None), default=None),
-                    StrawberryArgument(
-                        OFFSET_KEY, None, type_annotation=StrawberryAnnotation(int | None), default=None
-                    ),
-                ]
-            )
+            if self.pagination:
+                arguments.extend(
+                    [
+                        StrawberryArgument(
+                            LIMIT_KEY,
+                            None,
+                            type_annotation=StrawberryAnnotation(int | None),
+                            default=self.pagination.limit,
+                        ),
+                        StrawberryArgument(
+                            OFFSET_KEY,
+                            None,
+                            type_annotation=StrawberryAnnotation(int),
+                            default=self.pagination.offset,
+                        ),
+                    ]
+                )
             if self.filter:
                 arguments.append(
                     StrawberryArgument(

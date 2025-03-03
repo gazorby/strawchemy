@@ -1085,6 +1085,7 @@ dev = [
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
     { name = "ruff" },
+    { name = "syrupy" },
     { name = "vulture" },
 ]
 doc = [
@@ -1102,6 +1103,7 @@ test = [
     { name = "pytest-cov" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
+    { name = "syrupy" },
 ]
 
 [package.metadata]
@@ -1132,6 +1134,7 @@ dev = [
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
     { name = "ruff" },
+    { name = "syrupy" },
     { name = "vulture" },
 ]
 doc = [{ name = "git-cliff", specifier = ">=2.6.1" }]
@@ -1147,6 +1150,19 @@ test = [
     { name = "pytest-cov" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
+    { name = "syrupy" },
+]
+
+[[package]]
+name = "syrupy"
+version = "4.8.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/09/9b/288dd69ba9a32a22da873fe8a56fcbdc7f432ce9a29df65432ab3708ad40/syrupy-4.8.2.tar.gz", hash = "sha256:8418748be9cc050bf156d2e6c551dbc1768d591d36652e945a52ab3b0303a899", size = 50413 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/10/36/e42eae0bb6bcb34287e8b978b7f9d539423f8976eee1a69d47f3aef26621/syrupy-4.8.2-py3-none-any.whl", hash = "sha256:1fee874d422cfb1342aa746a65936d6500178beeb6fe26cb3a970c626fbe6058", size = 50476 },
 ]
 
 [[package]]

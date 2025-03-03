@@ -29,7 +29,7 @@ jobs:
           concurrent_skipping: "never"
           skip_after_successful_duplicate: "true"
           paths_ignore: '["**/**.md", "**/.vscode/**", "**/.dockerignore", "Makefile"]'
-          paths: '["src/**"]'
+          paths: '["src/**", "tests/**", "uv.lock", "pyproject.toml", ".github/workflows/ci.yaml", "noxfile.py"]'
 
   generate-jobs-tests:
     name: 💻 Generate test matrix
@@ -98,9 +98,6 @@ jobs:
             ${{ runner.os }}-nox-${{ matrix.session.session }}-
             ${{ runner.os }}-nox-
 
-      - name: Install coverage
-        run: pipx install coverage[toml]
-
       - name: Setup uv
         id: setup-uv
         uses: astral-sh/setup-uv@v5
@@ -108,9 +105,11 @@ jobs:
           enable-cache: true
           cache-suffix: ${{ runner.os }}-${{ matrix.session.session }}
 
-      - run: nox -r -t tests -s "${{ matrix.session.session }}" -- --junitxml=./junit.xml
+      - name: Run tests
+        run: nox -r -t tests -s "${{ matrix.session.session }}" -- --junitxml=./junit.xml
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v4
         id: upload-coverage-artifacts
         if: ${{ always() }}
         with:
@@ -125,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download coverage file
+      - name: Download test artifacts
         uses: actions/download-artifact@v4
 
       - name: Upload coverage to Codeocv

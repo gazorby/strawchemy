@@ -1,0 +1,73 @@
+[env]
+PROJECT_NAME = "strawchemy"
+_.python.venv = { path = ".venv" }
+_.file = ".env.json"
+
+[tools]
+ruff = "latest"
+uv = "latest"
+
+
+[tasks.install-pre-commit]
+description = "Install pre-commit hooks"
+run = "pre-commit install --install-hooks 2>&1"
+
+[tasks.install]
+description = "Install dependencies"
+alias = "i"
+run = "uv sync --all-extras --dev"
+
+[tasks.test]
+description = "Run tests"
+depends = "install"
+alias = "t"
+usage = 'arg "<test>" default=""'
+run = 'uv run nox -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
+
+[tasks.update-snapshot]
+description = "Run tests"
+depends = "install"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest --snapshot-update {{arg(name="test", var=true, default="")}}'
+
+[tasks.test-py13]
+description = "Run tests on python 3.13"
+depends = "install"
+alias = "t13"
+usage = 'arg "<test>" default=""'
+run = 'uv run nox -p 3.13 -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
+
+
+[tasks.pyright]
+description = "Run pyright"
+depends = "install"
+run = "uv run pyright"
+env = { PYRIGHT_PYTHON_PYLANCE_VERSION = "latest-release" }
+
+[tasks.vulture]
+description = "Run vulture"
+depends = "install"
+run = "uv run vulture"
+
+[tasks.ruff]
+description = "Check ruff formatting"
+run = "ruff format --check"
+
+[tasks.fix]
+description = "Format code"
+run = "ruff check --fix --unsafe-fixes"
+
+[tasks.format]
+description = "Format code"
+run = "ruff format"
+
+[tasks.lint]
+description = "Lint the code"
+alias = "l"
+depends = ["vulture", "pyright", "ruff"]
+
+
+[tasks.auto-bump]
+description = "Auto bump the version"
+depends = "install"
+run = "uv run bump-my-version bump --new-version $(uv run git cliff --unreleased --bumped-version)"

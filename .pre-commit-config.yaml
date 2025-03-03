@@ -20,11 +20,13 @@ repos:
       - id: debug-statements
       - id: end-of-file-fixer
       - id: trailing-whitespace
+        exclude: "^.*__snapshots__/.*$"
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
       - id: codespell
+        exclude: "^CHANGELOG.md$"
         additional_dependencies:
           - "tomli"
         args:
@@ -57,18 +59,16 @@ repos:
     hooks:
       - id: vulture
         name: vulture
-        entry: nox -rs vulture --
+        entry: uv run vulture
         language: python
         types: [python]
         require_serial: true
-        additional_dependencies: [nox]
 
   - repo: local
     hooks:
-      - id: lint
-        name: lint
-        entry: nox -r -t lint --
+      - id: pyright
+        name: pyright
+        entry: uv run pyright
         language: python
         types: [python]
         require_serial: true
-        additional_dependencies: [nox]
