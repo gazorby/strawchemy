@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/gazorby/strawchemy/compare/v0.4.0..v0.5.0) - 2025-03-03
+
+### 🚀 Features
+
+- *(mapping)* Add pagination setting on config level - ([5e84f4b](https://github.com/gazorby/strawchemy/commit/5e84f4bca54dbf7eab083dc74a5c37a9171c1818))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.5.0 - ([e15f7c7](https://github.com/gazorby/strawchemy/commit/e15f7c758b3980696cc75e80b5195afaeaf19292))
 ## [0.4.0](https://github.com/gazorby/strawchemy/compare/v0.3.0..v0.4.0) - 2025-03-03
 
 ### 🚀 Features
