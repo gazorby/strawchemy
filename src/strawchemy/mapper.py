@@ -20,6 +20,7 @@ from .strawberry.factory import (
     StrawberryTypeFactory,
 )
 from .strawberry.inspector import _StrawberryModelInspector
+from .types import DefaultOffsetPagination
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
@@ -31,7 +32,6 @@ if TYPE_CHECKING:
     from .sqlalchemy.typing import QueryHookCallable
     from .strawberry.repository import StrawchemyAsyncRepository, StrawchemySyncRepository
     from .strawberry.typing import FilterStatementCallable
-    from .types import DefaultOffsetPagination
 
 
 T = TypeVar("T")
@@ -158,6 +158,9 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
         execution_options_ = execution_options if execution_options is not None else self.settings.execution_options
+        pagination = (
+            DefaultOffsetPagination(limit=self.settings.pagination_default_limit) if pagination is True else pagination
+        )
 
         field = StrawchemyField(
             repository_type=repository_type_,

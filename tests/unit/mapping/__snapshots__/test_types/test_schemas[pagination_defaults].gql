@@ -54,7 +54,7 @@
     fruitsWithDefaultLimit(limit: Int = 10, offset: Int! = 0): [FruitType!]!
   
     """Fetch objects from the FruitType collection"""
-    fruitsWithDefaultOffset(limit: Int = null, offset: Int! = 10): [FruitType!]!
+    fruitsWithDefaultOffset(limit: Int = 100, offset: Int! = 10): [FruitType!]!
   }
   
   scalar UUID
