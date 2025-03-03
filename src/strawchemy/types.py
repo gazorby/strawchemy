@@ -5,7 +5,7 @@ from dataclasses import dataclass
 __all__ = ("DefaultOffsetPagination",)
 
 
-@dataclass
+@dataclass(eq=True, frozen=True)
 class DefaultOffsetPagination:
-    limit: int | None = None
+    limit: int = 100
     offset: int = 0

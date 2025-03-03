@@ -22,6 +22,7 @@ class StrawchemyConfig:
     repository_type: type[StrawchemyAsyncRepository[Any] | StrawchemySyncRepository[Any]] = StrawchemyAsyncRepository
     filter_overrides: FilterMap | None = None
     execution_options: dict[str, Any] | None = None
+    pagination_default_limit: int = 100
 
     inspector: GraphQLInspectorProtocol[Any, Any] = field(init=False)
 

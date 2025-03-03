@@ -1,36 +1,13 @@
 # serializer version: 1
 # name: test_schemas[pagination]
   '''
-  input ColorAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum
-  }
-  
-  input ColorAggregateNumericFieldsOrderBy {
-    name: OrderByEnum
-  }
-  
-  input ColorAggregateOrderBy {
-    count: OrderByEnum
-    sum: ColorAggregateNumericFieldsOrderBy
-    minString: ColorAggregateMinMaxStringFieldsOrderBy
-    maxString: ColorAggregateMinMaxStringFieldsOrderBy
-  }
-  
-  """Ordering options"""
-  input ColorOrderBy {
-    id: OrderByEnum
-    fruitsAggregate: FruitAggregateOrderBy
-    fruits: FruitOrderBy
-    name: OrderByEnum
-  }
-  
   """GraphQL type"""
   type ColorType {
     id: UUID!
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
-    fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
+    fruits: [FruitType!]!
     name: String!
   }
   
@@ -49,31 +26,6 @@
     varPop: FruitNumericFields!
   }
   
-  input FruitAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum
-  }
-  
-  input FruitAggregateNumericFieldsOrderBy {
-    name: OrderByEnum
-    sweetness: OrderByEnum
-  }
-  
-  input FruitAggregateOrderBy {
-    count: OrderByEnum
-    sum: FruitAggregateNumericFieldsOrderBy
-    min: FruitAggregateNumericFieldsOrderBy
-    max: FruitAggregateNumericFieldsOrderBy
-    minString: FruitAggregateMinMaxStringFieldsOrderBy
-    maxString: FruitAggregateMinMaxStringFieldsOrderBy
-    avg: FruitAggregateNumericFieldsOrderBy
-    stddev: FruitAggregateNumericFieldsOrderBy
-    stddevSamp: FruitAggregateNumericFieldsOrderBy
-    stddevPop: FruitAggregateNumericFieldsOrderBy
-    variance: FruitAggregateNumericFieldsOrderBy
-    varSamp: FruitAggregateNumericFieldsOrderBy
-    varPop: FruitAggregateNumericFieldsOrderBy
-  }
-  
   type FruitMinMaxFields {
     name: String
     sweetness: Int
@@ -81,16 +33,6 @@
   
   type FruitNumericFields {
     sweetness: Int
-  }
-  
-  """Ordering options"""
-  input FruitOrderBy {
-    id: OrderByEnum
-    name: OrderByEnum
-    colorId: OrderByEnum
-    colorAggregate: ColorAggregateOrderBy
-    color: ColorOrderBy
-    sweetness: OrderByEnum
   }
   
   type FruitSumFields {
@@ -107,18 +49,9 @@
     sweetness: Int!
   }
   
-  enum OrderByEnum {
-    ASC
-    ASC_NULLS_FIRST
-    ASC_NULLS_LAST
-    DESC
-    DESC_NULLS_FIRST
-    DESC_NULLS_LAST
-  }
-  
   type Query {
     """Fetch objects from the FruitType collection"""
-    fruit(limit: Int = null, offset: Int! = 0): [FruitType!]!
+    fruit(limit: Int = 100, offset: Int! = 0): [FruitType!]!
   }
   
   scalar UUID

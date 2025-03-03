@@ -112,6 +112,9 @@ def test_multiple_types_error() -> None:
         pytest.param("tests.schemas.type_override.Query", id="type_override"),
         pytest.param("tests.schemas.pagination.Query", id="pagination"),
         pytest.param("tests.schemas.pagination_defaults.Query", id="pagination_defaults"),
+        pytest.param("tests.schemas.child_pagination.Query", id="child_pagination"),
+        pytest.param("tests.schemas.child_pagination_defaults.Query", id="child_pagination_defaults"),
+        pytest.param("tests.schemas.pagination_config_defaults.Query", id="pagination_config_defaults"),
     ],
 )
 def test_schemas(path: str, snapshot: SnapshotAssertion) -> None:

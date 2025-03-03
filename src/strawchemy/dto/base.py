@@ -361,6 +361,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         field: DTOFieldDefinition[ModelT, ModelFieldT],
         dto_config: DTOConfig,
         node: Node[Relation[ModelT, DTOBaseT], None],
+        **factory_kwargs: Any,
     ) -> Any:
         """Recursively resolve the type hint to a valid pydantic type."""
         type_hint = self.type_map.get(field.type_hint, field.type_)
@@ -396,6 +397,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
                 name=dto_name,
                 parent_field_def=field,
                 current_node=child,
+                **factory_kwargs,
             )
             field.related_dto = dto
 
@@ -415,10 +417,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         return Node(Relation(model=model, name=name)) if node is None else node
 
     def _cache_key(
-        self,
-        model: type[Any],
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, DTOBaseT], None],
+        self, model: type[Any], dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None], **factory_kwargs: Any
     ) -> Hashable:
         base_key: list[Hashable] = [
             self,
@@ -493,7 +492,9 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
         return f"{name}{dto_config.purpose.value.capitalize()}DTO"
 
-    def generate_dto_name(self, model: type[Any], dto_config: DTOConfig, base: type[Any] | None) -> str:
+    def generate_dto_name(
+        self, model: type[Any], dto_config: DTOConfig, base: type[Any] | None, **factory_kwargs: Any
+    ) -> str:
         return base.__name__ if base else self.dto_name_suffix(model.__name__, dto_config)
 
     def iter_field_definitions(
@@ -504,7 +505,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         base: type[DTOBase[ModelT]] | None,
         node: Node[Relation[ModelT, DTOBaseT], None],
         raise_if_no_fields: bool = False,
-        **kwargs: Any,
+        **factory_kwargs: Any,
     ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT], None, None]:
         no_fields = True
         annotations: dict[str, Any] = dto_config.annotation_overrides
@@ -526,7 +527,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
             if not has_override or has_auto_override:
                 no_fields = False
-                field_def.type_ = self._resolve_type(field_def, dto_config, node)
+                field_def.type_ = self._resolve_type(field_def, dto_config, node, **factory_kwargs)
 
             yield field_def
 
@@ -551,9 +552,9 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         """Build a Data transfer object (DTO) from an SQAlchemy model."""
         dto_config = dto_config.with_base_annotations(base) if base else dto_config
         if not name:
-            name = self.generate_dto_name(model, dto_config, base)
+            name = self.generate_dto_name(model, dto_config, base, **kwargs)
         node = self._node_or_root(model, name, current_node)
-        cache_key = self._cache_key(model, dto_config, node)
+        cache_key = self._cache_key(model, dto_config, node, **kwargs)
 
         if dto := self._dto_cache.get(cache_key):
             if node.is_root:
