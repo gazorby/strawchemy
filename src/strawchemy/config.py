@@ -18,12 +18,21 @@ if TYPE_CHECKING:
 @dataclass
 class StrawchemyConfig:
     session_getter: AsyncSessionGetter = default_session_getter
+    """Function to retrieve SQLAlchemy session from strawberry `Info` object."""
     auto_snake_case: bool = True
+    """Automatically convert snake cased names to camel case"""
     repository_type: type[StrawchemyAsyncRepository[Any] | StrawchemySyncRepository[Any]] = StrawchemyAsyncRepository
+    """Repository class to use for auto resolvers."""
     filter_overrides: FilterMap | None = None
+    """Override default filters with custom filters."""
     execution_options: dict[str, Any] | None = None
+    """SQLAlchemy execution options for repository operations."""
     pagination_default_limit: int = 100
+    """Default pagination limit when `pagination=True`."""
+    pagination: bool = False
+    """Enable/disable pagination on list resolvers."""
     default_id_field_name: str = "id"
+    """Name for primary key fields arguments on primary key resolvers."""
 
     inspector: GraphQLInspectorProtocol[Any, Any] = field(init=False)
 

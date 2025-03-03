@@ -84,7 +84,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         filter_input: type[Any] | None = None,
         order_by: type[Any] | None = None,
         distinct_on: type[EnumDTO] | None = None,
-        pagination: bool | DefaultOffsetPagination = False,
+        pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
@@ -111,7 +111,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         filter_input: type[Any] | None = None,
         order_by: type[Any] | None = None,
         distinct_on: type[EnumDTO] | None = None,
-        pagination: bool | DefaultOffsetPagination = False,
+        pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
@@ -138,7 +138,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         filter_input: type[Any] | None = None,
         order_by: type[Any] | None = None,
         distinct_on: type[EnumDTO] | None = None,
-        pagination: bool | DefaultOffsetPagination = False,
+        pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
@@ -164,6 +164,8 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         pagination = (
             DefaultOffsetPagination(limit=self.settings.pagination_default_limit) if pagination is True else pagination
         )
+        if pagination is None:
+            pagination = self.settings.pagination
         id_field_name = id_field_name or self.settings.default_id_field_name
 
         field = StrawchemyField(
