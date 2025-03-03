@@ -23,6 +23,7 @@ class StrawchemyConfig:
     filter_overrides: FilterMap | None = None
     execution_options: dict[str, Any] | None = None
     pagination_default_limit: int = 100
+    default_id_field_name: str = "id"
 
     inspector: GraphQLInspectorProtocol[Any, Any] = field(init=False)
 

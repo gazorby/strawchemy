@@ -115,6 +115,7 @@ def test_multiple_types_error() -> None:
         pytest.param("tests.schemas.child_pagination.Query", id="child_pagination"),
         pytest.param("tests.schemas.child_pagination_defaults.Query", id="child_pagination_defaults"),
         pytest.param("tests.schemas.pagination_config_defaults.Query", id="pagination_config_defaults"),
+        pytest.param("tests.schemas.custom_id_field_name.Query", id="custom_id_field_name"),
     ],
 )
 def test_schemas(path: str, snapshot: SnapshotAssertion) -> None:

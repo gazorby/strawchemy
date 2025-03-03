@@ -96,6 +96,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         filter_statement: FilterStatementCallable | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
         execution_options: dict[str, Any] | None = None,
+        id_field_name: str = "id",
         # Original StrawberryField args
         python_name: str | None = None,
         graphql_name: str | None = None,
@@ -126,6 +127,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         self.pagination: DefaultOffsetPagination | Literal[False] = (
             DefaultOffsetPagination() if pagination is True else pagination
         )
+        self.id_field_name = id_field_name
 
         self._description = description
         self._session_getter = session_getter
@@ -233,8 +235,8 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
             session_getter=self._session_getter,
             filter_statement=self._filter_statement,
             query_hook=self.query_hook,
+            id_field_name=self.id_field_name,
             repository_type=self._repository_type,
-            # StrawberryMapperField args
             inspector=self.inspector,
             auto_snake_case=self.auto_snake_case,
             root_aggregations=self.root_aggregations,
@@ -334,12 +336,19 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
                     )
                 )
         else:
-            arguments.extend(
-                [
-                    StrawberryArgument(name, None, type_annotation=StrawberryAnnotation(field.type_))
-                    for name, field in self.inspector.id_field_definitions(self._model, DTOConfig(Purpose.READ))
-                ]
-            )
+            id_fields = list(self.inspector.id_field_definitions(self._model, DTOConfig(Purpose.READ)))
+            if len(id_fields) == 1:
+                field = id_fields[0][1]
+                arguments.append(
+                    StrawberryArgument(self.id_field_name, None, type_annotation=StrawberryAnnotation(field.type_))
+                )
+            else:
+                arguments.extend(
+                    [
+                        StrawberryArgument(name, None, type_annotation=StrawberryAnnotation(field.type_))
+                        for name, field in self.inspector.id_field_definitions(self._model, DTOConfig(Purpose.READ))
+                    ]
+                )
         return arguments
 
     @arguments.setter
