@@ -59,7 +59,7 @@ repos:
     hooks:
       - id: vulture
         name: vulture
-        entry: uv run vulture
+        entry: uv run vulture src
         language: python
         types: [python]
         require_serial: true

@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from strawberry.types.field import StrawberryField
     from strawchemy.graphql.filters import AnyGraphQLComparison
     from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
+    from strawchemy.types import DefaultOffsetPagination
 
     from .typing import GraphQLType
 
@@ -40,8 +41,10 @@ class _StrawberryGeoComparison:
 class RegistryTypeInfo:
     name: str
     graphql_type: GraphQLType
-    user_defined: bool
-    override: bool
+    user_defined: bool = False
+    override: bool = False
+    pagination: DefaultOffsetPagination | bool = False
+    order_by: bool = False
 
 
 class StrawberryRegistry:
@@ -52,11 +55,12 @@ class StrawberryRegistry:
         self._strawberry_enums: dict[str, type[Enum]] = {}
         self._field_map: defaultdict[str, list[StrawberryField]] = defaultdict(list)
         self._type_infos: set[RegistryTypeInfo] = set()
+        self._cache: dict[RegistryTypeInfo, type[Any]] = {}
 
     def conflicts(self, type_info: RegistryTypeInfo) -> bool:
         # Type conflict if:
         # - A user defined type with the same name, that is not marked as override already exists
-        return dataclasses.replace(type_info, user_defined=True, override=False) in self._type_infos
+        return dataclasses.replace(type_info, user_defined=True, override=False) in self._cache
 
     def _update_annotation_namespace(
         self,
@@ -80,15 +84,13 @@ class StrawberryRegistry:
             if field_type_name:
                 self._field_map[field_type_name].append(field)
 
-    def _register_type(
-        self, type_name: str, strawberry_type: type[Any], graphql_type: GraphQLType, override: bool, user_defined: bool
-    ) -> None:
-        self.namespace(graphql_type)[type_name] = strawberry_type
-        if override:
-            for field in self._field_map[type_name]:
+    def _register_type(self, type_info: RegistryTypeInfo, strawberry_type: type[Any]) -> None:
+        self.namespace(type_info.graphql_type)[type_info.name] = strawberry_type
+        if type_info.override:
+            for field in self._field_map[type_info.name]:
                 field.type = strawberry_type
-        self._update_annotation_namespace(strawberry_type, graphql_type)
-        self._type_infos.add(RegistryTypeInfo(type_name, graphql_type, user_defined, override))
+        self._update_annotation_namespace(strawberry_type, type_info.graphql_type)
+        self._cache[type_info] = strawberry_type
 
     @classmethod
     def _inner_types(cls, typ: Any) -> tuple[Any, ...]:
@@ -117,36 +119,30 @@ class StrawberryRegistry:
     def register_dataclass(
         self,
         type_: type[Any],
-        name: str,
-        graphql_type: GraphQLType,
+        type_info: RegistryTypeInfo,
         description: str | None = None,
         directives: Sequence[object] | None = (),
-        override: bool = False,
-        user_defined: bool = False,
     ) -> type[Any]:
-        type_name = name or type_.__name__
-
         if has_object_definition(type_):
             return type_
-        if not override and (existing := self.namespace(graphql_type).get(type_name)):
+        if not type_info.override and (existing := self._cache.get(type_info)):
             return existing
 
         strawberry_type = strawberry.type(
             type_,
-            name=type_name,
-            is_input=graphql_type == "input",
-            is_interface=graphql_type == "interface",
+            name=type_info.name,
+            is_input=type_info.graphql_type == "input",
+            is_interface=type_info.graphql_type == "interface",
             description=description,
             directives=directives,
         )
-        self._register_type(type_name, strawberry_type, graphql_type, override, user_defined)
+        self._register_type(type_info, strawberry_type)
         return strawberry_type
 
     def register_pydantic(
         self,
         pydantic_type: type[PydanticModel],
-        name: str,
-        graphql_type: GraphQLType,
+        type_info: RegistryTypeInfo,
         all_fields: bool = True,
         fields: list[str] | None = None,
         partial: bool = False,
@@ -155,34 +151,30 @@ class StrawberryRegistry:
         directives: Sequence[object] | None = (),
         use_pydantic_alias: bool = True,
         base: type[Any] | None = None,
-        override: bool = False,
-        user_defined: bool = False,
     ) -> type[StrawberryTypeFromPydantic[PydanticModel]]:
-        type_name = name or pydantic_type.__name__
-        strawberry_attr = "_strawberry_input_type" if graphql_type == "input" else "_strawberry_type"
-
+        strawberry_attr = "_strawberry_input_type" if type_info.graphql_type == "input" else "_strawberry_type"
         if existing := strawberry_type_from_pydantic(pydantic_type):
             return existing
-        if not override and (existing := self.namespace(graphql_type).get(type_name)):
+        if not type_info.override and (existing := self._cache.get(type_info)):
             setattr(pydantic_type, strawberry_attr, existing)
             return existing
 
-        base = base if base is not None else type(type_name, (), {})
+        base = base if base is not None else type(type_info.name, (), {})
 
         strawberry_type = strawberry_pydantic.type(
             pydantic_type,
-            is_input=graphql_type == "input",
-            is_interface=graphql_type == "interface",
+            is_input=type_info.graphql_type == "input",
+            is_interface=type_info.graphql_type == "interface",
             all_fields=all_fields,
             fields=fields,
             partial=partial,
-            name=type_name,
+            name=type_info.name,
             description=description,
             directives=directives,
             use_pydantic_alias=use_pydantic_alias,
             partial_fields=partial_fields,
         )(base)
-        self._register_type(type_name, strawberry_type, graphql_type, override, user_defined)
+        self._register_type(type_info, strawberry_type)
         return strawberry_type
 
     def register_enum(
@@ -202,22 +194,14 @@ class StrawberryRegistry:
     def register_comparison_type(
         self, comparison_type: type[AnyGraphQLComparison]
     ) -> type[StrawberryTypeFromPydantic[AnyGraphQLComparison]]:
+        type_info = RegistryTypeInfo(name=comparison_type.field_type_name(), graphql_type="input")
         if issubclass(comparison_type, GeoComparison):
             return self.register_pydantic(
-                pydantic_type=comparison_type,
-                name=comparison_type.field_type_name(),
-                graphql_type="input",
-                partial=True,
-                all_fields=False,
-                base=_StrawberryGeoComparison,
+                comparison_type, type_info, partial=True, all_fields=False, base=_StrawberryGeoComparison
             )
 
         return self.register_pydantic(
-            pydantic_type=comparison_type,
-            name=comparison_type.field_type_name(),
-            description=comparison_type.field_description(),
-            graphql_type="input",
-            partial=True,
+            comparison_type, type_info, description=comparison_type.field_description(), partial=True
         )
 
     def clear(self) -> None:

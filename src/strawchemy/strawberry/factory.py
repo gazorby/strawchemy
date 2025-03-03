@@ -2,14 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Sequence
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Self,
-    TypeVar,
-    get_type_hints,
-    override,
-)
+from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints, override
 
 from typing_extensions import dataclass_transform
 
@@ -20,15 +13,7 @@ from strawberry.types.object_type import _wrap_dataclass
 from strawberry.utils.typing import type_has_annotation
 from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.backend.pydantic import PydanticDTOBackend, PydanticDTOT
-from strawchemy.dto.base import (
-    DTOBackend,
-    DTOBaseT,
-    DTOFactory,
-    DTOFieldDefinition,
-    ModelFieldT,
-    ModelT,
-    Relation,
-)
+from strawchemy.dto.base import DTOBackend, DTOBaseT, DTOFactory, DTOFieldDefinition, ModelFieldT, ModelT, Relation
 from strawchemy.dto.types import DTO_AUTO, DTOConfig, DTOMissingType, Purpose
 from strawchemy.dto.utils import config, read_all_partial_config
 from strawchemy.exceptions import StrawchemyError
@@ -56,18 +41,17 @@ from strawchemy.graphql.factory import (
     dto_config_read_partial,
 )
 from strawchemy.graphql.typing import DataclassGraphQLDTO, PydanticGraphQLDTO
+from strawchemy.types import DefaultOffsetPagination
 
 from ._instance import MapperModelInstance
 from ._registry import RegistryTypeInfo, StrawberryRegistry
 from ._utils import pydantic_from_strawberry_type, strawberry_type_from_pydantic
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Callable, Hashable, Mapping, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
-    from strawberry.experimental.pydantic.conversion_types import (
-        StrawberryTypeFromPydantic,
-    )
+    from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
     from strawchemy import Strawchemy
     from strawchemy.dto.types import ExcludeFields, IncludeFields
     from strawchemy.graph import Node
@@ -104,19 +88,19 @@ class _StrawberryAggregationInspector(AggregationInspector[ModelT, ModelFieldT])
     @override
     def numeric_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
         if dto := super().numeric_field_type(model, dto_config):
-            return self._strawberry_registry.register_dataclass(dto, dto.__name__, "object")
+            return self._strawberry_registry.register_dataclass(dto, RegistryTypeInfo(dto.__name__, "object"))
         return dto
 
     @override
     def sum_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
         if dto := super().sum_field_type(model, dto_config):
-            return self._strawberry_registry.register_dataclass(dto, dto.__name__, "object")
+            return self._strawberry_registry.register_dataclass(dto, RegistryTypeInfo(dto.__name__, "object"))
         return dto
 
     @override
     def min_max_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
         if dto := super().min_max_field_type(model, dto_config):
-            return self._strawberry_registry.register_dataclass(dto, dto.__name__, "object")
+            return self._strawberry_registry.register_dataclass(dto, RegistryTypeInfo(dto.__name__, "object"))
         return dto
 
     @override
@@ -162,6 +146,24 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
             config.aliases = aliases
         return config
 
+    def _type_info(
+        self,
+        dto: type[Any],
+        dto_config: DTOConfig,
+        override: bool = False,
+        user_defined: bool = False,
+        child_pagination: DefaultOffsetPagination | bool = False,
+        child_order_by: bool = False,
+    ) -> RegistryTypeInfo:
+        return RegistryTypeInfo(
+            name=dto.__name__,
+            graphql_type=self.graphql_type(dto_config),
+            override=override,
+            user_defined=user_defined,
+            pagination=DefaultOffsetPagination() if child_pagination is True else child_pagination,
+            order_by=child_order_by,
+        )
+
     def _register_pydantic(
         self,
         dto: type[PydanticGraphQLDTOT],
@@ -172,18 +174,24 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         base: type[Any] | None = None,
         override: bool = False,
         user_defined: bool = False,
+        child_pagination: DefaultOffsetPagination | bool = False,
+        child_order_by: bool = False,
     ) -> type[PydanticGraphQLDTOT]:
         self._mapper.registry.register_pydantic(
             dto,
+            self._type_info(
+                dto,
+                dto_config,
+                override=override,
+                user_defined=user_defined,
+                child_pagination=child_pagination,
+                child_order_by=child_order_by,
+            ),
             all_fields=all_fields,
-            graphql_type=self.graphql_type(dto_config),
             partial=bool(dto_config.partial),
             description=description or dto.__strawchemy_description__,
             directives=directives,
-            name=dto.__name__,
             base=base,
-            override=override,
-            user_defined=user_defined,
         )
         return dto
 
@@ -195,15 +203,21 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         directives: Sequence[object] | None = (),
         override: bool = False,
         user_defined: bool = False,
+        child_pagination: DefaultOffsetPagination | bool = False,
+        child_order_by: bool = False,
     ) -> type[DataclassGraphQLDTOT]:
         return self._mapper.registry.register_dataclass(
             dto,
-            graphql_type=self.graphql_type(dto_config),
+            self._type_info(
+                dto,
+                dto_config,
+                override=override,
+                user_defined=user_defined,
+                child_pagination=child_pagination,
+                child_order_by=child_order_by,
+            ),
             description=description or dto.__strawchemy_description__,
             directives=directives,
-            name=dto.__name__,
-            override=override,
-            user_defined=user_defined,
         )
 
     def _check_model_instance_attribute(self, base: type[Any]) -> None:
@@ -258,7 +272,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         user_defined: bool = False,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
-        type_name = name or self.generate_dto_name(model, dto_config, base)
+        type_name = name or self.generate_dto_name(model, dto_config, base, **kwargs)
         if base:
             self._check_model_instance_attribute(base)
             dto_config = self._resolve_config(dto_config, base)
@@ -322,6 +336,8 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
         alias_generator: Callable[[str], str] | None = None,
+        child_pagination: bool | DefaultOffsetPagination = False,
+        child_order_by: bool = False,
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
@@ -349,6 +365,8 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
                 query_hook=query_hook,
                 override=override,
                 user_defined=True,
+                child_pagination=child_pagination,
+                child_order_by=child_order_by,
             )
             dto.__strawchemy_query_hook__ = query_hook
             return dto
@@ -540,13 +558,17 @@ class StrawberryOrderByInputFactory(
         dto_config: DTOConfig,
     ) -> type[OrderByDTO[ModelT, ModelFieldT]]:
         dto = super()._order_by_aggregation_fields(aggregation, model, dto_config)
-        strawberry_type = self._mapper.registry.register_pydantic(dto, dto.__name__, graphql_type="input", partial=True)
+        strawberry_type = self._mapper.registry.register_pydantic(
+            dto, RegistryTypeInfo(dto.__name__, "input"), partial=True
+        )
         return pydantic_from_strawberry_type(strawberry_type)
 
     @override
     def _order_by_aggregation(self, model: type[Any], dto_config: DTOConfig) -> type[OrderByDTO[ModelT, ModelFieldT]]:
         dto = super()._order_by_aggregation(model, dto_config)
-        strawberry_type = self._mapper.registry.register_pydantic(dto, dto.__name__, graphql_type="input", partial=True)
+        strawberry_type = self._mapper.registry.register_pydantic(
+            dto, RegistryTypeInfo(dto.__name__, "input"), partial=True
+        )
         return pydantic_from_strawberry_type(strawberry_type)
 
     @override
@@ -672,9 +694,8 @@ class StrawberryAggregateFilterInputFactory(
         if aggregation.function == "count":
             partial_fields.add("arguments")
         strawberry_type = self._mapper.registry.register_pydantic(
-            pydantic_type=dto_type,
-            graphql_type="input",
-            name=dto_type.__name__,
+            dto_type,
+            RegistryTypeInfo(dto_type.__name__, "input"),
             partial_fields=partial_fields,
             description=f"Boolean expression to compare {aggregation.function} aggregation.",
         )
@@ -733,7 +754,13 @@ class StrawberryTypeFactory(
         )
         self._order_by_factory = StrawberryOrderByInputFactory(mapper, handle_cycles=handle_cycles, type_map=type_map)
 
-    def _dataclass_merge(self, dto: type[MappedDataclassGraphQLDTO[Any]], base: type[Any] | None) -> type[Any]:
+    def _dataclass_merge(
+        self,
+        dto: type[MappedDataclassGraphQLDTO[Any]],
+        base: type[Any] | None,
+        pagination: bool | DefaultOffsetPagination = False,
+        order_by: bool = False,
+    ) -> type[Any]:
         base_dataclass_fields: dict[str, tuple[Any, dataclasses.Field[Any]]] = {}
         dto_dataclass_fields = {field.name: field for field in dataclasses.fields(dto)}
         attributes: dict[str, Any] = {}
@@ -742,11 +769,15 @@ class StrawberryTypeFactory(
             if field.is_relation and field.uselist:
                 type_annotation = list[Self if field.related_dto is dto else field.related_dto]
                 assert field.related_model
-                order_by = strawberry_type_from_pydantic(
-                    self._order_by_factory.factory(field.related_model, read_all_partial_config),
-                    strict=True,
+                order_by_input = None
+                if order_by:
+                    order_by_input = strawberry_type_from_pydantic(
+                        self._order_by_factory.factory(field.related_model, read_all_partial_config),
+                        strict=True,
+                    )
+                dc_field = self._mapper.field(
+                    pagination=pagination, order_by=order_by_input, root_field=False, graphql_type=type_annotation
                 )
-                dc_field = self._mapper.field(order_by=order_by, root_field=False, graphql_type=type_annotation)
                 attributes[field.name] = dc_field
             else:
                 dc_field = dto_dataclass_fields[field.name]
@@ -775,6 +806,19 @@ class StrawberryTypeFactory(
         return strawberry_base
 
     @override
+    def _cache_key(
+        self,
+        model: type[Any],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, MappedDataclassGraphQLDTO[Any]], None],
+        *,
+        child_pagination: bool | DefaultOffsetPagination,
+        child_order_by: bool,
+        **factory_kwargs: Any,
+    ) -> Hashable:
+        return (super()._cache_key(model, dto_config, node), child_pagination, child_order_by)
+
+    @override
     def factory(
         self,
         model: type[T],
@@ -786,6 +830,8 @@ class StrawberryTypeFactory(
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
         *,
+        child_pagination: bool | DefaultOffsetPagination = False,
+        child_order_by: bool = False,
         aggregations: bool = True,
         description: str | None = None,
         directives: Sequence[object] | None = (),
@@ -805,15 +851,19 @@ class StrawberryTypeFactory(
             backend_kwargs=backend_kwargs,
             register_type=False,
             override=override,
+            child_pagination=child_pagination,
+            child_order_by=child_order_by,
             **kwargs,
         )
         return self._register_dataclass(
-            self._dataclass_merge(dto, base),
+            self._dataclass_merge(dto, base, pagination=child_pagination, order_by=child_order_by),
             dto_config=dto_config,
             description=description,
             directives=directives,
             override=override,
             user_defined=user_defined,
+            child_pagination=child_pagination,
+            child_order_by=child_order_by,
         )
 
 

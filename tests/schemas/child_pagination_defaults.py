@@ -9,12 +9,11 @@ from tests.models import Fruit
 strawchemy = Strawchemy()
 
 
-@strawchemy.type(Fruit, include="all")
+@strawchemy.type(Fruit, include="all", child_pagination=DefaultOffsetPagination(limit=10, offset=10))
 class FruitType:
     pass
 
 
 @strawberry.type
 class Query:
-    fruits_with_default_limit: list[FruitType] = strawchemy.field(pagination=DefaultOffsetPagination(limit=10))
-    fruits_with_default_offset: list[FruitType] = strawchemy.field(pagination=DefaultOffsetPagination(offset=10))
+    fruit_with_default_limit: list[FruitType] = strawchemy.field()

@@ -8,11 +8,11 @@ from tests.models import Fruit
 strawchemy = Strawchemy()
 
 
-@strawchemy.type(Fruit, include="all")
+@strawchemy.type(Fruit, include="all", child_pagination=True)
 class FruitType:
     pass
 
 
 @strawberry.type
 class Query:
-    fruit: list[FruitType] = strawchemy.field(pagination=True)
+    fruit: list[FruitType] = strawchemy.field()

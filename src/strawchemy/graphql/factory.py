@@ -908,6 +908,7 @@ class FilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT
         aggregate_filters: bool = True,
         **kwargs: Any,
     ) -> type[GraphQLFilterDTOT]:
+        kwargs.pop("field_map", None)
         field_map: dict[DTOKey, GraphQLFieldDefinition[Any, Any]] = {}
         dto = super().factory(
             model,
