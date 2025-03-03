@@ -46,12 +46,7 @@ if TYPE_CHECKING:
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.sqlalchemy.typing import QueryHookCallable
 
-    from .typing import (
-        AsyncSessionGetter,
-        FilterStatementCallable,
-        StrawchemyTypeWithStrawberryObjectDefinition,
-        SyncSessionGetter,
-    )
+    from .typing import AnySessionGetter, FilterStatementCallable, StrawchemyTypeWithStrawberryObjectDefinition
 
 
 __all__ = ("StrawchemyField",)
@@ -84,7 +79,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
     def __init__(
         self,
         inspector: ModelInspector[ModelT, ModelFieldT],
-        session_getter: AsyncSessionGetter | SyncSessionGetter,
+        session_getter: AnySessionGetter,
         repository_type: type[StrawchemyAsyncRepository[Any] | StrawchemySyncRepository[Any]],
         filter_type: type[StrawberryTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
         order_by: type[StrawberryTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,

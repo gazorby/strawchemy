@@ -12,12 +12,12 @@ if TYPE_CHECKING:
 
     from .graphql.inspector import GraphQLInspectorProtocol
     from .sqlalchemy.typing import FilterMap
-    from .strawberry.typing import AsyncSessionGetter
+    from .strawberry.typing import AnySessionGetter
 
 
 @dataclass
 class StrawchemyConfig:
-    session_getter: AsyncSessionGetter = default_session_getter
+    session_getter: AnySessionGetter = default_session_getter
     """Function to retrieve SQLAlchemy session from strawberry `Info` object."""
     auto_snake_case: bool = True
     """Automatically convert snake cased names to camel case"""

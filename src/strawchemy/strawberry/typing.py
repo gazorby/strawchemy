@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from strawchemy.sqlalchemy.typing import AnyAsyncSession, AnySyncSession
 
 __all__ = (
+    "AnySessionGetter",
     "AsyncSessionGetter",
     "FilterStatementCallable",
     "StrawchemyTypeWithStrawberryObjectDefinition",
@@ -22,6 +23,7 @@ __all__ = (
 GraphQLType = Literal["input", "object", "interface"]
 AsyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnyAsyncSession]"
 SyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnySyncSession]"
+AnySessionGetter: TypeAlias = "AsyncSessionGetter | SyncSessionGetter"
 FilterStatementCallable: TypeAlias = "Callable[[Info[Any, Any]], Select[tuple[Any]]]"
 
 
