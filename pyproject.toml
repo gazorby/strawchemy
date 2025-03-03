@@ -54,6 +54,7 @@ test = [
     "pytest-asyncio>=0.24",
     "pytest-pretty",
     "pytest-xdist",
+    "syrupy"
 ]
 lint = ["pyright", "ruff", "vulture"]
 doc = ["git-cliff>=2.6.1"]

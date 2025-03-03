@@ -11,48 +11,36 @@ description = "Install dependencies"
 alias = "i"
 run = "uv sync --all-extras --dev"
 
-[tasks.install-lint]
-description = "Install dependencies to run lint checks"
-run = "uv sync --all-extras --group lint"
-
-[tasks.install-test]
-description = "Install dependencies to run tests"
-run = "uv sync --all-extras --group test"
-
-[tasks.test-matrix]
-description = "Generate CI test matrix"
-depends = "install-test"
-run = """
-    nox --json -t tests -l |
-    jq 'map(
-        {
-        session,
-        tags,
-        name: "\\( .name ) on \\( .python )\\( if .call_spec != {} then " (\\(.call_spec | to_entries | map("\\(.key)=\\(.value)") | join(", ")))" else "" end )"
-        }
-    )'
-"""
-
-[tasks.test-ci]
-description = "Run a single test session"
-usage = 'arg "<session>"'
-depends = "install-test"
-run = 'uv run nox -r -t tests -s {{arg(name="session")}} -- --junitxml=./junit.xml'
-
 [tasks.test]
 description = "Run tests"
-depends = "install-test"
-run = "uv run nox -r -t tests -- --cov-report=term-missing:skip-covered -n=auto"
+depends = "install"
+alias = "t"
+usage = 'arg "<test>" default=""'
+run = 'uv run nox -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
+
+[tasks.update-snapshot]
+description = "Run tests"
+depends = "install"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest --snapshot-update {{arg(name="test", var=true, default="")}}'
+
+[tasks.test-py13]
+description = "Run tests on python 3.13"
+depends = "install"
+alias = "t13"
+usage = 'arg "<test>" default=""'
+run = 'uv run nox -p 3.13 -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
+
 
 [tasks.pyright]
 description = "Run pyright"
-depends = "install-lint"
+depends = "install"
 run = "uv run pyright"
 env = { PYRIGHT_PYTHON_PYLANCE_VERSION = "latest-release" }
 
 [tasks.vulture]
 description = "Run vulture"
-depends = "install-lint"
+depends = "install"
 run = "uv run vulture"
 
 [tasks.ruff]
@@ -61,9 +49,9 @@ run = "ruff format --check"
 
 [tasks.lint]
 description = "Lint the code"
+alias = "l"
 depends = ["vulture", "pyright", "ruff"]
 
 [tools]
-jq = "latest"
 ruff = "latest"
 uv = "latest"
