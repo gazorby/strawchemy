@@ -15,7 +15,7 @@
   
   type Query {
     """Fetch objects from the FruitType collection"""
-    fruit(limit: Int = null, offset: Int = null): [FruitType!]!
+    fruit: [FruitType!]!
   }
   
   scalar UUID

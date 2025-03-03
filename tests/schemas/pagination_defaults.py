@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from strawchemy.mapper import Strawchemy
+from strawchemy.types import DefaultOffsetPagination
 
 import strawberry
 from tests.models import Fruit
@@ -20,4 +21,5 @@ class FruitOrderBy:
 
 @strawberry.type
 class Query:
-    fruit: list[FruitType] = strawchemy.field(order_by=FruitOrderBy)
+    fruits_with_default_limit: list[FruitType] = strawchemy.field(pagination=DefaultOffsetPagination(limit=10))
+    fruits_with_default_offset: list[FruitType] = strawchemy.field(pagination=DefaultOffsetPagination(offset=10))

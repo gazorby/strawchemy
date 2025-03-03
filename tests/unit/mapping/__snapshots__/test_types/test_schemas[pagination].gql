@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[all_fields_with_filter]
+# name: test_schemas[pagination]
   '''
   input ColorAggregateMinMaxStringFieldsOrderBy {
     name: OrderByEnum
@@ -117,8 +117,8 @@
   }
   
   type Query {
-    """Fetch object from the FruitType collection by id"""
-    fruit(id: UUID!): FruitType!
+    """Fetch objects from the FruitType collection"""
+    fruit(limit: Int = null, offset: Int! = 0): [FruitType!]!
   }
   
   scalar UUID

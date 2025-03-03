@@ -53,6 +53,14 @@ run = "uv run vulture"
 description = "Check ruff formatting"
 run = "ruff format --check"
 
+[tasks.fix]
+description = "Format code"
+run = "ruff check --fix --unsafe-fixes"
+
+[tasks.format]
+description = "Format code"
+run = "ruff format"
+
 [tasks.lint]
 description = "Lint the code"
 alias = "l"

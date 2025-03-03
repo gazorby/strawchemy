@@ -30,7 +30,7 @@
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
-    fruits(limit: Int = null, offset: Int = null, orderBy: [FruitOrderBy!] = null): [FruitType!]!
+    fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
     name: String!
   }
   

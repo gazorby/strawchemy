@@ -100,6 +100,7 @@ def test_multiple_types_error() -> None:
         pytest.param("tests.schemas.all_fields.Query", id="all_fields"),
         pytest.param("tests.schemas.all_fields_override.Query", id="all_fields_override"),
         pytest.param("tests.schemas.all_fields_filter.Query", id="all_fields_with_filter"),
+        pytest.param("tests.schemas.all_order_by.Query", id="all_fields_order_by"),
         pytest.param("tests.schemas.include_explicit.Query", id="include_explicit"),
         pytest.param("tests.schemas.exclude_explicit.Query", id="exclude_explicit"),
         pytest.param("tests.schemas.include_non_existent.Query", id="include_non_existent"),
@@ -109,6 +110,8 @@ def test_multiple_types_error() -> None:
         pytest.param("tests.schemas.exclude_and_override_type.Query", id="exclude_and_override_type"),
         pytest.param("tests.schemas.exclude_and_override_field.Query", id="exclude_and_override_field"),
         pytest.param("tests.schemas.type_override.Query", id="type_override"),
+        pytest.param("tests.schemas.pagination.Query", id="pagination"),
+        pytest.param("tests.schemas.pagination_defaults.Query", id="pagination_defaults"),
     ],
 )
 def test_schemas(path: str, snapshot: SnapshotAssertion) -> None:
