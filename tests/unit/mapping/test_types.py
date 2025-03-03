@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from strawchemy.exceptions import StrawchemyError
+from syrupy.assertion import SnapshotAssertion
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -96,21 +97,21 @@ def test_multiple_types_error() -> None:
 @pytest.mark.parametrize(
     "path",
     [
-        "tests.schemas.all_fields.Query",
-        "tests.schemas.all_fields_override.Query",
-        "tests.schemas.all_fields_filter.Query",
-        "tests.schemas.include_explicit.Query",
-        "tests.schemas.exclude_explicit.Query",
-        "tests.schemas.include_non_existent.Query",
-        "tests.schemas.exclude_non_existent.Query",
-        "tests.schemas.primary_key_resolver.Query",
-        "tests.schemas.list_resolver.Query",
-        "tests.schemas.exclude_and_override_type.Query",
-        "tests.schemas.exclude_and_override_field.Query",
-        "tests.schemas.type_override.Query",
+        pytest.param("tests.schemas.all_fields.Query", id="all_fields"),
+        pytest.param("tests.schemas.all_fields_override.Query", id="all_fields_override"),
+        pytest.param("tests.schemas.all_fields_filter.Query", id="all_fields_with_filter"),
+        pytest.param("tests.schemas.include_explicit.Query", id="include_explicit"),
+        pytest.param("tests.schemas.exclude_explicit.Query", id="exclude_explicit"),
+        pytest.param("tests.schemas.include_non_existent.Query", id="include_non_existent"),
+        pytest.param("tests.schemas.exclude_non_existent.Query", id="exclude_non_existent"),
+        pytest.param("tests.schemas.primary_key_resolver.Query", id="primary_key_resolver"),
+        pytest.param("tests.schemas.list_resolver.Query", id="list_resolver"),
+        pytest.param("tests.schemas.exclude_and_override_type.Query", id="exclude_and_override_type"),
+        pytest.param("tests.schemas.exclude_and_override_field.Query", id="exclude_and_override_field"),
+        pytest.param("tests.schemas.type_override.Query", id="type_override"),
     ],
 )
-def test_filter_input(path: str, snapshot: SnapshotAssertion) -> None:
+def test_schemas(path: str, snapshot: SnapshotAssertion) -> None:
     module, query_name = path.rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
 

@@ -1,0 +1,14 @@
+# serializer version: 1
+# name: test_schemas[include_explicit]
+  '''
+  """GraphQL type"""
+  type FruitType {
+    name: String!
+    sweetness: Int!
+  }
+  
+  type Query {
+    fruit: FruitType!
+  }
+  '''
+# ---
