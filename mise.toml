@@ -1,6 +1,12 @@
 [env]
 PROJECT_NAME = "strawchemy"
 _.python.venv = { path = ".venv" }
+_.file = ".env.json"
+
+[tools]
+ruff = "latest"
+uv = "latest"
+
 
 [tasks.install-pre-commit]
 description = "Install pre-commit hooks"
@@ -52,6 +58,8 @@ description = "Lint the code"
 alias = "l"
 depends = ["vulture", "pyright", "ruff"]
 
-[tools]
-ruff = "latest"
-uv = "latest"
+
+[tasks.auto-bump]
+description = "Auto bump the version"
+depends = "install"
+run = "uv run bump-my-version bump --new-version $(uv run git cliff --unreleased --bumped-version)"
