@@ -11,6 +11,12 @@ from tests.models import Color, Fruit
 strawchemy = Strawchemy()
 
 
+@strawchemy.type(Color, include="all")
+class ColorType:
+    id: auto
+    name: auto
+
+
 @strawchemy.type(Fruit)
 class FruitType:
     name: int
@@ -18,9 +24,3 @@ class FruitType:
     @strawberry.field
     def color(self, info: Info, root: Any) -> ColorType:
         return root.color
-
-
-@strawchemy.type(Color, include="all")
-class ColorType:
-    id: auto
-    name: auto

@@ -29,7 +29,7 @@ from strawchemy.strawberry._utils import (
     default_session_getter,
     dto_model_from_type,
     pydantic_from_strawberry_type,
-    strawberry_inner_type,
+    strawberry_contained_type,
 )
 from strawchemy.utils import camel_to_snake, snake_keys
 
@@ -74,7 +74,7 @@ class StrawchemyAsyncRepository(Generic[T]):
     _tree: _StrawberryQueryNode[T] = dataclasses.field(init=False)
 
     def __post_init__(self) -> None:
-        inner_root_type = strawberry_inner_type(self.root_type)
+        inner_root_type = strawberry_contained_type(self.root_type)
         resolver_selection = next(
             selection
             for selection in self.info.selected_fields
@@ -90,7 +90,7 @@ class StrawchemyAsyncRepository(Generic[T]):
 
     def graphql_repository(self) -> SQLAlchemyGraphQLAsyncRepository[Any]:
         return SQLAlchemyGraphQLAsyncRepository(
-            model=dto_model_from_type(strawberry_inner_type(self.root_type)),
+            model=dto_model_from_type(strawberry_contained_type(self.root_type)),
             session=self.session or self.session_getter(self.info),
             statement=self.filter_statement,
             execution_options=self.execution_options,
@@ -103,7 +103,7 @@ class StrawchemyAsyncRepository(Generic[T]):
         argument_types = {arg.python_name: arg.type for arg in strawberry_field.arguments}
         selection_arguments = snake_keys(selection.arguments) if auto_snake_case else selection.arguments
         if order_by_type := argument_types.get(ORDER_BY_KEY):
-            order_by_model = pydantic_from_strawberry_type(strawberry_inner_type(order_by_type))
+            order_by_model = pydantic_from_strawberry_type(strawberry_contained_type(order_by_type))
             return RelationFilterDTO[order_by_model].model_validate(selection_arguments)
         return RelationFilterDTO.model_validate(selection_arguments)
 
@@ -140,7 +140,7 @@ class StrawchemyAsyncRepository(Generic[T]):
         selected_fields: list[Selection],
         node: _StrawberryQueryNode[Any],
     ) -> None:
-        strawberry_type = strawberry_inner_type(strawberry_type)
+        strawberry_type = strawberry_contained_type(strawberry_type)
         if isinstance(strawberry_type, LazyType):
             strawberry_type = strawberry_type.resolve_type()
         strawberry_definition = get_object_definition(strawberry_type, strict=True)
@@ -153,7 +153,7 @@ class StrawchemyAsyncRepository(Generic[T]):
                 continue
             model_field_name = camel_to_snake(selection.name) if self.auto_snake_case else selection.name
             strawberry_field = next(field for field in strawberry_definition.fields if field.name == model_field_name)
-            strawberry_field_type = strawberry_inner_type(strawberry_field.type)
+            strawberry_field_type = strawberry_contained_type(strawberry_field.type)
             dto_model = dto_model_from_type(strawberry_type)
 
             if (hooks := self._get_field_hooks(strawberry_field)) is not None:

@@ -31,7 +31,7 @@ from strawchemy.graphql.constants import DISTINCT_ON_KEY, FILTER_KEY, LIMIT_KEY,
 from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
 from strawchemy.types import DefaultOffsetPagination
 
-from ._utils import dto_model_from_type, strawberry_inner_type
+from ._utils import dto_model_from_type, strawberry_contained_type
 from .repository import StrawchemyAsyncRepository, StrawchemySyncRepository
 
 if TYPE_CHECKING:
@@ -208,7 +208,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
 
     @cached_property
     def _model(self) -> type[ModelT]:
-        return dto_model_from_type(strawberry_inner_type(self.type))
+        return dto_model_from_type(strawberry_contained_type(self.type))
 
     @override
     def __copy__(self) -> Self:
@@ -264,13 +264,13 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         if self._description is not None:
             return self._description
         template = "Fetch {object} from the {name} collection"
-        if definition := get_object_definition(strawberry_inner_type(self.type), strict=False):
+        if definition := get_object_definition(strawberry_contained_type(self.type), strict=False):
             if not self.is_list:
                 description = template.format(object="object", name=definition.name)
                 return f"{description} by id" if not self.base_resolver else description
             if self.root_aggregations:
                 nodes_field = next(field for field in definition.fields if field.python_name == NODES_KEY)
-                definition = get_object_definition(strawberry_inner_type(nodes_field.type), strict=True)
+                definition = get_object_definition(strawberry_contained_type(nodes_field.type), strict=True)
                 return template.format(object="aggregation data", name=definition.name)
             return template.format(object="objects", name=definition.name)
         return template.format(object="objects", name="")

@@ -25,7 +25,7 @@ TYPE_DECORATOR_NAMES: list[str] = [
 def test_type_no_purpose_excluded(
     decorator: str, strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]
 ) -> None:
-    @getattr(strawchemy, decorator)(User, include="all")
+    @getattr(strawchemy, decorator)(User, include="all", override=True)
     class UserType: ...
 
     type_def = get_object_definition(UserType, strict=True)

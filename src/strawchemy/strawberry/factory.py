@@ -156,24 +156,32 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         self,
         dto: type[Any],
         dto_config: DTOConfig,
+        current_node: Node[Relation[Any, DTOBaseT], None] | None,
         override: bool = False,
         user_defined: bool = False,
         child_options: _ChildOptions | None = None,
     ) -> RegistryTypeInfo:
         child_options = child_options or _ChildOptions()
-        return RegistryTypeInfo(
+        graphql_type = self.graphql_type(dto_config)
+        type_info = RegistryTypeInfo(
             name=dto.__name__,
-            graphql_type=self.graphql_type(dto_config),
+            graphql_type=graphql_type,
             override=override,
             user_defined=user_defined,
             pagination=DefaultOffsetPagination() if child_options.pagination is True else child_options.pagination,
             order_by=child_options.order_by,
         )
+        if self._mapper.registry.name_clash(type_info) and current_node is not None:
+            type_info = dataclasses.replace(
+                type_info, name="".join(node.value.name for node in current_node.path_from_root())
+            )
+        return type_info
 
     def _register_pydantic(
         self,
         dto: type[PydanticGraphQLDTOT],
         dto_config: DTOConfig,
+        current_node: Node[Relation[Any, DTOBaseT], None] | None,
         all_fields: bool = True,
         description: str | None = None,
         directives: Sequence[object] | None = (),
@@ -182,9 +190,18 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         user_defined: bool = False,
         child_options: _ChildOptions | None = None,
     ) -> type[PydanticGraphQLDTOT]:
+        type_info = self._type_info(
+            dto,
+            dto_config,
+            override=override,
+            user_defined=user_defined,
+            child_options=child_options,
+            current_node=current_node,
+        )
+        self._raise_if_type_conflicts(type_info)
         self._mapper.registry.register_pydantic(
             dto,
-            self._type_info(dto, dto_config, override=override, user_defined=user_defined, child_options=child_options),
+            type_info,
             all_fields=all_fields,
             partial=bool(dto_config.partial),
             description=description or dto.__strawchemy_description__,
@@ -197,17 +214,24 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         self,
         dto: type[DataclassGraphQLDTOT],
         dto_config: DTOConfig,
+        current_node: Node[Relation[Any, DTOBaseT], None] | None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
         override: bool = False,
         user_defined: bool = False,
         child_options: _ChildOptions | None = None,
     ) -> type[DataclassGraphQLDTOT]:
-        return self._mapper.registry.register_dataclass(
+        type_info = self._type_info(
             dto,
-            self._type_info(dto, dto_config, override=override, user_defined=user_defined, child_options=child_options),
-            description=description or dto.__strawchemy_description__,
-            directives=directives,
+            dto_config,
+            override=override,
+            user_defined=user_defined,
+            child_options=child_options,
+            current_node=current_node,
+        )
+        self._raise_if_type_conflicts(type_info)
+        return self._mapper.registry.register_dataclass(
+            dto, type_info, description=description or dto.__strawchemy_description__, directives=directives
         )
 
     def _check_model_instance_attribute(self, base: type[Any]) -> None:
@@ -222,20 +246,21 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
 
     def _resolve_config(self, dto_config: DTOConfig, base: type[Any]) -> DTOConfig:
         config = dto_config.with_base_annotations(base)
-        for name, annotation in get_type_hints(base, include_extras=True).items():
+        try:
+            base_annotations = get_type_hints(base, include_extras=True)
+        except NameError:
+            base_annotations = base.__annotations__
+        for name, annotation in base_annotations.items():
             if type_has_annotation(annotation, StrawberryAuto):
                 config.annotation_overrides[name] = DTO_AUTO
                 base.__annotations__.pop(name)
         return config
 
-    def _raise_if_type_conflicts(self, name: str, dto_config: DTOConfig, user_defined: bool, override: bool) -> None:
-        if self._mapper.registry.conflicts(
-            RegistryTypeInfo(name, self.graphql_type(dto_config), user_defined, override)
-        ):
+    def _raise_if_type_conflicts(self, type_info: RegistryTypeInfo) -> None:
+        if self._mapper.registry.non_override_exists(type_info):
             msg = (
-                f"""Type `{name}` cannot be auto generated because it's already explicitly declared."""
-                """ Either use `override=True` on the explicit type to use it everywhere,"""
-                f""" or use override `{name}` fields where needed."""
+                f"""Type `{type_info.name}` cannot be auto generated because it's already declared."""
+                """ You may want to set `override=True` on the existing type to use it everywhere."""
             )
             raise StrawchemyError(msg)
 
@@ -262,11 +287,9 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         user_defined: bool = False,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
-        type_name = name or self.generate_dto_name(model, dto_config, base, **kwargs)
         if base:
             self._check_model_instance_attribute(base)
             dto_config = self._resolve_config(dto_config, base)
-        self._raise_if_type_conflicts(type_name, dto_config, user_defined, override)
         dto = super().factory(
             model,
             dto_config,
@@ -283,6 +306,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
                 return self._register_pydantic(
                     dto,
                     dto_config,
+                    current_node=current_node,
                     description=description,
                     directives=directives,
                     override=override,
@@ -292,6 +316,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
                 return self._register_dataclass(
                     dto,
                     dto_config,
+                    current_node=current_node,
                     description=description,
                     directives=directives,
                     override=override,
@@ -850,6 +875,7 @@ class StrawberryTypeFactory(
             override=override,
             user_defined=user_defined,
             child_options=child_options,
+            current_node=current_node,
         )
 
 

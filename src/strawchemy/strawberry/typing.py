@@ -20,7 +20,7 @@ __all__ = (
     "SyncSessionGetter",
 )
 
-GraphQLType = Literal["input", "object", "interface"]
+GraphQLType = Literal["input", "object", "interface", "enum"]
 AsyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnyAsyncSession]"
 SyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnySyncSession]"
 AnySessionGetter: TypeAlias = "AsyncSessionGetter | SyncSessionGetter"

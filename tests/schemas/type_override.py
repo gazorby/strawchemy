@@ -1,31 +1,32 @@
 from __future__ import annotations
 
-from typing import Any
-
 from strawchemy.mapper import Strawchemy
 
 import strawberry
-from strawberry import Info, auto
+from strawberry import auto
 from tests.models import Color, Fruit
 
 strawchemy = Strawchemy()
 
 
-@strawchemy.type(Color, include="all")
-class ColorType:
-    id: auto
-    name: auto
-
-
 @strawchemy.type(Fruit, override=True)
-class FruitType:
+class FruitTypeCustomName:
+    name: int
+    color: auto
+
+
+@strawchemy.type(Color, include="all", override=True)
+class ColorType:
+    fruits: auto
     name: int
 
-    @strawberry.field
-    def color(self, info: Info, root: Any) -> ColorType:
-        return root.color
+
+@strawchemy.type(Fruit, include="all", override=True)
+class FruitType:
+    name: int
 
 
 @strawberry.type
 class Query:
     fruit: FruitType = strawchemy.field()
+    custom_fruit: FruitTypeCustomName = strawchemy.field()

@@ -83,15 +83,19 @@ def test_type_resolution_with_resolvers() -> None:
     assert field.type is ColorType
 
 
-def test_multiple_types_error() -> None:
+@pytest.mark.parametrize(
+    "path",
+    [pytest.param("tests.schemas.auto_type_existing", id="auto_type_existing")],
+)
+def test_multiple_types_error(path: str) -> None:
     with pytest.raises(
         StrawchemyError,
         match=(
-            """Type `FruitType` cannot be auto generated because it's already explicitly declared."""
-            """ Either use `override=True` on the explicit type to use it everywhere, or use override `FruitType` fields where needed"""
+            """Type `FruitType` cannot be auto generated because it's already declared."""
+            """ You may want to set `override=True` on the existing type to use it everywhere."""
         ),
     ):
-        from tests.schemas import multiple_types  # noqa: F401 # pyright: ignore[reportUnusedImport]
+        import_module(path)
 
 
 @pytest.mark.parametrize(

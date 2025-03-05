@@ -67,9 +67,9 @@ def dto_model_from_type(type_: Any) -> Any:
     return strawberry_type.__dto_model__
 
 
-def strawberry_inner_type(type_: StrawberryType | Any) -> Any:
+def strawberry_contained_type(type_: StrawberryType | Any) -> Any:
     if isinstance(type_, LazyType):
-        return strawberry_inner_type(type_.resolve_type())
+        return strawberry_contained_type(type_.resolve_type())
     if isinstance(type_, StrawberryContainer):
-        return strawberry_inner_type(type_.of_type)
+        return strawberry_contained_type(type_.of_type)
     return type_
