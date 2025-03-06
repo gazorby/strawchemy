@@ -22,18 +22,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generic, Self, override
 
-from sqlalchemy import (
-    Dialect,
-    Label,
-    Select,
-    and_,
-    inspect,
-    not_,
-    null,
-    or_,
-    select,
-    true,
-)
+from sqlalchemy import Dialect, Label, Select, and_, inspect, not_, null, or_, select, true
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapper,
@@ -58,16 +47,7 @@ from strawchemy.graphql.dto import (
 from strawchemy.graphql.filters import GraphQLComparison
 
 from ._executor import SyncQueryExecutor
-from ._query import (
-    AggregationJoin,
-    Conjunction,
-    DistinctOn,
-    Join,
-    OrderBy,
-    Query,
-    QueryGraph,
-    Where,
-)
+from ._query import AggregationJoin, Conjunction, DistinctOn, Join, OrderBy, Query, QueryGraph, Where
 from ._scope import QueryScope
 from .exceptions import TranspilingError
 from .inspector import SQLAlchemyGraphQLInspector
@@ -252,9 +232,7 @@ class Transpiler(Generic[DeclarativeT]):
         if query.not_:
             not_conjunction = self._gather_conjonctions([query.not_], not_null_check=True)
             common_path = [
-                node
-                for node in common_path
-                if not any(not_node == node for not_node in not_conjunction.common_join_path)
+                node for node in common_path if all(not_node != node for not_node in not_conjunction.common_join_path)
             ]
             joins.extend(not_conjunction.joins)
             and_conjunction.expressions.append(not_(and_(*not_conjunction.expressions)))
@@ -375,7 +353,10 @@ class Transpiler(Generic[DeclarativeT]):
         return function_columns, new_join
 
     def _root_alias_as_subquery(
-        self, selection_tree: SQLAlchemyQueryNode, order_by_nodes: list[SQLAlchemyOrderByNode], components: Query
+        self,
+        selection_tree: SQLAlchemyQueryNode,
+        order_by_nodes: list[SQLAlchemyOrderByNode],
+        components: Query,
     ) -> AliasedClass[DeclarativeT]:
         """Root alias as subquery.
 
@@ -406,7 +387,11 @@ class Transpiler(Generic[DeclarativeT]):
             hook = hook_callable(statement, self.scope.root_alias)
             statement = hook.statement
 
-        return aliased(class_mapper(self.scope.model), statement.subquery(subquery_name), name=subquery_name)
+        return aliased(
+            class_mapper(self.scope.model),
+            statement.subquery(subquery_name),
+            name=subquery_name,
+        )
 
     def _apply_load_options(self, statement: Select[tuple[DeclarativeT]], node: SQLAlchemyQueryNode) -> _AbstractLoad:
         """Applies the load options to the statement for the given node.
@@ -647,7 +632,9 @@ class Transpiler(Generic[DeclarativeT]):
 
         if has_root_subquery:
             subquery_alias = self._root_alias_as_subquery(
-                query_graph.resolved_selection_tree, query_graph.order_by_nodes, dataclasses.replace(query, joins=joins)
+                query_graph.resolved_selection_tree,
+                query_graph.order_by_nodes,
+                dataclasses.replace(query, joins=joins),
             )
             self.scope.replace(alias=subquery_alias)
             limit, offset = None, None

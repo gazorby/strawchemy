@@ -166,7 +166,7 @@ class QueryGraph(Generic[DeclarativeT]):
             )
             self.order_by_nodes = sorted(self.order_by_tree.leaves())
 
-    @cached_property
+    @property
     def resolved_selection_tree(self) -> SQLAlchemyQueryNode:
         tree = self.selection_tree
         if tree and tree.query_metadata.root_aggregations:
