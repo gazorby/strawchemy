@@ -353,10 +353,7 @@ class Transpiler(Generic[DeclarativeT]):
         return function_columns, new_join
 
     def _root_alias_as_subquery(
-        self,
-        selection_tree: SQLAlchemyQueryNode,
-        order_by_nodes: list[SQLAlchemyOrderByNode],
-        components: Query,
+        self, selection_tree: SQLAlchemyQueryNode, order_by_nodes: list[SQLAlchemyOrderByNode], components: Query
     ) -> AliasedClass[DeclarativeT]:
         """Root alias as subquery.
 
@@ -387,11 +384,7 @@ class Transpiler(Generic[DeclarativeT]):
             hook = hook_callable(statement, self.scope.root_alias)
             statement = hook.statement
 
-        return aliased(
-            class_mapper(self.scope.model),
-            statement.subquery(subquery_name),
-            name=subquery_name,
-        )
+        return aliased(class_mapper(self.scope.model), statement.subquery(subquery_name), name=subquery_name)
 
     def _apply_load_options(self, statement: Select[tuple[DeclarativeT]], node: SQLAlchemyQueryNode) -> _AbstractLoad:
         """Applies the load options to the statement for the given node.
@@ -598,7 +591,6 @@ class Transpiler(Generic[DeclarativeT]):
     def _build_query(
         self,
         query_graph: QueryGraph[DeclarativeT],
-        selection_tree: SQLAlchemyQueryNode | None = None,
         limit: int | None = None,
         offset: int | None = None,
         allow_null: bool = False,
@@ -653,8 +645,8 @@ class Transpiler(Generic[DeclarativeT]):
             ]
 
         # Process root-level aggregations using window functions if requested
-        if selection_tree and selection_tree.query_metadata.root_aggregations:
-            query.root_aggregation_functions = self._root_aggregation_functions(selection_tree)
+        if query_graph.selection_tree and query_graph.selection_tree.query_metadata.root_aggregations:
+            query.root_aggregation_functions = self._root_aggregation_functions(query_graph.selection_tree)
 
         return query
 
@@ -714,7 +706,7 @@ class Transpiler(Generic[DeclarativeT]):
             order_by=order_by or [],
             distinct_on=distinct_on or [],
         )
-        query = self._build_query(query_graph, selection_tree, limit, offset, allow_null)
+        query = self._build_query(query_graph, limit, offset, allow_null)
         statement, aggregation_joins = self._select(query_graph.resolved_selection_tree)
         query.joins.extend(aggregation_joins)
         statement = query.statement(statement)
@@ -724,6 +716,7 @@ class Transpiler(Generic[DeclarativeT]):
             apply_unique=query.joins_have_many,
             root_aggregation_functions=query.root_aggregation_functions,
             scope=self.scope,
+            execution_options=execution_options,
         )
 
     @override
