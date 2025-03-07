@@ -353,32 +353,48 @@ class Transpiler(Generic[DeclarativeT]):
         return function_columns, new_join
 
     def _root_alias_as_subquery(
-        self, selection_tree: SQLAlchemyQueryNode, order_by_nodes: list[SQLAlchemyOrderByNode], components: Query
+        self, query_graph: QueryGraph[DeclarativeT], query: Query
     ) -> AliasedClass[DeclarativeT]:
-        """Root alias as subquery.
+        """Creates a subquery from the root alias for pagination.
+
+        This method is used when pagination (limit or offset) is applied at the root level.
+        It constructs a subquery using the root alias and applies necessary selections,
+        column transformations, before returning an aliased class
+        representing the subquery. This allows for correct pagination when dealing
+        with complex queries involving joins and aggregations.
 
         Args:
-            selection_tree: SQLAlchemyQueryNode
-            order_by_nodes: list[SQLAlchemyOrderByNode]
-            components: _Query
-            query_hooks: dict[SQLAlchemyQueryNode, QueryHook[Any]] | None
+            query_graph: The query graph representing the entire query structure.
+            query: The `Query` object containing query components like joins,
+                where clauses, and order by clauses.
 
         Returns:
-            AliasedClass[AnyDeclarative]:
+            An aliased class representing the subquery, which can be used in further
+            query construction.
         """
+        selection_tree = query_graph.resolved_selection_tree()
         subquery_name = self.scope.model.__tablename__
         root_insepcted = inspect(self._sub_query_root_alias)
         statement = select(root_insepcted).options(raiseload("*"))
-        statement = statement.with_only_columns(
-            *[self.scope.columns[node] for node in self.scope.referenced_function_nodes],
+        only_columns: list[QueryableAttribute[Any] | NamedColumn[Any]] = [
             *self.scope.inspect(selection_tree).selection(self._sub_query_root_alias),
-            *[self.scope.aliased_attribute(node) for node in order_by_nodes if not node.value.is_computed],
-        )
+            *[self.scope.aliased_attribute(node) for node in query_graph.order_by_nodes if not node.value.is_computed],
+        ]
+        root_aggregation_functions = []
+        if aggregation_tree := query_graph.root_aggregation_tree():
+            for child in aggregation_tree.leaves():
+                if not child.value.is_function_arg:
+                    continue
+                only_columns.append(self.scope.aliased_attribute(child))
+                root_aggregation_functions.append(self.scope.literal_column(subquery_name, self.scope.key(child)))
 
         for function_node in self.scope.referenced_function_nodes:
+            only_columns.append(self.scope.columns[function_node])
             self.scope.columns[function_node] = self.scope.literal_column(subquery_name, self.scope.key(function_node))
 
-        statement = components.statement(statement)
+        query.root_aggregation_functions = root_aggregation_functions
+        statement = statement.with_only_columns(*only_columns)
+        statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
 
         for hook_callable in self._query_hooks[selection_tree.root]:
             hook = hook_callable(statement, self.scope.root_alias)
@@ -431,7 +447,7 @@ class Transpiler(Generic[DeclarativeT]):
         aggregation_tree = selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
         if not aggregation_tree:
             return []
-        # Apply over() on each root aggregation function
+
         return [
             function
             for child in aggregation_tree.children
@@ -623,11 +639,7 @@ class Transpiler(Generic[DeclarativeT]):
             )
 
         if has_root_subquery:
-            subquery_alias = self._root_alias_as_subquery(
-                query_graph.resolved_selection_tree,
-                query_graph.order_by_nodes,
-                dataclasses.replace(query, joins=joins),
-            )
+            subquery_alias = self._root_alias_as_subquery(query_graph, dataclasses.replace(query, joins=joins))
             self.scope.replace(alias=subquery_alias)
             limit, offset = None, None
             query.distinct_on = DistinctOn(query_graph)
@@ -644,9 +656,9 @@ class Transpiler(Generic[DeclarativeT]):
                 if join.node not in subquery_join_nodes
             ]
 
-        # Process root-level aggregations using window functions if requested
-        if query_graph.selection_tree and query_graph.selection_tree.query_metadata.root_aggregations:
-            query.root_aggregation_functions = self._root_aggregation_functions(query_graph.selection_tree)
+            # Process root-level aggregations using window functions if requested
+            if query_graph.selection_tree and query_graph.selection_tree.query_metadata.root_aggregations:
+                query.root_aggregation_functions = self._root_aggregation_functions(query_graph.selection_tree)
 
         return query
 
@@ -707,7 +719,7 @@ class Transpiler(Generic[DeclarativeT]):
             distinct_on=distinct_on or [],
         )
         query = self._build_query(query_graph, limit, offset, allow_null)
-        statement, aggregation_joins = self._select(query_graph.resolved_selection_tree)
+        statement, aggregation_joins = self._select(query_graph.resolved_selection_tree())
         query.joins.extend(aggregation_joins)
         statement = query.statement(statement)
 

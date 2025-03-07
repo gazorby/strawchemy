@@ -278,6 +278,7 @@ class QueryScope(Generic[DeclarativeT]):
         self.selection_function_nodes: set[SQLAlchemyQueryNode] = set()
         self.order_by_function_nodes: set[SQLAlchemyOrderByNode] = set()
         self.where_function_nodes: set[SQLAlchemyQueryNode] = set()
+        self.root_aggregation_columns: set[SQLAlchemyQueryNode] = set()
 
     def _add_scope_id(self, name: str) -> str:
         return f"{name}_{self.level}" if not self.is_root else name
@@ -301,7 +302,11 @@ class QueryScope(Generic[DeclarativeT]):
 
     @property
     def referenced_function_nodes(self) -> set[SQLAlchemyQueryNode]:
-        return (self.where_function_nodes & self.selection_function_nodes) | self.order_by_function_nodes
+        return (
+            (self.where_function_nodes & self.selection_function_nodes)
+            | self.order_by_function_nodes
+            | self.root_aggregation_columns
+        )
 
     @property
     def is_root(self) -> bool:
