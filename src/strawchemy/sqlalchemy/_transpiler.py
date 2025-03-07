@@ -656,9 +656,9 @@ class Transpiler(Generic[DeclarativeT]):
                 if join.node not in subquery_join_nodes
             ]
 
-            # Process root-level aggregations using window functions if requested
-            if query_graph.selection_tree and query_graph.selection_tree.query_metadata.root_aggregations:
-                query.root_aggregation_functions = self._root_aggregation_functions(query_graph.selection_tree)
+        # Process root-level aggregations using window functions if requested
+        if query_graph.selection_tree and query_graph.selection_tree.query_metadata.root_aggregations:
+            query.root_aggregation_functions = self._root_aggregation_functions(query_graph.selection_tree)
 
         return query
 
