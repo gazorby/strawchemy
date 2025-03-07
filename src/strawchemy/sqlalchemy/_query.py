@@ -11,7 +11,7 @@ from sqlalchemy.sql import ColumnElement, SQLColumnExpression
 from sqlalchemy.sql.elements import NamedColumn
 from sqlalchemy.sql.visitors import replacement_traverse
 from strawchemy.graph import merge_trees
-from strawchemy.graphql.constants import NODES_KEY
+from strawchemy.graphql.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.graphql.dto import (
     BooleanFilterDTO,
     EnumDTO,
@@ -148,7 +148,7 @@ class QueryGraph(Generic[DeclarativeT]):
     order_by_nodes: list[SQLAlchemyOrderByNode] = dataclasses.field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
-        self.root_join_tree = self.resolved_selection_tree
+        self.root_join_tree = self.resolved_selection_tree()
         if self.dto_filter is not None:
             self.where_join_tree, self.query_filter = self.dto_filter.filters_tree()
             self.subquery_join_tree = self.where_join_tree
@@ -166,7 +166,6 @@ class QueryGraph(Generic[DeclarativeT]):
             )
             self.order_by_nodes = sorted(self.order_by_tree.leaves())
 
-    @cached_property
     def resolved_selection_tree(self) -> SQLAlchemyQueryNode:
         tree = self.selection_tree
         if tree and tree.query_metadata.root_aggregations:
@@ -203,6 +202,11 @@ class QueryGraph(Generic[DeclarativeT]):
             merged_tree = tree if merged_tree is None else merge_trees(merged_tree, tree, match_on="value_equality")
             max_order = max(orders) + 1
         return merged_tree
+
+    def root_aggregation_tree(self) -> SQLAlchemyQueryNode | None:
+        if self.selection_tree:
+            return self.selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
+        return None
 
 
 @dataclass
@@ -287,6 +291,20 @@ class DistinctOn:
 
 
 @dataclass
+class Conjunction:
+    expressions: list[ColumnElement[bool]]
+    joins: list[Join] = dataclasses.field(default_factory=list)
+    common_join_path: list[SQLAlchemyQueryNode] = dataclasses.field(default_factory=list)
+
+    def has_many_predicates(self) -> bool:
+        if not self.expressions:
+            return False
+        return len(self.expressions) > 1 or (
+            isinstance(self.expressions[0], BooleanClauseList) and len(self.expressions[0]) > 1
+        )
+
+
+@dataclass
 class Query:
     joins: list[Join] = dataclasses.field(default_factory=list)
     where: Where | None = None
@@ -327,17 +345,3 @@ class Query:
             base_statement = base_statement.offset(self.offset)
 
         return base_statement.add_columns(*self.root_aggregation_functions)
-
-
-@dataclass
-class Conjunction:
-    expressions: list[ColumnElement[bool]]
-    joins: list[Join] = dataclasses.field(default_factory=list)
-    common_join_path: list[SQLAlchemyQueryNode] = dataclasses.field(default_factory=list)
-
-    def has_many_predicates(self) -> bool:
-        if not self.expressions:
-            return False
-        return len(self.expressions) > 1 or (
-            isinstance(self.expressions[0], BooleanClauseList) and len(self.expressions[0]) > 1
-        )
