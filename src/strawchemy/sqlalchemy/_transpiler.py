@@ -380,19 +380,17 @@ class Transpiler(Generic[DeclarativeT]):
             *self.scope.inspect(selection_tree).selection(self._sub_query_root_alias),
             *[self.scope.aliased_attribute(node) for node in query_graph.order_by_nodes if not node.value.is_computed],
         ]
-        root_aggregation_functions = []
-        if aggregation_tree := query_graph.root_aggregation_tree():
-            for child in aggregation_tree.leaves():
-                if not child.value.is_function_arg:
-                    continue
-                only_columns.append(self.scope.aliased_attribute(child))
-                root_aggregation_functions.append(self.scope.literal_column(subquery_name, self.scope.key(child)))
 
+        if aggregation_tree := query_graph.root_aggregation_tree():
+            only_columns.extend(
+                self.scope.aliased_attribute(child)
+                for child in aggregation_tree.leaves()
+                if child.value.is_function_arg
+            )
         for function_node in self.scope.referenced_function_nodes:
             only_columns.append(self.scope.columns[function_node])
             self.scope.columns[function_node] = self.scope.literal_column(subquery_name, self.scope.key(function_node))
 
-        query.root_aggregation_functions = root_aggregation_functions
         statement = statement.with_only_columns(*only_columns)
         statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
 

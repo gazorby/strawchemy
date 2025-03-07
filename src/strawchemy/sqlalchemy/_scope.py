@@ -272,7 +272,7 @@ class QueryScope(Generic[DeclarativeT]):
         self._inspector = inspector or SQLAlchemyInspector([model.registry])
 
         self.model = model
-        self.level: int = 0 if not self._parent else self._parent.level + 1
+        self.level: int = self._parent.level + 1 if self._parent else 0
         self.columns: dict[SQLAlchemyQueryNode, NamedColumn[Any]] = {}
         self.selected_columns: list[NamedColumn[Any] | QueryableAttribute[Any]] = []
         self.selection_function_nodes: set[SQLAlchemyQueryNode] = set()
@@ -281,7 +281,7 @@ class QueryScope(Generic[DeclarativeT]):
         self.root_aggregation_columns: set[SQLAlchemyQueryNode] = set()
 
     def _add_scope_id(self, name: str) -> str:
-        return f"{name}_{self.level}" if not self.is_root else name
+        return name if self.is_root else f"{name}_{self.level}"
 
     def _node_key(self, node: SQLAlchemyQueryNode) -> str:
         if name := self._node_keys.get(node):
@@ -302,11 +302,7 @@ class QueryScope(Generic[DeclarativeT]):
 
     @property
     def referenced_function_nodes(self) -> set[SQLAlchemyQueryNode]:
-        return (
-            (self.where_function_nodes & self.selection_function_nodes)
-            | self.order_by_function_nodes
-            | self.root_aggregation_columns
-        )
+        return (self.where_function_nodes & self.selection_function_nodes) | self.order_by_function_nodes
 
     @property
     def is_root(self) -> bool:
