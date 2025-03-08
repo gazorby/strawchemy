@@ -47,7 +47,16 @@ from strawchemy.graphql.dto import (
 from strawchemy.graphql.filters import GraphQLComparison
 
 from ._executor import SyncQueryExecutor
-from ._query import AggregationJoin, Conjunction, DistinctOn, Join, OrderBy, Query, QueryGraph, Where
+from ._query import (
+    AggregationJoin,
+    Conjunction,
+    DistinctOn,
+    Join,
+    OrderBy,
+    Query,
+    QueryGraph,
+    Where,
+)
 from ._scope import QueryScope
 from .exceptions import TranspilingError
 from .inspector import SQLAlchemyGraphQLInspector
@@ -372,12 +381,10 @@ class Transpiler(Generic[DeclarativeT]):
             An aliased class representing the subquery, which can be used in further
             query construction.
         """
-        selection_tree = query_graph.resolved_selection_tree()
         subquery_name = self.scope.model.__tablename__
-        root_insepcted = inspect(self._sub_query_root_alias)
-        statement = select(root_insepcted).options(raiseload("*"))
+        statement = select(inspect(self._sub_query_root_alias)).options(raiseload("*"))
         only_columns: list[QueryableAttribute[Any] | NamedColumn[Any]] = [
-            *self.scope.inspect(selection_tree).selection(self._sub_query_root_alias),
+            *self.scope.inspect(query_graph.root_join_tree).selection(self._sub_query_root_alias),
             *[self.scope.aliased_attribute(node) for node in query_graph.order_by_nodes if not node.value.is_computed],
         ]
         # Add columns referenced in root aggregations
@@ -394,7 +401,7 @@ class Transpiler(Generic[DeclarativeT]):
         statement = statement.with_only_columns(*only_columns)
         statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
 
-        for hook_callable in self._query_hooks[selection_tree.root]:
+        for hook_callable in self._query_hooks[query_graph.root_join_tree.root]:
             hook = hook_callable(statement, self.scope.root_alias)
             statement = hook.statement
 

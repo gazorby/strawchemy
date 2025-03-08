@@ -51,8 +51,12 @@ class Join:
         return self.join.name
 
     @property
+    def relationship(self) -> RelationshipProperty[Any]:
+        return cast(RelationshipProperty[Any], self.node.value.model_field.property)
+
+    @property
     def to_many(self) -> bool:
-        return cast(RelationshipProperty[Any], self.node.value.model_field.property).direction in {
+        return self.relationship.direction in {
             RelationshipDirection.MANYTOMANY,
             RelationshipDirection.ONETOMANY,
         }
