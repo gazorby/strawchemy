@@ -24,7 +24,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, NamedTuple, override
 
 from sqlalchemy import Function, Label, func, inspect, literal_column
-from sqlalchemy.orm import DeclarativeBase, Mapper, QueryableAttribute, RelationshipProperty, aliased
+from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
 from sqlalchemy.orm.util import AliasedClass
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.graphql.constants import NODES_KEY
@@ -40,13 +40,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql.elements import NamedColumn
 
-    from .typing import (
-        DeclarativeSubT,
-        FunctionGenerator,
-        RelationshipSide,
-        SQLAlchemyOrderByNode,
-        SQLAlchemyQueryNode,
-    )
+    from .typing import DeclarativeSubT, FunctionGenerator, RelationshipSide, SQLAlchemyOrderByNode, SQLAlchemyQueryNode
 
 __all__ = ("NodeInspect", "QueryScope")
 
@@ -199,23 +193,22 @@ class NodeInspect:
             functions[self.node] = visit_func(sql_func()).label(self.scope.key(self.node))
         return functions
 
-    def columns_or_ids(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
-        columns = [
-            self.scope.aliased_attribute(child, alias)
-            for child in self.node.children
-            if not child.value.is_relation and not child.value.is_computed
-        ]
-        if self.node.is_root:
-            return columns if columns else self.scope.aliased_id_attributes(self.node, alias)
-        relation_children = [child for child in self.node.children if child.value.is_relation]
-        if not columns:
-            if not relation_children:
-                return []
-            return self.scope.aliased_id_attributes(self.node, alias)
+    def columns(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
+        columns: list[QueryableAttribute[Any]] = []
+        property_set: set[MapperProperty[Any]] = set()
+        for child in self.node.children:
+            if not child.value.is_relation and not child.value.is_computed:
+                aliased = self.scope.aliased_attribute(child, alias)
+                columns.append(aliased)
+                property_set.add(aliased.property)
+
+        id_attributes = self.scope.aliased_id_attributes(self.node, alias)
+        # Ensure id columns are added
+        columns.extend(attribute for attribute in id_attributes if attribute.property not in property_set)
         return columns
 
     def selection(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
-        return [*self.columns_or_ids(alias), *self._foreign_keys(alias)]
+        return [*self.columns(alias), *self._foreign_keys(alias)]
 
 
 class QueryScope(Generic[DeclarativeT]):
@@ -278,7 +271,6 @@ class QueryScope(Generic[DeclarativeT]):
         self.selection_function_nodes: set[SQLAlchemyQueryNode] = set()
         self.order_by_function_nodes: set[SQLAlchemyOrderByNode] = set()
         self.where_function_nodes: set[SQLAlchemyQueryNode] = set()
-        self.root_aggregation_columns: set[SQLAlchemyQueryNode] = set()
 
     def _add_scope_id(self, name: str) -> str:
         return name if self.is_root else f"{name}_{self.level}"
@@ -415,7 +407,12 @@ class QueryScope(Generic[DeclarativeT]):
     def literal_column(self, from_name: str, column_name: str) -> Label[Any]:
         return literal_column(f'{from_name}."{column_name}"').label(self._add_scope_id(column_name))
 
-    def set_relation_alias(self, node: SQLAlchemyQueryNode, side: RelationshipSide, alias: AliasedClass[Any]) -> None:
+    def set_relation_alias(
+        self,
+        node: SQLAlchemyQueryNode,
+        side: RelationshipSide,
+        alias: AliasedClass[Any],
+    ) -> None:
         self._node_alias_map[(node, side)] = alias
 
     def id_field_definitions(
@@ -463,7 +460,11 @@ class QueryScope(Generic[DeclarativeT]):
         self._keys_set.add(scoped_name)
         return self._add_scope_id(scoped_name)
 
-    def replace(self, model: type[DeclarativeT] | None = None, alias: AliasedClass[Any] | None = None) -> None:
+    def replace(
+        self,
+        model: type[DeclarativeT] | None = None,
+        alias: AliasedClass[Any] | None = None,
+    ) -> None:
         if model is not None:
             self.model = model
         if alias is not None:
@@ -471,7 +472,11 @@ class QueryScope(Generic[DeclarativeT]):
 
     def sub(self, model: type[DeclarativeSubT], alias: AliasedClass[Any]) -> QueryScope[DeclarativeSubT]:
         return QueryScope(
-            model=model, root_alias=alias, parent=self, alias_map=self._node_alias_map, inspector=self._inspector
+            model=model,
+            root_alias=alias,
+            parent=self,
+            alias_map=self._node_alias_map,
+            inspector=self._inspector,
         )
 
     @override

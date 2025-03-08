@@ -380,7 +380,7 @@ class Transpiler(Generic[DeclarativeT]):
             *self.scope.inspect(selection_tree).selection(self._sub_query_root_alias),
             *[self.scope.aliased_attribute(node) for node in query_graph.order_by_nodes if not node.value.is_computed],
         ]
-
+        # Add columns referenced in root aggregations
         if aggregation_tree := query_graph.root_aggregation_tree():
             only_columns.extend(
                 self.scope.aliased_attribute(child)
@@ -415,7 +415,7 @@ class Transpiler(Generic[DeclarativeT]):
         Returns:
             The modified statement with the load options applied
         """
-        columns = self.scope.inspect(node).columns_or_ids()
+        columns = self.scope.inspect(node).columns()
         self.scope.selected_columns.extend(columns)
         eager_options: list[_AbstractLoad] = []
         load = contains_eager(self.scope.aliased_attribute(node))
@@ -576,7 +576,7 @@ class Transpiler(Generic[DeclarativeT]):
     def _select(self, selection_tree: SQLAlchemyQueryNode) -> tuple[Select[tuple[DeclarativeT]], list[Join]]:
         aggregation_joins: list[Join] = []
         statement = self._base_statement()
-        root_columns = self.scope.inspect(selection_tree).columns_or_ids()
+        root_columns = self.scope.inspect(selection_tree).columns()
         self.scope.selected_columns.extend(root_columns)
         for node in selection_tree.iter_depth_first():
             if node.value.is_aggregate:
