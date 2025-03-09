@@ -47,7 +47,16 @@ from strawchemy.graphql.dto import (
 from strawchemy.graphql.filters import GraphQLComparison
 
 from ._executor import SyncQueryExecutor
-from ._query import AggregationJoin, Conjunction, DistinctOn, Join, OrderBy, Query, QueryGraph, Where
+from ._query import (
+    AggregationJoin,
+    Conjunction,
+    DistinctOn,
+    Join,
+    OrderBy,
+    Query,
+    QueryGraph,
+    Where,
+)
 from ._scope import QueryScope
 from .exceptions import TranspilingError
 from .inspector import SQLAlchemyGraphQLInspector
@@ -372,31 +381,27 @@ class Transpiler(Generic[DeclarativeT]):
             An aliased class representing the subquery, which can be used in further
             query construction.
         """
-        selection_tree = query_graph.resolved_selection_tree()
         subquery_name = self.scope.model.__tablename__
-        root_insepcted = inspect(self._sub_query_root_alias)
-        statement = select(root_insepcted).options(raiseload("*"))
+        statement = select(inspect(self._sub_query_root_alias)).options(raiseload("*"))
         only_columns: list[QueryableAttribute[Any] | NamedColumn[Any]] = [
-            *self.scope.inspect(selection_tree).selection(self._sub_query_root_alias),
+            *self.scope.inspect(query_graph.root_join_tree).selection(self._sub_query_root_alias),
             *[self.scope.aliased_attribute(node) for node in query_graph.order_by_nodes if not node.value.is_computed],
         ]
-        root_aggregation_functions = []
+        # Add columns referenced in root aggregations
         if aggregation_tree := query_graph.root_aggregation_tree():
-            for child in aggregation_tree.leaves():
-                if not child.value.is_function_arg:
-                    continue
-                only_columns.append(self.scope.aliased_attribute(child))
-                root_aggregation_functions.append(self.scope.literal_column(subquery_name, self.scope.key(child)))
-
+            only_columns.extend(
+                self.scope.aliased_attribute(child)
+                for child in aggregation_tree.leaves()
+                if child.value.is_function_arg
+            )
         for function_node in self.scope.referenced_function_nodes:
             only_columns.append(self.scope.columns[function_node])
             self.scope.columns[function_node] = self.scope.literal_column(subquery_name, self.scope.key(function_node))
 
-        query.root_aggregation_functions = root_aggregation_functions
         statement = statement.with_only_columns(*only_columns)
         statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
 
-        for hook_callable in self._query_hooks[selection_tree.root]:
+        for hook_callable in self._query_hooks[query_graph.root_join_tree.root]:
             hook = hook_callable(statement, self.scope.root_alias)
             statement = hook.statement
 
@@ -417,7 +422,7 @@ class Transpiler(Generic[DeclarativeT]):
         Returns:
             The modified statement with the load options applied
         """
-        columns = self.scope.inspect(node).columns_or_ids()
+        columns = self.scope.inspect(node).columns()
         self.scope.selected_columns.extend(columns)
         eager_options: list[_AbstractLoad] = []
         load = contains_eager(self.scope.aliased_attribute(node))
@@ -578,7 +583,7 @@ class Transpiler(Generic[DeclarativeT]):
     def _select(self, selection_tree: SQLAlchemyQueryNode) -> tuple[Select[tuple[DeclarativeT]], list[Join]]:
         aggregation_joins: list[Join] = []
         statement = self._base_statement()
-        root_columns = self.scope.inspect(selection_tree).columns_or_ids()
+        root_columns = self.scope.inspect(selection_tree).columns()
         self.scope.selected_columns.extend(root_columns)
         for node in selection_tree.iter_depth_first():
             if node.value.is_aggregate:
