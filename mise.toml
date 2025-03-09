@@ -7,6 +7,7 @@ _.file = ".env.json"
 ruff = "latest"
 uv = "latest"
 jq = "latest"
+pre-commit = "latest"
 
 
 [tasks.install-pre-commit]
@@ -19,7 +20,7 @@ alias = "i"
 run = "uv sync --all-extras --dev"
 
 [tasks.install-test]
-description = "Install test dependencies"
+description = "Install test dependencies only"
 run = "uv sync --only-group test"
 
 [tasks.test]
@@ -55,6 +56,11 @@ run = '''
         }
     )'
 '''
+
+[tasks.pre-commit]
+description = "Run pre-commit checks"
+depends = "install-pre-commit"
+run = "pre-commit run --color=always --all-files"
 
 [tasks.pyright]
 description = "Run pyright"
