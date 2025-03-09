@@ -123,6 +123,7 @@ def test_multiple_types_error(path: str) -> None:
         pytest.param("tests.schemas.custom_id_field_name.Query", id="custom_id_field_name"),
     ],
 )
+@pytest.mark.snapshot
 def test_schemas(path: str, snapshot: SnapshotAssertion) -> None:
     module, query_name = path.rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
