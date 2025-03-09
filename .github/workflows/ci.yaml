@@ -153,40 +153,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Pip cache
-        id: cache
-        uses: actions/cache@v4
+      - name: Setup mise
+        uses: jdx/mise-action@v2
         with:
-          path: |
-            ~/.cache
-            ~/.nox
-          key: ${{ runner.os }}-nox-lint-${{ matrix.session.session }}-${{hashFiles('**/uv.lock') }} }}
-          restore-keys: |
-            ${{ runner.os }}-lint-nox-${{ matrix.session.session }}-
-            ${{ runner.os }}-lint-nox-
+          cache: true
+          log_level: debug
 
-      - name: Setup nox
-        id: setup-nox
-        uses: wntrblm/nox@main
-        with:
-          python-versions: "3.12"
-
-      - name: Setup uv
-        id: setup-uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-suffix: ${{ runner.os }}-${{ matrix.session.session }}
-
-      - name: Install dependencies
-        run: uv sync --group lint
-
-      - name: Add .venv/bin to PATH
-        run: echo "$PWD/.venv/bin" >> $GITHUB_PATH
-
-      - run: nox -t lint
+      - name: Run linting
+        run: mise run lint
 
   # Ensure the workflow is successful only if all job in matrixes are successful
   result:

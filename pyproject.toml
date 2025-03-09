@@ -56,7 +56,7 @@ test = [
     "pytest-xdist",
     "syrupy"
 ]
-lint = ["pyright", "ruff", "vulture"]
+lint = ["pyright[nodejs]", "ruff", "vulture"]
 doc = ["git-cliff>=2.6.1"]
 
 [tool.bumpversion]
