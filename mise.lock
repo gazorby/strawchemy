@@ -1,0 +1,15 @@
+[tools.jq]
+version = "1.7.1"
+backend = "aqua:jqlang/jq"
+
+[tools.pre-commit]
+version = "4.1.0"
+backend = "aqua:pre-commit/pre-commit"
+
+[tools.ruff]
+version = "0.9.10"
+backend = "aqua:astral-sh/ruff"
+
+[tools.uv]
+version = "0.6.5"
+backend = "aqua:astral-sh/uv"
