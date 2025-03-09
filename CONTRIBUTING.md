@@ -8,16 +8,17 @@ This project uses [mise](https://mise.jdx.dev/) to manage tasks used for buildin
 
    - Install mise globally
 
-      See [here](https://mise.jdx.dev/installing-mise.html)
+     See [here](https://mise.jdx.dev/installing-mise.html)
 
    - Installing mise locally
 
-      If you don't want to install mise globally, you can perform a local install using the provided bootstrap script.
+     If you don't want to install mise globally, you can perform a local install using the provided bootstrap script.
 
-      1. Run `./bin/mise` to download and install mise in the `.mise` folder
-      2. (optional) [Activate mise in your shell](https://mise.jdx.dev/installing-mise.html#shells)
+     1. Run `./bin/mise` to download and install mise in the `.mise` folder
+     2. (optional) [Activate mise in your shell](https://mise.jdx.dev/installing-mise.html#shells)
 
 2. Run `mise run install` to install all dependencies and pre-commit hooks
+3. See [tasks](https://github.com/gazorby/strawchemy/blob/main/tasks.md) documentation for more details
 
 ## 🤝 Code contributions
 
