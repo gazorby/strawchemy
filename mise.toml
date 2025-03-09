@@ -2,6 +2,7 @@
 PROJECT_NAME = "strawchemy"
 _.python.venv = { path = ".venv" }
 _.file = ".env.json"
+_.path = ["./node_modules/.bin"]
 
 [tools]
 ruff = "latest"
@@ -9,48 +10,56 @@ uv = "latest"
 jq = "latest"
 pre-commit = "latest"
 
+[tasks._install]
+description = "Install dependencies"
+hide = true
+run = "uv sync --all-extras --dev"
 
-[tasks.install-pre-commit]
+[tasks."install:pre-commit"]
 description = "Install pre-commit hooks"
 run = "pre-commit install --install-hooks 2>&1"
 
 [tasks.install]
-description = "Install dependencies"
+description = "Install dependencies and pre-commit hooks"
 alias = "i"
-run = "uv sync --all-extras --dev"
+depends = ["install:pre-commit", "_install"]
 
-[tasks.install-test]
+[tasks."install:test"]
 description = "Install test dependencies only"
 run = "uv sync --only-group test"
 
+[tasks."render:usage"]
+env = { CLICOLOR_FORCE = "0" }
+run = ["mise generate task-docs > tasks.md"]
+
 [tasks.test]
 description = "Run tests"
-depends = "install"
+depends = "_install"
 alias = "t"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
 
-[tasks.test-ci]
+[tasks."test:ci"]
 description = "Run tests in CI"
-depends = "install-test"
+depends = "install:test"
 usage = 'arg "<session>"'
 run = "uv run nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 --junitxml=./junit.xml"
 
-[tasks.update-snapshot]
-description = "Run tests"
-depends = "install"
+[tasks."test:update-snapshot"]
+description = "Run snapshot-based tests and update snapshots"
+depends = "_install"
 run = 'uv run pytest -m snapshot --snapshot-update'
 
-[tasks.test-py13]
+[tasks."test:py13"]
 description = "Run tests on python 3.13"
-depends = "install"
+depends = "_install"
 alias = "t13"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -p 3.13 -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
 
-[tasks.test-matrix]
+[tasks."test:matrix"]
 description = "Output test matrix for CI"
-depends = "install-test"
+depends = "install:test"
 run = '''
     nox --json -t tests -l |
     jq 'map(
@@ -62,6 +71,27 @@ run = '''
     )'
 '''
 
+[tasks."ruff:check"]
+description = "Check ruff formatting"
+run = "ruff format --check"
+
+[tasks."ruff:fix"]
+description = "Fix ruff errors"
+run = "ruff check --fix --unsafe-fixes"
+
+[tasks."ruff:format"]
+description = "Format code"
+run = "ruff format"
+
+[tasks.lint]
+description = "Lint the code"
+alias = "l"
+depends = ["vulture", "pyright", "ruff:check"]
+
+[tasks."lint:pre-commit"]
+description = "Lint the code in pre-commit hook"
+depends = ["vulture", "pyright"]
+
 [tasks.pre-commit]
 description = "Run pre-commit checks"
 depends = "install-pre-commit"
@@ -69,37 +99,16 @@ run = "pre-commit run --color=always --all-files"
 
 [tasks.pyright]
 description = "Run pyright"
-depends = "install"
+depends = "_install"
 run = "uv run pyright"
 env = { PYRIGHT_PYTHON_PYLANCE_VERSION = "latest-release" }
 
 [tasks.vulture]
 description = "Run vulture"
-depends = "install"
+depends = "_install"
 run = "uv run vulture"
-
-[tasks.ruff]
-description = "Check ruff formatting"
-run = "ruff format --check"
-
-[tasks.fix]
-description = "Format code"
-run = "ruff check --fix --unsafe-fixes"
-
-[tasks.format]
-description = "Format code"
-run = "ruff format"
-
-[tasks.lint]
-description = "Lint the code"
-alias = "l"
-depends = ["vulture", "pyright", "ruff"]
-
-[tasks.lint-pre-commit]
-description = "Lint the code in pre-commit hook"
-depends = ["vulture", "pyright"]
 
 [tasks.auto-bump]
 description = "Auto bump the version"
-depends = "install"
+depends = "_install"
 run = "uv run bump-my-version bump --new-version $(uv run git cliff --unreleased --bumped-version)"

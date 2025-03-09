@@ -52,7 +52,7 @@ jobs:
         id: set-matrix
         shell: bash
         run: |
-          echo sessions=$(mise run test-matrix) | tee --append $GITHUB_OUTPUT
+          echo sessions=$(mise run test:matrix) | tee --append $GITHUB_OUTPUT
 
   tests:
     name: 🔬 ${{ matrix.session.name }}
@@ -92,7 +92,7 @@ jobs:
           log_level: debug
 
       - name: Run tests
-        run: mise run test-ci "${{ matrix.session.session }}"
+        run: mise run test:ci "${{ matrix.session.session }}"
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4

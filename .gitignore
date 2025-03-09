@@ -181,3 +181,4 @@ cython_debug/
 # Mise
 mise.local.toml
 .env.json
+.mise
