@@ -32,7 +32,11 @@ repos:
         args:
           - --toml=./pyproject.toml
 
-  # Python specific
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.4
+    hooks:
+      - id: actionlint
+        args: ["-shellcheck", ""]
 
   # Commitizen
   - repo: https://github.com/commitizen-tools/commitizen
@@ -59,7 +63,7 @@ repos:
     hooks:
       - id: lint
         name: lint
-        entry: mise run lint-pre-commit
+        entry: mise run lint:pre-commit
         language: python
         types: [python]
         require_serial: true

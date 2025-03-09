@@ -54,10 +54,15 @@ jobs:
         env:
           BUMPVERSION_TAG: "true"
         with:
-          args: ${{ inputs.bump-type }}
+          args: ${{ github.event.inputs.releaseType }}
           github-token: ${{ secrets.PAT }}
 
-      - name: Check
-        if: steps.bump.outputs.bumped == 'true'
+      - name: Check manual bump
+        if: steps.manual-version-bump.outputs.bumped == 'true'
         run: |
-          echo "Version was bumped from ${{ steps.bump.outputs.previous-version }} to ${{ steps.bump.outputs.current-version }}!"
+          echo "Version was bumped from ${{ steps.manual-version-bump.outputs.previous-version }} to ${{ steps.manual-version-bump.outputs.current-version }}!"
+
+      - name: Check auto bump
+        if: steps.auto-version-bump.outputs.bumped == 'true'
+        run: |
+          echo "Version was bumped from ${{ steps.auto-version-bump.outputs.previous-version }} to ${{ steps.auto-version-bump.outputs.current-version }}!"

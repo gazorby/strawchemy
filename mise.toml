@@ -94,7 +94,7 @@ depends = ["vulture", "pyright"]
 
 [tasks.pre-commit]
 description = "Run pre-commit checks"
-depends = "install-pre-commit"
+depends = "install:pre-commit"
 run = "pre-commit run --color=always --all-files"
 
 [tasks.pyright]
