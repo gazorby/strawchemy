@@ -57,18 +57,9 @@ repos:
 
   - repo: local
     hooks:
-      - id: vulture
-        name: vulture
-        entry: uv run vulture src
-        language: python
-        types: [python]
-        require_serial: true
-
-  - repo: local
-    hooks:
-      - id: pyright
-        name: pyright
-        entry: uv run pyright
+      - id: lint
+        name: lint
+        entry: mise run lint-pre-commit
         language: python
         types: [python]
         require_serial: true

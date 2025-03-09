@@ -90,6 +90,10 @@ description = "Lint the code"
 alias = "l"
 depends = ["vulture", "pyright", "ruff"]
 
+[tasks.lint-pre-commit]
+description = "Lint the code in pre-commit hook"
+depends = ["vulture", "pyright"]
+
 [tasks.auto-bump]
 description = "Auto bump the version"
 depends = "install"
