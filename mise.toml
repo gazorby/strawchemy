@@ -34,7 +34,7 @@ run = 'uv run nox -r -t tests -- --cov-report=term-missing:skip-covered -n=auto 
 description = "Run tests in CI"
 depends = "install-test"
 usage = 'arg "<session>"'
-run = 'uv run nox -r -t tests -n=2 --junitxml=./junit.xml --session {{arg(name="session", var=true)}}'
+run = "uv run nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 --junitxml=./junit.xml"
 
 [tasks.update-snapshot]
 description = "Run tests"
