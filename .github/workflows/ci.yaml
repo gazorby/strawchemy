@@ -92,7 +92,7 @@ jobs:
           log_level: debug
 
       - name: Run tests
-        run: mise run test-ci
+        run: mise run test-ci "${{ matrix.session.session }}"
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
