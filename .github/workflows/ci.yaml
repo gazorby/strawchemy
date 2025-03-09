@@ -68,12 +68,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup nox
-        id: setup-nox
-        uses: wntrblm/nox@main
-        with:
-          python-versions: "3.12"
-
       - name: Set up Docker Buildx
         if: contains(matrix.session.tags, 'docker')
         id: docker-buildx
@@ -91,15 +85,14 @@ jobs:
             ${{ runner.os }}-nox-${{ matrix.session.session }}-
             ${{ runner.os }}-nox-
 
-      - name: Setup uv
-        id: setup-uv
-        uses: astral-sh/setup-uv@v5
+      - name: Setup mise
+        uses: jdx/mise-action@v2
         with:
-          enable-cache: true
-          cache-suffix: ${{ runner.os }}-${{ matrix.session.session }}
+          cache: true
+          log_level: debug
 
       - name: Run tests
-        run: nox -r -t tests -s "${{ matrix.session.session }}" -- --junitxml=./junit.xml
+        run: mise run test-ci "${{ matrix.session.session }}"
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
