@@ -66,7 +66,6 @@ description = "Lint the code"
 alias = "l"
 depends = ["vulture", "pyright", "ruff"]
 
-
 [tasks.auto-bump]
 description = "Auto bump the version"
 depends = "install"
