@@ -42,24 +42,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup nox
-        id: setup-nox
-        uses: wntrblm/nox@main
+      - name: Setup mise
+        uses: jdx/mise-action@v2
+        with:
+          cache: true
+          log_level: debug
 
       - name: Generate test matrix
         id: set-matrix
         shell: bash
         run: |
-          echo sessions=$(
-            nox --json -t tests -l |
-            jq 'map(
-              {
-                session,
-                tags,
-                name: "\( .name ) on \( .python )\( if .call_spec != {} then " (\(.call_spec | to_entries | map("\(.key)=\(.value)") | join(", ")))" else "" end )"
-              }
-            )'
-          ) | tee --append $GITHUB_OUTPUT
+          echo sessions=$(mise run test-matrix) | tee --append $GITHUB_OUTPUT
 
   tests:
     name: 🔬 ${{ matrix.session.name }}

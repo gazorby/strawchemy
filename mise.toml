@@ -6,6 +6,7 @@ _.file = ".env.json"
 [tools]
 ruff = "latest"
 uv = "latest"
+jq = "latest"
 
 
 [tasks.install-pre-commit]
@@ -16,6 +17,10 @@ run = "pre-commit install --install-hooks 2>&1"
 description = "Install dependencies"
 alias = "i"
 run = "uv sync --all-extras --dev"
+
+[tasks.install-test]
+description = "Install test dependencies"
+run = "uv sync --only-group test"
 
 [tasks.test]
 description = "Run tests"
@@ -37,6 +42,19 @@ alias = "t13"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -p 3.13 -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
 
+[tasks.test-matrix]
+description = "Output test matrix for CI"
+depends = "install-test"
+run = '''
+    nox --json -t tests -l |
+    jq 'map(
+        {
+        session,
+        tags,
+        name: "\( .name ) on \( .python )\( if .call_spec != {} then " (\(.call_spec | to_entries | map("\(.key)=\(.value)") | join(", ")))" else "" end )"
+        }
+    )'
+'''
 
 [tasks.pyright]
 description = "Run pyright"
