@@ -29,7 +29,6 @@ description = "Install test dependencies only"
 run = "uv sync --only-group test"
 
 [tasks."render:usage"]
-env = { CLICOLOR_FORCE = "0" }
 run = ["mise generate task-docs > tasks.md"]
 
 [tasks.test]
@@ -110,5 +109,20 @@ run = "uv run vulture"
 
 [tasks.auto-bump]
 description = "Auto bump the version"
+confirm = "Are you sure you want to auto bump the version?"
 depends = "_install"
 run = "uv run bump-my-version bump --new-version $(uv run git cliff --unreleased --bumped-version)"
+
+[tasks.clean]
+description = "Clean working directory"
+confirm = 'Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files.'
+run = [
+  "rm -rf .nox .pytest_cache .ruff_cache .hypothesis build/ dist/ .eggs/ .coverage coverage.xml coverage.json junit.xml htmlcov/ tests/.pytest_cache tests/**/.pytest_cache .mypy_cache .unasyncd_cache/ .auto_pytabs_cache node_modules >/dev/null 2>&1",
+  "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
+  "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
+  "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
+]

@@ -6,6 +6,12 @@
 
 Auto bump the version
 
+## `clean`
+
+- **Usage**: `clean`
+
+Clean working directory
+
 ## `install`
 
 - Depends: install:pre-commit, _install
@@ -46,7 +52,7 @@ Lint the code in pre-commit hook
 
 ## `pre-commit`
 
-- Depends: install-pre-commit
+- Depends: install:pre-commit
 
 - **Usage**: `pre-commit`
 
