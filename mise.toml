@@ -2,7 +2,6 @@
 PROJECT_NAME = "strawchemy"
 _.python.venv = { path = ".venv" }
 _.file = ".env.json"
-_.path = ["./node_modules/.bin"]
 
 [tools]
 ruff = "latest"
@@ -29,6 +28,7 @@ description = "Install test dependencies only"
 run = "uv sync --only-group test"
 
 [tasks."render:usage"]
+description = "Generate tasks documentation"
 run = ["mise generate task-docs > tasks.md"]
 
 [tasks.test]

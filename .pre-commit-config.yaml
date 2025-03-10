@@ -67,3 +67,13 @@ repos:
         language: python
         types: [python]
         require_serial: true
+
+  - repo: local
+    hooks:
+      - id: task-docs
+        name: Tasks documentation
+        entry: mise run render:usage
+        language: system
+        files: ^mise.toml$
+        pass_filenames: false
+        require_serial: true

@@ -70,6 +70,8 @@ Run pyright
 
 - **Usage**: `render:usage`
 
+Generate tasks documentation
+
 ## `ruff:check`
 
 - **Usage**: `ruff:check`
