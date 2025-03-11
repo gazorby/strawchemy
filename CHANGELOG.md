@@ -2,6 +2,56 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1](https://github.com/gazorby/strawchemy/compare/v0.5.0..v0.5.1) - 2025-03-11
+
+### 🐛 Bug Fixes
+
+- *(mapping)* Dto edge cases - ([fd417a2](https://github.com/gazorby/strawchemy/commit/fd417a21e854dcc9596d3aa8fdb704eebb1e2711))
+- *(mapping)* Field arguments not replaced by override types - ([bf44803](https://github.com/gazorby/strawchemy/commit/bf44803ab5f41502ee24b18cd484ec9f87da4c62))
+- *(transpiler)* Remove caching property on resolved tree - ([6b11dcc](https://github.com/gazorby/strawchemy/commit/6b11dccab751a1e390adb6dc612c16c0321756ff))
+- *(transpiler)* Properly handle root aggregations - ([bacd111](https://github.com/gazorby/strawchemy/commit/bacd111c553ef8ed8b810d272ff7827f5ff6f26a))
+- *(transpiler)* Root aggregations not handled when using subquery - ([495420f](https://github.com/gazorby/strawchemy/commit/495420f024308e20e5e03e6d89d73ebf7db52332))
+- *(transpiler)* Add id columns in node selection if not present - ([5b06a8d](https://github.com/gazorby/strawchemy/commit/5b06a8d40cf3086fac16e17fb4f9cb85e6cc0bfc))
+- *(transpiler)* Update - ([a786a5f](https://github.com/gazorby/strawchemy/commit/a786a5fa7ada02d5f87eaaa9e82152bbcec6ab23))
+- *(typing)* Session_getter - ([af2edaa](https://github.com/gazorby/strawchemy/commit/af2edaa02d50d93879b1137068d60f3e97d08e9b))
+- Update - ([c334738](https://github.com/gazorby/strawchemy/commit/c33473829fa8976f31242828e7294543ef738044))
+
+### 🚜 Refactor
+
+- *(dx)* Update .editorconfig - ([89c9ac2](https://github.com/gazorby/strawchemy/commit/89c9ac202218e5d06e3da956ba7b91e7844219fb))
+- *(transpiler)* Minor changes - ([dafa2f5](https://github.com/gazorby/strawchemy/commit/dafa2f5549c1a4f81eaff9cd71bdb57aca24c85b))
+
+### 📚 Documentation
+
+- *(contributing)* Add tasks.md reference - ([c75b043](https://github.com/gazorby/strawchemy/commit/c75b043625a0c30f33a358d63d7bd1edc4d22be6))
+- Update CONTRIBUTING.md - ([447e529](https://github.com/gazorby/strawchemy/commit/447e5295c4b6d434669f5aabe5e17825d231f6a9))
+
+### 🧪 Testing
+
+- *(integration)* Initial work - ([cc644b5](https://github.com/gazorby/strawchemy/commit/cc644b5edbfb79d745820d9b91d1bf7972db390c))
+- *(integration)* Add relation tests - ([7b9de00](https://github.com/gazorby/strawchemy/commit/7b9de002b52e6c976c0d0fe6048e9086afd42efb))
+- *(snapshot)* Use a custom pytest marker for snapshot-based tests - ([7bf8ff6](https://github.com/gazorby/strawchemy/commit/7bf8ff666a26002aaf548017d0ddd8b76c71edb6))
+- *(unit)* Move unit schemas in unit folder - ([4f83c4a](https://github.com/gazorby/strawchemy/commit/4f83c4a1e8012122164771da5fae4475c174c7ad))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(ci)* Only fail workflow on cancellation/failure of test/lint jobs - ([c67b0d5](https://github.com/gazorby/strawchemy/commit/c67b0d53caa93137791a106b0bb0c2ad08f515ed))
+- *(ci)* Add mise.toml to paths whitelist in skip check job - ([3d23d82](https://github.com/gazorby/strawchemy/commit/3d23d82b21d698d2103817b1d1b89997fa56aa07))
+- *(ci)* Run tests using mise task - ([7902dd9](https://github.com/gazorby/strawchemy/commit/7902dd955cc43ee7b2951d4c4520009385e9c706))
+- *(ci)* Fix missing arg to test-ci task - ([37aba9c](https://github.com/gazorby/strawchemy/commit/37aba9c6e7f3c3153a1f0c4eb5e5c5a5a477d2e9))
+- *(ci)* Fix session param in nox call - ([b273b54](https://github.com/gazorby/strawchemy/commit/b273b54c7a379a5ce9ab10a87faed6f88a7e6d2f))
+- *(ci)* Fix typo - ([0269a3e](https://github.com/gazorby/strawchemy/commit/0269a3ef089086148b95b449380dd128ff988e4c))
+- *(lint)* Use mise - ([4e03e64](https://github.com/gazorby/strawchemy/commit/4e03e648087c05c7b8424ab3e196714b539ef4e2))
+- *(mise)* Add a task to run pre-commit checks - ([2b1b787](https://github.com/gazorby/strawchemy/commit/2b1b787e1a438c307d616a966fff1685eaa43ecd))
+- *(mise)* Add clean task - ([321ac42](https://github.com/gazorby/strawchemy/commit/321ac4292e8f4b89092d7b1d140494a1e4fa3283))
+- *(mise)* Add mise.lock - ([135fe82](https://github.com/gazorby/strawchemy/commit/135fe82fe2ac1fb3300a0cc61d9f7fc6e028dc23))
+- *(mise)* Streamline task names - ([dbf4357](https://github.com/gazorby/strawchemy/commit/dbf4357a0b17999e1586e6d88c5629d8ec20ca1b))
+- *(mise)* Remove actionlint in lint task - ([992aeec](https://github.com/gazorby/strawchemy/commit/992aeec15674324cdbd66ab13a61621105dea1af))
+- *(pre-commit)* Run pre-commit lint check in mise task - ([6c7b017](https://github.com/gazorby/strawchemy/commit/6c7b0170259d650b426039b4336f25db0f7fb446))
+- *(pre-commit)* Add actionlint hook - ([b75a842](https://github.com/gazorby/strawchemy/commit/b75a842863581c874e18465a3c820f5f1e7453d7))
+- *(pre-commit)* Add a hook to render tasks documentation - ([b067a84](https://github.com/gazorby/strawchemy/commit/b067a846d048ffbbb865740a04f178f58fa9d2e8))
+- *(release)* Bump to v0.5.1 - ([d1b30ca](https://github.com/gazorby/strawchemy/commit/d1b30cae2022e51b74aa91f5742fe1f25049c252))
+- *(test)* Call mise task to generate test matrix - ([43a0308](https://github.com/gazorby/strawchemy/commit/43a0308697661080c2b30758ec40eef178ac9f49))
 ## [0.5.0](https://github.com/gazorby/strawchemy/compare/v0.4.0..v0.5.0) - 2025-03-03
 
 ### 🚀 Features
