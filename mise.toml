@@ -97,7 +97,7 @@ run = 'uv run pytest -m snapshot --snapshot-update'
 description = "Run tests in CI"
 depends = "install:test"
 usage = 'arg "<session>"'
-run = "uv run nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 --junitxml=./junit.xml"
+run = "uv run nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 --junit-xml=./junit.xml -o junit_family=legacy"
 
 [tasks."ci:lint"]
 description = "Lint CI yaml files"
