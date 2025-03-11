@@ -35,6 +35,7 @@ Output test matrix for CI
 ## `clean`
 
 - **Usage**: `clean`
+- **Aliases**: `c`
 
 Clean working directory
 
@@ -121,7 +122,7 @@ Format code
 - Depends: _install
 
 - **Usage**: `test:integration [test]`
-- **Aliases**: `t`
+- **Aliases**: `ti`
 
 Run tests
 
@@ -129,14 +130,14 @@ Run tests
 
 #### `[test]`
 
-## `test:py13`
+## `test:integration-all`
 
 - Depends: _install
 
-- **Usage**: `test:py13 [test]`
-- **Aliases**: `t13`
+- **Usage**: `test:integration-all [test]`
+- **Aliases**: `tia`
 
-Run tests on python 3.13
+Run integration tests on all supported python versions
 
 ### Arguments
 
@@ -147,9 +148,22 @@ Run tests on python 3.13
 - Depends: _install
 
 - **Usage**: `test:unit [test]`
-- **Aliases**: `t`
+- **Aliases**: `tu`
 
 Run tests
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit-all`
+
+- Depends: _install
+
+- **Usage**: `test:unit-all [test]`
+- **Aliases**: `tua`
+
+Run unit tests on all supported python versions
 
 ### Arguments
 

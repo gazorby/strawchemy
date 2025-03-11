@@ -10,6 +10,31 @@ jq = "latest"
 pre-commit = "latest"
 actionlint = "latest"
 
+[vars]
+local_pytest_options = "--cov-report=term-missing:skip-covered -n=2"
+cleanable_paths = '''{{
+[
+  ".nox",
+  ".pytest_cache",
+  ".ruff_cache",
+  ".hypothesis",
+  "build/",
+  "dist/",
+  ".eggs/",
+  ".coverage",
+  "coverage.xml",
+  "coverage.json",
+  "junit.xml",
+  "htmlcov/",
+  "tests/.pytest_cache",
+  "tests/**/.pytest_cache",
+  ".mypy_cache",
+  ".unasyncd_cache/",
+  ".auto_pytabs_cache",
+  "node_module",
+] | join(sep=" ")
+}}'''
+
 # Dependencies
 
 [tasks._install]
@@ -35,28 +60,36 @@ run = "uv sync --only-group test"
 [tasks."test:unit"]
 description = "Run tests"
 depends = "_install"
-alias = "t"
+alias = "tu"
 usage = 'arg "<test>" default=""'
-run = 'uv run nox -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
+run = 'uv run pytest -m "not integration" {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration"]
 description = "Run tests"
 depends = "_install"
-alias = "t"
+alias = "ti"
 usage = 'arg "<test>" default=""'
-run = 'uv run nox -r -t tests -- --cov-report=term-missing:skip-covered {{arg(name="test", var=true, default="")}}'
+run = 'uv run pytest -m integration {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:unit-all"]
+description = "Run unit tests on all supported python versions"
+depends = "_install"
+alias = "tua"
+usage = 'arg "<test>" default=""'
+run = 'uv run nox -r -t unit -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:integration-all"]
+description = "Run integration tests on all supported python versions"
+depends = "_install"
+alias = "tia"
+usage = 'arg "<test>" default=""'
+run = 'uv run nox -r -t integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:update-snapshot"]
 description = "Run snapshot-based tests and update snapshots"
 depends = "_install"
 run = 'uv run pytest -m snapshot --snapshot-update'
 
-[tasks."test:py13"]
-description = "Run tests on python 3.13"
-depends = "_install"
-alias = "t13"
-usage = 'arg "<test>" default=""'
-run = 'uv run nox -p 3.13 -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
 
 # CI
 
@@ -133,9 +166,10 @@ run = "uv run bump-my-version bump --new-version $(uv run git cliff --unreleased
 
 [tasks.clean]
 description = "Clean working directory"
+alias = "c"
 confirm = 'Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files.'
 run = [
-  "rm -rf .nox .pytest_cache .ruff_cache .hypothesis build/ dist/ .eggs/ .coverage coverage.xml coverage.json junit.xml htmlcov/ tests/.pytest_cache tests/**/.pytest_cache .mypy_cache .unasyncd_cache/ .auto_pytabs_cache node_modules >/dev/null 2>&1",
+  "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
   "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
   "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
   "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
