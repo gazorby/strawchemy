@@ -6,6 +6,32 @@
 
 Auto bump the version
 
+## `ci:lint`
+
+- **Usage**: `ci:lint`
+
+Lint CI yaml files
+
+## `ci:test`
+
+- Depends: install:test
+
+- **Usage**: `ci:test <session>`
+
+Run tests in CI
+
+### Arguments
+
+#### `<session>`
+
+## `ci:test-matrix`
+
+- Depends: install:test
+
+- **Usage**: `ci:test-matrix`
+
+Output test matrix for CI
+
 ## `clean`
 
 - **Usage**: `clean`
@@ -35,7 +61,7 @@ Install test dependencies only
 
 ## `lint`
 
-- Depends: vulture, pyright, ruff:check
+- Depends: vulture, pyright, ruff:check, ci:lint
 
 - **Usage**: `lint`
 - **Aliases**: `l`
@@ -90,18 +116,6 @@ Fix ruff errors
 
 Format code
 
-## `test:ci`
-
-- Depends: install:test
-
-- **Usage**: `test:ci <session>`
-
-Run tests in CI
-
-### Arguments
-
-#### `<session>`
-
 ## `test:integration`
 
 - Depends: _install
@@ -114,14 +128,6 @@ Run tests
 ### Arguments
 
 #### `[test]`
-
-## `test:matrix`
-
-- Depends: install:test
-
-- **Usage**: `test:matrix`
-
-Output test matrix for CI
 
 ## `test:py13`
 

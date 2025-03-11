@@ -8,28 +8,29 @@ ruff = "latest"
 uv = "latest"
 jq = "latest"
 pre-commit = "latest"
+actionlint = "latest"
+
+# Dependencies
 
 [tasks._install]
 description = "Install dependencies"
 hide = true
 run = "uv sync --all-extras --dev"
 
-[tasks."install:pre-commit"]
-description = "Install pre-commit hooks"
-run = "pre-commit install --install-hooks 2>&1"
-
 [tasks.install]
 description = "Install dependencies and pre-commit hooks"
 alias = "i"
 depends = ["install:pre-commit", "_install"]
 
+[tasks."install:pre-commit"]
+description = "Install pre-commit hooks"
+run = "pre-commit install --install-hooks 2>&1"
+
 [tasks."install:test"]
 description = "Install test dependencies only"
 run = "uv sync --only-group test"
 
-[tasks."render:usage"]
-description = "Generate tasks documentation"
-run = ["mise generate task-docs > tasks.md"]
+# Test
 
 [tasks."test:unit"]
 description = "Run tests"
@@ -45,12 +46,6 @@ alias = "t"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -t tests -- --cov-report=term-missing:skip-covered {{arg(name="test", var=true, default="")}}'
 
-[tasks."test:ci"]
-description = "Run tests in CI"
-depends = "install:test"
-usage = 'arg "<session>"'
-run = "uv run nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 --junitxml=./junit.xml"
-
 [tasks."test:update-snapshot"]
 description = "Run snapshot-based tests and update snapshots"
 depends = "_install"
@@ -63,7 +58,19 @@ alias = "t13"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -p 3.13 -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
 
-[tasks."test:matrix"]
+# CI
+
+[tasks."ci:test"]
+description = "Run tests in CI"
+depends = "install:test"
+usage = 'arg "<session>"'
+run = "uv run nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 --junitxml=./junit.xml"
+
+[tasks."ci:lint"]
+description = "Lint CI yaml files"
+run = "actionlint"
+
+[tasks."ci:test-matrix"]
 description = "Output test matrix for CI"
 depends = "install:test"
 run = '''
@@ -77,6 +84,8 @@ run = '''
     )'
 '''
 
+# Linting
+
 [tasks."ruff:check"]
 description = "Check ruff formatting"
 run = "ruff format --check"
@@ -89,20 +98,6 @@ run = "ruff check --fix --unsafe-fixes"
 description = "Format code"
 run = "ruff format"
 
-[tasks.lint]
-description = "Lint the code"
-alias = "l"
-depends = ["vulture", "pyright", "ruff:check"]
-
-[tasks."lint:pre-commit"]
-description = "Lint the code in pre-commit hook"
-depends = ["vulture", "pyright"]
-
-[tasks.pre-commit]
-description = "Run pre-commit checks"
-depends = "install:pre-commit"
-run = "pre-commit run --color=always --all-files"
-
 [tasks.pyright]
 description = "Run pyright"
 depends = "_install"
@@ -113,6 +108,22 @@ env = { PYRIGHT_PYTHON_PYLANCE_VERSION = "latest-release" }
 description = "Run vulture"
 depends = "_install"
 run = "uv run vulture"
+
+[tasks.lint]
+description = "Lint the code"
+alias = "l"
+depends = ["vulture", "pyright", "ruff:check", "ci:lint"]
+
+[tasks."lint:pre-commit"]
+description = "Lint the code in pre-commit hook"
+depends = ["vulture", "pyright"]
+
+[tasks.pre-commit]
+description = "Run pre-commit checks"
+depends = "install:pre-commit"
+run = "pre-commit run --color=always --all-files"
+
+# Tools
 
 [tasks.auto-bump]
 description = "Auto bump the version"
@@ -133,3 +144,7 @@ run = [
   "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
   "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
 ]
+
+[tasks."render:usage"]
+description = "Generate tasks documentation"
+run = ["mise generate task-docs > tasks.md"]
