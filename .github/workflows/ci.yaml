@@ -118,7 +118,7 @@ jobs:
         id: upload-coverage
         uses: codecov/codecov-action@v5
         with:
-          name: ${{env.PROJECT_NAMdE}}-tests
+          name: ${{env.PROJECT_NAME}}-tests
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
