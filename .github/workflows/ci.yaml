@@ -2,6 +2,7 @@ name: 🔂 Tests and linting
 
 env:
   COLUMNS: 120 # Makes the error summary table printed by pytest-pretty much easier to read
+  PROJECT_NAME: "strawchemy"
 
 on:
   push:
@@ -117,7 +118,7 @@ jobs:
         id: upload-coverage
         uses: codecov/codecov-action@v5
         with:
-          name: drinn-tests
+          name: ${{env.PROJECT_NAMdE}}-tests
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
@@ -128,7 +129,7 @@ jobs:
         uses: codecov/test-results-action@v1
         with:
           files: ./junit.xml,!./cache
-          name: drinn-test-results
+          name: ${{env.PROJECT_NAME}}-test-results
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 

@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Any, TypeVar, override
 
 from shapely import Geometry
 
-from sqlalchemy.dialects import postgresql as pg_types
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute, registry
+from sqlalchemy.types import ARRAY
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.graphql.inspector import GraphQLInspectorProtocol
 
@@ -72,7 +72,7 @@ class SQLAlchemyGraphQLInspector(
     def get_field_comparison(
         self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]
     ) -> type[GraphQLComparison[DeclarativeBase, QueryableAttribute[Any]]]:
-        if isinstance(field_definition.model_field.type, pg_types.ARRAY):
+        if isinstance(field_definition.model_field.type, ARRAY):
             return PostgresArraySQLAlchemyFilter[field_definition.model_field.type.item_type.python_type]
         return self.get_type_comparison(self.model_field_type(field_definition))
 

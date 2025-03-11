@@ -31,12 +31,19 @@ run = "uv sync --only-group test"
 description = "Generate tasks documentation"
 run = ["mise generate task-docs > tasks.md"]
 
-[tasks.test]
+[tasks."test:unit"]
 description = "Run tests"
 depends = "_install"
 alias = "t"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:integration"]
+description = "Run tests"
+depends = "_install"
+alias = "t"
+usage = 'arg "<test>" default=""'
+run = 'uv run nox -r -t tests -- --cov-report=term-missing:skip-covered {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:ci"]
 description = "Run tests in CI"

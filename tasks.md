@@ -90,19 +90,6 @@ Fix ruff errors
 
 Format code
 
-## `test`
-
-- Depends: _install
-
-- **Usage**: `test [test]`
-- **Aliases**: `t`
-
-Run tests
-
-### Arguments
-
-#### `[test]`
-
 ## `test:ci`
 
 - Depends: install:test
@@ -114,6 +101,19 @@ Run tests in CI
 ### Arguments
 
 #### `<session>`
+
+## `test:integration`
+
+- Depends: _install
+
+- **Usage**: `test:integration [test]`
+- **Aliases**: `t`
+
+Run tests
+
+### Arguments
+
+#### `[test]`
 
 ## `test:matrix`
 
@@ -131,6 +131,19 @@ Output test matrix for CI
 - **Aliases**: `t13`
 
 Run tests on python 3.13
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit`
+
+- Depends: _install
+
+- **Usage**: `test:unit [test]`
+- **Aliases**: `t`
+
+Run tests
 
 ### Arguments
 

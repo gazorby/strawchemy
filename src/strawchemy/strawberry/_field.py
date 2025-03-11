@@ -24,6 +24,7 @@ from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.base import StrawberryList, StrawberryOptional, StrawberryType, WithStrawberryObjectDefinition
 from strawberry.types.field import UNRESOLVED, StrawberryField
+from strawberry.utils.inspect import in_async_context
 from strawchemy.dto.base import ModelFieldT, ModelInspector, ModelT
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.dto.utils import is_type_hint_optional
@@ -45,6 +46,7 @@ if TYPE_CHECKING:
     from strawberry.types.fields.resolver import StrawberryResolver
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.sqlalchemy.typing import QueryHookCallable
+    from strawchemy.typing import AnyRepository
 
     from .typing import AnySessionGetter, FilterStatementCallable, StrawchemyTypeWithStrawberryObjectDefinition
 
@@ -80,7 +82,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         self,
         inspector: ModelInspector[ModelT, ModelFieldT],
         session_getter: AnySessionGetter,
-        repository_type: type[StrawchemyAsyncRepository[Any] | StrawchemySyncRepository[Any]],
+        repository_type: AnyRepository,
         filter_type: type[StrawberryTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
         order_by: type[StrawberryTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
         distinct_on: type[EnumDTO] | None = None,
@@ -127,8 +129,12 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         self._description = description
         self._session_getter = session_getter
         self._filter_statement = filter_statement
-        self._repository_type = repository_type
         self._execution_options = execution_options
+
+        if repository_type == "auto":
+            self._repository_type = StrawchemyAsyncRepository if in_async_context() else StrawchemySyncRepository
+        else:
+            self._repository_type = repository_type
 
         super().__init__(
             python_name,
