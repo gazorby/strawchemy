@@ -6,9 +6,36 @@
 
 Auto bump the version
 
+## `ci:lint`
+
+- **Usage**: `ci:lint`
+
+Lint CI yaml files
+
+## `ci:test`
+
+- Depends: install:test
+
+- **Usage**: `ci:test <session>`
+
+Run tests in CI
+
+### Arguments
+
+#### `<session>`
+
+## `ci:test-matrix`
+
+- Depends: install:test
+
+- **Usage**: `ci:test-matrix`
+
+Output test matrix for CI
+
 ## `clean`
 
 - **Usage**: `clean`
+- **Aliases**: `c`
 
 Clean working directory
 
@@ -90,12 +117,12 @@ Fix ruff errors
 
 Format code
 
-## `test`
+## `test:integration`
 
 - Depends: _install
 
-- **Usage**: `test [test]`
-- **Aliases**: `t`
+- **Usage**: `test:integration [test]`
+- **Aliases**: `ti`
 
 Run tests
 
@@ -103,34 +130,40 @@ Run tests
 
 #### `[test]`
 
-## `test:ci`
-
-- Depends: install:test
-
-- **Usage**: `test:ci <session>`
-
-Run tests in CI
-
-### Arguments
-
-#### `<session>`
-
-## `test:matrix`
-
-- Depends: install:test
-
-- **Usage**: `test:matrix`
-
-Output test matrix for CI
-
-## `test:py13`
+## `test:integration-all`
 
 - Depends: _install
 
-- **Usage**: `test:py13 [test]`
-- **Aliases**: `t13`
+- **Usage**: `test:integration-all [test]`
+- **Aliases**: `tia`
 
-Run tests on python 3.13
+Run integration tests on all supported python versions
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit`
+
+- Depends: _install
+
+- **Usage**: `test:unit [test]`
+- **Aliases**: `tu`
+
+Run tests
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit-all`
+
+- Depends: _install
+
+- **Usage**: `test:unit-all [test]`
+- **Aliases**: `tua`
+
+Run unit tests on all supported python versions
 
 ### Arguments
 

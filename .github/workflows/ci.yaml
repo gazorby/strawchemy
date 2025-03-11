@@ -2,6 +2,7 @@ name: 🔂 Tests and linting
 
 env:
   COLUMNS: 120 # Makes the error summary table printed by pytest-pretty much easier to read
+  PROJECT_NAME: "strawchemy"
 
 on:
   push:
@@ -52,7 +53,7 @@ jobs:
         id: set-matrix
         shell: bash
         run: |
-          echo sessions=$(mise run test:matrix) | tee --append $GITHUB_OUTPUT
+          echo sessions=$(mise run ci:test-matrix) | tee --append $GITHUB_OUTPUT
 
   tests:
     name: 🔬 ${{ matrix.session.name }}
@@ -92,7 +93,7 @@ jobs:
           log_level: debug
 
       - name: Run tests
-        run: mise run test:ci "${{ matrix.session.session }}"
+        run: mise run ci:test "${{ matrix.session.session }}"
 
       - name: Upload test artifacts
         uses: actions/upload-artifact@v4
@@ -117,7 +118,7 @@ jobs:
         id: upload-coverage
         uses: codecov/codecov-action@v5
         with:
-          name: drinn-tests
+          name: ${{env.PROJECT_NAME}}-tests
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
@@ -128,7 +129,7 @@ jobs:
         uses: codecov/test-results-action@v1
         with:
           files: ./junit.xml,!./cache
-          name: drinn-test-results
+          name: ${{env.PROJECT_NAME}}-test-results
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 

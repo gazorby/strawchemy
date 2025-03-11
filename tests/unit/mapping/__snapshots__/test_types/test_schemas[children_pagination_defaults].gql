@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[child_pagination_defaults]
+# name: test_schemas[children_pagination_defaults]
   '''
   """GraphQL type"""
   type ColorType {

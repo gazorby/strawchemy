@@ -8,55 +8,102 @@ ruff = "latest"
 uv = "latest"
 jq = "latest"
 pre-commit = "latest"
+actionlint = "latest"
+
+[vars]
+local_pytest_options = "--cov-report=term-missing:skip-covered -n=2 -vv"
+cleanable_paths = '''{{
+[
+  ".nox",
+  ".pytest_cache",
+  ".ruff_cache",
+  ".hypothesis",
+  "build/",
+  "dist/",
+  ".eggs/",
+  ".coverage",
+  "coverage.xml",
+  "coverage.json",
+  "junit.xml",
+  "htmlcov/",
+  "tests/.pytest_cache",
+  "tests/**/.pytest_cache",
+  ".mypy_cache",
+  ".unasyncd_cache/",
+  ".auto_pytabs_cache",
+  "node_module",
+] | join(sep=" ")
+}}'''
+
+# Dependencies
 
 [tasks._install]
 description = "Install dependencies"
 hide = true
 run = "uv sync --all-extras --dev"
 
-[tasks."install:pre-commit"]
-description = "Install pre-commit hooks"
-run = "pre-commit install --install-hooks 2>&1"
-
 [tasks.install]
 description = "Install dependencies and pre-commit hooks"
 alias = "i"
 depends = ["install:pre-commit", "_install"]
 
+[tasks."install:pre-commit"]
+description = "Install pre-commit hooks"
+run = "pre-commit install --install-hooks 2>&1"
+
 [tasks."install:test"]
 description = "Install test dependencies only"
 run = "uv sync --only-group test"
 
-[tasks."render:usage"]
-description = "Generate tasks documentation"
-run = ["mise generate task-docs > tasks.md"]
+# Test
 
-[tasks.test]
+[tasks."test:unit"]
 description = "Run tests"
 depends = "_install"
-alias = "t"
+alias = "tu"
 usage = 'arg "<test>" default=""'
-run = 'uv run nox -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
+run = 'uv run pytest -m "not integration" {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
-[tasks."test:ci"]
-description = "Run tests in CI"
-depends = "install:test"
-usage = 'arg "<session>"'
-run = "uv run nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 --junitxml=./junit.xml"
+[tasks."test:integration"]
+description = "Run tests"
+depends = "_install"
+alias = "ti"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest -m integration {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:unit-all"]
+description = "Run unit tests on all supported python versions"
+depends = "_install"
+alias = "tua"
+usage = 'arg "<test>" default=""'
+run = 'uv run nox -r -t unit -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:integration-all"]
+description = "Run integration tests on all supported python versions"
+depends = "_install"
+alias = "tia"
+usage = 'arg "<test>" default=""'
+run = 'uv run nox -r -t integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:update-snapshot"]
 description = "Run snapshot-based tests and update snapshots"
 depends = "_install"
 run = 'uv run pytest -m snapshot --snapshot-update'
 
-[tasks."test:py13"]
-description = "Run tests on python 3.13"
-depends = "_install"
-alias = "t13"
-usage = 'arg "<test>" default=""'
-run = 'uv run nox -p 3.13 -r -t tests -- --cov-report=term-missing:skip-covered -n=auto {{arg(name="test", var=true, default="")}}'
 
-[tasks."test:matrix"]
+# CI
+
+[tasks."ci:test"]
+description = "Run tests in CI"
+depends = "install:test"
+usage = 'arg "<session>"'
+run = "uv run nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 --junitxml=./junit.xml"
+
+[tasks."ci:lint"]
+description = "Lint CI yaml files"
+run = "actionlint -shellcheck ''"
+
+[tasks."ci:test-matrix"]
 description = "Output test matrix for CI"
 depends = "install:test"
 run = '''
@@ -70,6 +117,8 @@ run = '''
     )'
 '''
 
+# Linting
+
 [tasks."ruff:check"]
 description = "Check ruff formatting"
 run = "ruff format --check"
@@ -81,6 +130,17 @@ run = "ruff check --fix --unsafe-fixes"
 [tasks."ruff:format"]
 description = "Format code"
 run = "ruff format"
+
+[tasks.pyright]
+description = "Run pyright"
+depends = "_install"
+run = "uv run pyright"
+env = { PYRIGHT_PYTHON_PYLANCE_VERSION = "latest-release" }
+
+[tasks.vulture]
+description = "Run vulture"
+depends = "_install"
+run = "uv run vulture"
 
 [tasks.lint]
 description = "Lint the code"
@@ -96,16 +156,7 @@ description = "Run pre-commit checks"
 depends = "install:pre-commit"
 run = "pre-commit run --color=always --all-files"
 
-[tasks.pyright]
-description = "Run pyright"
-depends = "_install"
-run = "uv run pyright"
-env = { PYRIGHT_PYTHON_PYLANCE_VERSION = "latest-release" }
-
-[tasks.vulture]
-description = "Run vulture"
-depends = "_install"
-run = "uv run vulture"
+# Tools
 
 [tasks.auto-bump]
 description = "Auto bump the version"
@@ -115,9 +166,10 @@ run = "uv run bump-my-version bump --new-version $(uv run git cliff --unreleased
 
 [tasks.clean]
 description = "Clean working directory"
+alias = "c"
 confirm = 'Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files.'
 run = [
-  "rm -rf .nox .pytest_cache .ruff_cache .hypothesis build/ dist/ .eggs/ .coverage coverage.xml coverage.json junit.xml htmlcov/ tests/.pytest_cache tests/**/.pytest_cache .mypy_cache .unasyncd_cache/ .auto_pytabs_cache node_modules >/dev/null 2>&1",
+  "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
   "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
   "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
   "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
@@ -126,3 +178,7 @@ run = [
   "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
   "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
 ]
+
+[tasks."render:usage"]
+description = "Generate tasks documentation"
+run = ["mise generate task-docs > tasks.md"]

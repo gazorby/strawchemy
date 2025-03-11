@@ -8,9 +8,11 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, cast, get_args, get_origin, overload
 
 import strawberry
+from strawberry.annotation import StrawberryAnnotation
 from strawberry.scalars import JSON  # noqa: TC001
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer, StrawberryType
+from strawberry.types.field import StrawberryField
 from strawchemy.graphql.filters import GeoComparison
 from strawchemy.strawberry import pydantic as strawberry_pydantic
 
@@ -20,8 +22,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
+    from strawberry.types.arguments import StrawberryArgument
     from strawberry.types.base import WithStrawberryObjectDefinition
-    from strawberry.types.field import StrawberryField
     from strawchemy.graphql.filters import AnyGraphQLComparison
     from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
     from strawchemy.types import DefaultOffsetPagination
@@ -44,7 +46,7 @@ class _StrawberryGeoComparison:
 
 @dataclass
 class _TypeReference:
-    ref_holder: StrawberryField
+    ref_holder: StrawberryField | StrawberryArgument
 
     @classmethod
     def _last_container_type(cls, type_: StrawberryType | Any) -> Any:
@@ -67,11 +69,16 @@ class _TypeReference:
         container_copy.of_type = replaced
         return container_copy
 
+    def _set_type(self, strawberry_type: type[WithStrawberryObjectDefinition] | StrawberryContainer) -> None:
+        if isinstance(self.ref_holder, StrawberryField):
+            self.ref_holder.type = strawberry_type
+        self.ref_holder.type_annotation = StrawberryAnnotation(strawberry_type)
+
     def update_type(self, strawberry_type: type[WithStrawberryObjectDefinition]) -> None:
         if isinstance(self.ref_holder.type, StrawberryContainer):
-            self.ref_holder.type = self._replace_contained_type(self.ref_holder.type, strawberry_type)
+            self._set_type(self._replace_contained_type(self.ref_holder.type, strawberry_type))
         else:
-            self.ref_holder.type = strawberry_type
+            self._set_type(strawberry_type)
 
 
 @dataclass(frozen=True, eq=True)
@@ -89,43 +96,51 @@ class StrawberryRegistry:
         self._namespaces: defaultdict[GraphQLType, dict[str, type[StrawchemyTypeWithStrawberryObjectDefinition]]] = (
             defaultdict(dict)
         )
-        self._type_references: defaultdict[str, list[_TypeReference]] = defaultdict(list)
+        self._type_references: defaultdict[GraphQLType, defaultdict[str, list[_TypeReference]]] = defaultdict(
+            lambda: defaultdict(list)
+        )
         self._type_map: dict[RegistryTypeInfo, type[Any]] = {}
         self._names_map: defaultdict[GraphQLType, dict[str, RegistryTypeInfo]] = defaultdict(dict)
 
-    def _update_annotation_namespace(
+    def _update_type(self, field: StrawberryField | StrawberryArgument, graphql_type: GraphQLType) -> None:
+        field_type_name: str | None = None
+        if field_type_def := get_object_definition(strawberry_contained_type(field.type)):
+            field_type_name = field_type_def.name
+        if field.type_annotation:
+            for type_ in self._inner_types(field.type_annotation.raw_annotation):
+                if isinstance(type_, ForwardRef):
+                    field_type_name = type_.__forward_arg__
+                elif isinstance(type_, str):
+                    field_type_name = type_
+                else:
+                    continue
+                field.type_annotation.namespace = self.namespace(graphql_type)
+        if field_type_name:
+            type_info = self.get(graphql_type, field_type_name, None)
+            if type_info is None or not type_info.override:
+                self._type_references[graphql_type][field_type_name].append(_TypeReference(field))
+            else:
+                _TypeReference(field).update_type(self._type_map[type_info])
+
+    def _track_types(
         self,
         strawberry_type: type[WithStrawberryObjectDefinition | StrawberryTypeFromPydantic[PydanticModel]],
         graphql_type: GraphQLType,
     ) -> None:
         object_definition = get_object_definition(strawberry_type, strict=True)
         for field in object_definition.fields:
-            field_type_name: str | None = None
-
-            if field_type_def := get_object_definition(strawberry_contained_type(field.type)):
-                field_type_name = field_type_def.name
-            if field.type_annotation:
-                for type_ in self._inner_types(field.type_annotation.raw_annotation):
-                    if isinstance(type_, ForwardRef):
-                        field_type_name = type_.__forward_arg__
-                    elif isinstance(type_, str):
-                        field_type_name = type_
-                    else:
-                        continue
-                    field.type_annotation.namespace = self.namespace(graphql_type)
-            if field_type_name:
-                type_info = self.get(graphql_type, field_type_name, None)
-                if type_info is None or not type_info.override:
-                    self._type_references[field_type_name].append(_TypeReference(field))
-                else:
-                    _TypeReference(field).update_type(self._type_map[type_info])
+            for argument in field.arguments:
+                if get_object_definition(strawberry_contained_type(argument.type)) is None:
+                    continue
+                self._update_type(argument, "input")
+            self._update_type(field, graphql_type)
 
     def _register_type(self, type_info: RegistryTypeInfo, strawberry_type: type[Any]) -> None:
         self.namespace(type_info.graphql_type)[type_info.name] = strawberry_type
         if type_info.override:
-            for reference in self._type_references[type_info.name]:
+            for reference in self._type_references[type_info.graphql_type][type_info.name]:
                 reference.update_type(strawberry_type)
-        self._update_annotation_namespace(strawberry_type, type_info.graphql_type)
+        self._track_types(strawberry_type, type_info.graphql_type)
         self._names_map[type_info.graphql_type][type_info.name] = type_info
         self._type_map[type_info] = strawberry_type
 

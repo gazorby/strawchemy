@@ -30,8 +30,8 @@ if TYPE_CHECKING:
     from strawberry.types.field import _RESOLVER_TYPE
 
     from .sqlalchemy.typing import QueryHookCallable
-    from .strawberry.repository import StrawchemyAsyncRepository, StrawchemySyncRepository
     from .strawberry.typing import FilterStatementCallable
+    from .typing import AnyRepository
 
 
 T = TypeVar("T")
@@ -90,7 +90,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         filter_statement: FilterStatementCallable | None = None,
         execution_options: dict[str, Any] | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
-        repository_type: type[StrawchemyAsyncRepository[Any] | StrawchemySyncRepository[Any]] | None = None,
+        repository_type: AnyRepository | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,
@@ -117,7 +117,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         filter_statement: FilterStatementCallable | None = None,
         execution_options: dict[str, Any] | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
-        repository_type: type[StrawchemyAsyncRepository[Any] | StrawchemySyncRepository[Any]] | None = None,
+        repository_type: AnyRepository | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,
@@ -144,7 +144,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         filter_statement: FilterStatementCallable | None = None,
         execution_options: dict[str, Any] | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
-        repository_type: type[StrawchemyAsyncRepository[Any] | StrawchemySyncRepository[Any]] | None = None,
+        repository_type: AnyRepository | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,
