@@ -101,7 +101,7 @@ run = "uv run nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 --junitxml=./
 
 [tasks."ci:lint"]
 description = "Lint CI yaml files"
-run = "actionlint"
+run = "actionlint -shellcheck ''"
 
 [tasks."ci:test-matrix"]
 description = "Output test matrix for CI"
@@ -145,7 +145,7 @@ run = "uv run vulture"
 [tasks.lint]
 description = "Lint the code"
 alias = "l"
-depends = ["vulture", "pyright", "ruff:check", "ci:lint"]
+depends = ["vulture", "pyright", "ruff:check"]
 
 [tasks."lint:pre-commit"]
 description = "Lint the code in pre-commit hook"

@@ -62,7 +62,7 @@ Install test dependencies only
 
 ## `lint`
 
-- Depends: vulture, pyright, ruff:check, ci:lint
+- Depends: vulture, pyright, ruff:check
 
 - **Usage**: `lint`
 - **Aliases**: `l`
