@@ -11,7 +11,7 @@ pre-commit = "latest"
 actionlint = "latest"
 
 [vars]
-local_pytest_options = "--cov-report=term-missing:skip-covered -n=2"
+local_pytest_options = "--cov-report=term-missing:skip-covered -n=2 -vv"
 cleanable_paths = '''{{
 [
   ".nox",

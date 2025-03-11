@@ -2,16 +2,20 @@ from __future__ import annotations
 
 from strawchemy import Strawchemy
 
-from .models import Fruit, User
+from .models import Color, Fruit, User
 
 strawchemy = Strawchemy()
+
+
+@strawchemy.type(Color, include="all", override=True)
+class ColorType: ...
 
 
 @strawchemy.type(User, include="all")
 class UserType: ...
 
 
-@strawchemy.type(Fruit, include="all")
+@strawchemy.type(Fruit, include="all", override=True)
 class FruitType: ...
 
 

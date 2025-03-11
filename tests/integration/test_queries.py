@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, time
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
 
@@ -18,6 +19,7 @@ from tests.utils import generate_query, maybe_async
 
 from .models import Color, Fruit, User, metadata
 from .types import (
+    ColorType,
     FruitFilter,
     FruitOrderBy,
     FruitTypeWithPaginationAndOrderBy,
@@ -67,6 +69,7 @@ class AsyncQuery:
         pagination=True,
         repository_type=StrawchemyAsyncRepository,
     )
+    colors: list[ColorType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
 
 
 @strawberry.type
@@ -88,16 +91,27 @@ class SyncQuery:
     users: list[UserType] = strawchemy.field(
         filter_input=UserFilter, order_by=UserOrderBy, pagination=True, repository_type=StrawchemySyncRepository
     )
+    colors: list[ColorType] = strawchemy.field()
 
 
 @pytest.fixture
-def raw_fruits() -> RawRecordData:
-    from decimal import Decimal
+def raw_colors() -> RawRecordData:
+    return [
+        {"id": str(uuid4()), "name": "Red"},
+        {"id": str(uuid4()), "name": "Yellow"},
+        {"id": str(uuid4()), "name": "Orange"},
+        {"id": str(uuid4()), "name": "Green"},
+        {"id": str(uuid4()), "name": "Pink"},
+    ]
 
+
+@pytest.fixture
+def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
     return [
         {
+            "id": str(uuid4()),
             "name": "Apple",
-            "color_id": None,
+            "color_id": raw_colors[0]["id"],
             "sweetness": 7,
             "has_core": True,
             "adjectives": ["crisp", "juicy", "sweet"],
@@ -105,8 +119,9 @@ def raw_fruits() -> RawRecordData:
             "price_float": 1.99,
         },
         {
+            "id": str(uuid4()),
             "name": "Banana",
-            "color_id": None,
+            "color_id": raw_colors[1]["id"],
             "sweetness": 8,
             "has_core": False,
             "adjectives": ["soft", "sweet", "tropical"],
@@ -114,8 +129,9 @@ def raw_fruits() -> RawRecordData:
             "price_float": 0.89,
         },
         {
+            "id": str(uuid4()),
             "name": "Orange",
-            "color_id": None,
+            "color_id": raw_colors[2]["id"],
             "sweetness": 6,
             "has_core": False,
             "adjectives": ["tangy", "juicy", "citrusy"],
@@ -123,8 +139,9 @@ def raw_fruits() -> RawRecordData:
             "price_float": 1.29,
         },
         {
+            "id": str(uuid4()),
             "name": "Strawberry",
-            "color_id": None,
+            "color_id": raw_colors[3]["id"],
             "sweetness": 9,
             "has_core": False,
             "adjectives": ["sweet", "fragrant", "small"],
@@ -132,25 +149,15 @@ def raw_fruits() -> RawRecordData:
             "price_float": 2.49,
         },
         {
+            "id": str(uuid4()),
             "name": "Watermelon",
-            "color_id": None,
+            "color_id": raw_colors[4]["id"],
             "sweetness": 8,
             "has_core": True,
             "adjectives": ["juicy", "refreshing", "summery"],
             "price_decimal": Decimal("4.99"),
             "price_float": 4.99,
         },
-    ]
-
-
-@pytest.fixture
-def raw_colors() -> RawRecordData:
-    return [
-        {"name": "Red"},
-        {"name": "Yellow"},
-        {"name": "Orange"},
-        {"name": "Green"},
-        {"name": "Pink"},
     ]
 
 
@@ -188,8 +195,8 @@ def seed_db_sync(
     with engine.begin() as conn:
         metadata.drop_all(conn)
         metadata.create_all(conn)
-        conn.execute(insert(Fruit).values(raw_fruits))
         conn.execute(insert(Color).values(raw_colors))
+        conn.execute(insert(Fruit).values(raw_fruits))
         conn.execute(insert(User).values(raw_users))
 
 
@@ -200,8 +207,8 @@ async def seed_db_async(
     async with async_engine.begin() as conn:
         await conn.run_sync(metadata.drop_all)
         await conn.run_sync(metadata.create_all)
-        await conn.execute(insert(Fruit).values(raw_fruits))
         await conn.execute(insert(Color).values(raw_colors))
+        await conn.execute(insert(Fruit).values(raw_fruits))
         await conn.execute(insert(User).values(raw_users))
 
 
@@ -260,3 +267,44 @@ async def test_many(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> No
         {"name": raw_users[1]["name"]},
         {"name": raw_users[2]["name"]},
     ]
+
+
+async def test_relation(any_query: AnyQueryExecutor, raw_colors: RawRecordData) -> None:
+    result = await maybe_async(any_query("{ fruits { color { id } } }"))
+
+    assert not result.errors
+    assert result.data
+    assert result.data["fruits"] == [
+        {"color": {"id": raw_colors[0]["id"]}},
+        {"color": {"id": raw_colors[1]["id"]}},
+        {"color": {"id": raw_colors[2]["id"]}},
+        {"color": {"id": raw_colors[3]["id"]}},
+        {"color": {"id": raw_colors[4]["id"]}},
+    ]
+
+
+async def test_list_relation(any_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
+    result = await maybe_async(any_query("{ colors { fruits { name id } } }"))
+
+    assert not result.errors
+
+    expected = [
+        {
+            "fruits": [{"name": "Apple", "id": raw_fruits[0]["id"]}],
+        },
+        {
+            "fruits": [{"name": "Banana", "id": raw_fruits[1]["id"]}],
+        },
+        {
+            "fruits": [{"name": "Orange", "id": raw_fruits[2]["id"]}],
+        },
+        {
+            "fruits": [{"name": "Strawberry", "id": raw_fruits[3]["id"]}],
+        },
+        {
+            "fruits": [{"name": "Watermelon", "id": raw_fruits[4]["id"]}],
+        },
+    ]
+
+    assert result.data
+    assert all(fruit in result.data["colors"] for fruit in expected)
