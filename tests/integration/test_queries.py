@@ -19,7 +19,7 @@ from tests.utils import generate_query, maybe_async
 from .models import Color, Fruit, User, metadata
 from .types import (
     FruitFilter,
-    FruitOrderBy_,
+    FruitOrderBy,
     FruitTypeWithPaginationAndOrderBy,
     UserFilter,
     UserOrderBy,
@@ -43,20 +43,20 @@ scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON}
 class AsyncQuery:
     fruit: FruitTypeWithPaginationAndOrderBy = strawchemy.field(repository_type=StrawchemyAsyncRepository)
     fruits: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
-        filter_input=FruitFilter, order_by=FruitOrderBy_, repository_type=StrawchemyAsyncRepository
+        filter_input=FruitFilter, order_by=FruitOrderBy, repository_type=StrawchemyAsyncRepository
     )
     fruits_paginated: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
         filter_input=FruitFilter,
-        order_by=FruitOrderBy_,
+        order_by=FruitOrderBy,
         pagination=True,
         repository_type=StrawchemyAsyncRepository,
     )
     fruits_aggregations: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
-        filter_input=FruitFilter, order_by=FruitOrderBy_, repository_type=StrawchemyAsyncRepository
+        filter_input=FruitFilter, order_by=FruitOrderBy, repository_type=StrawchemyAsyncRepository
     )
     fruits_aggregations_paginated: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
         filter_input=FruitFilter,
-        order_by=FruitOrderBy_,
+        order_by=FruitOrderBy,
         pagination=True,
         repository_type=StrawchemyAsyncRepository,
     )
@@ -73,16 +73,16 @@ class AsyncQuery:
 class SyncQuery:
     fruit: FruitTypeWithPaginationAndOrderBy = strawchemy.field(repository_type=StrawchemySyncRepository)
     fruits: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
-        filter_input=FruitFilter, order_by=FruitOrderBy_, repository_type=StrawchemySyncRepository
+        filter_input=FruitFilter, order_by=FruitOrderBy, repository_type=StrawchemySyncRepository
     )
     fruits_paginated: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
-        filter_input=FruitFilter, order_by=FruitOrderBy_, pagination=True, repository_type=StrawchemySyncRepository
+        filter_input=FruitFilter, order_by=FruitOrderBy, pagination=True, repository_type=StrawchemySyncRepository
     )
     fruits_aggregations: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
-        filter_input=FruitFilter, order_by=FruitOrderBy_, repository_type=StrawchemySyncRepository
+        filter_input=FruitFilter, order_by=FruitOrderBy, repository_type=StrawchemySyncRepository
     )
     fruits_aggregations_paginated: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
-        filter_input=FruitFilter, order_by=FruitOrderBy_, pagination=True, repository_type=StrawchemySyncRepository
+        filter_input=FruitFilter, order_by=FruitOrderBy, pagination=True, repository_type=StrawchemySyncRepository
     )
     user: UserType = strawchemy.field(repository_type=StrawchemySyncRepository)
     users: list[UserType] = strawchemy.field(

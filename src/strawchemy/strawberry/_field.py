@@ -174,6 +174,70 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
             execution_options=self._execution_options,
         )
 
+    def _auto_arguments(self) -> list[StrawberryArgument]:
+        arguments: list[StrawberryArgument] = []
+
+        if self.is_list:
+            if self.pagination:
+                arguments.extend(
+                    [
+                        StrawberryArgument(
+                            LIMIT_KEY,
+                            None,
+                            type_annotation=StrawberryAnnotation(int | None),
+                            default=self.pagination.limit,
+                        ),
+                        StrawberryArgument(
+                            OFFSET_KEY,
+                            None,
+                            type_annotation=StrawberryAnnotation(int),
+                            default=self.pagination.offset,
+                        ),
+                    ]
+                )
+            if self.filter:
+                arguments.append(
+                    StrawberryArgument(
+                        python_name="filter_input",
+                        graphql_name=FILTER_KEY,
+                        type_annotation=StrawberryAnnotation(self.filter | None),
+                        default=None,
+                    )
+                )
+            if self.order_by:
+                arguments.append(
+                    StrawberryArgument(
+                        ORDER_BY_KEY,
+                        None,
+                        type_annotation=StrawberryAnnotation(list[self.order_by] | None),
+                        default=None,
+                    )
+                )
+            if self.distinct_on:
+                arguments.append(
+                    StrawberryArgument(
+                        DISTINCT_ON_KEY,
+                        None,
+                        type_annotation=StrawberryAnnotation(list[self.distinct_on] | None),
+                        default=None,
+                    )
+                )
+        else:
+            id_fields = list(self.inspector.id_field_definitions(self._model, DTOConfig(Purpose.READ)))
+            if len(id_fields) == 1:
+                field = id_fields[0][1]
+                arguments.append(
+                    StrawberryArgument(self.id_field_name, None, type_annotation=StrawberryAnnotation(field.type_))
+                )
+            else:
+                arguments.extend(
+                    [
+                        StrawberryArgument(name, None, type_annotation=StrawberryAnnotation(field.type_))
+                        for name, field in self.inspector.id_field_definitions(self._model, DTOConfig(Purpose.READ))
+                    ]
+                )
+        return arguments
+
     def filter_statement(self, info: Info[Any, Any]) -> Select[tuple[ModelT]] | None:
         if self._filter_statement:
             return self._filter_statement(info)
@@ -288,69 +352,11 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
     @property
     @override
     def arguments(self) -> list[StrawberryArgument]:
-        arguments: list[StrawberryArgument] = []
         if self.base_resolver:
             return super().arguments
-        if self.is_list:
-            if self.pagination:
-                arguments.extend(
-                    [
-                        StrawberryArgument(
-                            LIMIT_KEY,
-                            None,
-                            type_annotation=StrawberryAnnotation(int | None),
-                            default=self.pagination.limit,
-                        ),
-                        StrawberryArgument(
-                            OFFSET_KEY,
-                            None,
-                            type_annotation=StrawberryAnnotation(int),
-                            default=self.pagination.offset,
-                        ),
-                    ]
-                )
-            if self.filter:
-                arguments.append(
-                    StrawberryArgument(
-                        python_name="filter_input",
-                        graphql_name=FILTER_KEY,
-                        type_annotation=StrawberryAnnotation(self.filter | None),
-                        default=None,
-                    )
-                )
-            if self.order_by:
-                arguments.append(
-                    StrawberryArgument(
-                        ORDER_BY_KEY,
-                        None,
-                        type_annotation=StrawberryAnnotation(list[self.order_by] | None),
-                        default=None,
-                    )
-                )
-            if self.distinct_on:
-                arguments.append(
-                    StrawberryArgument(
-                        DISTINCT_ON_KEY,
-                        None,
-                        type_annotation=StrawberryAnnotation(list[self.distinct_on] | None),
-                        default=None,
-                    )
-                )
-        else:
-            id_fields = list(self.inspector.id_field_definitions(self._model, DTOConfig(Purpose.READ)))
-            if len(id_fields) == 1:
-                field = id_fields[0][1]
-                arguments.append(
-                    StrawberryArgument(self.id_field_name, None, type_annotation=StrawberryAnnotation(field.type_))
-                )
-            else:
-                arguments.extend(
-                    [
-                        StrawberryArgument(name, None, type_annotation=StrawberryAnnotation(field.type_))
-                        for name, field in self.inspector.id_field_definitions(self._model, DTOConfig(Purpose.READ))
-                    ]
-                )
-        return arguments
+        if not self._arguments:
+            self._arguments = self._auto_arguments()
+        return self._arguments
 
     @arguments.setter
     def arguments(self, value: list[StrawberryArgument]) -> None:

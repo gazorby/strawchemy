@@ -1,14 +1,14 @@
 # serializer version: 1
-# name: test_schemas[type_override]
+# name: test_schemas[children_pagination]
   '''
   """GraphQL type"""
   type ColorType {
-    name: Int!
     id: UUID!
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
-    fruits: [FruitType!]!
+    fruits(limit: Int = 100, offset: Int! = 0): [FruitType!]!
+    name: String!
   }
   
   """Aggregation fields"""
@@ -42,25 +42,16 @@
   
   """GraphQL type"""
   type FruitType {
-    name: Int!
     id: UUID!
+    name: String!
     colorId: UUID
     color: ColorType!
     sweetness: Int!
   }
   
-  """GraphQL type"""
-  type FruitTypeCustomName {
-    name: Int!
-    color: ColorType!
-  }
-  
   type Query {
-    """Fetch object from the FruitType collection by id"""
-    fruit(id: UUID!): FruitType!
-  
-    """Fetch object from the FruitTypeCustomName collection by id"""
-    customFruit(id: UUID!): FruitTypeCustomName!
+    """Fetch objects from the FruitType collection"""
+    fruit: [FruitType!]!
   }
   
   scalar UUID

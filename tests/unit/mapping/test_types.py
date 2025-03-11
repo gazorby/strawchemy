@@ -73,7 +73,7 @@ def test_field_metadata_default(strawchemy: Strawchemy[DeclarativeBase, Queryabl
 
 
 def test_type_resolution_with_resolvers() -> None:
-    from tests.unit.schemas.custom_resolver import ColorType, Query
+    from tests.unit.schemas.resolver.custom_resolver import ColorType, Query
 
     schema = strawberry.Schema(query=Query)
     type_def = schema.get_type_by_name("FruitType")
@@ -101,31 +101,33 @@ def test_multiple_types_error(path: str) -> None:
 @pytest.mark.parametrize(
     "path",
     [
-        pytest.param("tests.unit.schemas.all_fields.Query", id="all_fields"),
-        pytest.param("tests.unit.schemas.all_fields_override.Query", id="all_fields_override"),
-        pytest.param("tests.unit.schemas.all_fields_filter.Query", id="all_fields_with_filter"),
-        pytest.param("tests.unit.schemas.all_order_by.Query", id="all_fields_order_by"),
-        pytest.param("tests.unit.schemas.include_explicit.Query", id="include_explicit"),
-        pytest.param("tests.unit.schemas.exclude_explicit.Query", id="exclude_explicit"),
-        pytest.param("tests.unit.schemas.include_non_existent.Query", id="include_non_existent"),
-        pytest.param("tests.unit.schemas.exclude_non_existent.Query", id="exclude_non_existent"),
-        pytest.param("tests.unit.schemas.primary_key_resolver.Query", id="primary_key_resolver"),
-        pytest.param("tests.unit.schemas.list_resolver.Query", id="list_resolver"),
-        pytest.param("tests.unit.schemas.exclude_and_override_type.Query", id="exclude_and_override_type"),
-        pytest.param("tests.unit.schemas.exclude_and_override_field.Query", id="exclude_and_override_field"),
-        pytest.param("tests.unit.schemas.override.type_override.Query", id="type_override"),
-        pytest.param("tests.unit.schemas.pagination.Query", id="pagination"),
-        pytest.param("tests.unit.schemas.pagination_defaults.Query", id="pagination_defaults"),
-        pytest.param("tests.unit.schemas.child_pagination.Query", id="child_pagination"),
-        pytest.param("tests.unit.schemas.child_pagination_defaults.Query", id="child_pagination_defaults"),
-        pytest.param("tests.unit.schemas.pagination_default_limit.Query", id="pagination_default_limit"),
-        pytest.param("tests.unit.schemas.pagination_config_default.Query", id="pagination_config_default"),
-        pytest.param("tests.unit.schemas.custom_id_field_name.Query", id="custom_id_field_name"),
+        pytest.param("include.all_fields.Query", id="all_fields"),
+        pytest.param("include.all_fields_override.Query", id="all_fields_override"),
+        pytest.param("include.all_fields_filter.Query", id="all_fields_with_filter"),
+        pytest.param("include.all_order_by.Query", id="all_fields_order_by"),
+        pytest.param("include.include_explicit.Query", id="include_explicit"),
+        pytest.param("include.include_non_existent.Query", id="include_non_existent"),
+        pytest.param("exclude.exclude_explicit.Query", id="exclude_explicit"),
+        pytest.param("exclude.exclude_non_existent.Query", id="exclude_non_existent"),
+        pytest.param("exclude.exclude_and_override_type.Query", id="exclude_and_override_type"),
+        pytest.param("exclude.exclude_and_override_field.Query", id="exclude_and_override_field"),
+        pytest.param("resolver.primary_key_resolver.Query", id="primary_key_resolver"),
+        pytest.param("resolver.list_resolver.Query", id="list_resolver"),
+        pytest.param("override.override_argument.Query", id="argument_override"),
+        pytest.param("override.override_auto_type.Query", id="override_auto_type"),
+        pytest.param("override.override_with_custom_name.Query", id="override_with_custom_name"),
+        pytest.param("pagination.pagination.Query", id="pagination"),
+        pytest.param("pagination.pagination_defaults.Query", id="pagination_defaults"),
+        pytest.param("pagination.children_pagination.Query", id="children_pagination"),
+        pytest.param("pagination.children_pagination_defaults.Query", id="children_pagination_defaults"),
+        pytest.param("pagination.pagination_default_limit.Query", id="pagination_default_limit"),
+        pytest.param("pagination.pagination_config_default.Query", id="pagination_config_default"),
+        pytest.param("custom_id_field_name.Query", id="custom_id_field_name"),
     ],
 )
 @pytest.mark.snapshot
 def test_schemas(path: str, snapshot: SnapshotAssertion) -> None:
-    module, query_name = path.rsplit(".", maxsplit=1)
+    module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
 
     schema = strawberry.Schema(query=query_class)

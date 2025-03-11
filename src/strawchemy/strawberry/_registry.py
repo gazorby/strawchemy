@@ -130,7 +130,9 @@ class StrawberryRegistry:
         object_definition = get_object_definition(strawberry_type, strict=True)
         for field in object_definition.fields:
             for argument in field.arguments:
-                self._update_type(argument, graphql_type)
+                if get_object_definition(strawberry_contained_type(argument.type)) is None:
+                    continue
+                self._update_type(argument, "input")
             self._update_type(field, graphql_type)
 
     def _register_type(self, type_info: RegistryTypeInfo, strawberry_type: type[Any]) -> None:
