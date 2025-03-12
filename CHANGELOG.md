@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.2](https://github.com/gazorby/strawchemy/compare/v0.5.1..v0.5.2) - 2025-03-12
+
+### 🐛 Bug Fixes
+
+- *(pagination)* Do not apply offset on the root query when a subquery is present - ([e91da34](https://github.com/gazorby/strawchemy/commit/e91da345507aefb9c8c39a64f39badf4df7c37a7))
+
+### 🧪 Testing
+
+- *(integration)* Add test case asserting only queried fields are are present in SELECT - ([5f46c42](https://github.com/gazorby/strawchemy/commit/5f46c420960633dd008d100f701736cb5dfbd0a0))
+- *(unit)* Add mapping test case for enum - ([b27dbb6](https://github.com/gazorby/strawchemy/commit/b27dbb64070793cc5d6d051b1e0ccba625a0d1ac))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(codecov)* Let the action find junit files - ([9848ab2](https://github.com/gazorby/strawchemy/commit/9848ab29986a4e6cd3a78dc5aa46d93570a7c43c))
+- *(codecov)* Add flags - ([d22a49d](https://github.com/gazorby/strawchemy/commit/d22a49d2954317fac925da6a3d2dc50d7915794c))
+- *(codecov)* Merge python version and session name in a single flag - ([0d9f34f](https://github.com/gazorby/strawchemy/commit/0d9f34f8c6b5789305612a0a420f3facfba94924))
+- *(codecov)* Fix typo in codecov.yml - ([acfe955](https://github.com/gazorby/strawchemy/commit/acfe9552641eb30c0c51a1e5340088b688df9837))
+- *(release)* Bump to v0.5.2 - ([76d446c](https://github.com/gazorby/strawchemy/commit/76d446c42960e2755733ab70cd0ffc93e5102dc6))
+- *(test)* Set the pytest junit_family to legacy - ([4d5b3d5](https://github.com/gazorby/strawchemy/commit/4d5b3d57bd904ec6897f50335bddef1284de26c8))
+- Add codecov.yml - ([2f77c09](https://github.com/gazorby/strawchemy/commit/2f77c0960116f8f46253c30fdeb6d8d0ed23195e))
 ## [0.5.1](https://github.com/gazorby/strawchemy/compare/v0.5.0..v0.5.1) - 2025-03-11
 
 ### 🐛 Bug Fixes
