@@ -124,7 +124,7 @@ jobs:
         with:
           name: ${{env.PROJECT_NAME}}-tests
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: ${{ matrix.session.name }},${{ matrix.session.python }}
+          flags: ${{ matrix.session.session }}
           fail_ci_if_error: true
           verbose: true
 
@@ -135,7 +135,7 @@ jobs:
         with:
           name: ${{env.PROJECT_NAME}}-test-results
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: ${{ matrix.session.name }},${{ matrix.session.python }}
+          flags: ${{ matrix.session.session }}
           verbose: true
 
   lint:
