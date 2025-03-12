@@ -6,7 +6,7 @@ import pytest
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry.types import get_object_definition
-from tests.models import User
+from tests.unit.models import User
 
 if TYPE_CHECKING:
     from strawchemy.mapper import Strawchemy

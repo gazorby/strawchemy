@@ -7,8 +7,8 @@ from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.types import DTOConfig, DTOFieldConfig, Purpose, PurposeConfig
 from strawchemy.dto.utils import config, field
 
-from tests.models import Tomato
 from tests.typing import MappedDataclassFactory
+from tests.unit.models import Tomato
 
 
 def test_base_annotations_include(sqlalchemy_dataclass_factory: MappedDataclassFactory) -> None:

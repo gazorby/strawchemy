@@ -7,7 +7,7 @@ from strawchemy.mapper import Strawchemy
 
 import strawberry
 from strawberry import Info, auto
-from tests.models import Color, Fruit
+from tests.unit.models import Color, Fruit
 
 strawchemy = Strawchemy(StrawchemyConfig(default_id_field_name="pk"))
 

@@ -5,8 +5,8 @@ from uuid import uuid4
 import pytest
 from strawchemy.dto.utils import read_all_config, write_all_config
 
-from tests.models import Admin, Book, Tomato
 from tests.typing import AnyFactory
+from tests.unit.models import Admin, Book, Tomato
 from tests.utils import DTOInspect, factory_iterator
 
 

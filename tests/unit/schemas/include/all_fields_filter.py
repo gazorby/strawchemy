@@ -3,7 +3,7 @@ from __future__ import annotations
 from strawchemy.mapper import Strawchemy
 
 import strawberry
-from tests.models import Fruit
+from tests.unit.models import Fruit
 
 strawchemy = Strawchemy()
 

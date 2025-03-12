@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import enum
 from uuid import UUID, uuid4
 
 from strawchemy.dto.utils import PRIVATE, READ_ONLY, WRITE_ONLY
 
-from sqlalchemy import VARCHAR, ForeignKey, Text
+from sqlalchemy import VARCHAR, Enum, ForeignKey, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -12,6 +13,14 @@ def validate_fruit_type(value: str) -> None:
     if "rotten" in value:
         msg = "We do not allow rotten fruits."
         raise ValueError(msg)
+
+
+class VegetableFamily(enum.Enum):
+    MUSHROOM = enum.auto()
+    GOURD = enum.auto()
+    CABBAGE = enum.auto()
+    ONION = enum.auto()
+    SEEDS = enum.auto()
 
 
 class UUIDBase(DeclarativeBase):
@@ -31,7 +40,7 @@ class NameDescriptionMixin(DeclarativeBase):
 class Vegetable(UUIDBase, NameDescriptionMixin):
     __tablename__ = "vegetable"
 
-    world_production: Mapped[float]
+    family: Mapped[VegetableFamily] = mapped_column(Enum(VegetableFamily))
 
 
 class Fruit(UUIDBase):
@@ -60,12 +69,6 @@ class Color(UUIDBase):
     __tablename__ = "color"
 
     fruits: Mapped[list[Fruit]] = relationship("Fruit", back_populates="color")
-    name: Mapped[str]
-
-
-class FruitType(UUIDBase):
-    __tablename__ = "fruit_type"
-
     name: Mapped[str]
 
 

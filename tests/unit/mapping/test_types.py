@@ -13,8 +13,8 @@ from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import auto
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
-from tests.models import Book as BookModel
-from tests.models import User
+from tests.unit.models import Book as BookModel
+from tests.unit.models import User
 
 if TYPE_CHECKING:
     from strawchemy.mapper import Strawchemy
@@ -123,6 +123,7 @@ def test_multiple_types_error(path: str) -> None:
         pytest.param("pagination.pagination_default_limit.Query", id="pagination_default_limit"),
         pytest.param("pagination.pagination_config_default.Query", id="pagination_config_default"),
         pytest.param("custom_id_field_name.Query", id="custom_id_field_name"),
+        pytest.param("enums.Query", id="enums"),
     ],
 )
 @pytest.mark.snapshot

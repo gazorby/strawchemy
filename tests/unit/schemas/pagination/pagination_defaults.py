@@ -4,7 +4,7 @@ from strawchemy.mapper import Strawchemy
 from strawchemy.types import DefaultOffsetPagination
 
 import strawberry
-from tests.models import Fruit
+from tests.unit.models import Fruit
 
 strawchemy = Strawchemy()
 

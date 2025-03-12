@@ -4,7 +4,7 @@ from strawchemy.config import StrawchemyConfig
 from strawchemy.mapper import Strawchemy
 
 import strawberry
-from tests.models import Fruit
+from tests.unit.models import Fruit
 
 strawchemy = Strawchemy(StrawchemyConfig(pagination_default_limit=5))
 
