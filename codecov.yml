@@ -1,0 +1,11 @@
+coverage:
+  status:
+    project:
+      default:
+        # Auto compares coverage to the previous base commit
+        target: auto
+        # This allows a'% drop from the previous base commit coverage
+        threshold: 2%
+comment:
+  # Show the comments only on coverage changes
+  require_changes: true
