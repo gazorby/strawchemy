@@ -24,7 +24,7 @@ cleanable_paths = '''{{
   ".coverage",
   "coverage.xml",
   "coverage.json",
-  "junit.xml",
+  "junit*.xml",
   "htmlcov/",
   "tests/.pytest_cache",
   "tests/**/.pytest_cache",
@@ -112,7 +112,9 @@ run = '''
         {
         session,
         tags,
-        name: "\( .name ) on \( .python )\( if .call_spec != {} then " (\(.call_spec | to_entries | map("\(.key)=\(.value)") | join(", ")))" else "" end )"
+        python,
+        name,
+        job_name: "\( .name ) on \( .python )\( if .call_spec != {} then " (\(.call_spec | to_entries | map("\(.key)=\(.value)") | join(", ")))" else "" end )"
         }
     )'
 '''

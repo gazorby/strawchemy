@@ -6,6 +6,13 @@ coverage:
         target: auto
         # This allows a'% drop from the previous base commit coverage
         threshold: 2%
+flag_management:
+  default_rules: # the rules that will be followed for any flag added, generally
+    carryforward: true
+    statuses:
+      - type: project
+        target: auto
+        threshold: 1%
 comment:
   # Show the comments only on coverage changes
   require_changes: true

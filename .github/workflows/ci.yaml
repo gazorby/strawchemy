@@ -56,7 +56,7 @@ jobs:
           echo sessions=$(mise run ci:test-matrix) | tee --append $GITHUB_OUTPUT
 
   tests:
-    name: 🔬 ${{ matrix.session.name }}
+    name: 🔬 ${{ matrix.session.job_name }}
     needs: [pre, generate-jobs-tests]
     if: github.ref_type == 'tag' || needs.pre.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
@@ -79,7 +79,6 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.cache
             ~/.nox
           key: ${{ runner.os }}-nox-${{ matrix.session.session }}-${{hashFiles('**/uv.lock') }}-${{ hashFiles('**/noxfile.py') }}
           restore-keys: |
@@ -103,16 +102,21 @@ jobs:
           name: coverage-${{ matrix.session.session }}
           path: |
             coverage.xml
-            junit.xml
+            junit*.xml
 
   upload-coverage:
     name: 🆙 Upload Coverage
-    needs: [tests]
+    needs: [tests, generate-jobs-tests]
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        session: ${{ fromJson(needs.generate-jobs-tests.outputs.sessions) }}
 
     steps:
       - name: Download test artifacts
         uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-${{ matrix.session.session }}
 
       - name: Upload coverage to Codeocv
         id: upload-coverage
@@ -120,6 +124,7 @@ jobs:
         with:
           name: ${{env.PROJECT_NAME}}-tests
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.session.name }},${{ matrix.session.python }}
           fail_ci_if_error: true
           verbose: true
 
@@ -130,6 +135,7 @@ jobs:
         with:
           name: ${{env.PROJECT_NAME}}-test-results
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.session.name }},${{ matrix.session.python }}
           verbose: true
 
   lint:
