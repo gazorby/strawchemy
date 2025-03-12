@@ -117,6 +117,19 @@ Fix ruff errors
 
 Format code
 
+## `test`
+
+- Depends: _install
+
+- **Usage**: `test [test]`
+- **Aliases**: `tu`
+
+Run tests
+
+### Arguments
+
+#### `[test]`
+
 ## `test:integration`
 
 - Depends: _install
@@ -124,7 +137,7 @@ Format code
 - **Usage**: `test:integration [test]`
 - **Aliases**: `ti`
 
-Run tests
+Run integration tests
 
 ### Arguments
 
@@ -150,7 +163,7 @@ Run integration tests on all supported python versions
 - **Usage**: `test:unit [test]`
 - **Aliases**: `tu`
 
-Run tests
+Run unit tests
 
 ### Arguments
 

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
@@ -19,6 +21,9 @@ from .types import (
     strawchemy,
 )
 from .typing import RawRecordData
+
+if TYPE_CHECKING:
+    from .fixtures import QueryTracker
 
 pytestmark = [pytest.mark.integration]
 
@@ -141,3 +146,14 @@ async def test_list_relation(any_query: AnyQueryExecutor, raw_fruits: RawRecordD
 
     assert result.data
     assert all(fruit in result.data["colors"] for fruit in expected)
+
+
+async def test_only_queried_columns_included_in_select(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker
+) -> None:
+    await maybe_async(any_query("{ colors { name fruits { name id } } }"))
+    assert len(query_tracker.executions) == 1
+    assert (
+        str(query_tracker.executions[0].state.statement)
+        == "SELECT DISTINCT color__fruits.name, color__fruits.id, color.name AS name_1, color.id AS id_1 \nFROM color AS color LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id"
+    )

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import dataclasses
+from dataclasses import dataclass
 from datetime import date, time
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
@@ -9,8 +11,9 @@ import pytest
 from pytest_lazy_fixtures import lf
 
 from sqlalchemy import URL, Engine, NullPool, create_engine, insert
+from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import ORMExecuteState, Session, sessionmaker
 from strawberry.scalars import JSON
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
@@ -22,10 +25,12 @@ if TYPE_CHECKING:
 
     from pytest import FixtureRequest, MonkeyPatch
     from pytest_databases.docker.postgres import PostgresService
+    from strawchemy.sqlalchemy.typing import AnySession
 
     from .typing import RawRecordData
 
 __all__ = (
+    "QueryTracker",
     "any_query",
     "async_engine",
     "async_session",
@@ -303,6 +308,16 @@ async def seed_db_async(
 
 
 @pytest.fixture(params=[lf("async_session"), lf("session")], ids=["async", "sync"])
+def any_session(request: FixtureRequest) -> AnySession:
+    return request.param
+
+
+@pytest.fixture(params=[lf("any_session")], ids=["tracked"])
+def query_tracker(request: FixtureRequest) -> QueryTracker:
+    return QueryTracker(request.param)
+
+
+@pytest.fixture(params=[lf("any_session")], ids=["session"])
 def any_query(sync_query: type[Any], async_query: type[Any], request: FixtureRequest) -> AnyQueryExecutor:
     if isinstance(request.param, AsyncSession):
         request.getfixturevalue("seed_db_async")
@@ -315,3 +330,24 @@ def any_query(sync_query: type[Any], async_query: type[Any], request: FixtureReq
 @pytest.fixture
 def no_session_query(sync_query: type[Any]) -> SyncQueryExecutor:
     return generate_query(query=sync_query, scalar_overrides=scalar_overrides)
+
+
+@dataclass
+class StatementInspector:
+    state: ORMExecuteState
+
+
+@dataclass
+class QueryTracker:
+    session: AnySession
+
+    executions: list[StatementInspector] = dataclasses.field(init=False, default_factory=list)
+
+    def __post_init__(self) -> None:
+        if isinstance(self.session, AsyncSession):
+            listens_for(self.session.sync_session, "do_orm_execute")(self._event_listener)
+        else:
+            listens_for(self.session, "do_orm_execute")(self._event_listener)
+
+    def _event_listener(self, orm_execute_state: ORMExecuteState) -> None:
+        self.executions.append(StatementInspector(orm_execute_state))

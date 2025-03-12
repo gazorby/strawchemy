@@ -57,15 +57,22 @@ run = "uv sync --only-group test"
 
 # Test
 
-[tasks."test:unit"]
+[tasks.test]
 description = "Run tests"
+depends = "_install"
+alias = "tu"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:unit"]
+description = "Run unit tests"
 depends = "_install"
 alias = "tu"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest -m "not integration" {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration"]
-description = "Run tests"
+description = "Run integration tests"
 depends = "_install"
 alias = "ti"
 usage = 'arg "<test>" default=""'
