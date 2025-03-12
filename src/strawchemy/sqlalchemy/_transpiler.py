@@ -646,7 +646,7 @@ class Transpiler(Generic[DeclarativeT]):
         if has_root_subquery:
             subquery_alias = self._root_alias_as_subquery(query_graph, dataclasses.replace(query, joins=joins))
             self.scope.replace(alias=subquery_alias)
-            limit, offset = None, None
+            query.offset = None
             query.distinct_on = DistinctOn(query_graph)
             query.joins = self._gather_joins(query_graph.root_join_tree, is_outer=True)
             query.order_by = self._order_by(query_graph.order_by_nodes, query.joins)
