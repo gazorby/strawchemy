@@ -4,7 +4,7 @@ coverage:
       default:
         # Auto compares coverage to the previous base commit
         target: auto
-        # This allows a'% drop from the previous base commit coverage
+        # This allows a 2% drop from the previous base commit coverage
         threshold: 2%
 flag_management:
   default_rules: # the rules that will be followed for any flag added, generally
