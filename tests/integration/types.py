@@ -11,6 +11,10 @@ strawchemy = Strawchemy()
 class ColorType: ...
 
 
+@strawchemy.type(Color, include="all", child_pagination=True)
+class ColorTypeWithPagination: ...
+
+
 @strawchemy.type(User, include="all")
 class UserType: ...
 
