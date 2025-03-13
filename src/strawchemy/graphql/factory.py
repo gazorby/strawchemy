@@ -790,7 +790,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
         aggregations: bool = True,
         **kwargs: Any,
     ) -> type[GraphQLDTOT]:
-        return super().factory(
+        dto = super().factory(
             model,
             dto_config,
             base,
@@ -802,6 +802,8 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
             aggregations=aggregations,
             **kwargs,
         )
+        dto.__strawchemy_is_root_aggregation_type__ = True
+        return dto
 
 
 class FilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT]):

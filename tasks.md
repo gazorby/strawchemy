@@ -122,7 +122,7 @@ Format code
 - Depends: _install
 
 - **Usage**: `test [test]`
-- **Aliases**: `tu`
+- **Aliases**: `t`
 
 Run tests
 

@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from strawchemy.exceptions import StrawchemyError
+from strawchemy.strawberry.exceptions import StrawchemyFieldError
 from syrupy.assertion import SnapshotAssertion
 
 import strawberry
@@ -96,6 +97,16 @@ def test_multiple_types_error(path: str) -> None:
         ),
     ):
         import_module(path)
+
+
+def test_aggregation_type_mismatch() -> None:
+    with pytest.raises(
+        StrawchemyFieldError,
+        match=(
+            """The `color_aggregations` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."""
+        ),
+    ):
+        import_module("tests.unit.schemas.aggregations.type_mismatch")
 
 
 @pytest.mark.parametrize(

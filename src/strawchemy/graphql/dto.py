@@ -86,6 +86,7 @@ class StrawchemyDTOAttributes:
     __strawchemy_description__: ClassVar[str] = "GraphQL type"
     __strawchemy_field_map__: ClassVar[dict[DTOKey, GraphQLFieldDefinition[Any, Any]]] = {}
     __strawchemy_query_hook__: QueryHookCallable | Sequence[QueryHookCallable] | None = None
+    __strawchemy_is_root_aggregation_type__: bool = False
 
 
 class _Key(Generic[T]):

@@ -60,7 +60,7 @@ run = "uv sync --only-group test"
 [tasks.test]
 description = "Run tests"
 depends = "_install"
-alias = "tu"
+alias = "t"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 

@@ -68,6 +68,16 @@ postgres = [
 lint = ["pyright[nodejs]", "ruff", "vulture"]
 doc = ["git-cliff>=2.6.1"]
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+##################
+# External Tools #
+##################
+[tool.uv]
+default-groups = ["test", "lint"]
+
 [tool.bumpversion]
 allow_dirty = true
 commit = true
@@ -101,14 +111,6 @@ search = """
 name = "strawchemy"
 version = "{current_version}"
 """
-
-
-[tool.uv]
-default-groups = ["test", "lint"]
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/strawchemy"]
