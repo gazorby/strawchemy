@@ -9,7 +9,6 @@ from .base import (
     TextSQLAlchemyFilter,
     TimeSQLAlchemyFilter,
 )
-from .geo import GeoSQLAlchemyFilter
 from .postgresql import JSONBSQLAlchemyFilter, PostgresArraySQLAlchemyFilter
 
 __all__ = (
@@ -18,7 +17,6 @@ __all__ = (
     "DateSQLAlchemyFilter",
     "DateTimeSQLAlchemyFilter",
     "GenericSQLAlchemyFilter",
-    "GeoSQLAlchemyFilter",
     "JSONBSQLAlchemyFilter",
     "NumericSQLAlchemyFilter",
     "PostgresArraySQLAlchemyFilter",

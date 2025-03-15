@@ -25,6 +25,7 @@ from typing import (
 
 from strawchemy.dto.exceptions import DTOError
 from strawchemy.graph import Node
+from strawchemy.utils import non_optional_type_hint
 
 from .types import (
     DTO_AUTO,
@@ -187,7 +188,7 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
         )
         if get_origin(type_hint) is Annotated:
             return get_args(type_hint)[0]
-        return type_hint
+        return non_optional_type_hint(type_hint)
 
 
 @dataclass
@@ -372,7 +373,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         if not field.is_relation:
             if not field.has_type_override and field.complete and is_type_hint_optional(type_hint):
-                type_hint = self._non_optional_type_hint(type_hint)
+                type_hint = non_optional_type_hint(type_hint)
             return type_hint
 
         relation_model = self.inspector.relation_model(field.model_field)

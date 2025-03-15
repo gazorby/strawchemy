@@ -5,6 +5,7 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
+from geoalchemy2 import WKBElement, WKTElement
 from shapely import Geometry
 
 from sqlalchemy.dialects import postgresql
@@ -23,8 +24,16 @@ from .filters import (
     TextSQLAlchemyFilter,
     TimeSQLAlchemyFilter,
 )
-from .filters.geo import GeoSQLAlchemyFilter
 from .filters.postgresql import JSONBSQLAlchemyFilter, PostgresArraySQLAlchemyFilter
+
+try:
+    from .filters.geo import GeoSQLAlchemyFilter
+
+    GeoFilter = GeoSQLAlchemyFilter
+
+except ModuleNotFoundError:
+    GeoFilter = None
+
 
 if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition
@@ -66,7 +75,9 @@ class SQLAlchemyGraphQLInspector(
         self._dialect_json_types: tuple[type[JSON], ...] | None = None
         if dialect == "postgresql":
             self._dialect_json_types = (postgresql.JSON, postgresql.JSONB)
-            self.filters_map |= {(dict,): JSONBSQLAlchemyFilter, (Geometry,): GeoSQLAlchemyFilter}
+            self.filters_map |= {(dict,): JSONBSQLAlchemyFilter}
+            if GeoFilter is not None:
+                self.filters_map |= {(Geometry, WKBElement, WKTElement): GeoFilter}
         self.filters_map |= filter_overrides or {}
 
     @classmethod

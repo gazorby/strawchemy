@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeAlias, TypeVar, ov
 
 from geojson_pydantic.geometries import Geometry
 
-from pydantic import BaseModel, Json, PrivateAttr
+from pydantic import BaseModel, PrivateAttr
 from strawchemy.dto.base import ModelFieldT, ModelT
 from strawchemy.pydantic import RegexPatternStr
 
@@ -76,7 +76,12 @@ class GraphQLComparison(BaseModel, Generic[ModelT, ModelFieldT]):
 
     @classmethod
     def field_type_name(cls) -> str:
-        return cls.__name__
+        try:
+            prefix = cls.field_name()
+        except NotImplementedError:
+            prefix = cls.__name__
+
+        return f"{prefix}Comparison"
 
     @classmethod
     def field_name(cls) -> str:
@@ -123,11 +128,6 @@ class GenericComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T, Model
     def field_name(cls) -> str:
         type_: type[Any] = cls.__pydantic_generic_metadata__["args"][0]
         return _normalize_field_name(type_)
-
-    @override
-    @classmethod
-    def field_type_name(cls) -> str:
-        return f"{cls.field_name()}Comparison"
 
 
 class NumericComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T, ModelT, ModelFieldT]):
@@ -254,8 +254,9 @@ class GeoComparison(GraphQLComparison[ModelT, ModelFieldT]):
         within_geometry: Filters for geometries that are within this geometry.
     """
 
-    contains_geometry: Json[Geometry] | None = None
-    within_geometry: Json[Geometry] | None = None
+    contains_geometry: Geometry | None = None
+    within_geometry: Geometry | None = None
+    is_null: bool | None = None
 
     @override
     @classmethod

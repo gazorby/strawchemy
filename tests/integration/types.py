@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from strawchemy import Strawchemy
 
-from .models import Color, Fruit, SQLDataTypes, User
+from .models import Color, Fruit, GeoModel, SQLDataTypes, User
 
 strawchemy = Strawchemy()
 
@@ -53,3 +53,11 @@ class SQLDataTypesFilter: ...
 
 @strawchemy.type(SQLDataTypes, include="all")
 class SQLDataTypesType: ...
+
+
+@strawchemy.type(GeoModel, include="all")
+class GeoFieldsType: ...
+
+
+@strawchemy.filter_input(GeoModel, include="all")
+class GeoFieldsFilter: ...

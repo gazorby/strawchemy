@@ -8,9 +8,11 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 import pytest
+from geoalchemy2 import WKBElement, WKTElement
 from pytest_lazy_fixtures import lf
+from strawchemy.strawberry.geo import GeoJSON
 
-from sqlalchemy import URL, Engine, Insert, NullPool, create_engine, insert
+from sqlalchemy import URL, Engine, Executable, Insert, MetaData, NullPool, create_engine, insert
 from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import ORMExecuteState, Session, sessionmaker
@@ -47,7 +49,7 @@ __all__ = (
     "session",
 )
 
-scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON}
+scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, WKTElement: GeoJSON, WKBElement: GeoJSON}
 
 
 @pytest.fixture(autouse=True)
@@ -67,20 +69,25 @@ def _patch_base(monkeypatch: MonkeyPatch) -> None:  # pyright: ignore[reportUnus
     monkeypatch.setattr(models, "UUIDBase", NewUUIDBase)
 
 
+@pytest.fixture
+def database_service(postgres_service: PostgresService) -> PostgresService:
+    return postgres_service
+
+
 # Sync engines
 
 
 @pytest.fixture
-def psycopg_engine(postgres_service: PostgresService) -> Engine:
+def psycopg_engine(database_service: PostgresService) -> Engine:
     """Postgresql instance for end-to-end testing."""
     return create_engine(
         URL(
             drivername="postgresql+psycopg",
             username="postgres",
-            password=postgres_service.password,
-            host=postgres_service.host,
-            port=postgres_service.port,
-            database=postgres_service.database,
+            password=database_service.password,
+            host=database_service.host,
+            port=database_service.port,
+            database=database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
@@ -118,16 +125,16 @@ def session(engine: Engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-def asyncpg_engine(postgres_service: PostgresService) -> AsyncEngine:
+def asyncpg_engine(database_service: PostgresService) -> AsyncEngine:
     """Postgresql instance for end-to-end testing."""
     return create_async_engine(
         URL(
             drivername="postgresql+asyncpg",
             username="postgres",
-            password=postgres_service.password,
-            host=postgres_service.host,
-            port=postgres_service.port,
-            database=postgres_service.database,
+            password=database_service.password,
+            host=database_service.host,
+            port=database_service.port,
+            database=database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
@@ -135,16 +142,16 @@ def asyncpg_engine(postgres_service: PostgresService) -> AsyncEngine:
 
 
 @pytest.fixture
-def psycopg_async_engine(postgres_service: PostgresService) -> AsyncEngine:
+def psycopg_async_engine(database_service: PostgresService) -> AsyncEngine:
     """Postgresql instance for end-to-end testing."""
     return create_async_engine(
         URL(
             drivername="postgresql+psycopg",
             username="postgres",
-            password=postgres_service.password,
-            host=postgres_service.host,
-            port=postgres_service.port,
-            database=postgres_service.database,
+            password=database_service.password,
+            host=database_service.host,
+            port=database_service.port,
+            database=database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
@@ -303,60 +310,6 @@ def raw_sql_data_types() -> RawRecordData:
 
 
 @pytest.fixture
-def raw_geo() -> RawRecordData:
-    return [
-        # Complete record with all geometry types
-        {
-            "id": str(uuid4()),
-            "point_required": "POINT(0 0)",  # Origin point
-            "point": "POINT(1 1)",  # Simple point
-            "line_string": "LINESTRING(0 0, 1 1, 2 2)",  # Simple line with 3 points
-            "polygon": "POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))",  # Simple square
-            "multi_point": "MULTIPOINT((0 0), (1 1), (2 2))",  # 3 points
-            "multi_line_string": "MULTILINESTRING((0 0, 1 1), (2 2, 3 3))",  # 2 lines
-            "multi_polygon": "MULTIPOLYGON(((0 0, 0 1, 1 1, 1 0, 0 0)), ((2 2, 2 3, 3 3, 3 2, 2 2)))",  # 2 squares
-            "geometry": "POINT(5 5)",  # Using point as generic geometry
-        },
-        # Record with only required fields
-        {
-            "id": str(uuid4()),
-            "point_required": "POINT(10 20)",  # Required point
-            "point": None,
-            "line_string": None,
-            "polygon": None,
-            "multi_point": None,
-            "multi_line_string": None,
-            "multi_polygon": None,
-            "geometry": None,
-        },
-        # Record with complex geometries
-        {
-            "id": str(uuid4()),
-            "point_required": "POINT(45.5 -122.6)",  # Real-world coordinates (Portland, OR)
-            "point": "POINT(-74.0060 40.7128)",  # New York City
-            "line_string": "LINESTRING(-122.4194 37.7749, -118.2437 34.0522, -74.0060 40.7128)",  # SF to LA to NYC
-            "polygon": "POLYGON((-122.4194 37.7749, -122.4194 37.8, -122.4 37.8, -122.4 37.7749, -122.4194 37.7749))",  # Area in SF
-            "multi_point": "MULTIPOINT((-122.4194 37.7749), (-118.2437 34.0522), (-74.0060 40.7128))",  # Major US cities
-            "multi_line_string": "MULTILINESTRING((-122.4194 37.7749, -118.2437 34.0522), (-118.2437 34.0522, -74.0060 40.7128))",  # Route segments
-            "multi_polygon": "MULTIPOLYGON(((-122.42 37.78, -122.42 37.8, -122.4 37.8, -122.4 37.78, -122.42 37.78)), ((-118.25 34.05, -118.25 34.06, -118.24 34.06, -118.24 34.05, -118.25 34.05)))",  # Areas in SF and LA
-            "geometry": "LINESTRING(-122.4194 37.7749, -74.0060 40.7128)",  # Direct SF to NYC
-        },
-        # Record with different geometry types
-        {
-            "id": str(uuid4()),
-            "point_required": "POINT(100 200)",
-            "point": "POINT(200 300)",
-            "line_string": "LINESTRING(100 100, 200 200, 300 300, 400 400)",  # Longer line
-            "polygon": "POLYGON((0 0, 0 10, 10 10, 10 0, 0 0), (2 2, 2 8, 8 8, 8 2, 2 2))",  # Polygon with hole
-            "multi_point": "MULTIPOINT((10 10), (20 20), (30 30), (40 40), (50 50))",  # 5 points
-            "multi_line_string": "MULTILINESTRING((10 10, 20 20), (30 30, 40 40), (50 50, 60 60))",  # 3 lines
-            "multi_polygon": "MULTIPOLYGON(((0 0, 0 5, 5 5, 5 0, 0 0)), ((10 10, 10 15, 15 15, 15 10, 10 10)), ((20 20, 20 25, 25 25, 25 20, 20 20)))",  # 3 squares
-            "geometry": "POLYGON((100 100, 100 200, 200 200, 200 100, 100 100))",  # Using polygon as geometry
-        },
-    ]
-
-
-@pytest.fixture
 def seed_insert_statements(
     raw_fruits: RawRecordData, raw_colors: RawRecordData, raw_users: RawRecordData, raw_sql_data_types: RawRecordData
 ) -> list[Insert]:
@@ -369,8 +322,25 @@ def seed_insert_statements(
 
 
 @pytest.fixture
-def seed_db_sync(engine: Engine, seed_insert_statements: list[Insert]) -> None:
+def before_create_all_statements() -> list[Executable]:
+    return []
+
+
+@pytest.fixture(name="metadata")
+def fx_metadata() -> MetaData:
+    return metadata
+
+
+@pytest.fixture
+def seed_db_sync(
+    engine: Engine,
+    metadata: MetaData,
+    seed_insert_statements: list[Insert],
+    before_create_all_statements: list[Executable],
+) -> None:
     with engine.begin() as conn:
+        for statement in before_create_all_statements:
+            conn.execute(statement)
         metadata.drop_all(conn)
         metadata.create_all(conn)
         for statement in seed_insert_statements:
@@ -378,8 +348,15 @@ def seed_db_sync(engine: Engine, seed_insert_statements: list[Insert]) -> None:
 
 
 @pytest.fixture
-async def seed_db_async(async_engine: AsyncEngine, seed_insert_statements: list[Insert]) -> None:
+async def seed_db_async(
+    async_engine: AsyncEngine,
+    metadata: MetaData,
+    seed_insert_statements: list[Insert],
+    before_create_all_statements: list[Executable],
+) -> None:
     async with async_engine.begin() as conn:
+        for statement in before_create_all_statements:
+            await conn.execute(statement)
         await conn.run_sync(metadata.drop_all)
         await conn.run_sync(metadata.create_all)
         for statement in seed_insert_statements:

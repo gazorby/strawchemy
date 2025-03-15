@@ -1,0 +1,64 @@
+# serializer version: 1
+# name: test_schemas[geo_filters]
+  '''
+  """
+  The `GeoJSON` type represents GEOJson values as specified by [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)
+  """
+  scalar GeoJSON @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc7946")
+  
+  input GeometryComparison {
+    containsGeometry: GeoJSON
+    withinGeometry: GeoJSON
+    isNull: Boolean
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input GeosFieldsFilter {
+    _and: [GeosFieldsFilter!]
+    _or: [GeosFieldsFilter!]
+    _not: GeosFieldsFilter
+    id: UUIDComparison
+    pointRequired: GeometryComparison
+    point: GeometryComparison
+    lineString: GeometryComparison
+    polygon: GeometryComparison
+    multiPoint: GeometryComparison
+    multiLineString: GeometryComparison
+    multiPolygon: GeometryComparison
+    geometry: GeometryComparison
+  }
+  
+  """GraphQL type"""
+  type GeosFieldsType {
+    id: UUID!
+    pointRequired: GeoJSON!
+    point: GeoJSON
+    lineString: GeoJSON
+    polygon: GeoJSON
+    multiPoint: GeoJSON
+    multiLineString: GeoJSON
+    multiPolygon: GeoJSON
+    geometry: GeoJSON
+  }
+  
+  type Query {
+    """Fetch objects from the GeosFieldsType collection"""
+    geo(filter: GeosFieldsFilter = null): [GeosFieldsType!]!
+  }
+  
+  scalar UUID
+  
+  """
+  Boolean expression to compare fields of type UUID. All fields are combined with logical 'AND'
+  """
+  input UUIDComparison {
+    eq: UUID
+    neq: UUID
+    isNull: Boolean
+    in_: [UUID!]
+    nin_: [UUID!]
+  }
+  '''
+# ---

@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, ca
 
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
-from strawberry.scalars import JSON  # noqa: TC001
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer, StrawberryType
 from strawberry.types.field import StrawberryField
@@ -37,11 +36,6 @@ T = TypeVar("T")
 EnumT = TypeVar("EnumT", bound=Enum)
 
 _RegistryMissing = NewType("_RegistryMissing", object)
-
-
-class _StrawberryGeoComparison:
-    contains_geometry: JSON | None = strawberry.UNSET
-    within_geometry: JSON | None = strawberry.UNSET
 
 
 @dataclass
@@ -296,12 +290,14 @@ class StrawberryRegistry:
     ) -> type[StrawberryTypeFromPydantic[AnyGraphQLComparison]]:
         type_info = RegistryTypeInfo(name=comparison_type.field_type_name(), graphql_type="input")
         if issubclass(comparison_type, GeoComparison):
+            from .geo import StrawberryGeoComparison
+
             return self.register_pydantic(
                 comparison_type,
                 type_info,
                 partial=True,
                 all_fields=False,
-                base=_StrawberryGeoComparison,
+                base=StrawberryGeoComparison,
             )
 
         return self.register_pydantic(

@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from geoalchemy2 import functions as geo_func
 
+from sqlalchemy import null
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.graphql.filters import GeoComparison
 
@@ -15,7 +16,7 @@ if TYPE_CHECKING:
 __all__ = ("GeoSQLAlchemyFilter",)
 
 
-class GeoSQLAlchemyFilter(SQLAlchemyFilterBase, GeoComparison[DeclarativeBase, QueryableAttribute[Any]]):
+class GeoSQLAlchemyFilter(GeoComparison[DeclarativeBase, QueryableAttribute[Any]], SQLAlchemyFilterBase):
     """Geo SQLAlchemy filter for geometry comparison operations.
 
     This class extends GeoComparison and adds filtering
@@ -45,9 +46,9 @@ class GeoSQLAlchemyFilter(SQLAlchemyFilterBase, GeoComparison[DeclarativeBase, Q
             )
         if "within_geometry" in self.model_fields_set and self.within_geometry:
             expressions.append(
-                geo_func.ST_Contains(
-                    model_attribute, geo_func.ST_GeomFromGeoJSON(self.within_geometry.model_dump_json())
-                )
+                geo_func.ST_Within(model_attribute, geo_func.ST_GeomFromGeoJSON(self.within_geometry.model_dump_json()))
             )
+        if "is_null" in self.model_fields_set and self.is_null is not None:
+            expressions.append(model_attribute.is_(null()) if self.is_null else model_attribute.is_not(null()))
 
         return expressions

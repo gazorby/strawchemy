@@ -5,9 +5,11 @@ from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from geoalchemy2 import WKBElement, WKTElement
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.strawberry.exceptions import StrawchemyFieldError
+from strawchemy.strawberry.geo import GeoJSON
 from syrupy.assertion import SnapshotAssertion
 
 import strawberry
@@ -154,6 +156,8 @@ def test_base_json_fails() -> None:
         pytest.param("custom_id_field_name.Query", id="custom_id_field_name"),
         pytest.param("enums.Query", id="enums"),
         pytest.param("filters.filters.Query", id="filters"),
+        pytest.param("geo.geo_filters.Query", id="geo_filters"),
+        pytest.param("geo.geo.Query", id="geo_type"),
     ],
 )
 @pytest.mark.snapshot
@@ -161,7 +165,9 @@ def test_schemas(path: str, snapshot: SnapshotAssertion) -> None:
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
 
-    schema = strawberry.Schema(query=query_class, scalar_overrides={dict[str, Any]: JSON})
+    schema = strawberry.Schema(
+        query=query_class, scalar_overrides={dict[str, Any]: JSON, WKTElement: GeoJSON, WKBElement: GeoJSON}
+    )
     assert textwrap.dedent(str(schema)).strip() == snapshot
 
 
