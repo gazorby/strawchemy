@@ -1,11 +1,17 @@
+# ruff: noqa: TC003
+
 from __future__ import annotations
 
 import enum
+from datetime import date, datetime, time
+from decimal import Decimal
+from typing import Any
 from uuid import UUID, uuid4
 
 from strawchemy.dto.utils import PRIVATE, READ_ONLY, WRITE_ONLY
 
-from sqlalchemy import VARCHAR, Enum, ForeignKey, Text
+from sqlalchemy import VARCHAR, DateTime, Enum, ForeignKey, Text
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -114,6 +120,23 @@ class Book(UUIDBase):
 
     title: Mapped[str]
     isbn: Mapped[str] = mapped_column(info=READ_ONLY)
+
+
+class SQLDataTypes(UUIDBase):
+    __tablename__ = "sql_data_types"
+
+    date_col: Mapped[date]
+    time_col: Mapped[time]
+    time_delta_col: Mapped[time]
+    datetime_col: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    str_col: Mapped[str]
+    int_col: Mapped[int]
+    float_col: Mapped[float]
+    decimal_col: Mapped[Decimal]
+    bool_col: Mapped[bool]
+    uuid_col: Mapped[UUID]
+    dict_col: Mapped[dict[str, Any]] = mapped_column(postgresql.JSONB, default=dict)
+    array_str_col: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
 
 
 try:

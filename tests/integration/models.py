@@ -7,7 +7,8 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import ARRAY, DECIMAL, JSON, Date, DateTime, ForeignKey, MetaData, Text, Time
+from sqlalchemy import DateTime, ForeignKey, MetaData, Text
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, registry, relationship
 
@@ -34,11 +35,7 @@ class Fruit(UUIDBase):
 
     name: Mapped[str]
     color_id: Mapped[UUID | None] = mapped_column(ForeignKey("color.id"), nullable=True, default=None)
-    sweetness: Mapped[int]
-    has_core: Mapped[bool]
-    adjectives: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
-    price_decimal: Mapped[Decimal] = mapped_column(DECIMAL(asdecimal=True))
-    price_float: Mapped[float]
+    adjectives: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
     color: Mapped[Color | None] = relationship("Color", back_populates="fruits")
 
     @hybrid_property
@@ -57,6 +54,21 @@ class User(UUIDBase):
     __tablename__ = "user"
 
     name: Mapped[str]
-    settings: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
-    birthday: Mapped[date] = mapped_column(Date)
-    newsletter_send_time: Mapped[time] = mapped_column(Time, default=lambda: time(hour=8))
+
+
+class SQLDataTypes(UUIDBase):
+    __tablename__ = "sql_data_types"
+
+    date_col: Mapped[date]
+    time_col: Mapped[time]
+    time_delta_col: Mapped[time]
+    datetime_col: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    str_col: Mapped[str]
+    int_col: Mapped[int]
+    float_col: Mapped[float]
+    decimal_col: Mapped[Decimal]
+    bool_col: Mapped[bool]
+    uuid_col: Mapped[UUID]
+    dict_col: Mapped[dict[str, Any]] = mapped_column(postgresql.JSONB, default=dict)
+    array_str_col: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
+    optional_str_col: Mapped[str | None] = mapped_column(nullable=True, default=None)

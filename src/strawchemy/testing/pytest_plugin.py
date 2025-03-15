@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import dataclasses
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, TypeAlias
 from unittest.mock import MagicMock
 
@@ -77,7 +79,7 @@ def fx_computed_values() -> dict[str, Any]:
     return {}
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(name="patch_query", autouse=True)
 def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, Any], model_instance: Any) -> None:
     monkeypatch.setattr(
         executor.AsyncQueryExecutor[Any], "execute", make_async_execute(computed_values, model_instance)
@@ -85,3 +87,13 @@ def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, A
     monkeypatch.setattr(executor.SyncQueryExecutor[Any], "execute", make_execute(computed_values, model_instance))
     monkeypatch.setattr(executor.NodeResult, "value", node_result_value)
     monkeypatch.setattr(executor.QueryResult, "value", query_result_value)
+
+
+@pytest.fixture
+def context() -> MockContext:
+    return MockContext()
+
+
+@dataclass
+class MockContext:
+    session: MagicMock = dataclasses.field(default_factory=lambda: MagicMock(name="SessionMock"))

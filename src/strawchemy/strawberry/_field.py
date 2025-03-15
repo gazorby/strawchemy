@@ -29,10 +29,11 @@ from strawchemy.dto.base import ModelFieldT, ModelInspector, ModelT
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.dto.utils import is_type_hint_optional
 from strawchemy.graphql.constants import DISTINCT_ON_KEY, FILTER_KEY, LIMIT_KEY, NODES_KEY, OFFSET_KEY, ORDER_BY_KEY
-from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO, StrawchemyDTOAttributes
 from strawchemy.types import DefaultOffsetPagination
 
 from ._utils import dto_model_from_type, strawberry_contained_type
+from .exceptions import StrawchemyFieldError
 from .repository import StrawchemyAsyncRepository, StrawchemySyncRepository
 
 if TYPE_CHECKING:
@@ -42,7 +43,7 @@ if TYPE_CHECKING:
     from strawberry import BasePermission, Info
     from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
     from strawberry.extensions.field_extension import FieldExtension
-    from strawberry.types.base import StrawberryType, WithStrawberryObjectDefinition
+    from strawberry.types.base import StrawberryObjectDefinition, StrawberryType, WithStrawberryObjectDefinition
     from strawberry.types.fields.resolver import StrawberryResolver
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.sqlalchemy.typing import QueryHookCallable
@@ -238,31 +239,37 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
                 )
         return arguments
 
-    def filter_statement(self, info: Info[Any, Any]) -> Select[tuple[ModelT]] | None:
-        if self._filter_statement:
-            return self._filter_statement(info)
-        return None
+    def _get_by_id_resolver(
+        self, info: Info, **kwargs: Any
+    ) -> GetByIdResolverResult | Coroutine[GetByIdResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        return repository.get_by_id(strict=not self.is_optional, **kwargs)
+
+    def _list_resolver(
+        self,
+        info: Info,
+        filter_input: StrawberryTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]] | None = None,
+        order_by: list[StrawberryTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
+        distinct_on: list[EnumDTO] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> ListResolverResult | Coroutine[ListResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        return repository.list(filter_input, order_by, distinct_on, limit, offset)
+
+    def _check_root_aggregations(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
+        inner_type = strawberry_contained_type(type_)
+        if (
+            self.root_aggregations
+            and issubclass(inner_type, StrawchemyDTOAttributes)
+            and not inner_type.__strawchemy_is_root_aggregation_type__
+        ):
+            msg = f"The `{self.name}` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."
+            raise StrawchemyFieldError(msg)
 
     @cached_property
-    def is_list(self) -> bool:
-        if self.root_aggregations:
-            return True
-        type_ = self._type_or_annotation()
-        if isinstance(type_, StrawberryOptional):
-            type_ = type_.of_type
-        if origin := get_origin(type_):
-            type_ = origin
-            if origin is Optional:
-                type_ = get_args(type_)[0]
-            if origin in (Union, UnionType) and len(args := get_args(type_)) == _OPTIONAL_UNION_ARG_SIZE:
-                type_ = args[0] if args[0] is not type(None) else args[1]
-
-        return isinstance(type_, StrawberryList) or type_ is list
-
-    @cached_property
-    def is_optional(self) -> bool:
-        type_ = self._type_or_annotation()
-        return isinstance(type_, StrawberryOptional) or is_type_hint_optional(type_)
+    def _model(self) -> type[ModelT]:
+        return dto_model_from_type(strawberry_contained_type(self.type))
 
     @property
     @override
@@ -275,10 +282,6 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         if self.base_resolver is None:
             return issubclass(self._repository_type, StrawchemyAsyncRepository)
         return super().is_async
-
-    @cached_property
-    def _model(self) -> type[ModelT]:
-        return dto_model_from_type(strawberry_contained_type(self.type))
 
     @override
     def __copy__(self) -> Self:
@@ -363,23 +366,39 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         args_prop = super(StrawchemyField, self.__class__).arguments
         return args_prop.fset(self, value)  # pyright: ignore[reportAttributeAccessIssue]
 
-    def _get_by_id_resolver(
-        self, info: Info, **kwargs: Any
-    ) -> GetByIdResolverResult | Coroutine[GetByIdResolverResult, Any, Any]:
-        repository = self._get_repository(info)
-        return repository.get_by_id(strict=not self.is_optional, **kwargs)
+    @override
+    def resolve_type(
+        self, *, type_definition: StrawberryObjectDefinition | None = None
+    ) -> StrawberryType | type[WithStrawberryObjectDefinition] | Any:
+        type_ = super().resolve_type(type_definition=type_definition)
+        self._check_root_aggregations(type_)
+        return type_
 
-    def _list_resolver(
-        self,
-        info: Info,
-        filter_input: StrawberryTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]] | None = None,
-        order_by: list[StrawberryTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
-        distinct_on: list[EnumDTO] | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
-    ) -> ListResolverResult | Coroutine[ListResolverResult, Any, Any]:
-        repository = self._get_repository(info)
-        return repository.list(filter_input, order_by, distinct_on, limit, offset)
+    def filter_statement(self, info: Info[Any, Any]) -> Select[tuple[ModelT]] | None:
+        if self._filter_statement:
+            return self._filter_statement(info)
+        return None
+
+    @cached_property
+    def is_list(self) -> bool:
+        if self.root_aggregations:
+            return True
+        type_ = self._type_or_annotation()
+        if isinstance(type_, StrawberryOptional):
+            type_ = type_.of_type
+        if origin := get_origin(type_):
+            type_ = origin
+            if origin is Optional:
+                type_ = get_args(type_)[0]
+            if origin in (Union, UnionType) and len(args := get_args(type_)) == _OPTIONAL_UNION_ARG_SIZE:
+                type_ = args[0] if args[0] is not type(None) else args[1]
+
+        return isinstance(type_, StrawberryList) or type_ is list
+
+    @cached_property
+    def is_optional(self) -> bool:
+        type_ = self._type_or_annotation()
+        return isinstance(type_, StrawberryOptional) or is_type_hint_optional(type_)
 
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any

@@ -20,3 +20,6 @@ backend = "aqua:astral-sh/ruff"
 [tools.uv]
 version = "0.6.5"
 backend = "aqua:astral-sh/uv"
+
+[tools.uv.checksums]
+"uv-x86_64-unknown-linux-musl.tar.gz" = "sha256:ed4830b7b6293b9413618970b84dad7bc9245f4a7dfa741f943afdb647c196c4"
