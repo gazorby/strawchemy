@@ -62,7 +62,7 @@ Install test dependencies only
 
 ## `lint`
 
-- Depends: vulture, pyright, ruff:check
+- Depends: vulture, pyright, ruff:check, ruff:format:check
 
 - **Usage**: `lint`
 - **Aliases**: `l`
@@ -114,6 +114,12 @@ Fix ruff errors
 ## `ruff:format`
 
 - **Usage**: `ruff:format`
+
+Format code
+
+## `ruff:format:check`
+
+- **Usage**: `ruff:format:check`
 
 Format code
 

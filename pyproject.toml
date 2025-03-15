@@ -220,7 +220,7 @@ max-complexity = 12
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["TCH001", "UP037"]
+"tests/*" = ["TCH001", "UP037", "PLR2004"]
 
 [tool.unasyncd]
 add_editors_note = true
@@ -365,4 +365,4 @@ token = ""
 min_confidence = 100
 paths = ["src", "tests"]
 sort_by_size = true
-exclude = ["tests/fixtures.py"]
+exclude = ["tests/fixtures.py", "tests/unit/schemas/mutations"]

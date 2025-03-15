@@ -62,7 +62,7 @@ description = "Run tests"
 depends = "_install"
 alias = "t"
 usage = 'arg "<test>" default=""'
-run = 'uv run pytest {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+run = 'uv run pytest {{vars.local_pytest_options}} -n=6 {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit"]
 description = "Run unit tests"
@@ -76,7 +76,7 @@ description = "Run integration tests"
 depends = "_install"
 alias = "ti"
 usage = 'arg "<test>" default=""'
-run = 'uv run pytest -m integration {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+run = 'uv run pytest -m integration {{vars.local_pytest_options}} -n=6 {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit-all"]
 description = "Run unit tests on all supported python versions"
@@ -130,7 +130,7 @@ run = '''
 
 [tasks."ruff:check"]
 description = "Check ruff formatting"
-run = "ruff format --check"
+run = "ruff check"
 
 [tasks."ruff:fix"]
 description = "Fix ruff errors"
@@ -139,6 +139,10 @@ run = "ruff check --fix --unsafe-fixes"
 [tasks."ruff:format"]
 description = "Format code"
 run = "ruff format"
+
+[tasks."ruff:format:check"]
+description = "Format code"
+run = "ruff format --check"
 
 [tasks.pyright]
 description = "Run pyright"
@@ -154,7 +158,7 @@ run = "uv run vulture"
 [tasks.lint]
 description = "Lint the code"
 alias = "l"
-depends = ["vulture", "pyright", "ruff:check"]
+depends = ["vulture", "pyright", "ruff:check", "ruff:format:check"]
 
 [tasks."lint:pre-commit"]
 description = "Lint the code in pre-commit hook"

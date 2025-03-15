@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from strawchemy import Strawchemy
 
-from .models import Color, Fruit, User
+from .models import Color, Fruit, SQLDataTypes, User
 
 strawchemy = Strawchemy()
 
@@ -45,3 +45,11 @@ class FruitOrderBy: ...
 
 @strawchemy.order_by_input(User, include="all", override=True)
 class UserOrderBy: ...
+
+
+@strawchemy.filter_input(SQLDataTypes, include="all")
+class SQLDataTypesFilter: ...
+
+
+@strawchemy.type(SQLDataTypes, include="all")
+class SQLDataTypesType: ...

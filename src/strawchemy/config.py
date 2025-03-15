@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from .graphql.inspector import GraphQLInspectorProtocol
     from .sqlalchemy.typing import FilterMap
     from .strawberry.typing import AnySessionGetter
-    from .typing import AnyRepository
+    from .typing import AnyRepository, SupportedDialect
 
 
 @dataclass
@@ -33,8 +33,9 @@ class StrawchemyConfig:
     """Enable/disable pagination on list resolvers."""
     default_id_field_name: str = "id"
     """Name for primary key fields arguments on primary key resolvers."""
+    dialect: SupportedDialect = "postgresql"
 
     inspector: GraphQLInspectorProtocol[Any, Any] = field(init=False)
 
     def __post_init__(self) -> None:
-        self.inspector = SQLAlchemyGraphQLInspector(filter_overrides=self.filter_overrides)
+        self.inspector = SQLAlchemyGraphQLInspector(self.dialect, filter_overrides=self.filter_overrides)

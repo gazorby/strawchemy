@@ -813,7 +813,6 @@ class StrawberryTypeFactory(
             bases=bases,
             kw_only=True,
             module=dto.__module__,
-            slots=True,
         )
         for name, value in attributes.items():
             setattr(strawberry_base, name, value)

@@ -20,7 +20,7 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Generic, Self, override
+from typing import TYPE_CHECKING, Any, Generic, Self, cast, override
 
 from sqlalchemy import Dialect, Label, Select, and_, inspect, not_, null, or_, select, true
 from sqlalchemy.orm import (
@@ -75,6 +75,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
     from sqlalchemy.sql.elements import NamedColumn
+    from strawchemy.typing import SupportedDialect
 
 __all__ = ("Transpiler",)
 
@@ -90,7 +91,7 @@ class Transpiler(Generic[DeclarativeT]):
         scope: QueryScope[DeclarativeT] | None = None,
         query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookCallableWithoutInfo[Any]]] | None = None,
     ) -> None:
-        self._inspector = SQLAlchemyGraphQLInspector([model.registry])
+        self._inspector = SQLAlchemyGraphQLInspector(cast("SupportedDialect", dialect.name), [model.registry])
         self._sub_query_root_alias = aliased(class_mapper(model), name=model.__tablename__, flat=True)
         self._aggregation_name_prefix: str = "aggregation"
         self._aggregation_joins: dict[SQLAlchemyQueryNode, AggregationJoin] = {}

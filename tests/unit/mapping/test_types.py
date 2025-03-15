@@ -6,12 +6,14 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from strawchemy.exceptions import StrawchemyError
+from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.strawberry.exceptions import StrawchemyFieldError
 from syrupy.assertion import SnapshotAssertion
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import auto
+from strawberry.scalars import JSON
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 from tests.unit.models import Book as BookModel
@@ -109,6 +111,22 @@ def test_aggregation_type_mismatch() -> None:
         import_module("tests.unit.schemas.aggregations.type_mismatch")
 
 
+def test_base_array_fails() -> None:
+    with pytest.raises(
+        InspectorError,
+        match=("""Base SQLAlchemy ARRAY type is not supported. Use backend-specific array type instead."""),
+    ):
+        import_module("tests.unit.schemas.filters.filters_base_array")
+
+
+def test_base_json_fails() -> None:
+    with pytest.raises(
+        InspectorError,
+        match=("""Base SQLAlchemy JSON type is not supported. Use backend-specific json type instead."""),
+    ):
+        import_module("tests.unit.schemas.filters.filters_base_json")
+
+
 @pytest.mark.parametrize(
     "path",
     [
@@ -135,6 +153,7 @@ def test_aggregation_type_mismatch() -> None:
         pytest.param("pagination.pagination_config_default.Query", id="pagination_config_default"),
         pytest.param("custom_id_field_name.Query", id="custom_id_field_name"),
         pytest.param("enums.Query", id="enums"),
+        pytest.param("filters.filters.Query", id="filters"),
     ],
 )
 @pytest.mark.snapshot
@@ -142,5 +161,21 @@ def test_schemas(path: str, snapshot: SnapshotAssertion) -> None:
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
 
-    schema = strawberry.Schema(query=query_class)
+    schema = strawberry.Schema(query=query_class, scalar_overrides={dict[str, Any]: JSON})
+    assert textwrap.dedent(str(schema)).strip() == snapshot
+
+
+@pytest.mark.parametrize("path", [pytest.param("input_type.Mutation", id="input_type")])
+@pytest.mark.snapshot
+def test_mutation_schemas(path: str, snapshot: SnapshotAssertion) -> None:
+    module, query_name = f"tests.unit.schemas.mutations.{path}".rsplit(".", maxsplit=1)
+    mutation_class = getattr(import_module(module), query_name)
+
+    @strawberry.type
+    class Query:
+        @strawberry.field
+        def hello(self) -> str:
+            return "world"
+
+    schema = strawberry.Schema(query=Query, mutation=mutation_class, scalar_overrides={dict[str, Any]: JSON})
     assert textwrap.dedent(str(schema)).strip() == snapshot

@@ -13,9 +13,11 @@ from .fixtures import (
     query_tracker,
     raw_colors,
     raw_fruits,
+    raw_sql_data_types,
     raw_users,
     seed_db_async,
     seed_db_sync,
+    seed_insert_statements,
     session,
 )
 
@@ -32,8 +34,10 @@ __all__ = (
     "query_tracker",
     "raw_colors",
     "raw_fruits",
+    "raw_sql_data_types",
     "raw_users",
     "seed_db_async",
     "seed_db_sync",
+    "seed_insert_statements",
     "session",
 )
