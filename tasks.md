@@ -101,6 +101,8 @@ Generate tasks documentation
 
 ## `ruff:check`
 
+- Depends: _install
+
 - **Usage**: `ruff:check`
 
 Check ruff formatting

@@ -130,6 +130,7 @@ run = '''
 
 [tasks."ruff:check"]
 description = "Check ruff formatting"
+depends = "_install"
 run = "ruff check"
 
 [tasks."ruff:fix"]
