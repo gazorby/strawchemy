@@ -71,6 +71,42 @@
   WHERE sql_data_types_container.id = :id_1
   '''
 # ---
+# name: test_avg_aggregation[session-tracked-intCol-int_col-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id,
+                  aggregation_0."avg_data_types__avg_int_col" AS avg_data_types__avg_int_col
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE sql_data_types_container.id = :id_1
+  '''
+# ---
+# name: test_avg_aggregation[session-tracked-intCol-int_col-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id,
+                  aggregation_0."avg_data_types__avg_int_col" AS avg_data_types__avg_int_col
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE sql_data_types_container.id = :id_1
+  '''
+# ---
+# name: test_avg_aggregation[session-tracked-intCol-int_col-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id,
+                  aggregation_0."avg_data_types__avg_int_col" AS avg_data_types__avg_int_col
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE sql_data_types_container.id = :id_1
+  '''
+# ---
 # name: test_count_aggregation[session-tracked-async-asyncpg_engine]
   '''
   SELECT DISTINCT sql_data_types_container.id,

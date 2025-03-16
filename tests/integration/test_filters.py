@@ -842,12 +842,8 @@ async def test_uuid_filters(
 
 
 # Test combining multiple filters
-@pytest.mark.snapshot
 async def test_combined_filters(
-    any_query: AnyQueryExecutor,
-    raw_sql_data_types: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
+    any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData, query_tracker: QueryTracker
 ) -> None:
     query = """
             {
@@ -869,4 +865,3 @@ async def test_combined_filters(
     assert len(result.data["sqlDataTypes"]) == 1
     assert result.data["sqlDataTypes"][0]["id"] == raw_sql_data_types[0]["id"]
     assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot

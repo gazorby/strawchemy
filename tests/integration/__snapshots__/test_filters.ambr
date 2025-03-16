@@ -36,9 +36,9 @@
          sql_data_types.bool_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
-    AND sql_data_types.bool_col = TRUE
+  WHERE sql_data_types.bool_col = TRUE
     AND sql_data_types.int_col > :int_col_1
+    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
   '''
 # ---
 # name: test_combined_filters[session-tracked-async-psycopg_async_engine]
@@ -48,9 +48,9 @@
          sql_data_types.bool_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
-    AND sql_data_types.bool_col = TRUE
+  WHERE sql_data_types.bool_col = TRUE
     AND sql_data_types.int_col > :int_col_1
+    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
   '''
 # ---
 # name: test_combined_filters[session-tracked-sync-psycopg_engine]
@@ -60,9 +60,9 @@
          sql_data_types.bool_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
-    AND sql_data_types.bool_col = TRUE
+  WHERE sql_data_types.bool_col = TRUE
     AND sql_data_types.int_col > :int_col_1
+    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
   '''
 # ---
 # name: test_complex_logical_operators[session-tracked-async-asyncpg_engine]

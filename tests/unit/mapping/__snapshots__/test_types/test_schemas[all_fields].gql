@@ -32,7 +32,7 @@
   }
   
   type FruitNumericFields {
-    sweetness: Int
+    sweetness: Float
   }
   
   type FruitSumFields {

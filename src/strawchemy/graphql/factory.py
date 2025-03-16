@@ -85,9 +85,8 @@ __all__ = (
 
 T = TypeVar("T")
 
-dto_config_read_partial = DTOConfig(Purpose.READ, partial=True)
 
-TYPING_NS = vars(strawchemy_typing)
+_TYPING_NS = vars(strawchemy_typing)
 
 
 class _EnumDTOBackend(DTOBackend[EnumDTO], Generic[ModelT]):
@@ -207,7 +206,7 @@ class _GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
 
     @override
     def type_hint_namespace(self) -> dict[str, Any]:
-        return super().type_hint_namespace() | TYPING_NS
+        return super().type_hint_namespace() | _TYPING_NS
 
     @override
     def iter_field_definitions(
@@ -451,7 +450,10 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
         return dto
 
     def output_functions(self, model: type[Any], dto_config: DTOConfig) -> list[OutputFunctionInfo]:
-        numeric_fields = self.numeric_field_type(model, dto_config)
+        int_as_float_config = dataclasses.replace(
+            dto_config, type_overrides={int: float | None, int | None: float | None}
+        )
+        numeric_fields = self.numeric_field_type(model, int_as_float_config)
         min_max_fields = self.min_max_field_type(model, dto_config)
         sum_fields = self.sum_field_type(model, dto_config)
 

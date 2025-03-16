@@ -30,6 +30,7 @@ __all__ = (
     "is_type_hint_optional",
     "read_all_config",
     "read_all_partial_config",
+    "read_partial",
     "write_all_config",
     "write_all_partial_config",
 )
@@ -97,6 +98,7 @@ def is_type_hint_optional(type_hint: Any) -> bool:
     return False
 
 
+read_partial = DTOConfig(Purpose.READ, partial=True)
 read_all_config = DTOConfig(Purpose.READ, include="all")
 read_all_partial_config = DTOConfig(Purpose.READ, include="all", partial=True)
 write_all_config = DTOConfig(Purpose.WRITE, include="all")
