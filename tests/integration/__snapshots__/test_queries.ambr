@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_only_queried_columns_included_in_select[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT color__fruits.name,
+                  color__fruits.id,
+                  color.name AS name_1,
+                  color.id AS id_1
+  FROM color AS color
+  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+  '''
+# ---
+# name: test_only_queried_columns_included_in_select[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT color__fruits.name,
+                  color__fruits.id,
+                  color.name AS name_1,
+                  color.id AS id_1
+  FROM color AS color
+  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+  '''
+# ---
+# name: test_only_queried_columns_included_in_select[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT color__fruits.name,
+                  color__fruits.id,
+                  color.name AS name_1,
+                  color.id AS id_1
+  FROM color AS color
+  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+  '''
+# ---

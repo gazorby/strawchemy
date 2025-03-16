@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 import pytest
+import sqlparse
 from geoalchemy2 import WKBElement, WKTElement
 from pytest_lazy_fixtures import lf
 from strawchemy.strawberry.geo import GeoJSON
@@ -20,7 +21,7 @@ from strawberry.scalars import JSON
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
-from .models import Color, Fruit, SQLDataTypes, User, metadata
+from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User, metadata
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -253,7 +254,12 @@ def raw_users() -> RawRecordData:
 
 
 @pytest.fixture
-def raw_sql_data_types() -> RawRecordData:
+def raw_sql_data_types_container() -> RawRecordData:
+    return [{"id": str(uuid4())}]
+
+
+@pytest.fixture
+def raw_sql_data_types(raw_sql_data_types_container: RawRecordData) -> RawRecordData:
     return [
         # Standard case with typical values
         {
@@ -271,6 +277,7 @@ def raw_sql_data_types() -> RawRecordData:
             "dict_col": {"key1": "value1", "key2": 2, "nested": {"inner": "value"}},
             "array_str_col": ["one", "two", "three"],
             "optional_str_col": "optional string",
+            "container_id": raw_sql_data_types_container[0]["id"],
         },
         # Case with negative numbers and different values
         {
@@ -288,6 +295,7 @@ def raw_sql_data_types() -> RawRecordData:
             "dict_col": {"status": "pending", "count": 0},
             "array_str_col": ["apple", "banana", "cherry", "date"],
             "optional_str_col": "another optional string",
+            "container_id": raw_sql_data_types_container[0]["id"],
         },
         # Edge case with empty values
         {
@@ -305,18 +313,24 @@ def raw_sql_data_types() -> RawRecordData:
             "dict_col": {},  # empty dict
             "array_str_col": [],  # empty array
             "optional_str_col": None,
+            "container_id": raw_sql_data_types_container[0]["id"],
         },
     ]
 
 
 @pytest.fixture
 def seed_insert_statements(
-    raw_fruits: RawRecordData, raw_colors: RawRecordData, raw_users: RawRecordData, raw_sql_data_types: RawRecordData
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
+    raw_users: RawRecordData,
+    raw_sql_data_types: RawRecordData,
+    raw_sql_data_types_container: RawRecordData,
 ) -> list[Insert]:
     return [
         insert(Color).values(raw_colors),
         insert(Fruit).values(raw_fruits),
         insert(User).values(raw_users),
+        insert(SQLDataTypesContainer).values(raw_sql_data_types_container),
         insert(SQLDataTypes).values(raw_sql_data_types),
     ]
 
@@ -392,6 +406,14 @@ def no_session_query(sync_query: type[Any]) -> SyncQueryExecutor:
 class StatementInspector:
     state: ORMExecuteState
 
+    @property
+    def statement_str(self) -> str:
+        return str(self.state.statement)
+
+    @property
+    def statement_formatted(self) -> str:
+        return sqlparse.format(self.statement_str, reindent=True, use_space_around_operators=True, keyword_case="upper")
+
 
 @dataclass
 class QueryTracker:
@@ -407,3 +429,10 @@ class QueryTracker:
 
     def _event_listener(self, orm_execute_state: ORMExecuteState) -> None:
         self.executions.append(StatementInspector(orm_execute_state))
+
+    @property
+    def query_count(self) -> int:
+        return len(self.executions)
+
+    def __getitem__(self, index: int) -> StatementInspector:
+        return self.executions[index]

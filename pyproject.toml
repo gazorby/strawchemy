@@ -59,6 +59,7 @@ test = [
     "pytest-databases",
     "pytest-lazy-fixtures",
     "syrupy",
+    "sqlparse",
 ]
 postgres = [
     "asyncpg>=0.29.0",

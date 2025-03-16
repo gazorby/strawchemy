@@ -138,6 +138,19 @@ Run tests
 
 #### `[test]`
 
+## `test:coverage`
+
+- Depends: _install
+
+- **Usage**: `test:coverage [test]`
+- **Aliases**: `tc`
+
+Run tests with coverage
+
+### Arguments
+
+#### `[test]`
+
 ## `test:integration`
 
 - Depends: _install

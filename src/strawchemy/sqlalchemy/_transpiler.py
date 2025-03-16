@@ -604,7 +604,7 @@ class Transpiler(Generic[DeclarativeT]):
         statement = statement.options(raiseload("*"), *root_options)
 
         for child in selection_tree.children:
-            if not child.value.is_relation:
+            if not child.value.is_relation or child.value.is_computed:
                 continue
             statement = statement.options(self._apply_load_options(statement, child))
 

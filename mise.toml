@@ -12,6 +12,7 @@ actionlint = "latest"
 
 [vars]
 local_pytest_options = "--cov-report=term-missing:skip-covered -n=2 -vv"
+pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-append --cov-report=xml"
 cleanable_paths = '''{{
 [
   ".nox",
@@ -63,6 +64,13 @@ depends = "_install"
 alias = "t"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest {{vars.local_pytest_options}} -n=6 {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:coverage"]
+description = "Run tests with coverage"
+depends = "_install"
+alias = "tc"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} -n=6 {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit"]
 description = "Run unit tests"

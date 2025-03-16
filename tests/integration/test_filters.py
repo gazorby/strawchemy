@@ -1,75 +1,23 @@
 from __future__ import annotations
 
-import json
-import re
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
-from typing import Any, Literal
-from uuid import UUID
+from typing import Any
 
 import pytest
 from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
 import strawberry
+from syrupy.assertion import SnapshotAssertion
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
+from .fixtures import QueryTracker
 from .types import SQLDataTypesFilter, SQLDataTypesType, strawchemy
 from .typing import RawRecordData
+from .utils import to_graphql_representation
 
-
-def _to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> Any:
-    """Convert Python values to their GraphQL string representation.
-
-    This function transforms various Python data types into their appropriate
-    GraphQL representation, with different handling based on whether the value
-    is being used as input to a GraphQL query or as output from a GraphQL query.
-
-    Args:
-        value: The Python value to convert to a GraphQL representation.
-            Supported types include:
-            - Basic types (str, int, float, bool)
-            - Date/time types (datetime, date, time)
-            - Decimal and UUID
-            - Dictionaries
-        mode: Determines the conversion format:
-            - "input": For values used in GraphQL query filters/arguments
-            - "output": For values expected in GraphQL query results
-
-    Returns:
-        The GraphQL representation of the input value:
-        - datetime/date/time: ISO format string
-        - Decimal/UUID: String representation
-        - Boolean (input mode): "true"/"false" strings
-        - Dictionaries (input mode): JSON with GraphQL-style unquoted keys
-        - Strings (input mode): Double-quoted
-
-    Examples:
-        >>> _to_graphql_representation(True, "input")
-        'true'
-        >>> _to_graphql_representation({"key": "value"}, "input")
-        '{key: "value"}'
-        >>> _to_graphql_representation(datetime(2023, 1, 1), "output")
-        '2023-01-01T00:00:00'
-    """
-    expected = value
-
-    if isinstance(value, datetime | date | time):
-        expected = value.isoformat()
-    elif isinstance(value, Decimal | UUID):
-        expected = str(value)
-
-    if mode == "input":
-        if value is True:
-            expected = "true"
-        elif value is False:
-            expected = "false"
-        elif isinstance(value, dict):
-            expected = re.sub(r'"([^"]+)":', r"\g<1>:", json.dumps(value))
-        if isinstance(value, str | datetime | date | time):
-            expected = f'"{expected}"'
-
-    return expected
+pytestmark = [pytest.mark.integration]
 
 
 @strawberry.type
@@ -96,11 +44,19 @@ def async_query() -> type[AsyncQuery]:
     return AsyncQuery
 
 
-async def test_no_filtering(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_no_filtering(
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
     result = await maybe_async(any_query("{ sqlDataTypes { id } }"))
     assert not result.errors
     assert result.data
     assert len(result.data["sqlDataTypes"]) == len(raw_sql_data_types)
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(
@@ -117,7 +73,15 @@ async def test_no_filtering(any_query: AnyQueryExecutor, raw_sql_data_types: Raw
         pytest.param("dictCol", {"key1": "value1", "key2": 2, "nested": {"inner": "value"}}, id="dict"),
     ],
 )
-async def test_eq(field_name: str, value: Any, any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_eq(
+    field_name: str,
+    value: Any,
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
     query = """
             {{
                 sqlDataTypes(filter: {{ {field_name}: {{ eq: {value} }} }}) {{
@@ -127,13 +91,15 @@ async def test_eq(field_name: str, value: Any, any_query: AnyQueryExecutor, raw_
             }}
     """
     result = await maybe_async(
-        any_query(query.format(field_name=field_name, value=_to_graphql_representation(value, "input")))
+        any_query(query.format(field_name=field_name, value=to_graphql_representation(value, "input")))
     )
     assert not result.errors
     assert result.data
     assert len(result.data["sqlDataTypes"]) == 1
     assert result.data["sqlDataTypes"][0]["id"] == raw_sql_data_types[0]["id"]
-    assert result.data["sqlDataTypes"][0][field_name] == _to_graphql_representation(value, "output")
+    assert result.data["sqlDataTypes"][0][field_name] == to_graphql_representation(value, "output")
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(
@@ -150,7 +116,15 @@ async def test_eq(field_name: str, value: Any, any_query: AnyQueryExecutor, raw_
         pytest.param("dictCol", {"key1": "value1", "key2": 2, "nested": {"inner": "value"}}, id="dict"),
     ],
 )
-async def test_neq(field_name: str, value: Any, any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_neq(
+    field_name: str,
+    value: Any,
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
     query = """
             {{
                 sqlDataTypes(filter: {{ {field_name}: {{ neq: {value} }} }}) {{
@@ -160,16 +134,24 @@ async def test_neq(field_name: str, value: Any, any_query: AnyQueryExecutor, raw
             }}
     """
     result = await maybe_async(
-        any_query(query.format(field_name=field_name, value=_to_graphql_representation(value, "input")))
+        any_query(query.format(field_name=field_name, value=to_graphql_representation(value, "input")))
     )
     assert not result.errors
     assert result.data
     assert len(result.data["sqlDataTypes"]) == 2
     assert result.data["sqlDataTypes"][0]["id"] == raw_sql_data_types[1]["id"]
     assert result.data["sqlDataTypes"][1]["id"] == raw_sql_data_types[2]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_isnull(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_isnull(
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
     query = """
             {
                 sqlDataTypes(filter: { optionalStrCol: { isNull: true } }) {
@@ -184,6 +166,8 @@ async def test_isnull(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecord
     assert len(result.data["sqlDataTypes"]) == 1
     assert result.data["sqlDataTypes"][0]["id"] == raw_sql_data_types[2]["id"]
     assert result.data["sqlDataTypes"][0]["optionalStrCol"] is None
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 # Tests for in_ and nin_ filters
@@ -208,14 +192,17 @@ async def test_isnull(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecord
         ),
     ],
 )
+@pytest.mark.snapshot
 async def test_in(
     field_name: str,
     values: list[Any],
     expected_ids: list[int],
     any_query: AnyQueryExecutor,
     raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
-    values_str = ", ".join(str(_to_graphql_representation(value, "input")) for value in values)
+    values_str = ", ".join(str(to_graphql_representation(value, "input")) for value in values)
     query = f"""
             {{
                 sqlDataTypes(filter: {{ {field_name}: {{ in_: [{values_str}] }} }}) {{
@@ -232,6 +219,8 @@ async def test_in(
     assert {result.data["sqlDataTypes"][i]["id"] for i in range(len(expected_ids))} == {
         raw_sql_data_types[i]["id"] for i in expected_ids
     }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(
@@ -255,14 +244,17 @@ async def test_in(
         ),
     ],
 )
+@pytest.mark.snapshot
 async def test_nin(
     field_name: str,
     values: list[Any],
     expected_ids: list[int],
     any_query: AnyQueryExecutor,
     raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
-    values_str = ", ".join(str(_to_graphql_representation(value, "input")) for value in values)
+    values_str = ", ".join(str(to_graphql_representation(value, "input")) for value in values)
     query = f"""
             {{
                 sqlDataTypes(filter: {{ {field_name}: {{ nin_: [{values_str}] }} }}) {{
@@ -279,6 +271,8 @@ async def test_nin(
     assert {result.data["sqlDataTypes"][i]["id"] for i in range(len(expected_ids))} == {
         raw_sql_data_types[i]["id"] for i in expected_ids
     }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 # Tests for gt, gte, lt, lte filters for numeric and date/time types
@@ -293,12 +287,19 @@ async def test_nin(
         pytest.param("datetimeCol", datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC), [0, 2], id="datetime-gt"),
     ],
 )
+@pytest.mark.snapshot
 async def test_gt(
-    field_name: str, value: Any, expected_ids: list[int], any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData
+    field_name: str,
+    value: Any,
+    expected_ids: list[int],
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = f"""
             {{
-                sqlDataTypes(filter: {{ {field_name}: {{ gt: {_to_graphql_representation(value, "input")} }} }}) {{
+                sqlDataTypes(filter: {{ {field_name}: {{ gt: {to_graphql_representation(value, "input")} }} }}) {{
                     id
                     {field_name}
                 }}
@@ -310,6 +311,8 @@ async def test_gt(
     assert len(result.data["sqlDataTypes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(
@@ -323,12 +326,19 @@ async def test_gt(
         pytest.param("datetimeCol", datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC), [0, 2], id="datetime-gte"),
     ],
 )
+@pytest.mark.snapshot
 async def test_gte(
-    field_name: str, value: Any, expected_ids: list[int], any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData
+    field_name: str,
+    value: Any,
+    expected_ids: list[int],
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = f"""
             {{
-                sqlDataTypes(filter: {{ {field_name}: {{ gte: {_to_graphql_representation(value, "input")} }} }}) {{
+                sqlDataTypes(filter: {{ {field_name}: {{ gte: {to_graphql_representation(value, "input")} }} }}) {{
                     id
                     {field_name}
                 }}
@@ -340,6 +350,8 @@ async def test_gte(
     assert len(result.data["sqlDataTypes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(
@@ -353,12 +365,19 @@ async def test_gte(
         pytest.param("datetimeCol", datetime(2023, 1, 15, 0, 0, 0, tzinfo=UTC), [1], id="datetime-lt"),
     ],
 )
+@pytest.mark.snapshot
 async def test_lt(
-    field_name: str, value: Any, expected_ids: list[int], any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData
+    field_name: str,
+    value: Any,
+    expected_ids: list[int],
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = f"""
             {{
-                sqlDataTypes(filter: {{ {field_name}: {{ lt: {_to_graphql_representation(value, "input")} }} }}) {{
+                sqlDataTypes(filter: {{ {field_name}: {{ lt: {to_graphql_representation(value, "input")} }} }}) {{
                     id
                     {field_name}
                 }}
@@ -370,6 +389,8 @@ async def test_lt(
     assert len(result.data["sqlDataTypes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(
@@ -383,12 +404,19 @@ async def test_lt(
         pytest.param("datetimeCol", datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC), [0, 1], id="datetime-lte"),
     ],
 )
+@pytest.mark.snapshot
 async def test_lte(
-    field_name: str, value: Any, expected_ids: list[int], any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData
+    field_name: str,
+    value: Any,
+    expected_ids: list[int],
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = f"""
             {{
-                sqlDataTypes(filter: {{ {field_name}: {{ lte: {_to_graphql_representation(value, "input")} }} }}) {{
+                sqlDataTypes(filter: {{ {field_name}: {{ lte: {to_graphql_representation(value, "input")} }} }}) {{
                     id
                     {field_name}
                 }}
@@ -400,6 +428,8 @@ async def test_lte(
     assert len(result.data["sqlDataTypes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 # Tests for string-specific filters
@@ -420,16 +450,19 @@ async def test_lte(
         pytest.param("nregexp", "^test", [1, 2], id="nregexp"),
     ],
 )
+@pytest.mark.snapshot
 async def test_string_filters(
     filter_name: str,
     value: str,
     expected_ids: list[int],
     any_query: AnyQueryExecutor,
     raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = f"""
             {{
-                sqlDataTypes(filter: {{ strCol: {{ {filter_name}: {_to_graphql_representation(value, "input")} }} }}) {{
+                sqlDataTypes(filter: {{ strCol: {{ {filter_name}: {to_graphql_representation(value, "input")} }} }}) {{
                     id
                     strCol
                 }}
@@ -441,6 +474,8 @@ async def test_string_filters(
     assert len(result.data["sqlDataTypes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 # Tests for JSON-specific filters
@@ -459,18 +494,21 @@ async def test_string_filters(
         pytest.param("hasKeyAny", ["key1", "status"], [0, 1], id="hasKeyAny"),
     ],
 )
+@pytest.mark.snapshot
 async def test_json_filters(
     filter_name: str,
     value: Any,
     expected_ids: list[int],
     any_query: AnyQueryExecutor,
     raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     if isinstance(value, list):
-        value_str = ", ".join(_to_graphql_representation(v, "input") for v in value)
+        value_str = ", ".join(to_graphql_representation(v, "input") for v in value)
         value_repr = f"[{value_str}]"
     else:
-        value_repr = _to_graphql_representation(value, "input")
+        value_repr = to_graphql_representation(value, "input")
 
     query = f"""
             {{
@@ -486,6 +524,8 @@ async def test_json_filters(
     assert len(result.data["sqlDataTypes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 # Tests for array-specific filters
@@ -497,14 +537,17 @@ async def test_json_filters(
         pytest.param("overlap", ["one", "apple"], [0, 1], id="overlap"),
     ],
 )
+@pytest.mark.snapshot
 async def test_postgres_array_filters(
     filter_name: str,
     value: list[str],
     expected_ids: list[int],
     any_query: AnyQueryExecutor,
     raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
-    value_str = ", ".join(_to_graphql_representation(v, "input") for v in value)
+    value_str = ", ".join(to_graphql_representation(v, "input") for v in value)
     query = f"""
             {{
                 sqlDataTypes(filter: {{ arrayStrCol: {{ {filter_name}: [{value_str}] }} }}) {{
@@ -519,6 +562,8 @@ async def test_postgres_array_filters(
     assert len(result.data["sqlDataTypes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 # Tests for date/time component filters
@@ -535,8 +580,15 @@ async def test_postgres_array_filters(
         pytest.param("isoWeekDay", 7, [0], id="isoWeekDay"),  # Sunday is 7 in ISO
     ],
 )
+@pytest.mark.snapshot
 async def test_date_components(
-    component: str, value: int, expected_ids: list[int], any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData
+    component: str,
+    value: int,
+    expected_ids: list[int],
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = f"""
             {{
@@ -552,6 +604,8 @@ async def test_date_components(
     assert len(result.data["sqlDataTypes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(
@@ -562,8 +616,15 @@ async def test_date_components(
         pytest.param("second", 45, [0], id="second"),
     ],
 )
+@pytest.mark.snapshot
 async def test_time_components(
-    component: str, value: int, expected_ids: list[int], any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData
+    component: str,
+    value: int,
+    expected_ids: list[int],
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = f"""
             {{
@@ -579,6 +640,8 @@ async def test_time_components(
     assert len(result.data["sqlDataTypes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(
@@ -597,8 +660,15 @@ async def test_time_components(
         pytest.param("isoWeekDay", 7, [0], id="isoWeekDay"),
     ],
 )
+@pytest.mark.snapshot
 async def test_datetime_components(
-    component: str, value: int, expected_ids: list[int], any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData
+    component: str,
+    value: int,
+    expected_ids: list[int],
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = f"""
             {{
@@ -614,10 +684,18 @@ async def test_datetime_components(
     assert len(result.data["sqlDataTypes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 # Tests for logical operators
-async def test_and(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_and(
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
     query = """
             {
                 sqlDataTypes(filter: { _and: [
@@ -635,9 +713,17 @@ async def test_and(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordDat
     assert result.data
     assert len(result.data["sqlDataTypes"]) == 1
     assert result.data["sqlDataTypes"][0]["id"] == raw_sql_data_types[0]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_or(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_or(
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
     query = """
             {
                 sqlDataTypes(filter: { _or: [
@@ -657,9 +743,17 @@ async def test_or(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData
         raw_sql_data_types[0]["id"],
         raw_sql_data_types[1]["id"],
     }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_not(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_not(
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
     query = """
             {
                 sqlDataTypes(filter: { _not: { intCol: { eq: 0 } } }) {
@@ -676,10 +770,18 @@ async def test_not(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordDat
         raw_sql_data_types[0]["id"],
         raw_sql_data_types[1]["id"],
     }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 # Test complex nested logical operators
-async def test_complex_logical_operators(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_complex_logical_operators(
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
     query = """
             {
                 sqlDataTypes(filter: {
@@ -708,10 +810,18 @@ async def test_complex_logical_operators(any_query: AnyQueryExecutor, raw_sql_da
         raw_sql_data_types[0]["id"],
         raw_sql_data_types[1]["id"],
     }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 # Test UUID filters
-async def test_uuid_filters(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_uuid_filters(
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
     uuid_value = raw_sql_data_types[0]["uuid_col"]
     query = f"""
             {{
@@ -727,10 +837,18 @@ async def test_uuid_filters(any_query: AnyQueryExecutor, raw_sql_data_types: Raw
     assert len(result.data["sqlDataTypes"]) == 1
     assert result.data["sqlDataTypes"][0]["id"] == raw_sql_data_types[0]["id"]
     assert result.data["sqlDataTypes"][0]["uuidCol"] == str(uuid_value)
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 # Test combining multiple filters
-async def test_combined_filters(any_query: AnyQueryExecutor, raw_sql_data_types: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_combined_filters(
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
     query = """
             {
                 sqlDataTypes(filter: {
@@ -750,3 +868,5 @@ async def test_combined_filters(any_query: AnyQueryExecutor, raw_sql_data_types:
     assert result.data
     assert len(result.data["sqlDataTypes"]) == 1
     assert result.data["sqlDataTypes"][0]["id"] == raw_sql_data_types[0]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

@@ -18,6 +18,7 @@ from sqlalchemy import Executable, Insert, MetaData, insert, text
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
+from .fixtures import QueryTracker
 from .models import GeoModel, geo_metadata
 from .types import GeoFieldsFilter, GeoFieldsType, strawchemy
 
@@ -29,7 +30,12 @@ if TYPE_CHECKING:
     from pytest_databases.docker.postgres import PostgresService
     from pytest_databases.types import XdistIsolationLevel
 
+    from syrupy.assertion import SnapshotAssertion
+
     from .typing import RawRecordData
+
+pytestmark = [pytest.mark.integration]
+
 
 _geo_data = [
     # Complete record with all geometry types
@@ -189,12 +195,18 @@ def seed_insert_statements(raw_geo: RawRecordData) -> list[Insert]:
     return [insert(GeoModel).values(raw_geo)]
 
 
-async def test_no_filtering(any_query: AnyQueryExecutor, raw_geo: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_no_filtering(
+    any_query: AnyQueryExecutor, raw_geo: RawRecordData, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
     """Test that querying without filters returns all records."""
     result = await maybe_async(any_query("{ geoField { id } }"))
     assert not result.errors
     assert result.data
     assert len(result.data["geoField"]) == len(raw_geo)
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(
@@ -205,12 +217,15 @@ async def test_no_filtering(any_query: AnyQueryExecutor, raw_geo: RawRecordData)
         pytest.param("geometry", {"type": "Point", "coordinates": [150, 150]}, [3], id="point-within-geometry-polygon"),
     ],
 )
+@pytest.mark.snapshot
 async def test_contains_geometry(
     field_name: str,
     geometry: dict[str, Any],
     expected_ids: list[int],
     any_query: AnyQueryExecutor,
     raw_geo: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test the contains_geometry filter.
 
@@ -231,6 +246,9 @@ async def test_contains_geometry(
     assert len(result.data["geoField"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["geoField"][i]["id"] == raw_geo[expected_id]["id"]
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(
@@ -267,12 +285,15 @@ async def test_contains_geometry(
         ),
     ],
 )
+@pytest.mark.snapshot
 async def test_within_geometry(
     field_name: str,
     geometry: dict[str, Any],
     expected_ids: list[int],
     any_query: AnyQueryExecutor,
     raw_geo: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test the within_geometry filter.
 
@@ -293,9 +314,15 @@ async def test_within_geometry(
     assert len(result.data["geoField"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["geoField"][i]["id"] == raw_geo[expected_id]["id"]
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_is_null(any_query: AnyQueryExecutor, raw_geo: RawRecordData) -> None:
+@pytest.mark.snapshot
+async def test_is_null(
+    any_query: AnyQueryExecutor, raw_geo: RawRecordData, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
     """Test the isNull filter for geometry fields."""
     query = """
             {
@@ -311,3 +338,6 @@ async def test_is_null(any_query: AnyQueryExecutor, raw_geo: RawRecordData) -> N
     assert len(result.data["geoField"]) == 1
     assert result.data["geoField"][0]["id"] == raw_geo[1]["id"]
     assert result.data["geoField"][0]["point"] is None
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

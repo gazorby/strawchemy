@@ -23,6 +23,8 @@ from .types import (
 from .typing import RawRecordData
 
 if TYPE_CHECKING:
+    from syrupy.assertion import SnapshotAssertion
+
     from .fixtures import QueryTracker
 
 pytestmark = [pytest.mark.integration]
@@ -148,12 +150,10 @@ async def test_list_relation(any_query: AnyQueryExecutor, raw_fruits: RawRecordD
     assert all(fruit in result.data["colors"] for fruit in expected)
 
 
+@pytest.mark.snapshot
 async def test_only_queried_columns_included_in_select(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     await maybe_async(any_query("{ colors { name fruits { name id } } }"))
-    assert len(query_tracker.executions) == 1
-    assert (
-        str(query_tracker.executions[0].state.statement)
-        == "SELECT DISTINCT color__fruits.name, color__fruits.id, color.name AS name_1, color.id AS id_1 \nFROM color AS color LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id"
-    )
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

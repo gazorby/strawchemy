@@ -79,6 +79,14 @@ class SQLDataTypes(UUIDBase):
     dict_col: Mapped[dict[str, Any]] = mapped_column(postgresql.JSONB, default=dict)
     array_str_col: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
     optional_str_col: Mapped[str | None] = mapped_column(nullable=True, default=None)
+    container_id: Mapped[UUID] = mapped_column(ForeignKey("sql_data_types_container.id"))
+    container: Mapped[SQLDataTypesContainer] = relationship("SQLDataTypesContainer")
+
+
+class SQLDataTypesContainer(UUIDBase):
+    __tablename__ = "sql_data_types_container"
+
+    data_types: Mapped[list[SQLDataTypes]] = relationship("SQLDataTypes", back_populates="container")
 
 
 class GeoModel(GeoUUIDBase):
