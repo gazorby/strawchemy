@@ -371,6 +371,7 @@ exclude = ["tests/fixtures.py", "tests/unit/schemas/mutations"]
 [tool.coverage.run]
 branch = true
 concurrency = ["multiprocessing"]
+source = ""
 omit = ["*/tests/*"]
 parallel = true
 relative_files = true
