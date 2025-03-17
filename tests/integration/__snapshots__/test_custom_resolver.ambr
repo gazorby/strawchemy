@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_custom_resolvers[session-tracked-async-asyncpg_engine]
+# name: test_get_one[session-tracked-async-asyncpg_engine]
   '''
   SELECT color.name,
          color.id
@@ -13,7 +13,7 @@
      WHERE color.name = :name_1) AS anon_1 ON color.id = anon_1.id
   '''
 # ---
-# name: test_custom_resolvers[session-tracked-async-psycopg_async_engine]
+# name: test_get_one[session-tracked-async-psycopg_async_engine]
   '''
   SELECT color.name,
          color.id
@@ -27,7 +27,7 @@
      WHERE color.name = :name_1) AS anon_1 ON color.id = anon_1.id
   '''
 # ---
-# name: test_custom_resolvers[session-tracked-sync-psycopg_engine]
+# name: test_get_one[session-tracked-sync-psycopg_engine]
   '''
   SELECT color.name,
          color.id
