@@ -45,6 +45,8 @@ __all__ = (
     "raw_colors",
     "raw_fruits",
     "raw_sql_data_types",
+    "raw_sql_data_types_set1",
+    "raw_sql_data_types_set2",
     "raw_users",
     "seed_db_async",
     "seed_db_sync",
@@ -315,6 +317,90 @@ def raw_sql_data_types(raw_sql_data_types_container: RawRecordData) -> RawRecord
             "array_str_col": [],  # empty array
             "optional_str_col": None,
             "container_id": raw_sql_data_types_container[0]["id"],
+        },
+    ]
+
+
+@pytest.fixture
+def raw_sql_data_types_set1(raw_containers: RawRecordData) -> RawRecordData:
+    return [
+        # First set with moderate values
+        {
+            "id": str(uuid4()),
+            "date_col": date(2021, 6, 15),
+            "time_col": time(10, 45, 30),
+            "time_delta_col": time(18, 30, 15),
+            "datetime_col": datetime(2021, 6, 15, 10, 45, 30, tzinfo=UTC),
+            "str_col": "data set 1 string",
+            "int_col": 100,
+            "float_col": 5.5,
+            "decimal_col": Decimal("50.75"),
+            "bool_col": True,
+            "uuid_col": uuid4(),
+            "dict_col": {"category": "electronics", "price": 299.99},
+            "array_str_col": ["red", "green", "blue"],
+            "optional_str_col": "set1 optional",
+            "container_id": raw_containers[0]["id"],
+        },
+        # Second entry with different values
+        {
+            "id": str(uuid4()),
+            "date_col": date(2021, 7, 20),
+            "time_col": time(15, 20, 10),
+            "time_delta_col": time(9, 45, 30),
+            "datetime_col": datetime(2021, 7, 20, 15, 20, 10, tzinfo=UTC),
+            "str_col": "another set 1 string",
+            "int_col": 75,
+            "float_col": 7.25,
+            "decimal_col": Decimal("75.50"),
+            "bool_col": False,
+            "uuid_col": uuid4(),
+            "dict_col": {"category": "clothing", "price": 49.99, "size": "medium"},
+            "array_str_col": ["circle", "square", "triangle"],
+            "optional_str_col": "set1 optional",
+            "container_id": raw_containers[0]["id"],
+        },
+    ]
+
+
+@pytest.fixture
+def raw_sql_data_types_set2(raw_containers: RawRecordData) -> RawRecordData:
+    return [
+        # First entry with moderate values
+        {
+            "id": str(uuid4()),
+            "date_col": date(2020, 3, 10),
+            "time_col": time(9, 15, 25),
+            "time_delta_col": time(16, 45, 0),
+            "datetime_col": datetime(2020, 3, 10, 9, 15, 25, tzinfo=UTC),
+            "str_col": "data set 2 string",
+            "int_col": 250,
+            "float_col": 9.8,
+            "decimal_col": Decimal("199.99"),
+            "bool_col": True,
+            "uuid_col": uuid4(),
+            "dict_col": {"category": "furniture", "price": 599.99, "color": "brown"},
+            "array_str_col": ["monday", "wednesday", "friday"],
+            "optional_str_col": "set2 optional",
+            "container_id": raw_containers[1]["id"],
+        },
+        # Second entry with different values
+        {
+            "id": str(uuid4()),
+            "date_col": date(2020, 9, 5),
+            "time_col": time(13, 0, 0),
+            "time_delta_col": time(21, 15, 45),
+            "datetime_col": datetime(2020, 9, 5, 13, 0, 0, tzinfo=UTC),
+            "str_col": "another set 2 string",
+            "int_col": 180,
+            "float_col": 12.34,
+            "decimal_col": Decimal("150.25"),
+            "bool_col": False,
+            "uuid_col": uuid4(),
+            "dict_col": {"category": "books", "price": 24.99, "author": "John Doe"},
+            "array_str_col": ["cat", "dog", "bird", "fish"],
+            "optional_str_col": "another set2 optional",
+            "container_id": raw_containers[1]["id"],
         },
     ]
 

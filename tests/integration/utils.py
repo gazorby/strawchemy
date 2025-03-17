@@ -4,12 +4,15 @@ import json
 import re
 from datetime import date, datetime, time
 from decimal import Decimal
+from statistics import mean, pstdev, stdev, variance
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
 from sqlalchemy import inspect
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from sqlalchemy.orm import DeclarativeBase
 
 
@@ -80,3 +83,28 @@ def from_graphql_representation(value: Any, type_: type[Any]) -> Any:
 
 def python_type(model: type[DeclarativeBase], col_name: str) -> type[Any]:
     return inspect(model).mapper.columns[col_name].type.python_type
+
+
+def compute_aggregation(
+    graphql_aggregation: Literal[
+        "max", "min", "sum", "avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"
+    ],
+    iterable: Iterable[int | float],
+) -> float | Decimal:
+    if graphql_aggregation == "max":
+        value = max(iterable)
+    elif graphql_aggregation == "min":
+        value = min(iterable)
+    elif graphql_aggregation == "sum":
+        value = sum(iterable)
+    elif graphql_aggregation == "avg":
+        value = mean(iterable)
+    elif graphql_aggregation == "stddev":
+        value = stdev(iterable)
+    elif graphql_aggregation == "stddevSamp":
+        value = pstdev(iterable)
+    elif graphql_aggregation == "stddevPop":
+        value = stdev(iterable)
+    elif graphql_aggregation in ("variance", "varSamp", "varPop"):
+        value = variance(iterable)
+    return value
