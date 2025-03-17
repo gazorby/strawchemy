@@ -7,9 +7,11 @@ from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
 import strawberry
 from graphql import GraphQLError
+from sqlalchemy import select
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import maybe_async
 
+from .models import Color
 from .types import (
     ColorType,
     FruitFilter,
@@ -43,6 +45,9 @@ class AsyncQuery:
         repository_type=StrawchemyAsyncRepository,
     )
     colors: list[ColorType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    colors_filtered: list[ColorType] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
+    )
 
 
 @strawberry.type
@@ -55,6 +60,9 @@ class SyncQuery:
         filter_input=UserFilter, order_by=UserOrderBy, pagination=True, repository_type=StrawchemySyncRepository
     )
     colors: list[ColorType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    colors_filtered: list[ColorType] = strawchemy.field(
+        repository_type=StrawchemySyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
+    )
 
 
 @pytest.fixture
@@ -155,5 +163,20 @@ async def test_only_queried_columns_included_in_select(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     await maybe_async(any_query("{ colors { name fruits { name id } } }"))
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_filtered_statement(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(any_query("{ colorsFiltered { name } }"))
+
+    assert not result.errors
+    assert result.data
+    assert len(result.data["colorsFiltered"]) == 1
+    assert result.data["colorsFiltered"][0]["name"] == "Red"
+
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
