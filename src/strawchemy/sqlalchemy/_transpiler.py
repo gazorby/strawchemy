@@ -47,16 +47,7 @@ from strawchemy.graphql.dto import (
 from strawchemy.graphql.filters import GraphQLComparison
 
 from ._executor import SyncQueryExecutor
-from ._query import (
-    AggregationJoin,
-    Conjunction,
-    DistinctOn,
-    Join,
-    OrderBy,
-    Query,
-    QueryGraph,
-    Where,
-)
+from ._query import AggregationJoin, Conjunction, DistinctOn, Join, OrderBy, Query, QueryGraph, Where
 from ._scope import QueryScope
 from .exceptions import TranspilingError
 from .inspector import SQLAlchemyGraphQLInspector
@@ -220,9 +211,7 @@ class Transpiler(Generic[DeclarativeT]):
         return Conjunction(bool_expressions, joins, common_join_path)
 
     def _conjonctions(
-        self,
-        query: Filter[DeclarativeBase, QueryableAttribute[Any]],
-        allow_null: bool = False,
+        self, query: Filter[DeclarativeBase, QueryableAttribute[Any]], allow_null: bool = False
     ) -> Conjunction:
         """Processes a filter's AND, OR, and NOT conditions into a conjunction.
 
@@ -272,46 +261,40 @@ class Transpiler(Generic[DeclarativeT]):
                 - A list of boolean expressions for the filter.
         """
         lateral_name = self.scope.key(self._aggregation_name_prefix)
-        function_node = aggregation.field_node
-        function_node_inspect = self.scope.inspect(function_node)
-        aggregation_node = function_node.first_aggregate_parent()
+        function_node_inspect = self.scope.inspect(aggregation.field_node)
+        aggregation_node = aggregation.field_node.first_aggregate_parent()
         aggregated_alias: AliasedClass[Any] = aliased(function_node_inspect.mapper.class_)
         aggregated_alias_inspected = inspect(aggregated_alias)
         root_relation = self.scope.aliased_attribute(aggregation_node).of_type(aggregated_alias)
-        functions = function_node_inspect.functions(aggregated_alias)
+        function_node, function = function_node_inspect.filter_function(aggregated_alias, distinct=aggregation.distinct)
         bool_expressions: list[ColumnElement[bool]] = []
 
-        if (function_column := self.scope.columns.get(function_node)) is not None:
+        if (function_column := self.scope.columns.get(aggregation.field_node)) is not None:
             bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
             return None, bool_expressions
 
         if join_info := self._aggregation_joins.get(aggregation_node):
-            for node, function in functions.items():
-                _, created = join_info.upsert_column_to_subquery(function)
-                function_column = self.scope.literal_column(join_info.name, self.scope.key(node))
-                if created:
-                    self.scope.columns[node] = function_column
-                    self.scope.where_function_nodes.add(node)
-                bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
+            _, created = join_info.upsert_column_to_subquery(function)
+            function_column = self.scope.literal_column(join_info.name, self.scope.key(function_node))
+            if created:
+                self.scope.columns[function_node] = function_column
+                self.scope.where_function_nodes.add(function_node)
+            bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
             return None, bool_expressions
 
-        for node in functions:
-            function_column = self.scope.literal_column(lateral_name, self.scope.key(node))
-            bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
-            self.scope.columns[node] = function_column
-            self.scope.where_function_nodes.add(node)
+        function_column = self.scope.literal_column(lateral_name, self.scope.key(function_node))
+        bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
+        self.scope.columns[function_node] = function_column
+        self.scope.where_function_nodes.add(function_node)
 
         statement = (
-            select(*functions.values())
+            select(function)
             .where(root_relation.expression)
             .select_from(aggregated_alias_inspected)
             .lateral(lateral_name)
         )
         join_info = AggregationJoin(
-            join=statement,
-            onclause=true(),
-            node=aggregation_node,
-            subquery_alias=aggregated_alias,
+            join=statement, onclause=true(), node=aggregation_node, subquery_alias=aggregated_alias
         )
         self._aggregation_joins[aggregation_node] = join_info
 
@@ -339,7 +322,7 @@ class Transpiler(Generic[DeclarativeT]):
         )
         alias = existing_join.subquery_alias if existing_join else aliased(node_inspect.mapper)
         for child_inspect in node_inspect.children:
-            child_functions = child_inspect.functions(alias)
+            child_functions = child_inspect.output_functions(alias)
             for node in set(child_functions) & set(self.scope.columns):
                 child_functions.pop(node)
                 function_columns.append(self.scope.columns[node])
@@ -458,7 +441,7 @@ class Transpiler(Generic[DeclarativeT]):
             function
             for child in aggregation_tree.children
             for function in self.scope.inspect(child)
-            .functions(self.scope.root_alias, lambda func: func.over())
+            .output_functions(self.scope.root_alias, lambda func: func.over())
             .values()
         ]
 

@@ -1179,9 +1179,7 @@ class AggregateFilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, Aggregat
                 FunctionFieldDefinition(
                     dto_config=dto_config,
                     model=model,
-                    _model_field=model_field,
                     model_field_name=aggregation.field_name,
-                    _function=aggregation,
                     type_hint=self._aggregate_function_type(
                         model=model,
                         dto_config=dto_config,
@@ -1190,6 +1188,8 @@ class AggregateFilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, Aggregat
                         model_field=model_field,
                         aggregation=aggregation,
                     ),
+                    _model_field=model_field,
+                    _function=aggregation,
                 ),
             )
         key = DTOKey([model])

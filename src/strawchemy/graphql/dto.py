@@ -450,6 +450,7 @@ class AggregationFilter(Generic[ModelT, ModelFieldT]):
     function_info: FilterFunctionInfo[ModelT, ModelFieldT, NumericComparison[Any, Any, Any]]
     predicate: GenericComparison[Any, ModelT, ModelFieldT]
     field_node: QueryNode[ModelT, ModelFieldT]
+    distinct: bool | None = None
 
 
 @dataclass
@@ -503,6 +504,7 @@ class AggregationFunctionFilterDTO(UnmappedPydanticGraphQLDTO[ModelT]):
 
     arguments: list[_HasValue[ModelT, Any]]
     predicate: GenericComparison[Any, ModelT, Any]
+    distinct: bool | None = None
 
 
 class OrderByDTO(GraphQLFilterDTO[ModelT], Generic[ModelT, ModelFieldT]):
@@ -592,6 +594,7 @@ class AggregateFilterDTO(GraphQLFilterDTO[ModelT]):
                     function_info=aggregation_function,
                     field_node=function_node,
                     predicate=function_filter.predicate,
+                    distinct=function_filter.distinct,
                 )
             )
         return aggregations
