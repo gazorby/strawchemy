@@ -8,6 +8,7 @@ from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 import strawberry
 from graphql import GraphQLError
 from sqlalchemy import select
+from strawberry.types import get_object_definition
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import maybe_async
 
@@ -103,6 +104,25 @@ async def test_single(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> 
     assert not result.errors
     assert result.data
     assert result.data["user"] == {"name": raw_users[0]["name"]}
+
+
+async def test_typename_do_not_fails(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
+    result = await maybe_async(
+        any_query(
+            """
+            query GetUser($id: UUID!) {
+                user(id: $id) {
+                    __typename
+            }
+            }
+            """,
+            {"id": raw_users[0]["id"]},
+        )
+    )
+
+    assert not result.errors
+    assert result.data
+    assert result.data["user"] == {"__typename": get_object_definition(UserType, strict=True).name}
 
 
 async def test_many(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
