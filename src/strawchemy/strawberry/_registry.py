@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, ca
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition, has_object_definition
-from strawberry.types.base import StrawberryContainer, StrawberryType
+from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
 from strawchemy.graphql.filters import GeoComparison
 from strawchemy.strawberry import pydantic as strawberry_pydantic
@@ -41,15 +41,6 @@ _RegistryMissing = NewType("_RegistryMissing", object)
 @dataclass
 class _TypeReference:
     ref_holder: StrawberryField | StrawberryArgument
-
-    @classmethod
-    def _last_container_type(cls, type_: StrawberryType | Any) -> Any:
-        inner_type = type_
-        if isinstance(type_, StrawberryContainer):
-            inner_type = type_.of_type
-        if isinstance(inner_type, StrawberryContainer):
-            return cls._last_container_type(inner_type)
-        return inner_type
 
     @classmethod
     def _replace_contained_type(

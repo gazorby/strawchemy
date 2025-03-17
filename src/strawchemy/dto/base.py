@@ -5,7 +5,7 @@ import typing
 import warnings
 from contextlib import suppress
 from dataclasses import dataclass, field
-from types import NoneType, UnionType, new_class
+from types import new_class
 from typing import (
     TYPE_CHECKING,
     Annotated,
@@ -16,7 +16,6 @@ from typing import (
     Protocol,
     Self,
     TypeVar,
-    Union,
     get_args,
     get_origin,
     get_type_hints,
@@ -345,17 +344,6 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         excluded = (explictly_excluded or not explicitly_included) or dto_config.purpose not in field.allowed_purposes
         return not has_override and excluded
-
-    @classmethod
-    def _non_optional_type_hint(cls, type_hint: Any) -> Any:
-        origin, args = get_origin(type_hint), get_args(type_hint)
-        if origin is None:
-            return type_hint
-        if origin is Optional:
-            return args
-        if origin in (Union, UnionType):
-            return Union[*tuple([arg for arg in args if arg not in (None, NoneType)])]
-        return False
 
     def _resolve_type(
         self,

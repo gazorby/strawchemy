@@ -23,11 +23,6 @@ class QueryHookResult(Generic[DeclarativeT]):
     statement: Select[tuple[DeclarativeT]]
     load_options: list[_AbstractLoad] = field(default_factory=list)
 
-    def apply_load_options(self) -> Select[tuple[DeclarativeT]]:
-        if self.load_options:
-            return self.statement.options(*self.load_options)
-        return self.statement
-
 
 @dataclass(frozen=True, eq=True)
 class QueryHook(Generic[DeclarativeT]):
