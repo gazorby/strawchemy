@@ -367,3 +367,20 @@ min_confidence = 100
 paths = ["src", "tests"]
 sort_by_size = true
 exclude = ["tests/fixtures.py", "tests/unit/schemas/mutations"]
+
+[tool.coverage.run]
+branch = true
+concurrency = ["multiprocessing"]
+omit = ["*/tests/*"]
+parallel = true
+relative_files = true
+
+[tool.coverage.report]
+exclude_lines = [
+    'pragma: no cover',
+    'if TYPE_CHECKING:',
+    'except ImportError as e:',
+    'except ImportError:',
+    '\.\.\.',
+    'raise NotImplementedError',
+]

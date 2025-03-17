@@ -157,8 +157,10 @@ def test_base_json_fails() -> None:
         pytest.param("custom_id_field_name.Query", id="custom_id_field_name"),
         pytest.param("enums.Query", id="enums"),
         pytest.param("filters.filters.Query", id="filters"),
+        pytest.param("filters.filters_aggregation.Query", id="aggregation_filters"),
         pytest.param("geo.geo_filters.Query", id="geo_filters"),
         pytest.param("geo.geo.Query", id="geo_type"),
+        pytest.param("aggregations.root_aggregations.Query", id="root_aggregations"),
     ],
 )
 @pytest.mark.snapshot

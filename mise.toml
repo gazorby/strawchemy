@@ -11,8 +11,8 @@ pre-commit = "latest"
 actionlint = "latest"
 
 [vars]
-local_pytest_options = "--cov-report=term-missing:skip-covered -n=2 -vv"
-pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-append --cov-report=xml"
+local_pytest_options = "-n=6 -vv"
+pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
 cleanable_paths = '''{{
 [
   ".nox",
@@ -63,14 +63,14 @@ description = "Run tests"
 depends = "_install"
 alias = "t"
 usage = 'arg "<test>" default=""'
-run = 'uv run pytest {{vars.local_pytest_options}} -n=6 {{arg(name="test", var=true, default="")}}'
+run = 'uv run pytest {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:coverage"]
 description = "Run tests with coverage"
 depends = "_install"
 alias = "tc"
 usage = 'arg "<test>" default=""'
-run = 'uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} -n=6 {{arg(name="test", var=true, default="")}}'
+run = 'uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit"]
 description = "Run unit tests"
@@ -84,7 +84,7 @@ description = "Run integration tests"
 depends = "_install"
 alias = "ti"
 usage = 'arg "<test>" default=""'
-run = 'uv run pytest -m integration {{vars.local_pytest_options}} -n=6 {{arg(name="test", var=true, default="")}}'
+run = 'uv run pytest -m integration {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit-all"]
 description = "Run unit tests on all supported python versions"
@@ -133,6 +133,11 @@ run = '''
         }
     )'
 '''
+
+[tasks."ci:test-sessions"]
+description = "Output test session names for CI"
+depends = "install:test"
+run = "nox --json -t tests -l | jq 'map(.name) | unique'"
 
 # Linting
 

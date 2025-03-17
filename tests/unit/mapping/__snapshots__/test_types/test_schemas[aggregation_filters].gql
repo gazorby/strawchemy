@@ -1,0 +1,313 @@
+# serializer version: 1
+# name: test_schemas[aggregation_filters]
+  '''
+  """
+  Boolean expression to compare fields of type Float. All fields are combined with logical 'AND'
+  """
+  input FloatComparison {
+    eq: Float
+    neq: Float
+    isNull: Boolean
+    in_: [Float!]
+    nin_: [Float!]
+    gt: Float
+    gte: Float
+    lt: Float
+    lte: Float
+  }
+  
+  """
+  Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
+  """
+  input GroupAggregateBoolExp {
+    count: GroupAggregateBoolExpCount
+    sum: GroupAggregateBoolExpSum
+    minString: GroupAggregateBoolExpMinstring
+    maxString: GroupAggregateBoolExpMaxstring
+  }
+  
+  """Boolean expression to compare count aggregation."""
+  input GroupAggregateBoolExpCount {
+    arguments: [GroupCountFields!]
+    predicate: IntComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare max aggregation."""
+  input GroupAggregateBoolExpMaxstring {
+    arguments: [GroupMinMaxStringFieldsEnum!]!
+    predicate: StringComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare min aggregation."""
+  input GroupAggregateBoolExpMinstring {
+    arguments: [GroupMinMaxStringFieldsEnum!]!
+    predicate: StringComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare sum aggregation."""
+  input GroupAggregateBoolExpSum {
+    arguments: [GroupSumFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  enum GroupCountFields {
+    id
+    name
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input GroupFilter {
+    _and: [GroupFilter!]
+    _or: [GroupFilter!]
+    _not: GroupFilter
+    id: UUIDComparison
+    name: StringComparison
+    usersAggregate: UserAggregateBoolExp
+    users: UserBoolExp
+  }
+  
+  enum GroupMinMaxStringFieldsEnum {
+    name
+  }
+  
+  enum GroupSumFieldsEnum {
+    name
+  }
+  
+  """GraphQL type"""
+  type GroupType {
+    id: UUID!
+    name: String!
+    usersAggregate: UserAggregate!
+  
+    """Fetch objects from the UserType collection"""
+    users: [UserType!]!
+  }
+  
+  """
+  Boolean expression to compare fields of type Int. All fields are combined with logical 'AND'
+  """
+  input IntComparison {
+    eq: Int
+    neq: Int
+    isNull: Boolean
+    in_: [Int!]
+    nin_: [Int!]
+    gt: Int
+    gte: Int
+    lt: Int
+    lte: Int
+  }
+  
+  type Query {
+    """Fetch objects from the GroupType collection"""
+    groups(filter: GroupFilter = null): [GroupType!]!
+  }
+  
+  """
+  Boolean expression to compare fields of type String. All fields are combined with logical 'AND'
+  """
+  input StringComparison {
+    eq: String
+    neq: String
+    isNull: Boolean
+    in_: [String!]
+    nin_: [String!]
+    like: String
+    nlike: String
+    ilike: String
+    nilike: String
+    regexp: String
+    nregexp: String
+    startswith: String
+    endswith: String
+    contains: String
+    istartswith: String
+    iendswith: String
+    icontains: String
+  }
+  
+  """
+  Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
+  """
+  input TagAggregateBoolExp {
+    count: TagAggregateBoolExpCount
+    sum: TagAggregateBoolExpSum
+    minString: TagAggregateBoolExpMinstring
+    maxString: TagAggregateBoolExpMaxstring
+  }
+  
+  """Boolean expression to compare count aggregation."""
+  input TagAggregateBoolExpCount {
+    arguments: [TagCountFields!]
+    predicate: IntComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare max aggregation."""
+  input TagAggregateBoolExpMaxstring {
+    arguments: [TagMinMaxStringFieldsEnum!]!
+    predicate: StringComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare min aggregation."""
+  input TagAggregateBoolExpMinstring {
+    arguments: [TagMinMaxStringFieldsEnum!]!
+    predicate: StringComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare sum aggregation."""
+  input TagAggregateBoolExpSum {
+    arguments: [TagSumFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input TagBoolExp {
+    _and: [TagBoolExp!]
+    _or: [TagBoolExp!]
+    _not: TagBoolExp
+    id: UUIDComparison
+    name: StringComparison
+  }
+  
+  enum TagCountFields {
+    id
+    name
+  }
+  
+  enum TagMinMaxStringFieldsEnum {
+    name
+  }
+  
+  enum TagSumFieldsEnum {
+    name
+  }
+  
+  """GraphQL type"""
+  type TagType {
+    id: UUID!
+    name: String!
+  }
+  
+  scalar UUID
+  
+  """
+  Boolean expression to compare fields of type UUID. All fields are combined with logical 'AND'
+  """
+  input UUIDComparison {
+    eq: UUID
+    neq: UUID
+    isNull: Boolean
+    in_: [UUID!]
+    nin_: [UUID!]
+  }
+  
+  """Aggregation fields"""
+  type UserAggregate {
+    count: Int
+    sum: UserSumFields!
+    min: UserMinMaxFields!
+    max: UserMinMaxFields!
+  }
+  
+  """
+  Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
+  """
+  input UserAggregateBoolExp {
+    count: UserAggregateBoolExpCount
+    sum: UserAggregateBoolExpSum
+    minString: UserAggregateBoolExpMinstring
+    maxString: UserAggregateBoolExpMaxstring
+  }
+  
+  """Boolean expression to compare count aggregation."""
+  input UserAggregateBoolExpCount {
+    arguments: [UserCountFields!]
+    predicate: IntComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare max aggregation."""
+  input UserAggregateBoolExpMaxstring {
+    arguments: [UserMinMaxStringFieldsEnum!]!
+    predicate: StringComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare min aggregation."""
+  input UserAggregateBoolExpMinstring {
+    arguments: [UserMinMaxStringFieldsEnum!]!
+    predicate: StringComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare sum aggregation."""
+  input UserAggregateBoolExpSum {
+    arguments: [UserSumFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input UserBoolExp {
+    _and: [UserBoolExp!]
+    _or: [UserBoolExp!]
+    _not: UserBoolExp
+    id: UUIDComparison
+    name: StringComparison
+    groupId: UUIDComparison
+    groupAggregate: GroupAggregateBoolExp
+    group: GroupFilter
+    tagId: UUIDComparison
+    tagAggregate: TagAggregateBoolExp
+    tag: TagBoolExp
+  }
+  
+  enum UserCountFields {
+    id
+    name
+    groupId
+    tagId
+  }
+  
+  type UserMinMaxFields {
+    name: String
+  }
+  
+  enum UserMinMaxStringFieldsEnum {
+    name
+  }
+  
+  type UserSumFields {
+    name: String
+  }
+  
+  enum UserSumFieldsEnum {
+    name
+  }
+  
+  """GraphQL type"""
+  type UserType {
+    id: UUID!
+    name: String!
+    groupId: UUID
+    group: GroupType!
+    tagId: UUID
+    tag: TagType!
+  }
+  '''
+# ---

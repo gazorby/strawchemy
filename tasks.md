@@ -32,6 +32,14 @@ Run tests in CI
 
 Output test matrix for CI
 
+## `ci:test-sessions`
+
+- Depends: install:test
+
+- **Usage**: `ci:test-sessions`
+
+Output test session names for CI
+
 ## `clean`
 
 - **Usage**: `clean`
