@@ -4,7 +4,7 @@ import json
 import re
 from datetime import date, datetime, time
 from decimal import Decimal
-from statistics import mean, pstdev, stdev, variance
+from statistics import mean, pstdev, pvariance, stdev, variance
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
@@ -99,12 +99,12 @@ def compute_aggregation(
         value = sum(iterable)
     elif graphql_aggregation == "avg":
         value = mean(iterable)
-    elif graphql_aggregation == "stddev":
-        value = stdev(iterable)
-    elif graphql_aggregation == "stddevSamp":
-        value = pstdev(iterable)
     elif graphql_aggregation == "stddevPop":
+        value = pstdev(iterable)
+    elif graphql_aggregation == "varPop":
+        value = pvariance(iterable)
+    elif graphql_aggregation in ("stddev", "stddevSamp"):
         value = stdev(iterable)
-    elif graphql_aggregation in ("variance", "varSamp", "varPop"):
+    elif graphql_aggregation in ("variance", "varSamp"):
         value = variance(iterable)
     return value
