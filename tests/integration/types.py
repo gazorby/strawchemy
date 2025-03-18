@@ -81,8 +81,12 @@ class SQLDataTypesFilter: ...
 class SQLDataTypesOrderBy: ...
 
 
-@strawchemy.type(SQLDataTypes, include="all")
+@strawchemy.type(SQLDataTypes, include="all", override=True)
 class SQLDataTypesType: ...
+
+
+@strawchemy.aggregation_type(SQLDataTypes, include="all")
+class SQLDataTypesAggregationType: ...
 
 
 @strawchemy.type(SQLDataTypesContainer, include="all", override=True)

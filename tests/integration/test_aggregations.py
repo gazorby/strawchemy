@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, Literal
 
 import pytest
 from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
+from strawchemy.types import DefaultOffsetPagination
 
 import strawberry
 from tests.typing import AnyQueryExecutor
@@ -11,7 +12,7 @@ from tests.unit.models import SQLDataTypes
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import SQLDataTypesContainerType, strawchemy
+from .types import SQLDataTypesAggregationType, SQLDataTypesContainerType, strawchemy
 from .typing import RawRecordData
 from .utils import compute_aggregation, from_graphql_representation, python_type
 
@@ -24,11 +25,23 @@ pytestmark = [pytest.mark.integration]
 @strawberry.type
 class AsyncQuery:
     container: SQLDataTypesContainerType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    data_aggregations: SQLDataTypesAggregationType = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository, root_aggregations=True
+    )
+    data_aggregations_paginated: SQLDataTypesAggregationType = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository, root_aggregations=True, pagination=DefaultOffsetPagination(limit=2)
+    )
 
 
 @strawberry.type
 class SyncQuery:
     container: SQLDataTypesContainerType = strawchemy.field(repository_type=StrawchemySyncRepository)
+    data_aggregations: SQLDataTypesAggregationType = strawchemy.field(
+        repository_type=StrawchemySyncRepository, root_aggregations=True
+    )
+    data_aggregations_paginated: SQLDataTypesAggregationType = strawchemy.field(
+        repository_type=StrawchemySyncRepository, root_aggregations=True, pagination=DefaultOffsetPagination(limit=2)
+    )
 
 
 @pytest.fixture
@@ -270,6 +283,73 @@ async def test_statistical_aggregation(
     )
 
     expected_value = compute_aggregation(agg_type, [record[raw_field_name] for record in raw_sql_data_types])
+
+    assert pytest.approx(actual_value) == expected_value
+
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    "pagination",
+    [pytest.param(None, id="no-pagination"), pytest.param(DefaultOffsetPagination(limit=2), id="pagination")],
+)
+@pytest.mark.parametrize(
+    "agg_type",
+    ["avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
+)
+@pytest.mark.parametrize(
+    ("field_name", "raw_field_name"),
+    [
+        ("intCol", "int_col"),
+        ("floatCol", "float_col"),
+        ("decimalCol", "decimal_col"),
+    ],
+)
+@pytest.mark.snapshot
+async def test_root_aggregation(
+    agg_type: Literal["avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
+    field_name: str,
+    raw_field_name: str,
+    pagination: None | DefaultOffsetPagination,
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test statistical aggregation functions for a specific field."""
+    query_name = "dataAggregations" if pagination is None else "dataAggregationsPaginated"
+    query = f"""
+        {{
+            {query_name} {{
+                aggregations {{
+                    {agg_type} {{
+                        {field_name}
+                    }}
+                }}
+                nodes {{
+                    id
+                    {field_name}
+                }}
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    # Verify result is a number or null
+    actual_value = from_graphql_representation(
+        result.data[query_name]["aggregations"][agg_type][field_name], python_type(SQLDataTypes, raw_field_name)
+    )
+
+    if pagination is None:
+        expected_value = compute_aggregation(agg_type, [record[raw_field_name] for record in raw_sql_data_types])
+    else:
+        expected_value = compute_aggregation(
+            agg_type, [record[raw_field_name] for record in raw_sql_data_types[: pagination.limit]]
+        )
 
     assert pytest.approx(actual_value) == expected_value
 

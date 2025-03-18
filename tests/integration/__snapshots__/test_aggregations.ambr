@@ -539,6 +539,1959 @@
   WHERE sql_data_types_container.id = :id_1
   '''
 # ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         avg(sql_data_types.decimal_col) OVER () AS avg_data_types__avg_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         avg(sql_data_types.decimal_col) OVER () AS avg_data_types__avg_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         avg(sql_data_types.decimal_col) OVER () AS avg_data_types__avg_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         avg(sql_data_types.decimal_col) OVER () AS avg_data_types__avg_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         avg(sql_data_types.decimal_col) OVER () AS avg_data_types__avg_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         avg(sql_data_types.decimal_col) OVER () AS avg_data_types__avg_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         avg(sql_data_types.decimal_col) OVER () AS avg_data_types__avg_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         avg(sql_data_types.decimal_col) OVER () AS avg_data_types__avg_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         avg(sql_data_types.decimal_col) OVER () AS avg_data_types__avg_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev(sql_data_types.decimal_col) OVER () AS stddev_data_types__stddev_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev(sql_data_types.decimal_col) OVER () AS stddev_data_types__stddev_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev(sql_data_types.decimal_col) OVER () AS stddev_data_types__stddev_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev(sql_data_types.decimal_col) OVER () AS stddev_data_types__stddev_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev(sql_data_types.decimal_col) OVER () AS stddev_data_types__stddev_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev(sql_data_types.decimal_col) OVER () AS stddev_data_types__stddev_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev(sql_data_types.decimal_col) OVER () AS stddev_data_types__stddev_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev(sql_data_types.decimal_col) OVER () AS stddev_data_types__stddev_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev(sql_data_types.decimal_col) OVER () AS stddev_data_types__stddev_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.decimal_col) OVER () AS stddev_pop_data_types__stddev_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.decimal_col) OVER () AS stddev_pop_data_types__stddev_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.decimal_col) OVER () AS stddev_pop_data_types__stddev_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.decimal_col) OVER () AS stddev_pop_data_types__stddev_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.decimal_col) OVER () AS stddev_pop_data_types__stddev_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.decimal_col) OVER () AS stddev_pop_data_types__stddev_pop_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.decimal_col) OVER () AS stddev_pop_data_types__stddev_pop_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.decimal_col) OVER () AS stddev_pop_data_types__stddev_pop_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.decimal_col) OVER () AS stddev_pop_data_types__stddev_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.decimal_col) OVER () AS stddev_samp_data_types__stddev_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.decimal_col) OVER () AS stddev_samp_data_types__stddev_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.decimal_col) OVER () AS stddev_samp_data_types__stddev_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.decimal_col) OVER () AS stddev_samp_data_types__stddev_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.decimal_col) OVER () AS stddev_samp_data_types__stddev_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.decimal_col) OVER () AS stddev_samp_data_types__stddev_samp_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.decimal_col) OVER () AS stddev_samp_data_types__stddev_samp_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.decimal_col) OVER () AS stddev_samp_data_types__stddev_samp_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.decimal_col) OVER () AS stddev_samp_data_types__stddev_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.decimal_col) OVER () AS var_pop_data_types__var_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.decimal_col) OVER () AS var_pop_data_types__var_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.decimal_col) OVER () AS var_pop_data_types__var_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.decimal_col) OVER () AS var_pop_data_types__var_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.decimal_col) OVER () AS var_pop_data_types__var_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.decimal_col) OVER () AS var_pop_data_types__var_pop_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.decimal_col) OVER () AS var_pop_data_types__var_pop_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.decimal_col) OVER () AS var_pop_data_types__var_pop_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.decimal_col) OVER () AS var_pop_data_types__var_pop_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.decimal_col) OVER () AS var_samp_data_types__var_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.decimal_col) OVER () AS var_samp_data_types__var_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.decimal_col) OVER () AS var_samp_data_types__var_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.decimal_col) OVER () AS var_samp_data_types__var_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.decimal_col) OVER () AS var_samp_data_types__var_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.decimal_col) OVER () AS var_samp_data_types__var_samp_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.decimal_col) OVER () AS var_samp_data_types__var_samp_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.decimal_col) OVER () AS var_samp_data_types__var_samp_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.decimal_col) OVER () AS var_samp_data_types__var_samp_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         variance(sql_data_types.decimal_col) OVER () AS variance_data_types__variance_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         variance(sql_data_types.decimal_col) OVER () AS variance_data_types__variance_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         variance(sql_data_types.decimal_col) OVER () AS variance_data_types__variance_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         variance(sql_data_types.decimal_col) OVER () AS variance_data_types__variance_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         variance(sql_data_types.decimal_col) OVER () AS variance_data_types__variance_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         variance(sql_data_types.decimal_col) OVER () AS variance_data_types__variance_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         variance(sql_data_types.decimal_col) OVER () AS variance_data_types__variance_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         variance(sql_data_types.decimal_col) OVER () AS variance_data_types__variance_decimal_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.decimal_col AS decimal_col,
+            sql_data_types.decimal_col AS decimal_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id,
+         variance(sql_data_types.decimal_col) OVER () AS variance_data_types__variance_decimal_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-avg-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         avg(sql_data_types.float_col) OVER () AS avg_data_types__avg_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-avg-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         avg(sql_data_types.float_col) OVER () AS avg_data_types__avg_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-avg-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         avg(sql_data_types.float_col) OVER () AS avg_data_types__avg_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-avg-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         avg(sql_data_types.float_col) OVER () AS avg_data_types__avg_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-avg-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         avg(sql_data_types.float_col) OVER () AS avg_data_types__avg_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-avg-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         avg(sql_data_types.float_col) OVER () AS avg_data_types__avg_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-avg-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         avg(sql_data_types.float_col) OVER () AS avg_data_types__avg_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-avg-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         avg(sql_data_types.float_col) OVER () AS avg_data_types__avg_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-avg-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         avg(sql_data_types.float_col) OVER () AS avg_data_types__avg_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev(sql_data_types.float_col) OVER () AS stddev_data_types__stddev_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev(sql_data_types.float_col) OVER () AS stddev_data_types__stddev_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev(sql_data_types.float_col) OVER () AS stddev_data_types__stddev_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev(sql_data_types.float_col) OVER () AS stddev_data_types__stddev_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev(sql_data_types.float_col) OVER () AS stddev_data_types__stddev_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev(sql_data_types.float_col) OVER () AS stddev_data_types__stddev_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev(sql_data_types.float_col) OVER () AS stddev_data_types__stddev_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev(sql_data_types.float_col) OVER () AS stddev_data_types__stddev_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev(sql_data_types.float_col) OVER () AS stddev_data_types__stddev_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.float_col) OVER () AS stddev_pop_data_types__stddev_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.float_col) OVER () AS stddev_pop_data_types__stddev_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.float_col) OVER () AS stddev_pop_data_types__stddev_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.float_col) OVER () AS stddev_pop_data_types__stddev_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.float_col) OVER () AS stddev_pop_data_types__stddev_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.float_col) OVER () AS stddev_pop_data_types__stddev_pop_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.float_col) OVER () AS stddev_pop_data_types__stddev_pop_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.float_col) OVER () AS stddev_pop_data_types__stddev_pop_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.float_col) OVER () AS stddev_pop_data_types__stddev_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.float_col) OVER () AS stddev_samp_data_types__stddev_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.float_col) OVER () AS stddev_samp_data_types__stddev_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.float_col) OVER () AS stddev_samp_data_types__stddev_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.float_col) OVER () AS stddev_samp_data_types__stddev_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.float_col) OVER () AS stddev_samp_data_types__stddev_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.float_col) OVER () AS stddev_samp_data_types__stddev_samp_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.float_col) OVER () AS stddev_samp_data_types__stddev_samp_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.float_col) OVER () AS stddev_samp_data_types__stddev_samp_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.float_col) OVER () AS stddev_samp_data_types__stddev_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.float_col) OVER () AS var_pop_data_types__var_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.float_col) OVER () AS var_pop_data_types__var_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.float_col) OVER () AS var_pop_data_types__var_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.float_col) OVER () AS var_pop_data_types__var_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.float_col) OVER () AS var_pop_data_types__var_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.float_col) OVER () AS var_pop_data_types__var_pop_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.float_col) OVER () AS var_pop_data_types__var_pop_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.float_col) OVER () AS var_pop_data_types__var_pop_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.float_col) OVER () AS var_pop_data_types__var_pop_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.float_col) OVER () AS var_samp_data_types__var_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.float_col) OVER () AS var_samp_data_types__var_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.float_col) OVER () AS var_samp_data_types__var_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.float_col) OVER () AS var_samp_data_types__var_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.float_col) OVER () AS var_samp_data_types__var_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.float_col) OVER () AS var_samp_data_types__var_samp_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.float_col) OVER () AS var_samp_data_types__var_samp_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.float_col) OVER () AS var_samp_data_types__var_samp_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.float_col) OVER () AS var_samp_data_types__var_samp_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-variance-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         variance(sql_data_types.float_col) OVER () AS variance_data_types__variance_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-variance-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         variance(sql_data_types.float_col) OVER () AS variance_data_types__variance_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-variance-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         variance(sql_data_types.float_col) OVER () AS variance_data_types__variance_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-variance-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         variance(sql_data_types.float_col) OVER () AS variance_data_types__variance_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-variance-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         variance(sql_data_types.float_col) OVER () AS variance_data_types__variance_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-variance-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         variance(sql_data_types.float_col) OVER () AS variance_data_types__variance_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-variance-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         variance(sql_data_types.float_col) OVER () AS variance_data_types__variance_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-variance-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         variance(sql_data_types.float_col) OVER () AS variance_data_types__variance_float_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.float_col AS float_col,
+            sql_data_types.float_col AS float_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-floatCol-float_col-variance-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id,
+         variance(sql_data_types.float_col) OVER () AS variance_data_types__variance_float_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-avg-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         avg(sql_data_types.int_col) OVER () AS avg_data_types__avg_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-avg-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         avg(sql_data_types.int_col) OVER () AS avg_data_types__avg_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-avg-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         avg(sql_data_types.int_col) OVER () AS avg_data_types__avg_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-avg-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         avg(sql_data_types.int_col) OVER () AS avg_data_types__avg_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-avg-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         avg(sql_data_types.int_col) OVER () AS avg_data_types__avg_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-avg-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         avg(sql_data_types.int_col) OVER () AS avg_data_types__avg_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-avg-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         avg(sql_data_types.int_col) OVER () AS avg_data_types__avg_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-avg-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         avg(sql_data_types.int_col) OVER () AS avg_data_types__avg_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-avg-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         avg(sql_data_types.int_col) OVER () AS avg_data_types__avg_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddev-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev(sql_data_types.int_col) OVER () AS stddev_data_types__stddev_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddev-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev(sql_data_types.int_col) OVER () AS stddev_data_types__stddev_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddev-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev(sql_data_types.int_col) OVER () AS stddev_data_types__stddev_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddev-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev(sql_data_types.int_col) OVER () AS stddev_data_types__stddev_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddev-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev(sql_data_types.int_col) OVER () AS stddev_data_types__stddev_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddev-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev(sql_data_types.int_col) OVER () AS stddev_data_types__stddev_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddev-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev(sql_data_types.int_col) OVER () AS stddev_data_types__stddev_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddev-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev(sql_data_types.int_col) OVER () AS stddev_data_types__stddev_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddev-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev(sql_data_types.int_col) OVER () AS stddev_data_types__stddev_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.int_col) OVER () AS stddev_pop_data_types__stddev_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.int_col) OVER () AS stddev_pop_data_types__stddev_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.int_col) OVER () AS stddev_pop_data_types__stddev_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.int_col) OVER () AS stddev_pop_data_types__stddev_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.int_col) OVER () AS stddev_pop_data_types__stddev_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.int_col) OVER () AS stddev_pop_data_types__stddev_pop_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.int_col) OVER () AS stddev_pop_data_types__stddev_pop_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.int_col) OVER () AS stddev_pop_data_types__stddev_pop_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_pop(sql_data_types.int_col) OVER () AS stddev_pop_data_types__stddev_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.int_col) OVER () AS stddev_samp_data_types__stddev_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.int_col) OVER () AS stddev_samp_data_types__stddev_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.int_col) OVER () AS stddev_samp_data_types__stddev_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.int_col) OVER () AS stddev_samp_data_types__stddev_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.int_col) OVER () AS stddev_samp_data_types__stddev_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.int_col) OVER () AS stddev_samp_data_types__stddev_samp_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.int_col) OVER () AS stddev_samp_data_types__stddev_samp_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.int_col) OVER () AS stddev_samp_data_types__stddev_samp_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         stddev_samp(sql_data_types.int_col) OVER () AS stddev_samp_data_types__stddev_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varPop-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.int_col) OVER () AS var_pop_data_types__var_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varPop-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.int_col) OVER () AS var_pop_data_types__var_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varPop-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.int_col) OVER () AS var_pop_data_types__var_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varPop-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.int_col) OVER () AS var_pop_data_types__var_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varPop-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.int_col) OVER () AS var_pop_data_types__var_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varPop-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.int_col) OVER () AS var_pop_data_types__var_pop_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varPop-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.int_col) OVER () AS var_pop_data_types__var_pop_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varPop-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.int_col) OVER () AS var_pop_data_types__var_pop_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varPop-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_pop(sql_data_types.int_col) OVER () AS var_pop_data_types__var_pop_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.int_col) OVER () AS var_samp_data_types__var_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.int_col) OVER () AS var_samp_data_types__var_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.int_col) OVER () AS var_samp_data_types__var_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.int_col) OVER () AS var_samp_data_types__var_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.int_col) OVER () AS var_samp_data_types__var_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.int_col) OVER () AS var_samp_data_types__var_samp_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.int_col) OVER () AS var_samp_data_types__var_samp_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.int_col) OVER () AS var_samp_data_types__var_samp_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         var_samp(sql_data_types.int_col) OVER () AS var_samp_data_types__var_samp_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-variance-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         variance(sql_data_types.int_col) OVER () AS variance_data_types__variance_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-variance-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         variance(sql_data_types.int_col) OVER () AS variance_data_types__variance_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-variance-no-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         variance(sql_data_types.int_col) OVER () AS variance_data_types__variance_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-variance-no-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         variance(sql_data_types.int_col) OVER () AS variance_data_types__variance_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-variance-no-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         variance(sql_data_types.int_col) OVER () AS variance_data_types__variance_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-variance-pagination-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         variance(sql_data_types.int_col) OVER () AS variance_data_types__variance_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-variance-pagination-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         variance(sql_data_types.int_col) OVER () AS variance_data_types__variance_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-variance-pagination-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         variance(sql_data_types.int_col) OVER () AS variance_data_types__variance_int_col
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col,
+            sql_data_types.int_col AS int_col__1
+     FROM sql_data_types AS sql_data_types
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-intCol-int_col-variance-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id,
+         variance(sql_data_types.int_col) OVER () AS variance_data_types__variance_int_col
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-avg-async-asyncpg_engine]
   '''
   SELECT DISTINCT sql_data_types_container.id,

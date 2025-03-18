@@ -833,6 +833,51 @@
   WHERE sql_data_types.time_col = :time_col_1
   '''
 # ---
+# name: test_filter_on_paginated_query[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col
+     FROM sql_data_types AS sql_data_types
+     WHERE NOT (sql_data_types.int_col = :int_col_1
+                AND sql_data_types.int_col IS NOT NULL)
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_filter_on_paginated_query[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col
+     FROM sql_data_types AS sql_data_types
+     WHERE NOT (sql_data_types.int_col = :int_col_1
+                AND sql_data_types.int_col IS NOT NULL)
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_filter_on_paginated_query[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col
+     FROM sql_data_types AS sql_data_types
+     WHERE NOT (sql_data_types.int_col = :int_col_1
+                AND sql_data_types.int_col IS NOT NULL)
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
 # name: test_gt[session-tracked-date-gt-async-asyncpg_engine]
   '''
   SELECT sql_data_types.date_col,

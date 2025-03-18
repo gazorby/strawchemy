@@ -6,6 +6,7 @@ from typing import Any
 
 import pytest
 from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
+from strawchemy.types import DefaultOffsetPagination
 
 import strawberry
 from syrupy.assertion import SnapshotAssertion
@@ -25,12 +26,22 @@ class AsyncQuery:
     sql_data_types: list[SQLDataTypesType] = strawchemy.field(
         filter_input=SQLDataTypesFilter, repository_type=StrawchemyAsyncRepository
     )
+    data_types_paginated: list[SQLDataTypesType] = strawchemy.field(
+        filter_input=SQLDataTypesFilter,
+        pagination=DefaultOffsetPagination(limit=1),
+        repository_type=StrawchemyAsyncRepository,
+    )
 
 
 @strawberry.type
 class SyncQuery:
     sql_data_types: list[SQLDataTypesType] = strawchemy.field(
         filter_input=SQLDataTypesFilter, repository_type=StrawchemySyncRepository
+    )
+    data_types_paginated: list[SQLDataTypesType] = strawchemy.field(
+        filter_input=SQLDataTypesFilter,
+        pagination=DefaultOffsetPagination(limit=1),
+        repository_type=StrawchemySyncRepository,
     )
 
 
@@ -865,3 +876,27 @@ async def test_combined_filters(
     assert len(result.data["sqlDataTypes"]) == 1
     assert result.data["sqlDataTypes"][0]["id"] == raw_sql_data_types[0]["id"]
     assert query_tracker.query_count == 1
+
+
+@pytest.mark.snapshot
+async def test_filter_on_paginated_query(
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+            {
+                dataTypesPaginated(filter: { _not: { intCol: { eq: 0 } } }) {
+                    id
+                    intCol
+                }
+            }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert len(result.data["dataTypesPaginated"]) == 1
+    assert {result.data["dataTypesPaginated"][0]["id"]} == {raw_sql_data_types[0]["id"]}
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
