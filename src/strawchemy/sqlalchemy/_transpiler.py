@@ -266,14 +266,18 @@ class Transpiler(Generic[DeclarativeT]):
         aggregated_alias: AliasedClass[Any] = aliased(function_node_inspect.mapper.class_)
         aggregated_alias_inspected = inspect(aggregated_alias)
         root_relation = self.scope.aliased_attribute(aggregation_node).of_type(aggregated_alias)
-        function_node, function = function_node_inspect.filter_function(aggregated_alias, distinct=aggregation.distinct)
         bool_expressions: list[ColumnElement[bool]] = []
 
+        # The aggregation column already exists, we just need to add the filter expression
         if (function_column := self.scope.columns.get(aggregation.field_node)) is not None:
             bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
             return None, bool_expressions
 
+        # If an existing lateral join exists, add the aggregation column to it
         if join_info := self._aggregation_joins.get(aggregation_node):
+            function_node, function = function_node_inspect.filter_function(
+                join_info.subquery_alias, distinct=aggregation.distinct
+            )
             _, created = join_info.upsert_column_to_subquery(function)
             function_column = self.scope.literal_column(join_info.name, self.scope.key(function_node))
             if created:
@@ -282,6 +286,7 @@ class Transpiler(Generic[DeclarativeT]):
             bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
             return None, bool_expressions
 
+        function_node, function = function_node_inspect.filter_function(aggregated_alias, distinct=aggregation.distinct)
         function_column = self.scope.literal_column(lateral_name, self.scope.key(function_node))
         bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
         self.scope.columns[function_node] = function_column

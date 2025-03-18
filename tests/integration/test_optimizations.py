@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING
 
 import pytest
@@ -127,6 +128,25 @@ def async_query() -> type[AsyncQuery]:
             """
         {
             containers(
+                filter: {
+                    dataTypesAggregate: {
+                        sum: { arguments: [intCol], predicate: { gt: 0 } },
+                        avg: { arguments: [intCol], predicate: { lt: 9999 } }
+                    }
+                }
+            ) {
+                dataTypes {
+                    id
+                }
+            }
+        }
+        """,
+            id="filter-same-aggregations-different-conditions",
+        ),
+        pytest.param(
+            """
+        {
+            containers(
                 orderBy: { dataTypesAggregate: { sum: { intCol: ASC }, avg: { floatCol: ASC } } }
             ) {
                 dataTypes {
@@ -143,7 +163,10 @@ async def test_aggregation_computation_is_reused(
     query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that aggregation computation is reused when filtering and ordering by the same aggregation."""
-    result = await maybe_async(any_query(query))
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        result = await maybe_async(any_query(query))
+
     assert not result.errors
     assert result.data
 
