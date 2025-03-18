@@ -79,15 +79,30 @@ def async_query() -> type[AsyncQuery]:
         {
             containers(
                 filter: { dataTypesAggregate: { count: { predicate: { gt: 0 } } } },
-                orderBy: { dataTypesAggregate: { count: ASC } }
+                orderBy: { dataTypesAggregate: { avg: { floatCol: ASC } } }
             ) {
-                dataTypesAggregate {
-                    count
+                dataTypes {
+                    id
                 }
             }
         }
         """,
-            id="output-filter-order-by",
+            id="filter-order-by",
+        ),
+        pytest.param(
+            """
+        {
+            containers(
+                filter: { dataTypesAggregate: { avg: { arguments: [floatCol] predicate: { gt: 0 } } } },
+                orderBy: { dataTypesAggregate: { avg: { floatCol: ASC } } }
+            ) {
+                dataTypes {
+                    id
+                }
+            }
+        }
+        """,
+            id="filter-order-by-same-aggregation",
         ),
         pytest.param(
             """
@@ -123,25 +138,6 @@ def async_query() -> type[AsyncQuery]:
         }
         """,
             id="filter-multiple-aggregations",
-        ),
-        pytest.param(
-            """
-        {
-            containers(
-                filter: {
-                    dataTypesAggregate: {
-                        sum: { arguments: [intCol], predicate: { gt: 0 } },
-                        avg: { arguments: [intCol], predicate: { lt: 9999 } }
-                    }
-                }
-            ) {
-                dataTypes {
-                    id
-                }
-            }
-        }
-        """,
-            id="filter-same-aggregations-different-conditions",
         ),
         pytest.param(
             """
