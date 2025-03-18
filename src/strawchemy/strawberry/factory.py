@@ -129,28 +129,6 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         super().__init__(mapper.inspector, backend, handle_cycles, type_map, **kwargs)
         self._mapper = mapper
 
-    @classmethod
-    def _config(
-        cls,
-        purpose: Purpose,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool = False,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-    ) -> DTOConfig:
-        config = DTOConfig(purpose, partial=partial, alias_generator=alias_generator)
-        if exclude:
-            config.exclude = exclude
-        if include:
-            config.include = include
-        if type_map:
-            config.type_overrides = type_map
-        if aliases:
-            config.aliases = aliases
-        return config
-
     def _type_info(
         self,
         dto: type[Any],

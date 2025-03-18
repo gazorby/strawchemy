@@ -405,6 +405,9 @@ def raw_sql_data_types_set2(raw_containers: RawRecordData) -> RawRecordData:
     ]
 
 
+# DB Seeding
+
+
 @pytest.fixture
 def seed_insert_statements(
     raw_fruits: RawRecordData,
@@ -462,6 +465,9 @@ async def seed_db_async(
         await conn.run_sync(metadata.create_all)
         for statement in seed_insert_statements:
             await conn.execute(statement)
+
+
+# Utilities
 
 
 @pytest.fixture(params=[lf("async_session"), lf("session")], ids=["async", "sync"])
