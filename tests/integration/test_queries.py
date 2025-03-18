@@ -178,6 +178,25 @@ async def test_list_relation(any_query: AnyQueryExecutor, raw_fruits: RawRecordD
     assert all(fruit in result.data["colors"] for fruit in expected)
 
 
+async def test_column_property(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
+    result = await maybe_async(
+        any_query(
+            """
+            query GetUser($id: UUID!) {
+                user(id: $id) {
+                    greeting
+            }
+            }
+            """,
+            {"id": raw_users[0]["id"]},
+        )
+    )
+
+    assert not result.errors
+    assert result.data
+    assert result.data["user"] == {"greeting": f"Hello, {raw_users[0]['name']}"}
+
+
 @pytest.mark.snapshot
 async def test_only_queried_columns_included_in_select(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion

@@ -8,17 +8,20 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
-from strawchemy.dto.utils import PRIVATE, READ_ONLY, WRITE_ONLY
+from strawchemy.dto.types import Purpose, PurposeConfig
+from strawchemy.dto.utils import PRIVATE, READ_ONLY, WRITE_ONLY, field
 
 from sqlalchemy import VARCHAR, DateTime, Enum, ForeignKey, Text
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
 
 
-def validate_fruit_type(value: str) -> None:
+def validate_tomato_type(value: str) -> str:
     if "rotten" in value:
-        msg = "We do not allow rotten fruits."
+        msg = "We do not allow rotten tomato."
         raise ValueError(msg)
+    return value
 
 
 class VegetableFamily(enum.Enum):
@@ -57,18 +60,19 @@ class Fruit(UUIDBase):
     color: Mapped[Color] = relationship("Color", back_populates="fruits")
     sweetness: Mapped[int]
 
-    def name_upper(self) -> str:
-        return self.name.upper()
-
-    @property
-    def name_lower(self) -> str:
-        return self.name.lower()
-
 
 class Tomato(UUIDBase):
     __tablename__ = "tomato"
 
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(
+        info=field(
+            purposes={Purpose.READ, Purpose.WRITE},
+            configs={Purpose.WRITE: PurposeConfig(validator=validate_tomato_type)},
+        )
+    )
+    weight: Mapped[float] = mapped_column(info=field(configs={Purpose.WRITE: PurposeConfig(type_override=int)}))
+    sweetness: Mapped[float] = mapped_column(info=field(configs={Purpose.WRITE: PurposeConfig(alias="sugarness")}))
+    popularity: Mapped[float] = mapped_column(info=field(configs={Purpose.WRITE: PurposeConfig(partial=True)}))
 
 
 class Color(UUIDBase):
@@ -93,6 +97,28 @@ class User(UUIDBase):
 
     def get_group(self) -> Group | None:
         return self.group
+
+
+class SponsoredUser(UUIDBase):
+    __tablename__ = "sponsored_user"
+
+    name: Mapped[str]
+    sponsor_id: Mapped[UUID | None] = mapped_column(ForeignKey("sponsored_user.id"))
+    sponsor: Mapped[SponsoredUser | None] = relationship("SponsoredUser", back_populates="sponsored")
+    sponsored: Mapped[list[SponsoredUser]] = relationship(
+        "SponsoredUser", back_populates="sponsor", remote_side="SponsoredUser.id", uselist=True
+    )
+
+
+class UserWithGreeting(UUIDBase):
+    __tablename__ = "user_with_greeting"
+
+    name: Mapped[str] = mapped_column()
+    greeting_column_property: Mapped[str] = column_property("Hello, " + name)
+
+    @hybrid_property
+    def greeting_hybrid_property(self) -> str:
+        return f"Hello, {self.name}"
 
 
 class Group(UUIDBase):
@@ -138,6 +164,8 @@ class SQLDataTypes(UUIDBase):
     dict_col: Mapped[dict[str, Any]] = mapped_column(postgresql.JSONB, default=dict)
     array_str_col: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
 
+
+# Geo
 
 try:
     from geoalchemy2 import Geometry, WKBElement

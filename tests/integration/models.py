@@ -12,7 +12,7 @@ from geoalchemy2 import Geometry, WKBElement
 from sqlalchemy import DateTime, ForeignKey, MetaData, Text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
 from sqlalchemy.orm import registry as Registry  # noqa: N812
 
 metadata, geo_metadata = MetaData(), MetaData()
@@ -60,7 +60,8 @@ class Color(UUIDBase):
 class User(UUIDBase):
     __tablename__ = "user"
 
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column()
+    greeting: Mapped[str] = column_property("Hello, " + name)
 
 
 class SQLDataTypes(UUIDBase):

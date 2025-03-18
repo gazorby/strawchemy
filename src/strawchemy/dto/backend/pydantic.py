@@ -7,9 +7,8 @@ for generating DTOs from models, and support for mapping DTOs to SQLAlchemy mode
 
 from __future__ import annotations
 
-import dataclasses
 from inspect import getmodule
-from typing import TYPE_CHECKING, Annotated, Any, TypeVar, cast, override
+from typing import TYPE_CHECKING, Annotated, Any, TypeVar, override
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, create_model
 from pydantic.fields import Field, FieldInfo
@@ -29,45 +28,15 @@ PydanticDTOT = TypeVar("PydanticDTOT", bound="PydanticDTO[Any] | MappedPydanticD
 
 
 class _PydanticDTOBase(BaseModel):
-    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True, defer_build=True)
+    model_config = ConfigDict(
+        from_attributes=True, arbitrary_types_allowed=True, defer_build=True, populate_by_name=True
+    )
 
 
 class PydanticDTO(_PydanticDTOBase, DTOBase[ModelT]): ...
 
 
-class MappedPydanticDTO(_PydanticDTOBase, MappedDTO[ModelT]):
-    @override
-    def to_mapped(self, **override: Any) -> ModelT:
-        """Create an instance of `self.__sqla_model__`.
-
-        Fill the bound SQLAlchemy model recursively with values from this dataclass.
-        """
-        as_model = {}
-        dc_fields: dict[str, dataclasses.Field[Any]] = {}
-        if dataclasses.is_dataclass(self.__dto_model__):
-            dc_fields = {f.name: f for f in dataclasses.fields(self.__dto_model__)}
-
-        for name, pydantic_field in self.model_fields.items():
-            if (value := override.get(name, DTO_MISSING)) and value is not DTO_MISSING:
-                as_model[name] = value
-                continue
-            if (field := dc_fields.get(name, None)) and not field.init:
-                continue
-
-            value: ModelT | MappedPydanticDTO[ModelT] | list[ModelT] | list[MappedPydanticDTO[ModelT]]
-            value = getattr(self, name)
-
-            if isinstance(value, list | tuple):
-                value = [el.to_mapped() if isinstance(el, MappedPydanticDTO) else cast(ModelT, el) for el in value]
-            if isinstance(value, MappedPydanticDTO):
-                value = value.to_mapped()
-            as_model[pydantic_field.alias or name] = value
-        try:
-            return cast("ModelT", self.__dto_model__(**(as_model | override)))
-        except TypeError as error:
-            original_message = error.args[0] if isinstance(error.args[0], str) else repr(error)
-            msg = f"{original_message} (model: {self.__dto_model__.__name__})"
-            raise TypeError(msg) from error
+class MappedPydanticDTO(_PydanticDTOBase, MappedDTO[ModelT]): ...
 
 
 class PydanticDTOBackend(DTOBackend[PydanticDTOT]):

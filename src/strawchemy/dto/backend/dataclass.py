@@ -10,7 +10,7 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass
 from inspect import getmodule
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, TypeVar, cast, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, TypeVar, override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOMissingType
@@ -43,39 +43,7 @@ DataclassFieldInfo: TypeAlias = BasicFieldInfo | FullFieldInfo
 
 
 @dataclass
-class MappedDataclassDTO(MappedDTO[ModelT]):
-    @override
-    def to_mapped(self, **override: Any) -> ModelT:
-        """Create an instance of `self.__sqla_model__`.
-
-        Fill the bound SQLAlchemy model recursively with values from this dataclass.
-        """
-        as_model = {}
-        dc_fields: dict[str, dataclasses.Field[Any]] = {}
-        if dataclasses.is_dataclass(self.__dto_model__):
-            dc_fields = {f.name: f for f in dataclasses.fields(self.__dto_model__)}
-
-        for dc_field in dataclasses.fields(self):
-            if (value := override.get(dc_field.name, DTO_MISSING)) and value is not DTO_MISSING:
-                as_model[dc_field.name] = value
-                continue
-            if (field := dc_fields.get(dc_field.name)) and not field.init:
-                continue
-
-            value: ModelT | MappedDataclassDTO[ModelT] | list[ModelT] | list[MappedDataclassDTO[ModelT]]
-            value = getattr(self, dc_field.name)
-
-            if isinstance(value, list | tuple):
-                value = [el.to_mapped() if isinstance(el, MappedDataclassDTO) else cast(ModelT, el) for el in value]
-            if isinstance(value, MappedDataclassDTO):
-                value = value.to_mapped()
-            as_model[dc_field.name] = value
-        try:
-            return self.__dto_model__(**(as_model | override))
-        except TypeError as error:
-            original_message = error.args[0] if isinstance(error.args[0], str) else repr(error)
-            msg = f"{original_message} (model: {self.__dto_model__.__name__})"
-            raise TypeError(msg) from error
+class MappedDataclassDTO(MappedDTO[ModelT]): ...
 
 
 class DataclassDTOBackend(DTOBackend[DataclassDTOT]):

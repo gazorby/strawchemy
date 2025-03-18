@@ -79,12 +79,26 @@ alias = "tu"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest -m "not integration" {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
+[tasks."test:unit:coverage"]
+description = "Run unit tests"
+depends = "_install"
+alias = "tuc"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest -m "not integration" {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
+
 [tasks."test:integration"]
 description = "Run integration tests"
 depends = "_install"
 alias = "ti"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest -m integration {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:integration:coverage"]
+description = "Run integration tests"
+depends = "_install"
+alias = "tic"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest -m integration {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit-all"]
 description = "Run unit tests on all supported python versions"

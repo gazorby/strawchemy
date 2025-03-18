@@ -216,7 +216,6 @@ class GraphQLFieldDefinition(DTOFieldDefinition[ModelT, ModelFieldT], Generic[Mo
     is_aggregate: bool = False
     is_function: bool = False
     is_function_arg: bool = False
-    alias: str | None = None
 
     _function: FunctionInfo[ModelT, ModelFieldT] | None = None
 
@@ -227,7 +226,6 @@ class GraphQLFieldDefinition(DTOFieldDefinition[ModelT, ModelFieldT], Generic[Mo
             self.init,
             self.uselist,
             self.model_field_name,
-            self.alias,
             self.is_aggregate,
             self.is_function,
             self.is_function_arg,

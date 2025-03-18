@@ -185,6 +185,19 @@ Run integration tests on all supported python versions
 
 #### `[test]`
 
+## `test:integration:coverage`
+
+- Depends: _install
+
+- **Usage**: `test:integration:coverage [test]`
+- **Aliases**: `tic`
+
+Run integration tests
+
+### Arguments
+
+#### `[test]`
+
 ## `test:unit`
 
 - Depends: _install
@@ -206,6 +219,19 @@ Run unit tests
 - **Aliases**: `tua`
 
 Run unit tests on all supported python versions
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit:coverage`
+
+- Depends: _install
+
+- **Usage**: `test:unit:coverage [test]`
+- **Aliases**: `tuc`
+
+Run unit tests
 
 ### Arguments
 
