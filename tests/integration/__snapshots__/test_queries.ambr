@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_filtered_statement[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT color.name,
+         color.id
+  FROM color AS color
+  JOIN
+    (SELECT color.name AS name,
+            color.id AS id,
+            color.created_at AS created_at,
+            color.updated_at AS updated_at
+     FROM color
+     WHERE color.name = :name_1) AS anon_1 ON color.id = anon_1.id
+  '''
+# ---
+# name: test_filtered_statement[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT color.name,
+         color.id
+  FROM color AS color
+  JOIN
+    (SELECT color.name AS name,
+            color.id AS id,
+            color.created_at AS created_at,
+            color.updated_at AS updated_at
+     FROM color
+     WHERE color.name = :name_1) AS anon_1 ON color.id = anon_1.id
+  '''
+# ---
+# name: test_filtered_statement[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT color.name,
+         color.id
+  FROM color AS color
+  JOIN
+    (SELECT color.name AS name,
+            color.id AS id,
+            color.created_at AS created_at,
+            color.updated_at AS updated_at
+     FROM color
+     WHERE color.name = :name_1) AS anon_1 ON color.id = anon_1.id
+  '''
+# ---
+# name: test_only_queried_columns_included_in_select[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT color__fruits.name,
+                  color__fruits.id,
+                  color.name AS name_1,
+                  color.id AS id_1
+  FROM color AS color
+  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+  '''
+# ---
+# name: test_only_queried_columns_included_in_select[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT color__fruits.name,
+                  color__fruits.id,
+                  color.name AS name_1,
+                  color.id AS id_1
+  FROM color AS color
+  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+  '''
+# ---
+# name: test_only_queried_columns_included_in_select[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT color__fruits.name,
+                  color__fruits.id,
+                  color.name AS name_1,
+                  color.id AS id_1
+  FROM color AS color
+  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+  '''
+# ---

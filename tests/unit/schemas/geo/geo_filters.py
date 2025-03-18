@@ -18,4 +18,4 @@ class GeosFieldsFilter: ...
 
 @strawberry.type
 class Query:
-    geo: GeosFieldsType = strawchemy.field(filter_input=GeosFieldsFilter)
+    geo: list[GeosFieldsType] = strawchemy.field(filter_input=GeosFieldsFilter)

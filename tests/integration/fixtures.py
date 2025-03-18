@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from datetime import date, time
+from datetime import UTC, date, datetime, time
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
 import pytest
+import sqlparse
+from geoalchemy2 import WKBElement, WKTElement
 from pytest_lazy_fixtures import lf
+from strawchemy.strawberry.geo import GeoJSON
 
-from sqlalchemy import URL, Engine, NullPool, create_engine, insert
+from sqlalchemy import URL, Engine, Executable, Insert, MetaData, NullPool, create_engine, insert
 from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import ORMExecuteState, Session, sessionmaker
@@ -18,7 +21,7 @@ from strawberry.scalars import JSON
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
-from .models import Color, Fruit, User, metadata
+from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User, metadata
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -41,13 +44,16 @@ __all__ = (
     "psycopg_engine",
     "raw_colors",
     "raw_fruits",
+    "raw_sql_data_types",
+    "raw_sql_data_types_set1",
+    "raw_sql_data_types_set2",
     "raw_users",
     "seed_db_async",
     "seed_db_sync",
     "session",
 )
 
-scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON}
+scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, WKTElement: GeoJSON, WKBElement: GeoJSON}
 
 
 @pytest.fixture(autouse=True)
@@ -67,20 +73,25 @@ def _patch_base(monkeypatch: MonkeyPatch) -> None:  # pyright: ignore[reportUnus
     monkeypatch.setattr(models, "UUIDBase", NewUUIDBase)
 
 
+@pytest.fixture
+def database_service(postgres_service: PostgresService) -> PostgresService:
+    return postgres_service
+
+
 # Sync engines
 
 
 @pytest.fixture
-def psycopg_engine(postgres_service: PostgresService) -> Engine:
+def psycopg_engine(database_service: PostgresService) -> Engine:
     """Postgresql instance for end-to-end testing."""
     return create_engine(
         URL(
             drivername="postgresql+psycopg",
             username="postgres",
-            password=postgres_service.password,
-            host=postgres_service.host,
-            port=postgres_service.port,
-            database=postgres_service.database,
+            password=database_service.password,
+            host=database_service.host,
+            port=database_service.port,
+            database=database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
@@ -118,16 +129,16 @@ def session(engine: Engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-def asyncpg_engine(postgres_service: PostgresService) -> AsyncEngine:
+def asyncpg_engine(database_service: PostgresService) -> AsyncEngine:
     """Postgresql instance for end-to-end testing."""
     return create_async_engine(
         URL(
             drivername="postgresql+asyncpg",
             username="postgres",
-            password=postgres_service.password,
-            host=postgres_service.host,
-            port=postgres_service.port,
-            database=postgres_service.database,
+            password=database_service.password,
+            host=database_service.host,
+            port=database_service.port,
+            database=database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
@@ -135,16 +146,16 @@ def asyncpg_engine(postgres_service: PostgresService) -> AsyncEngine:
 
 
 @pytest.fixture
-def psycopg_async_engine(postgres_service: PostgresService) -> AsyncEngine:
+def psycopg_async_engine(database_service: PostgresService) -> AsyncEngine:
     """Postgresql instance for end-to-end testing."""
     return create_async_engine(
         URL(
             drivername="postgresql+psycopg",
             username="postgres",
-            password=postgres_service.password,
-            host=postgres_service.host,
-            port=postgres_service.port,
-            database=postgres_service.database,
+            password=database_service.password,
+            host=database_service.host,
+            port=database_service.port,
+            database=database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
@@ -207,51 +218,31 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "id": str(uuid4()),
             "name": "Apple",
             "color_id": raw_colors[0]["id"],
-            "sweetness": 7,
-            "has_core": True,
             "adjectives": ["crisp", "juicy", "sweet"],
-            "price_decimal": Decimal("1.99"),
-            "price_float": 1.99,
         },
         {
             "id": str(uuid4()),
             "name": "Banana",
             "color_id": raw_colors[1]["id"],
-            "sweetness": 8,
-            "has_core": False,
             "adjectives": ["soft", "sweet", "tropical"],
-            "price_decimal": Decimal("0.89"),
-            "price_float": 0.89,
         },
         {
             "id": str(uuid4()),
             "name": "Orange",
             "color_id": raw_colors[2]["id"],
-            "sweetness": 6,
-            "has_core": False,
             "adjectives": ["tangy", "juicy", "citrusy"],
-            "price_decimal": Decimal("1.29"),
-            "price_float": 1.29,
         },
         {
             "id": str(uuid4()),
             "name": "Strawberry",
             "color_id": raw_colors[3]["id"],
-            "sweetness": 9,
-            "has_core": False,
             "adjectives": ["sweet", "fragrant", "small"],
-            "price_decimal": Decimal("2.49"),
-            "price_float": 2.49,
         },
         {
             "id": str(uuid4()),
             "name": "Watermelon",
             "color_id": raw_colors[4]["id"],
-            "sweetness": 8,
-            "has_core": True,
             "adjectives": ["juicy", "refreshing", "summery"],
-            "price_decimal": Decimal("4.99"),
-            "price_float": 4.99,
         },
     ]
 
@@ -259,52 +250,224 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
 @pytest.fixture
 def raw_users() -> RawRecordData:
     return [
+        {"id": str(uuid4()), "name": "Alice"},
+        {"id": str(uuid4()), "name": "Bob"},
+        {"id": str(uuid4()), "name": "Charlie"},
+    ]
+
+
+@pytest.fixture
+def raw_sql_data_types_container() -> RawRecordData:
+    return [{"id": str(uuid4())}]
+
+
+@pytest.fixture
+def raw_sql_data_types(raw_sql_data_types_container: RawRecordData) -> RawRecordData:
+    return [
+        # Standard case with typical values
         {
             "id": str(uuid4()),
-            "name": "Alice",
-            "settings": {"theme": "dark", "notifications": True},
-            "birthday": date(1990, 5, 15),
-            "newsletter_send_time": time(8, 0),
+            "date_col": date(2023, 1, 15),
+            "time_col": time(14, 30, 45),
+            "time_delta_col": time(23, 59, 59),
+            "datetime_col": datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC),
+            "str_col": "test string",
+            "int_col": 42,
+            "float_col": 3.14159,
+            "decimal_col": Decimal("123.45"),
+            "bool_col": True,
+            "uuid_col": uuid4(),
+            "dict_col": {"key1": "value1", "key2": 2, "nested": {"inner": "value"}},
+            "array_str_col": ["one", "two", "three"],
+            "optional_str_col": "optional string",
+            "container_id": raw_sql_data_types_container[0]["id"],
         },
+        # Case with negative numbers and different values
         {
             "id": str(uuid4()),
-            "name": "Bob",
-            "settings": {"theme": "light", "notifications": False},
-            "birthday": date(1985, 10, 22),
-            "newsletter_send_time": time(9, 30),
+            "date_col": date(2022, 12, 31),
+            "time_col": time(8, 15, 0),
+            "time_delta_col": time(12, 0, 0),
+            "datetime_col": datetime(2022, 12, 31, 23, 59, 59, tzinfo=UTC),
+            "str_col": "another string",
+            "int_col": -10,
+            "float_col": 2.71828,
+            "decimal_col": Decimal("-99.99"),
+            "bool_col": False,
+            "uuid_col": uuid4(),
+            "dict_col": {"status": "pending", "count": 0},
+            "array_str_col": ["apple", "banana", "cherry", "date"],
+            "optional_str_col": "another optional string",
+            "container_id": raw_sql_data_types_container[0]["id"],
         },
+        # Edge case with empty values
         {
             "id": str(uuid4()),
-            "name": "Charlie",
-            "settings": {"theme": "auto", "notifications": True},
-            "birthday": date(1995, 3, 8),
-            "newsletter_send_time": time(7, 15),
+            "date_col": date(2024, 2, 29),  # leap year
+            "time_col": time(0, 0, 0),
+            "time_delta_col": time(1, 1, 1),
+            "datetime_col": datetime(2024, 2, 29, 0, 0, 0, tzinfo=UTC),
+            "str_col": "",  # empty string
+            "int_col": 0,
+            "float_col": 0.0,
+            "decimal_col": Decimal("0.00"),
+            "bool_col": False,
+            "uuid_col": uuid4(),
+            "dict_col": {},  # empty dict
+            "array_str_col": [],  # empty array
+            "optional_str_col": None,
+            "container_id": raw_sql_data_types_container[0]["id"],
         },
     ]
 
 
 @pytest.fixture
+def raw_sql_data_types_set1(raw_containers: RawRecordData) -> RawRecordData:
+    return [
+        # First set with moderate values
+        {
+            "id": str(uuid4()),
+            "date_col": date(2021, 6, 15),
+            "time_col": time(10, 45, 30),
+            "time_delta_col": time(18, 30, 15),
+            "datetime_col": datetime(2021, 6, 15, 10, 45, 30, tzinfo=UTC),
+            "str_col": "data set 1 string",
+            "int_col": 100,
+            "float_col": 5.5,
+            "decimal_col": Decimal("50.75"),
+            "bool_col": True,
+            "uuid_col": uuid4(),
+            "dict_col": {"category": "electronics", "price": 299.99},
+            "array_str_col": ["red", "green", "blue"],
+            "optional_str_col": "set1 optional",
+            "container_id": raw_containers[0]["id"],
+        },
+        # Second entry with different values
+        {
+            "id": str(uuid4()),
+            "date_col": date(2021, 7, 20),
+            "time_col": time(15, 20, 10),
+            "time_delta_col": time(9, 45, 30),
+            "datetime_col": datetime(2021, 7, 20, 15, 20, 10, tzinfo=UTC),
+            "str_col": "another set 1 string",
+            "int_col": 75,
+            "float_col": 7.25,
+            "decimal_col": Decimal("75.50"),
+            "bool_col": False,
+            "uuid_col": uuid4(),
+            "dict_col": {"category": "clothing", "price": 49.99, "size": "medium"},
+            "array_str_col": ["circle", "square", "triangle"],
+            "optional_str_col": "set1 optional",
+            "container_id": raw_containers[0]["id"],
+        },
+    ]
+
+
+@pytest.fixture
+def raw_sql_data_types_set2(raw_containers: RawRecordData) -> RawRecordData:
+    return [
+        # First entry with moderate values
+        {
+            "id": str(uuid4()),
+            "date_col": date(2020, 3, 10),
+            "time_col": time(9, 15, 25),
+            "time_delta_col": time(16, 45, 0),
+            "datetime_col": datetime(2020, 3, 10, 9, 15, 25, tzinfo=UTC),
+            "str_col": "data set 2 string",
+            "int_col": 250,
+            "float_col": 9.8,
+            "decimal_col": Decimal("199.99"),
+            "bool_col": True,
+            "uuid_col": uuid4(),
+            "dict_col": {"category": "furniture", "price": 599.99, "color": "brown"},
+            "array_str_col": ["monday", "wednesday", "friday"],
+            "optional_str_col": "set2 optional",
+            "container_id": raw_containers[1]["id"],
+        },
+        # Second entry with different values
+        {
+            "id": str(uuid4()),
+            "date_col": date(2020, 9, 5),
+            "time_col": time(13, 0, 0),
+            "time_delta_col": time(21, 15, 45),
+            "datetime_col": datetime(2020, 9, 5, 13, 0, 0, tzinfo=UTC),
+            "str_col": "another set 2 string",
+            "int_col": 180,
+            "float_col": 12.34,
+            "decimal_col": Decimal("150.25"),
+            "bool_col": False,
+            "uuid_col": uuid4(),
+            "dict_col": {"category": "books", "price": 24.99, "author": "John Doe"},
+            "array_str_col": ["cat", "dog", "bird", "fish"],
+            "optional_str_col": "another set2 optional",
+            "container_id": raw_containers[1]["id"],
+        },
+    ]
+
+
+# DB Seeding
+
+
+@pytest.fixture
+def seed_insert_statements(
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
+    raw_users: RawRecordData,
+    raw_sql_data_types: RawRecordData,
+    raw_sql_data_types_container: RawRecordData,
+) -> list[Insert]:
+    return [
+        insert(Color).values(raw_colors),
+        insert(Fruit).values(raw_fruits),
+        insert(User).values(raw_users),
+        insert(SQLDataTypesContainer).values(raw_sql_data_types_container),
+        insert(SQLDataTypes).values(raw_sql_data_types),
+    ]
+
+
+@pytest.fixture
+def before_create_all_statements() -> list[Executable]:
+    return []
+
+
+@pytest.fixture(name="metadata")
+def fx_metadata() -> MetaData:
+    return metadata
+
+
+@pytest.fixture
 def seed_db_sync(
-    engine: Engine, raw_fruits: RawRecordData, raw_colors: RawRecordData, raw_users: RawRecordData
+    engine: Engine,
+    metadata: MetaData,
+    seed_insert_statements: list[Insert],
+    before_create_all_statements: list[Executable],
 ) -> None:
     with engine.begin() as conn:
+        for statement in before_create_all_statements:
+            conn.execute(statement)
         metadata.drop_all(conn)
         metadata.create_all(conn)
-        conn.execute(insert(Color).values(raw_colors))
-        conn.execute(insert(Fruit).values(raw_fruits))
-        conn.execute(insert(User).values(raw_users))
+        for statement in seed_insert_statements:
+            conn.execute(statement)
 
 
 @pytest.fixture
 async def seed_db_async(
-    async_engine: AsyncEngine, raw_fruits: RawRecordData, raw_colors: RawRecordData, raw_users: RawRecordData
+    async_engine: AsyncEngine,
+    metadata: MetaData,
+    seed_insert_statements: list[Insert],
+    before_create_all_statements: list[Executable],
 ) -> None:
     async with async_engine.begin() as conn:
+        for statement in before_create_all_statements:
+            await conn.execute(statement)
         await conn.run_sync(metadata.drop_all)
         await conn.run_sync(metadata.create_all)
-        await conn.execute(insert(Color).values(raw_colors))
-        await conn.execute(insert(Fruit).values(raw_fruits))
-        await conn.execute(insert(User).values(raw_users))
+        for statement in seed_insert_statements:
+            await conn.execute(statement)
+
+
+# Utilities
 
 
 @pytest.fixture(params=[lf("async_session"), lf("session")], ids=["async", "sync"])
@@ -336,6 +499,14 @@ def no_session_query(sync_query: type[Any]) -> SyncQueryExecutor:
 class StatementInspector:
     state: ORMExecuteState
 
+    @property
+    def statement_str(self) -> str:
+        return str(self.state.statement)
+
+    @property
+    def statement_formatted(self) -> str:
+        return sqlparse.format(self.statement_str, reindent=True, use_space_around_operators=True, keyword_case="upper")
+
 
 @dataclass
 class QueryTracker:
@@ -351,3 +522,10 @@ class QueryTracker:
 
     def _event_listener(self, orm_execute_state: ORMExecuteState) -> None:
         self.executions.append(StatementInspector(orm_execute_state))
+
+    @property
+    def query_count(self) -> int:
+        return len(self.executions)
+
+    def __getitem__(self, index: int) -> StatementInspector:
+        return self.executions[index]

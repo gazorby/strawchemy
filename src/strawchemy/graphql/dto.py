@@ -86,6 +86,7 @@ class StrawchemyDTOAttributes:
     __strawchemy_description__: ClassVar[str] = "GraphQL type"
     __strawchemy_field_map__: ClassVar[dict[DTOKey, GraphQLFieldDefinition[Any, Any]]] = {}
     __strawchemy_query_hook__: QueryHookCallable | Sequence[QueryHookCallable] | None = None
+    __strawchemy_is_root_aggregation_type__: bool = False
 
 
 class _Key(Generic[T]):
@@ -215,7 +216,6 @@ class GraphQLFieldDefinition(DTOFieldDefinition[ModelT, ModelFieldT], Generic[Mo
     is_aggregate: bool = False
     is_function: bool = False
     is_function_arg: bool = False
-    alias: str | None = None
 
     _function: FunctionInfo[ModelT, ModelFieldT] | None = None
 
@@ -226,7 +226,6 @@ class GraphQLFieldDefinition(DTOFieldDefinition[ModelT, ModelFieldT], Generic[Mo
             self.init,
             self.uselist,
             self.model_field_name,
-            self.alias,
             self.is_aggregate,
             self.is_function,
             self.is_function_arg,
@@ -449,6 +448,7 @@ class AggregationFilter(Generic[ModelT, ModelFieldT]):
     function_info: FilterFunctionInfo[ModelT, ModelFieldT, NumericComparison[Any, Any, Any]]
     predicate: GenericComparison[Any, ModelT, ModelFieldT]
     field_node: QueryNode[ModelT, ModelFieldT]
+    distinct: bool | None = None
 
 
 @dataclass
@@ -502,6 +502,7 @@ class AggregationFunctionFilterDTO(UnmappedPydanticGraphQLDTO[ModelT]):
 
     arguments: list[_HasValue[ModelT, Any]]
     predicate: GenericComparison[Any, ModelT, Any]
+    distinct: bool | None = None
 
 
 class OrderByDTO(GraphQLFilterDTO[ModelT], Generic[ModelT, ModelFieldT]):
@@ -591,6 +592,7 @@ class AggregateFilterDTO(GraphQLFilterDTO[ModelT]):
                     function_info=aggregation_function,
                     field_node=function_node,
                     predicate=function_filter.predicate,
+                    distinct=function_filter.distinct,
                 )
             )
         return aggregations

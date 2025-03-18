@@ -24,6 +24,7 @@ from collections import defaultdict
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, NamedTuple, override
 
 from sqlalchemy import Function, Label, func, inspect, literal_column
+from sqlalchemy import distinct as sqla_distinct
 from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
 from sqlalchemy.orm.util import AliasedClass
 from strawchemy.dto.types import DTOConfig, Purpose
@@ -175,7 +176,7 @@ class NodeInspect:
             and self.node.parent.is_root
         ) or self.node.is_root
 
-    def functions(
+    def output_functions(
         self,
         alias: AliasedClass[Any],
         visit_func: Callable[[Function[Any]], Any] = lambda func: func,
@@ -192,6 +193,25 @@ class NodeInspect:
         else:
             functions[self.node] = visit_func(sql_func()).label(self.scope.key(self.node))
         return functions
+
+    def filter_function(
+        self, alias: AliasedClass[Any], distinct: bool | None = None
+    ) -> tuple[SQLAlchemyQueryNode, Label[Any]]:
+        function_info = self._function_info(self.value.function(strict=True).function)
+        sql_func = function_info.sqla_function
+        function_arg = []
+        argument_attributes = [
+            self.mapper.attrs[arg_child.value.model_field_name].class_attribute.adapt_to_entity(inspect(alias))
+            for arg_child in self.children
+        ]
+        function_arg = (sqla_distinct(*argument_attributes),) if distinct else argument_attributes
+        if len(self.children) == 1:
+            function_node = self.children[0].node
+            label_name = self.scope.key(function_node)
+        else:
+            function_node = self.node
+            label_name = self.scope.key(self.node)
+        return function_node, sql_func(*function_arg).label(label_name)
 
     def columns(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
         columns: list[QueryableAttribute[Any]] = []

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar, cast
 
 from strawberry.types import get_object_definition
@@ -44,7 +43,6 @@ class _StrawberryQueryNode(QueryNode[Any, Any], Generic[T]):
         )
 
     @classmethod
-    @lru_cache(maxsize=256, typed=True)
     def _default_type_kwargs(cls, node: Self) -> dict[str, Any]:
         strawberry_definition = get_object_definition(node.strawberry_type, strict=True)
         return {field.name: DTO_MISSING for field in strawberry_definition.fields if field.init}

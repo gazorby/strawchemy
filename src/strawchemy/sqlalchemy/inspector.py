@@ -5,29 +5,40 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
+from geoalchemy2 import WKBElement, WKTElement
 from shapely import Geometry
 
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute, registry
-from sqlalchemy.types import ARRAY
+from sqlalchemy.types import ARRAY, JSON
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
+from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.graphql.inspector import GraphQLInspectorProtocol
 
 from .filters import (
     DateSQLAlchemyFilter,
     DateTimeSQLAlchemyFilter,
     GenericSQLAlchemyFilter,
-    JSONBSQLAlchemyFilter,
     NumericSQLAlchemyFilter,
-    PostgresArraySQLAlchemyFilter,
     SQLAlchemyFilterBase,
     TextSQLAlchemyFilter,
     TimeSQLAlchemyFilter,
 )
-from .filters.geo import GeoSQLAlchemyFilter
+from .filters.postgresql import JSONBSQLAlchemyFilter, PostgresArraySQLAlchemyFilter
+
+try:
+    from .filters.geo import GeoSQLAlchemyFilter
+
+    GeoFilter = GeoSQLAlchemyFilter
+
+except ModuleNotFoundError:
+    GeoFilter = None
+
 
 if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition
     from strawchemy.graphql.dto import GraphQLComparison
+    from strawchemy.typing import SupportedDialect
 
     from .typing import FilterMap
 
@@ -39,13 +50,11 @@ T = TypeVar("T", bound=Any)
 
 _DEFAULT_FILTERS_MAP: FilterMap = OrderedDict(
     {
-        (Geometry,): GeoSQLAlchemyFilter,
         (datetime,): DateTimeSQLAlchemyFilter,
         (time,): TimeSQLAlchemyFilter,
         (date,): DateSQLAlchemyFilter,
         (bool,): GenericSQLAlchemyFilter,
         (int, float, Decimal): NumericSQLAlchemyFilter,
-        (dict,): JSONBSQLAlchemyFilter,
         (str,): TextSQLAlchemyFilter,
     }
 )
@@ -54,9 +63,22 @@ _DEFAULT_FILTERS_MAP: FilterMap = OrderedDict(
 class SQLAlchemyGraphQLInspector(
     SQLAlchemyInspector, GraphQLInspectorProtocol[DeclarativeBase, QueryableAttribute[Any]]
 ):
-    def __init__(self, registries: list[registry] | None = None, filter_overrides: FilterMap | None = None) -> None:
+    def __init__(
+        self,
+        dialect: SupportedDialect,
+        registries: list[registry] | None = None,
+        filter_overrides: FilterMap | None = None,
+    ) -> None:
         super().__init__(registries)
-        self.filters_map = _DEFAULT_FILTERS_MAP | (filter_overrides or {})
+        self.dialect = dialect
+        self.filters_map = _DEFAULT_FILTERS_MAP
+        self._dialect_json_types: tuple[type[JSON], ...] | None = None
+        if dialect == "postgresql":
+            self._dialect_json_types = (postgresql.JSON, postgresql.JSONB)
+            self.filters_map |= {(dict,): JSONBSQLAlchemyFilter}
+            if GeoFilter is not None:
+                self.filters_map |= {(Geometry, WKBElement, WKTElement): GeoFilter}
+        self.filters_map |= filter_overrides or {}
 
     @classmethod
     def _is_specialized(cls, type_: type[Any]) -> bool:
@@ -72,8 +94,19 @@ class SQLAlchemyGraphQLInspector(
     def get_field_comparison(
         self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]
     ) -> type[GraphQLComparison[DeclarativeBase, QueryableAttribute[Any]]]:
-        if isinstance(field_definition.model_field.type, ARRAY):
-            return PostgresArraySQLAlchemyFilter[field_definition.model_field.type.item_type.python_type]
+        field_type = field_definition.model_field.type
+        if isinstance(field_type, postgresql.ARRAY):
+            return PostgresArraySQLAlchemyFilter[field_type.item_type.python_type]
+        if isinstance(field_type, ARRAY):
+            msg = "Base SQLAlchemy ARRAY type is not supported. Use backend-specific array type instead."
+            raise InspectorError(msg)
+        if (
+            self._dialect_json_types
+            and isinstance(field_type, JSON)
+            and not isinstance(field_type, self._dialect_json_types)
+        ):
+            msg = "Base SQLAlchemy JSON type is not supported. Use backend-specific json type instead."
+            raise InspectorError(msg)
         return self.get_type_comparison(self.model_field_type(field_definition))
 
     @override

@@ -11,7 +11,8 @@ pre-commit = "latest"
 actionlint = "latest"
 
 [vars]
-local_pytest_options = "--cov-report=term-missing:skip-covered -n=2 -vv"
+local_pytest_options = "-n=6 -vv"
+pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
 cleanable_paths = '''{{
 [
   ".nox",
@@ -60,9 +61,16 @@ run = "uv sync --only-group test"
 [tasks.test]
 description = "Run tests"
 depends = "_install"
-alias = "tu"
+alias = "t"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:coverage"]
+description = "Run tests with coverage"
+depends = "_install"
+alias = "tc"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit"]
 description = "Run unit tests"
@@ -71,12 +79,26 @@ alias = "tu"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest -m "not integration" {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
+[tasks."test:unit:coverage"]
+description = "Run unit tests"
+depends = "_install"
+alias = "tuc"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest -m "not integration" {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
+
 [tasks."test:integration"]
 description = "Run integration tests"
 depends = "_install"
 alias = "ti"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest -m integration {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:integration:coverage"]
+description = "Run integration tests"
+depends = "_install"
+alias = "tic"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest -m integration {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit-all"]
 description = "Run unit tests on all supported python versions"
@@ -126,11 +148,17 @@ run = '''
     )'
 '''
 
+[tasks."ci:test-sessions"]
+description = "Output test session names for CI"
+depends = "install:test"
+run = "nox --json -t tests -l | jq 'map(.name) | unique'"
+
 # Linting
 
 [tasks."ruff:check"]
 description = "Check ruff formatting"
-run = "ruff format --check"
+depends = "_install"
+run = "ruff check"
 
 [tasks."ruff:fix"]
 description = "Fix ruff errors"
@@ -139,6 +167,10 @@ run = "ruff check --fix --unsafe-fixes"
 [tasks."ruff:format"]
 description = "Format code"
 run = "ruff format"
+
+[tasks."ruff:format:check"]
+description = "Format code"
+run = "ruff format --check"
 
 [tasks.pyright]
 description = "Run pyright"
@@ -154,7 +186,7 @@ run = "uv run vulture"
 [tasks.lint]
 description = "Lint the code"
 alias = "l"
-depends = ["vulture", "pyright", "ruff:check"]
+depends = ["vulture", "pyright", "ruff:check", "ruff:format:check"]
 
 [tasks."lint:pre-commit"]
 description = "Lint the code in pre-commit hook"

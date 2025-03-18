@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Generator
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from inspect import getmodule
 from types import new_class
@@ -85,9 +85,8 @@ __all__ = (
 
 T = TypeVar("T")
 
-dto_config_read_partial = DTOConfig(Purpose.READ, partial=True)
 
-TYPING_NS = vars(strawchemy_typing)
+_TYPING_NS = vars(strawchemy_typing)
 
 
 class _EnumDTOBackend(DTOBackend[EnumDTO], Generic[ModelT]):
@@ -207,7 +206,7 @@ class _GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
 
     @override
     def type_hint_namespace(self) -> dict[str, Any]:
-        return super().type_hint_namespace() | TYPING_NS
+        return super().type_hint_namespace() | _TYPING_NS
 
     @override
     def iter_field_definitions(
@@ -339,7 +338,7 @@ class _NumericFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
 
 
 class _MinMaxFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
-    types: ClassVar[set[type[Any]]] = {int, float, str, Decimal, date, datetime}
+    types: ClassVar[set[type[Any]]] = {int, float, str, Decimal, date, datetime, time}
 
     @override
     def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
@@ -378,6 +377,14 @@ class _MinMaxStringFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT])
         return f"{name}MinMaxStringFields"
 
 
+class _MinMaxTimeFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
+    types: ClassVar[set[type[Any]]] = {time}
+
+    @override
+    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
+        return f"{name}MinMaxTimeFields"
+
+
 class _SumFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
     types: ClassVar[set[type[Any]]] = {int, float, str, Decimal, timedelta}
 
@@ -396,6 +403,7 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
         self._min_max_datetime_fields_factory = _MinMaxDateTimeFieldsDTOFactory(inspector)
         self._min_max_date_fields_factory = _MinMaxDateFieldsDTOFactory(inspector)
         self._min_max_string_fields_factory = _MinMaxStringFieldsDTOFactory(inspector)
+        self._min_max_time_fields_factory = _MinMaxTimeFieldsDTOFactory(inspector)
         self._min_max_fields_factory = _MinMaxFieldsDTOFactory(inspector)
 
     def arguments_type(
@@ -414,6 +422,8 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
                 dto = self._min_max_string_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
             elif aggregation == "min_max_numeric":
                 dto = self._min_max_numeric_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+            elif aggregation == "min_max_time":
+                dto = self._min_max_time_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
         except DTOError:
             return None
         return dto
@@ -440,7 +450,10 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
         return dto
 
     def output_functions(self, model: type[Any], dto_config: DTOConfig) -> list[OutputFunctionInfo]:
-        numeric_fields = self.numeric_field_type(model, dto_config)
+        int_as_float_config = dataclasses.replace(
+            dto_config, type_overrides={int: float | None, int | None: float | None}
+        )
+        numeric_fields = self.numeric_field_type(model, int_as_float_config)
         min_max_fields = self.min_max_field_type(model, dto_config)
         sum_fields = self.sum_field_type(model, dto_config)
 
@@ -552,6 +565,25 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
                     aggregation_type="min_max_date",
                     comparison_type=self._inspector.get_type_comparison(date),
                     field_name_="max_date",
+                )
+            )
+        if min_max_time_fields := self.arguments_type(model, dto_config, "min_max_time"):
+            aggregations.append(
+                FilterFunctionInfo(
+                    enum_fields=min_max_time_fields,
+                    function="min",
+                    aggregation_type="min_max_time",
+                    comparison_type=self._inspector.get_type_comparison(time),
+                    field_name_="min_time",
+                )
+            )
+            aggregations.append(
+                FilterFunctionInfo(
+                    enum_fields=min_max_time_fields,
+                    function="max",
+                    aggregation_type="min_max_time",
+                    comparison_type=self._inspector.get_type_comparison(time),
+                    field_name_="max_time",
                 )
             )
         if min_max_string_fields := self.arguments_type(model, dto_config, "min_max_string"):
@@ -790,7 +822,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
         aggregations: bool = True,
         **kwargs: Any,
     ) -> type[GraphQLDTOT]:
-        return super().factory(
+        dto = super().factory(
             model,
             dto_config,
             base,
@@ -802,6 +834,8 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
             aggregations=aggregations,
             **kwargs,
         )
+        dto.__strawchemy_is_root_aggregation_type__ = True
+        return dto
 
 
 class FilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT]):
@@ -1145,9 +1179,7 @@ class AggregateFilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, Aggregat
                 FunctionFieldDefinition(
                     dto_config=dto_config,
                     model=model,
-                    _model_field=model_field,
                     model_field_name=aggregation.field_name,
-                    _function=aggregation,
                     type_hint=self._aggregate_function_type(
                         model=model,
                         dto_config=dto_config,
@@ -1156,6 +1188,8 @@ class AggregateFilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, Aggregat
                         model_field=model_field,
                         aggregation=aggregation,
                     ),
+                    _model_field=model_field,
+                    _function=aggregation,
                 ),
             )
         key = DTOKey([model])

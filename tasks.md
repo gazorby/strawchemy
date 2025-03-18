@@ -32,6 +32,14 @@ Run tests in CI
 
 Output test matrix for CI
 
+## `ci:test-sessions`
+
+- Depends: install:test
+
+- **Usage**: `ci:test-sessions`
+
+Output test session names for CI
+
 ## `clean`
 
 - **Usage**: `clean`
@@ -62,7 +70,7 @@ Install test dependencies only
 
 ## `lint`
 
-- Depends: vulture, pyright, ruff:check
+- Depends: vulture, pyright, ruff:check, ruff:format:check
 
 - **Usage**: `lint`
 - **Aliases**: `l`
@@ -101,6 +109,8 @@ Generate tasks documentation
 
 ## `ruff:check`
 
+- Depends: _install
+
 - **Usage**: `ruff:check`
 
 Check ruff formatting
@@ -117,14 +127,33 @@ Fix ruff errors
 
 Format code
 
+## `ruff:format:check`
+
+- **Usage**: `ruff:format:check`
+
+Format code
+
 ## `test`
 
 - Depends: _install
 
 - **Usage**: `test [test]`
-- **Aliases**: `tu`
+- **Aliases**: `t`
 
 Run tests
+
+### Arguments
+
+#### `[test]`
+
+## `test:coverage`
+
+- Depends: _install
+
+- **Usage**: `test:coverage [test]`
+- **Aliases**: `tc`
+
+Run tests with coverage
 
 ### Arguments
 
@@ -156,6 +185,19 @@ Run integration tests on all supported python versions
 
 #### `[test]`
 
+## `test:integration:coverage`
+
+- Depends: _install
+
+- **Usage**: `test:integration:coverage [test]`
+- **Aliases**: `tic`
+
+Run integration tests
+
+### Arguments
+
+#### `[test]`
+
 ## `test:unit`
 
 - Depends: _install
@@ -177,6 +219,19 @@ Run unit tests
 - **Aliases**: `tua`
 
 Run unit tests on all supported python versions
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit:coverage`
+
+- Depends: _install
+
+- **Usage**: `test:unit:coverage [test]`
+- **Aliases**: `tuc`
+
+Run unit tests
 
 ### Arguments
 

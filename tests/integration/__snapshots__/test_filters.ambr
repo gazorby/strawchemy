@@ -1,0 +1,2737 @@
+# serializer version: 1
+# name: test_and[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col > :int_col_1
+    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_and[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col > :int_col_1
+    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_and[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col > :int_col_1
+    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_combined_filters[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.int_col,
+         sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col = TRUE
+    AND sql_data_types.int_col > :int_col_1
+    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_combined_filters[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.int_col,
+         sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col = TRUE
+    AND sql_data_types.int_col > :int_col_1
+    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_combined_filters[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.int_col,
+         sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col = TRUE
+    AND sql_data_types.int_col > :int_col_1
+    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_complex_logical_operators[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.int_col > :int_col_1
+         AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/'))
+    OR (sql_data_types.int_col < :int_col_2
+        AND NOT (sql_data_types.str_col = :str_col_2
+                 AND sql_data_types.str_col IS NOT NULL))
+  '''
+# ---
+# name: test_complex_logical_operators[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.int_col > :int_col_1
+         AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/'))
+    OR (sql_data_types.int_col < :int_col_2
+        AND NOT (sql_data_types.str_col = :str_col_2
+                 AND sql_data_types.str_col IS NOT NULL))
+  '''
+# ---
+# name: test_complex_logical_operators[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.int_col > :int_col_1
+         AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/'))
+    OR (sql_data_types.int_col < :int_col_2
+        AND NOT (sql_data_types.str_col = :str_col_2
+                 AND sql_data_types.str_col IS NOT NULL))
+  '''
+# ---
+# name: test_date_components[session-tracked-day-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DAY
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-day-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DAY
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-day-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DAY
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-isoWeekDay-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISODOW
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-isoWeekDay-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISODOW
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-isoWeekDay-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISODOW
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-isoYear-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISOYEAR
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-isoYear-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISOYEAR
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-isoYear-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISOYEAR
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-month-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MONTH
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-month-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MONTH
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-month-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MONTH
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-quarter-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(QUARTER
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-quarter-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(QUARTER
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-quarter-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(QUARTER
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-week-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(WEEK
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-week-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(WEEK
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-week-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(WEEK
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-weekDay-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DOW
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-weekDay-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DOW
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-weekDay-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DOW
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-year-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(YEAR
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-year-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(YEAR
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_date_components[session-tracked-year-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(YEAR
+                FROM sql_data_types.date_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-day-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DAY
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-day-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DAY
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-day-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DAY
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-hour-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(HOUR
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-hour-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(HOUR
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-hour-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(HOUR
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoWeekDay-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISODOW
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoWeekDay-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISODOW
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoWeekDay-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISODOW
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoYear-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISOYEAR
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoYear-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISOYEAR
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoYear-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(ISOYEAR
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-minute-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MINUTE
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-minute-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MINUTE
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-minute-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MINUTE
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-month-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MONTH
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-month-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MONTH
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-month-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MONTH
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-quarter-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(QUARTER
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-quarter-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(QUARTER
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-quarter-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(QUARTER
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-second-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(SECOND
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-second-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(SECOND
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-second-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(SECOND
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-week-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(WEEK
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-week-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(WEEK
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-week-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(WEEK
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-weekDay-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DOW
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-weekDay-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DOW
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-weekDay-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(DOW
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-year-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(YEAR
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-year-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(YEAR
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_datetime_components[session-tracked-year-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(YEAR
+                FROM sql_data_types.datetime_col) = :param_1
+  '''
+# ---
+# name: test_eq[session-tracked-bool-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col = TRUE
+  '''
+# ---
+# name: test_eq[session-tracked-bool-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col = TRUE
+  '''
+# ---
+# name: test_eq[session-tracked-bool-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col = TRUE
+  '''
+# ---
+# name: test_eq[session-tracked-date-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col = :date_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-date-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col = :date_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-date-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col = :date_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-datetime-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col = :datetime_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-datetime-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col = :datetime_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-datetime-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col = :datetime_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-decimal-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col = :decimal_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-decimal-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col = :decimal_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-decimal-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col = :decimal_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-dict-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col = :dict_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-dict-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col = :dict_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-dict-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col = :dict_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-float-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col = :float_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-float-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col = :float_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-float-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col = :float_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-int-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col = :int_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-int-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col = :int_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-int-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col = :int_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-str-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col = :str_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-str-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col = :str_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-str-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col = :str_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-time-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col = :time_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-time-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col = :time_col_1
+  '''
+# ---
+# name: test_eq[session-tracked-time-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col = :time_col_1
+  '''
+# ---
+# name: test_filter_on_paginated_query[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col
+     FROM sql_data_types AS sql_data_types
+     WHERE NOT (sql_data_types.int_col = :int_col_1
+                AND sql_data_types.int_col IS NOT NULL)
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_filter_on_paginated_query[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col
+     FROM sql_data_types AS sql_data_types
+     WHERE NOT (sql_data_types.int_col = :int_col_1
+                AND sql_data_types.int_col IS NOT NULL)
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_filter_on_paginated_query[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM
+    (SELECT sql_data_types.id AS id,
+            sql_data_types.int_col AS int_col
+     FROM sql_data_types AS sql_data_types
+     WHERE NOT (sql_data_types.int_col = :int_col_1
+                AND sql_data_types.int_col IS NOT NULL)
+     LIMIT :param_1
+     OFFSET :param_2) AS sql_data_types
+  LIMIT :param_3
+  '''
+# ---
+# name: test_gt[session-tracked-date-gt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col > :date_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-date-gt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col > :date_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-date-gt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col > :date_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-datetime-gt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col > :datetime_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-datetime-gt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col > :datetime_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-datetime-gt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col > :datetime_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-decimal-gt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col > :decimal_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-decimal-gt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col > :decimal_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-decimal-gt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col > :decimal_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-float-gt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col > :float_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-float-gt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col > :float_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-float-gt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col > :float_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-int-gt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col > :int_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-int-gt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col > :int_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-int-gt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col > :int_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-time-gt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col > :time_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-time-gt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col > :time_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-time-gt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col > :time_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-date-gte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col >= :date_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-date-gte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col >= :date_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-date-gte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col >= :date_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-datetime-gte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col >= :datetime_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-datetime-gte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col >= :datetime_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-datetime-gte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col >= :datetime_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-decimal-gte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col >= :decimal_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-decimal-gte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col >= :decimal_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-decimal-gte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col >= :decimal_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-float-gte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col >= :float_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-float-gte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col >= :float_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-float-gte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col >= :float_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-int-gte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col >= :int_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-int-gte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col >= :int_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-int-gte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col >= :int_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-time-gte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col >= :time_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-time-gte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col >= :time_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-time-gte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col >= :time_col_1
+  '''
+# ---
+# name: test_in[session-tracked-bool-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col IN (__[POSTCOMPILE_bool_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-bool-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col IN (__[POSTCOMPILE_bool_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-bool-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col IN (__[POSTCOMPILE_bool_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-date-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col IN (__[POSTCOMPILE_date_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-date-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col IN (__[POSTCOMPILE_date_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-date-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col IN (__[POSTCOMPILE_date_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-datetime-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col IN (__[POSTCOMPILE_datetime_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-datetime-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col IN (__[POSTCOMPILE_datetime_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-datetime-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col IN (__[POSTCOMPILE_datetime_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-decimal-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col IN (__[POSTCOMPILE_decimal_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-decimal-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col IN (__[POSTCOMPILE_decimal_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-decimal-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col IN (__[POSTCOMPILE_decimal_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-float-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col IN (__[POSTCOMPILE_float_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-float-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col IN (__[POSTCOMPILE_float_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-float-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col IN (__[POSTCOMPILE_float_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-int-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col IN (__[POSTCOMPILE_int_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-int-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col IN (__[POSTCOMPILE_int_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-int-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col IN (__[POSTCOMPILE_int_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-str-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col IN (__[POSTCOMPILE_str_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-str-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col IN (__[POSTCOMPILE_str_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-str-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col IN (__[POSTCOMPILE_str_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-time-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col IN (__[POSTCOMPILE_time_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-time-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col IN (__[POSTCOMPILE_time_col_1])
+  '''
+# ---
+# name: test_in[session-tracked-time-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col IN (__[POSTCOMPILE_time_col_1])
+  '''
+# ---
+# name: test_isnull[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.optional_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.optional_str_col IS NULL
+  '''
+# ---
+# name: test_isnull[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.optional_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.optional_str_col IS NULL
+  '''
+# ---
+# name: test_isnull[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.optional_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.optional_str_col IS NULL
+  '''
+# ---
+# name: test_json_filters[session-tracked-containedIn-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col <@ :dict_col_1
+  '''
+# ---
+# name: test_json_filters[session-tracked-containedIn-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col <@ :dict_col_1
+  '''
+# ---
+# name: test_json_filters[session-tracked-containedIn-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col <@ :dict_col_1
+  '''
+# ---
+# name: test_json_filters[session-tracked-contains-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col @> :dict_col_1
+  '''
+# ---
+# name: test_json_filters[session-tracked-contains-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col @> :dict_col_1
+  '''
+# ---
+# name: test_json_filters[session-tracked-contains-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col @> :dict_col_1
+  '''
+# ---
+# name: test_json_filters[session-tracked-hasKey-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col ? :dict_col_1
+  '''
+# ---
+# name: test_json_filters[session-tracked-hasKey-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col ? :dict_col_1
+  '''
+# ---
+# name: test_json_filters[session-tracked-hasKey-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col ? :dict_col_1
+  '''
+# ---
+# name: test_json_filters[session-tracked-hasKeyAll-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col ? & CAST(:param_1 AS ARRAY)
+  '''
+# ---
+# name: test_json_filters[session-tracked-hasKeyAll-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col ? & CAST(:param_1 AS ARRAY)
+  '''
+# ---
+# name: test_json_filters[session-tracked-hasKeyAll-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col ? & CAST(:param_1 AS ARRAY)
+  '''
+# ---
+# name: test_json_filters[session-tracked-hasKeyAny-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col ? | CAST(:param_1 AS ARRAY)
+  '''
+# ---
+# name: test_json_filters[session-tracked-hasKeyAny-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col ? | CAST(:param_1 AS ARRAY)
+  '''
+# ---
+# name: test_json_filters[session-tracked-hasKeyAny-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col ? | CAST(:param_1 AS ARRAY)
+  '''
+# ---
+# name: test_lt[session-tracked-date-lt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col < :date_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-date-lt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col < :date_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-date-lt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col < :date_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-datetime-lt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col < :datetime_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-datetime-lt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col < :datetime_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-datetime-lt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col < :datetime_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-decimal-lt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col < :decimal_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-decimal-lt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col < :decimal_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-decimal-lt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col < :decimal_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-float-lt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col < :float_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-float-lt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col < :float_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-float-lt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col < :float_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-int-lt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col < :int_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-int-lt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col < :int_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-int-lt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col < :int_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-time-lt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col < :time_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-time-lt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col < :time_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-time-lt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col < :time_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-date-lte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col <= :date_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-date-lte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col <= :date_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-date-lte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col <= :date_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-datetime-lte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col <= :datetime_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-datetime-lte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col <= :datetime_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-datetime-lte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col <= :datetime_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-decimal-lte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col <= :decimal_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-decimal-lte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col <= :decimal_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-decimal-lte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col <= :decimal_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-float-lte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col <= :float_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-float-lte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col <= :float_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-float-lte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col <= :float_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-int-lte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col <= :int_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-int-lte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col <= :int_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-int-lte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col <= :int_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-time-lte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col <= :time_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-time-lte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col <= :time_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-time-lte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col <= :time_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-bool-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col != TRUE
+  '''
+# ---
+# name: test_neq[session-tracked-bool-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col != TRUE
+  '''
+# ---
+# name: test_neq[session-tracked-bool-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.bool_col != TRUE
+  '''
+# ---
+# name: test_neq[session-tracked-date-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col != :date_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-date-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col != :date_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-date-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.date_col != :date_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-datetime-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col != :datetime_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-datetime-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col != :datetime_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-datetime-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.datetime_col != :datetime_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-decimal-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col != :decimal_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-decimal-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col != :decimal_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-decimal-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.decimal_col != :decimal_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-dict-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col != :dict_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-dict-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col != :dict_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-dict-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.dict_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.dict_col != :dict_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-float-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col != :float_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-float-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col != :float_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-float-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.float_col != :float_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-int-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col != :int_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-int-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col != :int_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-int-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col != :int_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-str-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col != :str_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-str-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col != :str_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-str-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col != :str_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-time-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col != :time_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-time-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col != :time_col_1
+  '''
+# ---
+# name: test_neq[session-tracked-time-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.time_col != :time_col_1
+  '''
+# ---
+# name: test_nin[session-tracked-bool-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.bool_col NOT IN (__[POSTCOMPILE_bool_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-bool-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.bool_col NOT IN (__[POSTCOMPILE_bool_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-bool-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.bool_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.bool_col NOT IN (__[POSTCOMPILE_bool_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-date-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.date_col NOT IN (__[POSTCOMPILE_date_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-date-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.date_col NOT IN (__[POSTCOMPILE_date_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-date-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.date_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.date_col NOT IN (__[POSTCOMPILE_date_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-datetime-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.datetime_col NOT IN (__[POSTCOMPILE_datetime_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-datetime-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.datetime_col NOT IN (__[POSTCOMPILE_datetime_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-datetime-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.datetime_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.datetime_col NOT IN (__[POSTCOMPILE_datetime_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-decimal-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.decimal_col NOT IN (__[POSTCOMPILE_decimal_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-decimal-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.decimal_col NOT IN (__[POSTCOMPILE_decimal_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-decimal-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.decimal_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.decimal_col NOT IN (__[POSTCOMPILE_decimal_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-float-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.float_col NOT IN (__[POSTCOMPILE_float_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-float-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.float_col NOT IN (__[POSTCOMPILE_float_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-float-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.float_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.float_col NOT IN (__[POSTCOMPILE_float_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-int-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.int_col NOT IN (__[POSTCOMPILE_int_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-int-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.int_col NOT IN (__[POSTCOMPILE_int_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-int-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.int_col NOT IN (__[POSTCOMPILE_int_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-str-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col NOT IN (__[POSTCOMPILE_str_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-str-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col NOT IN (__[POSTCOMPILE_str_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-str-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col NOT IN (__[POSTCOMPILE_str_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-time-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.time_col NOT IN (__[POSTCOMPILE_time_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-time-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.time_col NOT IN (__[POSTCOMPILE_time_col_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-time-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.time_col NOT IN (__[POSTCOMPILE_time_col_1]))
+  '''
+# ---
+# name: test_no_filtering[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_no_filtering[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_no_filtering[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  '''
+# ---
+# name: test_not[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE NOT (sql_data_types.int_col = :int_col_1
+             AND sql_data_types.int_col IS NOT NULL)
+  '''
+# ---
+# name: test_not[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE NOT (sql_data_types.int_col = :int_col_1
+             AND sql_data_types.int_col IS NOT NULL)
+  '''
+# ---
+# name: test_not[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE NOT (sql_data_types.int_col = :int_col_1
+             AND sql_data_types.int_col IS NOT NULL)
+  '''
+# ---
+# name: test_or[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col = :int_col_1
+    OR sql_data_types.int_col = :int_col_2
+  '''
+# ---
+# name: test_or[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col = :int_col_1
+    OR sql_data_types.int_col = :int_col_2
+  '''
+# ---
+# name: test_or[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.int_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.int_col = :int_col_1
+    OR sql_data_types.int_col = :int_col_2
+  '''
+# ---
+# name: test_postgres_array_filters[session-tracked-containedIn-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.array_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.array_str_col <@ :array_str_col_1
+  '''
+# ---
+# name: test_postgres_array_filters[session-tracked-containedIn-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.array_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.array_str_col <@ :array_str_col_1
+  '''
+# ---
+# name: test_postgres_array_filters[session-tracked-containedIn-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.array_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.array_str_col <@ :array_str_col_1
+  '''
+# ---
+# name: test_postgres_array_filters[session-tracked-contains-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.array_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.array_str_col @> :array_str_col_1
+  '''
+# ---
+# name: test_postgres_array_filters[session-tracked-contains-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.array_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.array_str_col @> :array_str_col_1
+  '''
+# ---
+# name: test_postgres_array_filters[session-tracked-contains-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.array_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.array_str_col @> :array_str_col_1
+  '''
+# ---
+# name: test_postgres_array_filters[session-tracked-overlap-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.array_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.array_str_col && :array_str_col_1
+  '''
+# ---
+# name: test_postgres_array_filters[session-tracked-overlap-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.array_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.array_str_col && :array_str_col_1
+  '''
+# ---
+# name: test_postgres_array_filters[session-tracked-overlap-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.array_str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.array_str_col && :array_str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-contains-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-contains-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-contains-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-endswith-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-endswith-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-endswith-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-icontains-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-icontains-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-icontains-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-iendswith-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-iendswith-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-iendswith-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-ilike-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) LIKE lower(:str_col_1)
+  '''
+# ---
+# name: test_string_filters[session-tracked-ilike-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) LIKE lower(:str_col_1)
+  '''
+# ---
+# name: test_string_filters[session-tracked-ilike-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) LIKE lower(:str_col_1)
+  '''
+# ---
+# name: test_string_filters[session-tracked-istartswith-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (lower(sql_data_types.str_col) LIKE lower(:str_col_1) || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-istartswith-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (lower(sql_data_types.str_col) LIKE lower(:str_col_1) || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-istartswith-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (lower(sql_data_types.str_col) LIKE lower(:str_col_1) || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-like-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col LIKE :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-like-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col LIKE :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-like-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col LIKE :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-nilike-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) NOT LIKE lower(:str_col_1)
+  '''
+# ---
+# name: test_string_filters[session-tracked-nilike-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) NOT LIKE lower(:str_col_1)
+  '''
+# ---
+# name: test_string_filters[session-tracked-nilike-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) NOT LIKE lower(:str_col_1)
+  '''
+# ---
+# name: test_string_filters[session-tracked-nlike-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col NOT LIKE :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-nlike-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col NOT LIKE :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-nlike-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col NOT LIKE :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-nregexp-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-nregexp-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-nregexp-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-regexp-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < regexp > :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-regexp-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < regexp > :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-regexp-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < regexp > :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-startswith-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col LIKE :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-startswith-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col LIKE :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-startswith-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE (sql_data_types.str_col LIKE :str_col_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_time_components[session-tracked-hour-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(HOUR
+                FROM sql_data_types.time_col) = :param_1
+  '''
+# ---
+# name: test_time_components[session-tracked-hour-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(HOUR
+                FROM sql_data_types.time_col) = :param_1
+  '''
+# ---
+# name: test_time_components[session-tracked-hour-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(HOUR
+                FROM sql_data_types.time_col) = :param_1
+  '''
+# ---
+# name: test_time_components[session-tracked-minute-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MINUTE
+                FROM sql_data_types.time_col) = :param_1
+  '''
+# ---
+# name: test_time_components[session-tracked-minute-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MINUTE
+                FROM sql_data_types.time_col) = :param_1
+  '''
+# ---
+# name: test_time_components[session-tracked-minute-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(MINUTE
+                FROM sql_data_types.time_col) = :param_1
+  '''
+# ---
+# name: test_time_components[session-tracked-second-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(SECOND
+                FROM sql_data_types.time_col) = :param_1
+  '''
+# ---
+# name: test_time_components[session-tracked-second-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(SECOND
+                FROM sql_data_types.time_col) = :param_1
+  '''
+# ---
+# name: test_time_components[session-tracked-second-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.time_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE EXTRACT(SECOND
+                FROM sql_data_types.time_col) = :param_1
+  '''
+# ---
+# name: test_uuid_filters[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.uuid_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.uuid_col = :uuid_col_1
+  '''
+# ---
+# name: test_uuid_filters[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.uuid_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.uuid_col = :uuid_col_1
+  '''
+# ---
+# name: test_uuid_filters[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.uuid_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.uuid_col = :uuid_col_1
+  '''
+# ---

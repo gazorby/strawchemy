@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeAlias, TypeVar, ov
 
 from geojson_pydantic.geometries import Geometry
 
-from pydantic import BaseModel, Json, PrivateAttr
+from pydantic import BaseModel, PrivateAttr
 from strawchemy.dto.base import ModelFieldT, ModelT
 from strawchemy.pydantic import RegexPatternStr
 
@@ -28,7 +28,7 @@ __all__ = (
     "GenericComparison",
     "GeoComparison",
     "GraphQLComparison",
-    "JSONBComparison",
+    "JSONComparison",
     "NumericComparison",
     "PostgresArrayComparison",
     "TextComparison",
@@ -76,7 +76,12 @@ class GraphQLComparison(BaseModel, Generic[ModelT, ModelFieldT]):
 
     @classmethod
     def field_type_name(cls) -> str:
-        return cls.__name__
+        try:
+            prefix = cls.field_name()
+        except NotImplementedError:
+            prefix = cls.__name__
+
+        return f"{prefix}Comparison"
 
     @classmethod
     def field_name(cls) -> str:
@@ -123,11 +128,6 @@ class GenericComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T, Model
     def field_name(cls) -> str:
         type_: type[Any] = cls.__pydantic_generic_metadata__["args"][0]
         return _normalize_field_name(type_)
-
-    @override
-    @classmethod
-    def field_type_name(cls) -> str:
-        return f"{cls.field_name()}Comparison"
 
 
 class NumericComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T, ModelT, ModelFieldT]):
@@ -189,36 +189,26 @@ class TextComparison(GraphQLComparison[ModelT, ModelFieldT]):
         return _normalize_field_name(str)
 
 
-class JSONBComparison(GraphQLComparison[ModelT, ModelFieldT]):
-    """JSONB comparison class for GraphQL filters.
+class JSONComparison(GraphQLComparison[ModelT, ModelFieldT]):
+    """JSON comparison class for GraphQL filters.
 
-    This class provides a set of JSONB comparison operators that can be
+    This class provides a set of JSON comparison operators that can be
     used to filter data based on containment, key existence, and other
-    JSONB-specific properties.
+    JSON-specific properties.
 
     Attributes:
-        contains: Filters for JSONB values that contain this JSON object.
-        ncontains: Filters for JSONB values that do not contain this JSON object.
-        contained_in: Filters for JSONB values that are contained in this JSON object.
-        ncontained_in: Filters for JSONB values that are not contained in this JSON object.
-        has_key: Filters for JSONB values that have this key.
-        has_key_all: Filters for JSONB values that have all of these keys.
-        has_key_any: Filters for JSONB values that have any of these keys.
-        nhas_key: Filters for JSONB values that do not have this key.
-        nhas_key_all: Filters for JSONB values that do not have all of these keys.
-        nhas_key_any: Filters for JSONB values that do not have any of these keys.
+        contains: Filters for JSON values that contain this JSON object.
+        contained_in: Filters for JSON values that are contained in this JSON object.
+        has_key: Filters for JSON values that have this key.
+        has_key_all: Filters for JSON values that have all of these keys.
+        has_key_any: Filters for JSON values that have any of these keys.
     """
 
-    contains: Json[dict[str, Any]] | None = None
-    ncontains: Json[dict[str, Any]] | None = None
-    contained_in: Json[dict[str, Any]] | None = None
-    ncontained_in: Json[dict[str, Any]] | None = None
+    contains: dict[str, Any] | None = None
+    contained_in: dict[str, Any] | None = None
     has_key: str | None = None
     has_key_all: list[str] | None = None
     has_key_any: list[str] | None = None
-    nhas_key: str | None = None
-    nhas_key_all: list[str] | None = None
-    nhas_key_any: list[str] | None = None
 
     @override
     @classmethod
@@ -264,8 +254,9 @@ class GeoComparison(GraphQLComparison[ModelT, ModelFieldT]):
         within_geometry: Filters for geometries that are within this geometry.
     """
 
-    contains_geometry: Json[Geometry] | None = None
-    within_geometry: Json[Geometry] | None = None
+    contains_geometry: Geometry | None = None
+    within_geometry: Geometry | None = None
+    is_null: bool | None = None
 
     @override
     @classmethod

@@ -15,7 +15,7 @@ from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.backend.pydantic import PydanticDTOBackend, PydanticDTOT
 from strawchemy.dto.base import DTOBackend, DTOBaseT, DTOFactory, DTOFieldDefinition, ModelFieldT, ModelT, Relation
 from strawchemy.dto.types import DTO_AUTO, DTOConfig, DTOMissingType, Purpose
-from strawchemy.dto.utils import config, read_all_partial_config
+from strawchemy.dto.utils import config, read_all_partial_config, read_partial
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graph import Node
 from strawchemy.graphql.dto import (
@@ -38,7 +38,6 @@ from strawchemy.graphql.factory import (
     OrderByDTOFactory,
     RootAggregateTypeDTOFactory,
     TypeDTOFactory,
-    dto_config_read_partial,
 )
 from strawchemy.graphql.typing import DataclassGraphQLDTO, PydanticGraphQLDTO
 from strawchemy.types import DefaultOffsetPagination
@@ -129,28 +128,6 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
     ) -> None:
         super().__init__(mapper.inspector, backend, handle_cycles, type_map, **kwargs)
         self._mapper = mapper
-
-    @classmethod
-    def _config(
-        cls,
-        purpose: Purpose,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool = False,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-    ) -> DTOConfig:
-        config = DTOConfig(purpose, partial=partial, alias_generator=alias_generator)
-        if exclude:
-            config.exclude = exclude
-        if include:
-            config.include = include
-        if type_map:
-            config.type_overrides = type_map
-        if aliases:
-            config.aliases = aliases
-        return config
 
     def _type_info(
         self,
@@ -512,7 +489,7 @@ class StraberryAggregateFactory(
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig = read_partial,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
@@ -719,7 +696,7 @@ class StrawberryAggregateFilterInputFactory(
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig = read_partial,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
@@ -813,7 +790,6 @@ class StrawberryTypeFactory(
             bases=bases,
             kw_only=True,
             module=dto.__module__,
-            slots=True,
         )
         for name, value in attributes.items():
             setattr(strawberry_base, name, value)
@@ -835,7 +811,7 @@ class StrawberryTypeFactory(
     def factory(
         self,
         model: type[T],
-        dto_config: DTOConfig = dto_config_read_partial,
+        dto_config: DTOConfig = read_partial,
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,

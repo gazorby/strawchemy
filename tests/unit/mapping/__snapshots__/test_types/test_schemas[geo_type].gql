@@ -1,0 +1,28 @@
+# serializer version: 1
+# name: test_schemas[geo_type]
+  '''
+  """
+  The `GeoJSON` type represents GEOJson values as specified by [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)
+  """
+  scalar GeoJSON @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc7946")
+  
+  """GraphQL type"""
+  type GeosFieldsType {
+    id: UUID!
+    pointRequired: GeoJSON!
+    point: GeoJSON
+    lineString: GeoJSON
+    polygon: GeoJSON
+    multiPoint: GeoJSON
+    multiLineString: GeoJSON
+    multiPolygon: GeoJSON
+    geometry: GeoJSON
+  }
+  
+  type Query {
+    geo: GeosFieldsType!
+  }
+  
+  scalar UUID
+  '''
+# ---

@@ -1,0 +1,1090 @@
+# serializer version: 1
+# name: test_avg_aggregation_filter[session-tracked-decimal-avg-eq-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_decimal_col" = :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-decimal-avg-eq-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_decimal_col" = :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-decimal-avg-eq-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_decimal_col" = :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-decimal-avg-gt-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_decimal_col" > :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-decimal-avg-gt-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_decimal_col" > :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-decimal-avg-gt-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_decimal_col" > :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-float-avg-eq-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_float_col" = :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-float-avg-eq-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_float_col" = :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-float-avg-eq-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_float_col" = :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-float-avg-gt-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_float_col" > :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-float-avg-gt-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_float_col" > :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-float-avg-gt-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_float_col" > :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-int-avg-eq-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_int_col" = :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-int-avg-eq-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_int_col" = :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-int-avg-eq-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_int_col" = :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-int-avg-gt-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_int_col" > :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-int-avg-gt-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_int_col" > :param_1
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-int-avg-gt-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."avg_data_types__avg_int_col" > :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-eq-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-eq-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-eq-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-gt-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" > :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-gt-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" > :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-gt-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" > :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-gte-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" >= :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-gte-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" >= :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-gte-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" >= :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-in-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" IN (__[POSTCOMPILE_param_1])
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-in-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" IN (__[POSTCOMPILE_param_1])
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-in-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" IN (__[POSTCOMPILE_param_1])
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-lt-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" < :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-lt-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" < :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-lt-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" < :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-lte-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" <= :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-lte-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" <= :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-lte-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" <= :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-neq-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" != :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-neq-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" != :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-neq-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_id" != :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-nin-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."count_data_types__count_id" NOT IN (__[POSTCOMPILE_param_1]))
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-nin-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."count_data_types__count_id" NOT IN (__[POSTCOMPILE_param_1]))
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-nin-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.id) AS count_data_types__count_id
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."count_data_types__count_id" NOT IN (__[POSTCOMPILE_param_1]))
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-default-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_optional_str_col" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-default-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_optional_str_col" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-default-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_optional_str_col" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-distinct-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(DISTINCT sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_optional_str_col" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-distinct-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(DISTINCT sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_optional_str_col" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-distinct-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(DISTINCT sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_optional_str_col" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-non-distinct-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_optional_str_col" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-non-distinct-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_optional_str_col" = :param_1
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-non-distinct-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."count_data_types__count_optional_str_col" = :param_1
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-contains-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."max_data_types__max_str_col" LIKE '%' || :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-contains-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."max_data_types__max_str_col" LIKE '%' || :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-contains-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."max_data_types__max_str_col" LIKE '%' || :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-eq-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."max_data_types__max_str_col" = :param_1
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-eq-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."max_data_types__max_str_col" = :param_1
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-eq-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."max_data_types__max_str_col" = :param_1
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-ilike-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE lower(aggregation_0."max_data_types__max_str_col") LIKE lower(:param_1)
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-ilike-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE lower(aggregation_0."max_data_types__max_str_col") LIKE lower(:param_1)
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-ilike-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE lower(aggregation_0."max_data_types__max_str_col") LIKE lower(:param_1)
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-like-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."max_data_types__max_str_col" LIKE :param_1
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-like-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."max_data_types__max_str_col" LIKE :param_1
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-like-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."max_data_types__max_str_col" LIKE :param_1
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-startswith-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."max_data_types__max_str_col" LIKE :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-startswith-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."max_data_types__max_str_col" LIKE :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-startswith-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."max_data_types__max_str_col" LIKE :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-contains-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."min_data_types__min_str_col" LIKE '%' || :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-contains-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."min_data_types__min_str_col" LIKE '%' || :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-contains-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."min_data_types__min_str_col" LIKE '%' || :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-eq-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."min_data_types__min_str_col" = :param_1
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-eq-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."min_data_types__min_str_col" = :param_1
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-eq-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."min_data_types__min_str_col" = :param_1
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-ilike-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE lower(aggregation_0."min_data_types__min_str_col") LIKE lower(:param_1)
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-ilike-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE lower(aggregation_0."min_data_types__min_str_col") LIKE lower(:param_1)
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-ilike-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE lower(aggregation_0."min_data_types__min_str_col") LIKE lower(:param_1)
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-like-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."min_data_types__min_str_col" LIKE :param_1
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-like-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."min_data_types__min_str_col" LIKE :param_1
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-like-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."min_data_types__min_str_col" LIKE :param_1
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-startswith-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."min_data_types__min_str_col" LIKE :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-startswith-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."min_data_types__min_str_col" LIKE :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-startswith-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE (aggregation_0."min_data_types__min_str_col" LIKE :param_1 || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-decimal-eq-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_decimal_col" = :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-decimal-eq-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_decimal_col" = :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-decimal-eq-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_decimal_col" = :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-decimal-gt-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_decimal_col" > :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-decimal-gt-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_decimal_col" > :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-decimal-gt-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_decimal_col" > :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-float-eq-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_float_col" = :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-float-eq-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_float_col" = :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-float-eq-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_float_col" = :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-float-gt-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_float_col" > :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-float-gt-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_float_col" > :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-float-gt-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_float_col" > :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-int-eq-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_int_col" = :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-int-eq-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_int_col" = :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-int-eq-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_int_col" = :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-int-gt-match-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_int_col" > :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-int-gt-match-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_int_col" > :param_1
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-int-gt-match-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT sql_data_types_container.id
+  FROM sql_data_types_container AS sql_data_types_container
+  JOIN LATERAL
+    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+     FROM sql_data_types AS sql_data_types_1
+     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
+  WHERE aggregation_0."sum_data_types__sum_int_col" > :param_1
+  '''
+# ---

@@ -7,9 +7,12 @@ from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
 import strawberry
 from graphql import GraphQLError
+from sqlalchemy import select
+from strawberry.types import get_object_definition
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import maybe_async
 
+from .models import Color
 from .types import (
     ColorType,
     FruitFilter,
@@ -23,6 +26,8 @@ from .types import (
 from .typing import RawRecordData
 
 if TYPE_CHECKING:
+    from syrupy.assertion import SnapshotAssertion
+
     from .fixtures import QueryTracker
 
 pytestmark = [pytest.mark.integration]
@@ -41,6 +46,9 @@ class AsyncQuery:
         repository_type=StrawchemyAsyncRepository,
     )
     colors: list[ColorType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    colors_filtered: list[ColorType] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
+    )
 
 
 @strawberry.type
@@ -53,6 +61,9 @@ class SyncQuery:
         filter_input=UserFilter, order_by=UserOrderBy, pagination=True, repository_type=StrawchemySyncRepository
     )
     colors: list[ColorType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    colors_filtered: list[ColorType] = strawchemy.field(
+        repository_type=StrawchemySyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
+    )
 
 
 @pytest.fixture
@@ -93,6 +104,25 @@ async def test_single(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> 
     assert not result.errors
     assert result.data
     assert result.data["user"] == {"name": raw_users[0]["name"]}
+
+
+async def test_typename_do_not_fails(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
+    result = await maybe_async(
+        any_query(
+            """
+            query GetUser($id: UUID!) {
+                user(id: $id) {
+                    __typename
+            }
+            }
+            """,
+            {"id": raw_users[0]["id"]},
+        )
+    )
+
+    assert not result.errors
+    assert result.data
+    assert result.data["user"] == {"__typename": get_object_definition(UserType, strict=True).name}
 
 
 async def test_many(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
@@ -148,12 +178,44 @@ async def test_list_relation(any_query: AnyQueryExecutor, raw_fruits: RawRecordD
     assert all(fruit in result.data["colors"] for fruit in expected)
 
 
+async def test_column_property(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
+    result = await maybe_async(
+        any_query(
+            """
+            query GetUser($id: UUID!) {
+                user(id: $id) {
+                    greeting
+            }
+            }
+            """,
+            {"id": raw_users[0]["id"]},
+        )
+    )
+
+    assert not result.errors
+    assert result.data
+    assert result.data["user"] == {"greeting": f"Hello, {raw_users[0]['name']}"}
+
+
+@pytest.mark.snapshot
 async def test_only_queried_columns_included_in_select(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     await maybe_async(any_query("{ colors { name fruits { name id } } }"))
-    assert len(query_tracker.executions) == 1
-    assert (
-        str(query_tracker.executions[0].state.statement)
-        == "SELECT DISTINCT color__fruits.name, color__fruits.id, color.name AS name_1, color.id AS id_1 \nFROM color AS color LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id"
-    )
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_filtered_statement(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(any_query("{ colorsFiltered { name } }"))
+
+    assert not result.errors
+    assert result.data
+    assert len(result.data["colorsFiltered"]) == 1
+    assert result.data["colorsFiltered"][0]["name"] == "Red"
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

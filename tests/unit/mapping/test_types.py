@@ -5,19 +5,25 @@ from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from geoalchemy2 import WKBElement, WKTElement
 from strawchemy.exceptions import StrawchemyError
-from syrupy.assertion import SnapshotAssertion
+from strawchemy.graphql.exceptions import InspectorError
+from strawchemy.strawberry.exceptions import StrawchemyFieldError
+from strawchemy.strawberry.geo import GeoJSON
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import auto
+from strawberry.scalars import JSON
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
+from syrupy.assertion import SnapshotAssertion
 from tests.unit.models import Book as BookModel
 from tests.unit.models import User
 
 if TYPE_CHECKING:
     from strawchemy.mapper import Strawchemy
+
     from syrupy.assertion import SnapshotAssertion
 
 
@@ -98,6 +104,32 @@ def test_multiple_types_error(path: str) -> None:
         import_module(path)
 
 
+def test_aggregation_type_mismatch() -> None:
+    with pytest.raises(
+        StrawchemyFieldError,
+        match=(
+            """The `color_aggregations` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."""
+        ),
+    ):
+        import_module("tests.unit.schemas.aggregations.type_mismatch")
+
+
+def test_base_array_fails() -> None:
+    with pytest.raises(
+        InspectorError,
+        match=("""Base SQLAlchemy ARRAY type is not supported. Use backend-specific array type instead."""),
+    ):
+        import_module("tests.unit.schemas.filters.filters_base_array")
+
+
+def test_base_json_fails() -> None:
+    with pytest.raises(
+        InspectorError,
+        match=("""Base SQLAlchemy JSON type is not supported. Use backend-specific json type instead."""),
+    ):
+        import_module("tests.unit.schemas.filters.filters_base_json")
+
+
 @pytest.mark.parametrize(
     "path",
     [
@@ -124,12 +156,35 @@ def test_multiple_types_error(path: str) -> None:
         pytest.param("pagination.pagination_config_default.Query", id="pagination_config_default"),
         pytest.param("custom_id_field_name.Query", id="custom_id_field_name"),
         pytest.param("enums.Query", id="enums"),
+        pytest.param("filters.filters.Query", id="filters"),
+        pytest.param("filters.filters_aggregation.Query", id="aggregation_filters"),
+        pytest.param("geo.geo_filters.Query", id="geo_filters"),
+        pytest.param("geo.geo.Query", id="geo_type"),
+        pytest.param("aggregations.root_aggregations.Query", id="root_aggregations"),
     ],
 )
 @pytest.mark.snapshot
-def test_schemas(path: str, snapshot: SnapshotAssertion) -> None:
+def test_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
 
-    schema = strawberry.Schema(query=query_class)
-    assert textwrap.dedent(str(schema)).strip() == snapshot
+    schema = strawberry.Schema(
+        query=query_class, scalar_overrides={dict[str, Any]: JSON, WKTElement: GeoJSON, WKBElement: GeoJSON}
+    )
+    assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
+
+
+@pytest.mark.parametrize("path", [pytest.param("input_type.Mutation", id="input_type")])
+@pytest.mark.snapshot
+def test_mutation_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
+    module, query_name = f"tests.unit.schemas.mutations.{path}".rsplit(".", maxsplit=1)
+    mutation_class = getattr(import_module(module), query_name)
+
+    @strawberry.type
+    class Query:
+        @strawberry.field
+        def hello(self) -> str:
+            return "world"
+
+    schema = strawberry.Schema(query=Query, mutation=mutation_class, scalar_overrides={dict[str, Any]: JSON})
+    assert textwrap.dedent(str(schema)).strip() == graphql_snapshot

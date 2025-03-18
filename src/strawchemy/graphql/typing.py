@@ -28,7 +28,9 @@ OrderByDTOT = TypeVar("OrderByDTOT", bound="OrderByDTO[Any, Any]")
 AggregationFunction = Literal[
     "min", "max", "sum", "avg", "count", "stddev", "stddev_samp", "stddev_pop", "variance", "var_samp", "var_pop"
 ]
-AggregationType = Literal["sum", "numeric", "min_max_datetime", "min_max_date", "min_max_string", "min_max_numeric"]
+AggregationType = Literal[
+    "sum", "numeric", "min_max_datetime", "min_max_date", "min_max_time", "min_max_string", "min_max_numeric"
+]
 
 QueryHookCallable: TypeAlias = "Callable[..., Any]"
 

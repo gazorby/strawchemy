@@ -7,12 +7,15 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import ARRAY, DECIMAL, JSON, Date, DateTime, ForeignKey, MetaData, Text, Time
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, registry, relationship
+from geoalchemy2 import Geometry, WKBElement
 
-metadata = MetaData()
-registry = registry(metadata=metadata)
+from sqlalchemy import DateTime, ForeignKey, MetaData, Text
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
+from sqlalchemy.orm import registry as Registry  # noqa: N812
+
+metadata, geo_metadata = MetaData(), MetaData()
 
 
 class BaseColumns:
@@ -26,7 +29,12 @@ class BaseColumns:
 
 class UUIDBase(BaseColumns, DeclarativeBase):
     __abstract__ = True
-    registry = registry
+    registry = Registry(metadata=metadata)
+
+
+class GeoUUIDBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=geo_metadata)
 
 
 class Fruit(UUIDBase):
@@ -34,11 +42,7 @@ class Fruit(UUIDBase):
 
     name: Mapped[str]
     color_id: Mapped[UUID | None] = mapped_column(ForeignKey("color.id"), nullable=True, default=None)
-    sweetness: Mapped[int]
-    has_core: Mapped[bool]
-    adjectives: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
-    price_decimal: Mapped[Decimal] = mapped_column(DECIMAL(asdecimal=True))
-    price_float: Mapped[float]
+    adjectives: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
     color: Mapped[Color | None] = relationship("Color", back_populates="fruits")
 
     @hybrid_property
@@ -56,7 +60,44 @@ class Color(UUIDBase):
 class User(UUIDBase):
     __tablename__ = "user"
 
-    name: Mapped[str]
-    settings: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
-    birthday: Mapped[date] = mapped_column(Date)
-    newsletter_send_time: Mapped[time] = mapped_column(Time, default=lambda: time(hour=8))
+    name: Mapped[str] = mapped_column()
+    greeting: Mapped[str] = column_property("Hello, " + name)
+
+
+class SQLDataTypes(UUIDBase):
+    __tablename__ = "sql_data_types"
+
+    date_col: Mapped[date]
+    time_col: Mapped[time]
+    time_delta_col: Mapped[time]
+    datetime_col: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    str_col: Mapped[str]
+    int_col: Mapped[int]
+    float_col: Mapped[float]
+    decimal_col: Mapped[Decimal]
+    bool_col: Mapped[bool]
+    uuid_col: Mapped[UUID]
+    dict_col: Mapped[dict[str, Any]] = mapped_column(postgresql.JSONB, default=dict)
+    array_str_col: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
+    optional_str_col: Mapped[str | None] = mapped_column(nullable=True, default=None)
+    container_id: Mapped[UUID] = mapped_column(ForeignKey("sql_data_types_container.id"))
+    container: Mapped[SQLDataTypesContainer] = relationship("SQLDataTypesContainer")
+
+
+class SQLDataTypesContainer(UUIDBase):
+    __tablename__ = "sql_data_types_container"
+
+    data_types: Mapped[list[SQLDataTypes]] = relationship("SQLDataTypes", back_populates="container")
+
+
+class GeoModel(GeoUUIDBase):
+    __tablename__ = "geos_fields"
+
+    point_required: Mapped[WKBElement] = mapped_column(Geometry("POINT", srid=4326))
+    point: Mapped[WKBElement | None] = mapped_column(Geometry("POINT", srid=4326), nullable=True)
+    line_string: Mapped[WKBElement | None] = mapped_column(Geometry("LINESTRING", srid=4326), nullable=True)
+    polygon: Mapped[WKBElement | None] = mapped_column(Geometry("POLYGON", srid=4326), nullable=True)
+    multi_point: Mapped[WKBElement | None] = mapped_column(Geometry("MULTIPOINT", srid=4326), nullable=True)
+    multi_line_string: Mapped[WKBElement | None] = mapped_column(Geometry("MULTILINESTRING", srid=4326), nullable=True)
+    multi_polygon: Mapped[WKBElement | None] = mapped_column(Geometry("MULTIPOLYGON", srid=4326), nullable=True)
+    geometry: Mapped[WKBElement | None] = mapped_column(Geometry("GEOMETRY", srid=4326), nullable=True)

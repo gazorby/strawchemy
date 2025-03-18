@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING, Any
+from types import NoneType, UnionType
+from typing import TYPE_CHECKING, Any, Optional, Union, get_args, get_origin
 
 if TYPE_CHECKING:
     from re import Pattern
 
+__all__ = ("camel_to_snake", "non_optional_type_hint", "snake_keys", "snake_to_camel", "snake_to_lower_camel_case")
 
 _camel_to_snake_pattern: Pattern[str] = re.compile(r"((?<=[a-z0-9])[A-Z]|(?!^)(?<!_)[A-Z](?=[a-z]))")
 
@@ -47,3 +49,12 @@ def snake_keys(dct: dict[str, Any]) -> dict[str, Any]:
         else:
             res[to_snake] = v
     return res
+
+
+def non_optional_type_hint(type_hint: Any) -> Any:
+    origin, args = get_origin(type_hint), get_args(type_hint)
+    if origin is Optional:
+        return args
+    if origin in (Union, UnionType):
+        return Union[*tuple([arg for arg in args if arg not in (None, NoneType)])]
+    return type_hint
