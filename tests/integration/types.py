@@ -1,10 +1,23 @@
 from __future__ import annotations
 
-from strawchemy import Strawchemy
+from strawchemy import ModelInstance, QueryHook, Strawchemy
+from strawchemy.sqlalchemy.hook import QueryHookResult
+
+from sqlalchemy import Select
+from sqlalchemy.orm.util import AliasedClass
+from strawberry import Info
 
 from .models import Color, Fruit, GeoModel, SQLDataTypes, SQLDataTypesContainer, User
 
 strawchemy = Strawchemy()
+
+
+def _user_fruit_filter(
+    statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit], info: Info
+) -> QueryHookResult[Fruit]:
+    if info.context.role == "user":
+        return QueryHookResult(statement=statement.where(alias.name == "Apple"))
+    return QueryHookResult(statement=statement)
 
 
 @strawchemy.type(Color, include="all", override=True)
@@ -21,6 +34,19 @@ class UserType: ...
 
 @strawchemy.type(Fruit, include="all", override=True)
 class FruitType: ...
+
+
+@strawchemy.type(Fruit, exclude={"color"})
+class FruitTypeWithDescription:
+    instance: ModelInstance[Fruit]
+
+    @strawchemy.field(query_hook=QueryHook(always_load=[Fruit.name, Fruit.adjectives]))
+    def description(self) -> str:
+        return self.instance.description
+
+
+@strawchemy.type(Fruit, exclude={"color"}, query_hook=_user_fruit_filter)
+class FilteredFruitType: ...
 
 
 @strawchemy.aggregation_type(Fruit, include="all")

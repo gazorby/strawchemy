@@ -1,0 +1,49 @@
+# serializer version: 1
+# name: test_always_load_column_hook[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.adjectives,
+         fruit.id
+  FROM fruit AS fruit
+  '''
+# ---
+# name: test_always_load_column_hook[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.adjectives,
+         fruit.id
+  FROM fruit AS fruit
+  '''
+# ---
+# name: test_always_load_column_hook[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.adjectives,
+         fruit.id
+  FROM fruit AS fruit
+  '''
+# ---
+# name: test_custom_query_hook[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  WHERE fruit.name = :name_1
+  '''
+# ---
+# name: test_custom_query_hook[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  WHERE fruit.name = :name_1
+  '''
+# ---
+# name: test_custom_query_hook[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  WHERE fruit.name = :name_1
+  '''
+# ---

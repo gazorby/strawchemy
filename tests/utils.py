@@ -132,6 +132,7 @@ async def maybe_async(obj: Awaitable[T] | T) -> T:
 @dataclass
 class StrawberryContext:
     session: AnySession
+    role: str = "user"
 
 
 class FactoryType(Enum):

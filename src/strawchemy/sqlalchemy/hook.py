@@ -40,7 +40,6 @@ class QueryHook(Generic[DeclarativeT]):
                     else joinedload(column, innerjoin=column.property.innerjoin)
                 )
             else:
-                statement = statement.add_columns(column)
                 load = undefer(column)
             options.append(load)
         return QueryHookResult(statement=statement, load_options=options)
