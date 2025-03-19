@@ -36,7 +36,7 @@ Issues = "https://github.com/gazorby/strawchemy/issues"
 Repository = "https://github.com/gazorby/strawchemy"
 
 [project.optional-dependencies]
-geo = ["GeoAlchemy2", "shapely", "geojson-pydantic"]
+geo = ["GeoAlchemy2", "geojson-pydantic"]
 
 [dependency-groups]
 build = ["bump-my-version", "git-cliff"]
@@ -60,6 +60,7 @@ test = [
     "pytest-lazy-fixtures",
     "syrupy",
     "sqlparse",
+    "shapely"
 ]
 postgres = [
     "asyncpg>=0.29.0",
