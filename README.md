@@ -1,6 +1,8 @@
 # Strawchemy
 
-Strawchemy is a powerful library that seamlessly integrates [SQLAlchemy](https://github.com/sqlalchemy/sqlalchemy) with [Strawberry GraphQL](https://github.com/strawberry-graphql/strawberry) to quickly build efficient GraphQL APIs with minimal boilerplate code. It automatically generates GraphQL types, resolvers, filters, and more from your SQLAlchemy models.
+[![🔂 Tests and linting](https://github.com/gazorby/strawchemy/actions/workflows/ci.yaml/badge.svg)](https://github.com/gazorby/strawchemy/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/gazorby/strawchemy/graph/badge.svg?token=BCU8SX1MJ7)](https://codecov.io/gh/gazorby/strawchemy) [![PyPI Downloads](https://static.pepy.tech/badge/strawchemy)](https://pepy.tech/projects/strawchemy)
+
+Generates GraphQL types, inputs, queries and resolvers directly from SQLAlchemy models.
 
 ## Features
 
