@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0](https://github.com/gazorby/strawchemy/compare/v0.5.3..v0.6.0) - 2025-03-19
+
+### 🚀 Features
+
+- *(geo)* Add GeoJSON scalar variants - ([d197b8d](https://github.com/gazorby/strawchemy/commit/d197b8d5b99cd9102e1c92900c148a024c9d65e5))
+
+### 🧪 Testing
+
+- *(geo)* Conditionally skip tests when geoalchemy2 is not installed - ([3ecc576](https://github.com/gazorby/strawchemy/commit/3ecc576e7f3b30a9a460dc0b6f3c31422e4f87e8))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.6.0 - ([69d4582](https://github.com/gazorby/strawchemy/commit/69d45829f07ade93d69d8be7958178fde216818e))
 ## [0.5.3](https://github.com/gazorby/strawchemy/compare/v0.5.2..v0.5.3) - 2025-03-19
 
 ### 🐛 Bug Fixes
