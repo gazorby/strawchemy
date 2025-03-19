@@ -16,7 +16,8 @@ Strawchemy is a powerful library that seamlessly integrates [SQLAlchemy](https:/
 
 - ⚡ **Sync/Async Support**: Works with both synchronous and asynchronous SQLAlchemy sessions
 
-- 🛢 **Database Support**: Currently only PostgreSQL is officially supported and tested
+- 🛢 **Database Support**: Currently only PostgreSQL is officially supported and tested (using [asyncpg](https://github.com/MagicStack/asyncpg) or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
+
 
 ## Table of Contents
 
@@ -260,48 +261,53 @@ class Query:
     user: UserType = strawchemy.field()
 ```
 
-For async resolvers, use `StrawchemyAsyncRepository`:
-
-```python
-from strawchemy import StrawchemyAsyncRepository
-
-@strawberry.type
-class Query:
-    users: list[UserType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
-```
-
 ### Custom Resolvers
 
 While Strawchemy automatically generates resolvers for most use cases, you can also create custom resolvers for more complex scenarios. There are two main approaches to creating custom resolvers:
 
 #### 1. Using Repository Directly
 
-You can create custom resolvers by using the `@strawchemy.field` decorator and directly working with the repository:
+When using `strawchemy.field()` as a function, strawchemy creates a resolver that delegates data fetching to the `StrawchemySyncRepository` or `StrawchemyAsyncRepository` classes depending on the SQLAlchemy session type.
+You can create custom resolvers by using the `@strawchemy.field` as a decorator and working directly with the repository:
 
 ```python
-from sqlalchemy import select
-from strawchemy import StrawchemySyncRepository # Use StrawchemyAsyncRepository in async context
+from sqlalchemy import select, true
+from strawchemy import StrawchemySyncRepository
 
 @strawberry.type
 class Query:
-    @strawchemy.field
-    def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
-        # Create a repository with a custom filter statement
-        repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
-        # Return a single result or None if not found
-        return repo.get_one_or_none()
-
     @strawchemy.field
     def red_color(self, info: strawberry.Info) -> ColorType:
         # Create a repository with a predefined filter
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == "Red"))
         # Return a single result (will raise an exception if not found)
         return repo.get_one()
+
+    @strawchemy.field
+    def get_color_by_name(self, info: strawberry.Info, color: str) -> ColorType | None:
+        # Create a repository with a custom filter statement
+        repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
+        # Return a single result or None if not found
+        return repo.get_one_or_none()
+
+    @strawchemy.field
+    def get_color_by_id(self, info: strawberry.Info, id: str) -> ColorType | None:
+        repo = StrawchemySyncRepository(ColorType, info)
+        # Return a single result or None if not found
+        return repo.get_by_id(id=id)
+
+    @strawchemy.field
+    def public_colors(self, info: strawberry.Info) -> ColorType:
+        repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.public.is_(true())))
+        # Return a list of results
+        return repo.list()
 ```
 
-For async resolvers, use `StrawchemyAsyncRepository` and `await` the repository methods:
+For async resolvers, use `StrawchemyAsyncRepository` which is the async variant of `StrawchemySyncRepository`:
 
 ```python
+from strawchemy import StrawchemyAsyncRepository
+
 @strawberry.type
 class Query:
     @strawchemy.field
@@ -314,7 +320,8 @@ The repository provides several methods for fetching data:
 
 - `get_one()`: Returns a single result, raises an exception if not found
 - `get_one_or_none()`: Returns a single result or None if not found
-- `get_many()`: Returns a list of results
+- `get_by_id()`: Returns a single result filtered on primary key
+- `list()`: Returns a list of results
 
 #### 2. Using Query Hooks
 
@@ -351,8 +358,11 @@ class FilteredFruitType:
     pass
 ```
 
-You must set a `ModelInstance` typed attribute if you want to access the model instance values.
-The `instance` attribute is matched by the `ModelInstance[Fruit]` type hint, so you can give it any name you want.
+> [!Note]\
+> You must set a `ModelInstance` typed attribute if you want to access the model instance values.
+> The `instance` attribute is matched by the `ModelInstance[Fruit]` type hint, so you can give it any name you want.
+
+
 
 Query hooks provide powerful ways to:
 
