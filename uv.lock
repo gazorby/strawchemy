@@ -1530,7 +1530,7 @@ requires-dist = [
     { name = "geoalchemy2", marker = "extra == 'geo'" },
     { name = "geojson-pydantic", marker = "extra == 'geo'" },
     { name = "pydantic" },
-    { name = "sqlalchemy" },
+    { name = "sqlalchemy", specifier = ">=1.4" },
     { name = "strawberry-graphql" },
 ]
 provides-extras = ["geo"]

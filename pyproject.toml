@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Database :: Database Engines/Servers",
 ]
 requires-python = ">=3.9"
-dependencies = ["sqlalchemy", "pydantic", "strawberry-graphql"]
+dependencies = ["sqlalchemy>=1.4", "pydantic", "strawberry-graphql"]
 keywords = ["sqlalchemy", "strawberry", "graphql", "SQL"]
 license = { text = "MIT" }
 
@@ -60,7 +60,7 @@ test = [
     "pytest-lazy-fixtures",
     "syrupy",
     "sqlparse",
-    "shapely"
+    "shapely",
 ]
 postgres = [
     "asyncpg>=0.29.0",
