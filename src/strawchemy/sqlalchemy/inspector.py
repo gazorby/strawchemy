@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from datetime import date, datetime, time
 from decimal import Decimal
+from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
 from sqlalchemy.dialects import postgresql
@@ -23,18 +24,6 @@ from .filters import (
 )
 from .filters.postgresql import JSONBSQLAlchemyFilter, PostgresArraySQLAlchemyFilter
 
-try:
-    from geoalchemy2 import WKBElement, WKTElement
-
-    from .filters.geo import GeoSQLAlchemyFilter
-
-    GeoFilter = GeoSQLAlchemyFilter
-    WKElements = (WKBElement, WKTElement)
-
-except ModuleNotFoundError:  # pragma: no cover
-    GeoFilter, WKElements = None, None
-
-
 if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition
     from strawchemy.graphql.dto import GraphQLComparison
@@ -47,6 +36,8 @@ __all__ = ("SQLAlchemyGraphQLInspector",)
 
 
 T = TypeVar("T", bound=Any)
+
+GEOALCHEMY_INSTALLED = find_spec("geoalchemy2") is not None
 
 _DEFAULT_FILTERS_MAP: FilterMap = OrderedDict(
     {
@@ -76,8 +67,13 @@ class SQLAlchemyGraphQLInspector(
         if dialect == "postgresql":
             self._dialect_json_types = (postgresql.JSON, postgresql.JSONB)
             self.filters_map |= {(dict,): JSONBSQLAlchemyFilter}
-            if GeoFilter is not None and WKElements is not None:
-                self.filters_map |= {WKElements: GeoFilter}
+            if GEOALCHEMY_INSTALLED:
+                from geoalchemy2 import WKBElement, WKTElement
+                from shapely import Geometry
+
+                from .filters.geo import GeoSQLAlchemyFilter
+
+                self.filters_map |= {(Geometry, WKBElement, WKTElement): GeoSQLAlchemyFilter}
         self.filters_map |= filter_overrides or {}
 
     @classmethod

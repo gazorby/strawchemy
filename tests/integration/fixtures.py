@@ -4,6 +4,7 @@ import dataclasses
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time
 from decimal import Decimal
+from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, cast
 from uuid import uuid4
 
@@ -21,16 +22,6 @@ from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
 from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User, metadata
-
-try:
-    from geoalchemy2 import WKBElement, WKTElement
-    from strawchemy.strawberry.geo import GeoJSON
-
-    WKElements = (WKBElement, WKTElement)
-except ModuleNotFoundError:  # pragma: no cover
-    WKElements = ()
-    GeoJSON = None
-
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -66,8 +57,10 @@ __all__ = (
 
 scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON}
 
-if WKElements and GeoJSON:
-    scalar_overrides |= {element: GeoJSON for element in WKElements}
+if find_spec("geoalchemy2") is not None:
+    from strawchemy.strawberry.geo import GEO_SCALAR_OVERRIDES
+
+    scalar_overrides |= GEO_SCALAR_OVERRIDES
 
 
 GEO_DATA = [
