@@ -25,7 +25,7 @@ classifiers = [
 ]
 requires-python = ">=3.9"
 dependencies = ["sqlalchemy>=1.4", "pydantic", "strawberry-graphql"]
-keywords = ["sqlalchemy", "strawberry", "graphql", "SQL"]
+keywords = ["sqlalchemy", "strawberry", "graphql", "SQL", "API"]
 license = { text = "MIT" }
 
 [project.urls]
