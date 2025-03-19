@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import abc
 from datetime import date, datetime, time
-from typing import TYPE_CHECKING, Any, Generic, override
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
 
 from sqlalchemy import ColumnElement, Dialect, func, not_, null
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -11,7 +11,6 @@ from strawchemy.graphql.filters import (
     GenericComparison,
     GraphQLComparison,
     NumericComparison,
-    T,
     TextComparison,
     TimeComparison,
 )
@@ -29,6 +28,8 @@ __all__ = (
     "TextSQLAlchemyFilter",
     "TimeSQLAlchemyFilter",
 )
+
+T = TypeVar("T")
 
 
 class SQLAlchemyFilterBase(GraphQLComparison[DeclarativeBase, QueryableAttribute[Any]], abc.ABC):

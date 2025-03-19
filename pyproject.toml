@@ -124,6 +124,7 @@ testpaths = ["tests"]
 markers = [
     "snapshot: snapshot-based tests using syrupy",
     "integration: SQLAlchemy integration tests",
+    "geo: Geoalchemy2 integration tests",
     "psycopg_async: SQLAlchemy Postgres (psycopg async) Tests",
     "psycopg_sync: SQLAlchemy Postgres (psycopg sync) Tests",
     "asyncpg: SQLAlchemy Postgres (asyncpg) Tests",

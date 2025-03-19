@@ -12,6 +12,7 @@ actionlint = "latest"
 
 [vars]
 local_pytest_options = "-n=6 -vv"
+local_pytest_options_no_extras = "--ignore=tests/integration/geo -n=6 -vv"
 pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
 cleanable_paths = '''{{
 [
@@ -41,12 +42,22 @@ cleanable_paths = '''{{
 [tasks._install]
 description = "Install dependencies"
 hide = true
+run = "uv sync --dev"
+
+[tasks."_install:geo"]
+description = "Install dependencies with geo extras"
+hide = true
+run = "uv sync --extra=geo --dev"
+
+[tasks."_install:all"]
+description = "Install dependencies with all extras"
+hide = true
 run = "uv sync --all-extras --dev"
 
 [tasks.install]
 description = "Install dependencies and pre-commit hooks"
 alias = "i"
-depends = ["install:pre-commit", "_install"]
+depends = ["install:pre-commit", "_install:all"]
 
 [tasks."install:pre-commit"]
 description = "Install pre-commit hooks"
@@ -60,42 +71,56 @@ run = "uv sync --only-group test"
 
 [tasks.test]
 description = "Run tests"
-depends = "_install"
+depends = "_install:all"
 alias = "t"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:coverage"]
 description = "Run tests with coverage"
-depends = "_install"
+depends = "_install:all"
 alias = "tc"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit"]
 description = "Run unit tests"
-depends = "_install"
+depends = "_install:all"
 alias = "tu"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest -m "not integration" {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
-[tasks."test:unit:coverage"]
-description = "Run unit tests"
+[tasks."test:unit:no-extras"]
+description = "Run unit tests without extras dependencies"
 depends = "_install"
+alias = "tug"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest -m "not integration" {{vars.local_pytest_options_no_extras}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:unit:coverage"]
+description = "Run unit tests with coverage"
+depends = "_install:all"
 alias = "tuc"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest -m "not integration" {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration"]
 description = "Run integration tests"
-depends = "_install"
+depends = "_install:all"
 alias = "ti"
 usage = 'arg "<test>" default=""'
-run = 'uv run pytest -m integration {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+run = 'uv run pytest -m "integration" {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:integration:no-extras"]
+description = "Run integration tests without extras dependencies"
+depends = "_install:geo"
+alias = "tig"
+usage = 'arg "<test>" default=""'
+run = 'uv run pytest -m "integration and not geo" {{vars.local_pytest_options_no_extras}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration:coverage"]
-description = "Run integration tests"
-depends = "_install"
+description = "Run integration tests with coverage"
+depends = "_install:all"
 alias = "tic"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest -m integration {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
@@ -116,7 +141,7 @@ run = 'uv run nox -r -t integration -- {{vars.local_pytest_options}} {{arg(name=
 
 [tasks."test:update-snapshot"]
 description = "Run snapshot-based tests and update snapshots"
-depends = "_install"
+depends = "_install:all"
 run = 'uv run pytest -m snapshot --snapshot-update'
 
 
@@ -157,7 +182,7 @@ run = "nox --json -t tests -l | jq 'map(.name) | unique'"
 
 [tasks."ruff:check"]
 description = "Check ruff formatting"
-depends = "_install"
+depends = "_install:all"
 run = "ruff check"
 
 [tasks."ruff:fix"]
@@ -174,7 +199,7 @@ run = "ruff format --check"
 
 [tasks.pyright]
 description = "Run pyright"
-depends = "_install"
+depends = "_install:all"
 run = "uv run pyright"
 env = { PYRIGHT_PYTHON_PYLANCE_VERSION = "latest-release" }
 

@@ -12,10 +12,16 @@ from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
-from strawchemy.graphql.filters import GeoComparison
 from strawchemy.strawberry import pydantic as strawberry_pydantic
 
 from ._utils import strawberry_contained_type, strawberry_type_from_pydantic
+
+try:
+    from strawchemy.graphql.filters.geo import GeoComparison
+
+    geo_comparison = GeoComparison
+except ModuleNotFoundError:  # pragma: no cover
+    geo_comparison = None
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -280,7 +286,7 @@ class StrawberryRegistry:
         self, comparison_type: type[AnyGraphQLComparison]
     ) -> type[StrawberryTypeFromPydantic[AnyGraphQLComparison]]:
         type_info = RegistryTypeInfo(name=comparison_type.field_type_name(), graphql_type="input")
-        if issubclass(comparison_type, GeoComparison):
+        if geo_comparison is not None and issubclass(comparison_type, geo_comparison):
             from .geo import StrawberryGeoComparison
 
             return self.register_pydantic(

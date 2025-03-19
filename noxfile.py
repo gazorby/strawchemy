@@ -29,13 +29,17 @@ nox.options.default_venv_backend = "uv"
 def unit_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     session.run_install(
-        "uv",
-        "sync",
-        "--all-extras",
-        "--group=test",
-        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+        "uv", "sync", "--all-extras", "--group=test", env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
     )
     args: list[str] = ["-m=not integration", *session.posargs]
+    session.run("pytest", *COMMON_PYTEST_OPTIONS, "-vv", *args)
+
+
+@nox.session(name="unit-no-extras", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "unit"])
+def unit_tests_no_extras(session: Session) -> None:
+    (here / ".coverage").unlink(missing_ok=True)
+    session.run_install("uv", "sync", "--group=test", env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location})
+    args: list[str] = ["-m=not integration and geo", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, "-vv", *args)
 
 
@@ -43,11 +47,7 @@ def unit_tests(session: Session) -> None:
 def integration_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     session.run_install(
-        "uv",
-        "sync",
-        "--all-extras",
-        "--group=test",
-        env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location},
+        "uv", "sync", "--all-extras", "--group=test", env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
     )
-    args: list[str] = ["-m=integration", *session.posargs]
+    args: list[str] = ["-m=integration and not geo", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, "-vv", *args)

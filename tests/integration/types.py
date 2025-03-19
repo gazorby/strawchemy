@@ -7,7 +7,7 @@ from sqlalchemy import Select
 from sqlalchemy.orm.util import AliasedClass
 from strawberry import Info
 
-from .models import Color, Fruit, GeoModel, SQLDataTypes, SQLDataTypesContainer, User
+from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User
 
 strawchemy = Strawchemy()
 
@@ -99,11 +99,3 @@ class SQLDataTypesContainerFilter: ...
 
 @strawchemy.order_by_input(SQLDataTypesContainer, include="all", override=True)
 class SQLDataTypesContainerOrderBy: ...
-
-
-@strawchemy.type(GeoModel, include="all")
-class GeoFieldsType: ...
-
-
-@strawchemy.filter_input(GeoModel, include="all")
-class GeoFieldsFilter: ...

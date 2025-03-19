@@ -9,9 +9,7 @@ from uuid import uuid4
 
 import pytest
 import sqlparse
-from geoalchemy2 import WKBElement, WKTElement
 from pytest_lazy_fixtures import lf
-from strawchemy.strawberry.geo import GeoJSON
 
 from sqlalchemy import URL, Engine, Executable, Insert, MetaData, NullPool, create_engine, insert
 from sqlalchemy.event import listens_for
@@ -22,6 +20,16 @@ from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
 from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User, metadata
+
+try:
+    from geoalchemy2 import WKBElement, WKTElement
+    from strawchemy.strawberry.geo import GeoJSON
+
+    WKElements = (WKBElement, WKTElement)
+except ModuleNotFoundError:  # pragma: no cover
+    WKElements = ()
+    GeoJSON = None
+
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
@@ -53,7 +61,10 @@ __all__ = (
     "session",
 )
 
-scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, WKTElement: GeoJSON, WKBElement: GeoJSON}
+scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON}
+
+if WKElements and GeoJSON:
+    scalar_overrides |= {element: GeoJSON for element in WKElements}
 
 
 @pytest.fixture(autouse=True)

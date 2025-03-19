@@ -49,7 +49,7 @@ Clean working directory
 
 ## `install`
 
-- Depends: install:pre-commit, _install
+- Depends: install:pre-commit, _install:all
 
 - **Usage**: `install`
 - **Aliases**: `i`
@@ -95,7 +95,7 @@ Run pre-commit checks
 
 ## `pyright`
 
-- Depends: _install
+- Depends: _install:all
 
 - **Usage**: `pyright`
 
@@ -109,7 +109,7 @@ Generate tasks documentation
 
 ## `ruff:check`
 
-- Depends: _install
+- Depends: _install:all
 
 - **Usage**: `ruff:check`
 
@@ -135,7 +135,7 @@ Format code
 
 ## `test`
 
-- Depends: _install
+- Depends: _install:all
 
 - **Usage**: `test [test]`
 - **Aliases**: `t`
@@ -148,7 +148,7 @@ Run tests
 
 ## `test:coverage`
 
-- Depends: _install
+- Depends: _install:all
 
 - **Usage**: `test:coverage [test]`
 - **Aliases**: `tc`
@@ -161,7 +161,7 @@ Run tests with coverage
 
 ## `test:integration`
 
-- Depends: _install
+- Depends: _install:all
 
 - **Usage**: `test:integration [test]`
 - **Aliases**: `ti`
@@ -187,12 +187,25 @@ Run integration tests on all supported python versions
 
 ## `test:integration:coverage`
 
-- Depends: _install
+- Depends: _install:all
 
 - **Usage**: `test:integration:coverage [test]`
 - **Aliases**: `tic`
 
-Run integration tests
+Run integration tests with coverage
+
+### Arguments
+
+#### `[test]`
+
+## `test:integration:no-extras`
+
+- Depends: _install:geo
+
+- **Usage**: `test:integration:no-extras [test]`
+- **Aliases**: `tig`
+
+Run integration tests without extras dependencies
 
 ### Arguments
 
@@ -200,7 +213,7 @@ Run integration tests
 
 ## `test:unit`
 
-- Depends: _install
+- Depends: _install:all
 
 - **Usage**: `test:unit [test]`
 - **Aliases**: `tu`
@@ -226,12 +239,25 @@ Run unit tests on all supported python versions
 
 ## `test:unit:coverage`
 
-- Depends: _install
+- Depends: _install:all
 
 - **Usage**: `test:unit:coverage [test]`
 - **Aliases**: `tuc`
 
-Run unit tests
+Run unit tests with coverage
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit:no-extras`
+
+- Depends: _install
+
+- **Usage**: `test:unit:no-extras [test]`
+- **Aliases**: `tug`
+
+Run unit tests without extras dependencies
 
 ### Arguments
 
@@ -239,7 +265,7 @@ Run unit tests
 
 ## `test:update-snapshot`
 
-- Depends: _install
+- Depends: _install:all
 
 - **Usage**: `test:update-snapshot`
 

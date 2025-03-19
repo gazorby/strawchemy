@@ -5,9 +5,6 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
-from geoalchemy2 import WKBElement, WKTElement
-from shapely import Geometry
-
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute, registry
 from sqlalchemy.types import ARRAY, JSON
@@ -27,12 +24,15 @@ from .filters import (
 from .filters.postgresql import JSONBSQLAlchemyFilter, PostgresArraySQLAlchemyFilter
 
 try:
+    from geoalchemy2 import WKBElement, WKTElement
+
     from .filters.geo import GeoSQLAlchemyFilter
 
     GeoFilter = GeoSQLAlchemyFilter
+    WKElements = (WKBElement, WKTElement)
 
-except ModuleNotFoundError:
-    GeoFilter = None
+except ModuleNotFoundError:  # pragma: no cover
+    GeoFilter, WKElements = None, ()
 
 
 if TYPE_CHECKING:
@@ -77,7 +77,7 @@ class SQLAlchemyGraphQLInspector(
             self._dialect_json_types = (postgresql.JSON, postgresql.JSONB)
             self.filters_map |= {(dict,): JSONBSQLAlchemyFilter}
             if GeoFilter is not None:
-                self.filters_map |= {(Geometry, WKBElement, WKTElement): GeoFilter}
+                self.filters_map |= {WKElements: GeoFilter}
         self.filters_map |= filter_overrides or {}
 
     @classmethod
@@ -88,7 +88,7 @@ class SQLAlchemyGraphQLInspector(
     def _filter_type(
         cls, type_: type[Any], sqlalchemy_filter: type[SQLAlchemyFilterBase]
     ) -> type[GraphQLComparison[DeclarativeBase, QueryableAttribute[Any]]]:
-        return sqlalchemy_filter[type_] if not cls._is_specialized(sqlalchemy_filter) else sqlalchemy_filter  # pyright: ignore[reportInvalidTypeArguments]
+        return sqlalchemy_filter if cls._is_specialized(sqlalchemy_filter) else sqlalchemy_filter[type_]  # pyright: ignore[reportInvalidTypeArguments]
 
     @override
     def get_field_comparison(

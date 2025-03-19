@@ -14,19 +14,16 @@ import time
 from datetime import date
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeAlias, TypeVar, override
 
-from geojson_pydantic.geometries import Geometry
-
 from pydantic import BaseModel, PrivateAttr
 from strawchemy.dto.base import ModelFieldT, ModelT
 from strawchemy.pydantic import RegexPatternStr
 
 if TYPE_CHECKING:
-    from .dto import OrderByEnum, QueryNode
+    from strawchemy.graphql.dto import OrderByEnum, QueryNode
 
 __all__ = (
     "DateComparison",
     "GenericComparison",
-    "GeoComparison",
     "GraphQLComparison",
     "JSONComparison",
     "NumericComparison",
@@ -241,27 +238,6 @@ class PostgresArrayComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T,
     @classmethod
     def field_type_name(cls) -> str:
         return f"{cls.field_name()}ArrayComparison"
-
-
-class GeoComparison(GraphQLComparison[ModelT, ModelFieldT]):
-    """Geo comparison class for GraphQL filters.
-
-    This class provides a set of geospatial comparison operators that can be
-    used to filter data based on geometry containment.
-
-    Attributes:
-        contains_geometry: Filters for geometries that contain this geometry.
-        within_geometry: Filters for geometries that are within this geometry.
-    """
-
-    contains_geometry: Geometry | None = None
-    within_geometry: Geometry | None = None
-    is_null: bool | None = None
-
-    @override
-    @classmethod
-    def field_name(cls) -> str:
-        return "Geometry"
 
 
 class DateComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericComparison, ModelT, ModelFieldT]):

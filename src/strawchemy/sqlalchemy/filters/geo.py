@@ -6,7 +6,7 @@ from geoalchemy2 import functions as geo_func
 
 from sqlalchemy import null
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from strawchemy.graphql.filters import GeoComparison
+from strawchemy.graphql.filters.geo import GeoComparison
 
 from .base import SQLAlchemyFilterBase
 

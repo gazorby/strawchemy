@@ -1,10 +1,12 @@
-from typing import Any, Generic, override
+from typing import Any, Generic, TypeVar, override
 
 from sqlalchemy import ColumnElement, Dialect, Text, cast
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from strawchemy.graphql.filters import JSONComparison, PostgresArrayComparison, T
+from strawchemy.graphql.filters import JSONComparison, PostgresArrayComparison
 from strawchemy.sqlalchemy.filters.base import GenericSQLAlchemyFilter
+
+T = TypeVar("T")
 
 
 class JSONBSQLAlchemyFilter(

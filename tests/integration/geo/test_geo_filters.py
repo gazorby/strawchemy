@@ -15,10 +15,10 @@ from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
 import strawberry
 from sqlalchemy import Executable, Insert, MetaData, insert, text
+from tests.integration.fixtures import QueryTracker
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-from .fixtures import QueryTracker
 from .models import GeoModel, geo_metadata
 from .types import GeoFieldsFilter, GeoFieldsType, strawchemy
 
@@ -31,10 +31,9 @@ if TYPE_CHECKING:
     from pytest_databases.types import XdistIsolationLevel
 
     from syrupy.assertion import SnapshotAssertion
+    from tests.integration.typing import RawRecordData
 
-    from .typing import RawRecordData
-
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.geo]
 
 
 _geo_data = [

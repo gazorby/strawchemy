@@ -5,11 +5,9 @@ from importlib import import_module
 from typing import TYPE_CHECKING, Any
 
 import pytest
-from geoalchemy2 import WKBElement, WKTElement
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.strawberry.exceptions import StrawchemyFieldError
-from strawchemy.strawberry.geo import GeoJSON
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -158,13 +156,27 @@ def test_base_json_fails() -> None:
         pytest.param("enums.Query", id="enums"),
         pytest.param("filters.filters.Query", id="filters"),
         pytest.param("filters.filters_aggregation.Query", id="aggregation_filters"),
-        pytest.param("geo.geo_filters.Query", id="geo_filters"),
-        pytest.param("geo.geo.Query", id="geo_type"),
         pytest.param("aggregations.root_aggregations.Query", id="root_aggregations"),
     ],
 )
 @pytest.mark.snapshot
 def test_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
+    module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
+    query_class = getattr(import_module(module), query_name)
+
+    schema = strawberry.Schema(query=query_class, scalar_overrides={dict[str, Any]: JSON})
+    assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
+
+
+@pytest.mark.parametrize(
+    "path", [pytest.param("geo.geo_filters.Query", id="geo_filters"), pytest.param("geo.geo.Query", id="geo_type")]
+)
+@pytest.mark.geo
+@pytest.mark.snapshot
+def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
+    from geoalchemy2 import WKBElement, WKTElement
+    from strawchemy.strawberry.geo import GeoJSON
+
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
 
