@@ -49,7 +49,7 @@ Clean working directory
 
 ## `install`
 
-- Depends: install:pre-commit, _install:all
+- Depends: install:pre-commit, _install
 
 - **Usage**: `install`
 - **Aliases**: `i`
@@ -95,7 +95,7 @@ Run pre-commit checks
 
 ## `pyright`
 
-- Depends: _install:all
+- Depends: _install
 
 - **Usage**: `pyright`
 
@@ -109,7 +109,7 @@ Generate tasks documentation
 
 ## `ruff:check`
 
-- Depends: _install:all
+- Depends: _install
 
 - **Usage**: `ruff:check`
 
@@ -135,7 +135,7 @@ Format code
 
 ## `test`
 
-- Depends: _install:all
+- Depends: _install
 
 - **Usage**: `test [test]`
 - **Aliases**: `t`
@@ -148,7 +148,7 @@ Run tests
 
 ## `test:coverage`
 
-- Depends: _install:all
+- Depends: _install
 
 - **Usage**: `test:coverage [test]`
 - **Aliases**: `tc`
@@ -161,7 +161,7 @@ Run tests with coverage
 
 ## `test:integration`
 
-- Depends: _install:all
+- Depends: _install
 
 - **Usage**: `test:integration [test]`
 - **Aliases**: `ti`
@@ -187,7 +187,7 @@ Run integration tests on all supported python versions
 
 ## `test:integration:coverage`
 
-- Depends: _install:all
+- Depends: _install
 
 - **Usage**: `test:integration:coverage [test]`
 - **Aliases**: `tic`
@@ -198,22 +198,9 @@ Run integration tests with coverage
 
 #### `[test]`
 
-## `test:integration:no-extras`
-
-- Depends: _install:geo
-
-- **Usage**: `test:integration:no-extras [test]`
-- **Aliases**: `tig`
-
-Run integration tests without extras dependencies
-
-### Arguments
-
-#### `[test]`
-
 ## `test:unit`
 
-- Depends: _install:all
+- Depends: _install
 
 - **Usage**: `test:unit [test]`
 - **Aliases**: `tu`
@@ -239,7 +226,7 @@ Run unit tests on all supported python versions
 
 ## `test:unit:coverage`
 
-- Depends: _install:all
+- Depends: _install
 
 - **Usage**: `test:unit:coverage [test]`
 - **Aliases**: `tuc`
@@ -265,7 +252,7 @@ Run unit tests without extras dependencies
 
 ## `test:update-snapshot`
 
-- Depends: _install:all
+- Depends: _install
 
 - **Usage**: `test:update-snapshot`
 
