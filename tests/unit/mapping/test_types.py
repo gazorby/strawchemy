@@ -176,15 +176,12 @@ def test_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
 @pytest.mark.snapshot
 @pytest.mark.skipif(not find_spec("geoalchemy2"), reason="geoalchemy2 is not installed")
 def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
-    from geoalchemy2 import WKBElement, WKTElement
-    from strawchemy.strawberry.geo import GeoJSON
+    from strawchemy.strawberry.geo import GEO_SCALAR_OVERRIDES
 
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
 
-    schema = strawberry.Schema(
-        query=query_class, scalar_overrides={dict[str, Any]: JSON, WKTElement: GeoJSON, WKBElement: GeoJSON}
-    )
+    schema = strawberry.Schema(query=query_class, scalar_overrides={dict[str, Any]: JSON, **GEO_SCALAR_OVERRIDES})
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
 
 

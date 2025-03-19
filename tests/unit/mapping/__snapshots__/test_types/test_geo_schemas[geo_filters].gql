@@ -6,6 +6,36 @@
   """
   scalar GeoJSON @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc7946")
   
+  """
+  The `GeoJSONLineString` type represents GeoJSON LineString object as specified by [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)
+  """
+  scalar GeoJSONLineString @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc7946")
+  
+  """
+  The `GeoJSONMultiLineString` type represents GeoJSON MultiLineString object as specified by [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)
+  """
+  scalar GeoJSONMultiLineString @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc7946")
+  
+  """
+  The `GeoJSONMultiPoint` type represents GeoJSON MultiPoint object as specified by [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)
+  """
+  scalar GeoJSONMultiPoint @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc7946")
+  
+  """
+  The `GeoJSONMultiPolygon` type represents GeoJSON MultiPolygon object as specified by [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)
+  """
+  scalar GeoJSONMultiPolygon @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc7946")
+  
+  """
+  The `GeoJSONPoint` type represents GeoJSON Point object as specified by [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)
+  """
+  scalar GeoJSONPoint @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc7946")
+  
+  """
+  The `GeoJSONPolygon` type represents GeoJSON Polygon object as specified by [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)
+  """
+  scalar GeoJSONPolygon @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc7946")
+  
   input GeometryComparison {
     containsGeometry: GeoJSON
     withinGeometry: GeoJSON
@@ -28,6 +58,13 @@
     multiLineString: GeometryComparison
     multiPolygon: GeometryComparison
     geometry: GeometryComparison
+    shapelyPoint: GeometryComparison
+    shapelyLineString: GeometryComparison
+    shapelyPolygon: GeometryComparison
+    shapelyMultiPoint: GeometryComparison
+    shapelyMultiLineString: GeometryComparison
+    shapelyMultiPolygon: GeometryComparison
+    shapelyGeometry: GeometryComparison
   }
   
   """GraphQL type"""
@@ -41,6 +78,13 @@
     multiLineString: GeoJSON
     multiPolygon: GeoJSON
     geometry: GeoJSON
+    shapelyPoint: GeoJSONPoint!
+    shapelyLineString: GeoJSONLineString!
+    shapelyPolygon: GeoJSONPolygon!
+    shapelyMultiPoint: GeoJSONMultiPoint!
+    shapelyMultiLineString: GeoJSONMultiLineString!
+    shapelyMultiPolygon: GeoJSONMultiPolygon!
+    shapelyGeometry: GeoJSON!
   }
   
   type Query {

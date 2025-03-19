@@ -4,6 +4,7 @@ import json
 from functools import partial
 from typing import Any, NewType
 
+import shapely
 from geoalchemy2 import WKBElement, WKTElement
 from geoalchemy2.shape import to_shape
 from geojson_pydantic.geometries import Geometry as PydanticGeometry
@@ -22,6 +23,7 @@ import strawberry
 from pydantic import TypeAdapter
 
 __all__ = (
+    "GEO_SCALAR_OVERRIDES",
     "GeoJSON",
     "GeoJSONGeometryCollection",
     "GeoJSONLineString",
@@ -153,3 +155,17 @@ class StrawberryGeoComparison:
     contains_geometry: GeoJSON | None = strawberry.UNSET
     within_geometry: GeoJSON | None = strawberry.UNSET
     is_null: bool | None = strawberry.UNSET
+
+
+GEO_SCALAR_OVERRIDES: dict[object, type[Any]] = {
+    WKTElement: GeoJSON,
+    WKBElement: GeoJSON,
+    shapely.Point: GeoJSONPoint,
+    shapely.MultiPoint: GeoJSONMultiPoint,
+    shapely.Polygon: GeoJSONPolygon,
+    shapely.MultiPolygon: GeoJSONMultiPolygon,
+    shapely.LineString: GeoJSONLineString,
+    shapely.MultiLineString: GeoJSONMultiLineString,
+    shapely.GeometryCollection: GeoJSONGeometryCollection,
+    shapely.Geometry: GeoJSON,
+}
