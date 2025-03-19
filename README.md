@@ -18,7 +18,6 @@ Strawchemy is a powerful library that seamlessly integrates [SQLAlchemy](https:/
 
 - 🛢 **Database Support**: Currently only PostgreSQL is officially supported and tested (using [asyncpg](https://github.com/MagicStack/asyncpg) or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
 
-
 ## Table of Contents
 
 - [Installation](#installation)
@@ -51,8 +50,6 @@ pip install strawchemy[geo]
 ```
 
 ## Quick Start
-
-Here's a simple example of how to use **Strawchemy**:
 
 ```python
 import strawberry
@@ -124,15 +121,11 @@ class PostOrderBy:
 @strawberry.type
 class Query:
     users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by=UserOrderBy, pagination=True)
-
     posts: list[PostType] = strawchemy.field(filter_input=PostFilter, order_by=PostOrderBy, pagination=True)
-
 
 # Create schema
 schema = strawberry.Schema(query=Query)
 ```
-
-Example GraphQL query:
 
 ```graphql
 {
@@ -167,7 +160,10 @@ Example GraphQL query:
 
 ## Mapping SQLAlchemy Models
 
-Strawchemy provides a simple way to map SQLAlchemy models to GraphQL types using the `@strawchemy.type` decorator:
+Strawchemy provides an easy way to map SQLAlchemy models to GraphQL types using the `@strawchemy.type` decorator. You can include/exclude specific fields or have strawchemy map all columns/relationships of the model and it's children.
+
+<details>
+<summary>SQLAlchemy models</summary>
 
 ```python
 import strawberry
@@ -195,7 +191,10 @@ class UserType:
     pass
 ```
 
-You can customize which fields to include or exclude:
+</details>
+
+<details>
+<summary>Customizing Fields</summary>
 
 ```python
 class User(Base):
@@ -224,7 +223,10 @@ class UserType:
     pass
 ```
 
-You can also add custom fields to your GraphQL type:
+</details>
+
+<details>
+<summary>Adding Custom Fields</summary>
 
 ```python
 from strawchemy import ModelInstance
@@ -246,9 +248,14 @@ class UserType:
         return f"{self.instance.first_name} {self.instance.last_name}"
 ```
 
+</details>
+
 ## Resolver Generation
 
-Strawchemy automatically generates resolvers for your GraphQL fields. You can use the `strawchemy.field` function to create fields that query your database:
+Strawchemy automatically generates resolvers for your GraphQL fields.
+
+<details>
+<summary>You can use the `strawchemy.field()` function to generate fields that query your database:</summary>
 
 ```python
 @strawberry.type
@@ -261,6 +268,8 @@ class Query:
     user: UserType = strawchemy.field()
 ```
 
+</details>
+
 ### Custom Resolvers
 
 While Strawchemy automatically generates resolvers for most use cases, you can also create custom resolvers for more complex scenarios. There are two main approaches to creating custom resolvers:
@@ -269,6 +278,9 @@ While Strawchemy automatically generates resolvers for most use cases, you can a
 
 When using `strawchemy.field()` as a function, strawchemy creates a resolver that delegates data fetching to the `StrawchemySyncRepository` or `StrawchemyAsyncRepository` classes depending on the SQLAlchemy session type.
 You can create custom resolvers by using the `@strawchemy.field` as a decorator and working directly with the repository:
+
+<details>
+<summary>Custom resolvers using repository</summary>
 
 ```python
 from sqlalchemy import select, true
@@ -303,7 +315,12 @@ class Query:
         return repo.list()
 ```
 
+</details>
+
 For async resolvers, use `StrawchemyAsyncRepository` which is the async variant of `StrawchemySyncRepository`:
+
+<details>
+<summary>Async repository</summary>
 
 ```python
 from strawchemy import StrawchemyAsyncRepository
@@ -316,6 +333,8 @@ class Query:
         return await repo.get_one_or_none()
 ```
 
+</details>
+
 The repository provides several methods for fetching data:
 
 - `get_one()`: Returns a single result, raises an exception if not found
@@ -326,6 +345,9 @@ The repository provides several methods for fetching data:
 #### 2. Using Query Hooks
 
 Strawchemy provides query hooks that allow you to customize query behavior. These hooks can be applied at both the field level and the type level:
+
+<details>
+<summary>Using query hooks</summary>
 
 ```python
 from strawchemy import ModelInstance, QueryHook
@@ -358,11 +380,11 @@ class FilteredFruitType:
     pass
 ```
 
+</details>
+
 > [!Note]\
 > You must set a `ModelInstance` typed attribute if you want to access the model instance values.
 > The `instance` attribute is matched by the `ModelInstance[Fruit]` type hint, so you can give it any name you want.
-
-
 
 Query hooks provide powerful ways to:
 
@@ -372,7 +394,10 @@ Query hooks provide powerful ways to:
 
 ## Pagination
 
-Strawchemy supports offset-based pagination out of the box:
+Strawchemy supports offset-based pagination out of the box.
+
+<details>
+<summary>Enable pagination on fields:</summary>
 
 ```python
 from strawchemy.types import DefaultOffsetPagination
@@ -385,7 +410,10 @@ class Query:
     users_custom_pagination: list[UserType] = strawchemy.field(pagination=DefaultOffsetPagination(limit=20))
 ```
 
-In your GraphQL queries, you can use the `offset` and `limit` parameters:
+</details>
+
+<details>
+<summary>In your GraphQL queries, you can use the `offset` and `limit` parameters:</summary>
 
 ```graphql
 {
@@ -396,7 +424,10 @@ In your GraphQL queries, you can use the `offset` and `limit` parameters:
 }
 ```
 
-You can also enable pagination for nested relationships:
+</details>
+
+<details>
+<summary>You can also enable pagination for nested relationships:</summary>
 
 ```python
 @strawchemy.type(User, include="all", child_pagination=True)
@@ -404,7 +435,10 @@ class UserType:
     pass
 ```
 
-Then in your GraphQL queries:
+</details>
+
+<details>
+<summary>Then in your GraphQL queries:</summary>
 
 ```graphql
 {
@@ -419,9 +453,14 @@ Then in your GraphQL queries:
 }
 ```
 
+</details>
+
 ## Filtering
 
-Strawchemy provides powerful filtering capabilities. First, create a filter input type:
+Strawchemy provides powerful filtering capabilities.
+
+<details>
+<summary>First, create a filter input type:</summary>
 
 ```python
 @strawchemy.filter_input(User, include="all")
@@ -429,7 +468,10 @@ class UserFilter:
     pass
 ```
 
-Then use it in your field:
+</details>
+
+<details>
+<summary>Then use it in your field:</summary>
 
 ```python
 @strawberry.type
@@ -437,7 +479,10 @@ class Query:
     users: list[UserType] = strawchemy.field(filter_input=UserFilter)
 ```
 
-Now you can use various filter operations in your GraphQL queries:
+</details>
+
+<details>
+<summary>Now you can use various filter operations in your GraphQL queries:</summary>
 
 ```graphql
 {
@@ -478,6 +523,8 @@ Now you can use various filter operations in your GraphQL queries:
 }
 ```
 
+</details>
+
 Strawchemy supports a wide range of filter operations:
 
 - **Common to most types**: `eq`, `neq`, `isNull`, `in_`, `nin_`
@@ -494,6 +541,9 @@ Strawchemy supports a wide range of filter operations:
 
 Strawchemy supports spatial filtering capabilities for geometry fields using [GeoJSON](https://datatracker.ietf.org/doc/html/rfc7946). To use geo filters, you need to have PostGIS installed and enabled in your PostgreSQL database.
 
+<details>
+<summary>Define models and types</summary>
+
 ```python
 class GeoModel(Base):
     __tablename__ = "geo"
@@ -503,21 +553,22 @@ class GeoModel(Base):
     point: Mapped[WKBElement | None] = mapped_column(Geometry("POINT", srid=4326), nullable=True)
     polygon: Mapped[WKBElement | None] = mapped_column(Geometry("POLYGON", srid=4326), nullable=True)
 
-
 @strawchemy.type(GeoModel, include="all")
 class GeoType: ...
-
 
 @strawchemy.filter_input(GeoModel, include="all")
 class GeoFieldsFilter: ...
 
-
 @strawberry.type
 class Query:
-    geo: list[GeoType] = strawchemy.field(filter_input=GeoFieldsFilter)
+geo: list[GeoType] = strawchemy.field(filter_input=GeoFieldsFilter)
+
 ```
 
-Then you can use the following geo filter operations in your GraphQL queries:
+</details>
+
+<details>
+<summary>Then you can use the following geo filter operations in your GraphQL queries:</summary>
 
 ```graphql
 {
@@ -553,6 +604,8 @@ Then you can use the following geo filter operations in your GraphQL queries:
 }
 ```
 
+</details>
+
 Strawchemy supports the following geo filter operations:
 
 - **containsGeometry**: Filters for geometries that contain the specified GeoJSON geometry
@@ -561,19 +614,22 @@ Strawchemy supports the following geo filter operations:
 
 These filters work with all geometry types supported by PostGIS, including:
 
-- Point
-- LineString
-- Polygon
-- MultiPoint
-- MultiLineString
-- MultiPolygon
-- Geometry (generic geometry type)
+- `Point`
+- `LineString`
+- `Polygon`
+- `MultiPoint`
+- `MultiLineString`
+- `MultiPolygon`
+- `Geometry` (generic geometry type)
 
 ## Aggregations
 
-Strawchemy automatically exposes aggregation fields for list relationships. When you define a model with a list relationship, the corresponding GraphQL type will include an aggregation field for that relationship.
+Strawchemy automatically exposes aggregation fields for list relationships.
 
-For example, with the following models:
+When you define a model with a list relationship, the corresponding GraphQL type will include an aggregation field for that relationship, named `<field_name>Aggregate`.
+
+<details>
+<summary> For example, with the following models:</summary>
 
 ```python
 class User(Base):
@@ -592,7 +648,9 @@ class Post(Base):
     author: Mapped[User] = relationship("User", back_populates="posts")
 ```
 
-And the corresponding GraphQL types:
+</details>
+<details>
+<summary> And the corresponding GraphQL types:</summary>
 
 ```python
 @strawchemy.type(User, include="all")
@@ -605,7 +663,9 @@ class PostType:
     pass
 ```
 
-You can query aggregations on the `posts` relationship:
+</details>
+<details>
+<summary> You can query aggregations on the `posts` relationship:</summary>
 
 ```graphql
 {
@@ -626,9 +686,14 @@ You can query aggregations on the `posts` relationship:
 }
 ```
 
+</details>
+
 ### Filtering by relationship aggregations
 
-You can also filter entities based on aggregations of their related entities. For example, to find users who have more than 5 posts:
+You can also filter entities based on aggregations of their related entities.
+
+<details>
+<summary>Define types with filters</summary>
 
 ```python
 @strawchemy.filter_input(User, include="all")
@@ -640,6 +705,11 @@ class UserFilter:
 class Query:
     users: list[UserType] = strawchemy.field(filter_input=UserFilter)
 ```
+
+</details>
+
+<details>
+<summary>For example, to find users who have more than 5 posts::</summary>
 
 ```graphql
 {
@@ -657,7 +727,10 @@ class Query:
 }
 ```
 
-You can use various predicates for filtering:
+</details>
+
+<details>
+<summary>You can use various predicates for filtering:</summary>
 
 ```graphql
 # Users with exactly 3 posts
@@ -691,9 +764,12 @@ users(filter: {
 })
 ```
 
+</details>
+
 #### Distinct aggregations
 
-You can also use the `distinct` parameter to count only distinct values:
+<details>
+<summary>You can also use the `distinct` parameter to count only distinct values:</summary>
 
 ```graphql
 {
@@ -710,11 +786,16 @@ You can also use the `distinct` parameter to count only distinct values:
 }
 ```
 
+</details>
+
 This would find users who have posts in more than 2 distinct categories.
 
 ### Root aggregations
 
-Strawchemy supports query level aggregations. First, create an aggregation type:
+Strawchemy supports query level aggregations.
+
+<details>
+<summary>First, create an aggregation type:</summary>
 
 ```python
 @strawchemy.aggregation_type(User, include="all")
@@ -722,7 +803,10 @@ class UserAggregationType:
     pass
 ```
 
-Then use it in your field with the `root_aggregations` parameter:
+</details>
+
+<details>
+<summary>Then set up the root aggregations on the field:</summary>
 
 ```python
 @strawberry.type
@@ -730,7 +814,10 @@ class Query:
     users_aggregations: UserAggregationType = strawchemy.field(root_aggregations=True)
 ```
 
-Now you can use aggregation functions on the result of your query:
+</details>
+
+<details>
+<summary>Now you can use aggregation functions on the result of your query:</summary>
 
 ```graphql
 {
@@ -774,19 +861,11 @@ Now you can use aggregation functions on the result of your query:
 }
 ```
 
+</details>
+
 ## Configuration
 
-Strawchemy can be configured when initializing the mapper. Here's a complete reference of all available configuration options:
-
-```python
-from strawchemy import Strawchemy
-
-# Initialize with default configuration
-strawchemy = Strawchemy()
-
-# Or customize the configuration
-strawchemy = Strawchemy(auto_snake_case=True, pagination=True)
-```
+Strawchemy can be configured when initializing the mapper.
 
 ### Configuration Options
 
