@@ -2,6 +2,57 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.3](https://github.com/gazorby/strawchemy/compare/v0.5.2..v0.5.3) - 2025-03-19
+
+### 🐛 Bug Fixes
+
+- *(aggregations)* Use float for aggregation output of int columns - ([bef9700](https://github.com/gazorby/strawchemy/commit/bef970043c1096fa677bf276c20e0a4618e85bb7))
+- *(strawberry-type)* Model instance passed on types not declaring it - ([06c1c1f](https://github.com/gazorby/strawchemy/commit/06c1c1f7eefaa2c5e1fe2f03f7ef3e854dafe7ea))
+- *(transpiler)* Adding an aggregation column to an existing lateral join would not be properly aliased, leading to a cartesian product on the same table - ([f365120](https://github.com/gazorby/strawchemy/commit/f365120ba9f5c110de9417b725ca32de4ce07d69))
+- Import errors when geo extras is not installed - ([f28f2ea](https://github.com/gazorby/strawchemy/commit/f28f2eaee54b2658cdc294d0cdce6325f54e69c6))
+
+### 🚜 Refactor
+
+- Remove unused stuff - ([9bd2d1b](https://github.com/gazorby/strawchemy/commit/9bd2d1b0b0738aac5e4dfb4db52a343a72ae363a))
+- Remove the default strawchemy instance - ([b766374](https://github.com/gazorby/strawchemy/commit/b7663745ab49f6415ccc1277421559945f7fcfb0))
+
+### 📚 Documentation
+
+- *(readme)* Update repository doc - ([d930468](https://github.com/gazorby/strawchemy/commit/d930468ddbe47980ec9cc9de4f8a6524f7b83a88))
+- *(readme)* Make code examples expandable - ([4da85a1](https://github.com/gazorby/strawchemy/commit/4da85a119dcc03a92ce24ad8ebbf4c6791784e6b))
+- Update README.md - ([4e5564b](https://github.com/gazorby/strawchemy/commit/4e5564bbc10305cdca8123e5fc059d9ec9fce8a9))
+- Update README.md - ([8a53b62](https://github.com/gazorby/strawchemy/commit/8a53b62e8f4cf22709b1ee3292e942774492e052))
+
+### 🧪 Testing
+
+- *(integration)* Add filters tests - ([875fc90](https://github.com/gazorby/strawchemy/commit/875fc90e2f0b5c25c4aca13c55ac069cb16de17c))
+- *(integration)* Add geo filter tests - ([9a03a29](https://github.com/gazorby/strawchemy/commit/9a03a29e3a2d8a0a2711b215eeba61084dabfea1))
+- *(integration)* Add aggregation tests - ([b5ee7d2](https://github.com/gazorby/strawchemy/commit/b5ee7d2885f174eb564dcdfd67133d0d945238a3))
+- *(integration)* Add aggregation filter tests - ([150cb3d](https://github.com/gazorby/strawchemy/commit/150cb3dc5ca6a6cfe6ab5a12c9981a44ebe09f32))
+- *(integration)* Add order by test cases - ([4eb84d7](https://github.com/gazorby/strawchemy/commit/4eb84d7803b1e12119a4b4d94daff9dc5a7163f3))
+- *(integration)* Add filtered statement test case - ([9f1f648](https://github.com/gazorby/strawchemy/commit/9f1f648c195c58196fd94b082eae5cfb33389539))
+- *(integration)* Assert aggregation values in test_statistical_aggregation - ([43e04ed](https://github.com/gazorby/strawchemy/commit/43e04edce34700424dd51329d51369f0d1c19ba6))
+- *(integration)* Add custom resolver test case - ([5882dd0](https://github.com/gazorby/strawchemy/commit/5882dd0e57553c120d01adcf0e23cc6279998a95))
+- *(integration)* Add test case for get_one_or_none repo method - ([ca953dd](https://github.com/gazorby/strawchemy/commit/ca953ddbb9a18f93d794d0caf0f10d77081af9be))
+- *(integration)* Add case to test querying __typename do not fails - ([12e6272](https://github.com/gazorby/strawchemy/commit/12e627224fd5ee0bea9cb761489e7e89b1485813))
+- *(integration)* Add query optimizations test cases - ([58be932](https://github.com/gazorby/strawchemy/commit/58be932b6abd3a42290ed1276e9ff16b67b81022))
+- *(integration)* Update query optimizations test cases - ([06d9499](https://github.com/gazorby/strawchemy/commit/06d9499f12e75e9a9c8f91b768b7eeca5022cbf0))
+- *(integration)* Add query hooks test cases - ([7d7a653](https://github.com/gazorby/strawchemy/commit/7d7a653a5817f0c07c4d39158cf58dfa6d4fe1b9))
+- *(integration)* Add root aggregation and paginated test cases - ([20f3ef0](https://github.com/gazorby/strawchemy/commit/20f3ef0d4744debb7db4dff27bedc557c18e3684))
+- *(local)* Use nox for specific test tasks - ([29d3984](https://github.com/gazorby/strawchemy/commit/29d3984d12f1ac595643799b9d140d8d6757c509))
+- *(unit)* Add aggregation filters and root aggregation schemas - ([40c4c74](https://github.com/gazorby/strawchemy/commit/40c4c740d6ab295a70f61d597b365ac6629fcd79))
+- *(unit)* Add various dto test cases - ([2b2647e](https://github.com/gazorby/strawchemy/commit/2b2647ee381c732f77d5dc6173c0e27dea34955c))
+- First batch - ([60033ad](https://github.com/gazorby/strawchemy/commit/60033ad5ed309a8e2c79e538844c6cd1e8521324))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(coverage)* Explicitly set source in [tool.coverage.run] as codecov might need it - ([5200d8c](https://github.com/gazorby/strawchemy/commit/5200d8c9e1274daf44cef85707017845930dfda4))
+- *(mise)* Upgrade - ([4afd3c8](https://github.com/gazorby/strawchemy/commit/4afd3c86af6f0694a9b1d5b116bbf95ab05ded2f))
+- *(mise)* Make the ruff:check depends on _install - ([b863708](https://github.com/gazorby/strawchemy/commit/b863708dbd1a5b59d8f8f1d258306c733721f98b))
+- *(pyproject)* Fix syntax - ([8cd111b](https://github.com/gazorby/strawchemy/commit/8cd111b468caa314d6597e40e5d91a28d435ca9b))
+- *(pyproject)* Remove multiprocessing from coverage config - ([b8cfe46](https://github.com/gazorby/strawchemy/commit/b8cfe46a0f51f32269ea5a969855235f2f94408c))
+- *(pyproject)* Update classifiers - ([59aa01b](https://github.com/gazorby/strawchemy/commit/59aa01b5b7531a0bf340756de465b9164d0bf9dd))
+- *(release)* Bump to v0.5.3 - ([dcb17d7](https://github.com/gazorby/strawchemy/commit/dcb17d7fa9ce83c40c6e3d92e9aa87abcca96dc1))
 ## [0.5.2](https://github.com/gazorby/strawchemy/compare/v0.5.1..v0.5.2) - 2025-03-12
 
 ### 🐛 Bug Fixes
