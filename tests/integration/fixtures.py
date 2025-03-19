@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import pytest
 import sqlparse
+from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
 
 from sqlalchemy import URL, Engine, Executable, Insert, MetaData, NullPool, create_engine, insert
@@ -35,7 +36,9 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator
 
     from pytest import FixtureRequest, MonkeyPatch
+    from pytest_databases._service import DockerService
     from pytest_databases.docker.postgres import PostgresService
+    from pytest_databases.types import XdistIsolationLevel
     from strawchemy.sqlalchemy.typing import AnySession
 
     from .typing import RawRecordData
@@ -67,6 +70,58 @@ if WKElements and GeoJSON:
     scalar_overrides |= {element: GeoJSON for element in WKElements}
 
 
+GEO_DATA = [
+    # Complete record with all geometry types
+    {
+        "id": str(uuid4()),
+        "point_required": "POINT(0 0)",  # Origin point
+        "point": "POINT(1 1)",  # Simple point
+        "line_string": "LINESTRING(0 0, 1 1, 2 2)",  # Simple line with 3 points
+        "polygon": "POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))",  # Simple square
+        "multi_point": "MULTIPOINT((0 0), (1 1), (2 2))",  # 3 points
+        "multi_line_string": "MULTILINESTRING((0 0, 1 1), (2 2, 3 3))",  # 2 lines
+        "multi_polygon": "MULTIPOLYGON(((0 0, 0 1, 1 1, 1 0, 0 0)), ((2 2, 2 3, 3 3, 3 2, 2 2)))",  # 2 squares
+        "geometry": "POINT(5 5)",  # Using point as generic geometry
+    },
+    # Record with only required fields
+    {
+        "id": str(uuid4()),
+        "point_required": "POINT(10 20)",  # Required point
+        "point": None,
+        "line_string": None,
+        "polygon": None,
+        "multi_point": None,
+        "multi_line_string": None,
+        "multi_polygon": None,
+        "geometry": None,
+    },
+    # Record with complex geometries
+    {
+        "id": str(uuid4()),
+        "point_required": "POINT(45.5 -122.6)",  # Real-world coordinates (Portland, OR)
+        "point": "POINT(-74.0060 40.7128)",  # New York City
+        "line_string": "LINESTRING(-122.4194 37.7749, -118.2437 34.0522, -74.0060 40.7128)",  # SF to LA to NYC
+        "polygon": "POLYGON((-122.4194 37.7749, -122.4194 37.8, -122.4 37.8, -122.4 37.7749, -122.4194 37.7749))",  # Area in SF
+        "multi_point": "MULTIPOINT((-122.4194 37.7749), (-118.2437 34.0522), (-74.0060 40.7128))",  # Major US cities
+        "multi_line_string": "MULTILINESTRING((-122.4194 37.7749, -118.2437 34.0522), (-118.2437 34.0522, -74.0060 40.7128))",  # Route segments
+        "multi_polygon": "MULTIPOLYGON(((-122.42 37.78, -122.42 37.8, -122.4 37.8, -122.4 37.78, -122.42 37.78)), ((-118.25 34.05, -118.25 34.06, -118.24 34.06, -118.24 34.05, -118.25 34.05)))",  # Areas in SF and LA
+        "geometry": "LINESTRING(-122.4194 37.7749, -74.0060 40.7128)",  # Direct SF to NYC
+    },
+    # Record with different geometry types
+    {
+        "id": str(uuid4()),
+        "point_required": "POINT(100 200)",
+        "point": "POINT(200 300)",
+        "line_string": "LINESTRING(100 100, 200 200, 300 300, 400 400)",  # Longer line
+        "polygon": "POLYGON((0 0, 0 10, 10 10, 10 0, 0 0), (2 2, 2 8, 8 8, 8 2, 2 2))",  # Polygon with hole
+        "multi_point": "MULTIPOINT((10 10), (20 20), (30 30), (40 40), (50 50))",  # 5 points
+        "multi_line_string": "MULTILINESTRING((10 10, 20 20), (30 30, 40 40), (50 50, 60 60))",  # 3 lines
+        "multi_polygon": "MULTIPOLYGON(((0 0, 0 5, 5 5, 5 0, 0 0)), ((10 10, 10 15, 15 15, 15 10, 10 10)), ((20 20, 20 25, 25 25, 25 20, 20 20)))",  # 3 squares
+        "geometry": "POLYGON((100 100, 100 200, 200 200, 200 100, 100 100))",  # Using polygon as geometry
+    },
+]
+
+
 @pytest.fixture(autouse=True)
 def _patch_base(monkeypatch: MonkeyPatch) -> None:  # pyright: ignore[reportUnusedFunction]
     """Ensure new registry state for every test.
@@ -82,6 +137,19 @@ def _patch_base(monkeypatch: MonkeyPatch) -> None:  # pyright: ignore[reportUnus
         __abstract__ = True
 
     monkeypatch.setattr(models, "UUIDBase", NewUUIDBase)
+
+
+@pytest.fixture(autouse=False, scope="session")
+def postgis_service(
+    docker_service: DockerService, xdist_postgres_isolation_level: XdistIsolationLevel
+) -> Generator[PostgresService, None, None]:
+    with _provide_postgres_service(
+        docker_service,
+        image="postgis/postgis:17-3.5",
+        name="postgis-17",
+        xdist_postgres_isolate=xdist_postgres_isolation_level,
+    ) as service:
+        yield service
 
 
 @pytest.fixture
@@ -414,6 +482,11 @@ def raw_sql_data_types_set2(raw_containers: RawRecordData) -> RawRecordData:
             "container_id": raw_containers[1]["id"],
         },
     ]
+
+
+@pytest.fixture
+def raw_geo() -> RawRecordData:
+    return GEO_DATA
 
 
 # DB Seeding

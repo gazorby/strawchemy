@@ -1467,6 +1467,7 @@ dependencies = [
 geo = [
     { name = "geoalchemy2" },
     { name = "geojson-pydantic" },
+    { name = "shapely" },
 ]
 
 [package.dev-dependencies]
@@ -1490,7 +1491,6 @@ dev = [
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
     { name = "ruff" },
-    { name = "shapely" },
     { name = "sqlparse" },
     { name = "syrupy" },
     { name = "vulture" },
@@ -1520,7 +1520,6 @@ test = [
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
-    { name = "shapely" },
     { name = "sqlparse" },
     { name = "syrupy" },
 ]
@@ -1530,6 +1529,7 @@ requires-dist = [
     { name = "geoalchemy2", marker = "extra == 'geo'" },
     { name = "geojson-pydantic", marker = "extra == 'geo'" },
     { name = "pydantic" },
+    { name = "shapely", marker = "extra == 'geo'" },
     { name = "sqlalchemy", specifier = ">=1.4" },
     { name = "strawberry-graphql" },
 ]
@@ -1557,7 +1557,6 @@ dev = [
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
     { name = "ruff" },
-    { name = "shapely" },
     { name = "sqlparse" },
     { name = "syrupy" },
     { name = "vulture" },
@@ -1585,7 +1584,6 @@ test = [
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
-    { name = "shapely" },
     { name = "sqlparse" },
     { name = "syrupy" },
 ]

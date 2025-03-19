@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import textwrap
 from importlib import import_module
+from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -173,6 +174,7 @@ def test_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
 )
 @pytest.mark.geo
 @pytest.mark.snapshot
+@pytest.mark.skipif(not find_spec("geoalchemy2"), reason="geoalchemy2 is not installed")
 def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     from geoalchemy2 import WKBElement, WKTElement
     from strawchemy.strawberry.geo import GeoJSON

@@ -32,7 +32,7 @@ try:
     WKElements = (WKBElement, WKTElement)
 
 except ModuleNotFoundError:  # pragma: no cover
-    GeoFilter, WKElements = None, ()
+    GeoFilter, WKElements = None, None
 
 
 if TYPE_CHECKING:
@@ -76,7 +76,7 @@ class SQLAlchemyGraphQLInspector(
         if dialect == "postgresql":
             self._dialect_json_types = (postgresql.JSON, postgresql.JSONB)
             self.filters_map |= {(dict,): JSONBSQLAlchemyFilter}
-            if GeoFilter is not None:
+            if GeoFilter is not None and WKElements is not None:
                 self.filters_map |= {WKElements: GeoFilter}
         self.filters_map |= filter_overrides or {}
 

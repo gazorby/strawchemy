@@ -2,7 +2,7 @@
 # name: test_geo_schemas[geo_type]
   '''
   """
-  The `GeoJSON` type represents GEOJson values as specified by [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)
+  The `GeoJSON` type represents GeoJSON values as specified by [RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)
   """
   scalar GeoJSON @specifiedBy(url: "https://datatracker.ietf.org/doc/html/rfc7946")
   
