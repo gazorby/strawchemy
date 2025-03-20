@@ -39,21 +39,14 @@
   """GraphQL type"""
   type GeosFieldsType {
     id: UUID!
-    pointRequired: GeoJSON!
-    point: GeoJSON
-    lineString: GeoJSON
-    polygon: GeoJSON
-    multiPoint: GeoJSON
-    multiLineString: GeoJSON
-    multiPolygon: GeoJSON
+    pointRequired: GeoJSONPoint!
+    point: GeoJSONPoint
+    lineString: GeoJSONLineString
+    polygon: GeoJSONPolygon
+    multiPoint: GeoJSONMultiPoint
+    multiLineString: GeoJSONMultiLineString
+    multiPolygon: GeoJSONMultiPolygon
     geometry: GeoJSON
-    shapelyPoint: GeoJSONPoint!
-    shapelyLineString: GeoJSONLineString!
-    shapelyPolygon: GeoJSONPolygon!
-    shapelyMultiPoint: GeoJSONMultiPoint!
-    shapelyMultiLineString: GeoJSONMultiLineString!
-    shapelyMultiPolygon: GeoJSONMultiPolygon!
-    shapelyGeometry: GeoJSON!
   }
   
   type Query {

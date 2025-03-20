@@ -3,12 +3,12 @@ from __future__ import annotations
 from collections import OrderedDict
 from datetime import date, datetime, time
 from decimal import Decimal
-from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute, registry
 from sqlalchemy.types import ARRAY, JSON
+from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.graphql.inspector import GraphQLInspectorProtocol
@@ -37,7 +37,6 @@ __all__ = ("SQLAlchemyGraphQLInspector",)
 
 T = TypeVar("T", bound=Any)
 
-GEOALCHEMY_INSTALLED = find_spec("geoalchemy2") is not None
 
 _DEFAULT_FILTERS_MAP: FilterMap = OrderedDict(
     {
@@ -67,7 +66,7 @@ class SQLAlchemyGraphQLInspector(
         if dialect == "postgresql":
             self._dialect_json_types = (postgresql.JSON, postgresql.JSONB)
             self.filters_map |= {(dict,): JSONBSQLAlchemyFilter}
-            if GEOALCHEMY_INSTALLED:
+            if GEO_INSTALLED:
                 from geoalchemy2 import WKBElement, WKTElement
                 from shapely import Geometry
 

@@ -26,7 +26,7 @@ from typing import (
 
 from strawchemy.dto.exceptions import DTOError
 from strawchemy.graph import Node
-from strawchemy.utils import non_optional_type_hint
+from strawchemy.utils import is_type_hint_optional, non_optional_type_hint
 
 from .types import (
     DTO_AUTO,
@@ -39,7 +39,7 @@ from .types import (
     Purpose,
     PurposeConfig,
 )
-from .utils import config, is_type_hint_optional
+from .utils import config
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Hashable, Iterable, Mapping

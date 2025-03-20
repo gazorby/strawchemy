@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
+from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.types import Purpose, PurposeConfig
 from strawchemy.dto.utils import PRIVATE, READ_ONLY, WRITE_ONLY, field
 
@@ -167,12 +168,8 @@ class SQLDataTypes(UUIDBase):
 
 # Geo
 
-try:
-    import shapely
+if GEO_INSTALLED:
     from geoalchemy2 import Geometry, WKBElement
-    from shapely import LineString, MultiLineString, MultiPoint, MultiPolygon, Point, Polygon
-
-    geoalchemy_imported = True
 
     class GeoModel(UUIDBase):
         __tablename__ = "geos_fields"
@@ -185,33 +182,3 @@ try:
         multi_line_string: Mapped[WKBElement | None] = mapped_column(Geometry("MULTILINESTRING"), nullable=True)
         multi_polygon: Mapped[WKBElement | None] = mapped_column(Geometry("MULTIPOLYGON"), nullable=True)
         geometry: Mapped[WKBElement | None] = mapped_column(Geometry("GEOMETRY"), nullable=True)
-        # Typed using shapely
-        shapely_point: Mapped[WKBElement] = mapped_column(
-            Geometry("POINT"), info=field(default_config=PurposeConfig(type_override=Point))
-        )
-        shapely_line_string: Mapped[WKBElement] = mapped_column(
-            Geometry("LINESTRING"), nullable=True, info=field(default_config=PurposeConfig(type_override=LineString))
-        )
-        shapely_polygon: Mapped[WKBElement] = mapped_column(
-            Geometry("POLYGON"), nullable=True, info=field(default_config=PurposeConfig(type_override=Polygon))
-        )
-        shapely_multi_point: Mapped[WKBElement] = mapped_column(
-            Geometry("MULTIPOINT"), nullable=True, info=field(default_config=PurposeConfig(type_override=MultiPoint))
-        )
-        shapely_multi_line_string: Mapped[WKBElement] = mapped_column(
-            Geometry("MULTILINESTRING"),
-            nullable=True,
-            info=field(default_config=PurposeConfig(type_override=MultiLineString)),
-        )
-        shapely_multi_polygon: Mapped[MultiPolygon] = mapped_column(
-            Geometry("MULTIPOLYGON"),
-            nullable=True,
-            info=field(default_config=PurposeConfig(type_override=MultiPolygon)),
-        )
-        shapely_geometry: Mapped[shapely.Geometry] = mapped_column(
-            Geometry("GEOMETRY"),
-            nullable=True,
-            info=field(default_config=PurposeConfig(type_override=shapely.Geometry)),
-        )
-except ModuleNotFoundError:
-    geoalchemy_imported = False

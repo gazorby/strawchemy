@@ -5,7 +5,7 @@ import contextlib
 from dataclasses import MISSING as DATACLASS_MISSING
 from dataclasses import Field, fields
 from inspect import getmodule, signature
-from typing import TYPE_CHECKING, Any, TypeVar, cast, get_args, get_origin, get_type_hints, override
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast, get_args, get_origin, get_type_hints, override
 
 from typing_extensions import TypeIs
 
@@ -20,14 +20,18 @@ from sqlalchemy.orm import (
     RelationshipProperty,
     registry,
 )
+from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, ModelInspector
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.exceptions import ModelInspectorError
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, DTOMissingType, Purpose
+from strawchemy.utils import is_type_hint_optional
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator
     from types import ModuleType
+
+    from shapely import Geometry
 
     from sqlalchemy.orm import MapperProperty
 
@@ -36,6 +40,34 @@ __all__ = ("SQLAlchemyInspector",)
 
 
 T = TypeVar("T", bound=Any)
+
+
+_shapely_geometry_map: dict[str, type[Geometry]] = {}
+
+if GEO_INSTALLED:
+    from shapely import (
+        Geometry,
+        GeometryCollection,
+        LineString,
+        MultiLineString,
+        MultiPoint,
+        MultiPolygon,
+        Point,
+        Polygon,
+    )
+
+    # Possible values that can be passed to geoalchemy2.types._GISType
+    # https://geoalchemy-2.readthedocs.io/en/latest/types.html#geoalchemy2.types._GISType
+    _shapely_geometry_map = {
+        "GEOMETRY": Geometry,
+        "POINT": Point,
+        "LINESTRING": LineString,
+        "POLYGON": Polygon,
+        "MULTIPOINT": MultiPoint,
+        "MULTILINESTRING": MultiLineString,
+        "MULTIPOLYGON": MultiPolygon,
+        "GEOMETRYCOLLECTION": GeometryCollection,
+    }
 
 
 _SQLA_NS = {**vars(orm), **vars(sql)}
@@ -218,8 +250,22 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         if type_hint is DTO_MISSING:
             type_hint = self.get_type_hints(mapper.class_).get(model_field.key, DTO_MISSING)
 
+        type_hint = self._resolve_model_type_hint(type_hint)
+
+        # If column type is a geoalchemy geometry type, override type hint with the corresponding shapely type
+        if GEO_INSTALLED and (column_prop := mapper.columns.get(model_field.key)) is not None:
+            from geoalchemy2 import Geometry
+
+            if (
+                isinstance(column_prop.type, Geometry)
+                and column_prop.type.geometry_type is not None
+                and column_prop.type.geometry_type in _shapely_geometry_map
+            ):
+                geo_type_hint = _shapely_geometry_map[column_prop.type.geometry_type]
+                type_hint = Optional[geo_type_hint] if is_type_hint_optional(type_hint) else geo_type_hint  # noqa: UP007
+
         return DTOFieldDefinition(
-            type_hint=self._resolve_model_type_hint(type_hint),
+            type_hint=type_hint,
             model=mapper.class_,
             model_field_name=model_field.key,
             uselist=uselist,

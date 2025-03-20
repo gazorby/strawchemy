@@ -27,10 +27,10 @@ from strawberry.types.field import UNRESOLVED, StrawberryField
 from strawberry.utils.inspect import in_async_context
 from strawchemy.dto.base import ModelFieldT, ModelInspector, ModelT
 from strawchemy.dto.types import DTOConfig, Purpose
-from strawchemy.dto.utils import is_type_hint_optional
 from strawchemy.graphql.constants import DISTINCT_ON_KEY, FILTER_KEY, LIMIT_KEY, NODES_KEY, OFFSET_KEY, ORDER_BY_KEY
 from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO, StrawchemyDTOAttributes
 from strawchemy.types import DefaultOffsetPagination
+from strawchemy.utils import is_type_hint_optional
 
 from ._utils import dto_model_from_type, strawberry_contained_type
 from .exceptions import StrawchemyFieldError

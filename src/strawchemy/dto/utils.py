@@ -12,8 +12,7 @@ It exports the following:
 
 from __future__ import annotations
 
-from types import UnionType
-from typing import TYPE_CHECKING, Any, Optional, Union, get_args, get_origin
+from typing import TYPE_CHECKING, Any
 
 from .constants import DTO_INFO_KEY
 from .types import DTOConfig, DTOFieldConfig, ExcludeFields, IncludeFields, Purpose, PurposeConfig
@@ -27,7 +26,6 @@ __all__ = (
     "WRITE_ONLY",
     "config",
     "field",
-    "is_type_hint_optional",
     "read_all_config",
     "read_all_partial_config",
     "read_partial",
@@ -71,31 +69,6 @@ def field(
             configs=configs or {},
         ),
     }
-
-
-def is_type_hint_optional(type_hint: Any) -> bool:
-    """Whether the given type hint is considered as optional or not.
-
-    Returns:
-        `True` if arguments of the given type hint are optional
-
-    Three cases are considered:
-    ```
-        Optional[str]
-        Union[str, None]
-        str | None
-    ```
-    In any other form, the type hint will not be considered as optional
-    """
-    origin = get_origin(type_hint)
-    if origin is None:
-        return False
-    if origin is Optional:
-        return True
-    if origin in (Union, UnionType):
-        args = get_args(type_hint)
-        return any(arg is type(None) for arg in args)
-    return False
 
 
 read_partial = DTOConfig(Purpose.READ, partial=True)
