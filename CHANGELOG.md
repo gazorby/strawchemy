@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0](https://github.com/gazorby/strawchemy/compare/v0.6.0..v0.8.0) - 2025-03-20
+
+### 🚀 Features
+
+- *(geo)* Infer GeoJSON specific scalars to be inferred from shapely geometries - ([145f495](https://github.com/gazorby/strawchemy/commit/145f495ddfa8e9745e30d71fd2275cbffa3365d9))
+- *(geo)* Infer shapely types from geoalchemy columns - ([a8ed586](https://github.com/gazorby/strawchemy/commit/a8ed586be7475e24fe042910448cee3aa084ce6e))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.7.0 - ([65cb766](https://github.com/gazorby/strawchemy/commit/65cb766047bf80f024650f6be66cc4c2255cf44e))
+- *(release)* Bump to v0.8.0 - ([98c32c0](https://github.com/gazorby/strawchemy/commit/98c32c0bff6773ca87f9580fa4c406bd1738a3ab))
 ## [0.6.0](https://github.com/gazorby/strawchemy/compare/v0.5.3..v0.6.0) - 2025-03-19
 
 ### 🚀 Features
