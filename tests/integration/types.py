@@ -52,6 +52,10 @@ class FruitTypeWithDescription:
     def description(self) -> str:
         return self.instance.description
 
+    @strawchemy.field(query_hook=QueryHook(load_columns=[]))
+    def empty_query_hook(self) -> str:
+        return "success"
+
 
 @strawchemy.type(Fruit, exclude={"color"}, query_hook=_user_fruit_filter)
 class FilteredFruitType: ...

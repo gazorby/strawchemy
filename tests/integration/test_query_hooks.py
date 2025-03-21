@@ -50,7 +50,7 @@ def async_query() -> type[AsyncQuery]:
 
 @pytest.mark.parametrize("fruits_query", ["fruits", "fruitsPaginated"])
 @pytest.mark.snapshot
-async def test_always_load_column_hook(
+async def test_load_columns_hook(
     fruits_query: str,
     any_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
@@ -71,6 +71,16 @@ async def test_always_load_column_hook(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize("fruits_query", ["fruits", "fruitsPaginated"])
+async def test_empty_query_hook(fruits_query: str, any_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(any_query(f"{{ {fruits_query} {{ emptyQueryHook }} }}"))
+
+    assert not result.errors
+    assert result.data
+    assert len(result.data[fruits_query]) == 5
+    assert result.data[fruits_query] == [{"emptyQueryHook": "success"} for _ in range(5)]
 
 
 @pytest.mark.snapshot
