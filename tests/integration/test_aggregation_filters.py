@@ -73,8 +73,8 @@ def seed_insert_statements(
         pytest.param("gte", 2, [0, 1], id="gte-match"),
         pytest.param("lt", 3, [0, 1], id="lt-match"),
         pytest.param("lte", 2, [0, 1], id="lte-match"),
-        pytest.param("in_", [1, 2, 3], [0, 1], id="in-match"),
-        pytest.param("nin_", [0, 3, 4], [0, 1], id="nin-match"),
+        pytest.param("in", [1, 2, 3], [0, 1], id="in-match"),
+        pytest.param("nin", [0, 3, 4], [0, 1], id="nin-match"),
     ],
 )
 @pytest.mark.snapshot

@@ -31,5 +31,5 @@ class GeoComparison(GraphQLComparison[ModelT, ModelFieldT]):
 
     @override
     @classmethod
-    def field_name(cls) -> str:
+    def compared_type_name(cls) -> str:
         return "Geometry"

@@ -187,7 +187,7 @@ async def test_isnull(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-# Tests for in_ and nin_ filters
+# Tests for in and nin filters
 @pytest.mark.parametrize(
     ("field_name", "values", "expected_ids"),
     [
@@ -231,7 +231,7 @@ async def test_in(
     values_str = ", ".join(str(to_graphql_representation(value, "input")) for value in values)
     query = f"""
             {{
-                sqlDataTypes(filter: {{ {field_name}: {{ in_: [{values_str}] }} }}) {{
+                sqlDataTypes(filter: {{ {field_name}: {{ in: [{values_str}] }} }}) {{
                     id
                     {field_name}
                 }}
@@ -292,7 +292,7 @@ async def test_nin(
     values_str = ", ".join(str(to_graphql_representation(value, "input")) for value in values)
     query = f"""
             {{
-                sqlDataTypes(filter: {{ {field_name}: {{ nin_: [{values_str}] }} }}) {{
+                sqlDataTypes(filter: {{ {field_name}: {{ nin: [{values_str}] }} }}) {{
                     id
                     {field_name}
                 }}

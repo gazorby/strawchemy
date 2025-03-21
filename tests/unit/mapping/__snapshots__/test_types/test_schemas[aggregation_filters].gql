@@ -8,8 +8,8 @@
     eq: Float
     neq: Float
     isNull: Boolean
-    in_: [Float!]
-    nin_: [Float!]
+    in: [Float!]
+    nin: [Float!]
     gt: Float
     gte: Float
     lt: Float
@@ -97,8 +97,8 @@
     eq: Int
     neq: Int
     isNull: Boolean
-    in_: [Int!]
-    nin_: [Int!]
+    in: [Int!]
+    nin: [Int!]
     gt: Int
     gte: Int
     lt: Int
@@ -117,8 +117,8 @@
     eq: String
     neq: String
     isNull: Boolean
-    in_: [String!]
-    nin_: [String!]
+    in: [String!]
+    nin: [String!]
     like: String
     nlike: String
     ilike: String
@@ -210,8 +210,8 @@
     eq: UUID
     neq: UUID
     isNull: Boolean
-    in_: [UUID!]
-    nin_: [UUID!]
+    in: [UUID!]
+    nin: [UUID!]
   }
   
   """Aggregation fields"""

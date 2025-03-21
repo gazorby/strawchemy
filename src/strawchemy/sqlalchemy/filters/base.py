@@ -53,9 +53,7 @@ class GenericSQLAlchemyFilter(
 
     @override
     def to_expressions(
-        self,
-        dialect: Dialect,
-        model_attribute: QueryableAttribute[Any] | ColumnElement[Any],
+        self, dialect: Dialect, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
     ) -> list[ColumnElement[bool]]:
         """Convert filter to SQLAlchemy expressions.
 
@@ -74,8 +72,8 @@ class GenericSQLAlchemyFilter(
             expressions.append(model_attribute != self.neq)
         if "in_" in self.model_fields_set and self.in_ is not None:
             expressions.append(model_attribute.in_(self.in_))
-        if "nin_" in self.model_fields_set and self.nin_ is not None:
-            expressions.append(model_attribute.not_in(self.nin_))
+        if "nin" in self.model_fields_set and self.nin is not None:
+            expressions.append(model_attribute.not_in(self.nin))
         if "is_null" in self.model_fields_set and self.is_null is not None:
             expressions.append(model_attribute.is_(null()) if self.is_null else model_attribute.is_not(null()))
 
@@ -304,11 +302,6 @@ class TimeDeltaSQLAlchemyFilter(
 
         return expressions
 
-    @override
-    @classmethod
-    def field_type_name(cls) -> str:
-        return "IntervalComparison"
-
 
 class DateTimeSQLAlchemyFilter(BaseDateSQLAlchemyFilter, BaseTimeSQLAlchemyFilter, NumericSQLAlchemyFilter[datetime]):
     """DateTime SQLAlchemy filter for datetime comparison operations."""
@@ -330,7 +323,7 @@ class DateTimeSQLAlchemyFilter(BaseDateSQLAlchemyFilter, BaseTimeSQLAlchemyFilte
 
     @override
     @classmethod
-    def field_name(cls) -> str:
+    def compared_type_name(cls) -> str:
         """Return the DTO field name.
 
         Returns:

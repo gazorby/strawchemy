@@ -8,8 +8,8 @@
     eq: Boolean
     neq: Boolean
     isNull: Boolean
-    in_: [Boolean!]
-    nin_: [Boolean!]
+    in: [Boolean!]
+    nin: [Boolean!]
   }
   
   """Date (isoformat)"""
@@ -22,8 +22,8 @@
     eq: Date
     neq: Date
     isNull: Boolean
-    in_: [Date!]
-    nin_: [Date!]
+    in: [Date!]
+    nin: [Date!]
     gt: Date
     gte: Date
     lt: Date
@@ -48,8 +48,8 @@
     eq: DateTime
     neq: DateTime
     isNull: Boolean
-    in_: [DateTime!]
-    nin_: [DateTime!]
+    in: [DateTime!]
+    nin: [DateTime!]
     gt: DateTime
     gte: DateTime
     lt: DateTime
@@ -77,8 +77,8 @@
     eq: Decimal
     neq: Decimal
     isNull: Boolean
-    in_: [Decimal!]
-    nin_: [Decimal!]
+    in: [Decimal!]
+    nin: [Decimal!]
     gt: Decimal
     gte: Decimal
     lt: Decimal
@@ -92,8 +92,8 @@
     eq: Float
     neq: Float
     isNull: Boolean
-    in_: [Float!]
-    nin_: [Float!]
+    in: [Float!]
+    nin: [Float!]
     gt: Float
     gte: Float
     lt: Float
@@ -107,8 +107,8 @@
     eq: Int
     neq: Int
     isNull: Boolean
-    in_: [Int!]
-    nin_: [Int!]
+    in: [Int!]
+    nin: [Int!]
     gt: Int
     gte: Int
     lt: Int
@@ -121,14 +121,14 @@
   scalar Interval @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601#Durations")
   
   """
-  Boolean expression to compare fields of type Time. All fields are combined with logical 'AND'
+  Boolean expression to compare fields of type Interval. All fields are combined with logical 'AND'
   """
   input IntervalComparison {
     eq: Interval
     neq: Interval
     isNull: Boolean
-    in_: [Interval!]
-    nin_: [Interval!]
+    in: [Interval!]
+    nin: [Interval!]
     gt: Interval
     gte: Interval
     lt: Interval
@@ -151,8 +151,8 @@
     eq: JSON
     neq: JSON
     isNull: Boolean
-    in_: [JSON!]
-    nin_: [JSON!]
+    in: [JSON!]
+    nin: [JSON!]
     contains: JSON
     containedIn: JSON
     hasKey: String
@@ -211,8 +211,8 @@
     eq: String
     neq: String
     isNull: Boolean
-    in_: [String!]
-    nin_: [String!]
+    in: [String!]
+    nin: [String!]
     contains: [String!]
     containedIn: [String!]
     overlap: [String!]
@@ -225,8 +225,8 @@
     eq: String
     neq: String
     isNull: Boolean
-    in_: [String!]
-    nin_: [String!]
+    in: [String!]
+    nin: [String!]
     like: String
     nlike: String
     ilike: String
@@ -251,8 +251,8 @@
     eq: Time
     neq: Time
     isNull: Boolean
-    in_: [Time!]
-    nin_: [Time!]
+    in: [Time!]
+    nin: [Time!]
     gt: Time
     gte: Time
     lt: Time
@@ -271,8 +271,8 @@
     eq: UUID
     neq: UUID
     isNull: Boolean
-    in_: [UUID!]
-    nin_: [UUID!]
+    in: [UUID!]
+    nin: [UUID!]
   }
   '''
 # ---

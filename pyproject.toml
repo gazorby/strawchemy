@@ -387,3 +387,7 @@ exclude_also = [
     'raise NotImplementedError',
     '@(abc\.)?abstractmethod',
 ]
+
+[tool.codespell]
+skip = '*.po,*.ts,./src/3rdParty,./src/Test'
+ignore-words-list = "nin"
