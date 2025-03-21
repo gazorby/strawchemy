@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0](https://github.com/gazorby/strawchemy/compare/v0.8.0..v0.9.0) - 2025-03-21
+
+### 🚀 Features
+
+- *(filters)* Add order filters to string - ([d76c950](https://github.com/gazorby/strawchemy/commit/d76c9509e96cb2300e87bcc87d6aa23ad2215742))
+- *(filters)* Add insensitive regexp variants - ([27706d5](https://github.com/gazorby/strawchemy/commit/27706d5a9a26f909f2027145992e47d4a264f7f8))
+- Support postgres `Interval` type (mapping and filtering) - ([355994f](https://github.com/gazorby/strawchemy/commit/355994f6747d9b5aa6799708aa0e0063636e8019))
+
+### 📚 Documentation
+
+- *(readme)* Clarify supported filters - ([91a52b5](https://github.com/gazorby/strawchemy/commit/91a52b5cfd5218569cde02c54dae831ae843fdf0))
+- *(readme)* Update filter names - ([8e51154](https://github.com/gazorby/strawchemy/commit/8e51154172f678aeb2ddec39455607b7cfee88df))
+- *(readme)* Add type override documentation - ([5d34539](https://github.com/gazorby/strawchemy/commit/5d34539f5f7078a7935deb47d652de78481adebd))
+- *(readme)* Update filters section - ([83f43d3](https://github.com/gazorby/strawchemy/commit/83f43d3bc20da1e5d5eeac7f794789e8e18e099a))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.9.0 - ([36ac3b6](https://github.com/gazorby/strawchemy/commit/36ac3b6dee86a62a7d729619920b72f6046d67d8))
 ## [0.8.0](https://github.com/gazorby/strawchemy/compare/v0.6.0..v0.8.0) - 2025-03-20
 
 ### 🚀 Features
