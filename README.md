@@ -548,10 +548,10 @@ Strawchemy supports a wide range of filter operations:
 - **String**: `like`, `nlike`, `ilike`, `nilike`, `regexp`, `nregexp`, `startswith`, `endswith`, `contains`, `istartswith`, `iendswith`, `icontains`
 - **JSON**: `contains`, `containedIn`, `hasKey`, `hasKeyAll`, `hasKeyAny`
 - **Array**: `contains`, `containedIn`, `overlap`
-- **Date**: `year`, `month`, `day`, `weekDay`, `week`, `quarter`, `isoYear`, `isoWeekDay`
+- **Date**: numeric filters on plain dates, plus `year`, `month`, `day`, `weekDay`, `week`, `quarter`, `isoYear` and `isoWeekDay` filters
 - **DateTime**: All Date filters plus `hour`, `minute`, `second`
-- **Time**: `hour`, `minute`, `second`
-- **Interval**: numeric filters, plus `days`, `hours`, `minutes`, `seconds`
+- **Time**: numeric filters on plain times, plus `hour`, `minute` and `second` filters
+- **Interval**: numeric filters on plain intervals, plus `days`, `hours`, `minutes` and `seconds` filters
 - **Logical**: `_and`, `_or`, `_not`
 
 ### Geo Filters
