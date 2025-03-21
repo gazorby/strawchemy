@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.0](https://github.com/gazorby/strawchemy/compare/v0.9.0..v1.0.0) - 2025-03-21
+## [0.10.0](https://github.com/gazorby/strawchemy/compare/v0.9.0..v0.10.0) - 2025-03-21
 
 ### 🐛 Bug Fixes
 
@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 ### ⚙️ Miscellaneous Tasks
 
 - *(release)* Bump to v1.0.0 - ([ba914bc](https://github.com/gazorby/strawchemy/commit/ba914bc3a57d67d874a48fb47d604ecf2ed88365))
+- *(release)* Bump to v0.10.0 - ([03609ab](https://github.com/gazorby/strawchemy/commit/03609ab04e241c33826eae0f91cb3db9d01df64b))
 ## [0.9.0](https://github.com/gazorby/strawchemy/compare/v0.8.0..v0.9.0) - 2025-03-21
 
 ### 🚀 Features
