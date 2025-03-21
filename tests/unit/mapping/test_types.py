@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graphql.exceptions import InspectorError
+from strawchemy.sqlalchemy.exceptions import QueryHookError
 from strawchemy.strawberry.exceptions import StrawchemyFieldError
 from strawchemy.strawberry.scalars import Interval
 
@@ -132,6 +133,11 @@ def test_base_json_fails() -> None:
         match=("""Base SQLAlchemy JSON type is not supported. Use backend-specific json type instead."""),
     ):
         import_module("tests.unit.schemas.filters.filters_base_json")
+
+
+def test_query_hooks_load_columns_relationship_fails() -> None:
+    with pytest.raises(QueryHookError, match=("Relationships are not supported `load_columns`")):
+        import_module("tests.unit.schemas.query_hooks")
 
 
 @pytest.mark.parametrize(

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from strawchemy import ModelInstance, QueryHook, Strawchemy
 from strawchemy.sqlalchemy.hook import QueryHookResult
 
@@ -9,11 +11,17 @@ from strawberry import Info
 
 from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User
 
+if TYPE_CHECKING:
+    from strawchemy.sqlalchemy.typing import LoadMode
+
 strawchemy = Strawchemy()
 
 
 def _user_fruit_filter(
-    statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit], info: Info
+    statement: Select[tuple[Fruit]],
+    alias: AliasedClass[Fruit],
+    mode: LoadMode,  # noqa: ARG001
+    info: Info,
 ) -> QueryHookResult[Fruit]:
     if info.context.role == "user":
         return QueryHookResult(statement=statement.where(alias.name == "Apple"))
@@ -40,7 +48,7 @@ class FruitType: ...
 class FruitTypeWithDescription:
     instance: ModelInstance[Fruit]
 
-    @strawchemy.field(query_hook=QueryHook(always_load=[Fruit.name, Fruit.adjectives]))
+    @strawchemy.field(query_hook=QueryHook(load_columns=[Fruit.name, Fruit.adjectives]))
     def description(self) -> str:
         return self.instance.description
 

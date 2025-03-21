@@ -15,6 +15,75 @@
   FROM fruit AS fruit
   '''
 # ---
+# name: test_always_load_column_hook[session-tracked-fruits-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.adjectives,
+         fruit.id
+  FROM fruit AS fruit
+  '''
+# ---
+# name: test_always_load_column_hook[session-tracked-fruits-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.adjectives,
+         fruit.id
+  FROM fruit AS fruit
+  '''
+# ---
+# name: test_always_load_column_hook[session-tracked-fruits-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.adjectives,
+         fruit.id
+  FROM fruit AS fruit
+  '''
+# ---
+# name: test_always_load_column_hook[session-tracked-fruitsPaginated-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.adjectives,
+         fruit.id
+  FROM
+    (SELECT fruit.id AS id,
+            fruit.name AS name,
+            fruit.adjectives AS adjectives
+     FROM fruit AS fruit
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  LIMIT :param_3
+  '''
+# ---
+# name: test_always_load_column_hook[session-tracked-fruitsPaginated-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.adjectives,
+         fruit.id
+  FROM
+    (SELECT fruit.id AS id,
+            fruit.name AS name,
+            fruit.adjectives AS adjectives
+     FROM fruit AS fruit
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  LIMIT :param_3
+  '''
+# ---
+# name: test_always_load_column_hook[session-tracked-fruitsPaginated-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.adjectives,
+         fruit.id
+  FROM
+    (SELECT fruit.id AS id,
+            fruit.name AS name,
+            fruit.adjectives AS adjectives
+     FROM fruit AS fruit
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  LIMIT :param_3
+  '''
+# ---
 # name: test_always_load_column_hook[session-tracked-sync-psycopg_engine]
   '''
   SELECT fruit.name,

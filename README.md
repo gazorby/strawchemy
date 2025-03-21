@@ -428,8 +428,8 @@ from strawberry import Info
 class FruitTypeWithDescription:
     instance: ModelInstance[Fruit]
 
-    # Use QueryHook with always_load parameter to ensure columns are loaded
-    @strawchemy.field(query_hook=QueryHook(always_load=[Fruit.name, Fruit.adjectives]))
+    # Use QueryHook with load_columns parameter to ensure columns are loaded
+    @strawchemy.field(query_hook=QueryHook(load_columns=[Fruit.name, Fruit.adjectives]))
     def description(self) -> str:
         return f"The {self.instance.name} is {', '.join(self.instance.adjectives)}"
 

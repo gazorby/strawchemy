@@ -391,8 +391,10 @@ class Transpiler(Generic[DeclarativeT]):
         statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
 
         for hook_callable in self._query_hooks[query_graph.root_join_tree.root]:
-            hook = hook_callable(statement, self.scope.root_alias)
+            hook = hook_callable(statement, self.scope.root_alias, "statement")
             statement = hook.statement
+            if hook.load_options:
+                statement = statement.options(*hook.load_options)
 
         return aliased(class_mapper(self.scope.model), statement.subquery(subquery_name), name=subquery_name)
 
@@ -420,7 +422,7 @@ class Transpiler(Generic[DeclarativeT]):
             eager_options = [load_only(*columns)]
 
         for hook_callable in self._query_hooks[node]:
-            hook = hook_callable(statement, self.scope.alias_from_relation_node(node, "target"))
+            hook = hook_callable(statement, self.scope.alias_from_relation_node(node, "target"), "load_options")
             statement = hook.statement
             eager_options.extend(hook.load_options)
         load = load.options(*eager_options)
@@ -585,7 +587,7 @@ class Transpiler(Generic[DeclarativeT]):
         root_options = [load_only(*root_columns)] if root_columns else []
 
         for hook_callable in self._query_hooks[selection_tree.root]:
-            hook = hook_callable(statement, self.scope.root_alias)
+            hook = hook_callable(statement, self.scope.root_alias, "load_options")
             statement = hook.statement
             root_options.extend(hook.load_options)
 

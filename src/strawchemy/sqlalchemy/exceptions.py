@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-__all__ = ("QueryResultError", "TranspilingError")
+__all__ = ("QueryHookError", "QueryResultError", "TranspilingError")
 
 
 class TranspilingError(Exception):
@@ -10,3 +10,6 @@ class TranspilingError(Exception):
 
 
 class QueryResultError(Exception): ...
+
+
+class QueryHookError(Exception): ...
