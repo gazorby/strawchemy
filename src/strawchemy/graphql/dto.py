@@ -53,13 +53,13 @@ from strawchemy.graph import GraphError, MatchOn, Node, UndefinedType, undefined
 from strawchemy.utils import camel_to_snake
 
 from .constants import LIMIT_KEY, OFFSET_KEY, ORDER_BY_KEY
-from .filters import AnyNumericComparison
+from .filters import AnyOrderComparison
 from .typing import OrderByDTOT
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
 
-    from .filters import GenericComparison, GraphQLComparison, NumericComparison
+    from .filters import GenericComparison, GraphQLComparison, OrderComparison
     from .typing import AggregationFunction, AggregationType, FunctionInfo, QueryHookCallable
 
 T = TypeVar("T")
@@ -194,7 +194,7 @@ class OutputFunctionInfo:
 
 
 @dataclass
-class FilterFunctionInfo(Generic[ModelT, ModelFieldT, AnyNumericComparison]):
+class FilterFunctionInfo(Generic[ModelT, ModelFieldT, AnyOrderComparison]):
     function: AggregationFunction
     enum_fields: type[EnumDTO]
     aggregation_type: AggregationType
@@ -296,7 +296,7 @@ class FunctionFieldDefinition(GraphQLFieldDefinition[ModelT, ModelFieldT]):
         cls,
         field_def: DTOFieldDefinition[ModelT, ModelFieldT],
         *,
-        function: FilterFunctionInfo[ModelT, ModelFieldT, NumericComparison[Any, Any, Any]] | OutputFunctionInfo,
+        function: FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]] | OutputFunctionInfo,
         **kwargs: Any,
     ) -> Self:
         return super().from_field(field_def, _function=function, **kwargs)
@@ -445,7 +445,7 @@ class OrderByNode(QueryNode[ModelT, ModelFieldT]):
 
 @dataclass
 class AggregationFilter(Generic[ModelT, ModelFieldT]):
-    function_info: FilterFunctionInfo[ModelT, ModelFieldT, NumericComparison[Any, Any, Any]]
+    function_info: FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]]
     predicate: GenericComparison[Any, ModelT, ModelFieldT]
     field_node: QueryNode[ModelT, ModelFieldT]
     distinct: bool | None = None
@@ -498,7 +498,7 @@ class AggregateDTO(UnmappedDataclassGraphQLDTO[ModelT]): ...
 
 
 class AggregationFunctionFilterDTO(UnmappedPydanticGraphQLDTO[ModelT]):
-    __dto_function_info__: ClassVar[FilterFunctionInfo[Any, Any, NumericComparison[Any, Any, Any]]]
+    __dto_function_info__: ClassVar[FilterFunctionInfo[Any, Any, OrderComparison[Any, Any, Any]]]
 
     arguments: list[_HasValue[ModelT, Any]]
     predicate: GenericComparison[Any, ModelT, Any]

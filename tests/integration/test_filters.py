@@ -321,6 +321,7 @@ async def test_nin(
         pytest.param("timeCol", time(10, 0, 0), [0], id="time-gt"),
         pytest.param("datetimeCol", datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC), [0, 2], id="datetime-gt"),
         pytest.param("timeDeltaCol", timedelta(days=1), [0, 1], id="timedelta-gt"),
+        pytest.param("strCol", "az", [0], id="str-gt"),
     ],
 )
 @pytest.mark.snapshot
@@ -361,6 +362,7 @@ async def test_gt(
         pytest.param("timeCol", time(8, 15, 0), [0, 1], id="time-gte"),
         pytest.param("datetimeCol", datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC), [0, 2], id="datetime-gte"),
         pytest.param("timeDeltaCol", timedelta(weeks=1, days=3, hours=12), [1], id="timedelta-gte"),
+        pytest.param("strCol", "test string", [0], id="str-gte"),
     ],
 )
 @pytest.mark.snapshot
@@ -401,6 +403,7 @@ async def test_gte(
         pytest.param("timeCol", time(14, 0, 0), [1, 2], id="time-lt"),
         pytest.param("datetimeCol", datetime(2023, 1, 15, 0, 0, 0, tzinfo=UTC), [1], id="datetime-lt"),
         pytest.param("timeDeltaCol", timedelta(days=7), [0, 2], id="timedelta-lt"),
+        pytest.param("strCol", "bbbb", [1, 2], id="str-lt"),
     ],
 )
 @pytest.mark.snapshot
@@ -441,6 +444,7 @@ async def test_lt(
         pytest.param("timeCol", time(14, 30, 45), [0, 1, 2], id="time-lte"),
         pytest.param("datetimeCol", datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC), [0, 1], id="datetime-lte"),
         pytest.param("timeDeltaCol", timedelta(days=2, hours=23, minutes=59, seconds=59), [0, 2], id="timedelta-lte"),
+        pytest.param("strCol", "", [2], id="str-lte"),
     ],
 )
 @pytest.mark.snapshot

@@ -986,6 +986,30 @@
   WHERE sql_data_types.int_col > :int_col_1
   '''
 # ---
+# name: test_gt[session-tracked-str-gt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col > :str_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-str-gt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col > :str_col_1
+  '''
+# ---
+# name: test_gt[session-tracked-str-gt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col > :str_col_1
+  '''
+# ---
 # name: test_gt[session-tracked-time-gt-async-asyncpg_engine]
   '''
   SELECT sql_data_types.time_col,
@@ -1152,6 +1176,30 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE sql_data_types.int_col >= :int_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-str-gte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col >= :str_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-str-gte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col >= :str_col_1
+  '''
+# ---
+# name: test_gte[session-tracked-str-gte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col >= :str_col_1
   '''
 # ---
 # name: test_gte[session-tracked-time-gte-async-asyncpg_engine]
@@ -1682,6 +1730,30 @@
   WHERE sql_data_types.int_col < :int_col_1
   '''
 # ---
+# name: test_lt[session-tracked-str-lt-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < :str_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-str-lt-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < :str_col_1
+  '''
+# ---
+# name: test_lt[session-tracked-str-lt-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < :str_col_1
+  '''
+# ---
 # name: test_lt[session-tracked-time-lt-async-asyncpg_engine]
   '''
   SELECT sql_data_types.time_col,
@@ -1848,6 +1920,30 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE sql_data_types.int_col <= :int_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-str-lte-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col <= :str_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-str-lte-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col <= :str_col_1
+  '''
+# ---
+# name: test_lte[session-tracked-str-lte-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col <= :str_col_1
   '''
 # ---
 # name: test_lte[session-tracked-time-lte-async-asyncpg_engine]
