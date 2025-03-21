@@ -512,7 +512,6 @@ class Query:
     id
     name
   }
-
   # Nested filters
   users(filter: { posts: { title: { contains: "GraphQL" } } }) {
     id
@@ -522,9 +521,24 @@ class Query:
       title
     }
   }
+
+  # Compare interval component
+  tasks(filter: { duration: { days: { gt: 2 } } }) {
+    id
+    name
+    duration
+  }
+
+  # Direct interval comparison
+  tasks(filter: { duration: { gt: "P2DT5H" } }) {
+    id
+    name
+    duration
+  }
 }
 ```
 
+</details>
 </details>
 
 Strawchemy supports a wide range of filter operations:
@@ -534,9 +548,10 @@ Strawchemy supports a wide range of filter operations:
 - **String**: `like`, `nlike`, `ilike`, `nilike`, `regexp`, `nregexp`, `startswith`, `endswith`, `contains`, `istartswith`, `iendswith`, `icontains`
 - **JSON**: `contains`, `containedIn`, `hasKey`, `hasKeyAll`, `hasKeyAny`
 - **Array**: `contains`, `containedIn`, `overlap`
-- **Date**: `year`, `month`, `day`, `weekDay`, `week`, `quarter`, `isoYear`, `isoWeekDay`
+- **Date**: numeric filters on plain dates, plus `year`, `month`, `day`, `weekDay`, `week`, `quarter`, `isoYear` and `isoWeekDay` filters
 - **DateTime**: All Date filters plus `hour`, `minute`, `second`
-- **Time**: `hour`, `minute`, `second`
+- **Time**: numeric filters on plain times, plus `hour`, `minute` and `second` filters
+- **Interval**: numeric filters on plain intervals, plus `days`, `hours`, `minutes` and `seconds` filters
 - **Logical**: `_and`, `_or`, `_not`
 
 ### Geo Filters

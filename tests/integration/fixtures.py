@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, cast
@@ -12,6 +12,7 @@ import pytest
 import sqlparse
 from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
+from strawchemy.strawberry.scalars import Interval
 
 from sqlalchemy import URL, Engine, Executable, Insert, MetaData, NullPool, create_engine, insert
 from sqlalchemy.event import listens_for
@@ -55,7 +56,7 @@ __all__ = (
     "session",
 )
 
-scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON}
+scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval}
 
 if find_spec("geoalchemy2") is not None:
     from strawchemy.strawberry.geo import GEO_SCALAR_OVERRIDES
@@ -341,7 +342,7 @@ def raw_sql_data_types(raw_sql_data_types_container: RawRecordData) -> RawRecord
             "id": str(uuid4()),
             "date_col": date(2023, 1, 15),
             "time_col": time(14, 30, 45),
-            "time_delta_col": time(23, 59, 59),
+            "time_delta_col": timedelta(days=2, hours=23, minutes=59, seconds=59),
             "datetime_col": datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC),
             "str_col": "test string",
             "int_col": 42,
@@ -359,7 +360,7 @@ def raw_sql_data_types(raw_sql_data_types_container: RawRecordData) -> RawRecord
             "id": str(uuid4()),
             "date_col": date(2022, 12, 31),
             "time_col": time(8, 15, 0),
-            "time_delta_col": time(12, 0, 0),
+            "time_delta_col": timedelta(weeks=1, days=3, hours=12),
             "datetime_col": datetime(2022, 12, 31, 23, 59, 59, tzinfo=UTC),
             "str_col": "another string",
             "int_col": -10,
@@ -377,7 +378,7 @@ def raw_sql_data_types(raw_sql_data_types_container: RawRecordData) -> RawRecord
             "id": str(uuid4()),
             "date_col": date(2024, 2, 29),  # leap year
             "time_col": time(0, 0, 0),
-            "time_delta_col": time(1, 1, 1),
+            "time_delta_col": timedelta(microseconds=500000, seconds=1),
             "datetime_col": datetime(2024, 2, 29, 0, 0, 0, tzinfo=UTC),
             "str_col": "",  # empty string
             "int_col": 0,
@@ -401,7 +402,7 @@ def raw_sql_data_types_set1(raw_containers: RawRecordData) -> RawRecordData:
             "id": str(uuid4()),
             "date_col": date(2021, 6, 15),
             "time_col": time(10, 45, 30),
-            "time_delta_col": time(18, 30, 15),
+            "time_delta_col": timedelta(days=-5, hours=18, minutes=30, seconds=15),
             "datetime_col": datetime(2021, 6, 15, 10, 45, 30, tzinfo=UTC),
             "str_col": "data set 1 string",
             "int_col": 100,
@@ -419,7 +420,7 @@ def raw_sql_data_types_set1(raw_containers: RawRecordData) -> RawRecordData:
             "id": str(uuid4()),
             "date_col": date(2021, 7, 20),
             "time_col": time(15, 20, 10),
-            "time_delta_col": time(9, 45, 30),
+            "time_delta_col": timedelta(weeks=2, hours=9, minutes=45, seconds=30, microseconds=123456),
             "datetime_col": datetime(2021, 7, 20, 15, 20, 10, tzinfo=UTC),
             "str_col": "another set 1 string",
             "int_col": 75,
@@ -443,7 +444,7 @@ def raw_sql_data_types_set2(raw_containers: RawRecordData) -> RawRecordData:
             "id": str(uuid4()),
             "date_col": date(2020, 3, 10),
             "time_col": time(9, 15, 25),
-            "time_delta_col": time(16, 45, 0),
+            "time_delta_col": timedelta(days=30, hours=16, minutes=45),
             "datetime_col": datetime(2020, 3, 10, 9, 15, 25, tzinfo=UTC),
             "str_col": "data set 2 string",
             "int_col": 250,
@@ -461,7 +462,7 @@ def raw_sql_data_types_set2(raw_containers: RawRecordData) -> RawRecordData:
             "id": str(uuid4()),
             "date_col": date(2020, 9, 5),
             "time_col": time(13, 0, 0),
-            "time_delta_col": time(21, 15, 45),
+            "time_delta_col": timedelta(days=-10, hours=-5, minutes=15, seconds=45, microseconds=999999),
             "datetime_col": datetime(2020, 9, 5, 13, 0, 0, tzinfo=UTC),
             "str_col": "another set 2 string",
             "int_col": 180,

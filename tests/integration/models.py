@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
@@ -67,7 +67,7 @@ class SQLDataTypes(UUIDBase):
 
     date_col: Mapped[date]
     time_col: Mapped[time]
-    time_delta_col: Mapped[time]
+    time_delta_col: Mapped[timedelta]
     datetime_col: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     str_col: Mapped[str]
     int_col: Mapped[int]

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import textwrap
+from datetime import timedelta
 from importlib import import_module
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any
@@ -9,6 +10,7 @@ import pytest
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.strawberry.exceptions import StrawchemyFieldError
+from strawchemy.strawberry.scalars import Interval
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -24,6 +26,9 @@ if TYPE_CHECKING:
     from strawchemy.mapper import Strawchemy
 
     from syrupy.assertion import SnapshotAssertion
+
+
+SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval}
 
 
 def test_type_instance(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]) -> None:
@@ -165,7 +170,7 @@ def test_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
 
-    schema = strawberry.Schema(query=query_class, scalar_overrides={dict[str, Any]: JSON})
+    schema = strawberry.Schema(query=query_class, scalar_overrides=SCALAR_OVERRIDES)
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
 
 
@@ -181,7 +186,7 @@ def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
 
-    schema = strawberry.Schema(query=query_class, scalar_overrides={dict[str, Any]: JSON, **GEO_SCALAR_OVERRIDES})
+    schema = strawberry.Schema(query=query_class, scalar_overrides=(SCALAR_OVERRIDES | GEO_SCALAR_OVERRIDES))
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
 
 
@@ -197,5 +202,5 @@ def test_mutation_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> Non
         def hello(self) -> str:
             return "world"
 
-    schema = strawberry.Schema(query=Query, mutation=mutation_class, scalar_overrides={dict[str, Any]: JSON})
+    schema = strawberry.Schema(query=Query, mutation=mutation_class, scalar_overrides=SCALAR_OVERRIDES)
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot

@@ -7,6 +7,7 @@ from .base import (
     NumericSQLAlchemyFilter,
     SQLAlchemyFilterBase,
     TextSQLAlchemyFilter,
+    TimeDeltaSQLAlchemyFilter,
     TimeSQLAlchemyFilter,
 )
 from .postgresql import JSONBSQLAlchemyFilter, PostgresArraySQLAlchemyFilter
@@ -22,5 +23,6 @@ __all__ = (
     "PostgresArraySQLAlchemyFilter",
     "SQLAlchemyFilterBase",
     "TextSQLAlchemyFilter",
+    "TimeDeltaSQLAlchemyFilter",
     "TimeSQLAlchemyFilter",
 )

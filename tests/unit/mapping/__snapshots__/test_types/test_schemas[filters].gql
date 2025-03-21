@@ -116,6 +116,30 @@
   }
   
   """
+  The `Interval` scalar type represents a duration of time as specified by [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations).
+  """
+  scalar Interval @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601#Durations")
+  
+  """
+  Boolean expression to compare fields of type Time. All fields are combined with logical 'AND'
+  """
+  input IntervalComparison {
+    eq: Interval
+    neq: Interval
+    isNull: Boolean
+    in_: [Interval!]
+    nin_: [Interval!]
+    gt: Interval
+    gte: Interval
+    lt: Interval
+    lte: Interval
+    days: FloatComparison
+    hours: FloatComparison
+    minutes: FloatComparison
+    seconds: FloatComparison
+  }
+  
+  """
   The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
   """
   scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
@@ -151,7 +175,7 @@
     id: UUIDComparison
     dateCol: DateComparison
     timeCol: TimeComparison
-    timeDeltaCol: TimeComparison
+    timeDeltaCol: IntervalComparison
     datetimeCol: DateTimeComparison
     strCol: StringComparison
     intCol: IntComparison
@@ -168,7 +192,7 @@
     id: UUID!
     dateCol: Date!
     timeCol: Time!
-    timeDeltaCol: Time!
+    timeDeltaCol: Interval!
     datetimeCol: DateTime!
     strCol: String!
     intCol: Int!

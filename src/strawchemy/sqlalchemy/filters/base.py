@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import abc
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
 
 from sqlalchemy import ColumnElement, Dialect, func, not_, null
@@ -13,6 +13,7 @@ from strawchemy.graphql.filters import (
     NumericComparison,
     TextComparison,
     TimeComparison,
+    TimeDeltaComparison,
 )
 
 if TYPE_CHECKING:
@@ -26,6 +27,7 @@ __all__ = (
     "GenericSQLAlchemyFilter",
     "NumericSQLAlchemyFilter",
     "TextSQLAlchemyFilter",
+    "TimeDeltaSQLAlchemyFilter",
     "TimeSQLAlchemyFilter",
 )
 
@@ -273,6 +275,39 @@ class DateSQLAlchemyFilter(BaseDateSQLAlchemyFilter, NumericSQLAlchemyFilter[dat
 
 class TimeSQLAlchemyFilter(BaseTimeSQLAlchemyFilter, NumericSQLAlchemyFilter[time]):
     """Time SQLAlchemy filter for time comparison operations."""
+
+
+class TimeDeltaSQLAlchemyFilter(
+    TimeDeltaComparison[NumericSQLAlchemyFilter[float], DeclarativeBase, QueryableAttribute[Any]],
+    NumericSQLAlchemyFilter[timedelta],
+):
+    """Time delta SQLAlchemy filter for interval comparison operations."""
+
+    @override
+    def to_expressions(
+        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+    ) -> list[ColumnElement[bool]]:
+        expressions = super().to_expressions(dialect, model_attribute)
+
+        if dialect.name == "postgresql":
+            if "days" in self.model_fields_set and self.days:
+                seconds_in_day = 60 * 60 * 24
+                expressions.extend(
+                    self.days.to_expressions(dialect, func.extract("EPOCH", model_attribute) / seconds_in_day)
+                )
+            if "hours" in self.model_fields_set and self.hours:
+                expressions.extend(self.hours.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 3600))
+            if "minutes" in self.model_fields_set and self.minutes:
+                expressions.extend(self.minutes.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 60))
+            if "seconds" in self.model_fields_set and self.seconds:
+                expressions.extend(self.seconds.to_expressions(dialect, func.extract("EPOCH", model_attribute)))
+
+        return expressions
+
+    @override
+    @classmethod
+    def field_type_name(cls) -> str:
+        return "IntervalComparison"
 
 
 class DateTimeSQLAlchemyFilter(BaseDateSQLAlchemyFilter, BaseTimeSQLAlchemyFilter, NumericSQLAlchemyFilter[datetime]):

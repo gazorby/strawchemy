@@ -4,7 +4,13 @@ from typing import TYPE_CHECKING, Any, override
 
 from strawchemy.dto import DTOConfig, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.graphql.dto import OrderByEnum
-from strawchemy.graphql.filters import DateComparison, GraphQLComparison, GraphQLFilter, TimeComparison
+from strawchemy.graphql.filters import (
+    DateComparison,
+    GraphQLComparison,
+    GraphQLFilter,
+    TimeComparison,
+    TimeDeltaComparison,
+)
 from strawchemy.graphql.inspector import GraphQLInspectorProtocol
 
 from ._utils import pydantic_from_strawberry_type
@@ -25,6 +31,8 @@ class _StrawberryModelInspector(GraphQLInspectorProtocol[ModelT, ModelFieldT]):
     def _register_sub_types(self, comparison_type: type[GraphQLFilter[ModelT, ModelFieldT]]) -> None:
         if issubclass(comparison_type, TimeComparison | DateComparison):
             self._registry.register_comparison_type(self._inspector.get_type_comparison(int))
+        if issubclass(comparison_type, TimeDeltaComparison):
+            self._registry.register_comparison_type(self._inspector.get_type_comparison(float))
 
     @override
     def field_definitions(
