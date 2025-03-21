@@ -119,6 +119,10 @@
     isNull: Boolean
     in: [String!]
     nin: [String!]
+    gt: String
+    gte: String
+    lt: String
+    lte: String
     like: String
     nlike: String
     ilike: String

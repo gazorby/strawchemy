@@ -17,7 +17,7 @@ from .filters import (
     DateSQLAlchemyFilter,
     DateTimeSQLAlchemyFilter,
     GenericSQLAlchemyFilter,
-    NumericSQLAlchemyFilter,
+    OrderSQLAlchemyFilter,
     SQLAlchemyFilterBase,
     TextSQLAlchemyFilter,
     TimeDeltaSQLAlchemyFilter,
@@ -46,7 +46,7 @@ _DEFAULT_FILTERS_MAP: FilterMap = OrderedDict(
         (time,): TimeSQLAlchemyFilter,
         (date,): DateSQLAlchemyFilter,
         (bool,): GenericSQLAlchemyFilter,
-        (int, float, Decimal): NumericSQLAlchemyFilter,
+        (int, float, Decimal): OrderSQLAlchemyFilter,
         (str,): TextSQLAlchemyFilter,
     }
 )

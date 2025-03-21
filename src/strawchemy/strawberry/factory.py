@@ -54,7 +54,7 @@ if TYPE_CHECKING:
     from strawchemy import Strawchemy
     from strawchemy.dto.types import ExcludeFields, IncludeFields
     from strawchemy.graph import Node
-    from strawchemy.graphql.filters import NumericComparison
+    from strawchemy.graphql.filters import OrderComparison
     from strawchemy.graphql.inspector import GraphQLInspectorProtocol
     from strawchemy.graphql.typing import AggregationType
     from strawchemy.sqlalchemy.typing import QueryHookCallable
@@ -544,7 +544,7 @@ class StrawberryOrderByInputFactory(
     @override
     def _order_by_aggregation_fields(
         self,
-        aggregation: FilterFunctionInfo[ModelT, ModelFieldT, NumericComparison[Any, Any, Any]],
+        aggregation: FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]],
         model: type[Any],
         dto_config: DTOConfig,
     ) -> type[OrderByDTO[ModelT, ModelFieldT]]:
@@ -667,7 +667,7 @@ class StrawberryAggregateFilterInputFactory(
         model: type[T],
         dto_config: DTOConfig,
         dto_name: str,
-        aggregation: FilterFunctionInfo[T, ModelFieldT, NumericComparison[Any, Any, Any]],
+        aggregation: FilterFunctionInfo[T, ModelFieldT, OrderComparison[Any, Any, Any]],
         model_field: DTOMissingType | ModelFieldT,
         parent_field_def: DTOFieldDefinition[ModelT, Any] | None = None,
     ) -> type[AggregationFunctionFilterDTO[ModelT]]:

@@ -17,7 +17,7 @@ if TYPE_CHECKING:
         UnmappedDataclassGraphQLDTO,
         UnmappedPydanticGraphQLDTO,
     )
-    from .filters import NumericComparison
+    from .filters import OrderComparison
 
 QueryObject = TypeVar("QueryObject", bound=Any)
 GraphQLFilterDTOT = TypeVar("GraphQLFilterDTOT", bound="GraphQLFilterDTO[Any]")
@@ -37,6 +37,4 @@ QueryHookCallable: TypeAlias = "Callable[..., Any]"
 PydanticGraphQLDTO: TypeAlias = "UnmappedPydanticGraphQLDTO[Any]"
 DataclassGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[Any] | UnmappedDataclassGraphQLDTO[Any]"
 GraphQLDTO: TypeAlias = "PydanticGraphQLDTO | DataclassGraphQLDTO"
-FunctionInfo: TypeAlias = (
-    "FilterFunctionInfo[ModelT, ModelFieldT, NumericComparison[Any, Any, Any]] | OutputFunctionInfo"
-)
+FunctionInfo: TypeAlias = "FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]] | OutputFunctionInfo"

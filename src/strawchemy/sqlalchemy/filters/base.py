@@ -10,7 +10,7 @@ from strawchemy.graphql.filters import (
     DateComparison,
     GenericComparison,
     GraphQLComparison,
-    NumericComparison,
+    OrderComparison,
     TextComparison,
     TimeComparison,
     TimeDeltaComparison,
@@ -25,7 +25,7 @@ __all__ = (
     "DateSQLAlchemyFilter",
     "DateTimeSQLAlchemyFilter",
     "GenericSQLAlchemyFilter",
-    "NumericSQLAlchemyFilter",
+    "OrderSQLAlchemyFilter",
     "TextSQLAlchemyFilter",
     "TimeDeltaSQLAlchemyFilter",
     "TimeSQLAlchemyFilter",
@@ -80,10 +80,10 @@ class GenericSQLAlchemyFilter(
         return expressions
 
 
-class NumericSQLAlchemyFilter(
-    NumericComparison[T, DeclarativeBase, QueryableAttribute[Any]], GenericSQLAlchemyFilter[T], Generic[T]
+class OrderSQLAlchemyFilter(
+    OrderComparison[T, DeclarativeBase, QueryableAttribute[Any]], GenericSQLAlchemyFilter[T], Generic[T]
 ):
-    """Numeric SQLAlchemy filter for numeric comparison operations.
+    """Order filter for comparison operations on values that can be ordered.
 
     This class extends GenericSQLAlchemyFilter and adds filtering
     capabilities for greater than, greater than or equal to, less than,
@@ -119,7 +119,7 @@ class NumericSQLAlchemyFilter(
         return expressions
 
 
-class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[Any]], GenericSQLAlchemyFilter[str]):
+class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[Any]], OrderSQLAlchemyFilter[str]):
     """Text SQLAlchemy filter for text comparison operations.
 
     This class extends GenericSQLAlchemyFilter and adds filtering
@@ -191,7 +191,7 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
         return expressions
 
 
-class BaseDateSQLAlchemyFilter(DateComparison[NumericSQLAlchemyFilter[int], DeclarativeBase, QueryableAttribute[Any]]):
+class BaseDateSQLAlchemyFilter(DateComparison[OrderSQLAlchemyFilter[int], DeclarativeBase, QueryableAttribute[Any]]):
     """Base Date SQLAlchemy filter for date comparison operations.
 
     This class extends DateComparison and adds filtering
@@ -234,7 +234,7 @@ class BaseDateSQLAlchemyFilter(DateComparison[NumericSQLAlchemyFilter[int], Decl
         return expressions
 
 
-class BaseTimeSQLAlchemyFilter(TimeComparison[NumericSQLAlchemyFilter[int], DeclarativeBase, QueryableAttribute[Any]]):
+class BaseTimeSQLAlchemyFilter(TimeComparison[OrderSQLAlchemyFilter[int], DeclarativeBase, QueryableAttribute[Any]]):
     """Base Time SQLAlchemy filter for time comparison operations.
 
     This class extends TimeComparison and adds filtering
@@ -267,17 +267,17 @@ class BaseTimeSQLAlchemyFilter(TimeComparison[NumericSQLAlchemyFilter[int], Decl
         return expressions
 
 
-class DateSQLAlchemyFilter(BaseDateSQLAlchemyFilter, NumericSQLAlchemyFilter[date]):
+class DateSQLAlchemyFilter(BaseDateSQLAlchemyFilter, OrderSQLAlchemyFilter[date]):
     """Date SQLAlchemy filter for date comparison operations."""
 
 
-class TimeSQLAlchemyFilter(BaseTimeSQLAlchemyFilter, NumericSQLAlchemyFilter[time]):
+class TimeSQLAlchemyFilter(BaseTimeSQLAlchemyFilter, OrderSQLAlchemyFilter[time]):
     """Time SQLAlchemy filter for time comparison operations."""
 
 
 class TimeDeltaSQLAlchemyFilter(
-    TimeDeltaComparison[NumericSQLAlchemyFilter[float], DeclarativeBase, QueryableAttribute[Any]],
-    NumericSQLAlchemyFilter[timedelta],
+    TimeDeltaComparison[OrderSQLAlchemyFilter[float], DeclarativeBase, QueryableAttribute[Any]],
+    OrderSQLAlchemyFilter[timedelta],
 ):
     """Time delta SQLAlchemy filter for interval comparison operations."""
 
@@ -303,7 +303,7 @@ class TimeDeltaSQLAlchemyFilter(
         return expressions
 
 
-class DateTimeSQLAlchemyFilter(BaseDateSQLAlchemyFilter, BaseTimeSQLAlchemyFilter, NumericSQLAlchemyFilter[datetime]):
+class DateTimeSQLAlchemyFilter(BaseDateSQLAlchemyFilter, BaseTimeSQLAlchemyFilter, OrderSQLAlchemyFilter[datetime]):
     """DateTime SQLAlchemy filter for datetime comparison operations."""
 
     @override

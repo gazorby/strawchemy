@@ -65,7 +65,7 @@ if TYPE_CHECKING:
 
     from strawchemy.graph import Node
 
-    from .filters import GraphQLFilter, NumericComparison
+    from .filters import GraphQLFilter, OrderComparison
     from .inspector import GraphQLInspectorProtocol
     from .typing import AggregationFunction, AggregationType
 
@@ -489,12 +489,12 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
 
     def filter_functions(
         self, model: type[Any], dto_config: DTOConfig
-    ) -> list[FilterFunctionInfo[ModelT, ModelFieldT, NumericComparison[Any, Any, Any]]]:
+    ) -> list[FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]]]:
         count_fields = self._count_fields_factory.factory(model=model, dto_config=dto_config)
         numeric_arg_fields = self.arguments_type(model, dto_config, "numeric")
         sum_arg_fields = self.arguments_type(model, dto_config, "sum")
 
-        aggregations: list[FilterFunctionInfo[ModelT, ModelFieldT, NumericComparison[Any, Any, Any]]] = [
+        aggregations: list[FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]]] = [
             FilterFunctionInfo(
                 enum_fields=count_fields,
                 function="count",
@@ -1108,7 +1108,7 @@ class AggregateFilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, Aggregat
         model: type[T],
         dto_config: DTOConfig,
         dto_name: str,
-        aggregation: FilterFunctionInfo[T, ModelFieldT, NumericComparison[Any, Any, Any]],
+        aggregation: FilterFunctionInfo[T, ModelFieldT, OrderComparison[Any, Any, Any]],
         model_field: DTOMissingType | ModelFieldT,
         parent_field_def: DTOFieldDefinition[ModelT, Any] | None,
     ) -> type[AggregationFunctionFilterDTO[ModelT]]:
@@ -1257,7 +1257,7 @@ class OrderByDTOFactory(FilterDTOFactory[ModelT, ModelFieldT, OrderByDTO[ModelT,
 
     def _order_by_aggregation_fields(
         self,
-        aggregation: FilterFunctionInfo[ModelT, ModelFieldT, NumericComparison[Any, Any, Any]],
+        aggregation: FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]],
         model: type[Any],
         dto_config: DTOConfig,
     ) -> type[OrderByDTO[ModelT, ModelFieldT]]:

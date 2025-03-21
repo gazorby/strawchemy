@@ -24,7 +24,7 @@ __all__ = (
     "GenericComparison",
     "GraphQLComparison",
     "JSONComparison",
-    "NumericComparison",
+    "OrderComparison",
     "PostgresArrayComparison",
     "TextComparison",
     "TimeComparison",
@@ -33,7 +33,7 @@ __all__ = (
 
 T = TypeVar("T")
 AnyGraphQLComparison = TypeVar("AnyGraphQLComparison", bound="GraphQLComparison[Any, Any]")
-AnyNumericComparison = TypeVar("AnyNumericComparison", bound="NumericComparison[Any, Any, Any]")
+AnyOrderComparison = TypeVar("AnyOrderComparison", bound="OrderComparison[Any, Any, Any]")
 GraphQLFilter: TypeAlias = "GraphQLComparison[ModelT, ModelFieldT] | OrderByEnum"
 
 
@@ -128,8 +128,8 @@ class GenericComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T, Model
         return _normalize_field_name(type_)
 
 
-class NumericComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T, ModelT, ModelFieldT]):
-    """Numeric comparison class for GraphQL filters.
+class OrderComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T, ModelT, ModelFieldT]):
+    """Order comparison class for GraphQL filters.
 
     This class provides a set of numeric comparison operators that can be
     used to filter data based on greater than, less than, and equality.
@@ -241,7 +241,7 @@ class PostgresArrayComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T,
         return f"{cls.compared_type_name()}ArrayComparison"
 
 
-class DateComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericComparison, ModelT, ModelFieldT]):
+class DateComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyOrderComparison, ModelT, ModelFieldT]):
     """Date comparison class for GraphQL filters.
 
     This class provides a set of date component comparison operators that
@@ -258,14 +258,14 @@ class DateComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericC
         iso_week_day: Filters based on the ISO day of the week.
     """
 
-    year: AnyNumericComparison | None = None
-    month: AnyNumericComparison | None = None
-    day: AnyNumericComparison | None = None
-    week_day: AnyNumericComparison | None = None
-    week: AnyNumericComparison | None = None
-    quarter: AnyNumericComparison | None = None
-    iso_year: AnyNumericComparison | None = None
-    iso_week_day: AnyNumericComparison | None = None
+    year: AnyOrderComparison | None = None
+    month: AnyOrderComparison | None = None
+    day: AnyOrderComparison | None = None
+    week_day: AnyOrderComparison | None = None
+    week: AnyOrderComparison | None = None
+    quarter: AnyOrderComparison | None = None
+    iso_year: AnyOrderComparison | None = None
+    iso_week_day: AnyOrderComparison | None = None
 
     @override
     @classmethod
@@ -273,7 +273,7 @@ class DateComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericC
         return "Date"
 
 
-class TimeComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericComparison, ModelT, ModelFieldT]):
+class TimeComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyOrderComparison, ModelT, ModelFieldT]):
     """Time comparison class for GraphQL filters.
 
     This class provides a set of time component comparison operators that
@@ -285,9 +285,9 @@ class TimeComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericC
         second: Filters based on the second.
     """
 
-    hour: AnyNumericComparison | None = None
-    minute: AnyNumericComparison | None = None
-    second: AnyNumericComparison | None = None
+    hour: AnyOrderComparison | None = None
+    minute: AnyOrderComparison | None = None
+    second: AnyOrderComparison | None = None
 
     @override
     @classmethod
@@ -295,11 +295,11 @@ class TimeComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericC
         return "Time"
 
 
-class TimeDeltaComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericComparison, ModelT, ModelFieldT]):
-    days: AnyNumericComparison | None = None
-    hours: AnyNumericComparison | None = None
-    minutes: AnyNumericComparison | None = None
-    seconds: AnyNumericComparison | None = None
+class TimeDeltaComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyOrderComparison, ModelT, ModelFieldT]):
+    days: AnyOrderComparison | None = None
+    hours: AnyOrderComparison | None = None
+    minutes: AnyOrderComparison | None = None
+    seconds: AnyOrderComparison | None = None
 
     @override
     @classmethod
