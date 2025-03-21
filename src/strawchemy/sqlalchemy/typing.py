@@ -47,12 +47,13 @@ QueryExecutorT = TypeVar("QueryExecutorT", bound="QueryExecutor[Any]")
 
 RelationshipSide: TypeAlias = Literal["parent", "target"]
 StatementType = Literal["lambda", "select"]
+LoadMode = Literal["load_options", "statement"]
 SQLAlchemyQueryNode: TypeAlias = "QueryNode[DeclarativeBase, QueryableAttribute[Any]]"
 SQLAlchemyOrderByNode: TypeAlias = "OrderByNode[DeclarativeBase, QueryableAttribute[Any]]"
 type ColumnOrRelationship = "Column[Any] | RelationshipProperty[Any]"
 FunctionGenerator: TypeAlias = "Callable[..., Function[Any]]"
-QueryHookCallableWithoutInfo: TypeAlias = "Callable[[Select[tuple[QueryHookDeclarativeT]], AliasedClass[QueryHookDeclarativeT]], QueryHookResult[QueryHookDeclarativeT]]"
-QueryHookCallableWithInfo: TypeAlias = "Callable[[Select[tuple[QueryHookDeclarativeT]], AliasedClass[QueryHookDeclarativeT], Info[Any, Any]], QueryHookResult[QueryHookDeclarativeT]]"
+QueryHookCallableWithoutInfo: TypeAlias = "Callable[[Select[tuple[QueryHookDeclarativeT]], AliasedClass[QueryHookDeclarativeT], LoadMode], QueryHookResult[QueryHookDeclarativeT]]"
+QueryHookCallableWithInfo: TypeAlias = "Callable[[Select[tuple[QueryHookDeclarativeT]], AliasedClass[QueryHookDeclarativeT], LoadMode, Info[Any, Any]], QueryHookResult[QueryHookDeclarativeT]]"
 QueryHookCallable: TypeAlias = (
     "QueryHookCallableWithoutInfo[QueryHookDeclarativeT] | QueryHookCallableWithInfo[QueryHookDeclarativeT]"
 )
