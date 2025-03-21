@@ -543,7 +543,7 @@ class Query:
 
 Strawchemy supports a wide range of filter operations:
 
-- **Common to most types**: `eq`, `neq`, `isNull`, `in_`, `nin_`
+- **Common to most types**: `eq`, `neq`, `isNull`, `in`, `nin`
 - **Numeric types (Int, Float, Decimal)**: `gt`, `gte`, `lt`, `lte`
 - **String**: `like`, `nlike`, `ilike`, `nilike`, `regexp`, `nregexp`, `startswith`, `endswith`, `contains`, `istartswith`, `iendswith`, `icontains`
 - **JSON**: `contains`, `containedIn`, `hasKey`, `hasKeyAll`, `hasKeyAny`

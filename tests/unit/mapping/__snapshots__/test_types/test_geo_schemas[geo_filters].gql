@@ -87,8 +87,8 @@
     eq: UUID
     neq: UUID
     isNull: Boolean
-    in_: [UUID!]
-    nin_: [UUID!]
+    in: [UUID!]
+    nin: [UUID!]
   }
   '''
 # ---

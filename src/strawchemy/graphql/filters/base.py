@@ -10,11 +10,9 @@ compare fields of DTOs in GraphQL queries.
 # ruff: noqa: TC003, TC002, TC001
 from __future__ import annotations
 
-import time
-from datetime import date
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeAlias, TypeVar, override
 
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 from strawchemy.dto.base import ModelFieldT, ModelT
 from strawchemy.pydantic import RegexPatternStr
 
@@ -64,6 +62,8 @@ class GraphQLComparison(BaseModel, Generic[ModelT, ModelFieldT]):
         _field_node: A private attribute that stores the DTO field node.
     """
 
+    model_config = ConfigDict(populate_by_name=True)
+
     _description: ClassVar[str] = (
         "Boolean expression to compare fields of type {field}. All fields are combined with logical 'AND'"
     )
@@ -73,21 +73,21 @@ class GraphQLComparison(BaseModel, Generic[ModelT, ModelFieldT]):
         raise NotImplementedError
 
     @classmethod
-    def field_type_name(cls) -> str:
+    def comparison_type_name(cls) -> str:
         try:
-            prefix = cls.field_name()
+            prefix = cls.compared_type_name()
         except NotImplementedError:
             prefix = cls.__name__
 
         return f"{prefix}Comparison"
 
     @classmethod
-    def field_name(cls) -> str:
+    def compared_type_name(cls) -> str:
         raise NotImplementedError
 
     @classmethod
     def field_description(cls) -> str:
-        return cls._description.format(field=cls.field_name())
+        return cls._description.format(field=cls.compared_type_name())
 
     @property
     def field_node(self) -> QueryNode[ModelT, ModelFieldT]:
@@ -111,19 +111,19 @@ class GenericComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T, Model
         eq: Filters for values equal to this.
         neq: Filters for values not equal to this.
         is_null: Filters for null values if True, or non-null values if False.
-        in_: Filters for values present in this list.
-        nin_: Filters for values not present in this list.
+        in: Filters for values present in this list.
+        nin: Filters for values not present in this list.
     """
 
     eq: T | None = None
     neq: T | None = None
     is_null: bool | None = None
-    in_: list[T] | None = None
-    nin_: list[T] | None = None
+    in_: list[T] | None = Field(alias="in", default=None)
+    nin: list[T] | None = None
 
     @override
     @classmethod
-    def field_name(cls) -> str:
+    def compared_type_name(cls) -> str:
         type_: type[Any] = cls.__pydantic_generic_metadata__["args"][0]
         return _normalize_field_name(type_)
 
@@ -183,8 +183,8 @@ class TextComparison(GraphQLComparison[ModelT, ModelFieldT]):
 
     @override
     @classmethod
-    def field_name(cls) -> str:
-        return _normalize_field_name(str)
+    def compared_type_name(cls) -> str:
+        return "String"
 
 
 class JSONComparison(GraphQLComparison[ModelT, ModelFieldT]):
@@ -210,7 +210,7 @@ class JSONComparison(GraphQLComparison[ModelT, ModelFieldT]):
 
     @override
     @classmethod
-    def field_name(cls) -> str:
+    def compared_type_name(cls) -> str:
         return "JSON"
 
 
@@ -237,8 +237,8 @@ class PostgresArrayComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[T,
 
     @override
     @classmethod
-    def field_type_name(cls) -> str:
-        return f"{cls.field_name()}ArrayComparison"
+    def comparison_type_name(cls) -> str:
+        return f"{cls.compared_type_name()}ArrayComparison"
 
 
 class DateComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericComparison, ModelT, ModelFieldT]):
@@ -269,8 +269,8 @@ class DateComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericC
 
     @override
     @classmethod
-    def field_name(cls) -> str:
-        return _normalize_field_name(date)
+    def compared_type_name(cls) -> str:
+        return "Date"
 
 
 class TimeComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericComparison, ModelT, ModelFieldT]):
@@ -291,8 +291,8 @@ class TimeComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericC
 
     @override
     @classmethod
-    def field_name(cls) -> str:
-        return _normalize_field_name(time)
+    def compared_type_name(cls) -> str:
+        return "Time"
 
 
 class TimeDeltaComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericComparison, ModelT, ModelFieldT]):
@@ -303,5 +303,5 @@ class TimeDeltaComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNum
 
     @override
     @classmethod
-    def field_name(cls) -> str:
-        return _normalize_field_name(time)
+    def compared_type_name(cls) -> str:
+        return "Interval"

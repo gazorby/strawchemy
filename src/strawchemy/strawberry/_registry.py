@@ -285,7 +285,7 @@ class StrawberryRegistry:
     def register_comparison_type(
         self, comparison_type: type[AnyGraphQLComparison]
     ) -> type[StrawberryTypeFromPydantic[AnyGraphQLComparison]]:
-        type_info = RegistryTypeInfo(name=comparison_type.field_type_name(), graphql_type="input")
+        type_info = RegistryTypeInfo(name=comparison_type.comparison_type_name(), graphql_type="input")
         if geo_comparison is not None and issubclass(comparison_type, geo_comparison):
             from .geo import StrawberryGeoComparison
 
