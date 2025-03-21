@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0](https://github.com/gazorby/strawchemy/compare/v0.9.0..v1.0.0) - 2025-03-21
+
+### 🐛 Bug Fixes
+
+- *(query-hooks)* [**breaking**] Enforce column only attributs in QueryHook.load_columns - ([0cc4bb5](https://github.com/gazorby/strawchemy/commit/0cc4bb5a4b06e64f05bb7ce0fc8a9b23f7bb03f3))
+
+### 🧪 Testing
+
+- *(integration)* Test empty query hooks - ([9df6df9](https://github.com/gazorby/strawchemy/commit/9df6df97f67c701bd60a5ca60b6aad31539c592f))
+- *(integration)* Update snapshot - ([8b4aef5](https://github.com/gazorby/strawchemy/commit/8b4aef551cb4ff5f2d8c6649241789b608303960))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v1.0.0 - ([ba914bc](https://github.com/gazorby/strawchemy/commit/ba914bc3a57d67d874a48fb47d604ecf2ed88365))
 ## [0.9.0](https://github.com/gazorby/strawchemy/compare/v0.8.0..v0.9.0) - 2025-03-21
 
 ### 🚀 Features
