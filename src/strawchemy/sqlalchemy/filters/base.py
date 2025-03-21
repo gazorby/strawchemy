@@ -153,6 +153,10 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
             expressions.append(model_attribute.regexp_match(self.regexp))
         if "nregexp" in self.model_fields_set:
             expressions.append(not_(model_attribute.regexp_match(self.nregexp)))
+        if "iregexp" in self.model_fields_set:
+            expressions.append(func.lower(model_attribute).regexp_match(self.iregexp))
+        if "inregexp" in self.model_fields_set:
+            expressions.append(not_(func.lower(model_attribute).regexp_match(self.inregexp)))
 
         return expressions
 

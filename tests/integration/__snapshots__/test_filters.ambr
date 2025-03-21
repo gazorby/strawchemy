@@ -2714,6 +2714,78 @@
   WHERE lower(sql_data_types.str_col) LIKE lower(:str_col_1)
   '''
 # ---
+# name: test_string_filters[session-tracked-inregexp0-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-inregexp0-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-inregexp0-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-inregexp1-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) < not regexp > :lower_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-inregexp1-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) < not regexp > :lower_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-inregexp1-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) < not regexp > :lower_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-iregexp-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) < regexp > :lower_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-iregexp-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) < regexp > :lower_1
+  '''
+# ---
+# name: test_string_filters[session-tracked-iregexp-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) < regexp > :lower_1
+  '''
+# ---
 # name: test_string_filters[session-tracked-istartswith-async-asyncpg_engine]
   '''
   SELECT sql_data_types.str_col,
