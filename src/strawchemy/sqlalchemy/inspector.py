@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
@@ -20,6 +20,7 @@ from .filters import (
     NumericSQLAlchemyFilter,
     SQLAlchemyFilterBase,
     TextSQLAlchemyFilter,
+    TimeDeltaSQLAlchemyFilter,
     TimeSQLAlchemyFilter,
 )
 from .filters.postgresql import JSONBSQLAlchemyFilter, PostgresArraySQLAlchemyFilter
@@ -40,6 +41,7 @@ T = TypeVar("T", bound=Any)
 
 _DEFAULT_FILTERS_MAP: FilterMap = OrderedDict(
     {
+        (timedelta,): TimeDeltaSQLAlchemyFilter,
         (datetime,): DateTimeSQLAlchemyFilter,
         (time,): TimeSQLAlchemyFilter,
         (date,): DateSQLAlchemyFilter,

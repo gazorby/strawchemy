@@ -512,7 +512,6 @@ class Query:
     id
     name
   }
-
   # Nested filters
   users(filter: { posts: { title: { contains: "GraphQL" } } }) {
     id
@@ -522,9 +521,24 @@ class Query:
       title
     }
   }
+
+  # Compare interval component
+  tasks(filter: { duration: { days: { gt: 2 } } }) {
+    id
+    name
+    duration
+  }
+
+  # Direct interval comparison
+  tasks(filter: { duration: { gt: "P2DT5H" } }) {
+    id
+    name
+    duration
+  }
 }
 ```
 
+</details>
 </details>
 
 Strawchemy supports a wide range of filter operations:
@@ -537,6 +551,7 @@ Strawchemy supports a wide range of filter operations:
 - **Date**: `year`, `month`, `day`, `weekDay`, `week`, `quarter`, `isoYear`, `isoWeekDay`
 - **DateTime**: All Date filters plus `hour`, `minute`, `second`
 - **Time**: `hour`, `minute`, `second`
+- **Interval**: numeric filters, plus `days`, `hours`, `minutes`, `seconds`
 - **Logical**: `_and`, `_or`, `_not`
 
 ### Geo Filters

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -19,6 +19,10 @@ from .typing import RawRecordData
 from .utils import to_graphql_representation
 
 pytestmark = [pytest.mark.integration]
+
+seconds_in_year = 60 * 60 * 24 * 365.25
+seconds_in_month = seconds_in_year / 12
+seconds_in_day = 60 * 60 * 24
 
 
 @strawberry.type
@@ -81,6 +85,7 @@ async def test_no_filtering(
         pytest.param("timeCol", time(14, 30, 45), id="time"),
         pytest.param("dateCol", date(2023, 1, 15), id="date"),
         pytest.param("datetimeCol", datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC), id="datetime"),
+        pytest.param("timeDeltaCol", timedelta(days=2, hours=23, minutes=59, seconds=59), id="timedelta"),
         pytest.param("dictCol", {"key1": "value1", "key2": 2, "nested": {"inner": "value"}}, id="dict"),
     ],
 )
@@ -124,6 +129,7 @@ async def test_eq(
         pytest.param("timeCol", time(14, 30, 45), id="time"),
         pytest.param("dateCol", date(2023, 1, 15), id="date"),
         pytest.param("datetimeCol", datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC), id="datetime"),
+        pytest.param("timeDeltaCol", timedelta(days=2, hours=23, minutes=59, seconds=59), id="timedelta"),
         pytest.param("dictCol", {"key1": "value1", "key2": 2, "nested": {"inner": "value"}}, id="dict"),
     ],
 )
@@ -201,6 +207,15 @@ async def test_isnull(
             [0, 1],
             id="datetime",
         ),
+        pytest.param(
+            "timeDeltaCol",
+            [
+                timedelta(days=2, hours=23, minutes=59, seconds=59),
+                timedelta(weeks=1, days=3, hours=12),
+            ],
+            [0, 1],
+            id="timedelta",
+        ),
     ],
 )
 @pytest.mark.snapshot
@@ -253,6 +268,15 @@ async def test_in(
             [2],
             id="datetime",
         ),
+        pytest.param(
+            "timeDeltaCol",
+            [
+                timedelta(days=2, hours=23, minutes=59, seconds=59),
+                timedelta(weeks=1, days=3, hours=12),
+            ],
+            [2],
+            id="timedelta",
+        ),
     ],
 )
 @pytest.mark.snapshot
@@ -296,6 +320,7 @@ async def test_nin(
         pytest.param("dateCol", date(2023, 1, 1), [0, 2], id="date-gt"),
         pytest.param("timeCol", time(10, 0, 0), [0], id="time-gt"),
         pytest.param("datetimeCol", datetime(2023, 1, 1, 0, 0, 0, tzinfo=UTC), [0, 2], id="datetime-gt"),
+        pytest.param("timeDeltaCol", timedelta(days=1), [0, 1], id="timedelta-gt"),
     ],
 )
 @pytest.mark.snapshot
@@ -335,6 +360,7 @@ async def test_gt(
         pytest.param("dateCol", date(2023, 1, 15), [0, 2], id="date-gte"),
         pytest.param("timeCol", time(8, 15, 0), [0, 1], id="time-gte"),
         pytest.param("datetimeCol", datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC), [0, 2], id="datetime-gte"),
+        pytest.param("timeDeltaCol", timedelta(weeks=1, days=3, hours=12), [1], id="timedelta-gte"),
     ],
 )
 @pytest.mark.snapshot
@@ -374,6 +400,7 @@ async def test_gte(
         pytest.param("dateCol", date(2023, 1, 15), [1], id="date-lt"),
         pytest.param("timeCol", time(14, 0, 0), [1, 2], id="time-lt"),
         pytest.param("datetimeCol", datetime(2023, 1, 15, 0, 0, 0, tzinfo=UTC), [1], id="datetime-lt"),
+        pytest.param("timeDeltaCol", timedelta(days=7), [0, 2], id="timedelta-lt"),
     ],
 )
 @pytest.mark.snapshot
@@ -413,6 +440,7 @@ async def test_lt(
         pytest.param("dateCol", date(2023, 1, 15), [0, 1], id="date-lte"),
         pytest.param("timeCol", time(14, 30, 45), [0, 1, 2], id="time-lte"),
         pytest.param("datetimeCol", datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC), [0, 1], id="datetime-lte"),
+        pytest.param("timeDeltaCol", timedelta(days=2, hours=23, minutes=59, seconds=59), [0, 2], id="timedelta-lte"),
     ],
 )
 @pytest.mark.snapshot
@@ -686,6 +714,43 @@ async def test_datetime_components(
                 sqlDataTypes(filter: {{ datetimeCol: {{ {component}: {{ eq: {value} }} }} }}) {{
                     id
                     datetimeCol
+                }}
+            }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert len(result.data["sqlDataTypes"]) == len(expected_ids)
+    for i, expected_id in enumerate(expected_ids):
+        assert result.data["sqlDataTypes"][i]["id"] == raw_sql_data_types[expected_id]["id"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("component", "value", "expected_ids"),
+    [
+        pytest.param("days", timedelta(weeks=1, days=3, hours=12).total_seconds() / seconds_in_day, [1], id="days"),
+        pytest.param("hours", timedelta(weeks=1, days=3, hours=12).total_seconds() / 3600, [1], id="hours"),
+        pytest.param("minutes", timedelta(weeks=1, days=3, hours=12).total_seconds() / 60, [1], id="minutes"),
+        pytest.param("seconds", timedelta(weeks=1, days=3, hours=12).total_seconds(), [1], id="totalSeconds"),
+    ],
+)
+@pytest.mark.snapshot
+async def test_timedelta_components(
+    component: str,
+    value: int,
+    expected_ids: list[int],
+    any_query: AnyQueryExecutor,
+    raw_sql_data_types: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = f"""
+            {{
+                sqlDataTypes(filter: {{ timeDeltaCol: {{ {component}: {{ eq: {value} }} }} }}) {{
+                    id
+                    timeDeltaCol
                 }}
             }}
     """

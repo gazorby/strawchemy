@@ -30,6 +30,7 @@ __all__ = (
     "PostgresArrayComparison",
     "TextComparison",
     "TimeComparison",
+    "TimeDeltaComparison",
 )
 
 T = TypeVar("T")
@@ -287,6 +288,18 @@ class TimeComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericC
     hour: AnyNumericComparison | None = None
     minute: AnyNumericComparison | None = None
     second: AnyNumericComparison | None = None
+
+    @override
+    @classmethod
+    def field_name(cls) -> str:
+        return _normalize_field_name(time)
+
+
+class TimeDeltaComparison(GraphQLComparison[ModelT, ModelFieldT], Generic[AnyNumericComparison, ModelT, ModelFieldT]):
+    days: AnyNumericComparison | None = None
+    hours: AnyNumericComparison | None = None
+    minutes: AnyNumericComparison | None = None
+    seconds: AnyNumericComparison | None = None
 
     @override
     @classmethod

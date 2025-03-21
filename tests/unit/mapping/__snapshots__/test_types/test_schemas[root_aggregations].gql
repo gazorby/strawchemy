@@ -11,6 +11,11 @@
   scalar Decimal
   
   """
+  The `Interval` scalar type represents a duration of time as specified by [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations).
+  """
+  scalar Interval @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601#Durations")
+  
+  """
   The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
   """
   scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
@@ -44,7 +49,6 @@
   type SQLDataTypesMinMaxFields {
     dateCol: Date
     timeCol: Time
-    timeDeltaCol: Time
     datetimeCol: DateTime
     strCol: String
     intCol: Int
@@ -59,6 +63,7 @@
   }
   
   type SQLDataTypesSumFields {
+    timeDeltaCol: Interval
     strCol: String
     intCol: Int
     floatCol: Float
@@ -70,7 +75,7 @@
     id: UUID!
     dateCol: Date!
     timeCol: Time!
-    timeDeltaCol: Time!
+    timeDeltaCol: Interval!
     datetimeCol: DateTime!
     strCol: String!
     intCol: Int!

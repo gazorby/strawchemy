@@ -12,6 +12,7 @@ from .base import (
     PostgresArrayComparison,
     TextComparison,
     TimeComparison,
+    TimeDeltaComparison,
 )
 
 __all__ = (
@@ -26,4 +27,5 @@ __all__ = (
     "PostgresArrayComparison",
     "TextComparison",
     "TimeComparison",
+    "TimeDeltaComparison",
 )

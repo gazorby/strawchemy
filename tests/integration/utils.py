@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import json
 import re
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from statistics import mean, pstdev, pvariance, stdev, variance
 from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
+from pydantic import TypeAdapter
 from sqlalchemy import inspect
 
 if TYPE_CHECKING:
@@ -17,6 +18,9 @@ if TYPE_CHECKING:
 
 
 __all__ = ("from_graphql_representation", "python_type", "to_graphql_representation")
+
+
+_TimeDeltaType = TypeAdapter(timedelta)
 
 
 def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> Any:
@@ -57,6 +61,8 @@ def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> A
 
     if isinstance(value, datetime | date | time):
         expected = value.isoformat()
+    elif isinstance(value, timedelta):
+        expected = _TimeDeltaType.dump_python(value, mode="json")
     elif isinstance(value, Decimal | UUID):
         expected = str(value)
 
