@@ -362,7 +362,7 @@ def raw_sql_data_types(raw_sql_data_types_container: RawRecordData) -> RawRecord
             "time_col": time(8, 15, 0),
             "time_delta_col": timedelta(weeks=1, days=3, hours=12),
             "datetime_col": datetime(2022, 12, 31, 23, 59, 59, tzinfo=UTC),
-            "str_col": "another string",
+            "str_col": "another STRING",
             "int_col": -10,
             "float_col": 2.71828,
             "decimal_col": Decimal("-99.99"),

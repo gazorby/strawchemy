@@ -191,7 +191,7 @@ async def test_isnull(
 @pytest.mark.parametrize(
     ("field_name", "values", "expected_ids"),
     [
-        pytest.param("strCol", ["test string", "another string"], [0, 1], id="str"),
+        pytest.param("strCol", ["test string", "another STRING"], [0, 1], id="str"),
         pytest.param("intCol", [42, -10], [0, 1], id="int"),
         pytest.param("floatCol", [3.14159, 2.71828], [0, 1], id="float"),
         pytest.param("decimalCol", [Decimal("123.45"), Decimal("-99.99")], [0, 1], id="decimal"),
@@ -252,7 +252,7 @@ async def test_in(
 @pytest.mark.parametrize(
     ("field_name", "values", "expected_ids"),
     [
-        pytest.param("strCol", ["test string", "another string"], [2], id="str"),
+        pytest.param("strCol", ["test string", "another STRING"], [2], id="str"),
         pytest.param("intCol", [42, -10], [2], id="int"),
         pytest.param("floatCol", [3.14159, 2.71828], [2], id="float"),
         pytest.param("decimalCol", [Decimal("123.45"), Decimal("-99.99")], [2], id="decimal"),
@@ -479,18 +479,20 @@ async def test_lte(
 @pytest.mark.parametrize(
     ("filter_name", "value", "expected_ids"),
     [
-        pytest.param("like", "%string%", [0, 1], id="like"),
-        pytest.param("nlike", "%string%", [2], id="nlike"),
+        pytest.param("like", "%string%", [0], id="like"),
+        pytest.param("nlike", "%string%", [1, 2], id="nlike"),
         pytest.param("ilike", "%STRING%", [0, 1], id="ilike"),
         pytest.param("nilike", "%STRING%", [2], id="nilike"),
         pytest.param("startswith", "test", [0], id="startswith"),
-        pytest.param("endswith", "string", [0, 1], id="endswith"),
-        pytest.param("contains", "string", [0, 1], id="contains"),
+        pytest.param("endswith", "string", [0], id="endswith"),
+        pytest.param("contains", "string", [0], id="contains"),
         pytest.param("istartswith", "TEST", [0], id="istartswith"),
         pytest.param("iendswith", "STRING", [0, 1], id="iendswith"),
         pytest.param("icontains", "STRING", [0, 1], id="icontains"),
         pytest.param("regexp", "^test", [0], id="regexp"),
-        pytest.param("nregexp", "^test", [1, 2], id="nregexp"),
+        pytest.param("iregexp", ".*string$", [0, 1], id="iregexp"),
+        pytest.param("nregexp", "^test", [1, 2], id="inregexp"),
+        pytest.param("inregexp", ".*string$", [2], id="inregexp"),
     ],
 )
 @pytest.mark.snapshot

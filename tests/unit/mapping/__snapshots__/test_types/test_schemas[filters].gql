@@ -236,7 +236,9 @@
     ilike: String
     nilike: String
     regexp: String
+    iregexp: String
     nregexp: String
+    inregexp: String
     startswith: String
     endswith: String
     contains: String

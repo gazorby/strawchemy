@@ -173,7 +173,9 @@ class TextComparison(GraphQLComparison[ModelT, ModelFieldT]):
     ilike: str | None = None
     nilike: str | None = None
     regexp: RegexPatternStr | None = None
+    iregexp: RegexPatternStr | None = None
     nregexp: RegexPatternStr | None = None
+    inregexp: RegexPatternStr | None = None
     startswith: str | None = None
     endswith: str | None = None
     contains: str | None = None
