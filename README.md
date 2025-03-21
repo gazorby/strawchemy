@@ -596,18 +596,18 @@ Now you can use various filter operations in your GraphQL queries:
 
 Strawchemy supports a wide range of filter operations:
 
-| Data Type/Category | Filter Operations |
-|-------------------|-------------------|
-| **Common to most types** | `eq`, `neq`, `isNull`, `in`, `nin` |
-| **Numeric types (Int, Float, Decimal)** | `gt`, `gte`, `lt`, `lte` |
-| **String** | `like`, `nlike`, `ilike`, `nilike`, `regexp`, `nregexp`, `startswith`, `endswith`, `contains`, `istartswith`, `iendswith`, `icontains` |
-| **JSON** | `contains`, `containedIn`, `hasKey`, `hasKeyAll`, `hasKeyAny` |
-| **Array** | `contains`, `containedIn`, `overlap` |
-| **Date** | numeric filters on plain dates, plus `year`, `month`, `day`, `weekDay`, `week`, `quarter`, `isoYear` and `isoWeekDay` filters |
-| **DateTime** | All Date filters plus `hour`, `minute`, `second` |
-| **Time** | numeric filters on plain times, plus `hour`, `minute` and `second` filters |
-| **Interval** | numeric filters on plain intervals, plus `days`, `hours`, `minutes` and `seconds` filters |
-| **Logical** | `_and`, `_or`, `_not` |
+| Data Type/Category                      | Filter Operations                                                                                                                                         |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Common to most types**                | `eq`, `neq`, `isNull`, `in`, `nin`                                                                                                                        |
+| **Numeric types (Int, Float, Decimal)** | `gt`, `gte`, `lt`, `lte`                                                                                                                                  |
+| **String**                              | order filter, plus `like`, `nlike`, `ilike`, `nilike`, `regexp`, `nregexp`, `startswith`, `endswith`, `contains`, `istartswith`, `iendswith`, `icontains` |
+| **JSON**                                | `contains`, `containedIn`, `hasKey`, `hasKeyAll`, `hasKeyAny`                                                                                             |
+| **Array**                               | `contains`, `containedIn`, `overlap`                                                                                                                      |
+| **Date**                                | order filters on plain dates, plus `year`, `month`, `day`, `weekDay`, `week`, `quarter`, `isoYear` and `isoWeekDay` filters                               |
+| **DateTime**                            | All Date filters plus `hour`, `minute`, `second`                                                                                                          |
+| **Time**                                | order filters on plain times, plus `hour`, `minute` and `second` filters                                                                                  |
+| **Interval**                            | order filters on plain intervals, plus `days`, `hours`, `minutes` and `seconds` filters                                                                   |
+| **Logical**                             | `_and`, `_or`, `_not`                                                                                                                                     |
 
 ### Geo Filters
 
