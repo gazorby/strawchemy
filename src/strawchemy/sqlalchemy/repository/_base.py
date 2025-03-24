@@ -3,13 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from strawchemy.sqlalchemy._transpiler import Transpiler
-from strawchemy.sqlalchemy.typing import (
-    DeclarativeT,
-    QueryExecutorT,
-    QueryHookCallableWithoutInfo,
-    SessionT,
-    SQLAlchemyQueryNode,
-)
+from strawchemy.sqlalchemy.typing import DeclarativeT, QueryExecutorT, SessionT, SQLAlchemyQueryNode
 
 if TYPE_CHECKING:
     from collections import defaultdict
@@ -17,6 +11,7 @@ if TYPE_CHECKING:
     from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.sqlalchemy.hook import QueryHook
 
 
 __all__ = ("SQLAlchemyGraphQLRepository",)
@@ -50,8 +45,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookCallableWithoutInfo[DeclarativeBase]]]
-        | None = None,
+        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
         transpiler = Transpiler(self.model, self._dialect, query_hooks=query_hooks, statement=self.statement)

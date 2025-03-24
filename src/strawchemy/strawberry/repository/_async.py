@@ -4,13 +4,11 @@ import dataclasses
 from collections import defaultdict
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
-from functools import lru_cache, partial
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
 
 from typing_extensions import TypeIs
 
 from strawberry.types import get_object_definition, has_object_definition
-from strawberry.types.fields.resolver import StrawberryResolver
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.nodes import SelectedField, Selection
 from strawchemy.exceptions import StrawchemyError
@@ -41,7 +39,8 @@ if TYPE_CHECKING:
     from strawberry import Info
     from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
     from strawberry.types.field import StrawberryField
-    from strawchemy.sqlalchemy.typing import AnyAsyncSession, QueryHookCallable, QueryHookCallableWithoutInfo
+    from strawchemy.sqlalchemy.hook import QueryHook
+    from strawchemy.sqlalchemy.typing import AnyAsyncSession
     from strawchemy.strawberry.typing import AsyncSessionGetter, StrawchemyTypeWithStrawberryObjectDefinition
 
 __all__ = ("StrawchemyAsyncRepository",)
@@ -68,7 +67,7 @@ class StrawchemyAsyncRepository(Generic[T]):
     filter_statement: Select[tuple[Any]] | None = None
     execution_options: dict[str, Any] | None = None
 
-    _query_hooks: defaultdict[QueryNode[Any, Any], list[QueryHookCallableWithoutInfo[Any]]] = dataclasses.field(
+    _query_hooks: defaultdict[QueryNode[Any, Any], list[QueryHook[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(list), init=False
     )
     _tree: _StrawberryQueryNode[T] = dataclasses.field(init=False)
@@ -108,31 +107,18 @@ class StrawchemyAsyncRepository(Generic[T]):
         return RelationFilterDTO.model_validate(selection_arguments)
 
     @classmethod
-    @lru_cache(maxsize=256, typed=True)
-    def _query_hook_to_resolver(cls, query_hook: QueryHookCallable[Any]) -> StrawberryResolver[Any]:
-        # We instantiate a resolver only to use the info parameter retrieval logic
-        return StrawberryResolver(query_hook)
-
-    @classmethod
-    def _get_field_hooks(
-        cls, field: StrawberryField
-    ) -> QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None:
+    def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]] | None:
         from strawchemy.strawberry import StrawchemyField
 
-        if isinstance(field, StrawchemyField):
-            return field.query_hook
-        return None
+        return field.query_hook if isinstance(field, StrawchemyField) else None
 
     def _add_query_hooks(
-        self, query_hooks: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]], node: _StrawberryQueryNode[Any]
+        self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: _StrawberryQueryNode[Any]
     ) -> None:
         hooks = query_hooks if isinstance(query_hooks, Collection) else [query_hooks]
         for hook in hooks:
-            query_hook_resolver = self._query_hook_to_resolver(hook)
-            kwargs: dict[str, Any] = {}
-            if info_parameter := query_hook_resolver.info_parameter:
-                kwargs[info_parameter.name] = self.info
-            self._query_hooks[node].append(partial(query_hook_resolver, **kwargs))
+            hook.info_var.set(self.info)
+            self._query_hooks[node].append(hook)
 
     def _build(
         self,
@@ -238,9 +224,7 @@ class StrawchemyAsyncRepository(Generic[T]):
             selection=self._tree, query_hooks=self._query_hooks, **kwargs
         )
         result = query_results.one() if strict else query_results.one_or_none()
-        if result:
-            return self._tree.to_strawberry_type(result)
-        return None
+        return self._tree.to_strawberry_type(result) if result else None
 
     async def list(
         self,

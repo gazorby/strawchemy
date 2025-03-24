@@ -412,38 +412,41 @@ The repository provides several methods for fetching data:
 
 #### 2. Using Query Hooks
 
-Strawchemy provides query hooks that allow you to customize query behavior. These hooks can be applied at both the field level and the type level:
+Strawchemy provides query hooks that allow you to customize query behavior. Query hooks give you fine-grained control over how SQL queries are constructed and executed.
 
 <details>
 <summary>Using query hooks</summary>
 
 ```python
 from strawchemy import ModelInstance, QueryHook
-from strawchemy.sqlalchemy.hook import QueryHookResult
-from sqlalchemy import Select
+from sqlalchemy import Select, select
 from sqlalchemy.orm.util import AliasedClass
-from strawberry import Info
 
+# Define a model and type
+class Fruit(Base):
+    __tablename__ = "fruit"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    adjectives: Mapped[list[str]] = mapped_column(ARRAY(String))
+
+# Apply the hook at the field level
 @strawchemy.type(Fruit, exclude={"color"})
 class FruitTypeWithDescription:
     instance: ModelInstance[Fruit]
 
-    # Use QueryHook with load_columns parameter to ensure columns are loaded
+    # Use LoadColumnsHook to ensure specific columns are loaded
     @strawchemy.field(query_hook=QueryHook(load_columns=[Fruit.name, Fruit.adjectives]))
     def description(self) -> str:
         return f"The {self.instance.name} is {', '.join(self.instance.adjectives)}"
 
-# Custom query hook function
-def user_fruit_filter(
-    statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit], info: Info
-) -> QueryHookResult[Fruit]:
-    # Add a custom filter based on context
-    if info.context.role == "user":
-        return QueryHookResult(statement=statement.where(alias.name == "Apple"))
-    return QueryHookResult(statement=statement)
+# Create a custom query hook for filtering
+class FilterFruitHook(QueryHook[Fruit]):
+    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+        # Add a custom WHERE clause
+        return statement.where(alias.name == "Apple")
 
-# Type-level query hook
-@strawchemy.type(Fruit, exclude={"color"}, query_hook=user_fruit_filter)
+# Apply the hook at the type level
+@strawchemy.type(Fruit, exclude={"color"}, query_hook=FilterFruitHook())
 class FilteredFruitType:
     pass
 ```
@@ -451,11 +454,20 @@ class FilteredFruitType:
 > You must set a `ModelInstance` typed attribute if you want to access the model instance values.
 > The `instance` attribute is matched by the `ModelInstance[Fruit]` type hint, so you can give it any name you want.
 
-Query hooks provide powerful ways to:
+The `QueryHook` base class provides several methods that you can override to customize query behavior:
 
-- Ensure specific columns are always loaded, even if not directly requested in the GraphQL query. (useful to expose hybrid properties in the schema)
-- Apply custom filters based on context (e.g., user role)
-- Modify the underlying SQLAlchemy query for optimization or security
+1. **`apply_hook`**: Apply changes to the statement. By default, it returns it unchanged. This method is only for filtering or ordering customizations, if you want to explicitly load columns, use the `load_columns' parameter instead.
+
+2. **`load_columns`**: Specify columns that should always be loaded, even if not directly requested in the GraphQL query. This is useful for:
+   - Ensuring data needed for computed properties is available
+   - Loading columns required for custom resolvers
+   - Optimizing queries by explicitly loading only required columns
+
+Important notes when using query hooks:
+
+- You must use the provided `alias` parameter to refer to columns of the model on which the hook is applied. Otherwise, the statement may fail.
+- For now, you can only refer to model columns; accessing columns from relationships (through joins) is not supported.
+- The GraphQL context is available through `self.info` within hook methods.
 
 </details>
 

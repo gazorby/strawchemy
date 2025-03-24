@@ -50,6 +50,7 @@ from strawchemy.dto.backend.pydantic import PydanticDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, Purpose
 from strawchemy.graph import GraphError, MatchOn, Node, UndefinedType, undefined
+from strawchemy.sqlalchemy.hook import QueryHook  # noqa: TC001
 from strawchemy.utils import camel_to_snake
 
 from .constants import LIMIT_KEY, OFFSET_KEY, ORDER_BY_KEY
@@ -60,7 +61,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
 
     from .filters import GenericComparison, GraphQLComparison, OrderComparison
-    from .typing import AggregationFunction, AggregationType, FunctionInfo, QueryHookCallable
+    from .typing import AggregationFunction, AggregationType, FunctionInfo
 
 T = TypeVar("T")
 
@@ -85,7 +86,7 @@ class QueryMetadata:
 class StrawchemyDTOAttributes:
     __strawchemy_description__: ClassVar[str] = "GraphQL type"
     __strawchemy_field_map__: ClassVar[dict[DTOKey, GraphQLFieldDefinition[Any, Any]]] = {}
-    __strawchemy_query_hook__: QueryHookCallable | Sequence[QueryHookCallable] | None = None
+    __strawchemy_query_hook__: QueryHook[Any] | Sequence[QueryHook[Any]] | None = None
     __strawchemy_is_root_aggregation_type__: bool = False
 
 

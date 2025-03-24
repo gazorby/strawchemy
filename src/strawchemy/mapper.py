@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.field import _RESOLVER_TYPE
+    from strawchemy.sqlalchemy.hook import QueryHook
 
     from .sqlalchemy.typing import QueryHookCallable
     from .strawberry.typing import FilterStatementCallable
@@ -89,7 +90,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
         execution_options: dict[str, Any] | None = None,
-        query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
+        query_hook: QueryHook[Any] | Sequence[QueryHook[Any]] | None = None,
         repository_type: AnyRepository | None = None,
         name: str | None = None,
         description: str | None = None,

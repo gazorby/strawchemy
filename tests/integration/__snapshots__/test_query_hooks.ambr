@@ -116,6 +116,213 @@
   WHERE fruit.name = :name_1
   '''
 # ---
+# name: test_custom_query_hook[session-tracked-userFruits-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  WHERE fruit.name = :name_1
+  '''
+# ---
+# name: test_custom_query_hook[session-tracked-userFruits-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  WHERE fruit.name = :name_1
+  '''
+# ---
+# name: test_custom_query_hook[session-tracked-userFruits-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  WHERE fruit.name = :name_1
+  '''
+# ---
+# name: test_custom_query_hook[session-tracked-userFruitsPaginated-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM
+    (SELECT fruit.name AS name,
+            fruit.id AS id
+     FROM fruit AS fruit
+     WHERE fruit.name = :name_1
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  WHERE fruit.name = :name_2
+  LIMIT :param_3
+  '''
+# ---
+# name: test_custom_query_hook[session-tracked-userFruitsPaginated-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM
+    (SELECT fruit.name AS name,
+            fruit.id AS id
+     FROM fruit AS fruit
+     WHERE fruit.name = :name_1
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  WHERE fruit.name = :name_2
+  LIMIT :param_3
+  '''
+# ---
+# name: test_custom_query_hook[session-tracked-userFruitsPaginated-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM
+    (SELECT fruit.name AS name,
+            fruit.id AS id
+     FROM fruit AS fruit
+     WHERE fruit.name = :name_1
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  WHERE fruit.name = :name_2
+  LIMIT :param_3
+  '''
+# ---
+# name: test_custom_query_hook_order_by[session-tracked-orderedFruits-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  ORDER BY fruit.name ASC
+  '''
+# ---
+# name: test_custom_query_hook_order_by[session-tracked-orderedFruits-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  ORDER BY fruit.name ASC
+  '''
+# ---
+# name: test_custom_query_hook_order_by[session-tracked-orderedFruits-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  ORDER BY fruit.name ASC
+  '''
+# ---
+# name: test_custom_query_hook_order_by[session-tracked-orderedFruitsPaginated-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM
+    (SELECT fruit.name AS name,
+            fruit.id AS id
+     FROM fruit AS fruit
+     ORDER BY fruit.name ASC
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  ORDER BY fruit.name ASC
+  LIMIT :param_3
+  '''
+# ---
+# name: test_custom_query_hook_order_by[session-tracked-orderedFruitsPaginated-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM
+    (SELECT fruit.name AS name,
+            fruit.id AS id
+     FROM fruit AS fruit
+     ORDER BY fruit.name ASC
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  ORDER BY fruit.name ASC
+  LIMIT :param_3
+  '''
+# ---
+# name: test_custom_query_hook_order_by[session-tracked-orderedFruitsPaginated-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM
+    (SELECT fruit.name AS name,
+            fruit.id AS id
+     FROM fruit AS fruit
+     ORDER BY fruit.name ASC
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  ORDER BY fruit.name ASC
+  LIMIT :param_3
+  '''
+# ---
+# name: test_custom_query_hook_where[session-tracked-filteredFruits-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  WHERE fruit.name = :name_1
+  '''
+# ---
+# name: test_custom_query_hook_where[session-tracked-filteredFruits-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  WHERE fruit.name = :name_1
+  '''
+# ---
+# name: test_custom_query_hook_where[session-tracked-filteredFruits-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM fruit AS fruit
+  WHERE fruit.name = :name_1
+  '''
+# ---
+# name: test_custom_query_hook_where[session-tracked-filteredFruitsPaginated-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM
+    (SELECT fruit.name AS name,
+            fruit.id AS id
+     FROM fruit AS fruit
+     WHERE fruit.name = :name_1
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  WHERE fruit.name = :name_2
+  LIMIT :param_3
+  '''
+# ---
+# name: test_custom_query_hook_where[session-tracked-filteredFruitsPaginated-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM
+    (SELECT fruit.name AS name,
+            fruit.id AS id
+     FROM fruit AS fruit
+     WHERE fruit.name = :name_1
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  WHERE fruit.name = :name_2
+  LIMIT :param_3
+  '''
+# ---
+# name: test_custom_query_hook_where[session-tracked-filteredFruitsPaginated-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+  FROM
+    (SELECT fruit.name AS name,
+            fruit.id AS id
+     FROM fruit AS fruit
+     WHERE fruit.name = :name_1
+     LIMIT :param_1
+     OFFSET :param_2) AS fruit
+  WHERE fruit.name = :name_2
+  LIMIT :param_3
+  '''
+# ---
 # name: test_load_columns_hook[session-tracked-fruits-async-asyncpg_engine]
   '''
   SELECT fruit.name,

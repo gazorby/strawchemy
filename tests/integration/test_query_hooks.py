@@ -9,7 +9,7 @@ import strawberry
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-from .types import FilteredFruitType, FruitTypeWithDescription, strawchemy
+from .types import FilteredFruitType, FruitTypeWithDescription, OrderedFruitType, strawchemy
 from .typing import RawRecordData
 
 if TYPE_CHECKING:
@@ -26,7 +26,14 @@ class AsyncQuery:
     fruits_paginated: list[FruitTypeWithDescription] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
-    user_fruits: list[FilteredFruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    filtered_fruits: list[FilteredFruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    filtered_fruits_paginated: list[FilteredFruitType] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository, pagination=True
+    )
+    ordered_fruits: list[OrderedFruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    ordered_fruits_paginated: list[OrderedFruitType] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository, pagination=True
+    )
 
 
 @strawberry.type
@@ -35,7 +42,14 @@ class SyncQuery:
     fruits_paginated: list[FruitTypeWithDescription] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
     )
-    user_fruits: list[FilteredFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    filtered_fruits: list[FilteredFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    filtered_fruits_paginated: list[FilteredFruitType] = strawchemy.field(
+        repository_type=StrawchemySyncRepository, pagination=True
+    )
+    ordered_fruits: list[OrderedFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    ordered_fruits_paginated: list[OrderedFruitType] = strawchemy.field(
+        repository_type=StrawchemySyncRepository, pagination=True
+    )
 
 
 @pytest.fixture
@@ -83,16 +97,39 @@ async def test_empty_query_hook(fruits_query: str, any_query: AnyQueryExecutor) 
     assert result.data[fruits_query] == [{"emptyQueryHook": "success"} for _ in range(5)]
 
 
+@pytest.mark.parametrize("query", ["filteredFruits", "filteredFruitsPaginated"])
 @pytest.mark.snapshot
-async def test_custom_query_hook(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+async def test_custom_query_hook_where(
+    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
-    result = await maybe_async(any_query("{ userFruits { name } }"))
+    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
 
     assert not result.errors
     assert result.data
-    assert len(result.data["userFruits"]) == 1
-    assert result.data["userFruits"] == [{"name": "Apple"}]
+    assert len(result.data[query]) == 1
+    assert result.data[query] == [{"name": "Apple"}]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize("query", ["orderedFruits", "orderedFruitsPaginated"])
+@pytest.mark.snapshot
+async def test_custom_query_hook_order_by(
+    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
+
+    assert not result.errors
+    assert result.data
+    assert len(result.data[query]) == 5
+    assert result.data[query] == [
+        {"name": "Apple"},
+        {"name": "Banana"},
+        {"name": "Orange"},
+        {"name": "Strawberry"},
+        {"name": "Watermelon"},
+    ]
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

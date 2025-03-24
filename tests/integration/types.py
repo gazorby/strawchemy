@@ -1,31 +1,29 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import override
 
 from strawchemy import ModelInstance, QueryHook, Strawchemy
-from strawchemy.sqlalchemy.hook import QueryHookResult
 
 from sqlalchemy import Select
 from sqlalchemy.orm.util import AliasedClass
-from strawberry import Info
 
 from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User
-
-if TYPE_CHECKING:
-    from strawchemy.sqlalchemy.typing import LoadMode
 
 strawchemy = Strawchemy()
 
 
-def _user_fruit_filter(
-    statement: Select[tuple[Fruit]],
-    alias: AliasedClass[Fruit],
-    mode: LoadMode,  # noqa: ARG001
-    info: Info,
-) -> QueryHookResult[Fruit]:
-    if info.context.role == "user":
-        return QueryHookResult(statement=statement.where(alias.name == "Apple"))
-    return QueryHookResult(statement=statement)
+class FruitFilterHook(QueryHook[Fruit]):
+    @override
+    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+        if self.info.context.role == "user":
+            return statement.where(alias.name == "Apple")
+        return statement
+
+
+class FruitOrderingHook(QueryHook[Fruit]):
+    @override
+    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+        return statement.order_by(alias.name.asc())
 
 
 @strawchemy.type(Color, include="all", override=True)
@@ -57,8 +55,12 @@ class FruitTypeWithDescription:
         return "success"
 
 
-@strawchemy.type(Fruit, exclude={"color"}, query_hook=_user_fruit_filter)
+@strawchemy.type(Fruit, exclude={"color"}, query_hook=FruitFilterHook())
 class FilteredFruitType: ...
+
+
+@strawchemy.type(Fruit, exclude={"color"}, query_hook=FruitOrderingHook())
+class OrderedFruitType: ...
 
 
 @strawchemy.aggregation_type(Fruit, include="all")
