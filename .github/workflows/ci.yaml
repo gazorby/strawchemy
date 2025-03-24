@@ -123,6 +123,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download test artifacts
         uses: actions/download-artifact@v4
         with:
@@ -157,6 +160,9 @@ jobs:
         session: ${{ fromJson(needs.generate-jobs-tests.outputs.sessions) }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Download test artifacts
         uses: actions/download-artifact@v4
         with:
