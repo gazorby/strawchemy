@@ -96,7 +96,7 @@ jobs:
 
       - name: Rename coverage and junit files
         run: |
-          mv .coverage* .coverage-${{ matrix.session.session }}.xml
+          mv .coverage* .coverage-${{ matrix.session.session }}
           mv junit* junit-${{ matrix.session.session }}.xml
 
       - name: Upload coverage data
@@ -105,7 +105,7 @@ jobs:
         if: ${{ always() }}
         with:
           name: coverage-${{ matrix.session.session }}
-          path: .coverage-${{ matrix.session.session }}.xml
+          path: .coverage-${{ matrix.session.session }}
           include-hidden-files: true
 
       - name: Upload test results data
