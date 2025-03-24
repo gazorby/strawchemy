@@ -67,9 +67,7 @@ T = TypeVar("T")
 
 
 def _ensure_list(value: Any) -> Any:
-    if not isinstance(value, list):
-        return [value]
-    return value
+    return value if isinstance(value, list) else [value]
 
 
 class _HasValue(Protocol, Generic[ModelT, ModelFieldT]):
@@ -87,7 +85,7 @@ class StrawchemyDTOAttributes:
     __strawchemy_description__: ClassVar[str] = "GraphQL type"
     __strawchemy_field_map__: ClassVar[dict[DTOKey, GraphQLFieldDefinition[Any, Any]]] = {}
     __strawchemy_query_hook__: QueryHook[Any] | Sequence[QueryHook[Any]] | None = None
-    __strawchemy_is_root_aggregation_type__: bool = False
+    __strawchemy_is_root_aggregation_type__: ClassVar[bool] = False
 
 
 class _Key(Generic[T]):
@@ -480,7 +478,9 @@ class EnumDTO(DTOBase[Any], Enum):
     def field_definition(self) -> GraphQLFieldDefinition[Any, Any]: ...
 
 
-class MappedDataclassGraphQLDTO(StrawchemyDTOAttributes, MappedDataclassDTO[ModelT]): ...
+class MappedDataclassGraphQLDTO(StrawchemyDTOAttributes, MappedDataclassDTO[ModelT]):
+    __strawchemy_filter__: type[Any] | None = None
+    __strawchemy_order_by__: type[Any] | None = None
 
 
 class UnmappedDataclassGraphQLDTO(StrawchemyDTOAttributes, DataclassDTO[ModelT]): ...

@@ -8,7 +8,7 @@ from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.base import ModelFieldT, ModelT
 
 from .config import StrawchemyConfig
-from .graphql.dto import EnumDTO, MappedDataclassGraphQLDTO, OrderByEnum
+from .graphql.dto import BooleanFilterDTO, EnumDTO, MappedDataclassGraphQLDTO, OrderByDTO, OrderByEnum
 from .graphql.factory import DistinctOnFieldsDTOFactory
 from .strawberry import StrawchemyField
 from .strawberry.factory import (
@@ -28,10 +28,10 @@ if TYPE_CHECKING:
     from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.field import _RESOLVER_TYPE
-    from strawchemy.sqlalchemy.hook import QueryHook
 
+    from .sqlalchemy.hook import QueryHook
     from .sqlalchemy.typing import QueryHookCallable
-    from .strawberry.typing import FilterStatementCallable
+    from .strawberry.typing import FilterStatementCallable, StrawchemyTypeFromPydantic
     from .typing import AnyRepository
 
 
@@ -82,8 +82,8 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self,
         resolver: _RESOLVER_TYPE[Any],
         *,
-        filter_input: type[Any] | None = None,
-        order_by: type[Any] | None = None,
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
+        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
@@ -109,8 +109,8 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
     def field(
         self,
         *,
-        filter_input: type[Any] | None = None,
-        order_by: type[Any] | None = None,
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
+        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
@@ -136,8 +136,8 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self,
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
-        filter_input: type[Any] | None = None,
-        order_by: type[Any] | None = None,
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
+        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,

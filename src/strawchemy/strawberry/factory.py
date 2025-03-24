@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints, override
 
 from typing_extensions import dataclass_transform
 
-from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
 from strawberry.types.auto import StrawberryAuto
 from strawberry.types.field import StrawberryField
 from strawberry.types.object_type import _wrap_dataclass
@@ -44,13 +43,12 @@ from strawchemy.types import DefaultOffsetPagination
 
 from ._instance import MapperModelInstance
 from ._registry import RegistryTypeInfo, StrawberryRegistry
-from ._utils import pydantic_from_strawberry_type, strawberry_type_from_pydantic
+from ._utils import pydantic_from_strawberry_type, strawchemy_type_from_pydantic
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Mapping, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
-    from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
     from strawchemy import Strawchemy
     from strawchemy.dto.types import ExcludeFields, IncludeFields
     from strawchemy.graph import Node
@@ -59,7 +57,7 @@ if TYPE_CHECKING:
     from strawchemy.graphql.typing import AggregationType
     from strawchemy.sqlalchemy.hook import QueryHook
 
-    from .typing import GraphQLType
+    from .typing import GraphQLType, StrawchemyTypeFromPydantic
 
 __all__ = (
     "StraberryAggregateFactory",
@@ -73,6 +71,7 @@ __all__ = (
 T = TypeVar("T", bound="DeclarativeBase")
 PydanticGraphQLDTOT = TypeVar("PydanticGraphQLDTOT", bound=PydanticGraphQLDTO)
 DataclassGraphQLDTOT = TypeVar("DataclassGraphQLDTOT", bound=DataclassGraphQLDTO)
+MappedDataclassGraphQLDTOT = TypeVar("MappedDataclassGraphQLDTOT", bound=MappedDataclassGraphQLDTO[Any])
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
@@ -330,6 +329,8 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
         alias_generator: Callable[[str], str] | None = None,
         child_pagination: bool | DefaultOffsetPagination = False,
         child_order_by: bool = False,
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
+        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
@@ -360,6 +361,9 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
                 child_options=_ChildOptions(pagination=child_pagination, order_by=child_order_by),
             )
             dto.__strawchemy_query_hook__ = query_hook
+            if issubclass(dto, MappedDataclassGraphQLDTO):
+                dto.__strawchemy_filter__ = filter_input
+                dto.__strawchemy_order_by__ = order_by
             return dto
 
         return wrapper
@@ -421,7 +425,6 @@ class StrawberryPydanticInputFactory(_StrawberryFactory[ModelT, ModelFieldT, Pyd
     def graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
         return "input"
 
-    @dataclass_transform(order_default=True, kw_only_default=True)
     def input(
         self,
         model: type[T],
@@ -436,10 +439,10 @@ class StrawberryPydanticInputFactory(_StrawberryFactory[ModelT, ModelFieldT, Pyd
         directives: Sequence[object] | None = (),
         override: bool = False,
         purpose: Purpose = Purpose.READ,
-    ) -> Callable[[type[Any]], type[StrawberryTypeFromPydantic[PydanticDTOT]]]:
+    ) -> Callable[[type[Any]], type[StrawchemyTypeFromPydantic[PydanticDTOT]]]:
         def wrapper(
             class_: type[Any],
-        ) -> type[StrawberryTypeFromPydantic[PydanticDTOT]]:
+        ) -> type[StrawchemyTypeFromPydantic[PydanticDTOT]]:
             dto_config = config(
                 purpose,
                 include=include,
@@ -449,7 +452,7 @@ class StrawberryPydanticInputFactory(_StrawberryFactory[ModelT, ModelFieldT, Pyd
                 alias_generator=alias_generator,
                 aliases=aliases,
             )
-            return strawberry_type_from_pydantic(
+            return strawchemy_type_from_pydantic(
                 self.factory(
                     model=model,
                     dto_config=dto_config,
@@ -762,7 +765,7 @@ class StrawberryTypeFactory(
                 assert field.related_model
                 order_by_input = None
                 if order_by:
-                    order_by_input = strawberry_type_from_pydantic(
+                    order_by_input = strawchemy_type_from_pydantic(
                         self._order_by_factory.factory(field.related_model, read_all_partial_config),
                         strict=True,
                     )
