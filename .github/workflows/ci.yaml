@@ -96,7 +96,7 @@ jobs:
 
       - name: Rename coverage and junit files
         run: |
-          mv coverage* coverage-${{ matrix.session.session }}.xml
+          mv .coverage* coverage-${{ matrix.session.session }}.xml
           mv junit* junit-${{ matrix.session.session }}.xml
 
       - name: Upload coverage data
