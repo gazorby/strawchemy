@@ -20,7 +20,7 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Generic, Self, cast, override
+from typing import TYPE_CHECKING, Any, Generic, Literal, Self, cast, override
 
 from sqlalchemy import Dialect, Label, Select, and_, inspect, not_, null, or_, select, true
 from sqlalchemy.orm import (
@@ -33,6 +33,7 @@ from sqlalchemy.orm import (
     contains_eager,
     load_only,
     raiseload,
+    undefer,
 )
 from strawchemy.graphql.constants import AGGREGATIONS_KEY
 from strawchemy.graphql.dto import (
@@ -50,7 +51,6 @@ from ._executor import SyncQueryExecutor
 from ._query import AggregationJoin, Conjunction, DistinctOn, Join, OrderBy, Query, QueryGraph, Where
 from ._scope import QueryScope
 from .exceptions import TranspilingError
-from .hook import LoadColumnsHook
 from .inspector import SQLAlchemyGraphQLInspector
 from .typing import DeclarativeT, QueryExecutorT, SQLAlchemyOrderByNode, SQLAlchemyQueryNode
 
@@ -61,7 +61,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
     from sqlalchemy.sql.elements import NamedColumn
-    from strawchemy.sqlalchemy.hook import QueryHookProtocol
+    from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.typing import SupportedDialect
 
 __all__ = ("Transpiler",)
@@ -76,7 +76,7 @@ class Transpiler(Generic[DeclarativeT]):
         dialect: Dialect,
         statement: Select[tuple[DeclarativeT]] | None = None,
         scope: QueryScope[DeclarativeT] | None = None,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookProtocol[Any]]] | None = None,
+        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[Any]]] | None = None,
     ) -> None:
         self._inspector = SQLAlchemyGraphQLInspector(cast("SupportedDialect", dialect.name), [model.registry])
         self._sub_query_root_alias = aliased(class_mapper(model), name=model.__tablename__, flat=True)
@@ -387,9 +387,26 @@ class Transpiler(Generic[DeclarativeT]):
         statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
 
         for hook in self._query_hooks[query_graph.root_join_tree.root]:
-            statement = hook.apply_hook_on_statement(statement, self.scope.root_alias)
+            statement = hook.apply_hook(statement, self.scope.root_alias)
+            statement, _ = self._load_columns_from_hook(statement, self.scope.root_alias, hook, "add_columns")
 
         return aliased(class_mapper(self.scope.model), statement.subquery(subquery_name), name=subquery_name)
+
+    def _load_columns_from_hook(
+        self,
+        statement: Select[tuple[DeclarativeT]],
+        alias: AliasedClass[Any],
+        hook: QueryHook[DeclarativeT],
+        mode: Literal["load_options", "add_columns"],
+    ) -> tuple[Select[tuple[DeclarativeT]], list[_AbstractLoad]]:
+        load_options: list[_AbstractLoad] = []
+        for column in hook.load_columns:
+            alias_attribute = getattr(alias, column.key)
+            if mode == "load_options":
+                load_options.append(undefer(alias_attribute))
+            else:
+                statement = statement.add_columns(alias_attribute)
+        return statement, load_options
 
     def _apply_load_options(self, statement: Select[tuple[DeclarativeT]], node: SQLAlchemyQueryNode) -> _AbstractLoad:
         """Applies the load options to the statement for the given node.
@@ -416,9 +433,8 @@ class Transpiler(Generic[DeclarativeT]):
 
         for hook in self._query_hooks[node]:
             node_alias = self.scope.alias_from_relation_node(node, "target")
-            options = hook.apply_hook_on_load_options(statement, node_alias)
-            if not isinstance(hook, LoadColumnsHook):
-                statement = hook.apply_hook_on_statement(statement, node_alias)
+            statement = hook.apply_hook(statement, node_alias)
+            statement, options = self._load_columns_from_hook(statement, node_alias, hook, "load_options")
             eager_options.extend(options)
         load = load.options(*eager_options)
 
@@ -580,9 +596,8 @@ class Transpiler(Generic[DeclarativeT]):
         root_options = [load_only(*root_columns)] if root_columns else []
 
         for hook in self._query_hooks[selection_tree.root]:
-            options = hook.apply_hook_on_load_options(statement, self.scope.root_alias)
-            if not isinstance(hook, LoadColumnsHook):
-                statement = hook.apply_hook_on_statement(statement, self.scope.root_alias)
+            statement = hook.apply_hook(statement, self.scope.root_alias)
+            statement, options = self._load_columns_from_hook(statement, self.scope.root_alias, hook, "load_options")
             root_options.extend(options)
 
         statement = statement.options(raiseload("*"), *root_options)

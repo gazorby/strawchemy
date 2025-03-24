@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from strawberry import Info
     from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
     from strawberry.types.field import StrawberryField
-    from strawchemy.sqlalchemy.hook import QueryHookProtocol
+    from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.sqlalchemy.typing import AnySyncSession
     from strawchemy.strawberry.typing import (
         StrawchemyTypeWithStrawberryObjectDefinition,
@@ -72,7 +72,7 @@ class StrawchemySyncRepository(Generic[T]):
     filter_statement: Select[tuple[Any]] | None = None
     execution_options: dict[str, Any] | None = None
 
-    _query_hooks: defaultdict[QueryNode[Any, Any], list[QueryHookProtocol[Any]]] = dataclasses.field(
+    _query_hooks: defaultdict[QueryNode[Any, Any], list[QueryHook[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(list), init=False
     )
     _tree: _StrawberryQueryNode[T] = dataclasses.field(init=False)
@@ -112,15 +112,13 @@ class StrawchemySyncRepository(Generic[T]):
         return RelationFilterDTO.model_validate(selection_arguments)
 
     @classmethod
-    def _get_field_hooks(
-        cls, field: StrawberryField
-    ) -> QueryHookProtocol[Any] | Sequence[QueryHookProtocol[Any]] | None:
+    def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]] | None:
         from strawchemy.strawberry import StrawchemyField
 
         return field.query_hook if isinstance(field, StrawchemyField) else None
 
     def _add_query_hooks(
-        self, query_hooks: QueryHookProtocol[Any] | Sequence[QueryHookProtocol[Any]], node: _StrawberryQueryNode[Any]
+        self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: _StrawberryQueryNode[Any]
     ) -> None:
         hooks = query_hooks if isinstance(query_hooks, Collection) else [query_hooks]
         for hook in hooks:

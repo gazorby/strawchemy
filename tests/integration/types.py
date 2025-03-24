@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import override
 
-from strawchemy import FilterOrderHook, LoadColumnsHook, ModelInstance, Strawchemy
+from strawchemy import ModelInstance, QueryHook, Strawchemy
 
 from sqlalchemy import Select
 from sqlalchemy.orm.util import AliasedClass
@@ -12,12 +12,18 @@ from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User
 strawchemy = Strawchemy()
 
 
-class UserFruitHook(FilterOrderHook[Fruit]):
+class FruitFilterHook(QueryHook[Fruit]):
     @override
-    def statement(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
         if self.info.context.role == "user":
             return statement.where(alias.name == "Apple")
         return statement
+
+
+class FruitOrderingHook(QueryHook[Fruit]):
+    @override
+    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+        return statement.order_by(alias.name.asc())
 
 
 @strawchemy.type(Color, include="all", override=True)
@@ -40,17 +46,21 @@ class FruitType: ...
 class FruitTypeWithDescription:
     instance: ModelInstance[Fruit]
 
-    @strawchemy.field(query_hook=LoadColumnsHook(columns=[Fruit.name, Fruit.adjectives]))
+    @strawchemy.field(query_hook=QueryHook(load_columns=[Fruit.name, Fruit.adjectives]))
     def description(self) -> str:
         return self.instance.description
 
-    @strawchemy.field(query_hook=LoadColumnsHook(columns=[]))
+    @strawchemy.field(query_hook=QueryHook(load_columns=[]))
     def empty_query_hook(self) -> str:
         return "success"
 
 
-@strawchemy.type(Fruit, exclude={"color"}, query_hook=UserFruitHook())
+@strawchemy.type(Fruit, exclude={"color"}, query_hook=FruitFilterHook())
 class FilteredFruitType: ...
+
+
+@strawchemy.type(Fruit, exclude={"color"}, query_hook=FruitOrderingHook())
+class OrderedFruitType: ...
 
 
 @strawchemy.aggregation_type(Fruit, include="all")

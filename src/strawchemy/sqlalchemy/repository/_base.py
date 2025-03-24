@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.sqlalchemy.hook import QueryHookProtocol
+    from strawchemy.sqlalchemy.hook import QueryHook
 
 
 __all__ = ("SQLAlchemyGraphQLRepository",)
@@ -45,7 +45,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookProtocol[DeclarativeBase]]] | None = None,
+        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
         transpiler = Transpiler(self.model, self._dialect, query_hooks=query_hooks, statement=self.statement)

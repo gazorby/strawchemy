@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
     from ._executor import QueryExecutor
     from .filters import SQLAlchemyFilterBase
-    from .hook import QueryHookProtocol
+    from .hook import QueryHook
 
 
 __all__ = (
@@ -48,7 +48,7 @@ SQLAlchemyQueryNode: TypeAlias = "QueryNode[DeclarativeBase, QueryableAttribute[
 SQLAlchemyOrderByNode: TypeAlias = "OrderByNode[DeclarativeBase, QueryableAttribute[Any]]"
 type ColumnOrRelationship = "Column[Any] | RelationshipProperty[Any]"
 FunctionGenerator: TypeAlias = "Callable[..., Function[Any]]"
-QueryHookCallable: TypeAlias = "QueryHookProtocol[QueryHookDeclarativeT]"
+QueryHookCallable: TypeAlias = "QueryHook[QueryHookDeclarativeT]"
 FilterMap: TypeAlias = "OrderedDict[tuple[type[Any], ...], type[SQLAlchemyFilterBase]]"
 AnySyncSession: TypeAlias = "Session | scoped_session[Session]"
 AnyAsyncSession: TypeAlias = "AsyncSession | async_scoped_session[AsyncSession]"

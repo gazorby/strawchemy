@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.sqlalchemy.hook import QueryHookProtocol
+    from strawchemy.sqlalchemy.hook import QueryHook
 
 
 __all__ = ("SQLAlchemyGraphQLAsyncRepository",)
@@ -30,7 +30,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookProtocol[DeclarativeBase]]] | None = None,
+        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
@@ -57,7 +57,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookProtocol[DeclarativeBase]]] | None = None,
+        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
@@ -79,7 +79,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def get_by_id(
         self,
         selection: SQLAlchemyQueryNode | None = None,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookProtocol[DeclarativeBase]]] | None = None,
+        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
