@@ -94,15 +94,28 @@ jobs:
       - name: Run tests
         run: mise run ci:test "${{ matrix.session.session }}"
 
-      - name: Upload test artifacts
+      - name: Rename coverage and junit files
+        run: |
+          mv coverage* coverage-${{ matrix.session.session }}.xml
+          mv junit* junit-${{ matrix.session.session }}.xml
+
+      - name: Upload coverage data
         uses: actions/upload-artifact@v4
-        id: upload-coverage-artifacts
+        id: upload-coverage-data
         if: ${{ always() }}
         with:
           name: coverage-${{ matrix.session.session }}
           path: |
-            coverage.xml
-            junit*.xml
+            coverage-${{ matrix.session.session }}.xml
+
+      - name: Upload test results data
+        uses: actions/upload-artifact@v4
+        id: upload-test-results-data
+        if: ${{ always() }}
+        with:
+          name: test-results-${{ matrix.session.session }}
+          path: |
+            junit-${{ matrix.session.session }}.xml
 
   upload-coverage:
     name: 🆙 Upload Coverage
@@ -112,6 +125,9 @@ jobs:
     steps:
       - name: Download test artifacts
         uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          merge-multiple: true
 
       - uses: actions/setup-python@v5
         with:
@@ -132,6 +148,20 @@ jobs:
           fail_ci_if_error: true
           verbose: true
 
+  upload-test-results:
+    name: 📊 Upload test results
+    needs: [tests, generate-jobs-tests]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        session: ${{ fromJson(needs.generate-jobs-tests.outputs.sessions) }}
+
+    steps:
+      - name: Download test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: test-results-*
+
       - name: Upload test results to Codecov
         id: upload-test-results
         if: ${{ !cancelled() }}
@@ -139,6 +169,7 @@ jobs:
         with:
           name: ${{env.PROJECT_NAME}}-test-results
           token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.session.session }}
           verbose: true
 
   lint:
