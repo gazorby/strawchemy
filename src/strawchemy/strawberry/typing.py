@@ -15,7 +15,6 @@ if TYPE_CHECKING:
 
 __all__ = (
     "AnySessionGetter",
-    "AnyStrawchemyType",
     "AsyncSessionGetter",
     "FilterStatementCallable",
     "StrawchemyTypeFromPydantic",
@@ -34,6 +33,3 @@ class StrawchemyTypeWithStrawberryObjectDefinition(StrawchemyDTOAttributes, With
 
 
 class StrawchemyTypeFromPydantic(StrawchemyDTOAttributes, StrawberryTypeFromPydantic[PydanticModel]): ...
-
-
-AnyStrawchemyType: TypeAlias = "StrawchemyTypeFromPydantic[Any] | StrawchemyTypeWithStrawberryObjectDefinition"
