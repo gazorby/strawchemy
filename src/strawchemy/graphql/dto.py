@@ -59,8 +59,10 @@ from .typing import OrderByDTOT
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
 
+    from strawchemy.sqlalchemy.hook import QueryHookProtocol
+
     from .filters import GenericComparison, GraphQLComparison, OrderComparison
-    from .typing import AggregationFunction, AggregationType, FunctionInfo, QueryHookCallable
+    from .typing import AggregationFunction, AggregationType, FunctionInfo
 
 T = TypeVar("T")
 
@@ -85,7 +87,7 @@ class QueryMetadata:
 class StrawchemyDTOAttributes:
     __strawchemy_description__: ClassVar[str] = "GraphQL type"
     __strawchemy_field_map__: ClassVar[dict[DTOKey, GraphQLFieldDefinition[Any, Any]]] = {}
-    __strawchemy_query_hook__: QueryHookCallable | Sequence[QueryHookCallable] | None = None
+    __strawchemy_query_hook__: QueryHookProtocol[Any] | Sequence[QueryHookProtocol[Any]] | None = None
     __strawchemy_is_root_aggregation_type__: bool = False
 
 

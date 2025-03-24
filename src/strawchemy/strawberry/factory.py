@@ -57,7 +57,7 @@ if TYPE_CHECKING:
     from strawchemy.graphql.filters import OrderComparison
     from strawchemy.graphql.inspector import GraphQLInspectorProtocol
     from strawchemy.graphql.typing import AggregationType
-    from strawchemy.sqlalchemy.typing import QueryHookCallable
+    from strawchemy.sqlalchemy.hook import QueryHookProtocol
 
     from .typing import GraphQLType
 
@@ -333,7 +333,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
-        query_hook: QueryHookCallable[T] | Sequence[QueryHookCallable[T]] | None = None,
+        query_hook: QueryHookProtocol[T] | Sequence[QueryHookProtocol[T]] | None = None,
         override: bool = False,
         purpose: Purpose = Purpose.READ,
     ) -> Callable[[type[Any]], type[DataclassGraphQLDTOT]]:

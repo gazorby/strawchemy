@@ -50,14 +50,9 @@ from ._executor import SyncQueryExecutor
 from ._query import AggregationJoin, Conjunction, DistinctOn, Join, OrderBy, Query, QueryGraph, Where
 from ._scope import QueryScope
 from .exceptions import TranspilingError
+from .hook import LoadColumnsHook
 from .inspector import SQLAlchemyGraphQLInspector
-from .typing import (
-    DeclarativeT,
-    QueryExecutorT,
-    QueryHookCallableWithoutInfo,
-    SQLAlchemyOrderByNode,
-    SQLAlchemyQueryNode,
-)
+from .typing import DeclarativeT, QueryExecutorT, SQLAlchemyOrderByNode, SQLAlchemyQueryNode
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
@@ -66,6 +61,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
     from sqlalchemy.sql.elements import NamedColumn
+    from strawchemy.sqlalchemy.hook import QueryHookProtocol
     from strawchemy.typing import SupportedDialect
 
 __all__ = ("Transpiler",)
@@ -80,7 +76,7 @@ class Transpiler(Generic[DeclarativeT]):
         dialect: Dialect,
         statement: Select[tuple[DeclarativeT]] | None = None,
         scope: QueryScope[DeclarativeT] | None = None,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookCallableWithoutInfo[Any]]] | None = None,
+        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookProtocol[Any]]] | None = None,
     ) -> None:
         self._inspector = SQLAlchemyGraphQLInspector(cast("SupportedDialect", dialect.name), [model.registry])
         self._sub_query_root_alias = aliased(class_mapper(model), name=model.__tablename__, flat=True)
@@ -157,11 +153,11 @@ class Transpiler(Generic[DeclarativeT]):
         Returns:
             A list of join objects for the query tree.
         """
-        joins: list[Join] = []
-        for child in tree.iter_breadth_first():
-            if child.value.is_computed or not child.value.is_relation or child.is_root:
-                continue
-            joins.append(self._join(child, is_outer=is_outer))
+        joins: list[Join] = [
+            self._join(child, is_outer=is_outer)
+            for child in tree.iter_breadth_first()
+            if not child.value.is_computed and child.value.is_relation and not child.is_root
+        ]
         return joins
 
     def _gather_conjonctions(
@@ -390,11 +386,8 @@ class Transpiler(Generic[DeclarativeT]):
         statement = statement.with_only_columns(*only_columns)
         statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
 
-        for hook_callable in self._query_hooks[query_graph.root_join_tree.root]:
-            hook = hook_callable(statement, self.scope.root_alias, "statement")
-            statement = hook.statement
-            if hook.load_options:
-                statement = statement.options(*hook.load_options)
+        for hook in self._query_hooks[query_graph.root_join_tree.root]:
+            statement = hook.apply_hook_on_statement(statement, self.scope.root_alias)
 
         return aliased(class_mapper(self.scope.model), statement.subquery(subquery_name), name=subquery_name)
 
@@ -421,10 +414,12 @@ class Transpiler(Generic[DeclarativeT]):
             load = load.options(load_only(*columns))
             eager_options = [load_only(*columns)]
 
-        for hook_callable in self._query_hooks[node]:
-            hook = hook_callable(statement, self.scope.alias_from_relation_node(node, "target"), "load_options")
-            statement = hook.statement
-            eager_options.extend(hook.load_options)
+        for hook in self._query_hooks[node]:
+            node_alias = self.scope.alias_from_relation_node(node, "target")
+            options = hook.apply_hook_on_load_options(statement, node_alias)
+            if not isinstance(hook, LoadColumnsHook):
+                statement = hook.apply_hook_on_statement(statement, node_alias)
+            eager_options.extend(options)
         load = load.options(*eager_options)
 
         for child in node.children:
@@ -440,17 +435,15 @@ class Transpiler(Generic[DeclarativeT]):
         :param selection_tree: The selection tree to build root aggregations from
         :return: A list of Labels representing the root aggregations
         """
-        aggregation_tree = selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
-        if not aggregation_tree:
-            return []
-
-        return [
-            function
-            for child in aggregation_tree.children
-            for function in self.scope.inspect(child)
-            .output_functions(self.scope.root_alias, lambda func: func.over())
-            .values()
-        ]
+        if aggregation_tree := selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY):
+            return [
+                function
+                for child in aggregation_tree.children
+                for function in self.scope.inspect(child)
+                .output_functions(self.scope.root_alias, lambda func: func.over())
+                .values()
+            ]
+        return []
 
     def _join(self, node: SQLAlchemyQueryNode, is_outer: bool = False) -> Join:
         """Creates a join object for a query node.
@@ -586,10 +579,11 @@ class Transpiler(Generic[DeclarativeT]):
         # Only load selected root columns + those of child relations
         root_options = [load_only(*root_columns)] if root_columns else []
 
-        for hook_callable in self._query_hooks[selection_tree.root]:
-            hook = hook_callable(statement, self.scope.root_alias, "load_options")
-            statement = hook.statement
-            root_options.extend(hook.load_options)
+        for hook in self._query_hooks[selection_tree.root]:
+            options = hook.apply_hook_on_load_options(statement, self.scope.root_alias)
+            if not isinstance(hook, LoadColumnsHook):
+                statement = hook.apply_hook_on_statement(statement, self.scope.root_alias)
+            root_options.extend(options)
 
         statement = statement.options(raiseload("*"), *root_options)
 

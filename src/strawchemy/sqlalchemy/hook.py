@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, Literal, override
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Protocol, override
 
 from sqlalchemy.orm import RelationshipProperty, undefer
 from sqlalchemy.orm.util import AliasedClass
@@ -16,46 +17,72 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import InstrumentedAttribute
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.orm.util import AliasedClass
+    from strawberry import Info
 
 
-@dataclass
-class QueryHookResult(Generic[DeclarativeT]):
-    statement: Select[tuple[DeclarativeT]]
-    load_options: list[_AbstractLoad] = field(default_factory=list)
+class QueryHookProtocol(Protocol, Generic[DeclarativeT]):
+    info_var: ClassVar[ContextVar[Info[Any, Any] | None]] = ContextVar("info", default=None)
+
+    @property
+    def info(self) -> Info[Any, Any]:
+        if info := self.info_var.get():
+            return info
+        msg = "info context is not available"
+        raise QueryHookError(msg)
+
+    def apply_hook_on_statement(
+        self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[DeclarativeT]
+    ) -> Select[tuple[DeclarativeT]]:
+        return statement
+
+    def apply_hook_on_load_options(
+        self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[DeclarativeT]
+    ) -> list[_AbstractLoad]:
+        return []
 
 
 @dataclass(frozen=True, eq=True)
-class QueryHook(Generic[DeclarativeT]):
-    load_columns: Sequence[InstrumentedAttribute[Any]] = field(default_factory=tuple)
+class LoadColumnsHook(QueryHookProtocol[DeclarativeT]):
+    columns: Sequence[InstrumentedAttribute[Any]] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
-        if any(isinstance(element.property, RelationshipProperty) for element in self.load_columns):
+        if any(isinstance(element.property, RelationshipProperty) for element in self.columns):
             msg = "Relationships are not supported `load_columns`"
             raise QueryHookError(msg)
 
-    def _apply_hook(
-        self,
-        statement: Select[tuple[DeclarativeT]],
-        alias: AliasedClass[Any],
-        mode: Literal["load_options", "statement"],
-    ) -> QueryHookResult[DeclarativeT]:
+    @override
+    def apply_hook_on_load_options(
+        self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[DeclarativeT]
+    ) -> list[_AbstractLoad]:
         load_options: list[_AbstractLoad] = []
-        for column in self.load_columns:
+        for column in self.columns:
             alias_attribute = getattr(alias, column.key)
-            if mode == "load_options":
-                load_options.append(undefer(alias_attribute))
-            else:
-                statement = statement.add_columns(alias_attribute)
-        return QueryHookResult(statement=statement, load_options=load_options)
+            load_options.append(undefer(alias_attribute))
+        return load_options
 
-    def __call__(
-        self,
-        statement: Select[tuple[DeclarativeT]],
-        alias: AliasedClass[DeclarativeT],
-        mode: Literal["load_options", "statement"],
-    ) -> QueryHookResult[DeclarativeT]:
-        return self._apply_hook(statement, alias, mode)
+    @override
+    def apply_hook_on_statement(
+        self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[DeclarativeT]
+    ) -> Select[tuple[DeclarativeT]]:
+        for column in self.columns:
+            alias_attribute = getattr(alias, column.key)
+            statement = statement.add_columns(alias_attribute)
+        return statement
 
     @override
     def __hash__(self) -> int:
-        return hash(tuple(self.load_columns))
+        return hash(tuple(self.columns))
+
+
+@dataclass
+class FilterOrderHook(QueryHookProtocol[DeclarativeT]):
+    def statement(
+        self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[DeclarativeT]
+    ) -> Select[tuple[DeclarativeT]]:
+        return statement
+
+    @override
+    def apply_hook_on_statement(
+        self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[DeclarativeT]
+    ) -> Select[tuple[DeclarativeT]]:
+        return self.statement(statement, alias)

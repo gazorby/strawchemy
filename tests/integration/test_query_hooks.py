@@ -27,6 +27,9 @@ class AsyncQuery:
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
     user_fruits: list[FilteredFruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    user_fruits_paginated: list[FilteredFruitType] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository, pagination=True
+    )
 
 
 @strawberry.type
@@ -36,6 +39,9 @@ class SyncQuery:
         repository_type=StrawchemySyncRepository, pagination=True
     )
     user_fruits: list[FilteredFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    user_fruits_paginated: list[FilteredFruitType] = strawchemy.field(
+        repository_type=StrawchemySyncRepository, pagination=True
+    )
 
 
 @pytest.fixture
@@ -83,16 +89,17 @@ async def test_empty_query_hook(fruits_query: str, any_query: AnyQueryExecutor) 
     assert result.data[fruits_query] == [{"emptyQueryHook": "success"} for _ in range(5)]
 
 
+@pytest.mark.parametrize("query", ["userFruits", "userFruitsPaginated"])
 @pytest.mark.snapshot
 async def test_custom_query_hook(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
-    result = await maybe_async(any_query("{ userFruits { name } }"))
+    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
 
     assert not result.errors
     assert result.data
-    assert len(result.data["userFruits"]) == 1
-    assert result.data["userFruits"] == [{"name": "Apple"}]
+    assert len(result.data[query]) == 1
+    assert result.data[query] == [{"name": "Apple"}]
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

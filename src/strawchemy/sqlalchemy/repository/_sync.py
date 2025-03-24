@@ -5,12 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from strawchemy.sqlalchemy._executor import QueryResult, SyncQueryExecutor
-from strawchemy.sqlalchemy.typing import (
-    AnySyncSession,
-    DeclarativeT,
-    QueryHookCallableWithoutInfo,
-    SQLAlchemyQueryNode,
-)
+from strawchemy.sqlalchemy.typing import AnySyncSession, DeclarativeT, SQLAlchemyQueryNode
 
 from ._base import SQLAlchemyGraphQLRepository
 
@@ -19,6 +14,7 @@ if TYPE_CHECKING:
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.sqlalchemy.hook import QueryHookProtocol
 
 
 __all__ = ()
@@ -36,8 +32,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookCallableWithoutInfo[DeclarativeBase]]]
-        | None = None,
+        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookProtocol[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
@@ -64,8 +59,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookCallableWithoutInfo[DeclarativeBase]]]
-        | None = None,
+        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookProtocol[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
@@ -87,8 +81,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     def get_by_id(
         self,
         selection: SQLAlchemyQueryNode | None = None,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookCallableWithoutInfo[DeclarativeBase]]]
-        | None = None,
+        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHookProtocol[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:

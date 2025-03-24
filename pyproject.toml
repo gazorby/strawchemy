@@ -39,7 +39,7 @@ Repository = "https://github.com/gazorby/strawchemy"
 geo = ["GeoAlchemy2", "geojson-pydantic", "shapely"]
 
 [dependency-groups]
-build = ["bump-my-version", "git-cliff"]
+build = ["bump-my-version", "git-cliff", "unasyncd"]
 dev = [
     { include-group = "build" },
     { include-group = "test" },

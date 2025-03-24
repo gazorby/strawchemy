@@ -1,31 +1,23 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import override
 
-from strawchemy import ModelInstance, QueryHook, Strawchemy
-from strawchemy.sqlalchemy.hook import QueryHookResult
+from strawchemy import FilterOrderHook, LoadColumnsHook, ModelInstance, Strawchemy
 
 from sqlalchemy import Select
 from sqlalchemy.orm.util import AliasedClass
-from strawberry import Info
 
 from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User
-
-if TYPE_CHECKING:
-    from strawchemy.sqlalchemy.typing import LoadMode
 
 strawchemy = Strawchemy()
 
 
-def _user_fruit_filter(
-    statement: Select[tuple[Fruit]],
-    alias: AliasedClass[Fruit],
-    mode: LoadMode,  # noqa: ARG001
-    info: Info,
-) -> QueryHookResult[Fruit]:
-    if info.context.role == "user":
-        return QueryHookResult(statement=statement.where(alias.name == "Apple"))
-    return QueryHookResult(statement=statement)
+class UserFruitHook(FilterOrderHook[Fruit]):
+    @override
+    def statement(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+        if self.info.context.role == "user":
+            return statement.where(alias.name == "Apple")
+        return statement
 
 
 @strawchemy.type(Color, include="all", override=True)
@@ -48,16 +40,16 @@ class FruitType: ...
 class FruitTypeWithDescription:
     instance: ModelInstance[Fruit]
 
-    @strawchemy.field(query_hook=QueryHook(load_columns=[Fruit.name, Fruit.adjectives]))
+    @strawchemy.field(query_hook=LoadColumnsHook(columns=[Fruit.name, Fruit.adjectives]))
     def description(self) -> str:
         return self.instance.description
 
-    @strawchemy.field(query_hook=QueryHook(load_columns=[]))
+    @strawchemy.field(query_hook=LoadColumnsHook(columns=[]))
     def empty_query_hook(self) -> str:
         return "success"
 
 
-@strawchemy.type(Fruit, exclude={"color"}, query_hook=_user_fruit_filter)
+@strawchemy.type(Fruit, exclude={"color"}, query_hook=UserFruitHook())
 class FilteredFruitType: ...
 
 
