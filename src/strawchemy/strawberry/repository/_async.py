@@ -41,7 +41,11 @@ if TYPE_CHECKING:
     from strawberry.types.field import StrawberryField
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.sqlalchemy.typing import AnyAsyncSession
-    from strawchemy.strawberry.typing import AsyncSessionGetter, StrawchemyTypeWithStrawberryObjectDefinition
+    from strawchemy.strawberry.typing import (
+        AsyncSessionGetter,
+        StrawchemyTypeFromPydantic,
+        StrawchemyTypeWithStrawberryObjectDefinition,
+    )
 
 __all__ = ("StrawchemyAsyncRepository",)
 
@@ -172,8 +176,8 @@ class StrawchemyAsyncRepository(Generic[T]):
 
     async def get_one_or_none(
         self,
-        filter_input: StrawberryTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
-        order_by: list[StrawberryTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
+        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
+        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
@@ -193,8 +197,8 @@ class StrawchemyAsyncRepository(Generic[T]):
 
     async def get_one(
         self,
-        filter_input: StrawberryTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
-        order_by: list[StrawberryTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
+        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
+        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
@@ -228,8 +232,8 @@ class StrawchemyAsyncRepository(Generic[T]):
 
     async def list(
         self,
-        filter_input: StrawberryTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
-        order_by: list[StrawberryTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
+        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
+        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,

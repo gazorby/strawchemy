@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
+from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
 from strawberry.types.base import WithStrawberryObjectDefinition
 from strawchemy.graphql.dto import StrawchemyDTOAttributes
 
@@ -14,8 +15,10 @@ if TYPE_CHECKING:
 
 __all__ = (
     "AnySessionGetter",
+    "AnyStrawchemyType",
     "AsyncSessionGetter",
     "FilterStatementCallable",
+    "StrawchemyTypeFromPydantic",
     "StrawchemyTypeWithStrawberryObjectDefinition",
     "SyncSessionGetter",
 )
@@ -28,3 +31,9 @@ FilterStatementCallable: TypeAlias = "Callable[[Info[Any, Any]], Select[tuple[An
 
 
 class StrawchemyTypeWithStrawberryObjectDefinition(StrawchemyDTOAttributes, WithStrawberryObjectDefinition): ...
+
+
+class StrawchemyTypeFromPydantic(StrawchemyDTOAttributes, StrawberryTypeFromPydantic[PydanticModel]): ...
+
+
+AnyStrawchemyType: TypeAlias = "StrawchemyTypeFromPydantic[Any] | StrawchemyTypeWithStrawberryObjectDefinition"

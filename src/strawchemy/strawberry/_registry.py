@@ -14,7 +14,7 @@ from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
 from strawchemy.strawberry import pydantic as strawberry_pydantic
 
-from ._utils import strawberry_contained_type, strawberry_type_from_pydantic
+from ._utils import strawberry_contained_type, strawchemy_type_from_pydantic
 
 try:
     from strawchemy.graphql.filters.geo import GeoComparison
@@ -244,7 +244,7 @@ class StrawberryRegistry:
     ) -> type[StrawberryTypeFromPydantic[PydanticModel]]:
         self._check_conflicts(type_info)
         strawberry_attr = "_strawberry_input_type" if type_info.graphql_type == "input" else "_strawberry_type"
-        if existing := strawberry_type_from_pydantic(pydantic_type):
+        if existing := strawchemy_type_from_pydantic(pydantic_type):
             return existing
         if existing := self._get(type_info):
             setattr(pydantic_type, strawberry_attr, existing)

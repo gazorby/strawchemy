@@ -168,6 +168,8 @@ def test_query_hooks_load_columns_relationship_fails() -> None:
         pytest.param("enums.Query", id="enums"),
         pytest.param("filters.filters.Query", id="filters"),
         pytest.param("filters.filters_aggregation.Query", id="aggregation_filters"),
+        pytest.param("filters.type_filter.Query", id="type_filter"),
+        pytest.param("order.type_order_by.Query", id="type_order_by"),
         pytest.param("aggregations.root_aggregations.Query", id="root_aggregations"),
     ],
 )
@@ -210,3 +212,23 @@ def test_mutation_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> Non
 
     schema = strawberry.Schema(query=Query, mutation=mutation_class, scalar_overrides=SCALAR_OVERRIDES)
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
+
+
+def test_field_filter_equals_type_filter() -> None:
+    from tests.unit.schemas.filters.filters import Query as FieldFilterQuery
+    from tests.unit.schemas.filters.type_filter import Query as TypeFilterQuery
+
+    field_filter_schema = strawberry.Schema(query=FieldFilterQuery, scalar_overrides=SCALAR_OVERRIDES)
+    type_filter_schema = strawberry.Schema(query=TypeFilterQuery, scalar_overrides=SCALAR_OVERRIDES)
+
+    assert textwrap.dedent(str(field_filter_schema)).strip() == textwrap.dedent(str(type_filter_schema)).strip()
+
+
+def test_field_order_by_equals_type_order_by() -> None:
+    from tests.unit.schemas.order.field_order_by import Query as FieldOrderQuery
+    from tests.unit.schemas.order.type_order_by import Query as TypeOrderQuery
+
+    field_filter_schema = strawberry.Schema(query=FieldOrderQuery, scalar_overrides=SCALAR_OVERRIDES)
+    type_filter_schema = strawberry.Schema(query=TypeOrderQuery, scalar_overrides=SCALAR_OVERRIDES)
+
+    assert textwrap.dedent(str(field_filter_schema)).strip() == textwrap.dedent(str(type_filter_schema)).strip()

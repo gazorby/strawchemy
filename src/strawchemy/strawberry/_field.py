@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from functools import cached_property
+from inspect import isclass
 from types import UnionType
 from typing import (
     TYPE_CHECKING,
@@ -19,6 +20,8 @@ from typing import (
     override,
 )
 
+from typing_extensions import TypeIs
+
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
@@ -28,7 +31,13 @@ from strawberry.utils.inspect import in_async_context
 from strawchemy.dto.base import ModelFieldT, ModelInspector, ModelT
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.graphql.constants import DISTINCT_ON_KEY, FILTER_KEY, LIMIT_KEY, NODES_KEY, OFFSET_KEY, ORDER_BY_KEY
-from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO, StrawchemyDTOAttributes
+from strawchemy.graphql.dto import (
+    BooleanFilterDTO,
+    EnumDTO,
+    MappedDataclassGraphQLDTO,
+    OrderByDTO,
+    StrawchemyDTOAttributes,
+)
 from strawchemy.types import DefaultOffsetPagination
 from strawchemy.utils import is_type_hint_optional
 
@@ -41,7 +50,6 @@ if TYPE_CHECKING:
 
     from sqlalchemy import Select
     from strawberry import BasePermission, Info
-    from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.base import StrawberryObjectDefinition, StrawberryType, WithStrawberryObjectDefinition
     from strawberry.types.fields.resolver import StrawberryResolver
@@ -49,7 +57,12 @@ if TYPE_CHECKING:
     from strawchemy.sqlalchemy.typing import QueryHookCallable
     from strawchemy.typing import AnyRepository
 
-    from .typing import AnySessionGetter, FilterStatementCallable, StrawchemyTypeWithStrawberryObjectDefinition
+    from .typing import (
+        AnySessionGetter,
+        FilterStatementCallable,
+        StrawchemyTypeFromPydantic,
+        StrawchemyTypeWithStrawberryObjectDefinition,
+    )
 
 
 __all__ = ("StrawchemyField",)
@@ -84,8 +97,8 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         inspector: ModelInspector[ModelT, ModelFieldT],
         session_getter: AnySessionGetter,
         repository_type: AnyRepository,
-        filter_type: type[StrawberryTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
-        order_by: type[StrawberryTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
+        filter_type: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[ModelT, ModelFieldT]]] | None = None,
+        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[ModelT, ModelFieldT]]] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination = False,
         root_aggregations: bool = False,
@@ -118,8 +131,6 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         self.inspector = inspector
         self.auto_snake_case = auto_snake_case
         self.root_aggregations = root_aggregations
-        self.filter = filter_type
-        self.order_by = order_by
         self.distinct_on = distinct_on
         self.query_hook = query_hook
         self.pagination: DefaultOffsetPagination | Literal[False] = (
@@ -127,6 +138,8 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         )
         self.id_field_name = id_field_name
 
+        self._filter = filter_type
+        self._order_by = order_by
         self._description = description
         self._session_getter = session_getter
         self._filter_statement = filter_statement
@@ -248,8 +261,8 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
     def _list_resolver(
         self,
         info: Info,
-        filter_input: StrawberryTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]] | None = None,
-        order_by: list[StrawberryTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
+        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]] | None = None,
+        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
@@ -266,6 +279,28 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         ):
             msg = f"The `{self.name}` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."
             raise StrawchemyFieldError(msg)
+
+    @classmethod
+    def _is_strawchemy_type(
+        cls, type_: Any
+    ) -> TypeIs[MappedDataclassGraphQLDTO[Any] | type[MappedDataclassGraphQLDTO[Any]]]:
+        return isinstance(type_, MappedDataclassGraphQLDTO) or (
+            isclass(type_) and issubclass(type_, MappedDataclassGraphQLDTO)
+        )
+
+    @cached_property
+    def filter(self) -> type[StrawchemyTypeFromPydantic[BooleanFilterDTO[ModelT, ModelFieldT]]] | None:
+        inner_type = strawberry_contained_type(self.type)
+        if self._filter is None and self._is_strawchemy_type(inner_type):
+            return inner_type.__strawchemy_filter__
+        return self._filter
+
+    @cached_property
+    def order_by(self) -> type[StrawchemyTypeFromPydantic[OrderByDTO[ModelT, ModelFieldT]]] | None:
+        inner_type = strawberry_contained_type(self.type)
+        if self._order_by is None and self._is_strawchemy_type(inner_type):
+            return inner_type.__strawchemy_order_by__
+        return self._order_by
 
     @cached_property
     def _model(self) -> type[ModelT]:
@@ -308,8 +343,8 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
             inspector=self.inspector,
             auto_snake_case=self.auto_snake_case,
             root_aggregations=self.root_aggregations,
-            filter_type=self.filter,
-            order_by=self.order_by,
+            filter_type=self._filter,
+            order_by=self._order_by,
             distinct_on=self.distinct_on,
             pagination=self.pagination,
             registry_namespace=self.registry_namespace,

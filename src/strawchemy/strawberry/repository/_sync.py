@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.sqlalchemy.typing import AnySyncSession
     from strawchemy.strawberry.typing import (
+        StrawchemyTypeFromPydantic,
         StrawchemyTypeWithStrawberryObjectDefinition,
         SyncSessionGetter,
     )
@@ -177,8 +178,8 @@ class StrawchemySyncRepository(Generic[T]):
 
     def get_one_or_none(
         self,
-        filter_input: StrawberryTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
-        order_by: list[StrawberryTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
+        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
+        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
@@ -198,8 +199,8 @@ class StrawchemySyncRepository(Generic[T]):
 
     def get_one(
         self,
-        filter_input: StrawberryTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
-        order_by: list[StrawberryTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
+        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
+        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
@@ -233,8 +234,8 @@ class StrawchemySyncRepository(Generic[T]):
 
     def list(
         self,
-        filter_input: StrawberryTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
-        order_by: list[StrawberryTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
+        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
+        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,

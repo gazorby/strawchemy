@@ -10,13 +10,14 @@ from strawberry.types.lazy_type import LazyType
 if TYPE_CHECKING:
     from strawberry import Info
     from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
+    from strawchemy.strawberry.typing import StrawchemyTypeFromPydantic
 
 
 __all__ = (
     "default_session_getter",
     "dto_model_from_type",
     "pydantic_from_strawberry_type",
-    "strawberry_type_from_pydantic",
+    "strawchemy_type_from_pydantic",
 )
 
 
@@ -29,26 +30,26 @@ def pydantic_from_strawberry_type(type_: type[StrawberryTypeFromPydantic[Pydanti
 
 
 @overload
-def strawberry_type_from_pydantic(
+def strawchemy_type_from_pydantic(
     type_: type[PydanticModel], strict: Literal[False]
-) -> type[StrawberryTypeFromPydantic[PydanticModel]] | None: ...
+) -> type[StrawchemyTypeFromPydantic[PydanticModel]] | None: ...
 
 
 @overload
-def strawberry_type_from_pydantic(
+def strawchemy_type_from_pydantic(
     type_: type[PydanticModel], strict: Literal[True]
-) -> type[StrawberryTypeFromPydantic[PydanticModel]]: ...
+) -> type[StrawchemyTypeFromPydantic[PydanticModel]]: ...
 
 
 @overload
-def strawberry_type_from_pydantic(
+def strawchemy_type_from_pydantic(
     type_: type[PydanticModel], strict: bool = False
-) -> type[StrawberryTypeFromPydantic[PydanticModel]] | None: ...
+) -> type[StrawchemyTypeFromPydantic[PydanticModel]] | None: ...
 
 
-def strawberry_type_from_pydantic(
+def strawchemy_type_from_pydantic(
     type_: type[PydanticModel], strict: bool = False
-) -> type[StrawberryTypeFromPydantic[PydanticModel]] | None:
+) -> type[StrawchemyTypeFromPydantic[PydanticModel]] | None:
     try:
         return get_strawberry_type_from_model(type_)
     except UnregisteredTypeException as error:
