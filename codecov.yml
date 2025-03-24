@@ -6,6 +6,9 @@ coverage:
         target: auto
         # This allows a 2% drop from the previous base commit coverage
         threshold: 2%
+    patch:
+      default:
+        target: auto
 flag_management:
   default_rules: # the rules that will be followed for any flag added, generally
     carryforward: true

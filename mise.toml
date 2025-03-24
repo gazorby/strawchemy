@@ -13,7 +13,7 @@ actionlint = "latest"
 [vars]
 local_pytest_options = "-n=6 -vv"
 pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
-ci_pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=xml --junit-xml=./junit.xml -o junit_family=legacy"
+ci_pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --junit-xml=./junit.xml -o junit_family=legacy"
 nox_py13 = "uv run nox -r -p=3.13"
 
 cleanable_paths = '''{{
