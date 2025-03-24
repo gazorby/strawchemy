@@ -60,6 +60,7 @@ test = [
     "pytest-lazy-fixtures",
     "syrupy",
     "sqlparse",
+    "covdefaults",
 ]
 postgres = [
     "asyncpg>=0.29.0",
@@ -372,21 +373,14 @@ exclude = ["tests/fixtures.py", "tests/unit/schemas/mutations"]
 [tool.coverage.run]
 branch = true
 source = ["src"]
+plugins = ["covdefaults"]
 omit = ["*/tests/*"]
 parallel = true
 relative_files = true
 
 [tool.coverage.report]
-exclude_also = [
-    'def __repr__',
-    'pragma: no cover',
-    'if TYPE_CHECKING:',
-    'except ImportError as e:',
-    'except ImportError:',
-    '\.\.\.',
-    'raise NotImplementedError',
-    '@(abc\.)?abstractmethod',
-]
+exclude_also = ['def __repr__']
+fail_under = 50
 
 [tool.codespell]
 skip = '*.po,*.ts,./src/3rdParty,./src/Test'

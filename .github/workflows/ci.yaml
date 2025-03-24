@@ -108,15 +108,20 @@ jobs:
     name: 🆙 Upload Coverage
     needs: [tests, generate-jobs-tests]
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        session: ${{ fromJson(needs.generate-jobs-tests.outputs.sessions) }}
 
     steps:
       - name: Download test artifacts
         uses: actions/download-artifact@v4
+
+      - uses: actions/setup-python@v5
         with:
-          pattern: coverage-${{ matrix.session.session }}
+          python-version: "3.12"
+
+      - name: Combine coverage files
+        run: |
+          python -Im pip install coverage covdefaults
+          python -Im coverage combine
+          python -Im coverage xml -i
 
       - name: Upload coverage to Codeocv
         id: upload-coverage
@@ -124,7 +129,6 @@ jobs:
         with:
           name: ${{env.PROJECT_NAME}}-tests
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: ${{ matrix.session.session }}
           fail_ci_if_error: true
           verbose: true
 
@@ -135,7 +139,6 @@ jobs:
         with:
           name: ${{env.PROJECT_NAME}}-test-results
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: ${{ matrix.session.session }}
           verbose: true
 
   lint:
