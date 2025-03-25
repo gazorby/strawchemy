@@ -912,23 +912,6 @@ class FilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT
         return f"{name}BoolExp"
 
     @override
-    def decorator(
-        self,
-        model: type[T],
-        purpose: Purpose,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        **kwargs: Any,
-    ) -> Callable[[type[Any]], type[GraphQLFilterDTOT]]:
-        return super().decorator(
-            model, purpose, include, exclude, partial, type_map, aliases, alias_generator, **kwargs
-        )
-
-    @override
     def factory(
         self,
         model: type[T],
@@ -1085,23 +1068,6 @@ class AggregateFilterDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, Aggregat
     @override
     def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
         return f"{name}AggregateBoolExp"
-
-    @override
-    def decorator(
-        self,
-        model: type[T],
-        purpose: Purpose,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        **kwargs: Any,
-    ) -> Callable[[type[Any]], type[AggregateFilterDTO[ModelT]]]:
-        return super().decorator(
-            model, purpose, include, exclude, partial, type_map, aliases, alias_generator, **kwargs
-        )
 
     def _aggregate_function_type(
         self,
