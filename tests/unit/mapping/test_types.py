@@ -171,6 +171,7 @@ def test_query_hooks_load_columns_relationship_fails() -> None:
         pytest.param("filters.type_filter.Query", id="type_filter"),
         pytest.param("order.type_order_by.Query", id="type_order_by"),
         pytest.param("aggregations.root_aggregations.Query", id="root_aggregations"),
+        pytest.param("distinct.Query", id="distinct"),
     ],
 )
 @pytest.mark.snapshot
