@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.11.0](https://github.com/gazorby/strawchemy/compare/v0.10.0..v0.11.0) - 2025-03-25
+
+### 🚀 Features
+
+- *(hook)* Add QueryHookProtocol - ([afd406a](https://github.com/gazorby/strawchemy/commit/afd406a2463f511cf629e9a71ad218f1e9adbc4b))
+- *(mapping)* Allow setting filter/order_by at the type level - ([c1ead8c](https://github.com/gazorby/strawchemy/commit/c1ead8c89ff765ef299d611073be3d5e03c361fa))
+
+### 🐛 Bug Fixes
+
+- *(hook)* Hook would not be correctly applied if triggered by a type - ([0de25a0](https://github.com/gazorby/strawchemy/commit/0de25a058787d5e4d80af558e048a63f6ed71939))
+- *(mapping)* Type annotation override on a list field - ([6f56744](https://github.com/gazorby/strawchemy/commit/6f567441ba708feaa1854223c257de69e29eaf47))
+- *(order-by)* Order by on relation not working properly - ([acf1a8c](https://github.com/gazorby/strawchemy/commit/acf1a8cefd7513eeb2dec9450ae75608c8080a58))
+
+### 🚜 Refactor
+
+- *(hook)* Simplify query hook interface - ([5f84532](https://github.com/gazorby/strawchemy/commit/5f84532e630b84c8aa85a4b703bc5b6bf0ed5959))
+- *(typing)* Remove unused type - ([f242ce5](https://github.com/gazorby/strawchemy/commit/f242ce5d1b1a87eaff604bde3e0f20fede939620))
+
+### 🧪 Testing
+
+- *(integration)* Add test case for distinctOn - ([2ed11c1](https://github.com/gazorby/strawchemy/commit/2ed11c145f7d730e12af794da16db10b67dd7d97))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(coverage)* Use coverage combine - ([05b772d](https://github.com/gazorby/strawchemy/commit/05b772d873059391f5026ba9e3ff969818665805))
+- *(coverage)* Use merge-multiple - ([dfa12d6](https://github.com/gazorby/strawchemy/commit/dfa12d65f6e440927a4d36d81ca2bfe06b0baf9c))
+- *(coverage)* Use default coverage data when running tests - ([4773d23](https://github.com/gazorby/strawchemy/commit/4773d234caeb26ef6be64677b85e6968d5e646e9))
+- *(coverage)* Checkout the repository before processing files - ([d2dad3d](https://github.com/gazorby/strawchemy/commit/d2dad3db1619e538c7a40f246116725b023980b6))
+- *(coverage)* Let leading dot in coverage data filenames - ([ddf8de9](https://github.com/gazorby/strawchemy/commit/ddf8de9005102f7b1a7ea1cdc52bd16e8f2c6e1e))
+- *(coverage)* Remove .xml extension in coverage filenames - ([a4c1fda](https://github.com/gazorby/strawchemy/commit/a4c1fda35faf83d9d6cb123245547e133b3652aa))
+- *(coverage)* Append the coverage session name as file extension - ([7046c63](https://github.com/gazorby/strawchemy/commit/7046c634cfc2ea8a2af7005b2ff9088690196609))
+- *(release)* Bump to v0.11.0 - ([bd27b8e](https://github.com/gazorby/strawchemy/commit/bd27b8e8a8545557879a7de22f9b5483cd751fb6))
 ## [0.10.0](https://github.com/gazorby/strawchemy/compare/v0.9.0..v0.10.0) - 2025-03-21
 
 ### 🐛 Bug Fixes
