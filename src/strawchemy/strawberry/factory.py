@@ -761,7 +761,8 @@ class StrawberryTypeFactory(
 
         for field in dto.__strawchemy_field_map__.values():
             if field.is_relation and field.uselist:
-                type_annotation = list[Self if field.related_dto is dto else field.related_dto]
+                related = Self if field.related_dto is dto else field.related_dto
+                type_annotation = list[related] if related is not None else field.type_
                 assert field.related_model
                 order_by_input = None
                 if order_by:

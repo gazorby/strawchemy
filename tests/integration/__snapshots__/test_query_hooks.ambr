@@ -392,3 +392,33 @@
   LIMIT :param_3
   '''
 # ---
+# name: test_query_hook_on_type[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.id AS id_1
+  FROM color AS color
+  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+  WHERE color__fruits.name = :name_1
+  '''
+# ---
+# name: test_query_hook_on_type[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.id AS id_1
+  FROM color AS color
+  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+  WHERE color__fruits.name = :name_1
+  '''
+# ---
+# name: test_query_hook_on_type[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.id AS id_1
+  FROM color AS color
+  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+  WHERE color__fruits.name = :name_1
+  '''
+# ---

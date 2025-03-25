@@ -9,7 +9,7 @@ import strawberry
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-from .types import FilteredFruitType, FruitTypeWithDescription, OrderedFruitType, strawchemy
+from .types import ColorWithFilteredFruit, FilteredFruitType, FruitTypeWithDescription, OrderedFruitType, strawchemy
 from .typing import RawRecordData
 
 if TYPE_CHECKING:
@@ -34,6 +34,7 @@ class AsyncQuery:
     ordered_fruits_paginated: list[OrderedFruitType] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
+    colors: list[ColorWithFilteredFruit] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
 
 
 @strawberry.type
@@ -50,6 +51,7 @@ class SyncQuery:
     ordered_fruits_paginated: list[OrderedFruitType] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
     )
+    colors: list[ColorWithFilteredFruit] = strawchemy.field(repository_type=StrawchemySyncRepository)
 
 
 @pytest.fixture
@@ -130,6 +132,21 @@ async def test_custom_query_hook_order_by(
         {"name": "Strawberry"},
         {"name": "Watermelon"},
     ]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_query_hook_on_type(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(any_query("{ colors { fruits { name } } }"))
+
+    assert not result.errors
+    assert result.data
+    assert len(result.data["colors"]) == 1
+    assert result.data["colors"] == [{"fruits": [{"name": "Apple"}]}]
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

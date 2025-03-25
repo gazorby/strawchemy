@@ -75,6 +75,11 @@ class FruitAggregationType: ...
 class FruitTypeWithPaginationAndOrderBy: ...
 
 
+@strawchemy.type(Color, include="all")
+class ColorWithFilteredFruit:
+    fruits: list[FilteredFruitType]
+
+
 @strawchemy.filter_input(Fruit, include="all")
 class FruitFilter: ...
 

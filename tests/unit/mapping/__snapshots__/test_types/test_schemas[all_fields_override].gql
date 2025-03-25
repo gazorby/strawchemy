@@ -3,12 +3,11 @@
   '''
   """GraphQL type"""
   type ColorType {
-    id: UUID!
-    fruitsAggregate: FruitAggregate!
-  
     """Fetch objects from the FruitType collection"""
     fruits: [FruitType!]!
-    name: Int!
+    id: UUID!
+    fruitsAggregate: FruitAggregate!
+    name: String!
   }
   
   """Aggregation fields"""
