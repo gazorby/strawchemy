@@ -474,7 +474,7 @@ class Transpiler(Generic[DeclarativeT]):
         node_inspect = self.scope.inspect(node)
         aliased_attribute = self.scope.aliased_attribute(node)
         relation_filter = node.relation_filter
-        if not relation_filter:
+        if not relation_filter.model_fields_set:
             return Join(aliased_attribute, node=node, is_outer=is_outer)
         relationship = node.value.model_field.property
         assert isinstance(relationship, RelationshipProperty)

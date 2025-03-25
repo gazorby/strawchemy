@@ -333,7 +333,8 @@ class Query:
             base_statement = base_statement.where(*self.where.expressions)
         if order_by_expressions:
             base_statement = base_statement.order_by(*order_by_expressions)
-        if self.joins_have_many or distinct_expressions:
+        if distinct_expressions:
+            # Add ORDER BY columns not present in the SELECT clause
             base_statement = base_statement.add_columns(
                 *[
                     expression.element

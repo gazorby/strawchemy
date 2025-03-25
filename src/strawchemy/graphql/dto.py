@@ -176,12 +176,9 @@ class RelationFilterDTO(BaseModel, Generic[OrderByDTOT]):
         default=None, alias=ORDER_BY_KEY
     )
 
-    def __bool__(self) -> bool:
-        return any(value is not None for value in (self.limit, self.offset))
-
     @override
     def __hash__(self) -> int:
-        return hash((self.limit, self.offset))
+        return hash(self.model_dump_json())
 
 
 @dataclass
@@ -508,7 +505,7 @@ class AggregationFunctionFilterDTO(UnmappedPydanticGraphQLDTO[ModelT]):
 
 class OrderByDTO(GraphQLFilterDTO[ModelT], Generic[ModelT, ModelFieldT]):
     def tree(self, _node: OrderByNode[Any, ModelFieldT] | None = None) -> OrderByNode[Any, ModelFieldT]:
-        node = _node if _node else OrderByNode.root_node(self.__dto_model__)
+        node = _node or OrderByNode.root_node(self.__dto_model__)
         key = DTOKey.from_query_node(node)
 
         for name in self.dto_set_fields:
@@ -535,7 +532,7 @@ class BooleanFilterDTO(GraphQLFilterDTO[ModelT], Generic[ModelT, ModelFieldT]):
     def filters_tree(
         self, _node: QueryNode[Any, ModelFieldT] | None = None
     ) -> tuple[QueryNode[ModelT, ModelFieldT], Filter[ModelT, ModelFieldT]]:
-        node = _node if _node else QueryNode.root_node(self.__dto_model__)
+        node = _node or QueryNode.root_node(self.__dto_model__)
         key = DTOKey.from_query_node(node)
         query = Filter(
             and_=[and_val.filters_tree(node)[1] for and_val in self.and_],
