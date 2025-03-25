@@ -408,7 +408,9 @@ class Transpiler(Generic[DeclarativeT]):
                 statement = statement.add_columns(alias_attribute)
         return statement, load_options
 
-    def _apply_load_options(self, statement: Select[tuple[DeclarativeT]], node: SQLAlchemyQueryNode) -> _AbstractLoad:
+    def _select_child(
+        self, statement: Select[tuple[DeclarativeT]], node: SQLAlchemyQueryNode
+    ) -> tuple[Select[tuple[DeclarativeT]], _AbstractLoad]:
         """Applies the load options to the statement for the given node.
 
         Load is applied based on whether it's a relation or not.
@@ -441,9 +443,10 @@ class Transpiler(Generic[DeclarativeT]):
         for child in node.children:
             if not child.value.is_relation or child.value.is_computed:
                 continue
-            if options := self._apply_load_options(statement, child):
+            statement, options = self._select_child(statement, child)
+            if options:
                 load = load.options(options)
-        return load
+        return statement, load
 
     def _root_aggregation_functions(self, selection_tree: SQLAlchemyQueryNode) -> list[Label[Any]]:
         """Build a list of root aggregations, given an SQLAlchemyQueryNode representing the selection tree.
@@ -605,7 +608,8 @@ class Transpiler(Generic[DeclarativeT]):
         for child in selection_tree.children:
             if not child.value.is_relation or child.value.is_computed:
                 continue
-            statement = statement.options(self._apply_load_options(statement, child))
+            statement, options = self._select_child(statement, child)
+            statement = statement.options(options)
 
         return statement, aggregation_joins
 
