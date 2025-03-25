@@ -30,6 +30,10 @@ class FruitOrderingHook(QueryHook[Fruit]):
 class ColorType: ...
 
 
+@strawchemy.distinct_on_enum(Color, include="all", override=True)
+class ColorDistinctOn: ...
+
+
 @strawchemy.type(Color, include="all", child_pagination=True)
 class ColorTypeWithPagination: ...
 
