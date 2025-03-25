@@ -196,3 +196,41 @@ async def test_order_by_aggregations(
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize("order_by", ["ASC", "DESC"])
+@pytest.mark.snapshot
+async def test_relation_order_by(
+    order_by: Literal["ASC", "DESC"],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_containers: RawRecordData,
+    raw_sql_data_types_set1: RawRecordData,
+    raw_sql_data_types_set2: RawRecordData,
+) -> None:
+    result = await maybe_async(
+        any_query(
+            f"""{{
+            containers {{
+                id
+                dataTypes(orderBy: {{ intCol: {order_by} }}) {{
+                    intCol
+                }}
+            }}
+        }}"""
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    for container in result.data["containers"]:
+        raw_data_types = (
+            raw_sql_data_types_set1 if container["id"] == raw_containers[0]["id"] else raw_sql_data_types_set2
+        )
+        expected_order = sorted([x["int_col"] for x in raw_data_types], reverse=order_by == "DESC")
+        assert [row["intCol"] for row in container["dataTypes"]] == expected_order
+
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
