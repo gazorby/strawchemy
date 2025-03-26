@@ -1,0 +1,22 @@
+[project]
+name = "testapp"
+version = "0.1.0"
+description = "Basic test app"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "sqlalchemy",
+    "strawchemy",
+    "granian[reload]",
+    "strawberry-graphql",
+    "litestar[sqlalchemy]",
+    "litestar-granian",
+    "aiosqlite",
+]
+
+[tool.uv.sources]
+strawchemy = { workspace = true }
+
+
+[project.scripts]
+basic = "app:app"

@@ -14,7 +14,7 @@ This project uses [mise](https://mise.jdx.dev/) to manage tasks used for buildin
 
      If you don't want to install mise globally, you can perform a local install using the provided bootstrap script.
 
-     1. Run `./bin/mise` to download and install mise in the `.mise` folder
+     1. Run `./tools/mise` to download and install mise in the `.mise` folder
      2. (optional) [Activate mise in your shell](https://mise.jdx.dev/installing-mise.html#shells)
 
 2. Run `mise run install` to install all dependencies and pre-commit hooks

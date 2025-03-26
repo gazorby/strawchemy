@@ -46,6 +46,7 @@ dev = [
     { include-group = "lint" },
     { include-group = "doc" },
     { include-group = "postgres" },
+    "testapp",
 
 ]
 test = [
@@ -79,6 +80,12 @@ build-backend = "hatchling.build"
 ##################
 [tool.uv]
 default-groups = ["test", "lint"]
+
+[tool.uv.sources]
+testapp = { workspace = true }
+
+[tool.uv.workspace]
+members = ["examples/*"]
 
 [tool.bumpversion]
 allow_dirty = true

@@ -1,0 +1,15 @@
+[env]
+PROJECT_NAME = "basic"
+_.python.venv = { path = ".venv" }
+
+
+[tasks._install]
+description = "Install dependencies"
+hide = true
+run = "uv sync --all-extras --dev"
+
+[tasks.run]
+description = "Run the test app"
+depends = "_install"
+alias = "r"
+run = "uv run litestar --app basic.app:app run --reload --in-subprocess --debug"
