@@ -740,7 +740,7 @@ class TypeDTOFactory(_GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
             current_node,
             raise_if_no_fields,
             backend_kwargs,
-            aggregations=aggregations,
+            aggregations=aggregations if dto_config.purpose is Purpose.READ else False,
             field_map=field_map,
             **kwargs,
         )

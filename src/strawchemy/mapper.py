@@ -62,7 +62,6 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self.input = self._type_factory.input
         self.type = self._type_factory.type
         self.aggregation_type = self._aggregation_factory.type
-
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
 

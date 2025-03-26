@@ -2250,7 +2250,7 @@ dev = [
     { name = "ruff" },
     { name = "sqlparse" },
     { name = "syrupy" },
-    { name = "testapp", virtual = "examples/testapp" },
+    { name = "testapp", editable = "examples/testapp" },
     { name = "unasyncd" },
     { name = "vulture" },
 ]
@@ -2297,7 +2297,7 @@ wheels = [
 [[package]]
 name = "testapp"
 version = "0.1.0"
-source = { virtual = "examples/testapp" }
+source = { editable = "examples/testapp" }
 dependencies = [
     { name = "aiosqlite" },
     { name = "granian", extra = ["reload"] },
@@ -2305,7 +2305,6 @@ dependencies = [
     { name = "litestar-granian" },
     { name = "sqlalchemy" },
     { name = "strawberry-graphql" },
-    { name = "strawchemy" },
 ]
 
 [package.metadata]
@@ -2316,7 +2315,6 @@ requires-dist = [
     { name = "litestar-granian" },
     { name = "sqlalchemy" },
     { name = "strawberry-graphql" },
-    { name = "strawchemy", editable = "." },
 ]
 
 [[package]]

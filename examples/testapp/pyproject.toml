@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "sqlalchemy",
-    "strawchemy",
     "granian[reload]",
     "strawberry-graphql",
     "litestar[sqlalchemy]",
@@ -14,9 +13,6 @@ dependencies = [
     "aiosqlite",
 ]
 
-[tool.uv.sources]
-strawchemy = { workspace = true }
-
-
-[project.scripts]
-basic = "app:app"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -218,6 +218,14 @@ def test_mutation_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> Non
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
 
 
+@pytest.mark.snapshot
+def test_query_and_mutations(graphql_snapshot: SnapshotAssertion) -> None:
+    from tests.unit.schemas.mutation_and_query import Mutation, Query
+
+    schema = strawberry.Schema(query=Query, mutation=Mutation)
+    assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
+
+
 def test_field_filter_equals_type_filter() -> None:
     from tests.unit.schemas.filters.filters import Query as FieldFilterQuery
     from tests.unit.schemas.filters.type_filter import Query as TypeFilterQuery
