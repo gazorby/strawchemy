@@ -22,3 +22,5 @@ DISTINCT_ON_KEY = "distinct_on"
 
 AGGREGATIONS_KEY = "aggregations"
 NODES_KEY = "nodes"
+
+DATA_KEY = "data"

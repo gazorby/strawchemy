@@ -10,7 +10,7 @@
             color.created_at AS created_at,
             color.updated_at AS updated_at
      FROM color
-     WHERE color.name = :name_1) AS anon_1 ON color.id = anon_1.id
+     WHERE color.name = $1::VARCHAR) AS anon_1 ON color.id = anon_1.id
   '''
 # ---
 # name: test_get_one[session-tracked-async-psycopg_async_engine]
@@ -24,7 +24,7 @@
             color.created_at AS created_at,
             color.updated_at AS updated_at
      FROM color
-     WHERE color.name = :name_1) AS anon_1 ON color.id = anon_1.id
+     WHERE color.name = %(name_1)s::VARCHAR) AS anon_1 ON color.id = anon_1.id
   '''
 # ---
 # name: test_get_one[session-tracked-sync-psycopg_engine]
@@ -38,6 +38,6 @@
             color.created_at AS created_at,
             color.updated_at AS updated_at
      FROM color
-     WHERE color.name = :name_1) AS anon_1 ON color.id = anon_1.id
+     WHERE color.name = %(name_1)s::VARCHAR) AS anon_1 ON color.id = anon_1.id
   '''
 # ---

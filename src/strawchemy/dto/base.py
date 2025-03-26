@@ -46,13 +46,7 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-__all__ = (
-    "DTOFactory",
-    "DTOFieldDefinition",
-    "MappedDTO",
-    "MappedDTOProtocol",
-    "ModelInspector",
-)
+__all__ = ("DTOFactory", "DTOFieldDefinition", "MappedDTO", "ModelInspector")
 
 T = TypeVar("T")
 DTOBaseT = TypeVar("DTOBaseT", bound="DTOBase[Any]")
@@ -60,20 +54,6 @@ ModelT = TypeVar("ModelT")
 ModelFieldT = TypeVar("ModelFieldT")
 
 TYPING_NS = vars(typing) | vars(types)
-
-
-class DTOProtocol(Protocol, Generic[ModelT]):
-    """Base class to define DTO mapping classes."""
-
-    __dto_model__: type[ModelT]
-    __dto_factory__: DTOFactory[ModelT, Any, Any]
-
-
-class MappedDTOProtocol(DTOProtocol[ModelT]):
-    """Base class to define DTO mapping classes."""
-
-    def to_mapped(self, **override: Any) -> ModelT:
-        raise NotImplementedError
 
 
 class DTOBase(Generic[ModelT]):

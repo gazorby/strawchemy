@@ -49,7 +49,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
         transpiler = Transpiler(self.model, self._dialect, query_hooks=query_hooks, statement=self.statement)
-        return transpiler.executor(
+        return transpiler.select_executor(
             selection_tree=selection,
             dto_filter=dto_filter,
             order_by=order_by,

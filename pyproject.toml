@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Database :: Database Engines/Servers",
 ]
 requires-python = ">=3.9"
-dependencies = ["sqlalchemy>=1.4", "pydantic", "strawberry-graphql"]
+dependencies = ["sqlalchemy>=2.0.10", "pydantic", "strawberry-graphql"]
 keywords = ["sqlalchemy", "strawberry", "graphql", "SQL", "API"]
 license = { text = "MIT" }
 

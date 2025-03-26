@@ -368,7 +368,6 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
 
         return wrapper
 
-    @dataclass_transform(order_default=True, kw_only_default=True)
     def input(
         self,
         model: type[T],

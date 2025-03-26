@@ -46,7 +46,7 @@ from typing import (
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 from strawchemy.dto.backend.dataclass import DataclassDTO, MappedDataclassDTO
-from strawchemy.dto.backend.pydantic import PydanticDTO
+from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, Purpose
 from strawchemy.graph import GraphError, MatchOn, Node, UndefinedType, undefined
@@ -487,6 +487,11 @@ class UnmappedPydanticGraphQLDTO(StrawchemyDTOAttributes, PydanticDTO[ModelT]):
     @property
     def dto_set_fields(self) -> set[str]:
         return {name for name in self.model_fields_set if getattr(self, name) is not None}
+
+
+class MappedPydanticGraphQLDTO(StrawchemyDTOAttributes, MappedPydanticDTO[ModelT]):
+    __strawchemy_filter__: type[Any] | None = None
+    __strawchemy_order_by__: type[Any] | None = None
 
 
 class GraphQLFilterDTO(UnmappedPydanticGraphQLDTO[ModelT]): ...

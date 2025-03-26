@@ -671,7 +671,7 @@ class Transpiler(Generic[DeclarativeT]):
 
         return query
 
-    def executor(
+    def select_executor(
         self,
         selection_tree: SQLAlchemyQueryNode | None = None,
         dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,

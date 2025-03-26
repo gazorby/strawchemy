@@ -60,9 +60,9 @@ def test_input_instance(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribu
         id: auto
         name: auto
 
-    user = InputType(id=1, name="user")
-    assert user.id == 1
-    assert user.name == "user"
+    user = InputType(id=1, name="user")  # pyright: ignore[reportCallIssue]
+    assert user.id == 1  # pyright: ignore[reportAttributeAccessIssue]
+    assert user.name == "user"  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_field_metadata_default(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]) -> None:
@@ -199,7 +199,10 @@ def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
 
 
-@pytest.mark.parametrize("path", [pytest.param("input_type.Mutation", id="input_type")])
+@pytest.mark.parametrize(
+    "path",
+    [pytest.param("input_type.Mutation", id="input_type"), pytest.param("create.Mutation", id="create_mutation")],
+)
 @pytest.mark.snapshot
 def test_mutation_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     module, query_name = f"tests.unit.schemas.mutations.{path}".rsplit(".", maxsplit=1)

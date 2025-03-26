@@ -4,6 +4,7 @@ from .fixtures import (
     any_query,
     any_session,
     async_engine,
+    async_mutation,
     async_session,
     asyncpg_engine,
     before_create_all_statements,
@@ -27,12 +28,14 @@ from .fixtures import (
     seed_db_sync,
     seed_insert_statements,
     session,
+    sync_mutation,
 )
 
 __all__ = (
     "any_query",
     "any_session",
     "async_engine",
+    "async_mutation",
     "async_session",
     "asyncpg_engine",
     "before_create_all_statements",
@@ -56,4 +59,5 @@ __all__ = (
     "seed_db_sync",
     "seed_insert_statements",
     "session",
+    "sync_mutation",
 )

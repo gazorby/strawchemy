@@ -14,10 +14,24 @@ from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
 from strawchemy.strawberry.scalars import Interval
 
-from sqlalchemy import URL, Engine, Executable, Insert, MetaData, NullPool, create_engine, insert
+from sqlalchemy import (
+    URL,
+    ClauseElement,
+    Compiled,
+    Connection,
+    CursorResult,
+    Dialect,
+    Engine,
+    Executable,
+    Insert,
+    MetaData,
+    NullPool,
+    create_engine,
+    insert,
+)
 from sqlalchemy.event import listens_for
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import ORMExecuteState, Session, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session, sessionmaker
 from strawberry.scalars import JSON
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
@@ -548,6 +562,16 @@ async def seed_db_async(
 # Utilities
 
 
+@pytest.fixture
+def async_mutation() -> type[Any] | None:
+    return None
+
+
+@pytest.fixture
+def sync_mutation() -> type[Any] | None:
+    return None
+
+
 @pytest.fixture(params=[lf("async_session"), lf("session")], ids=["async", "sync"])
 def any_session(request: FixtureRequest) -> AnySession:
     return request.param
@@ -559,13 +583,23 @@ def query_tracker(request: FixtureRequest) -> QueryTracker:
 
 
 @pytest.fixture(params=[lf("any_session")], ids=["session"])
-def any_query(sync_query: type[Any], async_query: type[Any], request: FixtureRequest) -> AnyQueryExecutor:
+def any_query(
+    sync_query: type[Any],
+    async_query: type[Any],
+    async_mutation: type[Any] | None,
+    sync_mutation: type[Any] | None,
+    request: FixtureRequest,
+) -> AnyQueryExecutor:
     if isinstance(request.param, AsyncSession):
         request.getfixturevalue("seed_db_async")
-        return generate_query(session=request.param, query=async_query, scalar_overrides=scalar_overrides)
+        return generate_query(
+            session=request.param, query=async_query, mutation=async_mutation, scalar_overrides=scalar_overrides
+        )
     request.getfixturevalue("seed_db_sync")
 
-    return generate_query(session=request.param, query=sync_query, scalar_overrides=scalar_overrides)
+    return generate_query(
+        session=request.param, query=sync_query, mutation=sync_mutation, scalar_overrides=scalar_overrides
+    )
 
 
 @pytest.fixture
@@ -574,12 +608,18 @@ def no_session_query(sync_query: type[Any]) -> SyncQueryExecutor:
 
 
 @dataclass
-class StatementInspector:
-    state: ORMExecuteState
+class QueryInspector:
+    clause_element: Compiled | str | ClauseElement
+    dialect: Dialect
+    multiparams: list[dict[str, Any]] = dataclasses.field(default_factory=list)
+    params: dict[str, Any] = dataclasses.field(default_factory=dict)
 
     @property
     def statement_str(self) -> str:
-        return str(self.state.statement)
+        compiled = self.clause_element
+        if isinstance(self.clause_element, ClauseElement):
+            compiled = self.clause_element.compile(dialect=self.dialect)
+        return str(compiled)
 
     @property
     def statement_formatted(self) -> str:
@@ -590,20 +630,25 @@ class StatementInspector:
 class QueryTracker:
     session: AnySession
 
-    executions: list[StatementInspector] = dataclasses.field(init=False, default_factory=list)
+    executions: list[QueryInspector] = dataclasses.field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
-        if isinstance(self.session, AsyncSession):
-            listens_for(self.session.sync_session, "do_orm_execute")(self._event_listener)
-        else:
-            listens_for(self.session, "do_orm_execute")(self._event_listener)
+        listens_for(self.session.get_bind(), "after_execute")(self._event_listener)
 
-    def _event_listener(self, orm_execute_state: ORMExecuteState) -> None:
-        self.executions.append(StatementInspector(orm_execute_state))
+    def _event_listener(
+        self,
+        conn: Connection | AsyncConnection,
+        clauseelement: Compiled | str | ClauseElement,
+        multiparams: list[dict[str, Any]],
+        params: dict[str, Any],
+        execution_options: dict[str, Any],
+        result: CursorResult[Any],
+    ) -> None:
+        self.executions.append(QueryInspector(clauseelement, conn.dialect, multiparams, params))
 
     @property
     def query_count(self) -> int:
         return len(self.executions)
 
-    def __getitem__(self, index: int) -> StatementInspector:
+    def __getitem__(self, index: int) -> QueryInspector:
         return self.executions[index]

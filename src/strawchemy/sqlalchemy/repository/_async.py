@@ -2,6 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from sqlalchemy import insert
+from sqlalchemy.orm import NO_VALUE
+from sqlalchemy.orm.util import object_state
 from strawchemy.sqlalchemy._executor import AsyncQueryExecutor, QueryResult
 from strawchemy.sqlalchemy.typing import AnyAsyncSession, DeclarativeT, SQLAlchemyQueryNode
 
@@ -9,9 +12,11 @@ from ._base import SQLAlchemyGraphQLRepository
 
 if TYPE_CHECKING:
     from collections import defaultdict
+    from collections.abc import Sequence
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.graphql.typing import AnyMappedDTO
     from strawchemy.sqlalchemy.hook import QueryHook
 
 
@@ -93,3 +98,37 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             ]
         )
         return await executor.get_one_or_none(self.session)
+
+    async def create_many(self, data: Sequence[AnyMappedDTO]) -> QueryResult[DeclarativeT]:
+        use_insert = True
+        relationship_keys = {relationship.key for relationship in self.model.__mapper__.relationships}
+        instances: Sequence[DeclarativeT] = []
+        for dto in data:
+            instance = dto.to_mapped()
+            instances.append(instance)
+            loaded_keys = {attr.key for attr in object_state(instance).attrs if attr.loaded_value is not NO_VALUE}
+            if loaded_keys & relationship_keys:
+                use_insert = False
+                break
+        if use_insert:
+            values: list[dict[str, Any]] = []
+            for dto, instance in zip(data, instances, strict=True):
+                include = {field.model_field_name for field in dto.__dto_field_definitions__.values()}
+                exclude = object_state(instance).unloaded
+                values.append(
+                    {
+                        field: getattr(instance, field)
+                        for field in instance.__mapper__.columns.keys()  # noqa: SIM118
+                        if field not in exclude and field in include
+                    }
+                )
+
+            result = await self.session.scalars(
+                insert(self.model).returning(self.model, sort_by_parameter_order=True), values
+            )
+            instances = result.all()
+        else:
+            self.session.add_all(data)
+            await self.session.commit()
+
+        return QueryResult(nodes=instances)

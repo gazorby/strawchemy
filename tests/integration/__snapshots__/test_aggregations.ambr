@@ -8,7 +8,7 @@
     (SELECT count(*) AS data_types__count_data_types
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_count_aggregation[session-tracked-async-psycopg_async_engine]
@@ -20,7 +20,7 @@
     (SELECT count(*) AS data_types__count_data_types
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_count_aggregation[session-tracked-sync-psycopg_engine]
@@ -32,7 +32,7 @@
     (SELECT count(*) AS data_types__count_data_types
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-dateCol-date_col-async-asyncpg_engine]
@@ -44,7 +44,7 @@
     (SELECT max(sql_data_types_1.date_col) AS max_data_types__max_date_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-dateCol-date_col-async-psycopg_async_engine]
@@ -56,7 +56,7 @@
     (SELECT max(sql_data_types_1.date_col) AS max_data_types__max_date_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-dateCol-date_col-sync-psycopg_engine]
@@ -68,7 +68,7 @@
     (SELECT max(sql_data_types_1.date_col) AS max_data_types__max_date_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-datetimeCol-datetime_col-async-asyncpg_engine]
@@ -80,7 +80,7 @@
     (SELECT max(sql_data_types_1.datetime_col) AS max_data_types__max_datetime_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-datetimeCol-datetime_col-async-psycopg_async_engine]
@@ -92,7 +92,7 @@
     (SELECT max(sql_data_types_1.datetime_col) AS max_data_types__max_datetime_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-datetimeCol-datetime_col-sync-psycopg_engine]
@@ -104,7 +104,7 @@
     (SELECT max(sql_data_types_1.datetime_col) AS max_data_types__max_datetime_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-decimalCol-decimal_col-async-asyncpg_engine]
@@ -116,7 +116,7 @@
     (SELECT max(sql_data_types_1.decimal_col) AS max_data_types__max_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-decimalCol-decimal_col-async-psycopg_async_engine]
@@ -128,7 +128,7 @@
     (SELECT max(sql_data_types_1.decimal_col) AS max_data_types__max_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-decimalCol-decimal_col-sync-psycopg_engine]
@@ -140,7 +140,7 @@
     (SELECT max(sql_data_types_1.decimal_col) AS max_data_types__max_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-floatCol-float_col-async-asyncpg_engine]
@@ -152,7 +152,7 @@
     (SELECT max(sql_data_types_1.float_col) AS max_data_types__max_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-floatCol-float_col-async-psycopg_async_engine]
@@ -164,7 +164,7 @@
     (SELECT max(sql_data_types_1.float_col) AS max_data_types__max_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-floatCol-float_col-sync-psycopg_engine]
@@ -176,7 +176,7 @@
     (SELECT max(sql_data_types_1.float_col) AS max_data_types__max_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-intCol-int_col-async-asyncpg_engine]
@@ -188,7 +188,7 @@
     (SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-intCol-int_col-async-psycopg_async_engine]
@@ -200,7 +200,7 @@
     (SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-intCol-int_col-sync-psycopg_engine]
@@ -212,7 +212,7 @@
     (SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-strCol-str_col-async-asyncpg_engine]
@@ -224,7 +224,7 @@
     (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-strCol-str_col-async-psycopg_async_engine]
@@ -236,7 +236,7 @@
     (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-strCol-str_col-sync-psycopg_engine]
@@ -248,7 +248,7 @@
     (SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-timeCol-time_col-async-asyncpg_engine]
@@ -260,7 +260,7 @@
     (SELECT max(sql_data_types_1.time_col) AS max_data_types__max_time_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-timeCol-time_col-async-psycopg_async_engine]
@@ -272,7 +272,7 @@
     (SELECT max(sql_data_types_1.time_col) AS max_data_types__max_time_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_max_aggregation[session-tracked-timeCol-time_col-sync-psycopg_engine]
@@ -284,7 +284,7 @@
     (SELECT max(sql_data_types_1.time_col) AS max_data_types__max_time_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-dateCol-date_col-async-asyncpg_engine]
@@ -296,7 +296,7 @@
     (SELECT min(sql_data_types_1.date_col) AS min_data_types__min_date_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-dateCol-date_col-async-psycopg_async_engine]
@@ -308,7 +308,7 @@
     (SELECT min(sql_data_types_1.date_col) AS min_data_types__min_date_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-dateCol-date_col-sync-psycopg_engine]
@@ -320,7 +320,7 @@
     (SELECT min(sql_data_types_1.date_col) AS min_data_types__min_date_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-datetimeCol-datetime_col-async-asyncpg_engine]
@@ -332,7 +332,7 @@
     (SELECT min(sql_data_types_1.datetime_col) AS min_data_types__min_datetime_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-datetimeCol-datetime_col-async-psycopg_async_engine]
@@ -344,7 +344,7 @@
     (SELECT min(sql_data_types_1.datetime_col) AS min_data_types__min_datetime_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-datetimeCol-datetime_col-sync-psycopg_engine]
@@ -356,7 +356,7 @@
     (SELECT min(sql_data_types_1.datetime_col) AS min_data_types__min_datetime_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-decimalCol-decimal_col-async-asyncpg_engine]
@@ -368,7 +368,7 @@
     (SELECT min(sql_data_types_1.decimal_col) AS min_data_types__min_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-decimalCol-decimal_col-async-psycopg_async_engine]
@@ -380,7 +380,7 @@
     (SELECT min(sql_data_types_1.decimal_col) AS min_data_types__min_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-decimalCol-decimal_col-sync-psycopg_engine]
@@ -392,7 +392,7 @@
     (SELECT min(sql_data_types_1.decimal_col) AS min_data_types__min_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-floatCol-float_col-async-asyncpg_engine]
@@ -404,7 +404,7 @@
     (SELECT min(sql_data_types_1.float_col) AS min_data_types__min_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-floatCol-float_col-async-psycopg_async_engine]
@@ -416,7 +416,7 @@
     (SELECT min(sql_data_types_1.float_col) AS min_data_types__min_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-floatCol-float_col-sync-psycopg_engine]
@@ -428,7 +428,7 @@
     (SELECT min(sql_data_types_1.float_col) AS min_data_types__min_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-intCol-int_col-async-asyncpg_engine]
@@ -440,7 +440,7 @@
     (SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-intCol-int_col-async-psycopg_async_engine]
@@ -452,7 +452,7 @@
     (SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-intCol-int_col-sync-psycopg_engine]
@@ -464,7 +464,7 @@
     (SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-strCol-str_col-async-asyncpg_engine]
@@ -476,7 +476,7 @@
     (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-strCol-str_col-async-psycopg_async_engine]
@@ -488,7 +488,7 @@
     (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-strCol-str_col-sync-psycopg_engine]
@@ -500,7 +500,7 @@
     (SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-timeCol-time_col-async-asyncpg_engine]
@@ -512,7 +512,7 @@
     (SELECT min(sql_data_types_1.time_col) AS min_data_types__min_time_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-timeCol-time_col-async-psycopg_async_engine]
@@ -524,7 +524,7 @@
     (SELECT min(sql_data_types_1.time_col) AS min_data_types__min_time_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_min_aggregation[session-tracked-timeCol-time_col-sync-psycopg_engine]
@@ -536,7 +536,7 @@
     (SELECT min(sql_data_types_1.time_col) AS min_data_types__min_time_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-async-asyncpg_engine]
@@ -589,9 +589,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-pagination-async-psycopg_async_engine]
@@ -604,9 +604,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-pagination-sync-psycopg_engine]
@@ -619,9 +619,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-avg-sync-psycopg_engine]
@@ -682,9 +682,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-pagination-async-psycopg_async_engine]
@@ -697,9 +697,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-pagination-sync-psycopg_engine]
@@ -712,9 +712,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddev-sync-psycopg_engine]
@@ -775,9 +775,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-pagination-async-psycopg_async_engine]
@@ -790,9 +790,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-pagination-sync-psycopg_engine]
@@ -805,9 +805,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-sync-psycopg_engine]
@@ -868,9 +868,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-pagination-async-psycopg_async_engine]
@@ -883,9 +883,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-pagination-sync-psycopg_engine]
@@ -898,9 +898,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-sync-psycopg_engine]
@@ -961,9 +961,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-pagination-async-psycopg_async_engine]
@@ -976,9 +976,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-pagination-sync-psycopg_engine]
@@ -991,9 +991,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varPop-sync-psycopg_engine]
@@ -1054,9 +1054,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-pagination-async-psycopg_async_engine]
@@ -1069,9 +1069,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-pagination-sync-psycopg_engine]
@@ -1084,9 +1084,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-varSamp-sync-psycopg_engine]
@@ -1147,9 +1147,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-pagination-async-psycopg_async_engine]
@@ -1162,9 +1162,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-pagination-sync-psycopg_engine]
@@ -1177,9 +1177,9 @@
             sql_data_types.decimal_col AS decimal_col,
             sql_data_types.decimal_col AS decimal_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-decimalCol-decimal_col-variance-sync-psycopg_engine]
@@ -1240,9 +1240,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-avg-pagination-async-psycopg_async_engine]
@@ -1255,9 +1255,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-avg-pagination-sync-psycopg_engine]
@@ -1270,9 +1270,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-avg-sync-psycopg_engine]
@@ -1333,9 +1333,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-pagination-async-psycopg_async_engine]
@@ -1348,9 +1348,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-pagination-sync-psycopg_engine]
@@ -1363,9 +1363,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-stddev-sync-psycopg_engine]
@@ -1426,9 +1426,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-pagination-async-psycopg_async_engine]
@@ -1441,9 +1441,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-pagination-sync-psycopg_engine]
@@ -1456,9 +1456,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-stddevPop-sync-psycopg_engine]
@@ -1519,9 +1519,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-pagination-async-psycopg_async_engine]
@@ -1534,9 +1534,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-pagination-sync-psycopg_engine]
@@ -1549,9 +1549,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-stddevSamp-sync-psycopg_engine]
@@ -1612,9 +1612,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-pagination-async-psycopg_async_engine]
@@ -1627,9 +1627,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-pagination-sync-psycopg_engine]
@@ -1642,9 +1642,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-varPop-sync-psycopg_engine]
@@ -1705,9 +1705,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-pagination-async-psycopg_async_engine]
@@ -1720,9 +1720,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-pagination-sync-psycopg_engine]
@@ -1735,9 +1735,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-varSamp-sync-psycopg_engine]
@@ -1798,9 +1798,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-variance-pagination-async-psycopg_async_engine]
@@ -1813,9 +1813,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-variance-pagination-sync-psycopg_engine]
@@ -1828,9 +1828,9 @@
             sql_data_types.float_col AS float_col,
             sql_data_types.float_col AS float_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-floatCol-float_col-variance-sync-psycopg_engine]
@@ -1891,9 +1891,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-avg-pagination-async-psycopg_async_engine]
@@ -1906,9 +1906,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-avg-pagination-sync-psycopg_engine]
@@ -1921,9 +1921,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-avg-sync-psycopg_engine]
@@ -1984,9 +1984,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-stddev-pagination-async-psycopg_async_engine]
@@ -1999,9 +1999,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-stddev-pagination-sync-psycopg_engine]
@@ -2014,9 +2014,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-stddev-sync-psycopg_engine]
@@ -2077,9 +2077,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-pagination-async-psycopg_async_engine]
@@ -2092,9 +2092,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-pagination-sync-psycopg_engine]
@@ -2107,9 +2107,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-stddevPop-sync-psycopg_engine]
@@ -2170,9 +2170,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-pagination-async-psycopg_async_engine]
@@ -2185,9 +2185,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-pagination-sync-psycopg_engine]
@@ -2200,9 +2200,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-stddevSamp-sync-psycopg_engine]
@@ -2263,9 +2263,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-varPop-pagination-async-psycopg_async_engine]
@@ -2278,9 +2278,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-varPop-pagination-sync-psycopg_engine]
@@ -2293,9 +2293,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-varPop-sync-psycopg_engine]
@@ -2356,9 +2356,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-pagination-async-psycopg_async_engine]
@@ -2371,9 +2371,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-pagination-sync-psycopg_engine]
@@ -2386,9 +2386,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-varSamp-sync-psycopg_engine]
@@ -2449,9 +2449,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS sql_data_types
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-variance-pagination-async-psycopg_async_engine]
@@ -2464,9 +2464,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-variance-pagination-sync-psycopg_engine]
@@ -2479,9 +2479,9 @@
             sql_data_types.int_col AS int_col,
             sql_data_types.int_col AS int_col__1
      FROM sql_data_types AS sql_data_types
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_root_aggregation[session-tracked-intCol-int_col-variance-sync-psycopg_engine]
@@ -2501,7 +2501,7 @@
     (SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-avg-async-psycopg_async_engine]
@@ -2513,7 +2513,7 @@
     (SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-avg-sync-psycopg_engine]
@@ -2525,7 +2525,7 @@
     (SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-stddev-async-asyncpg_engine]
@@ -2537,7 +2537,7 @@
     (SELECT stddev(sql_data_types_1.decimal_col) AS stddev_data_types__stddev_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-stddev-async-psycopg_async_engine]
@@ -2549,7 +2549,7 @@
     (SELECT stddev(sql_data_types_1.decimal_col) AS stddev_data_types__stddev_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-stddev-sync-psycopg_engine]
@@ -2561,7 +2561,7 @@
     (SELECT stddev(sql_data_types_1.decimal_col) AS stddev_data_types__stddev_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-async-asyncpg_engine]
@@ -2573,7 +2573,7 @@
     (SELECT stddev_pop(sql_data_types_1.decimal_col) AS stddev_pop_data_types__stddev_pop_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-async-psycopg_async_engine]
@@ -2585,7 +2585,7 @@
     (SELECT stddev_pop(sql_data_types_1.decimal_col) AS stddev_pop_data_types__stddev_pop_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-stddevPop-sync-psycopg_engine]
@@ -2597,7 +2597,7 @@
     (SELECT stddev_pop(sql_data_types_1.decimal_col) AS stddev_pop_data_types__stddev_pop_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-async-asyncpg_engine]
@@ -2609,7 +2609,7 @@
     (SELECT stddev_samp(sql_data_types_1.decimal_col) AS stddev_samp_data_types__stddev_samp_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-async-psycopg_async_engine]
@@ -2621,7 +2621,7 @@
     (SELECT stddev_samp(sql_data_types_1.decimal_col) AS stddev_samp_data_types__stddev_samp_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-stddevSamp-sync-psycopg_engine]
@@ -2633,7 +2633,7 @@
     (SELECT stddev_samp(sql_data_types_1.decimal_col) AS stddev_samp_data_types__stddev_samp_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-varPop-async-asyncpg_engine]
@@ -2645,7 +2645,7 @@
     (SELECT var_pop(sql_data_types_1.decimal_col) AS var_pop_data_types__var_pop_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-varPop-async-psycopg_async_engine]
@@ -2657,7 +2657,7 @@
     (SELECT var_pop(sql_data_types_1.decimal_col) AS var_pop_data_types__var_pop_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-varPop-sync-psycopg_engine]
@@ -2669,7 +2669,7 @@
     (SELECT var_pop(sql_data_types_1.decimal_col) AS var_pop_data_types__var_pop_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-varSamp-async-asyncpg_engine]
@@ -2681,7 +2681,7 @@
     (SELECT var_samp(sql_data_types_1.decimal_col) AS var_samp_data_types__var_samp_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-varSamp-async-psycopg_async_engine]
@@ -2693,7 +2693,7 @@
     (SELECT var_samp(sql_data_types_1.decimal_col) AS var_samp_data_types__var_samp_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-varSamp-sync-psycopg_engine]
@@ -2705,7 +2705,7 @@
     (SELECT var_samp(sql_data_types_1.decimal_col) AS var_samp_data_types__var_samp_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-variance-async-asyncpg_engine]
@@ -2717,7 +2717,7 @@
     (SELECT variance(sql_data_types_1.decimal_col) AS variance_data_types__variance_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-variance-async-psycopg_async_engine]
@@ -2729,7 +2729,7 @@
     (SELECT variance(sql_data_types_1.decimal_col) AS variance_data_types__variance_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-decimalCol-decimal_col-variance-sync-psycopg_engine]
@@ -2741,7 +2741,7 @@
     (SELECT variance(sql_data_types_1.decimal_col) AS variance_data_types__variance_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-avg-async-asyncpg_engine]
@@ -2753,7 +2753,7 @@
     (SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-avg-async-psycopg_async_engine]
@@ -2765,7 +2765,7 @@
     (SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-avg-sync-psycopg_engine]
@@ -2777,7 +2777,7 @@
     (SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-stddev-async-asyncpg_engine]
@@ -2789,7 +2789,7 @@
     (SELECT stddev(sql_data_types_1.float_col) AS stddev_data_types__stddev_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-stddev-async-psycopg_async_engine]
@@ -2801,7 +2801,7 @@
     (SELECT stddev(sql_data_types_1.float_col) AS stddev_data_types__stddev_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-stddev-sync-psycopg_engine]
@@ -2813,7 +2813,7 @@
     (SELECT stddev(sql_data_types_1.float_col) AS stddev_data_types__stddev_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-stddevPop-async-asyncpg_engine]
@@ -2825,7 +2825,7 @@
     (SELECT stddev_pop(sql_data_types_1.float_col) AS stddev_pop_data_types__stddev_pop_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-stddevPop-async-psycopg_async_engine]
@@ -2837,7 +2837,7 @@
     (SELECT stddev_pop(sql_data_types_1.float_col) AS stddev_pop_data_types__stddev_pop_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-stddevPop-sync-psycopg_engine]
@@ -2849,7 +2849,7 @@
     (SELECT stddev_pop(sql_data_types_1.float_col) AS stddev_pop_data_types__stddev_pop_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-stddevSamp-async-asyncpg_engine]
@@ -2861,7 +2861,7 @@
     (SELECT stddev_samp(sql_data_types_1.float_col) AS stddev_samp_data_types__stddev_samp_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-stddevSamp-async-psycopg_async_engine]
@@ -2873,7 +2873,7 @@
     (SELECT stddev_samp(sql_data_types_1.float_col) AS stddev_samp_data_types__stddev_samp_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-stddevSamp-sync-psycopg_engine]
@@ -2885,7 +2885,7 @@
     (SELECT stddev_samp(sql_data_types_1.float_col) AS stddev_samp_data_types__stddev_samp_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-varPop-async-asyncpg_engine]
@@ -2897,7 +2897,7 @@
     (SELECT var_pop(sql_data_types_1.float_col) AS var_pop_data_types__var_pop_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-varPop-async-psycopg_async_engine]
@@ -2909,7 +2909,7 @@
     (SELECT var_pop(sql_data_types_1.float_col) AS var_pop_data_types__var_pop_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-varPop-sync-psycopg_engine]
@@ -2921,7 +2921,7 @@
     (SELECT var_pop(sql_data_types_1.float_col) AS var_pop_data_types__var_pop_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-varSamp-async-asyncpg_engine]
@@ -2933,7 +2933,7 @@
     (SELECT var_samp(sql_data_types_1.float_col) AS var_samp_data_types__var_samp_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-varSamp-async-psycopg_async_engine]
@@ -2945,7 +2945,7 @@
     (SELECT var_samp(sql_data_types_1.float_col) AS var_samp_data_types__var_samp_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-varSamp-sync-psycopg_engine]
@@ -2957,7 +2957,7 @@
     (SELECT var_samp(sql_data_types_1.float_col) AS var_samp_data_types__var_samp_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-variance-async-asyncpg_engine]
@@ -2969,7 +2969,7 @@
     (SELECT variance(sql_data_types_1.float_col) AS variance_data_types__variance_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-variance-async-psycopg_async_engine]
@@ -2981,7 +2981,7 @@
     (SELECT variance(sql_data_types_1.float_col) AS variance_data_types__variance_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-floatCol-float_col-variance-sync-psycopg_engine]
@@ -2993,7 +2993,7 @@
     (SELECT variance(sql_data_types_1.float_col) AS variance_data_types__variance_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-avg-async-asyncpg_engine]
@@ -3005,7 +3005,7 @@
     (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-avg-async-psycopg_async_engine]
@@ -3017,7 +3017,7 @@
     (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-avg-sync-psycopg_engine]
@@ -3029,7 +3029,7 @@
     (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-stddev-async-asyncpg_engine]
@@ -3041,7 +3041,7 @@
     (SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-stddev-async-psycopg_async_engine]
@@ -3053,7 +3053,7 @@
     (SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-stddev-sync-psycopg_engine]
@@ -3065,7 +3065,7 @@
     (SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-stddevPop-async-asyncpg_engine]
@@ -3077,7 +3077,7 @@
     (SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-stddevPop-async-psycopg_async_engine]
@@ -3089,7 +3089,7 @@
     (SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-stddevPop-sync-psycopg_engine]
@@ -3101,7 +3101,7 @@
     (SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-stddevSamp-async-asyncpg_engine]
@@ -3113,7 +3113,7 @@
     (SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-stddevSamp-async-psycopg_async_engine]
@@ -3125,7 +3125,7 @@
     (SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-stddevSamp-sync-psycopg_engine]
@@ -3137,7 +3137,7 @@
     (SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-varPop-async-asyncpg_engine]
@@ -3149,7 +3149,7 @@
     (SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-varPop-async-psycopg_async_engine]
@@ -3161,7 +3161,7 @@
     (SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-varPop-sync-psycopg_engine]
@@ -3173,7 +3173,7 @@
     (SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-varSamp-async-asyncpg_engine]
@@ -3185,7 +3185,7 @@
     (SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-varSamp-async-psycopg_async_engine]
@@ -3197,7 +3197,7 @@
     (SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-varSamp-sync-psycopg_engine]
@@ -3209,7 +3209,7 @@
     (SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-variance-async-asyncpg_engine]
@@ -3221,7 +3221,7 @@
     (SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-variance-async-psycopg_async_engine]
@@ -3233,7 +3233,7 @@
     (SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-intCol-int_col-variance-sync-psycopg_engine]
@@ -3245,7 +3245,7 @@
     (SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-decimalCol-decimal_col-async-asyncpg_engine]
@@ -3257,7 +3257,7 @@
     (SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-decimalCol-decimal_col-async-psycopg_async_engine]
@@ -3269,7 +3269,7 @@
     (SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-decimalCol-decimal_col-sync-psycopg_engine]
@@ -3281,7 +3281,7 @@
     (SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-floatCol-float_col-async-asyncpg_engine]
@@ -3293,7 +3293,7 @@
     (SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-floatCol-float_col-async-psycopg_async_engine]
@@ -3305,7 +3305,7 @@
     (SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-floatCol-float_col-sync-psycopg_engine]
@@ -3317,7 +3317,7 @@
     (SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-intCol-int_col-async-asyncpg_engine]
@@ -3329,7 +3329,7 @@
     (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = $1::UUID
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-intCol-int_col-async-psycopg_async_engine]
@@ -3341,7 +3341,7 @@
     (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-intCol-int_col-sync-psycopg_engine]
@@ -3353,6 +3353,6 @@
     (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
      FROM sql_data_types AS sql_data_types_1
      WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  WHERE sql_data_types_container.id = :id_1
+  WHERE sql_data_types_container.id = %(id_1)s::UUID
   '''
 # ---

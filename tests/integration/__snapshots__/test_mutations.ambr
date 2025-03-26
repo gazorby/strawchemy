@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_create_many_mutation[session-tracked-async-asyncpg_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_create_many_mutation[session-tracked-async-psycopg_async_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_create_many_mutation[session-tracked-sync-psycopg_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_create_mutation[session-tracked-async-asyncpg_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_create_mutation[session-tracked-async-psycopg_async_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_create_mutation[session-tracked-sync-psycopg_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
