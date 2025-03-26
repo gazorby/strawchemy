@@ -23,6 +23,7 @@ from typing import (
 
 from typing_extensions import TypeIs
 
+from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
@@ -157,10 +158,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         self._filter_statement = filter_statement
         self._execution_options = execution_options
 
-        if repository_type == "auto":
-            self._repository_type = StrawchemyAsyncRepository if in_async_context() else StrawchemySyncRepository
-        else:
-            self._repository_type = repository_type
+        self._repository_type = repository_type
 
         super().__init__(
             python_name,
@@ -190,9 +188,16 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         return cast("type[StrawchemyTypeWithStrawberryObjectDefinition]", self.type)
 
     def _get_repository(self, info: Info[Any, Any]) -> StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]:
-        return self._repository_type(
+        session = self._session_getter(info)
+        if self._repository_type == "auto":
+            repository_type = (
+                StrawchemyAsyncRepository if isinstance(session, AsyncSession) else StrawchemySyncRepository
+            )
+        else:
+            repository_type = self._repository_type
+        return repository_type(
             self._strawchemy_type,
-            session=self._session_getter(info),  # pyright: ignore[reportArgumentType]
+            session=session,  # pyright: ignore[reportArgumentType]
             info=info,
             auto_snake_case=self.auto_snake_case,
             root_aggregations=self.root_aggregations,
@@ -352,9 +357,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
     @cached_property
     @override
     def is_async(self) -> bool:
-        if self.base_resolver is None:
-            return issubclass(self._repository_type, StrawchemyAsyncRepository)
-        return super().is_async
+        return in_async_context() if self.base_resolver is None else super().is_async
 
     @override
     def __copy__(self) -> Self:
