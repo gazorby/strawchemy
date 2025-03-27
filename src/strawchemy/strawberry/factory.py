@@ -25,20 +25,21 @@ from strawchemy.graphql.dto import (
     EnumDTO,
     MappedDataclassGraphQLDTO,
     OrderByDTO,
+    StrawchemyDTOAttributes,
     UnmappedDataclassGraphQLDTO,
     UnmappedPydanticGraphQLDTO,
 )
-from strawchemy.graphql.factory import (
+from strawchemy.graphql.factories.aggregations import AggregationInspector
+from strawchemy.graphql.factories.inputs import (
     AggregateDTOFactory,
     AggregateFilterDTOFactory,
-    AggregationInspector,
     FilterDTOFactory,
     FilterFunctionInfo,
     OrderByDTOFactory,
-    RootAggregateTypeDTOFactory,
-    TypeDTOFactory,
 )
+from strawchemy.graphql.factories.types import RootAggregateTypeDTOFactory, TypeDTOFactory
 from strawchemy.graphql.typing import DataclassGraphQLDTO, PydanticGraphQLDTO
+from strawchemy.strawberry.types import ToManyInput, ToOneInput
 from strawchemy.types import DefaultOffsetPagination
 
 from ._instance import MapperModelInstance
@@ -72,6 +73,7 @@ T = TypeVar("T", bound="DeclarativeBase")
 PydanticGraphQLDTOT = TypeVar("PydanticGraphQLDTOT", bound=PydanticGraphQLDTO)
 DataclassGraphQLDTOT = TypeVar("DataclassGraphQLDTOT", bound=DataclassGraphQLDTO)
 MappedDataclassGraphQLDTOT = TypeVar("MappedDataclassGraphQLDTOT", bound=MappedDataclassGraphQLDTO[Any])
+StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound=StrawchemyDTOAttributes)
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
@@ -188,7 +190,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
 
     def _register_dataclass(
         self,
-        dto: type[DataclassGraphQLDTOT],
+        dto: type[StrawchemyDTOT],
         dto_config: DTOConfig,
         current_node: Node[Relation[Any, DTOBaseT], None] | None,
         description: str | None = None,
@@ -196,7 +198,7 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, DTOBaseT]):
         override: bool = False,
         user_defined: bool = False,
         child_options: _ChildOptions | None = None,
-    ) -> type[DataclassGraphQLDTOT]:
+    ) -> type[StrawchemyDTOT]:
         type_info = self._type_info(
             dto,
             dto_config,
@@ -575,8 +577,8 @@ class StrawberryOrderByInputFactory(
         current_node: Node[Relation[Any, OrderByDTO[Any, ModelFieldT]], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
-        aggregate_filters: bool = True,
         *,
+        aggregate_filters: bool = True,
         description: str | None = None,
         directives: Sequence[object] | None = (),
         **kwargs: Any,
@@ -858,6 +860,29 @@ class StrawberryTypeFactory(
         )
 
 
+class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
+    @override
+    def type_description(self) -> str:
+        return "GraphQL input type"
+
+    @override
+    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
+        return f"{name}InputType"
+
+    @override
+    def _resolve_type(
+        self,
+        field: DTOFieldDefinition[ModelT, ModelFieldT],
+        dto_config: DTOConfig,
+        node: Node[Relation[ModelT, DTOBaseT], None],
+        **factory_kwargs: Any,
+    ) -> Any:
+        """Recursively resolve the type hint to a valid pydantic type."""
+        if not field.is_relation:
+            return self._resolve_basic_type(field, dto_config)
+        return ToOneInput if field.uselist else ToManyInput
+
+
 class StrawberryFilterInputFactory(
     StrawberryPydanticInputFactory[ModelT, ModelFieldT, BooleanFilterDTO[Any, ModelFieldT]],
     FilterDTOFactory[ModelT, ModelFieldT, BooleanFilterDTO[Any, ModelFieldT]],
@@ -890,8 +915,8 @@ class StrawberryFilterInputFactory(
         current_node: Node[Relation[Any, BooleanFilterDTO[Any, ModelFieldT]], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
-        aggregate_filters: bool = True,
         *,
+        aggregate_filters: bool = True,
         description: str | None = None,
         directives: Sequence[object] | None = (),
         **kwargs: Any,

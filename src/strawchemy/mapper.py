@@ -9,11 +9,12 @@ from strawchemy.dto.base import ModelFieldT, ModelT
 
 from .config import StrawchemyConfig
 from .graphql.dto import BooleanFilterDTO, EnumDTO, MappedDataclassGraphQLDTO, OrderByDTO, OrderByEnum
-from .graphql.factory import DistinctOnFieldsDTOFactory
+from .graphql.factories.types import DistinctOnFieldsDTOFactory
 from .strawberry import StrawchemyField, StrawchemyMutationField
 from .strawberry.factory import (
     StrawberryAggregateFilterInputFactory,
     StrawberryFilterInputFactory,
+    StrawberryInputFactory,
     StrawberryOrderByInputFactory,
     StrawberryRegistry,
     StrawberryRootAggregateTypeFactory,
@@ -53,13 +54,14 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self._order_by_factory = StrawberryOrderByInputFactory(self)
         self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.inspector)
         self._type_factory = StrawberryTypeFactory(self, dataclass_backend)
+        self._input_factory = StrawberryInputFactory(self, dataclass_backend)
         self._aggregation_factory = StrawberryRootAggregateTypeFactory(self, dataclass_backend)
 
         self.filter_input = self._filter_factory.input
         self.aggregate_filter_input = self._aggregate_filter_factory.input
         self.order_by_input = self._order_by_factory.input
         self.distinct_on_enum = self._distinct_on_enum_factory.decorator
-        self.input = self._type_factory.input
+        self.input = self._input_factory.input
         self.type = self._type_factory.type
         self.aggregation_type = self._aggregation_factory.type
         # Register common types

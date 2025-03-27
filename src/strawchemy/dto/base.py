@@ -360,25 +360,25 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         excluded = (explictly_excluded or not explicitly_included) or dto_config.purpose not in field.allowed_purposes
         return not has_override and excluded
 
-    def _resolve_type(
-        self,
-        field: DTOFieldDefinition[ModelT, ModelFieldT],
-        dto_config: DTOConfig,
-        node: Node[Relation[ModelT, DTOBaseT], None],
-        **factory_kwargs: Any,
-    ) -> Any:
-        """Recursively resolve the type hint to a valid pydantic type."""
+    def _resolve_basic_type(self, field: DTOFieldDefinition[ModelT, ModelFieldT], dto_config: DTOConfig) -> Any:
         type_hint = self.type_map.get(field.type_hint, field.type_)
         overriden_by_type_map = field.type_hint in dto_config.type_overrides or field.type_hint in self.type_map
 
         if overriden_by_type_map or field.has_type_override:
             return type_hint
 
-        if not field.is_relation:
-            if not field.has_type_override and field.complete and is_type_hint_optional(type_hint):
-                type_hint = non_optional_type_hint(type_hint)
-            return type_hint
+        if not field.has_type_override and field.complete and is_type_hint_optional(type_hint):
+            type_hint = non_optional_type_hint(type_hint)
+        return type_hint
 
+    def _resolve_relation_type(
+        self,
+        field: DTOFieldDefinition[ModelT, ModelFieldT],
+        dto_config: DTOConfig,
+        node: Node[Relation[ModelT, DTOBaseT], None],
+        **factory_kwargs: Any,
+    ) -> Any:
+        type_hint = self.type_map.get(field.type_hint, field.type_)
         relation_model = self.inspector.relation_model(field.model_field)
         dto_name = self.dto_name_suffix(relation_model.__name__, dto_config)
         relation_child = Relation(relation_model, name=dto_name)
@@ -411,6 +411,18 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         if (is_type_hint_optional(type_hint) and not field.complete) or field.partial:
             return Optional[dto]  # noqa: UP007
         return dto
+
+    def _resolve_type(
+        self,
+        field: DTOFieldDefinition[ModelT, ModelFieldT],
+        dto_config: DTOConfig,
+        node: Node[Relation[ModelT, DTOBaseT], None],
+        **factory_kwargs: Any,
+    ) -> Any:
+        """Recursively resolve the type hint to a valid pydantic type."""
+        if not field.is_relation:
+            return self._resolve_basic_type(field, dto_config)
+        return self._resolve_relation_type(field, dto_config, node, **factory_kwargs)
 
     def _node_or_root(
         self,
@@ -564,10 +576,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         cache_key = self._cache_key(model, dto_config, node, **kwargs)
 
         if dto := self._dto_cache.get(cache_key):
-            if node.is_root:
-                return self.backend.copy(dto, name)
-            return dto
-
+            return self.backend.copy(dto, name) if node.is_root else dto
         dto = self._factory(
             name,
             model,

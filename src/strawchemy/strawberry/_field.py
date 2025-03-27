@@ -30,7 +30,7 @@ from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.base import StrawberryList, StrawberryOptional, StrawberryType, WithStrawberryObjectDefinition
 from strawberry.types.field import UNRESOLVED, StrawberryField
 from strawberry.utils.inspect import in_async_context
-from strawchemy.dto.base import ModelFieldT, ModelInspector, ModelT
+from strawchemy.dto.base import MappedDTO, ModelFieldT, ModelInspector, ModelT
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.graphql.constants import (
     DATA_KEY,
@@ -242,10 +242,6 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         )
 
     @cached_property
-    def _model(self) -> type[ModelT]:
-        return dto_model_from_type(strawberry_contained_type(self.type))
-
-    @cached_property
     def filter(self) -> type[StrawchemyTypeFromPydantic[BooleanFilterDTO[ModelT, ModelFieldT]]] | None:
         inner_type = strawberry_contained_type(self.type)
         if self._filter is None and self._is_strawchemy_type(inner_type):
@@ -261,6 +257,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
 
     def auto_arguments(self) -> list[StrawberryArgument]:
         arguments: list[StrawberryArgument] = []
+        inner_type = strawberry_contained_type(self.type)
 
         if self.is_list:
             if self.pagination:
@@ -307,8 +304,9 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
                         default=None,
                     )
                 )
-        else:
-            id_fields = list(self.inspector.id_field_definitions(self._model, DTOConfig(Purpose.READ)))
+        elif issubclass(inner_type, MappedDTO):
+            model = dto_model_from_type(inner_type)
+            id_fields = list(self.inspector.id_field_definitions(model, DTOConfig(Purpose.READ)))
             if len(id_fields) == 1:
                 field = id_fields[0][1]
                 arguments.append(
@@ -318,7 +316,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
                 arguments.extend(
                     [
                         StrawberryArgument(name, None, type_annotation=StrawberryAnnotation(field.type_))
-                        for name, field in self.inspector.id_field_definitions(self._model, DTOConfig(Purpose.READ))
+                        for name, field in self.inspector.id_field_definitions(model, DTOConfig(Purpose.READ))
                     ]
                 )
         return arguments
@@ -409,20 +407,21 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
 
     @property
     @override
-    def description(self) -> str:
+    def description(self) -> str | None:
         if self._description is not None:
             return self._description
-        template = "Fetch {object} from the {name} collection"
-        if definition := get_object_definition(strawberry_contained_type(self.type), strict=False):
-            if not self.is_list:
-                description = template.format(object="object", name=definition.name)
-                return f"{description} by id" if not self.base_resolver else description
-            if self.root_aggregations:
-                nodes_field = next(field for field in definition.fields if field.python_name == NODES_KEY)
-                definition = get_object_definition(strawberry_contained_type(nodes_field.type), strict=True)
-                return template.format(object="aggregation data", name=definition.name)
-            return template.format(object="objects", name=definition.name)
-        return template.format(object="objects", name="")
+        definition = get_object_definition(strawberry_contained_type(self.type), strict=False)
+        named_template = "Fetch {object} from the {name} collection"
+        if not definition or definition.is_input:
+            return None
+        if not self.is_list:
+            description = named_template.format(object="object", name=definition.name)
+            return description if self.base_resolver else f"{description} by id"
+        if self.root_aggregations:
+            nodes_field = next(field for field in definition.fields if field.python_name == NODES_KEY)
+            definition = get_object_definition(strawberry_contained_type(nodes_field.type), strict=True)
+            return named_template.format(object="aggregation data", name=definition.name)
+        return named_template.format(object="objects", name=definition.name)
 
     @description.setter
     def description(self, value: str) -> None:  # pyright: ignore[reportIncompatibleVariableOverride]

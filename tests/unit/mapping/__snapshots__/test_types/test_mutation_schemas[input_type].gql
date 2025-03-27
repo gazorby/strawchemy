@@ -28,7 +28,7 @@
     hello: String!
   }
   
-  """GraphQL type"""
+  """GraphQL input type"""
   input SQLDataTypesCreate {
     id: UUID!
     dateCol: Date!

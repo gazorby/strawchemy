@@ -1,12 +1,10 @@
 # serializer version: 1
 # name: test_query_and_mutations
   '''
-  """GraphQL type"""
-  input ColorInputType {
+  """GraphQL input type"""
+  input ColorInput {
     id: UUID!
-  
-    """Fetch objects from the FruitInput collection"""
-    fruits: [FruitInput!]!
+    fruits: ToOneInput!
     name: String!
   }
   
@@ -35,12 +33,12 @@
     varPop: FruitNumericFields!
   }
   
-  """GraphQL type"""
+  """GraphQL input type"""
   input FruitInput {
     id: UUID!
     name: String!
     colorId: UUID = null
-    color: ColorInputType!
+    color: ToManyInput!
     sweetness: Int!
   }
   
@@ -73,6 +71,12 @@
   
     """Fetch objects from the FruitType collection"""
     createFruits(data: [FruitInput!]!): [FruitType!]!
+  
+    """Fetch object from the ColorType collection by id"""
+    createColor(data: ColorInput!): ColorType!
+  
+    """Fetch objects from the ColorType collection"""
+    createColors(data: [ColorInput!]!): [ColorType!]!
   }
   
   type Query {
@@ -81,6 +85,24 @@
   
     """Fetch objects from the FruitType collection"""
     fruits: [FruitType!]!
+  
+    """Fetch object from the ColorType collection by id"""
+    color(id: UUID!): ColorType!
+  
+    """Fetch objects from the ColorType collection"""
+    colors: [ColorType!]!
+  }
+  
+  input ToManyInput {
+    add: [ID!]
+    remove: [ID!]
+    set: [ID!]
+  }
+  
+  input ToOneInput {
+    add: [ID!]
+    remove: [ID!]
+    set: [ID!]
   }
   
   scalar UUID
