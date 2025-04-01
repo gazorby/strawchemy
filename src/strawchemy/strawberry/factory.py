@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeVar, get_type_hints, override
+from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints, override
 
 from typing_extensions import dataclass_transform
 
@@ -69,7 +69,7 @@ if TYPE_CHECKING:
     from strawchemy.graphql.typing import AggregationType
     from strawchemy.sqlalchemy.hook import QueryHook
 
-    from .typing import GraphQLType, StrawchemyTypeFromPydantic
+    from .typing import GraphQLType, InputMode, StrawchemyTypeFromPydantic
 
 __all__ = (
     "StraberryAggregateFactory",
@@ -384,7 +384,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
     def input(
         self,
         model: type[T],
-        mode: Literal["create", "update"],
+        mode: InputMode,
         include: IncludeFields | None = None,
         exclude: ExcludeFields | None = None,
         partial: bool | None = None,
@@ -821,7 +821,6 @@ class StrawberryTypeFactory(
         node: Node[Relation[Any, MappedDataclassGraphQLDTO[Any]], None],
         *,
         child_options: _ChildOptions | None = None,
-        **factory_kwargs: Any,
     ) -> Hashable:
         return (super()._cache_key(model, dto_config, node), child_options)
 
@@ -884,7 +883,7 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         type_map: dict[Any, Any] | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(mapper, backend, handle_cycles, type_map, use_cache=False, **kwargs)
+        super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
         self._identifier_input_dto_builder = DataclassDTOBackend(MappedDataclassDTO[ModelT])
 
     def _identifier_input(
@@ -902,6 +901,17 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         base.__dto_model__ = related_model  # pyright: ignore[reportGeneralTypeIssues]
         base.__dto_field_definitions__ = dict(id_fields)
         return strawberry.input(base, name=name)
+
+    @override
+    def _cache_key(
+        self,
+        model: type[Any],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, MappedDataclassGraphQLDTO[Any]], None],
+        *,
+        child_options: _ChildOptions | None = None,
+    ) -> Hashable:
+        return (super()._cache_key(model, dto_config, node, child_options=child_options), node.root.value.model)
 
     @override
     def type_description(self) -> str:
@@ -923,7 +933,7 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         dto_config: DTOConfig,
         node: Node[Relation[ModelT, MappedDataclassGraphQLDTO[Any]], None],
         *,
-        mode: Literal["create", "update"],
+        mode: InputMode,
         **factory_kwargs: Any,
     ) -> Any:
         if not field.is_relation:

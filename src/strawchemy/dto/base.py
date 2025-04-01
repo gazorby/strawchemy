@@ -377,7 +377,6 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         backend: DTOBackend[DTOBaseT],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        use_cache: bool = True,
     ) -> None:
         """Initialize internal state to keep track of generated DTOs."""
         # Mapping of all existing dtos names to their class, both declared and generated
@@ -388,7 +387,6 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self.inspector = inspector
         self.backend = backend
         self.type_map = type_map or {}
-        self.use_cache = use_cache
 
         self._dto_cache: dict[Hashable, type[DTOBaseT]] = {}
 
@@ -489,30 +487,24 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         return Node(Relation(model=model, name=name)) if node is None else node
 
     def _cache_key(
-        self, model: type[Any], dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None], **factory_kwargs: Any
+        self, model: type[Any], dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None]
     ) -> Hashable:
-        base_key: list[Hashable] = [
-            self,
-            dto_config.purpose,
-            dto_config.partial,
-            dto_config.alias_generator,
-            tuple(sorted(dto_config.type_overrides, key=repr)),
-            tuple(sorted(dto_config.type_overrides.values(), key=repr)),
-        ]
-        node_key: tuple[Any, ...] = ()
-        if node.is_root:
-            include = tuple(sorted(dto_config.include)) if dto_config.include != "all" else ()
-            root_key = [
-                *include,
-                *tuple(sorted(dto_config.exclude)),
-                *tuple(sorted(dto_config.aliases)),
-                *tuple(sorted(dto_config.aliases.values())),
-                *tuple(sorted(dto_config.annotation_overrides)),
-                *tuple(sorted(dto_config.annotation_overrides.values(), key=repr)),
+        base_key = frozenset(
+            [
+                (dto_config.purpose, dto_config.partial, dto_config.alias_generator),
+                tuple(dto_config.type_overrides.items()),
             ]
-            node_key = tuple(root_key)
-        base_key.extend(node_key)
-        return (model, tuple(base_key))
+        )
+        node_key = frozenset()
+        if node.is_root:
+            root_key = [
+                frozenset(dto_config.include if dto_config.include != "all" else ()),
+                frozenset(dto_config.exclude),
+                frozenset(dto_config.aliases.items()),
+                frozenset(dto_config.annotation_overrides.items()),
+            ]
+            node_key = frozenset(key for key in root_key if key)
+        return (model, base_key, node_key)
 
     def _factory(
         self,
@@ -627,9 +619,9 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             name = base.__name__ if base else self.dto_name(model.__name__, dto_config, current_node)
         node = self._node_or_root(model, name, current_node)
 
-        cache_key = self._cache_key(model, dto_config, node, **kwargs)
+        cache_key = self._cache_key(model, dto_config, node)
 
-        if self.use_cache and (dto := self._dto_cache.get(cache_key)):
+        if dto := self._dto_cache.get(cache_key):
             return self.backend.copy(dto, name) if node.is_root else dto
         dto = self._factory(
             name,
@@ -654,8 +646,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         if self.handle_cycles and node.is_root and node.value.dto:
             self.backend.update_forward_refs(node.value.dto, self.type_hint_namespace())
 
-        if self.use_cache:
-            self._dto_cache[cache_key] = dto
+        self._dto_cache[cache_key] = dto
 
         return dto
 
