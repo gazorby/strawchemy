@@ -327,14 +327,6 @@ class QueryScope(Generic[DeclarativeT]):
     def inspect(self, node: SQLAlchemyQueryNode) -> NodeInspect:
         return NodeInspect(node, self)
 
-    def aliases_from_sql_element(self, element: QueryableAttribute[Any], side: RelationshipSide) -> AliasedClass[Any]:
-        for (node, side_), alias in self._node_alias_map.items():
-            if node.value.model_field is not element or side != side_:
-                continue
-            return alias
-        msg = "Alias not found"
-        raise TranspilingError(msg)
-
     def alias_from_relation_node(self, node: SQLAlchemyQueryNode, side: RelationshipSide) -> AliasedClass[Any]:
         node_inspect = self.inspect(node)
         if (side == "parent" and node.parent and self.inspect(node.parent).is_data_root) or node_inspect.is_data_root:
