@@ -88,7 +88,7 @@ class ToManyUpdateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
 
 
 @dataclass
-class UnboundRelationInput(Generic[ModelT, ModelFieldT]):
+class _UnboundRelationInput(Generic[ModelT, ModelFieldT]):
     field: DTOFieldDefinition[ModelT, ModelFieldT]
     relation_type: RelationType
     set: list[ModelT] = dataclasses.field(default_factory=list)
@@ -100,11 +100,11 @@ class UnboundRelationInput(Generic[ModelT, ModelFieldT]):
 
 
 @dataclass(kw_only=True)
-class RelationInput(UnboundRelationInput[ModelT, ModelFieldT], Generic[ModelT, ModelFieldT]):
+class RelationInput(_UnboundRelationInput[ModelT, ModelFieldT], Generic[ModelT, ModelFieldT]):
     parent: ModelT
 
     @classmethod
-    def from_unbound(cls, unbound: UnboundRelationInput[ModelT, ModelFieldT], model: ModelT) -> Self:
+    def from_unbound(cls, unbound: _UnboundRelationInput[ModelT, ModelFieldT], model: ModelT) -> Self:
         return cls(
             parent=model,
             field=unbound.field,
@@ -122,7 +122,7 @@ class RelationInput(UnboundRelationInput[ModelT, ModelFieldT], Generic[ModelT, M
 class InputVisitor(VisitorProtocol, Generic[ModelT, ModelFieldT]):
     input_data: InputData[ModelT, ModelFieldT]
 
-    current_relations: list[UnboundRelationInput[ModelT, ModelFieldT]] = dataclasses.field(default_factory=list)
+    current_relations: list[_UnboundRelationInput[ModelT, ModelFieldT]] = dataclasses.field(default_factory=list)
 
     @override
     def field_value(
@@ -146,7 +146,7 @@ class InputVisitor(VisitorProtocol, Generic[ModelT, ModelFieldT]):
             create = value if isinstance(value, list) else [value]
         if set_ or add or remove or create:
             self.current_relations.append(
-                UnboundRelationInput(
+                _UnboundRelationInput(
                     field=field,
                     relation_type=relation_type,
                     set=set_,
@@ -194,23 +194,27 @@ class InputData(Generic[ModelT, ModelFieldT]):
         for level in level_range:
             level_input = LevelInput()
             for relation in self.relations:
+                input_data: list[FilteredRelationInput[ModelT, ModelFieldT]] = []
                 if relation.level != level:
                     continue
-                for mapped in getattr(relation, input_type):
-                    if relation.relation_type is not relation_type:
-                        continue
-                    level_input.instances.append(mapped)
-                    level_input.relation_instance_tuples.append((relation, mapped))
-                if level_input.relation_instance_tuples:
-                    level_input.relations.append(relation)
-            if level_input.relation_instance_tuples:
+                input_data.extend(
+                    FilteredRelationInput(relation, mapped)
+                    for mapped in getattr(relation, input_type)
+                    if relation.relation_type is relation_type
+                )
+                level_input.inputs.extend(input_data)
+            if level_input.inputs:
                 levels.append(level_input)
 
         return levels
 
 
 @dataclass
+class FilteredRelationInput(Generic[ModelT, ModelFieldT]):
+    relation: RelationInput[ModelT, ModelFieldT]
+    instance: ModelT
+
+
+@dataclass
 class LevelInput(Generic[ModelT, ModelFieldT]):
-    relation_instance_tuples: list[tuple[RelationInput[ModelT, ModelFieldT], ModelT]] = field(default_factory=list)
-    relations: list[RelationInput[ModelT, ModelFieldT]] = field(default_factory=list)
-    instances: list[ModelT] = field(default_factory=list)
+    inputs: list[FilteredRelationInput[ModelT, ModelFieldT]] = field(default_factory=list)

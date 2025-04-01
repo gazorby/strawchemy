@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
-from strawchemy.sqlalchemy._transpiler import Transpiler
+from sqlalchemy import inspect
+from sqlalchemy.orm import NO_VALUE, RelationshipProperty
+from strawchemy.graphql.mutation import RelationType
+from strawchemy.sqlalchemy._transpiler import QueryTranspiler
 from strawchemy.sqlalchemy.typing import DeclarativeT, QueryExecutorT, SessionT, SQLAlchemyQueryNode
 
 if TYPE_CHECKING:
@@ -11,6 +14,7 @@ if TYPE_CHECKING:
     from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.graphql.mutation import InputData
     from strawchemy.sqlalchemy.hook import QueryHook
 
 
@@ -35,7 +39,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
 
         self._dialect = session.get_bind().dialect
 
-    def _get_executor(
+    def _get_query_executor(
         self,
         executor_type: type[QueryExecutorT],
         selection: SQLAlchemyQueryNode | None = None,
@@ -48,7 +52,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
-        transpiler = Transpiler(self.model, self._dialect, query_hooks=query_hooks, statement=self.statement)
+        transpiler = QueryTranspiler(self.model, self._dialect, query_hooks=query_hooks, statement=self.statement)
         return transpiler.select_executor(
             selection_tree=selection,
             dto_filter=dto_filter,
@@ -60,3 +64,23 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
             executor_cls=executor_type,
             execution_options=execution_options if execution_options is not None else self.execution_options,
         )
+
+    def _to_dict(self, model: DeclarativeBase) -> dict[str, Any]:
+        loaded_attr = {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
+        return {field: getattr(model, field) for field in model.__mapper__.columns.keys() if field in loaded_attr}  # noqa: SIM118
+
+    def _connect_to_one_relations(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> None:
+        for relation in data.relations:
+            prop = relation.field.model_field.property
+            if (
+                not relation.set
+                or not isinstance(prop, RelationshipProperty)
+                or relation.relation_type is not RelationType.TO_ONE
+            ):
+                continue
+            assert prop.local_remote_pairs
+            for local, remote in prop.local_remote_pairs:
+                assert local.key
+                assert remote.key
+                # We take the first input as it's a *ToOne relation
+                setattr(relation.parent, local.key, getattr(relation.set[0], remote.key))

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import strawberry
 
-from .types import MilestoneType, ProjectInput, ProjectType, TicketInput, TicketType, strawchemy
+from .types import MilestoneInput, MilestoneType, ProjectInput, ProjectType, TicketInput, TicketType, strawchemy
 
 
 @strawberry.type
@@ -23,6 +23,8 @@ class Mutation:
 
     create_project: ProjectType = strawchemy.create_mutation(ProjectInput)
     create_projects: list[ProjectType] = strawchemy.create_mutation(ProjectInput)
+
+    create_milestone: MilestoneType = strawchemy.create_mutation(MilestoneInput)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

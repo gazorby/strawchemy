@@ -39,7 +39,7 @@ from strawberry.scalars import JSON
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
-from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User, metadata
+from .models import Color, Fruit, FruitFarm, SQLDataTypes, SQLDataTypesContainer, User, metadata
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, Iterator
@@ -49,6 +49,8 @@ if TYPE_CHECKING:
     from pytest_databases.docker.postgres import PostgresService
     from pytest_databases.types import XdistIsolationLevel
     from strawchemy.sqlalchemy.typing import AnySession
+
+    from syrupy.assertion import SnapshotAssertion
 
     from .typing import RawRecordData
 
@@ -292,6 +294,11 @@ async def async_session(async_engine: AsyncEngine) -> AsyncGenerator[AsyncSessio
 
 
 @pytest.fixture
+def raw_farms(raw_fruits: RawRecordData) -> RawRecordData:
+    return [{"name": f"{fruit['name']} farm", "fruit_id": fruit["id"]} for fruit in raw_fruits]
+
+
+@pytest.fixture
 def raw_colors() -> RawRecordData:
     return [
         {"id": str(uuid4()), "name": "Red"},
@@ -509,12 +516,14 @@ def seed_insert_statements(
     raw_fruits: RawRecordData,
     raw_colors: RawRecordData,
     raw_users: RawRecordData,
+    raw_farms: RawRecordData,
     raw_sql_data_types: RawRecordData,
     raw_sql_data_types_container: RawRecordData,
 ) -> list[Insert]:
     return [
         insert(Color).values(raw_colors),
         insert(Fruit).values(raw_fruits),
+        insert(FruitFarm).values(raw_farms),
         insert(User).values(raw_users),
         insert(SQLDataTypesContainer).values(raw_sql_data_types_container),
         insert(SQLDataTypes).values(raw_sql_data_types),
@@ -680,6 +689,15 @@ class QueryTracker:
 
     def __iter__(self) -> Iterator[QueryInspector]:
         return iter(self.executions)
+
+    def assert_statements(
+        self, count: int, statement_type: FilterableStatement | None = None, snapshot: SnapshotAssertion | None = None
+    ) -> None:
+        filtered = self.filter(statement_type) if statement_type is not None else self
+        assert filtered.query_count == count
+        if snapshot is not None:
+            for query in filtered:
+                assert query.statement_formatted == snapshot
 
 
 @strawberry.type

@@ -213,6 +213,58 @@ async def test_create_mutation_nested_to_one(
 
 
 @pytest.mark.snapshot
+async def test_create_mutation_nested_mixed_relations_create(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+            mutation {
+                createColor(data: {
+                    name: "White",
+                    fruits: {
+                        create: [
+                            {
+                                name: "Grape",
+                                product: { create: { name: "wine" } },
+                                adjectives: ["tangy", "juicy"]
+                            },
+                            {
+                                name: "Lychee",
+                                farms: { create: [ { name: "Bio farm" } ] },
+                                adjectives: ["sweet", "floral"]
+                            },
+                        ]
+                    }
+                }) {
+                    name
+                    fruits {
+                        name
+                        product {
+                            name
+                        }
+                        farms {
+                            name
+                        }
+                    }
+                }
+            }
+            """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["createColor"] == {
+        "name": "White",
+        "fruits": [
+            {"name": "Lychee", "product": None, "farms": [{"name": "Bio farm"}]},
+            {"name": "Grape", "product": {"name": "wine"}, "farms": []},
+        ],
+    }
+
+    # Heterogeneous params means inserts cannot be batched
+    query_tracker.assert_statements(5, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+@pytest.mark.snapshot
 async def test_create_mutation_nested_to_one_create(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
@@ -269,8 +321,5 @@ async def test_create_many_mutation(
     assert result.data
     assert result.data["createColors"] == [{"name": "new color 1"}, {"name": "new color 2"}]
 
-    insert_tracker, select_tracker = query_tracker.filter("insert"), query_tracker.filter("select")
-    assert insert_tracker.query_count == 1
-    assert select_tracker.query_count == 1
-    assert insert_tracker[0].statement_formatted == sql_snapshot
-    assert select_tracker[0].statement_formatted == sql_snapshot
+    query_tracker.assert_statements(1, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)

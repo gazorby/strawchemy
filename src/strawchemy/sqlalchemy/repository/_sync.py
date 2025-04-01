@@ -5,9 +5,9 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any, TypeVar
 
-from sqlalchemy import Row, insert, inspect, update
-from sqlalchemy.orm import NO_VALUE, RelationshipProperty
-from strawchemy.graphql.mutation import InputData, RelationType
+from sqlalchemy import Row, insert, update
+from sqlalchemy.orm import RelationshipProperty
+from strawchemy.graphql.mutation import InputData, LevelInput, RelationType
 from strawchemy.sqlalchemy._executor import QueryResult, SyncQueryExecutor
 from strawchemy.sqlalchemy.typing import AnySyncSession, DeclarativeT, SQLAlchemyQueryNode
 
@@ -27,64 +27,57 @@ T = TypeVar("T", bound=Any)
 
 
 class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, AnySyncSession]):
-    def _to_dict(self, model: DeclarativeBase) -> dict[str, Any]:
-        loaded_attr = {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
-        return {field: getattr(model, field) for field in model.__mapper__.columns.keys() if field in loaded_attr}  # noqa: SIM118
+    def _insert(
+        self,
+        model_type: type[DeclarativeBase],
+        values: list[dict[str, Any]],
+        level: LevelInput[DeclarativeBase, QueryableAttribute[Any]],
+    ) -> None:
+        results = self.session.execute(
+            insert(model_type).returning(*model_type.__mapper__.primary_key, sort_by_parameter_order=True),
+            values,
+        )
+        instance_ids = results.all()
+        pk_names = [pk.name for pk in model_type.__mapper__.primary_key]
 
-    def _connect_to_one_relations(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> None:
-        for relation in data.relations:
-            prop = relation.field.model_field.property
-            if (
-                not relation.set
-                or not isinstance(prop, RelationshipProperty)
-                or relation.relation_type is not RelationType.TO_ONE
-            ):
+        pk_index, fk_index = 0, 0
+        for relation_input in level.inputs:
+            if not isinstance(relation_input.instance, model_type):
                 continue
+            # Update Pks
+            for column in model_type.__mapper__.primary_key:
+                setattr(relation_input.instance, column.key, instance_ids[pk_index][pk_names.index(column.key)])
+            pk_index += 1
+            if relation_input.relation.relation_type is RelationType.TO_MANY:
+                continue
+            # Update Fks
+            prop = relation_input.relation.field.model_field.property
+            assert isinstance(prop, RelationshipProperty)
             assert prop.local_remote_pairs
             for local, remote in prop.local_remote_pairs:
                 assert local.key
                 assert remote.key
-                # We take the first input as it's a *ToOne relation
-                setattr(relation.parent, local.key, getattr(relation.set[0], remote.key))
+                setattr(relation_input.relation.parent, local.key, instance_ids[fk_index][pk_names.index(remote.key)])
+            fk_index += 1
 
     def _create_nested_to_one_relations(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> None:
         for level in data.filter_by_level(RelationType.TO_ONE, "create"):
             insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
 
-            for relation, instance in level.relation_instance_tuples:
-                assert relation.field.related_model
-                insert_params[relation.field.related_model].append(self._to_dict(instance))
+            for create_input in level.inputs:
+                assert create_input.relation.field.related_model
+                insert_params[create_input.relation.field.related_model].append(self._to_dict(create_input.instance))
 
             for model_type, values in insert_params.items():
-                results = self.session.execute(
-                    insert(model_type).returning(*model_type.__mapper__.primary_key, sort_by_parameter_order=True),
-                    values,
-                )
-                instance_ids = results.all()
-
-                pk_names = [pk.name for pk in model_type.__mapper__.primary_key]
-
-                # Update Pks
-                for instance in level.instances:
-                    for column in model_type.__mapper__.primary_key:
-                        setattr(instance, column.key, instance_ids[pk_names.index(column.key)])
-
-                # Update Fks
-                for relation, id_values in zip(level.relations, instance_ids, strict=True):
-                    prop = relation.field.model_field.property
-                    assert isinstance(prop, RelationshipProperty)
-                    assert prop.local_remote_pairs
-                    for local, remote in prop.local_remote_pairs:
-                        assert local.key
-                        assert remote.key
-                        setattr(relation.parent, local.key, id_values[pk_names.index(remote.key)])
+                self._insert(model_type, values, level)
 
     def _connect_to_many_relations(
         self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], created_ids: Sequence[Row[Any]]
     ) -> None:
         for level in data.filter_by_level(RelationType.TO_MANY, "set"):
             update_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
-            for relation in level.relations:
+            for set_input in level.inputs:
+                relation = set_input.relation
                 prop = relation.field.model_field.property
                 assert prop.local_remote_pairs
                 assert relation.field.related_model
@@ -112,7 +105,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     ) -> None:
         for level in data.filter_by_level(RelationType.TO_MANY, "create"):
             insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
-            for relation in level.relations:
+            for create_input in level.inputs:
+                relation = create_input.relation
                 prop = relation.field.model_field.property
                 assert prop.local_remote_pairs
                 assert relation.field.related_model
@@ -122,19 +116,17 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                     for local, remote in prop.local_remote_pairs
                     if local.key and remote.key
                 }
-                insert_params[relation.field.related_model].extend(
-                    [self._to_dict(mapped) | fks for mapped in relation.create]
-                )
+                insert_params[relation.field.related_model].append(self._to_dict(create_input.instance) | fks)
 
             for model_type, values in insert_params.items():
-                self.session.execute(insert(model_type), values)
+                self._insert(model_type, values, level)
 
     def _create_many(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> Sequence[Row[Any]]:
         with self.session.begin_nested() as transaction:
             self._create_nested_to_one_relations(data)
             self._connect_to_one_relations(data)
             result = self.session.execute(
-                insert(self.model).returning(*self.model.__mapper__.primary_key),
+                insert(self.model).returning(*self.model.__mapper__.primary_key, sort_by_parameter_order=True),
                 [self._to_dict(instance) for instance in data.input_instances],
             )
             instance_ids = result.all()
@@ -156,7 +148,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
-        executor = self._get_executor(
+        executor = self._get_query_executor(
             executor_type=SyncQueryExecutor,
             selection=selection,
             dto_filter=dto_filter,
@@ -183,7 +175,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
-        executor = self._get_executor(
+        executor = self._get_query_executor(
             executor_type=SyncQueryExecutor,
             selection=selection,
             dto_filter=dto_filter,
@@ -205,7 +197,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
-        executor = self._get_executor(
+        executor = self._get_query_executor(
             SyncQueryExecutor, selection=selection, query_hooks=query_hooks, execution_options=execution_options
         )
         executor.base_statement = executor.base_statement.where(
@@ -216,11 +208,11 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         )
         return executor.get_one_or_none(self.session)
 
-    def create_many(
+    def create(
         self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], selection: SQLAlchemyQueryNode | None = None
     ) -> QueryResult[DeclarativeT]:
         created_ids = self._create_many(data)
-        executor = self._get_executor(SyncQueryExecutor, selection=selection)
+        executor = self._get_query_executor(SyncQueryExecutor, selection=selection)
         id_fields = executor.scope.id_field_definitions(self.model)
         # 6. Get the selection for newly added instances
         instances_ids: dict[str, list[Any]] = {

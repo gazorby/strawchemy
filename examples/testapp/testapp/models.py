@@ -38,10 +38,18 @@ class Milestone(Base):
     projects: Mapped[list[Project]] = relationship("Project", back_populates="milestone")
 
 
+class Tag(Base):
+    __tablename__ = "tag"
+
+    name: Mapped[str]
+
+
 class Project(Base):
     __tablename__ = "project"
 
     milestone_id: Mapped[UUID | None] = mapped_column(ForeignKey("milestone.id"), nullable=True, default=None)
+    tag_id: Mapped[UUID | None] = mapped_column(ForeignKey("tag.id"), nullable=True, default=None)
     tickets: Mapped[list[Ticket]] = relationship(Ticket, back_populates="project")
-    milestone: Mapped[Milestone] = relationship(Milestone, back_populates="projects")
+    milestone: Mapped[Milestone | None] = relationship(Milestone, back_populates="projects")
+    tag: Mapped[Tag | None] = relationship(Tag)
     name: Mapped[str]
