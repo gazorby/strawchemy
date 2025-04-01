@@ -53,7 +53,7 @@ class QueryHook(Generic[DeclarativeT]):
                     self._check_relationship_load_spec(attribute)
                 if not isinstance(key.property, RelationshipProperty):
                     msg = f"Keys of mappings passed in `load` param must be relationship attributes: {key}"
-                    raise TypeError(msg)
+                    raise QueryHookError(msg)
 
     @property
     def info(self) -> Info[Any, Any]:
