@@ -47,6 +47,7 @@ dev = [
   { include-group = "doc" },
   { include-group = "postgres" },
   "testapp",
+  "debugpy",
 ]
 doc = ["git-cliff>=2.6.1"]
 lint = ["pyright[nodejs]", "ruff", "vulture"]

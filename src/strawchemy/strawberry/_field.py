@@ -322,9 +322,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         return arguments
 
     def filter_statement(self, info: Info[Any, Any]) -> Select[tuple[ModelT]] | None:
-        if self._filter_statement:
-            return self._filter_statement(info)
-        return None
+        return self._filter_statement(info) if self._filter_statement else None
 
     @cached_property
     def is_list(self) -> bool:

@@ -110,8 +110,10 @@ class FilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT]
             yield field
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}BoolExp"
+    def dto_name(
+        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, GraphQLFilterDTOT], None] | None = None
+    ) -> str:
+        return f"{base_name}BoolExp"
 
     @override
     def factory(
@@ -160,8 +162,10 @@ class AggregateDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, AggregateDTOT])
         return "Aggregation fields"
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}Aggregate"
+    def dto_name(
+        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, AggregateDTOT], None] | None = None
+    ) -> str:
+        return f"{base_name}Aggregate"
 
     @override
     def _factory(
@@ -216,8 +220,13 @@ class AggregateFilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, Aggregate
         return "Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'."
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}AggregateBoolExp"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, AggregateFilterDTO[ModelT]], None] | None = None,
+    ) -> str:
+        return f"{base_name}AggregateBoolExp"
 
     def _aggregate_function_type(
         self,
@@ -402,8 +411,13 @@ class OrderByDTOFactory(FilterDTOFactory[ModelT, ModelFieldT, OrderByDTO[ModelT,
         )
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}OrderBy"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, OrderByDTO[ModelT, ModelFieldT]], None] | None = None,
+    ) -> str:
+        return f"{base_name}OrderBy"
 
     @override
     def factory(

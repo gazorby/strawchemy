@@ -2,19 +2,29 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints, override
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeVar, get_type_hints, override
 
 from typing_extensions import dataclass_transform
 
+import strawberry
 from strawberry.types.auto import StrawberryAuto
 from strawberry.types.field import StrawberryField
 from strawberry.types.object_type import _wrap_dataclass
 from strawberry.utils.typing import type_has_annotation
-from strawchemy.dto.backend.dataclass import DataclassDTOBackend
+from strawchemy.dto.backend.dataclass import DataclassDTOBackend, MappedDataclassDTO
 from strawchemy.dto.backend.pydantic import PydanticDTOBackend, PydanticDTOT
-from strawchemy.dto.base import DTOBackend, DTOBaseT, DTOFactory, DTOFieldDefinition, ModelFieldT, ModelT, Relation
+from strawchemy.dto.base import (
+    DTOBackend,
+    DTOBaseT,
+    DTOFactory,
+    DTOFieldDefinition,
+    MappedDTO,
+    ModelFieldT,
+    ModelT,
+    Relation,
+)
 from strawchemy.dto.types import DTO_AUTO, DTOConfig, DTOMissingType, Purpose
-from strawchemy.dto.utils import config, read_all_partial_config, read_partial
+from strawchemy.dto.utils import config, read_all_partial_config, read_partial, write_all_config
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graph import Node
 from strawchemy.graphql.dto import (
@@ -39,12 +49,13 @@ from strawchemy.graphql.factories.inputs import (
 )
 from strawchemy.graphql.factories.types import RootAggregateTypeDTOFactory, TypeDTOFactory
 from strawchemy.graphql.typing import DataclassGraphQLDTO, PydanticGraphQLDTO
-from strawchemy.strawberry.types import ToManyInput, ToOneInput
 from strawchemy.types import DefaultOffsetPagination
+from strawchemy.utils import snake_to_camel
 
 from ._instance import MapperModelInstance
 from ._registry import RegistryTypeInfo, StrawberryRegistry
 from ._utils import pydantic_from_strawberry_type, strawchemy_type_from_pydantic
+from .types import ToManyCreateInput, ToManyUpdateInput, ToOneInput
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Mapping, Sequence
@@ -373,6 +384,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
     def input(
         self,
         model: type[T],
+        mode: Literal["create", "update"],
         include: IncludeFields | None = None,
         exclude: ExcludeFields | None = None,
         partial: bool | None = None,
@@ -404,6 +416,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
                 directives=directives,
                 override=override,
                 user_defined=True,
+                mode=mode,
             )
 
         return wrapper
@@ -848,8 +861,10 @@ class StrawberryTypeFactory(
             **kwargs,
         )
         child_options = child_options or _ChildOptions()
+        if self.graphql_type(dto_config) == "object":
+            dto = self._dataclass_merge(dto, base, pagination=child_options.pagination, order_by=child_options.order_by)
         return self._register_dataclass(
-            self._dataclass_merge(dto, base, pagination=child_options.pagination, order_by=child_options.order_by),
+            dto,
             dto_config=dto_config,
             description=description,
             directives=directives,
@@ -861,26 +876,69 @@ class StrawberryTypeFactory(
 
 
 class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
+    def __init__(
+        self,
+        mapper: Strawchemy[ModelT, ModelFieldT],
+        backend: DataclassDTOBackend[MappedDataclassGraphQLDTO[Any]],
+        handle_cycles: bool = True,
+        type_map: dict[Any, Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(mapper, backend, handle_cycles, type_map, use_cache=False, **kwargs)
+        self._identifier_input_dto_builder = DataclassDTOBackend(MappedDataclassDTO[ModelT])
+
+    def _identifier_input(
+        self,
+        dto_config: DTOConfig,
+        field: DTOFieldDefinition[ModelT, ModelFieldT],
+        node: Node[Relation[ModelT, MappedDataclassGraphQLDTO[Any]], None],
+    ) -> type[MappedDTO[Any]]:
+        name = f"{node.root.value.model.__name__}{snake_to_camel(field.name)}IdFieldsInput"
+        related_model = field.related_model
+        assert related_model
+        id_fields = list(self.inspector.id_field_definitions(related_model, write_all_config))
+        base = self._identifier_input_dto_builder.build(name, related_model, [field for _, field in id_fields])
+        base.__dto_config__ = dataclasses.replace(dto_config, include={name for name, _ in id_fields})
+        base.__dto_model__ = related_model  # pyright: ignore[reportGeneralTypeIssues]
+        base.__dto_field_definitions__ = dict(id_fields)
+        return strawberry.input(base, name=name)
+
     @override
     def type_description(self) -> str:
         return "GraphQL input type"
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}InputType"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, MappedDataclassGraphQLDTO[Any]], None] | None = None,
+    ) -> str:
+        return f"{node.root.value.model.__name__ if node else ''}{base_name}Input"
 
     @override
     def _resolve_type(
         self,
         field: DTOFieldDefinition[ModelT, ModelFieldT],
         dto_config: DTOConfig,
-        node: Node[Relation[ModelT, DTOBaseT], None],
+        node: Node[Relation[ModelT, MappedDataclassGraphQLDTO[Any]], None],
+        *,
+        mode: Literal["create", "update"],
         **factory_kwargs: Any,
     ) -> Any:
-        """Recursively resolve the type hint to a valid pydantic type."""
         if not field.is_relation:
             return self._resolve_basic_type(field, dto_config)
-        return ToOneInput if field.uselist else ToManyInput
+        self._resolve_relation_type(field, dto_config, node, mode=mode, **factory_kwargs)
+        identifier_input = self._identifier_input(dto_config, field, node)
+        if field.uselist:
+            input_type = (
+                ToManyCreateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
+                if mode == "create"
+                else ToManyUpdateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
+            )
+        else:
+            input_type = ToOneInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
+        return input_type | None
 
 
 class StrawberryFilterInputFactory(

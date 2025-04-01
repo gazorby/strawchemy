@@ -35,8 +35,10 @@ T = TypeVar("T")
 
 class _CountFieldsDTOFactory(EnumDTOFactory[ModelT, ModelFieldT]):
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}CountFields"
+    def dto_name(
+        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None
+    ) -> str:
+        return f"{base_name}CountFields"
 
 
 class _FunctionArgDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, UnmappedDataclassGraphQLDTO[ModelT]]):
@@ -125,7 +127,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, UnmappedData
         **kwargs: Any,
     ) -> type[EnumDTO]:
         if not name:
-            name = f"{self.dto_name_suffix(model.__name__, dto_config)}Enum"
+            name = f"{self.dto_name(model.__name__, dto_config)}Enum"
         field_defs = self.iter_field_definitions(
             name=name,
             model=model,
@@ -142,64 +144,104 @@ class _NumericFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
     types: ClassVar[set[type[Any]]] = {int, float, Decimal}
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}NumericFields"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+    ) -> str:
+        return f"{base_name}NumericFields"
 
 
 class _MinMaxFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
     types: ClassVar[set[type[Any]]] = {int, float, str, Decimal, date, datetime, time}
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}MinMaxFields"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+    ) -> str:
+        return f"{base_name}MinMaxFields"
 
 
 class _MinMaxDateFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
     types: ClassVar[set[type[Any]]] = {date}
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}MinMaxDateFields"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+    ) -> str:
+        return f"{base_name}MinMaxDateFields"
 
 
 class _MinMaxDateTimeFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
     types: ClassVar[set[type[Any]]] = {datetime}
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}MinMaxDateTimeFields"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+    ) -> str:
+        return f"{base_name}MinMaxDateTimeFields"
 
 
 class _MinMaxNumericFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
     types: ClassVar[set[type[Any]]] = {int, float, Decimal}
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}MinMaxNumericFields"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+    ) -> str:
+        return f"{base_name}MinMaxNumericFields"
 
 
 class _MinMaxStringFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
     types: ClassVar[set[type[Any]]] = {str}
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}MinMaxStringFields"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+    ) -> str:
+        return f"{base_name}MinMaxStringFields"
 
 
 class _MinMaxTimeFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
     types: ClassVar[set[type[Any]]] = {time}
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}MinMaxTimeFields"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+    ) -> str:
+        return f"{base_name}MinMaxTimeFields"
 
 
 class _SumFieldsDTOFactory(_FunctionArgDTOFactory[ModelT, ModelFieldT]):
     types: ClassVar[set[type[Any]]] = {int, float, str, Decimal, timedelta}
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}SumFields"
+    def dto_name(
+        self,
+        base_name: str,
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+    ) -> str:
+        return f"{base_name}SumFields"
 
 
 class AggregationInspector(Generic[ModelT, ModelFieldT]):

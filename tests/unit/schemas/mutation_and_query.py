@@ -12,15 +12,15 @@ strawchemy = Strawchemy()
 class FruitType: ...
 
 
-@strawchemy.input(Fruit, include="all")
-class FruitInput: ...
-
-
 @strawchemy.type(Color, include="all", override=True)
 class ColorType: ...
 
 
-@strawchemy.input(Color, include="all")
+@strawchemy.input(Fruit, "create", include="all")
+class FruitInput: ...
+
+
+@strawchemy.input(Color, "create", include="all", override=True)
 class ColorInput: ...
 
 

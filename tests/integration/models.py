@@ -7,6 +7,8 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
+from strawchemy.dto.utils import READ_ONLY
+
 from sqlalchemy import DateTime, ForeignKey, MetaData, Text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -17,11 +19,13 @@ metadata, geo_metadata = MetaData(), MetaData()
 
 
 class BaseColumns:
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, info=READ_ONLY)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), info=READ_ONLY
+    )
     """Date/time of instance creation."""
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), info=READ_ONLY
     )
 
 

@@ -5,12 +5,10 @@ description = "Basic test app"
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "sqlalchemy",
-    "granian[reload]",
-    "strawberry-graphql",
-    "litestar[sqlalchemy]",
-    "litestar-granian",
-    "aiosqlite",
+  "aiosqlite",
+  "litestar[sqlalchemy,standard]",
+  "sqlalchemy",
+  "strawberry-graphql",
 ]
 
 [build-system]

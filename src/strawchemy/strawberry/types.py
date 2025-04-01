@@ -1,28 +1,32 @@
 from __future__ import annotations
 
+from typing import Any, TypeVar
+
 import strawberry
 from strawberry import UNSET
+from strawchemy.dto.base import MappedDTO
+from strawchemy.graphql.mutation import ToManyCreateInputMixin, ToManyUpdateInputMixin, ToOneInputMixin
+
+T = TypeVar("T", bound=MappedDTO[Any])
+RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
 
 
 @strawberry.input
-class OneToOneInput:
-    set: strawberry.ID | None
+class ToOneInput(ToOneInputMixin[T, RelationInputT]):
+    set: T | None = UNSET
+    create: RelationInputT | None = UNSET
 
 
 @strawberry.input
-class OneToManyInput:
-    set: strawberry.ID | None
+class ToManyCreateInput(ToManyCreateInputMixin[T, RelationInputT]):
+    set: list[T] | None = UNSET
+    add: list[T] | None = UNSET
+    create: list[RelationInputT] | None = UNSET
 
 
 @strawberry.input
-class ToOneInput:
-    add: list[strawberry.ID] | None = UNSET
-    remove: list[strawberry.ID] | None = UNSET
-    set: list[strawberry.ID] | None = UNSET
-
-
-@strawberry.input
-class ToManyInput:
-    add: list[strawberry.ID] | None = UNSET
-    remove: list[strawberry.ID] | None = UNSET
-    set: list[strawberry.ID] | None = UNSET
+class ToManyUpdateInput(ToManyUpdateInputMixin[T, RelationInputT]):
+    set: list[T] | None = UNSET
+    add: list[T] | None = UNSET
+    remove: list[T] | None = UNSET
+    create: list[RelationInputT] | None = UNSET

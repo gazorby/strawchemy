@@ -22,6 +22,7 @@ from strawchemy.graphql.dto import (
     AggregateDTO,
     AggregateFieldDefinition,
     DTOKey,
+    EnumDTO,
     FunctionFieldDefinition,
     GraphQLFieldDefinition,
 )
@@ -139,8 +140,10 @@ class TypeDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         )
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}{'Input' if dto_config.purpose is Purpose.WRITE else ''}Type"
+    def dto_name(
+        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, GraphQLDTOT], None] | None = None
+    ) -> str:
+        return f"{base_name}{'Input' if dto_config.purpose is Purpose.WRITE else ''}Type"
 
     @override
     def iter_field_definitions(
@@ -214,8 +217,10 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
         )
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}Root"
+    def dto_name(
+        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, GraphQLDTOT], None] | None = None
+    ) -> str:
+        return f"{base_name}Root"
 
     @override
     def iter_field_definitions(
@@ -303,8 +308,10 @@ class AggregateDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, AggregateDTOT])
         return "Aggregation fields"
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}Aggregate"
+    def dto_name(
+        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, AggregateDTOT], None] | None = None
+    ) -> str:
+        return f"{base_name}Aggregate"
 
     @override
     def _factory(
@@ -343,5 +350,7 @@ class AggregateDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, AggregateDTOT])
 
 class DistinctOnFieldsDTOFactory(EnumDTOFactory[ModelT, ModelFieldT]):
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}DistinctOnFields"
+    def dto_name(
+        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None
+    ) -> str:
+        return f"{base_name}DistinctOnFields"

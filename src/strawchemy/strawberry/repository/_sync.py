@@ -24,6 +24,7 @@ from strawchemy.graphql.dto import (
     RelationFilterDTO,
     StrawchemyDTOAttributes,
 )
+from strawchemy.graphql.mutation import InputData
 from strawchemy.sqlalchemy.repository import SQLAlchemyGraphQLSyncRepository
 from strawchemy.strawberry._utils import (
     default_session_getter,
@@ -255,9 +256,9 @@ class StrawchemySyncRepository(Generic[T]):
         return self._tree.query_result_to_strawberry_type(query_results)
 
     def create_many(self, data: Sequence[AnyMappedDTO]) -> Sequence[T]:
-        query_results = self.graphql_repository().create_many(data)
+        query_results = self.graphql_repository().create_many(InputData(data), self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)
 
     def create(self, data: AnyMappedDTO) -> T:
-        query_results = self.graphql_repository().create_many([data])
+        query_results = self.graphql_repository().create_many(InputData([data]), self._tree)
         return self._tree.to_strawberry_type(query_results.one())

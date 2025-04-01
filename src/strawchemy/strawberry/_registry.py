@@ -92,10 +92,12 @@ class StrawberryRegistry:
         )
         self._type_map: dict[RegistryTypeInfo, type[Any]] = {}
         self._names_map: defaultdict[GraphQLType, dict[str, RegistryTypeInfo]] = defaultdict(dict)
+        self._tracked_type_names: defaultdict[GraphQLType, set[str]] = defaultdict(set)
 
-    def _update_type(self, field: StrawberryField | StrawberryArgument, graphql_type: GraphQLType) -> None:
+    def _update_references(self, field: StrawberryField | StrawberryArgument, graphql_type: GraphQLType) -> None:
         field_type_name: str | None = None
-        if field_type_def := get_object_definition(strawberry_contained_type(field.type)):
+        inner_type = strawberry_contained_type(field.type)
+        if field_type_def := get_object_definition(inner_type):
             field_type_name = field_type_def.name
         if field.type_annotation:
             for type_ in self._inner_types(field.type_annotation.raw_annotation):
@@ -112,26 +114,31 @@ class StrawberryRegistry:
                 self._type_references[graphql_type][field_type_name].append(_TypeReference(field))
             else:
                 _TypeReference(field).update_type(self._type_map[type_info])
+        if field_type_def:
+            self._track_references(inner_type, graphql_type)
 
-    def _track_types(
+    def _track_references(
         self,
         strawberry_type: type[WithStrawberryObjectDefinition | StrawberryTypeFromPydantic[PydanticModel]],
         graphql_type: GraphQLType,
     ) -> None:
         object_definition = get_object_definition(strawberry_type, strict=True)
+        if object_definition.name in self._tracked_type_names[graphql_type]:
+            return
+        self._tracked_type_names[graphql_type].add(object_definition.name)
         for field in object_definition.fields:
             for argument in field.arguments:
                 if get_object_definition(strawberry_contained_type(argument.type)) is None:
                     continue
-                self._update_type(argument, "input")
-            self._update_type(field, graphql_type)
+                self._update_references(argument, "input")
+            self._update_references(field, graphql_type)
 
     def _register_type(self, type_info: RegistryTypeInfo, strawberry_type: type[Any]) -> None:
         self.namespace(type_info.graphql_type)[type_info.name] = strawberry_type
         if type_info.override:
             for reference in self._type_references[type_info.graphql_type][type_info.name]:
                 reference.update_type(strawberry_type)
-        self._track_types(strawberry_type, type_info.graphql_type)
+        self._track_references(strawberry_type, type_info.graphql_type)
         self._names_map[type_info.graphql_type][type_info.name] = type_info
         self._type_map[type_info] = strawberry_type
 
@@ -150,7 +157,10 @@ class StrawberryRegistry:
         origin = get_origin(typ)
         if not origin or not hasattr(typ, "__args__"):
             return (typ,)
-        return tuple(cls._inner_types(t)[0] for t in get_args(typ))
+        arg_types = []
+        for arg_type in get_args(typ):
+            arg_types.extend(cls._inner_types(arg_type))
+        return tuple(arg_types)
 
     def _get(self, type_info: RegistryTypeInfo) -> type[Any] | None:
         if (existing := self.get(type_info.graphql_type, type_info.name, None)) and existing.override:

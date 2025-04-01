@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, cast
 from uuid import uuid4
 
 import pytest
@@ -14,6 +14,7 @@ from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
 from strawchemy.strawberry.scalars import Interval
 
+import strawberry
 from sqlalchemy import (
     URL,
     ClauseElement,
@@ -26,6 +27,8 @@ from sqlalchemy import (
     Insert,
     MetaData,
     NullPool,
+    Select,
+    Update,
     create_engine,
     insert,
 )
@@ -39,7 +42,7 @@ from tests.utils import generate_query
 from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User, metadata
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Generator
+    from collections.abc import AsyncGenerator, Generator, Iterator
 
     from pytest import FixtureRequest, MonkeyPatch
     from pytest_databases._service import DockerService
@@ -70,6 +73,7 @@ __all__ = (
     "session",
 )
 
+FilterableStatement: TypeAlias = Literal["insert", "update", "select"]
 scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval}
 
 if find_spec("geoalchemy2") is not None:
@@ -563,6 +567,16 @@ async def seed_db_async(
 
 
 @pytest.fixture
+def sync_query() -> type[DefaultQuery]:
+    return DefaultQuery
+
+
+@pytest.fixture
+def async_query() -> type[DefaultQuery]:
+    return DefaultQuery
+
+
+@pytest.fixture
 def async_mutation() -> type[Any] | None:
     return None
 
@@ -630,9 +644,10 @@ class QueryInspector:
 class QueryTracker:
     session: AnySession
 
-    executions: list[QueryInspector] = dataclasses.field(init=False, default_factory=list)
+    executions: list[QueryInspector] = dataclasses.field(default_factory=list)
 
     def __post_init__(self) -> None:
+        self._clause_map = {"insert": Insert, "select": Select, "update": Update}
         listens_for(self.session.get_bind(), "after_execute")(self._event_listener)
 
     def _event_listener(
@@ -646,9 +661,29 @@ class QueryTracker:
     ) -> None:
         self.executions.append(QueryInspector(clauseelement, conn.dialect, multiparams, params))
 
+    def filter(self, statement: FilterableStatement) -> Self:
+        return dataclasses.replace(
+            self,
+            executions=[
+                execution
+                for execution in self.executions
+                if isinstance(execution.clause_element, self._clause_map[statement])
+            ],
+        )
+
     @property
     def query_count(self) -> int:
         return len(self.executions)
 
     def __getitem__(self, index: int) -> QueryInspector:
         return self.executions[index]
+
+    def __iter__(self) -> Iterator[QueryInspector]:
+        return iter(self.executions)
+
+
+@strawberry.type
+class DefaultQuery:
+    @strawberry.field
+    def hello(self) -> str:
+        return "World"

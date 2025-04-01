@@ -2,9 +2,27 @@
 # name: test_query_and_mutations
   '''
   """GraphQL input type"""
+  input ColorFruitInput {
+    id: UUID!
+    name: String!
+    colorId: UUID = null
+    sweetness: Int!
+  }
+  
+  input ColorFruitsIdFieldsInput {
+    id: UUID!
+  }
+  
+  input ColorFruitsIdFieldsInputColorFruitInputToManyCreateInput {
+    set: [ColorFruitsIdFieldsInput!]
+    add: [ColorFruitsIdFieldsInput!]
+    create: [ColorFruitInput!]
+  }
+  
+  """GraphQL input type"""
   input ColorInput {
     id: UUID!
-    fruits: ToOneInput!
+    fruits: ColorFruitsIdFieldsInputColorFruitInputToManyCreateInput
     name: String!
   }
   
@@ -33,12 +51,27 @@
     varPop: FruitNumericFields!
   }
   
+  input FruitColorIdFieldsInput {
+    id: UUID!
+  }
+  
+  input FruitColorIdFieldsInputFruitColorInputToOneInput {
+    set: FruitColorIdFieldsInput
+    create: FruitColorInput
+  }
+  
+  """GraphQL input type"""
+  input FruitColorInput {
+    id: UUID!
+    name: String!
+  }
+  
   """GraphQL input type"""
   input FruitInput {
     id: UUID!
     name: String!
     colorId: UUID = null
-    color: ToManyInput!
+    color: FruitColorIdFieldsInputFruitColorInputToOneInput = null
     sweetness: Int!
   }
   
@@ -91,18 +124,6 @@
   
     """Fetch objects from the ColorType collection"""
     colors: [ColorType!]!
-  }
-  
-  input ToManyInput {
-    add: [ID!]
-    remove: [ID!]
-    set: [ID!]
-  }
-  
-  input ToOneInput {
-    add: [ID!]
-    remove: [ID!]
-    set: [ID!]
   }
   
   scalar UUID

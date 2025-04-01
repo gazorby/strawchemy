@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from litestar import Litestar
 from litestar.plugins.sqlalchemy import EngineConfig, SQLAlchemyAsyncConfig, SQLAlchemyPlugin
-from litestar_granian import GranianPlugin
 
 from strawberry.litestar import BaseContext, make_graphql_controller
 
@@ -31,7 +30,8 @@ async def context_getter(db_session: AsyncSession) -> GraphQLContext:
     return GraphQLContext(db_session)
 
 
-app = Litestar(
-    plugins=[GranianPlugin(), SQLAlchemyPlugin(config=config)],
-    route_handlers=[make_graphql_controller(schema, context_getter=context_getter)],
-)
+def create_app() -> Litestar:
+    return Litestar(
+        plugins=[SQLAlchemyPlugin(config=config)],
+        route_handlers=[make_graphql_controller(schema, context_getter=context_getter)],
+    )

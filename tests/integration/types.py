@@ -87,6 +87,10 @@ class FruitFilter: ...
 class FruitOrderBy: ...
 
 
+@strawchemy.input(Fruit, "create", include="all")
+class FruitCreateInput: ...
+
+
 # Color
 
 
@@ -107,7 +111,7 @@ class ColorWithFilteredFruit:
     fruits: list[FilteredFruitType]
 
 
-@strawchemy.input(Color, include={"name", "id"})
+@strawchemy.input(Color, "create", include="all")
 class ColorCreateInput: ...
 
 

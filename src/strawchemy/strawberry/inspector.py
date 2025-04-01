@@ -18,6 +18,9 @@ from ._utils import pydantic_from_strawberry_type
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from strawchemy.dto.base import Relation
+    from strawchemy.graph import Node
+
     from .factory import StrawberryRegistry
 
 __all__ = ("_StrawberryModelInspector",)
@@ -79,3 +82,9 @@ class _StrawberryModelInspector(GraphQLInspectorProtocol[ModelT, ModelFieldT]):
     @override
     def model_field_type(self, field_definition: DTOFieldDefinition[ModelT, ModelFieldT]) -> Any:
         return self._inspector.model_field_type(field_definition)
+
+    @override
+    def relation_cycle(
+        self, field: DTOFieldDefinition[Any, ModelFieldT], node: Node[Relation[ModelT, Any], None]
+    ) -> bool:
+        return self._inspector.relation_cycle(field, node)

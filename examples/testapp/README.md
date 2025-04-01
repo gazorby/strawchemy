@@ -9,5 +9,5 @@ pipx install uv
 Run the app:
 
 ```console
-uv run litestar --app testapp.app:app run --reload --in-subprocess
+uv run litestar --app testapp.app:app run --reload
 ```

@@ -94,8 +94,10 @@ class EnumDTOFactory(DTOFactory[ModelT, ModelFieldT, EnumDTO]):
         super().__init__(inspector, backend or EnumDTOBackend(), handle_cycles, type_map)
 
     @override
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}Fields"
+    def dto_name(
+        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None
+    ) -> str:
+        return f"{base_name}Fields"
 
     @override
     def should_exclude_field(

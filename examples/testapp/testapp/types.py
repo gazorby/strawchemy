@@ -2,49 +2,49 @@ from __future__ import annotations
 
 from strawchemy import Strawchemy
 
-from .models import Color, Fruit
+from .models import Project, Ticket
 
 strawchemy = Strawchemy()
 
 # Filter
 
 
-@strawchemy.filter_input(Fruit, include="all")
-class FruitFilter: ...
+@strawchemy.filter_input(Ticket, include="all")
+class TicketFilter: ...
 
 
-@strawchemy.filter_input(Color, include="all")
-class ColorFilter: ...
+@strawchemy.filter_input(Project, include="all")
+class ProjectFilter: ...
 
 
 # Order
 
 
-@strawchemy.order_by_input(Fruit, include="all")
-class FruitOrder: ...
+@strawchemy.order_by_input(Ticket, include="all")
+class TicketOrder: ...
 
 
-@strawchemy.order_by_input(Color, include="all")
-class ColorOrder: ...
+@strawchemy.order_by_input(Project, include="all")
+class ProjectOrder: ...
 
 
 # types
 
 
-@strawchemy.type(Fruit, include="all", filter_input=FruitFilter, order_by=FruitOrder, override=True)
-class FruitType: ...
+@strawchemy.type(Ticket, include="all", filter_input=TicketFilter, order_by=TicketOrder, override=True)
+class TicketType: ...
 
 
-@strawchemy.type(Color, include="all", filter_input=ColorFilter, order_by=ColorOrder, override=True)
-class ColorType: ...
+@strawchemy.type(Project, include="all", filter_input=ProjectFilter, order_by=ProjectOrder, override=True)
+class ProjectType: ...
 
 
 # Input types
 
 
-@strawchemy.input(Fruit, include="all")
-class FruitInput: ...
+@strawchemy.input(Ticket, "create", include="all")
+class TicketInput: ...
 
 
-@strawchemy.input(Color, include="all")
-class ColorInput: ...
+@strawchemy.input(Project, "create", include="all", override=True)
+class ProjectInput: ...
