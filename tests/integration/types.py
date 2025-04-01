@@ -7,7 +7,7 @@ from strawchemy import ModelInstance, QueryHook, Strawchemy
 from sqlalchemy import Select
 from sqlalchemy.orm.util import AliasedClass
 
-from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User
+from .models import Color, Fruit, FruitFarm, SQLDataTypes, SQLDataTypesContainer, User
 
 strawchemy = Strawchemy()
 
@@ -51,16 +51,26 @@ class FruitType: ...
 
 
 @strawchemy.type(Fruit, exclude={"color"})
-class FruitTypeWithDescription:
+class FruitTypeHooks:
     instance: ModelInstance[Fruit]
 
-    @strawchemy.field(query_hook=QueryHook(load_columns=[Fruit.name, Fruit.adjectives]))
+    @strawchemy.field(query_hook=QueryHook(load=[Fruit.name, Fruit.adjectives]))
     def description(self) -> str:
         return self.instance.description
 
-    @strawchemy.field(query_hook=QueryHook(load_columns=[]))
+    @strawchemy.field(query_hook=QueryHook())
     def empty_query_hook(self) -> str:
         return "success"
+
+    @strawchemy.field(query_hook=QueryHook(load=[(Fruit.color, [Color.name, Color.created_at])]))
+    def pretty_color(self) -> str:
+        return f"Color is {self.instance.color.name}" if self.instance.color else "No color!"
+
+    @strawchemy.field(query_hook=QueryHook(load=[Fruit.farms]))
+    def pretty_farms(self) -> str:
+        return (
+            f"Farms are: {', '.join(farm.name for farm in self.instance.farms)}" if self.instance.farms else "No farm!"
+        )
 
 
 @strawchemy.type(Fruit, exclude={"color"}, query_hook=FruitFilterHook())
@@ -108,7 +118,13 @@ class ColorTypeWithPagination: ...
 
 @strawchemy.type(Color, include="all")
 class ColorWithFilteredFruit:
+    instance: ModelInstance[Color]
+
     fruits: list[FilteredFruitType]
+
+    @strawchemy.field(query_hook=QueryHook(load=[(Color.fruits, [(Fruit.farms, [FruitFarm.name])])]))
+    def farms(self) -> str:
+        return f"Farms are: {', '.join(farm.name for fruit in self.instance.fruits for farm in fruit.farms)}"
 
 
 @strawchemy.input(Color, "create", include="all")

@@ -9,7 +9,7 @@ from tests.unit.models import Fruit
 strawchemy = Strawchemy()
 
 
-@strawchemy.type(Fruit, query_hook=QueryHook(load_columns=[Fruit.color]))
+@strawchemy.type(Fruit, query_hook=QueryHook(load=[Fruit.color]))
 class FruitType:
     family: auto
 
