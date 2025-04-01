@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[aggregation_filters]
+# name: test_query_schemas[aggregation_filters]
   '''
   """
   Boolean expression to compare fields of type Float. All fields are combined with logical 'AND'

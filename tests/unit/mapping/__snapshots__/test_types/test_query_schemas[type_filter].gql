@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[filters]
+# name: test_query_schemas[type_filter]
   '''
   """
   Boolean expression to compare fields of type Boolean. All fields are combined with logical 'AND'

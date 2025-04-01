@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[pagination_default_limit]
+# name: test_query_schemas[all_fields_with_filter]
   '''
   """GraphQL type"""
   type ColorType {
@@ -7,7 +7,7 @@
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
-    fruits(limit: Int = 5, offset: Int! = 0): [FruitType!]!
+    fruits: [FruitType!]!
     name: String!
   }
   
@@ -50,8 +50,8 @@
   }
   
   type Query {
-    """Fetch objects from the FruitType collection"""
-    fruits(limit: Int = 5, offset: Int! = 0): [FruitType!]!
+    """Fetch object from the FruitType collection by id"""
+    fruit(id: UUID!): FruitType!
   }
   
   scalar UUID

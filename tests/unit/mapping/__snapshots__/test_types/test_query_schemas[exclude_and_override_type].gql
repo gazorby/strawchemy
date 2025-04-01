@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[exclude_and_override_type]
+# name: test_query_schemas[exclude_and_override_type]
   '''
   """GraphQL type"""
   type ColorType {

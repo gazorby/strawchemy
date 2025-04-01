@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[enums]
+# name: test_query_schemas[enums]
   '''
   type Query {
     """Fetch object from the VegetableType collection by id"""

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[custom_id_field_name]
+# name: test_query_schemas[custom_id_field_name]
   '''
   """GraphQL type"""
   type ColorType {

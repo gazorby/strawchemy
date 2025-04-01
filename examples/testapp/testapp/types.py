@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from strawchemy import Strawchemy
 
-from .models import Project, Ticket
+from .models import Milestone, Project, Ticket
 
 strawchemy = Strawchemy()
 
@@ -37,6 +37,10 @@ class TicketType: ...
 
 @strawchemy.type(Project, include="all", filter_input=ProjectFilter, order_by=ProjectOrder, override=True)
 class ProjectType: ...
+
+
+@strawchemy.type(Milestone, include="all", override=True)
+class MilestoneType: ...
 
 
 # Input types

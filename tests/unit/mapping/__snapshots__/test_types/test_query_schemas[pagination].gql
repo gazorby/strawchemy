@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[pagination_config_default]
+# name: test_query_schemas[pagination]
   '''
   """GraphQL type"""
   type ColorType {
@@ -51,7 +51,7 @@
   
   type Query {
     """Fetch objects from the FruitType collection"""
-    fruits(limit: Int = 100, offset: Int! = 0): [FruitType!]!
+    fruit(limit: Int = 100, offset: Int! = 0): [FruitType!]!
   }
   
   scalar UUID

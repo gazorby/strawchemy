@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[argument_override]
+# name: test_query_schemas[all_fields_order_by]
   '''
   input ColorAggregateMinMaxStringFieldsOrderBy {
     name: OrderByEnum
@@ -30,8 +30,8 @@
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
-    fruits(limit: Int = 100, offset: Int! = 0, orderBy: [FruitOrderBy!] = null): [FruitType!]!
-    name: Int!
+    fruits: [FruitType!]!
+    name: String!
   }
   
   """Aggregation fields"""
@@ -91,7 +91,6 @@
     colorAggregate: ColorAggregateOrderBy
     color: ColorOrderBy
     sweetness: OrderByEnum
-    override: Boolean
   }
   
   type FruitSumFields {
@@ -101,8 +100,8 @@
   
   """GraphQL type"""
   type FruitType {
-    name: Int!
     id: UUID!
+    name: String!
     colorId: UUID
     color: ColorType!
     sweetness: Int!
@@ -119,7 +118,7 @@
   
   type Query {
     """Fetch objects from the FruitType collection"""
-    fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
+    fruit(orderBy: [FruitOrderBy!] = null): [FruitType!]!
   }
   
   scalar UUID

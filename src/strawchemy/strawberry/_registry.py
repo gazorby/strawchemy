@@ -121,9 +121,10 @@ class StrawberryRegistry:
         self,
         strawberry_type: type[WithStrawberryObjectDefinition | StrawberryTypeFromPydantic[PydanticModel]],
         graphql_type: GraphQLType,
+        force: bool = False,
     ) -> None:
         object_definition = get_object_definition(strawberry_type, strict=True)
-        if object_definition.name in self._tracked_type_names[graphql_type]:
+        if not force and object_definition.name in self._tracked_type_names[graphql_type]:
             return
         self._tracked_type_names[graphql_type].add(object_definition.name)
         for field in object_definition.fields:
@@ -138,7 +139,7 @@ class StrawberryRegistry:
         if type_info.override:
             for reference in self._type_references[type_info.graphql_type][type_info.name]:
                 reference.update_type(strawberry_type)
-        self._track_references(strawberry_type, type_info.graphql_type)
+        self._track_references(strawberry_type, type_info.graphql_type, force=type_info.override)
         self._names_map[type_info.graphql_type][type_info.name] = type_info
         self._type_map[type_info] = strawberry_type
 

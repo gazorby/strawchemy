@@ -1,6 +1,11 @@
 # serializer version: 1
-# name: test_schemas[all_fields]
+# name: test_query_schemas[distinct]
   '''
+  enum ColorDistinctOnFields {
+    id
+    name
+  }
+  
   """GraphQL type"""
   type ColorType {
     id: UUID!
@@ -50,7 +55,8 @@
   }
   
   type Query {
-    fruit: FruitType!
+    """Fetch objects from the ColorType collection"""
+    color(distinctOn: [ColorDistinctOnFields!] = null): [ColorType!]!
   }
   
   scalar UUID

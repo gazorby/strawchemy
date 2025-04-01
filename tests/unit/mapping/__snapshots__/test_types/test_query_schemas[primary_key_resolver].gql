@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[list_resolver]
+# name: test_query_schemas[primary_key_resolver]
   '''
   """GraphQL type"""
   type ColorType {
@@ -14,8 +14,8 @@
   }
   
   type Query {
-    """Fetch objects from the FruitType collection"""
-    fruit: [FruitType!]!
+    """Fetch object from the FruitType collection by id"""
+    fruit(id: UUID!): FruitType!
   }
   
   scalar UUID

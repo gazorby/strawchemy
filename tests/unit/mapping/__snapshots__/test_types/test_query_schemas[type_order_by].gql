@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_schemas[type_order_by]
+# name: test_query_schemas[type_order_by]
   '''
   """Date (isoformat)"""
   scalar Date

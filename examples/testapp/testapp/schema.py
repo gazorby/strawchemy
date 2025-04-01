@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import strawberry
 
-from .types import ProjectInput, ProjectType, TicketInput, TicketType, strawchemy
+from .types import MilestoneType, ProjectInput, ProjectType, TicketInput, TicketType, strawchemy
 
 
 @strawberry.type
@@ -12,6 +12,8 @@ class Query:
 
     project: ProjectType = strawchemy.field()
     projects: list[ProjectType] = strawchemy.field()
+
+    milestones: list[MilestoneType] = strawchemy.field()
 
 
 @strawberry.type
