@@ -111,17 +111,9 @@ async def test_create_mutation_nested_to_many(
         "fruits": [{"id": to_graphql_representation(raw_fruits[0]["id"], "output")}],
     }
 
-    insert_tracker, update_tracker, select_tracker = (
-        query_tracker.filter("insert"),
-        query_tracker.filter("update"),
-        query_tracker.filter("select"),
-    )
-    assert insert_tracker.query_count == 1
-    assert update_tracker.query_count == 1
-    assert select_tracker.query_count == 1
-    assert insert_tracker[0].statement_formatted == sql_snapshot
-    assert update_tracker[0].statement_formatted == sql_snapshot
-    assert select_tracker[0].statement_formatted == sql_snapshot
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+    query_tracker.assert_statements(1, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "update", sql_snapshot)
 
 
 @pytest.mark.snapshot
@@ -154,12 +146,8 @@ async def test_create_mutation_nested_to_many_create(
         "fruits": [{"name": "new fruit 1"}, {"name": "new fruit 2"}],
     }
 
-    insert_tracker, select_tracker = query_tracker.filter("insert"), query_tracker.filter("select")
-    assert insert_tracker.query_count == 2
-    assert select_tracker.query_count == 1
-    for query in insert_tracker:
-        assert query.statement_formatted == sql_snapshot
-    assert select_tracker[0].statement_formatted == sql_snapshot
+    query_tracker.assert_statements(2, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
 @pytest.mark.parametrize(
@@ -205,11 +193,8 @@ async def test_create_mutation_nested_to_one(
         "color": {"id": to_graphql_representation(raw_colors[0]["id"], "output")},
     }
 
-    insert_tracker, select_tracker = query_tracker.filter("insert"), query_tracker.filter("select")
-    assert insert_tracker.query_count == 1
-    assert select_tracker.query_count == 1
-    assert insert_tracker[0].statement_formatted == sql_snapshot
-    assert select_tracker[0].statement_formatted == sql_snapshot
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+    query_tracker.assert_statements(1, "insert", sql_snapshot)
 
 
 @pytest.mark.snapshot
@@ -289,12 +274,8 @@ async def test_create_mutation_nested_to_one_create(
     assert result.data
     assert result.data["createFruit"] == {"name": "new color", "color": {"name": "new sub color"}}
 
-    insert_tracker, select_tracker = query_tracker.filter("insert"), query_tracker.filter("select")
-    assert insert_tracker.query_count == 2
-    assert select_tracker.query_count == 1
-    assert insert_tracker[0].statement_formatted == sql_snapshot
-    assert insert_tracker[1].statement_formatted == sql_snapshot
-    assert select_tracker[0].statement_formatted == sql_snapshot
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+    query_tracker.assert_statements(2, "insert", sql_snapshot)
 
 
 @pytest.mark.snapshot

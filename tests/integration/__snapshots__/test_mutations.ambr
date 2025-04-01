@@ -373,11 +373,21 @@
 # ---
 # name: test_create_mutation_nested_to_many[session-tracked-set-async-asyncpg_engine]
   '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+  FROM color AS color
+  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+  WHERE color.id IN (__[POSTCOMPILE_id_2])
+  '''
+# ---
+# name: test_create_mutation_nested_to_many[session-tracked-set-async-asyncpg_engine].1
+  '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
-# name: test_create_mutation_nested_to_many[session-tracked-set-async-asyncpg_engine].1
+# name: test_create_mutation_nested_to_many[session-tracked-set-async-asyncpg_engine].2
   '''
   UPDATE fruit
   SET name = $1::VARCHAR,
@@ -389,7 +399,7 @@
   WHERE fruit.id = $8::UUID
   '''
 # ---
-# name: test_create_mutation_nested_to_many[session-tracked-set-async-asyncpg_engine].2
+# name: test_create_mutation_nested_to_many[session-tracked-set-async-psycopg_async_engine]
   '''
   SELECT color__fruits.id,
          color.name,
@@ -397,16 +407,16 @@
   FROM color AS color
   LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
   WHERE color.id IN (__[POSTCOMPILE_id_2])
-  '''
-# ---
-# name: test_create_mutation_nested_to_many[session-tracked-set-async-psycopg_async_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
 # name: test_create_mutation_nested_to_many[session-tracked-set-async-psycopg_async_engine].1
   '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_create_mutation_nested_to_many[session-tracked-set-async-psycopg_async_engine].2
+  '''
   UPDATE fruit
   SET name = %(name)s::VARCHAR,
       color_id = %(color_id)s::UUID,
@@ -417,7 +427,7 @@
   WHERE fruit.id = %(fruit_id)s::UUID
   '''
 # ---
-# name: test_create_mutation_nested_to_many[session-tracked-set-async-psycopg_async_engine].2
+# name: test_create_mutation_nested_to_many[session-tracked-set-sync-psycopg_engine]
   '''
   SELECT color__fruits.id,
          color.name,
@@ -427,13 +437,13 @@
   WHERE color.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
-# name: test_create_mutation_nested_to_many[session-tracked-set-sync-psycopg_engine]
+# name: test_create_mutation_nested_to_many[session-tracked-set-sync-psycopg_engine].1
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
-# name: test_create_mutation_nested_to_many[session-tracked-set-sync-psycopg_engine].1
+# name: test_create_mutation_nested_to_many[session-tracked-set-sync-psycopg_engine].2
   '''
   UPDATE fruit
   SET name = %(name)s::VARCHAR,
@@ -443,16 +453,6 @@
                                            created_at = %(created_at)s::TIMESTAMP WITH TIME ZONE,
                                                                                             updated_at = %(updated_at)s::TIMESTAMP WITH TIME ZONE
   WHERE fruit.id = %(fruit_id)s::UUID
-  '''
-# ---
-# name: test_create_mutation_nested_to_many[session-tracked-set-sync-psycopg_engine].2
-  '''
-  SELECT color__fruits.id,
-         color.name,
-         color.id AS id_1
-  FROM color AS color
-  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
-  WHERE color.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
 # name: test_create_mutation_nested_to_many_create[session-tracked-async-asyncpg_engine]
@@ -526,28 +526,38 @@
 # ---
 # name: test_create_mutation_nested_to_one[session-tracked-set-async-asyncpg_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE)
+  SELECT fruit__color.id,
+         fruit.name,
+         fruit.id AS id_1
+  FROM fruit AS fruit
+  LEFT OUTER JOIN color AS fruit__color ON fruit__color.id = fruit.color_id
+  WHERE fruit.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
 # name: test_create_mutation_nested_to_one[session-tracked-set-async-asyncpg_engine].1
   '''
-  SELECT fruit__color.id,
-         fruit.name,
-         fruit.id AS id_1
-  FROM fruit AS fruit
-  LEFT OUTER JOIN color AS fruit__color ON fruit__color.id = fruit.color_id
-  WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+  INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
 # name: test_create_mutation_nested_to_one[session-tracked-set-async-psycopg_async_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
+  SELECT fruit__color.id,
+         fruit.name,
+         fruit.id AS id_1
+  FROM fruit AS fruit
+  LEFT OUTER JOIN color AS fruit__color ON fruit__color.id = fruit.color_id
+  WHERE fruit.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
 # name: test_create_mutation_nested_to_one[session-tracked-set-async-psycopg_async_engine].1
   '''
+  INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_create_mutation_nested_to_one[session-tracked-set-sync-psycopg_engine]
+  '''
   SELECT fruit__color.id,
          fruit.name,
          fruit.id AS id_1
@@ -556,35 +566,36 @@
   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
-# name: test_create_mutation_nested_to_one[session-tracked-set-sync-psycopg_engine]
+# name: test_create_mutation_nested_to_one[session-tracked-set-sync-psycopg_engine].1
   '''
   INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
-# name: test_create_mutation_nested_to_one[session-tracked-set-sync-psycopg_engine].1
+# name: test_create_mutation_nested_to_one_create[session-tracked-async-asyncpg_engine]
   '''
-  SELECT fruit__color.id,
-         fruit.name,
+  SELECT fruit__color.name,
+         fruit__color.id,
+         fruit.name AS name_1,
          fruit.id AS id_1
   FROM fruit AS fruit
   LEFT OUTER JOIN color AS fruit__color ON fruit__color.id = fruit.color_id
   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
-# name: test_create_mutation_nested_to_one_create[session-tracked-async-asyncpg_engine]
+# name: test_create_mutation_nested_to_one_create[session-tracked-async-asyncpg_engine].1
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
-# name: test_create_mutation_nested_to_one_create[session-tracked-async-asyncpg_engine].1
+# name: test_create_mutation_nested_to_one_create[session-tracked-async-asyncpg_engine].2
   '''
   INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
   VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
-# name: test_create_mutation_nested_to_one_create[session-tracked-async-asyncpg_engine].2
+# name: test_create_mutation_nested_to_one_create[session-tracked-async-psycopg_async_engine]
   '''
   SELECT fruit__color.name,
          fruit__color.id,
@@ -593,21 +604,21 @@
   FROM fruit AS fruit
   LEFT OUTER JOIN color AS fruit__color ON fruit__color.id = fruit.color_id
   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-  '''
-# ---
-# name: test_create_mutation_nested_to_one_create[session-tracked-async-psycopg_async_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
 # name: test_create_mutation_nested_to_one_create[session-tracked-async-psycopg_async_engine].1
   '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_create_mutation_nested_to_one_create[session-tracked-async-psycopg_async_engine].2
+  '''
   INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
-# name: test_create_mutation_nested_to_one_create[session-tracked-async-psycopg_async_engine].2
+# name: test_create_mutation_nested_to_one_create[session-tracked-sync-psycopg_engine]
   '''
   SELECT fruit__color.name,
          fruit__color.id,
@@ -618,26 +629,15 @@
   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
-# name: test_create_mutation_nested_to_one_create[session-tracked-sync-psycopg_engine]
+# name: test_create_mutation_nested_to_one_create[session-tracked-sync-psycopg_engine].1
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
-# name: test_create_mutation_nested_to_one_create[session-tracked-sync-psycopg_engine].1
+# name: test_create_mutation_nested_to_one_create[session-tracked-sync-psycopg_engine].2
   '''
   INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
-  '''
-# ---
-# name: test_create_mutation_nested_to_one_create[session-tracked-sync-psycopg_engine].2
-  '''
-  SELECT fruit__color.name,
-         fruit__color.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
-  FROM fruit AS fruit
-  LEFT OUTER JOIN color AS fruit__color ON fruit__color.id = fruit.color_id
-  WHERE fruit.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
