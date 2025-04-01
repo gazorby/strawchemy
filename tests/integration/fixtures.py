@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, cast
 from uuid import uuid4
 
 import pytest
@@ -14,24 +14,43 @@ from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
 from strawchemy.strawberry.scalars import Interval
 
-from sqlalchemy import URL, Engine, Executable, Insert, MetaData, NullPool, create_engine, insert
+import strawberry
+from sqlalchemy import (
+    URL,
+    ClauseElement,
+    Compiled,
+    Connection,
+    CursorResult,
+    Dialect,
+    Engine,
+    Executable,
+    Insert,
+    MetaData,
+    NullPool,
+    Select,
+    Update,
+    create_engine,
+    insert,
+)
 from sqlalchemy.event import listens_for
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import ORMExecuteState, Session, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session, sessionmaker
 from strawberry.scalars import JSON
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
-from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User, metadata
+from .models import Color, Fruit, FruitFarm, SQLDataTypes, SQLDataTypesContainer, User, metadata
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator, Generator
+    from collections.abc import AsyncGenerator, Generator, Iterator
 
     from pytest import FixtureRequest, MonkeyPatch
     from pytest_databases._service import DockerService
     from pytest_databases.docker.postgres import PostgresService
     from pytest_databases.types import XdistIsolationLevel
     from strawchemy.sqlalchemy.typing import AnySession
+
+    from syrupy.assertion import SnapshotAssertion
 
     from .typing import RawRecordData
 
@@ -56,6 +75,7 @@ __all__ = (
     "session",
 )
 
+FilterableStatement: TypeAlias = Literal["insert", "update", "select"]
 scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval}
 
 if find_spec("geoalchemy2") is not None:
@@ -271,6 +291,11 @@ async def async_session(async_engine: AsyncEngine) -> AsyncGenerator[AsyncSessio
 
 
 # Mock data
+
+
+@pytest.fixture
+def raw_farms(raw_fruits: RawRecordData) -> RawRecordData:
+    return [{"name": f"{fruit['name']} farm", "fruit_id": fruit["id"]} for fruit in raw_fruits]
 
 
 @pytest.fixture
@@ -491,12 +516,14 @@ def seed_insert_statements(
     raw_fruits: RawRecordData,
     raw_colors: RawRecordData,
     raw_users: RawRecordData,
+    raw_farms: RawRecordData,
     raw_sql_data_types: RawRecordData,
     raw_sql_data_types_container: RawRecordData,
 ) -> list[Insert]:
     return [
         insert(Color).values(raw_colors),
         insert(Fruit).values(raw_fruits),
+        insert(FruitFarm).values(raw_farms),
         insert(User).values(raw_users),
         insert(SQLDataTypesContainer).values(raw_sql_data_types_container),
         insert(SQLDataTypes).values(raw_sql_data_types),
@@ -548,6 +575,26 @@ async def seed_db_async(
 # Utilities
 
 
+@pytest.fixture
+def sync_query() -> type[DefaultQuery]:
+    return DefaultQuery
+
+
+@pytest.fixture
+def async_query() -> type[DefaultQuery]:
+    return DefaultQuery
+
+
+@pytest.fixture
+def async_mutation() -> type[Any] | None:
+    return None
+
+
+@pytest.fixture
+def sync_mutation() -> type[Any] | None:
+    return None
+
+
 @pytest.fixture(params=[lf("async_session"), lf("session")], ids=["async", "sync"])
 def any_session(request: FixtureRequest) -> AnySession:
     return request.param
@@ -559,13 +606,23 @@ def query_tracker(request: FixtureRequest) -> QueryTracker:
 
 
 @pytest.fixture(params=[lf("any_session")], ids=["session"])
-def any_query(sync_query: type[Any], async_query: type[Any], request: FixtureRequest) -> AnyQueryExecutor:
+def any_query(
+    sync_query: type[Any],
+    async_query: type[Any],
+    async_mutation: type[Any] | None,
+    sync_mutation: type[Any] | None,
+    request: FixtureRequest,
+) -> AnyQueryExecutor:
     if isinstance(request.param, AsyncSession):
         request.getfixturevalue("seed_db_async")
-        return generate_query(session=request.param, query=async_query, scalar_overrides=scalar_overrides)
+        return generate_query(
+            session=request.param, query=async_query, mutation=async_mutation, scalar_overrides=scalar_overrides
+        )
     request.getfixturevalue("seed_db_sync")
 
-    return generate_query(session=request.param, query=sync_query, scalar_overrides=scalar_overrides)
+    return generate_query(
+        session=request.param, query=sync_query, mutation=sync_mutation, scalar_overrides=scalar_overrides
+    )
 
 
 @pytest.fixture
@@ -574,12 +631,18 @@ def no_session_query(sync_query: type[Any]) -> SyncQueryExecutor:
 
 
 @dataclass
-class StatementInspector:
-    state: ORMExecuteState
+class QueryInspector:
+    clause_element: Compiled | str | ClauseElement
+    dialect: Dialect
+    multiparams: list[dict[str, Any]] = dataclasses.field(default_factory=list)
+    params: dict[str, Any] = dataclasses.field(default_factory=dict)
 
     @property
     def statement_str(self) -> str:
-        return str(self.state.statement)
+        compiled = self.clause_element
+        if isinstance(self.clause_element, ClauseElement):
+            compiled = self.clause_element.compile(dialect=self.dialect)
+        return str(compiled)
 
     @property
     def statement_formatted(self) -> str:
@@ -590,20 +653,55 @@ class StatementInspector:
 class QueryTracker:
     session: AnySession
 
-    executions: list[StatementInspector] = dataclasses.field(init=False, default_factory=list)
+    executions: list[QueryInspector] = dataclasses.field(default_factory=list)
 
     def __post_init__(self) -> None:
-        if isinstance(self.session, AsyncSession):
-            listens_for(self.session.sync_session, "do_orm_execute")(self._event_listener)
-        else:
-            listens_for(self.session, "do_orm_execute")(self._event_listener)
+        self._clause_map = {"insert": Insert, "select": Select, "update": Update}
+        listens_for(self.session.get_bind(), "after_execute")(self._event_listener)
 
-    def _event_listener(self, orm_execute_state: ORMExecuteState) -> None:
-        self.executions.append(StatementInspector(orm_execute_state))
+    def _event_listener(
+        self,
+        conn: Connection | AsyncConnection,
+        clauseelement: Compiled | str | ClauseElement,
+        multiparams: list[dict[str, Any]],
+        params: dict[str, Any],
+        execution_options: dict[str, Any],
+        result: CursorResult[Any],
+    ) -> None:
+        self.executions.append(QueryInspector(clauseelement, conn.dialect, multiparams, params))
+
+    def filter(self, statement: FilterableStatement) -> Self:
+        return dataclasses.replace(
+            self,
+            executions=[
+                execution
+                for execution in self.executions
+                if isinstance(execution.clause_element, self._clause_map[statement])
+            ],
+        )
 
     @property
     def query_count(self) -> int:
         return len(self.executions)
 
-    def __getitem__(self, index: int) -> StatementInspector:
+    def __getitem__(self, index: int) -> QueryInspector:
         return self.executions[index]
+
+    def __iter__(self) -> Iterator[QueryInspector]:
+        return iter(self.executions)
+
+    def assert_statements(
+        self, count: int, statement_type: FilterableStatement | None = None, snapshot: SnapshotAssertion | None = None
+    ) -> None:
+        filtered = self.filter(statement_type) if statement_type is not None else self
+        assert filtered.query_count == count
+        if snapshot is not None:
+            for query in filtered:
+                assert query.statement_formatted == snapshot
+
+
+@strawberry.type
+class DefaultQuery:
+    @strawberry.field
+    def hello(self) -> str:
+        return "World"

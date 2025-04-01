@@ -1,0 +1,55 @@
+# serializer version: 1
+# name: test_query_schemas[exclude_and_override_type]
+  '''
+  """GraphQL type"""
+  type ColorType {
+    id: UUID!
+    fruitsAggregate: FruitAggregate!
+  
+    """Fetch objects from the FruitType collection"""
+    fruits: [FruitType!]!
+    name: String!
+  }
+  
+  """Aggregation fields"""
+  type FruitAggregate {
+    count: Int
+    sum: FruitSumFields!
+    min: FruitMinMaxFields!
+    max: FruitMinMaxFields!
+    avg: FruitNumericFields!
+    stddev: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    stddevPop: FruitNumericFields!
+    variance: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    varPop: FruitNumericFields!
+  }
+  
+  type FruitMinMaxFields {
+    sweetness: Int
+  }
+  
+  type FruitNumericFields {
+    sweetness: Float
+  }
+  
+  type FruitSumFields {
+    sweetness: Int
+  }
+  
+  """GraphQL type"""
+  type FruitType {
+    sweetness: String!
+    id: UUID!
+    colorId: UUID
+    color: ColorType!
+  }
+  
+  type Query {
+    fruit: FruitType!
+  }
+  
+  scalar UUID
+  '''
+# ---

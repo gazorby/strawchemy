@@ -16,12 +16,14 @@ from typing import (
     Optional,
     Protocol,
     Self,
+    TypeAlias,
     TypeVar,
     cast,
     get_args,
     get_origin,
     get_type_hints,
     override,
+    runtime_checkable,
 )
 
 from strawchemy.dto.exceptions import DTOError
@@ -46,34 +48,35 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-__all__ = (
-    "DTOFactory",
-    "DTOFieldDefinition",
-    "MappedDTO",
-    "MappedDTOProtocol",
-    "ModelInspector",
-)
+__all__ = ("DTOFactory", "DTOFieldDefinition", "MappedDTO", "ModelInspector")
 
 T = TypeVar("T")
 DTOBaseT = TypeVar("DTOBaseT", bound="DTOBase[Any]")
 ModelT = TypeVar("ModelT")
+ToMappedProtocolT = TypeVar("ToMappedProtocolT", bound="ToMappedProtocol")
 ModelFieldT = TypeVar("ModelFieldT")
+FieldVisitor: TypeAlias = "Callable[[ToMappedProtocol, DTOFieldDefinition[Any, Any], Any], Any]"
 
 TYPING_NS = vars(typing) | vars(types)
 
 
-class DTOProtocol(Protocol, Generic[ModelT]):
-    """Base class to define DTO mapping classes."""
+class VisitorProtocol(Protocol):
+    def field_value(
+        self, parent: ToMappedProtocol, field: DTOFieldDefinition[Any, Any], value: Any, level: int
+    ) -> Any: ...
 
-    __dto_model__: type[ModelT]
-    __dto_factory__: DTOFactory[ModelT, Any, Any]
+    def model(self, model: ModelT, level: int) -> ModelT: ...
 
 
-class MappedDTOProtocol(DTOProtocol[ModelT]):
-    """Base class to define DTO mapping classes."""
-
-    def to_mapped(self, **override: Any) -> ModelT:
-        raise NotImplementedError
+@runtime_checkable
+class ToMappedProtocol(Protocol):
+    def to_mapped(
+        self,
+        skip_dto_missing: bool = True,
+        visitor: VisitorProtocol | None = None,
+        override: dict[str, Any] | None = None,
+        level: int = 0,
+    ) -> Any: ...
 
 
 class DTOBase(Generic[ModelT]):
@@ -87,33 +90,55 @@ class DTOBase(Generic[ModelT]):
 class MappedDTO(DTOBase[ModelT]):
     """Base class to define DTO mapping classes."""
 
-    def to_mapped(self, **override: Any) -> ModelT:
+    def to_mapped(
+        self,
+        skip_dto_missing: bool = True,
+        visitor: VisitorProtocol | None = None,
+        override: dict[str, Any] | None = None,
+        level: int = 0,
+    ) -> ModelT:
         """Create an instance of `self.__sqla_model__`.
 
         Fill the bound SQLAlchemy model recursively with values from this dataclass.
         """
-        as_model = {}
+        model_kwargs: dict[str, Any] = {}
+        override = override or {}
         dc_fields: dict[str, dataclasses.Field[Any]] = {}
         if dataclasses.is_dataclass(self.__dto_model__):
             dc_fields = {f.name: f for f in dataclasses.fields(self.__dto_model__)}
 
         for name, field_def in self.__dto_field_definitions__.items():
             if (value := override.get(name, DTO_MISSING)) and value is not DTO_MISSING:
-                as_model[name] = value
+                model_kwargs[name] = value
                 continue
             if (field := dc_fields.get(name)) and not field.init:
                 continue
 
-            value: ModelT | MappedDTO[ModelT] | list[ModelT] | list[MappedDTO[ModelT]]
+            if TYPE_CHECKING:
+                value: ModelT | ToMappedProtocol | list[ModelT] | list[ToMappedProtocol] | DTOMissingType
+
             value = getattr(self, name)
 
             if isinstance(value, list | tuple):
-                value = [el.to_mapped() if isinstance(el, MappedDTO) else cast(ModelT, el) for el in value]
-            if isinstance(value, MappedDTO):
-                value = value.to_mapped()
-            as_model[field_def.model_field_name] = value
+                value = [
+                    dto.to_mapped(skip_dto_missing, visitor, level=level + 1)
+                    if isinstance(dto, ToMappedProtocol)
+                    else cast(ModelT, dto)
+                    for dto in value
+                ]
+            if isinstance(value, ToMappedProtocol):
+                value = value.to_mapped(skip_dto_missing, visitor, level=level + 1)
+
+            if visitor is not None:
+                value = visitor.field_value(self, field_def, value, level + 1)
+
+            if skip_dto_missing and value is DTO_MISSING:
+                continue
+
+            model_kwargs[field_def.model_field_name] = value
         try:
-            return self.__dto_model__(**(as_model | override))
+            model = self.__dto_model__(**model_kwargs, **override)
+            return visitor.model(model, level + 1) if visitor else model
         except TypeError as error:
             original_message = error.args[0] if isinstance(error.args[0], str) else repr(error)
             msg = f"{original_message} (model: {self.__dto_model__.__name__})"
@@ -220,6 +245,10 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
         if get_origin(type_hint) is Annotated:
             return get_args(type_hint)[0]
         return non_optional_type_hint(type_hint)
+
+    def relation_cycle(
+        self, field: DTOFieldDefinition[Any, ModelFieldT], node: Node[Relation[ModelT, Any], None]
+    ) -> bool: ...
 
 
 @dataclass
@@ -369,6 +398,11 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         has_override: bool,
     ) -> bool:
         """Whether the model field should be excluded from the dto or not."""
+        input_cycle = False
+
+        if dto_config.purpose is Purpose.WRITE:
+            input_cycle = self.inspector.relation_cycle(field, node)
+
         explictly_excluded = node.is_root and field.model_field_name in dto_config.exclude
         explicitly_included = node.is_root and field.model_field_name in dto_config.include
 
@@ -378,29 +412,29 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             explicitly_included = True
 
         excluded = (explictly_excluded or not explicitly_included) or dto_config.purpose not in field.allowed_purposes
-        return not has_override and excluded
+        return (not has_override and excluded) or input_cycle
 
-    def _resolve_type(
-        self,
-        field: DTOFieldDefinition[ModelT, ModelFieldT],
-        dto_config: DTOConfig,
-        node: Node[Relation[ModelT, DTOBaseT], None],
-        **factory_kwargs: Any,
-    ) -> Any:
-        """Recursively resolve the type hint to a valid pydantic type."""
+    def _resolve_basic_type(self, field: DTOFieldDefinition[ModelT, ModelFieldT], dto_config: DTOConfig) -> Any:
         type_hint = self.type_map.get(field.type_hint, field.type_)
         overriden_by_type_map = field.type_hint in dto_config.type_overrides or field.type_hint in self.type_map
 
         if overriden_by_type_map or field.has_type_override:
             return type_hint
 
-        if not field.is_relation:
-            if not field.has_type_override and field.complete and is_type_hint_optional(type_hint):
-                type_hint = non_optional_type_hint(type_hint)
-            return type_hint
+        if not field.has_type_override and field.complete and is_type_hint_optional(type_hint):
+            type_hint = non_optional_type_hint(type_hint)
+        return type_hint
 
+    def _resolve_relation_type(
+        self,
+        field: DTOFieldDefinition[ModelT, ModelFieldT],
+        dto_config: DTOConfig,
+        node: Node[Relation[ModelT, DTOBaseT], None],
+        **factory_kwargs: Any,
+    ) -> Any:
+        type_hint = self.type_map.get(field.type_hint, field.type_)
         relation_model = self.inspector.relation_model(field.model_field)
-        dto_name = self.dto_name_suffix(relation_model.__name__, dto_config)
+        dto_name = self.dto_name(relation_model.__name__, dto_config, node)
         relation_child = Relation(relation_model, name=dto_name)
         parent = node.find_parent(lambda parent: parent.value == relation_child)
 
@@ -432,6 +466,18 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             return Optional[dto]  # noqa: UP007
         return dto
 
+    def _resolve_type(
+        self,
+        field: DTOFieldDefinition[ModelT, ModelFieldT],
+        dto_config: DTOConfig,
+        node: Node[Relation[ModelT, DTOBaseT], None],
+        **factory_kwargs: Any,
+    ) -> Any:
+        """Recursively resolve the type hint to a valid pydantic type."""
+        if not field.is_relation:
+            return self._resolve_basic_type(field, dto_config)
+        return self._resolve_relation_type(field, dto_config, node, **factory_kwargs)
+
     def _node_or_root(
         self,
         model: type[Any],
@@ -441,30 +487,24 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         return Node(Relation(model=model, name=name)) if node is None else node
 
     def _cache_key(
-        self, model: type[Any], dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None], **factory_kwargs: Any
+        self, model: type[Any], dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None]
     ) -> Hashable:
-        base_key: list[Hashable] = [
-            self,
-            dto_config.purpose,
-            dto_config.partial,
-            dto_config.alias_generator,
-            tuple(sorted(dto_config.type_overrides, key=repr)),
-            tuple(sorted(dto_config.type_overrides.values(), key=repr)),
-        ]
-        node_key: tuple[Any, ...] = ()
-        if node.is_root:
-            include = tuple(sorted(dto_config.include)) if dto_config.include != "all" else ()
-            root_key = [
-                *include,
-                *tuple(sorted(dto_config.exclude)),
-                *tuple(sorted(dto_config.aliases)),
-                *tuple(sorted(dto_config.aliases.values())),
-                *tuple(sorted(dto_config.annotation_overrides)),
-                *tuple(sorted(dto_config.annotation_overrides.values(), key=repr)),
+        base_key = frozenset(
+            [
+                (dto_config.purpose, dto_config.partial, dto_config.alias_generator),
+                tuple(dto_config.type_overrides.items()),
             ]
-            node_key = tuple(root_key)
-        base_key.extend(node_key)
-        return (model, tuple(base_key))
+        )
+        node_key = frozenset()
+        if node.is_root:
+            root_key = [
+                frozenset(dto_config.include if dto_config.include != "all" else ()),
+                frozenset(dto_config.exclude),
+                frozenset(dto_config.aliases.items()),
+                frozenset(dto_config.annotation_overrides.items()),
+            ]
+            node_key = frozenset(key for key in root_key if key)
+        return (model, base_key, node_key)
 
     def _factory(
         self,
@@ -516,13 +556,10 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     def type_hint_namespace(self) -> dict[str, Any]:
         return TYPING_NS | self.dtos
 
-    def dto_name_suffix(self, name: str, dto_config: DTOConfig) -> str:
-        return f"{name}{dto_config.purpose.value.capitalize()}DTO"
-
-    def generate_dto_name(
-        self, model: type[Any], dto_config: DTOConfig, base: type[Any] | None, **factory_kwargs: Any
+    def dto_name(
+        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None] | None = None
     ) -> str:
-        return base.__name__ if base else self.dto_name_suffix(model.__name__, dto_config)
+        return f"{base_name}{dto_config.purpose.value.capitalize()}DTO"
 
     def iter_field_definitions(
         self,
@@ -579,15 +616,13 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         """Build a Data transfer object (DTO) from an SQAlchemy model."""
         dto_config = dto_config.with_base_annotations(base) if base else dto_config
         if not name:
-            name = self.generate_dto_name(model, dto_config, base, **kwargs)
+            name = base.__name__ if base else self.dto_name(model.__name__, dto_config, current_node)
         node = self._node_or_root(model, name, current_node)
-        cache_key = self._cache_key(model, dto_config, node, **kwargs)
+
+        cache_key = self._cache_key(model, dto_config, node)
 
         if dto := self._dto_cache.get(cache_key):
-            if node.is_root:
-                return self.backend.copy(dto, name)
-            return dto
-
+            return self.backend.copy(dto, name) if node.is_root else dto
         dto = self._factory(
             name,
             model,

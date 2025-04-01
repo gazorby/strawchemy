@@ -12,6 +12,7 @@ if TYPE_CHECKING:
         FilterFunctionInfo,
         GraphQLFilterDTO,
         MappedDataclassGraphQLDTO,
+        MappedPydanticGraphQLDTO,
         OrderByDTO,
         OutputFunctionInfo,
         UnmappedDataclassGraphQLDTO,
@@ -34,7 +35,8 @@ AggregationType = Literal[
 
 QueryHookCallable: TypeAlias = "Callable[..., Any]"
 
-PydanticGraphQLDTO: TypeAlias = "UnmappedPydanticGraphQLDTO[Any]"
+PydanticGraphQLDTO: TypeAlias = "UnmappedPydanticGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
 DataclassGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[Any] | UnmappedDataclassGraphQLDTO[Any]"
+AnyMappedDTO: TypeAlias = "MappedDataclassGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
 GraphQLDTO: TypeAlias = "PydanticGraphQLDTO | DataclassGraphQLDTO"
 FunctionInfo: TypeAlias = "FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]] | OutputFunctionInfo"

@@ -1,0 +1,56 @@
+# serializer version: 1
+# name: test_query_schemas[nested_overrides]
+  '''
+  """GraphQL type"""
+  type GroupType {
+    name: Int!
+    id: UUID!
+    usersAggregate: UserAggregate!
+  
+    """Fetch objects from the UserType collection"""
+    users: [UserType!]!
+  }
+  
+  type Query {
+    """Fetch object from the UserType collection by id"""
+    user(id: UUID!): UserType!
+  
+    """Fetch object from the TagType collection by id"""
+    tag(id: UUID!): TagType!
+  }
+  
+  """GraphQL type"""
+  type TagType {
+    name: Int!
+    id: UUID!
+  }
+  
+  scalar UUID
+  
+  """Aggregation fields"""
+  type UserAggregate {
+    count: Int
+    sum: UserSumFields!
+    min: UserMinMaxFields!
+    max: UserMinMaxFields!
+  }
+  
+  type UserMinMaxFields {
+    name: String
+  }
+  
+  type UserSumFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type UserType {
+    name: Int!
+    id: UUID!
+    groupId: UUID
+    group: GroupType!
+    tagId: UUID
+    tag: TagType!
+  }
+  '''
+# ---

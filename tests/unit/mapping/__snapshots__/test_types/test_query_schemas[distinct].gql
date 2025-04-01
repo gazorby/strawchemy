@@ -1,0 +1,64 @@
+# serializer version: 1
+# name: test_query_schemas[distinct]
+  '''
+  enum ColorDistinctOnFields {
+    id
+    name
+  }
+  
+  """GraphQL type"""
+  type ColorType {
+    id: UUID!
+    fruitsAggregate: FruitAggregate!
+  
+    """Fetch objects from the FruitType collection"""
+    fruits: [FruitType!]!
+    name: String!
+  }
+  
+  """Aggregation fields"""
+  type FruitAggregate {
+    count: Int
+    sum: FruitSumFields!
+    min: FruitMinMaxFields!
+    max: FruitMinMaxFields!
+    avg: FruitNumericFields!
+    stddev: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    stddevPop: FruitNumericFields!
+    variance: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    varPop: FruitNumericFields!
+  }
+  
+  type FruitMinMaxFields {
+    name: String
+    sweetness: Int
+  }
+  
+  type FruitNumericFields {
+    sweetness: Float
+  }
+  
+  type FruitSumFields {
+    name: String
+    sweetness: Int
+  }
+  
+  """GraphQL type"""
+  type FruitType {
+    id: UUID!
+    name: String!
+    colorId: UUID
+    color: ColorType!
+    sweetness: Int!
+  }
+  
+  type Query {
+    """Fetch objects from the ColorType collection"""
+    color(distinctOn: [ColorDistinctOnFields!] = null): [ColorType!]!
+  }
+  
+  scalar UUID
+  '''
+# ---

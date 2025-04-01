@@ -11,6 +11,8 @@ from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer, User
 
 strawchemy = Strawchemy()
 
+# Hooks
+
 
 class FruitFilterHook(QueryHook[Fruit]):
     @override
@@ -26,20 +28,22 @@ class FruitOrderingHook(QueryHook[Fruit]):
         return statement.order_by(alias.name.asc())
 
 
-@strawchemy.type(Color, include="all", override=True)
-class ColorType: ...
-
-
-@strawchemy.distinct_on_enum(Color, include="all", override=True)
-class ColorDistinctOn: ...
-
-
-@strawchemy.type(Color, include="all", child_pagination=True)
-class ColorTypeWithPagination: ...
+# User
 
 
 @strawchemy.type(User, include="all")
 class UserType: ...
+
+
+@strawchemy.order_by_input(User, include="all", override=True)
+class UserOrderBy: ...
+
+
+@strawchemy.filter_input(User, include="all")
+class UserFilter: ...
+
+
+# Fruit
 
 
 @strawchemy.type(Fruit, include="all", override=True)
@@ -75,25 +79,43 @@ class FruitAggregationType: ...
 class FruitTypeWithPaginationAndOrderBy: ...
 
 
-@strawchemy.type(Color, include="all")
-class ColorWithFilteredFruit:
-    fruits: list[FilteredFruitType]
-
-
 @strawchemy.filter_input(Fruit, include="all")
 class FruitFilter: ...
-
-
-@strawchemy.filter_input(User, include="all")
-class UserFilter: ...
 
 
 @strawchemy.order_by_input(Fruit, include="all", override=True)
 class FruitOrderBy: ...
 
 
-@strawchemy.order_by_input(User, include="all", override=True)
-class UserOrderBy: ...
+@strawchemy.input(Fruit, "create", include="all")
+class FruitCreateInput: ...
+
+
+# Color
+
+
+@strawchemy.type(Color, include="all", override=True)
+class ColorType: ...
+
+
+@strawchemy.distinct_on_enum(Color, include="all", override=True)
+class ColorDistinctOn: ...
+
+
+@strawchemy.type(Color, include="all", child_pagination=True)
+class ColorTypeWithPagination: ...
+
+
+@strawchemy.type(Color, include="all")
+class ColorWithFilteredFruit:
+    fruits: list[FilteredFruitType]
+
+
+@strawchemy.input(Color, "create", include="all")
+class ColorCreateInput: ...
+
+
+# SQL Data types
 
 
 @strawchemy.filter_input(SQLDataTypes, include="all")
@@ -110,6 +132,9 @@ class SQLDataTypesType: ...
 
 @strawchemy.aggregation_type(SQLDataTypes, include="all")
 class SQLDataTypesAggregationType: ...
+
+
+# SQL Data types Container
 
 
 @strawchemy.type(SQLDataTypesContainer, include="all", override=True, child_order_by=True)

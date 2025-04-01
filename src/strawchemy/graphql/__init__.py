@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from .factory import DistinctOnFieldsDTOFactory, FilterDTOFactory, OrderByDTO, OrderByEnum
+from .dto import OrderByDTO, OrderByEnum
+from .factories.inputs import FilterDTOFactory
+from .factories.types import DistinctOnFieldsDTOFactory
 from .filters import GenericComparison, GraphQLFilter, JSONComparison, PostgresArrayComparison, TextComparison
 
 __all__ = (

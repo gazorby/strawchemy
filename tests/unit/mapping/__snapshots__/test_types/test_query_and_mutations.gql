@@ -1,0 +1,131 @@
+# serializer version: 1
+# name: test_query_and_mutations
+  '''
+  """GraphQL input type"""
+  input ColorFruitInput {
+    id: UUID!
+    name: String!
+    colorId: UUID = null
+    sweetness: Int!
+  }
+  
+  input ColorFruitsIdFieldsInput {
+    id: UUID!
+  }
+  
+  input ColorFruitsIdFieldsInputColorFruitInputToManyCreateInput {
+    set: [ColorFruitsIdFieldsInput!]
+    add: [ColorFruitsIdFieldsInput!]
+    create: [ColorFruitInput!]
+  }
+  
+  """GraphQL input type"""
+  input ColorInput {
+    id: UUID!
+    fruits: ColorFruitsIdFieldsInputColorFruitInputToManyCreateInput
+    name: String!
+  }
+  
+  """GraphQL type"""
+  type ColorType {
+    id: UUID!
+    fruitsAggregate: FruitAggregate!
+  
+    """Fetch objects from the FruitType collection"""
+    fruits: [FruitType!]!
+    name: String!
+  }
+  
+  """Aggregation fields"""
+  type FruitAggregate {
+    count: Int
+    sum: FruitSumFields!
+    min: FruitMinMaxFields!
+    max: FruitMinMaxFields!
+    avg: FruitNumericFields!
+    stddev: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    stddevPop: FruitNumericFields!
+    variance: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    varPop: FruitNumericFields!
+  }
+  
+  input FruitColorIdFieldsInput {
+    id: UUID!
+  }
+  
+  input FruitColorIdFieldsInputFruitColorInputToOneInput {
+    set: FruitColorIdFieldsInput
+    create: FruitColorInput
+  }
+  
+  """GraphQL input type"""
+  input FruitColorInput {
+    id: UUID!
+    name: String!
+  }
+  
+  """GraphQL input type"""
+  input FruitInput {
+    id: UUID!
+    name: String!
+    colorId: UUID = null
+    color: FruitColorIdFieldsInputFruitColorInputToOneInput = null
+    sweetness: Int!
+  }
+  
+  type FruitMinMaxFields {
+    name: String
+    sweetness: Int
+  }
+  
+  type FruitNumericFields {
+    sweetness: Float
+  }
+  
+  type FruitSumFields {
+    name: String
+    sweetness: Int
+  }
+  
+  """GraphQL type"""
+  type FruitType {
+    id: UUID!
+    name: String!
+    colorId: UUID
+    color: ColorType!
+    sweetness: Int!
+  }
+  
+  type Mutation {
+    """Fetch object from the FruitType collection by id"""
+    createFruit(data: FruitInput!): FruitType!
+  
+    """Fetch objects from the FruitType collection"""
+    createFruits(data: [FruitInput!]!): [FruitType!]!
+  
+    """Fetch object from the ColorType collection by id"""
+    createColor(data: ColorInput!): ColorType!
+  
+    """Fetch objects from the ColorType collection"""
+    createColors(data: [ColorInput!]!): [ColorType!]!
+  }
+  
+  type Query {
+    """Fetch object from the FruitType collection by id"""
+    fruit(id: UUID!): FruitType!
+  
+    """Fetch objects from the FruitType collection"""
+    fruits: [FruitType!]!
+  
+    """Fetch object from the ColorType collection by id"""
+    color(id: UUID!): ColorType!
+  
+    """Fetch objects from the ColorType collection"""
+    colors: [ColorType!]!
+  }
+  
+  scalar UUID
+  '''
+# ---

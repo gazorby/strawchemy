@@ -55,14 +55,14 @@ def test_type_instance_auto_as_str(strawchemy: Strawchemy[DeclarativeBase, Query
 
 
 def test_input_instance(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]) -> None:
-    @strawchemy.input(User)
+    @strawchemy.input(User, "create")
     class InputType:
         id: auto
         name: auto
 
-    user = InputType(id=1, name="user")
-    assert user.id == 1
-    assert user.name == "user"
+    user = InputType(id=1, name="user")  # pyright: ignore[reportCallIssue]
+    assert user.id == 1  # pyright: ignore[reportAttributeAccessIssue]
+    assert user.name == "user"  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_field_metadata_default(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]) -> None:
@@ -158,6 +158,7 @@ def test_query_hooks_load_columns_relationship_fails() -> None:
         pytest.param("override.override_argument.Query", id="argument_override"),
         pytest.param("override.override_auto_type.Query", id="override_auto_type"),
         pytest.param("override.override_with_custom_name.Query", id="override_with_custom_name"),
+        pytest.param("override.nested_overrides.Query", id="nested_overrides"),
         pytest.param("pagination.pagination.Query", id="pagination"),
         pytest.param("pagination.pagination_defaults.Query", id="pagination_defaults"),
         pytest.param("pagination.children_pagination.Query", id="children_pagination"),
@@ -175,7 +176,7 @@ def test_query_hooks_load_columns_relationship_fails() -> None:
     ],
 )
 @pytest.mark.snapshot
-def test_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
+def test_query_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)
 
@@ -199,7 +200,10 @@ def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
 
 
-@pytest.mark.parametrize("path", [pytest.param("input_type.Mutation", id="input_type")])
+@pytest.mark.parametrize(
+    "path",
+    [pytest.param("input_type.Mutation", id="input_type"), pytest.param("create.Mutation", id="create_mutation")],
+)
 @pytest.mark.snapshot
 def test_mutation_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     module, query_name = f"tests.unit.schemas.mutations.{path}".rsplit(".", maxsplit=1)
@@ -212,6 +216,14 @@ def test_mutation_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> Non
             return "world"
 
     schema = strawberry.Schema(query=Query, mutation=mutation_class, scalar_overrides=SCALAR_OVERRIDES)
+    assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
+
+
+@pytest.mark.snapshot
+def test_query_and_mutations(graphql_snapshot: SnapshotAssertion) -> None:
+    from tests.unit.schemas.mutation_and_query import Mutation, Query
+
+    schema = strawberry.Schema(query=Query, mutation=Mutation)
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
 
 

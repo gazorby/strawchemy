@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_query_schemas[exclude_non_existent]
+  '''
+  """GraphQL type"""
+  type FruitType {
+    id: UUID!
+    name: String!
+    sweetness: Int!
+  }
+  
+  type Query {
+    fruit: FruitType!
+  }
+  
+  scalar UUID
+  '''
+# ---

@@ -3,30 +3,30 @@ name = "strawchemy"
 version = "0.11.0"
 description = "Generate GraphQL API from SQLAlchemy models"
 readme = "README.md"
-authors = [{ name = "gazorby", email = "gazorby@pm.me" }]
-classifiers = [
-    "Development Status :: 3 - Alpha",
-    "Environment :: Web Environment",
-    "License :: OSI Approved :: MIT License",
-    "Natural Language :: English",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python",
-    "Topic :: Software Development",
-    "Typing :: Typed",
-    "Intended Audience :: Developers",
-    "Intended Audience :: System Administrators",
-    "Topic :: Database",
-    "Topic :: Database :: Database Engines/Servers",
-]
 requires-python = ">=3.9"
-dependencies = ["sqlalchemy>=1.4", "pydantic", "strawberry-graphql"]
-keywords = ["sqlalchemy", "strawberry", "graphql", "SQL", "API"]
 license = { text = "MIT" }
+authors = [{ name = "gazorby", email = "gazorby@pm.me" }]
+keywords = ["API", "SQL", "graphql", "sqlalchemy", "strawberry"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Web Environment",
+  "Intended Audience :: Developers",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python",
+  "Topic :: Database :: Database Engines/Servers",
+  "Topic :: Database",
+  "Topic :: Software Development",
+  "Typing :: Typed",
+]
+dependencies = ["pydantic", "sqlalchemy>=2.0.10", "strawberry-graphql"]
 
 [project.urls]
 Changelog = "https://github.com/gazorby/strawchemy/blob/main/CHANGELOG.md"
@@ -41,44 +41,39 @@ geo = ["GeoAlchemy2", "geojson-pydantic", "shapely"]
 [dependency-groups]
 build = ["bump-my-version", "git-cliff", "unasyncd"]
 dev = [
-    { include-group = "build" },
-    { include-group = "test" },
-    { include-group = "lint" },
-    { include-group = "doc" },
-    { include-group = "postgres" },
-
+  { include-group = "build" },
+  { include-group = "test" },
+  { include-group = "lint" },
+  { include-group = "doc" },
+  { include-group = "postgres" },
+  "testapp",
+  "debugpy",
+]
+doc = ["git-cliff>=2.6.1"]
+lint = ["pyright[nodejs]", "ruff", "vulture"]
+postgres = [
+  "asyncpg>=0.29.0",
+  "psycopg2-binary>=2.9.10",
+  "psycopg[binary,pool]>=3.2.3",
 ]
 test = [
-    { include-group = "postgres" },
-    "nox[uv]",
-    "pytest",
-    "pytest-cov",
-    "pytest-asyncio>=0.24",
-    "pytest-pretty",
-    "pytest-xdist",
-    "pytest-databases",
-    "pytest-lazy-fixtures",
-    "syrupy",
-    "sqlparse",
-    "covdefaults",
+  { include-group = "postgres" },
+  "nox[uv]",
+  "pytest",
+  "pytest-cov",
+  "pytest-asyncio>=0.24",
+  "pytest-pretty",
+  "pytest-xdist",
+  "pytest-databases",
+  "pytest-lazy-fixtures",
+  "syrupy",
+  "sqlparse",
+  "covdefaults",
 ]
-postgres = [
-    "asyncpg>=0.29.0",
-    "psycopg2-binary>=2.9.10",
-    "psycopg[binary,pool]>=3.2.3",
-]
-lint = ["pyright[nodejs]", "ruff", "vulture"]
-doc = ["git-cliff>=2.6.1"]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-##################
-# External Tools #
-##################
-[tool.uv]
-default-groups = ["test", "lint"]
 
 [tool.bumpversion]
 allow_dirty = true
@@ -114,138 +109,21 @@ name = "strawchemy"
 version = "{current_version}"
 """
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/strawchemy"]
+[tool.codespell]
+skip = "*.po,*.ts,./src/3rdParty,./src/Test"
+ignore-words-list = "nin"
 
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
-testpaths = ["tests"]
-markers = [
-    "snapshot: snapshot-based tests using syrupy",
-    "integration: SQLAlchemy integration tests",
-    "geo: Geoalchemy2 integration tests",
-    "psycopg_async: SQLAlchemy Postgres (psycopg async) Tests",
-    "psycopg_sync: SQLAlchemy Postgres (psycopg sync) Tests",
-    "asyncpg: SQLAlchemy Postgres (asyncpg) Tests",
-]
+[tool.coverage.run]
+branch = true
+source = ["src"]
+plugins = ["covdefaults"]
+omit = ["*/tests/*"]
+parallel = true
+relative_files = true
 
-[tool.pyright]
-venv = ".venv"
-exclude = [
-    "**/__pycache__",
-    "**/.hypothesis",
-    "**/.mypy_cache",
-    "**/.pytest_cache",
-    "**/.ruff_cache",
-    "**/.venv",
-    "**/.tox",
-    "**/.nox",
-    "**/build",
-    "**/dist",
-    "**/node_modules",
-    "**/cdk.out",
-    "**/alembic/versions",
-]
-verboseOutput = true
-pythonVersion = "3.12"
-typeCheckingMode = "strict"
-
-reportUnknownMemberType = false
-reportMissingTypeStubs = false
-reportUnknownArgumentType = false
-reportUnknownVariableType = false
-reportPrivateUsage = false
-reportUnnecessaryTypeIgnoreComment = true
-reportImplicitOverride = true
-reportPropertyTypeMismatch = true
-reportShadowedImports = true
-
-
-[tool.ruff]
-line-length = 120
-fix = true
-target-version = "py311"
-exclude = [
-    ".bzr",
-    ".direnv",
-    ".eggs",
-    ".git",
-    ".hg",
-    ".mypy_cache",
-    ".nox",
-    ".tox",
-    ".pants.d",
-    ".ruff_cache",
-    ".svn",
-    ".venv",
-    "__pypackages__",
-    "_build",
-    "buck-out",
-    "build",
-    "dist",
-    "node_modules",
-    "venv",
-    "tests/codegen/snapshots",
-    "alembic/*  ",
-]
-src = ["src/strawchemy", "tests"]
-
-[tool.ruff.lint]
-select = ["ALL"]
-ignore = [
-    "A005",    # flake8-builtins - module {name} shadows a Python standard-library module
-    "D100",    # pydocstyle - missing docstring in public module
-    "D101",    # pydocstyle - missing docstring in public class
-    "D102",    # pydocstyle - missing docstring in public method
-    "D103",    # pydocstyle - missing docstring in public function
-    "D104",    # pydocstyle - missing docstring in public package
-    "D105",    # pydocstyle - missing docstring in magic method
-    "D106",    # pydocstyle - missing docstring in public nested class
-    "D107",    # pydocstyle - missing docstring in __init__
-    "E501",    # pycodestyle - line too long, handled by ruff format
-    "PLR0913", # pylint - too many arguments
-    "ARG002",  # flake8-unused-argument - unused arguments
-    "COM812",  # flake8-commas - Checks for the absence of trailing commas
-    "S101",    # flake8-bandit - Assert statements, investigate
-    "ANN401",  # flake8-annotations - typing Any disallowed in function arguments
-    "FBT",     # flake8-annotations - boolean trap. Try to remove this in the future
-    "PT013",   # flake8-pytest-style - Incorrect import of pytest
-
-]
-# Allow unused variables when underscore-prefixed.
-dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
-
-[tool.ruff.lint.mccabe]
-max-complexity = 12
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-
-[tool.ruff.lint.per-file-ignores]
-"tests/*" = ["TCH001", "UP037", "PLR2004"]
-
-[tool.unasyncd]
-add_editors_note = true
-ruff_fix = true
-ruff_format = true
-update_docstrings = true
-cache = true
-
-[tool.unasyncd.files]
-"src/strawchemy/sqlalchemy/repository/_async.py" = "src/strawchemy/sqlalchemy/repository/_sync.py"
-"src/strawchemy/strawberry/repository/_async.py" = "src/strawchemy/strawberry/repository/_sync.py"
-
-[tool.unasyncd.per_file_add_replacements."src/strawchemy/sqlalchemy/repository/_async.py"]
-"strawchemy.sqlalchemy._executor.AsyncQueryExecutor" = "strawchemy.sqlalchemy._executor.SyncQueryExecutor"
-SQLAlchemyGraphQLAsyncRepository = "SQLAlchemyGraphQLSyncRepository"
-"strawchemy.sqlalchemy.typing.AnyAsyncSession" = "strawchemy.sqlalchemy.typing.AnySyncSession"
-
-[tool.unasyncd.per_file_add_replacements."src/strawchemy/strawberry/repository/_async.py"]
-"strawchemy.sqlalchemy.repository.SQLAlchemyGraphQLAsyncRepository" = "strawchemy.sqlalchemy.repository.SQLAlchemyGraphQLSyncRepository"
-"strawchemy.sqlalchemy.typing.AnyAsyncSession" = "strawchemy.sqlalchemy.typing.AnySyncSession"
-"strawchemy.strawberry.typing.AsyncSessionGetter" = "strawchemy.strawberry.typing.SyncSessionGetter"
-StrawchemyAsyncRepository = "StrawchemySyncRepository"
+[tool.coverage.report]
+exclude_also = ["def __repr__"]
+fail_under = 50
 
 [tool.git-cliff.changelog]
 # template for the changelog header
@@ -311,8 +189,9 @@ footer = """
 trim = true
 # postprocessors
 postprocessors = [
-    # { pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" }, # replace repository URL
+  # { pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" }, # replace repository URL
 ]
+
 # render body even when there are no releases to process
 # render_always = true
 # output file path
@@ -327,30 +206,30 @@ filter_unconventional = true
 split_commits = false
 # regex for preprocessing the commit messages
 commit_preprocessors = [
-    # Replace issue numbers
-    #{ pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"},
-    # Check spelling of the commit with https://github.com/crate-ci/typos
-    # If the spelling is incorrect, it will be automatically fixed.
-    #{ pattern = '.*', replace_command = 'typos --write-changes -' },
+  # Replace issue numbers
+  # { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"},
+  # Check spelling of the commit with https://github.com/crate-ci/typos
+  # If the spelling is incorrect, it will be automatically fixed.
+  # { pattern = '.*', replace_command = 'typos --write-changes -' },
 ]
 # regex for parsing and grouping commits
 commit_parsers = [
-    { message = "^feat", group = "<!-- 0 -->🚀 Features" },
-    { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
-    { message = "^doc", group = "<!-- 3 -->📚 Documentation" },
-    { message = "^perf", group = "<!-- 4 -->⚡ Performance" },
-    { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
-    { message = "^style", group = "<!-- 5 -->🎨 Styling" },
-    { message = "^test", group = "<!-- 6 -->🧪 Testing" },
-    { message = "^build\\(release\\): prepare for", skip = true },
-    { message = "^build\\(deps.*\\)", skip = true },
-    { message = "^build\\(pr\\)", skip = true },
-    { message = "^build\\(pull\\)", skip = true },
-    { message = "^build|^ci", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
-    { body = ".*security", group = "<!-- 8 -->🛡️ Security" },
-    { message = "^revert", group = "<!-- 9 -->◀️ Revert" },
-    { message = ".*", group = "<!-- 10 -->💼 Other" },
-    { body = "$^", skip = true },
+  { message = "^feat", group = "<!-- 0 -->🚀 Features" },
+  { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
+  { message = "^doc", group = "<!-- 3 -->📚 Documentation" },
+  { message = "^perf", group = "<!-- 4 -->⚡ Performance" },
+  { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
+  { message = "^style", group = "<!-- 5 -->🎨 Styling" },
+  { message = "^test", group = "<!-- 6 -->🧪 Testing" },
+  { message = "^build\\(release\\): prepare for", skip = true },
+  { message = "^build\\(deps.*\\)", skip = true },
+  { message = "^build\\(pr\\)", skip = true },
+  { message = "^build\\(pull\\)", skip = true },
+  { message = "^build|^ci", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
+  { body = ".*security", group = "<!-- 8 -->🛡️ Security" },
+  { message = "^revert", group = "<!-- 9 -->◀️ Revert" },
+  { message = ".*", group = "<!-- 10 -->💼 Other" },
+  { body = "$^", skip = true },
 ]
 # filter out the commits that are not matched by commit parsers
 filter_commits = false
@@ -364,24 +243,150 @@ owner = "gazorby"
 repo = "strawchemy"
 token = ""
 
+[tool.hatch.build.targets.wheel]
+packages = ["src/strawchemy"]
+
+[tool.pyright]
+venv = ".venv"
+exclude = [
+  "**/__pycache__",
+  "**/.hypothesis",
+  "**/.mypy_cache",
+  "**/.pytest_cache",
+  "**/.ruff_cache",
+  "**/.venv",
+  "**/.tox",
+  "**/.nox",
+  "**/build",
+  "**/dist",
+  "**/node_modules",
+  "**/cdk.out",
+  "**/alembic/versions",
+]
+verboseOutput = true
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+reportUnknownMemberType = false
+reportMissingTypeStubs = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportPrivateUsage = false
+reportUnnecessaryTypeIgnoreComment = true
+reportImplicitOverride = true
+reportPropertyTypeMismatch = true
+reportShadowedImports = true
+
+[tool.pytest.ini_options]
+markers = [
+  "snapshot: snapshot-based tests using syrupy",
+  "integration: SQLAlchemy integration tests",
+  "geo: Geoalchemy2 integration tests",
+  "psycopg_async: SQLAlchemy Postgres (psycopg async) Tests",
+  "psycopg_sync: SQLAlchemy Postgres (psycopg sync) Tests",
+  "asyncpg: SQLAlchemy Postgres (asyncpg) Tests",
+]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 120
+fix = true
+target-version = "py311"
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".tox",
+  ".pants.d",
+  ".ruff_cache",
+  ".svn",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+  "tests/codegen/snapshots",
+  "alembic/*  ",
+]
+src = ["src/strawchemy", "tests"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "A005",  # flake8-builtins - module {name} shadows a Python standard-library module
+  "D100",  # pydocstyle - missing docstring in public module
+  "D101",  # pydocstyle - missing docstring in public class
+  "D102",  # pydocstyle - missing docstring in public method
+  "D103",  # pydocstyle - missing docstring in public function
+  "D104",  # pydocstyle - missing docstring in public package
+  "D105",  # pydocstyle - missing docstring in magic method
+  "D106",  # pydocstyle - missing docstring in public nested class
+  "D107",  # pydocstyle - missing docstring in __init__
+  "E501",  # pycodestyle - line too long, handled by ruff format
+  "PLR0913",  # pylint - too many arguments
+  "ARG002",  # flake8-unused-argument - unused arguments
+  "COM812",  # flake8-commas - Checks for the absence of trailing commas
+  "S101",  # flake8-bandit - Assert statements, investigate
+  "ANN401",  # flake8-annotations - typing Any disallowed in function arguments
+  "FBT",  # flake8-annotations - boolean trap. Try to remove this in the future
+  "PT013",  # flake8-pytest-style - Incorrect import of pytest
+]
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["TC001", "UP037", "PLR2004"]
+
+[tool.unasyncd]
+add_editors_note = true
+ruff_fix = true
+ruff_format = true
+update_docstrings = true
+cache = true
+
+[tool.unasyncd.files]
+"src/strawchemy/sqlalchemy/repository/_async.py" = "src/strawchemy/sqlalchemy/repository/_sync.py"
+"src/strawchemy/strawberry/repository/_async.py" = "src/strawchemy/strawberry/repository/_sync.py"
+
+[tool.unasyncd.per_file_add_replacements."src/strawchemy/sqlalchemy/repository/_async.py"]
+"strawchemy.sqlalchemy._executor.AsyncQueryExecutor" = "strawchemy.sqlalchemy._executor.SyncQueryExecutor"
+SQLAlchemyGraphQLAsyncRepository = "SQLAlchemyGraphQLSyncRepository"
+"strawchemy.sqlalchemy.typing.AnyAsyncSession" = "strawchemy.sqlalchemy.typing.AnySyncSession"
+
+[tool.unasyncd.per_file_add_replacements."src/strawchemy/strawberry/repository/_async.py"]
+"strawchemy.sqlalchemy.repository.SQLAlchemyGraphQLAsyncRepository" = "strawchemy.sqlalchemy.repository.SQLAlchemyGraphQLSyncRepository"
+"strawchemy.sqlalchemy.typing.AnyAsyncSession" = "strawchemy.sqlalchemy.typing.AnySyncSession"
+"strawchemy.strawberry.typing.AsyncSessionGetter" = "strawchemy.strawberry.typing.SyncSessionGetter"
+StrawchemyAsyncRepository = "StrawchemySyncRepository"
+
+# #################
+# External Tools #
+# #################
+[tool.uv]
+default-groups = ["test", "lint"]
+
+[tool.uv.sources]
+testapp = { workspace = true }
+
+[tool.uv.workspace]
+members = ["examples/*"]
+
 [tool.vulture]
 min_confidence = 100
 paths = ["src", "tests"]
 sort_by_size = true
 exclude = ["tests/fixtures.py", "tests/unit/schemas/mutations"]
-
-[tool.coverage.run]
-branch = true
-source = ["src"]
-plugins = ["covdefaults"]
-omit = ["*/tests/*"]
-parallel = true
-relative_files = true
-
-[tool.coverage.report]
-exclude_also = ['def __repr__']
-fail_under = 50
-
-[tool.codespell]
-skip = '*.po,*.ts,./src/3rdParty,./src/Test'
-ignore-words-list = "nin"

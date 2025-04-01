@@ -21,7 +21,7 @@ from sqlalchemy.orm import (
     registry,
 )
 from strawchemy.constants import GEO_INSTALLED
-from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, ModelInspector
+from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, ModelInspector, Relation
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.exceptions import ModelInspectorError
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, DTOMissingType, Purpose
@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from shapely import Geometry
 
     from sqlalchemy.orm import MapperProperty
+    from strawchemy.graph import Node
 
 
 __all__ = ("SQLAlchemyInspector",)
@@ -131,9 +132,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         return self._mapped_classes_map
 
     def _uselist(self, elem: MapperProperty[Any]) -> bool:
-        if self._is_relationship(elem):
-            return bool(elem.uselist)
-        return False
+        return bool(elem.uselist) if self._is_relationship(elem) else False
 
     def _is_init(self, model: type[DeclarativeBase], name: str) -> bool:
         if issubclass(model, MappedAsDataclass):
@@ -164,7 +163,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
 
         if (
             issubclass(model, MappedAsDataclass)
-            and (field := cls._dataclass_fields(model).get(attribute.key, None))
+            and (field := cls._dataclass_fields(model).get(attribute.key))
             and field.default_factory is not DATACLASS_MISSING
         ):
             default_factory = field.default_factory
@@ -318,3 +317,20 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             return field_definition.model_field.type.python_type
         except NotImplementedError:
             return super().model_field_type(field_definition)
+
+    @override
+    def relation_cycle(
+        self,
+        field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
+        node: Node[Relation[DeclarativeBase, Any], None],
+    ) -> bool:
+        if not isinstance(field.model_field.property, RelationshipProperty):
+            return False
+        parent_relationships: set[RelationshipProperty[Any]] = set()
+        for parent in node.iter_parents():
+            for relationship in parent.value.model.__mapper__.relationships:
+                parent_relationships.add(relationship)
+        return any(
+            relationship in parent_relationships
+            for relationship in field.model_field.property._reverse_property  # noqa: SLF001
+        )

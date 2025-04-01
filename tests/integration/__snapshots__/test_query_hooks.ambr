@@ -218,10 +218,10 @@
             fruit.id AS id
      FROM fruit AS fruit
      ORDER BY fruit.name ASC
-     LIMIT :param_1
-     OFFSET :param_2) AS fruit
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS fruit
   ORDER BY fruit.name ASC
-  LIMIT :param_3
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-orderedFruitsPaginated-async-psycopg_async_engine]
@@ -233,10 +233,10 @@
             fruit.id AS id
      FROM fruit AS fruit
      ORDER BY fruit.name ASC
-     LIMIT :param_1
-     OFFSET :param_2) AS fruit
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS fruit
   ORDER BY fruit.name ASC
-  LIMIT :param_3
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-orderedFruitsPaginated-sync-psycopg_engine]
@@ -248,10 +248,10 @@
             fruit.id AS id
      FROM fruit AS fruit
      ORDER BY fruit.name ASC
-     LIMIT :param_1
-     OFFSET :param_2) AS fruit
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS fruit
   ORDER BY fruit.name ASC
-  LIMIT :param_3
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruits-async-asyncpg_engine]
@@ -259,7 +259,7 @@
   SELECT fruit.name,
          fruit.id
   FROM fruit AS fruit
-  WHERE fruit.name = :name_1
+  WHERE fruit.name = $1::VARCHAR
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruits-async-psycopg_async_engine]
@@ -267,7 +267,7 @@
   SELECT fruit.name,
          fruit.id
   FROM fruit AS fruit
-  WHERE fruit.name = :name_1
+  WHERE fruit.name = %(name_1)s::VARCHAR
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruits-sync-psycopg_engine]
@@ -275,7 +275,7 @@
   SELECT fruit.name,
          fruit.id
   FROM fruit AS fruit
-  WHERE fruit.name = :name_1
+  WHERE fruit.name = %(name_1)s::VARCHAR
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruitsPaginated-async-asyncpg_engine]
@@ -286,11 +286,11 @@
     (SELECT fruit.name AS name,
             fruit.id AS id
      FROM fruit AS fruit
-     WHERE fruit.name = :name_1
-     LIMIT :param_1
-     OFFSET :param_2) AS fruit
-  WHERE fruit.name = :name_2
-  LIMIT :param_3
+     WHERE fruit.name = $1::VARCHAR
+     LIMIT $2::INTEGER
+     OFFSET $3::INTEGER) AS fruit
+  WHERE fruit.name = $4::VARCHAR
+  LIMIT $5::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruitsPaginated-async-psycopg_async_engine]
@@ -301,11 +301,11 @@
     (SELECT fruit.name AS name,
             fruit.id AS id
      FROM fruit AS fruit
-     WHERE fruit.name = :name_1
-     LIMIT :param_1
-     OFFSET :param_2) AS fruit
-  WHERE fruit.name = :name_2
-  LIMIT :param_3
+     WHERE fruit.name = %(name_1)s::VARCHAR
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS fruit
+  WHERE fruit.name = %(name_2)s::VARCHAR
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruitsPaginated-sync-psycopg_engine]
@@ -316,11 +316,11 @@
     (SELECT fruit.name AS name,
             fruit.id AS id
      FROM fruit AS fruit
-     WHERE fruit.name = :name_1
-     LIMIT :param_1
-     OFFSET :param_2) AS fruit
-  WHERE fruit.name = :name_2
-  LIMIT :param_3
+     WHERE fruit.name = %(name_1)s::VARCHAR
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS fruit
+  WHERE fruit.name = %(name_2)s::VARCHAR
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-fruits-async-asyncpg_engine]
@@ -357,9 +357,9 @@
             fruit.name AS name,
             fruit.adjectives AS adjectives
      FROM fruit AS fruit
-     LIMIT :param_1
-     OFFSET :param_2) AS fruit
-  LIMIT :param_3
+     LIMIT $1::INTEGER
+     OFFSET $2::INTEGER) AS fruit
+  LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-fruitsPaginated-async-psycopg_async_engine]
@@ -372,9 +372,9 @@
             fruit.name AS name,
             fruit.adjectives AS adjectives
      FROM fruit AS fruit
-     LIMIT :param_1
-     OFFSET :param_2) AS fruit
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS fruit
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-fruitsPaginated-sync-psycopg_engine]
@@ -387,9 +387,9 @@
             fruit.name AS name,
             fruit.adjectives AS adjectives
      FROM fruit AS fruit
-     LIMIT :param_1
-     OFFSET :param_2) AS fruit
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS fruit
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-async-asyncpg_engine]
@@ -399,7 +399,7 @@
          color.id AS id_1
   FROM color AS color
   LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
-  WHERE color__fruits.name = :name_1
+  WHERE color__fruits.name = $1::VARCHAR
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-async-psycopg_async_engine]
@@ -409,7 +409,7 @@
          color.id AS id_1
   FROM color AS color
   LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
-  WHERE color__fruits.name = :name_1
+  WHERE color__fruits.name = %(name_1)s::VARCHAR
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-sync-psycopg_engine]
@@ -419,6 +419,6 @@
          color.id AS id_1
   FROM color AS color
   LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
-  WHERE color__fruits.name = :name_1
+  WHERE color__fruits.name = %(name_1)s::VARCHAR
   '''
 # ---

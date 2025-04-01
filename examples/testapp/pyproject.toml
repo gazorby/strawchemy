@@ -1,0 +1,16 @@
+[project]
+name = "testapp"
+version = "0.1.0"
+description = "Basic test app"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+  "aiosqlite",
+  "litestar[sqlalchemy,standard]",
+  "sqlalchemy",
+  "strawberry-graphql",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

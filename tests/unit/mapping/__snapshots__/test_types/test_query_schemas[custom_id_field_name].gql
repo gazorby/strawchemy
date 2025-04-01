@@ -1,0 +1,23 @@
+# serializer version: 1
+# name: test_query_schemas[custom_id_field_name]
+  '''
+  """GraphQL type"""
+  type ColorType {
+    id: UUID!
+    name: String!
+  }
+  
+  """GraphQL type"""
+  type FruitType {
+    color: ColorType!
+    name: String!
+  }
+  
+  type Query {
+    """Fetch object from the FruitType collection by id"""
+    fruit(pk: UUID!): FruitType!
+  }
+  
+  scalar UUID
+  '''
+# ---

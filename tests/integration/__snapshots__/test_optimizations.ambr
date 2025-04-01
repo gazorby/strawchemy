@@ -6,7 +6,7 @@
          sql_data_types_container.id AS id_1
   FROM sql_data_types_container AS sql_data_types_container
   JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  WHERE sql_data_types_container__data_types.int_col > :int_col_1
+  WHERE sql_data_types_container__data_types.int_col > $1::INTEGER
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-join-rewrite-async-psycopg_async_engine]
@@ -16,7 +16,7 @@
          sql_data_types_container.id AS id_1
   FROM sql_data_types_container AS sql_data_types_container
   JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  WHERE sql_data_types_container__data_types.int_col > :int_col_1
+  WHERE sql_data_types_container__data_types.int_col > %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-join-rewrite-sync-psycopg_engine]
@@ -26,7 +26,7 @@
          sql_data_types_container.id AS id_1
   FROM sql_data_types_container AS sql_data_types_container
   JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  WHERE sql_data_types_container__data_types.int_col > :int_col_1
+  WHERE sql_data_types_container__data_types.int_col > %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-no-join-rewrite-async-asyncpg_engine]
@@ -36,7 +36,7 @@
          sql_data_types_container.id AS id_1
   FROM sql_data_types_container AS sql_data_types_container
   LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  WHERE sql_data_types_container.created_at > :created_at_1
+  WHERE sql_data_types_container.created_at > $1::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-no-join-rewrite-async-psycopg_async_engine]
@@ -46,7 +46,7 @@
          sql_data_types_container.id AS id_1
   FROM sql_data_types_container AS sql_data_types_container
   LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  WHERE sql_data_types_container.created_at > :created_at_1
+  WHERE sql_data_types_container.created_at > %(created_at_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-no-join-rewrite-sync-psycopg_engine]
@@ -56,6 +56,6 @@
          sql_data_types_container.id AS id_1
   FROM sql_data_types_container AS sql_data_types_container
   LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  WHERE sql_data_types_container.created_at > :created_at_1
+  WHERE sql_data_types_container.created_at > %(created_at_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---

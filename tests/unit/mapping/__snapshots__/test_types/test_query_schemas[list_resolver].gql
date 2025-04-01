@@ -1,0 +1,23 @@
+# serializer version: 1
+# name: test_query_schemas[list_resolver]
+  '''
+  """GraphQL type"""
+  type ColorType {
+    id: UUID!
+    name: String!
+  }
+  
+  """GraphQL type"""
+  type FruitType {
+    color: ColorType!
+    name: String!
+  }
+  
+  type Query {
+    """Fetch objects from the FruitType collection"""
+    fruit: [FruitType!]!
+  }
+  
+  scalar UUID
+  '''
+# ---

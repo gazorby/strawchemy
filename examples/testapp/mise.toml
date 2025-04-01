@@ -1,0 +1,2 @@
+[tasks.run]
+run = "uv run litestar --app testapp.app:create_app run --reload --reload-dir testapp"

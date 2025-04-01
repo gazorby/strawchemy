@@ -59,10 +59,14 @@ class QueryResult(Generic[ModelT]):
             the query.
     """
 
-    node_key: Callable[[QueryNode[Any, Any]], str]
+    node_key: Callable[[QueryNode[Any, Any]], str] = lambda key: str(key)
     nodes: Sequence[ModelT] = dataclasses.field(default_factory=list)
     node_computed_values: Sequence[dict[str, Any]] = dataclasses.field(default_factory=list)
     query_computed_values: defaultdict[str, Any] = dataclasses.field(default_factory=lambda: defaultdict(lambda: None))
+
+    def __post_init__(self) -> None:
+        if not self.node_computed_values:
+            self.node_computed_values = [{} for _ in range(len(self.nodes))]
 
     def __iter__(self) -> Generator[NodeResult[ModelT]]:
         for model, compiled_values in zip(self.nodes, self.node_computed_values, strict=True):

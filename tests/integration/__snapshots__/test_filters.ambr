@@ -5,8 +5,8 @@
          sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col > :int_col_1
-    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  WHERE sql_data_types.int_col > $1::INTEGER
+    AND (sql_data_types.str_col LIKE '%' || $2::VARCHAR || '%' ESCAPE '/')
   '''
 # ---
 # name: test_and[session-tracked-async-psycopg_async_engine]
@@ -15,8 +15,8 @@
          sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col > :int_col_1
-    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  WHERE sql_data_types.int_col > %(int_col_1)s::INTEGER
+    AND (sql_data_types.str_col LIKE '%%' || %(str_col_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
 # name: test_and[session-tracked-sync-psycopg_engine]
@@ -25,8 +25,8 @@
          sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col > :int_col_1
-    AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  WHERE sql_data_types.int_col > %(int_col_1)s::INTEGER
+    AND (sql_data_types.str_col LIKE '%%' || %(str_col_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
 # name: test_complex_logical_operators[session-tracked-async-asyncpg_engine]
@@ -35,10 +35,10 @@
          sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.int_col > :int_col_1
-         AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/'))
-    OR (sql_data_types.int_col < :int_col_2
-        AND NOT (sql_data_types.str_col = :str_col_2
+  WHERE (sql_data_types.int_col > $1::INTEGER
+         AND (sql_data_types.str_col LIKE '%' || $2::VARCHAR || '%' ESCAPE '/'))
+    OR (sql_data_types.int_col < $3::INTEGER
+        AND NOT (sql_data_types.str_col = $4::VARCHAR
                  AND sql_data_types.str_col IS NOT NULL))
   '''
 # ---
@@ -48,10 +48,10 @@
          sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.int_col > :int_col_1
-         AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/'))
-    OR (sql_data_types.int_col < :int_col_2
-        AND NOT (sql_data_types.str_col = :str_col_2
+  WHERE (sql_data_types.int_col > %(int_col_1)s::INTEGER
+         AND (sql_data_types.str_col LIKE '%%' || %(str_col_1)s::VARCHAR || '%%' ESCAPE '/'))
+    OR (sql_data_types.int_col < %(int_col_2)s::INTEGER
+        AND NOT (sql_data_types.str_col = %(str_col_2)s::VARCHAR
                  AND sql_data_types.str_col IS NOT NULL))
   '''
 # ---
@@ -61,10 +61,10 @@
          sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.int_col > :int_col_1
-         AND (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/'))
-    OR (sql_data_types.int_col < :int_col_2
-        AND NOT (sql_data_types.str_col = :str_col_2
+  WHERE (sql_data_types.int_col > %(int_col_1)s::INTEGER
+         AND (sql_data_types.str_col LIKE '%%' || %(str_col_1)s::VARCHAR || '%%' ESCAPE '/'))
+    OR (sql_data_types.int_col < %(int_col_2)s::INTEGER
+        AND NOT (sql_data_types.str_col = %(str_col_2)s::VARCHAR
                  AND sql_data_types.str_col IS NOT NULL))
   '''
 # ---
@@ -74,7 +74,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DAY
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = $1::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-day-async-psycopg_async_engine]
@@ -83,7 +83,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DAY
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-day-sync-psycopg_engine]
@@ -92,7 +92,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DAY
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-isoWeekDay-async-asyncpg_engine]
@@ -101,7 +101,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISODOW
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = $1::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-isoWeekDay-async-psycopg_async_engine]
@@ -110,7 +110,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISODOW
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-isoWeekDay-sync-psycopg_engine]
@@ -119,7 +119,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISODOW
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-isoYear-async-asyncpg_engine]
@@ -128,7 +128,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISOYEAR
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = $1::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-isoYear-async-psycopg_async_engine]
@@ -137,7 +137,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISOYEAR
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-isoYear-sync-psycopg_engine]
@@ -146,7 +146,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISOYEAR
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-month-async-asyncpg_engine]
@@ -155,7 +155,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MONTH
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = $1::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-month-async-psycopg_async_engine]
@@ -164,7 +164,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MONTH
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-month-sync-psycopg_engine]
@@ -173,7 +173,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MONTH
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-quarter-async-asyncpg_engine]
@@ -182,7 +182,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(QUARTER
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = $1::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-quarter-async-psycopg_async_engine]
@@ -191,7 +191,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(QUARTER
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-quarter-sync-psycopg_engine]
@@ -200,7 +200,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(QUARTER
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-week-async-asyncpg_engine]
@@ -209,7 +209,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(WEEK
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = $1::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-week-async-psycopg_async_engine]
@@ -218,7 +218,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(WEEK
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-week-sync-psycopg_engine]
@@ -227,7 +227,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(WEEK
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-weekDay-async-asyncpg_engine]
@@ -236,7 +236,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DOW
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = $1::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-weekDay-async-psycopg_async_engine]
@@ -245,7 +245,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DOW
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-weekDay-sync-psycopg_engine]
@@ -254,7 +254,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DOW
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-year-async-asyncpg_engine]
@@ -263,7 +263,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(YEAR
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = $1::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-year-async-psycopg_async_engine]
@@ -272,7 +272,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(YEAR
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_date_components[session-tracked-year-sync-psycopg_engine]
@@ -281,7 +281,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(YEAR
-                FROM sql_data_types.date_col) = :param_1
+                FROM sql_data_types.date_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-day-async-asyncpg_engine]
@@ -290,7 +290,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DAY
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-day-async-psycopg_async_engine]
@@ -299,7 +299,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DAY
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-day-sync-psycopg_engine]
@@ -308,7 +308,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DAY
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-hour-async-asyncpg_engine]
@@ -317,7 +317,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(HOUR
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-hour-async-psycopg_async_engine]
@@ -326,7 +326,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(HOUR
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-hour-sync-psycopg_engine]
@@ -335,7 +335,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(HOUR
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-isoWeekDay-async-asyncpg_engine]
@@ -344,7 +344,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISODOW
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-isoWeekDay-async-psycopg_async_engine]
@@ -353,7 +353,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISODOW
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-isoWeekDay-sync-psycopg_engine]
@@ -362,7 +362,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISODOW
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-isoYear-async-asyncpg_engine]
@@ -371,7 +371,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISOYEAR
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-isoYear-async-psycopg_async_engine]
@@ -380,7 +380,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISOYEAR
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-isoYear-sync-psycopg_engine]
@@ -389,7 +389,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(ISOYEAR
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-minute-async-asyncpg_engine]
@@ -398,7 +398,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MINUTE
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-minute-async-psycopg_async_engine]
@@ -407,7 +407,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MINUTE
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-minute-sync-psycopg_engine]
@@ -416,7 +416,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MINUTE
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-month-async-asyncpg_engine]
@@ -425,7 +425,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MONTH
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-month-async-psycopg_async_engine]
@@ -434,7 +434,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MONTH
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-month-sync-psycopg_engine]
@@ -443,7 +443,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MONTH
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-quarter-async-asyncpg_engine]
@@ -452,7 +452,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(QUARTER
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-quarter-async-psycopg_async_engine]
@@ -461,7 +461,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(QUARTER
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-quarter-sync-psycopg_engine]
@@ -470,7 +470,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(QUARTER
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-second-async-asyncpg_engine]
@@ -479,7 +479,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(SECOND
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-second-async-psycopg_async_engine]
@@ -488,7 +488,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(SECOND
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-second-sync-psycopg_engine]
@@ -497,7 +497,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(SECOND
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-week-async-asyncpg_engine]
@@ -506,7 +506,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(WEEK
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-week-async-psycopg_async_engine]
@@ -515,7 +515,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(WEEK
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-week-sync-psycopg_engine]
@@ -524,7 +524,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(WEEK
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-weekDay-async-asyncpg_engine]
@@ -533,7 +533,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DOW
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-weekDay-async-psycopg_async_engine]
@@ -542,7 +542,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DOW
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-weekDay-sync-psycopg_engine]
@@ -551,7 +551,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(DOW
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-year-async-asyncpg_engine]
@@ -560,7 +560,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(YEAR
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = $1::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-year-async-psycopg_async_engine]
@@ -569,7 +569,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(YEAR
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_datetime_components[session-tracked-year-sync-psycopg_engine]
@@ -578,7 +578,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(YEAR
-                FROM sql_data_types.datetime_col) = :param_1
+                FROM sql_data_types.datetime_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_eq[session-tracked-bool-async-asyncpg_engine]
@@ -610,7 +610,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col = :date_col_1
+  WHERE sql_data_types.date_col = $1::DATE
   '''
 # ---
 # name: test_eq[session-tracked-date-async-psycopg_async_engine]
@@ -618,7 +618,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col = :date_col_1
+  WHERE sql_data_types.date_col = %(date_col_1)s::DATE
   '''
 # ---
 # name: test_eq[session-tracked-date-sync-psycopg_engine]
@@ -626,7 +626,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col = :date_col_1
+  WHERE sql_data_types.date_col = %(date_col_1)s::DATE
   '''
 # ---
 # name: test_eq[session-tracked-datetime-async-asyncpg_engine]
@@ -634,7 +634,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col = :datetime_col_1
+  WHERE sql_data_types.datetime_col = $1::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_eq[session-tracked-datetime-async-psycopg_async_engine]
@@ -642,7 +642,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col = :datetime_col_1
+  WHERE sql_data_types.datetime_col = %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_eq[session-tracked-datetime-sync-psycopg_engine]
@@ -650,7 +650,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col = :datetime_col_1
+  WHERE sql_data_types.datetime_col = %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_eq[session-tracked-decimal-async-asyncpg_engine]
@@ -658,7 +658,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col = :decimal_col_1
+  WHERE sql_data_types.decimal_col = $1::NUMERIC
   '''
 # ---
 # name: test_eq[session-tracked-decimal-async-psycopg_async_engine]
@@ -666,7 +666,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col = :decimal_col_1
+  WHERE sql_data_types.decimal_col = %(decimal_col_1)s
   '''
 # ---
 # name: test_eq[session-tracked-decimal-sync-psycopg_engine]
@@ -674,7 +674,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col = :decimal_col_1
+  WHERE sql_data_types.decimal_col = %(decimal_col_1)s
   '''
 # ---
 # name: test_eq[session-tracked-dict-async-asyncpg_engine]
@@ -682,7 +682,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col = :dict_col_1
+  WHERE sql_data_types.dict_col = $1::JSONB
   '''
 # ---
 # name: test_eq[session-tracked-dict-async-psycopg_async_engine]
@@ -690,7 +690,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col = :dict_col_1
+  WHERE sql_data_types.dict_col = %(dict_col_1)s::JSONB
   '''
 # ---
 # name: test_eq[session-tracked-dict-sync-psycopg_engine]
@@ -698,7 +698,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col = :dict_col_1
+  WHERE sql_data_types.dict_col = %(dict_col_1)s::JSONB
   '''
 # ---
 # name: test_eq[session-tracked-float-async-asyncpg_engine]
@@ -706,7 +706,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col = :float_col_1
+  WHERE sql_data_types.float_col = $1::FLOAT
   '''
 # ---
 # name: test_eq[session-tracked-float-async-psycopg_async_engine]
@@ -714,7 +714,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col = :float_col_1
+  WHERE sql_data_types.float_col = %(float_col_1)s
   '''
 # ---
 # name: test_eq[session-tracked-float-sync-psycopg_engine]
@@ -722,7 +722,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col = :float_col_1
+  WHERE sql_data_types.float_col = %(float_col_1)s
   '''
 # ---
 # name: test_eq[session-tracked-int-async-asyncpg_engine]
@@ -730,7 +730,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col = :int_col_1
+  WHERE sql_data_types.int_col = $1::INTEGER
   '''
 # ---
 # name: test_eq[session-tracked-int-async-psycopg_async_engine]
@@ -738,7 +738,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col = :int_col_1
+  WHERE sql_data_types.int_col = %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_eq[session-tracked-int-sync-psycopg_engine]
@@ -746,7 +746,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col = :int_col_1
+  WHERE sql_data_types.int_col = %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_eq[session-tracked-str-async-asyncpg_engine]
@@ -754,7 +754,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col = :str_col_1
+  WHERE sql_data_types.str_col = $1::VARCHAR
   '''
 # ---
 # name: test_eq[session-tracked-str-async-psycopg_async_engine]
@@ -762,7 +762,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col = :str_col_1
+  WHERE sql_data_types.str_col = %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_eq[session-tracked-str-sync-psycopg_engine]
@@ -770,7 +770,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col = :str_col_1
+  WHERE sql_data_types.str_col = %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_eq[session-tracked-time-async-asyncpg_engine]
@@ -778,7 +778,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col = :time_col_1
+  WHERE sql_data_types.time_col = $1::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_eq[session-tracked-time-async-psycopg_async_engine]
@@ -786,7 +786,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col = :time_col_1
+  WHERE sql_data_types.time_col = %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_eq[session-tracked-time-sync-psycopg_engine]
@@ -794,7 +794,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col = :time_col_1
+  WHERE sql_data_types.time_col = %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_eq[session-tracked-timedelta-async-asyncpg_engine]
@@ -802,7 +802,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col = :time_delta_col_1
+  WHERE sql_data_types.time_delta_col = $1::INTERVAL
   '''
 # ---
 # name: test_eq[session-tracked-timedelta-async-psycopg_async_engine]
@@ -810,7 +810,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col = :time_delta_col_1
+  WHERE sql_data_types.time_delta_col = %(time_delta_col_1)s
   '''
 # ---
 # name: test_eq[session-tracked-timedelta-sync-psycopg_engine]
@@ -818,7 +818,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col = :time_delta_col_1
+  WHERE sql_data_types.time_delta_col = %(time_delta_col_1)s
   '''
 # ---
 # name: test_filter_on_paginated_query[session-tracked-async-asyncpg_engine]
@@ -829,11 +829,11 @@
     (SELECT sql_data_types.id AS id,
             sql_data_types.int_col AS int_col
      FROM sql_data_types AS sql_data_types
-     WHERE NOT (sql_data_types.int_col = :int_col_1
+     WHERE NOT (sql_data_types.int_col = $1::INTEGER
                 AND sql_data_types.int_col IS NOT NULL)
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT $2::INTEGER
+     OFFSET $3::INTEGER) AS sql_data_types
+  LIMIT $4::INTEGER
   '''
 # ---
 # name: test_filter_on_paginated_query[session-tracked-async-psycopg_async_engine]
@@ -844,11 +844,11 @@
     (SELECT sql_data_types.id AS id,
             sql_data_types.int_col AS int_col
      FROM sql_data_types AS sql_data_types
-     WHERE NOT (sql_data_types.int_col = :int_col_1
+     WHERE NOT (sql_data_types.int_col = %(int_col_1)s::INTEGER
                 AND sql_data_types.int_col IS NOT NULL)
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_filter_on_paginated_query[session-tracked-sync-psycopg_engine]
@@ -859,11 +859,11 @@
     (SELECT sql_data_types.id AS id,
             sql_data_types.int_col AS int_col
      FROM sql_data_types AS sql_data_types
-     WHERE NOT (sql_data_types.int_col = :int_col_1
+     WHERE NOT (sql_data_types.int_col = %(int_col_1)s::INTEGER
                 AND sql_data_types.int_col IS NOT NULL)
-     LIMIT :param_1
-     OFFSET :param_2) AS sql_data_types
-  LIMIT :param_3
+     LIMIT %(param_1)s::INTEGER
+     OFFSET %(param_2)s::INTEGER) AS sql_data_types
+  LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_gt[session-tracked-date-gt-async-asyncpg_engine]
@@ -871,7 +871,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col > :date_col_1
+  WHERE sql_data_types.date_col > $1::DATE
   '''
 # ---
 # name: test_gt[session-tracked-date-gt-async-psycopg_async_engine]
@@ -879,7 +879,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col > :date_col_1
+  WHERE sql_data_types.date_col > %(date_col_1)s::DATE
   '''
 # ---
 # name: test_gt[session-tracked-date-gt-sync-psycopg_engine]
@@ -887,7 +887,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col > :date_col_1
+  WHERE sql_data_types.date_col > %(date_col_1)s::DATE
   '''
 # ---
 # name: test_gt[session-tracked-datetime-gt-async-asyncpg_engine]
@@ -895,7 +895,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col > :datetime_col_1
+  WHERE sql_data_types.datetime_col > $1::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_gt[session-tracked-datetime-gt-async-psycopg_async_engine]
@@ -903,7 +903,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col > :datetime_col_1
+  WHERE sql_data_types.datetime_col > %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_gt[session-tracked-datetime-gt-sync-psycopg_engine]
@@ -911,7 +911,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col > :datetime_col_1
+  WHERE sql_data_types.datetime_col > %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_gt[session-tracked-decimal-gt-async-asyncpg_engine]
@@ -919,7 +919,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col > :decimal_col_1
+  WHERE sql_data_types.decimal_col > $1::NUMERIC
   '''
 # ---
 # name: test_gt[session-tracked-decimal-gt-async-psycopg_async_engine]
@@ -927,7 +927,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col > :decimal_col_1
+  WHERE sql_data_types.decimal_col > %(decimal_col_1)s
   '''
 # ---
 # name: test_gt[session-tracked-decimal-gt-sync-psycopg_engine]
@@ -935,7 +935,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col > :decimal_col_1
+  WHERE sql_data_types.decimal_col > %(decimal_col_1)s
   '''
 # ---
 # name: test_gt[session-tracked-float-gt-async-asyncpg_engine]
@@ -943,7 +943,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col > :float_col_1
+  WHERE sql_data_types.float_col > $1::FLOAT
   '''
 # ---
 # name: test_gt[session-tracked-float-gt-async-psycopg_async_engine]
@@ -951,7 +951,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col > :float_col_1
+  WHERE sql_data_types.float_col > %(float_col_1)s
   '''
 # ---
 # name: test_gt[session-tracked-float-gt-sync-psycopg_engine]
@@ -959,7 +959,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col > :float_col_1
+  WHERE sql_data_types.float_col > %(float_col_1)s
   '''
 # ---
 # name: test_gt[session-tracked-int-gt-async-asyncpg_engine]
@@ -967,7 +967,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col > :int_col_1
+  WHERE sql_data_types.int_col > $1::INTEGER
   '''
 # ---
 # name: test_gt[session-tracked-int-gt-async-psycopg_async_engine]
@@ -975,7 +975,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col > :int_col_1
+  WHERE sql_data_types.int_col > %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_gt[session-tracked-int-gt-sync-psycopg_engine]
@@ -983,7 +983,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col > :int_col_1
+  WHERE sql_data_types.int_col > %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_gt[session-tracked-str-gt-async-asyncpg_engine]
@@ -991,7 +991,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col > :str_col_1
+  WHERE sql_data_types.str_col > $1::VARCHAR
   '''
 # ---
 # name: test_gt[session-tracked-str-gt-async-psycopg_async_engine]
@@ -999,7 +999,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col > :str_col_1
+  WHERE sql_data_types.str_col > %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_gt[session-tracked-str-gt-sync-psycopg_engine]
@@ -1007,7 +1007,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col > :str_col_1
+  WHERE sql_data_types.str_col > %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_gt[session-tracked-time-gt-async-asyncpg_engine]
@@ -1015,7 +1015,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col > :time_col_1
+  WHERE sql_data_types.time_col > $1::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_gt[session-tracked-time-gt-async-psycopg_async_engine]
@@ -1023,7 +1023,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col > :time_col_1
+  WHERE sql_data_types.time_col > %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_gt[session-tracked-time-gt-sync-psycopg_engine]
@@ -1031,7 +1031,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col > :time_col_1
+  WHERE sql_data_types.time_col > %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_gt[session-tracked-timedelta-gt-async-asyncpg_engine]
@@ -1039,7 +1039,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col > :time_delta_col_1
+  WHERE sql_data_types.time_delta_col > $1::INTERVAL
   '''
 # ---
 # name: test_gt[session-tracked-timedelta-gt-async-psycopg_async_engine]
@@ -1047,7 +1047,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col > :time_delta_col_1
+  WHERE sql_data_types.time_delta_col > %(time_delta_col_1)s
   '''
 # ---
 # name: test_gt[session-tracked-timedelta-gt-sync-psycopg_engine]
@@ -1055,7 +1055,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col > :time_delta_col_1
+  WHERE sql_data_types.time_delta_col > %(time_delta_col_1)s
   '''
 # ---
 # name: test_gte[session-tracked-date-gte-async-asyncpg_engine]
@@ -1063,7 +1063,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col >= :date_col_1
+  WHERE sql_data_types.date_col >= $1::DATE
   '''
 # ---
 # name: test_gte[session-tracked-date-gte-async-psycopg_async_engine]
@@ -1071,7 +1071,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col >= :date_col_1
+  WHERE sql_data_types.date_col >= %(date_col_1)s::DATE
   '''
 # ---
 # name: test_gte[session-tracked-date-gte-sync-psycopg_engine]
@@ -1079,7 +1079,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col >= :date_col_1
+  WHERE sql_data_types.date_col >= %(date_col_1)s::DATE
   '''
 # ---
 # name: test_gte[session-tracked-datetime-gte-async-asyncpg_engine]
@@ -1087,7 +1087,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col >= :datetime_col_1
+  WHERE sql_data_types.datetime_col >= $1::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_gte[session-tracked-datetime-gte-async-psycopg_async_engine]
@@ -1095,7 +1095,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col >= :datetime_col_1
+  WHERE sql_data_types.datetime_col >= %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_gte[session-tracked-datetime-gte-sync-psycopg_engine]
@@ -1103,7 +1103,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col >= :datetime_col_1
+  WHERE sql_data_types.datetime_col >= %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_gte[session-tracked-decimal-gte-async-asyncpg_engine]
@@ -1111,7 +1111,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col >= :decimal_col_1
+  WHERE sql_data_types.decimal_col >= $1::NUMERIC
   '''
 # ---
 # name: test_gte[session-tracked-decimal-gte-async-psycopg_async_engine]
@@ -1119,7 +1119,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col >= :decimal_col_1
+  WHERE sql_data_types.decimal_col >= %(decimal_col_1)s
   '''
 # ---
 # name: test_gte[session-tracked-decimal-gte-sync-psycopg_engine]
@@ -1127,7 +1127,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col >= :decimal_col_1
+  WHERE sql_data_types.decimal_col >= %(decimal_col_1)s
   '''
 # ---
 # name: test_gte[session-tracked-float-gte-async-asyncpg_engine]
@@ -1135,7 +1135,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col >= :float_col_1
+  WHERE sql_data_types.float_col >= $1::FLOAT
   '''
 # ---
 # name: test_gte[session-tracked-float-gte-async-psycopg_async_engine]
@@ -1143,7 +1143,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col >= :float_col_1
+  WHERE sql_data_types.float_col >= %(float_col_1)s
   '''
 # ---
 # name: test_gte[session-tracked-float-gte-sync-psycopg_engine]
@@ -1151,7 +1151,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col >= :float_col_1
+  WHERE sql_data_types.float_col >= %(float_col_1)s
   '''
 # ---
 # name: test_gte[session-tracked-int-gte-async-asyncpg_engine]
@@ -1159,7 +1159,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col >= :int_col_1
+  WHERE sql_data_types.int_col >= $1::INTEGER
   '''
 # ---
 # name: test_gte[session-tracked-int-gte-async-psycopg_async_engine]
@@ -1167,7 +1167,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col >= :int_col_1
+  WHERE sql_data_types.int_col >= %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_gte[session-tracked-int-gte-sync-psycopg_engine]
@@ -1175,7 +1175,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col >= :int_col_1
+  WHERE sql_data_types.int_col >= %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_gte[session-tracked-str-gte-async-asyncpg_engine]
@@ -1183,7 +1183,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col >= :str_col_1
+  WHERE sql_data_types.str_col >= $1::VARCHAR
   '''
 # ---
 # name: test_gte[session-tracked-str-gte-async-psycopg_async_engine]
@@ -1191,7 +1191,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col >= :str_col_1
+  WHERE sql_data_types.str_col >= %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_gte[session-tracked-str-gte-sync-psycopg_engine]
@@ -1199,7 +1199,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col >= :str_col_1
+  WHERE sql_data_types.str_col >= %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_gte[session-tracked-time-gte-async-asyncpg_engine]
@@ -1207,7 +1207,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col >= :time_col_1
+  WHERE sql_data_types.time_col >= $1::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_gte[session-tracked-time-gte-async-psycopg_async_engine]
@@ -1215,7 +1215,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col >= :time_col_1
+  WHERE sql_data_types.time_col >= %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_gte[session-tracked-time-gte-sync-psycopg_engine]
@@ -1223,7 +1223,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col >= :time_col_1
+  WHERE sql_data_types.time_col >= %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_gte[session-tracked-timedelta-gte-async-asyncpg_engine]
@@ -1231,7 +1231,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col >= :time_delta_col_1
+  WHERE sql_data_types.time_delta_col >= $1::INTERVAL
   '''
 # ---
 # name: test_gte[session-tracked-timedelta-gte-async-psycopg_async_engine]
@@ -1239,7 +1239,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col >= :time_delta_col_1
+  WHERE sql_data_types.time_delta_col >= %(time_delta_col_1)s
   '''
 # ---
 # name: test_gte[session-tracked-timedelta-gte-sync-psycopg_engine]
@@ -1247,7 +1247,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col >= :time_delta_col_1
+  WHERE sql_data_types.time_delta_col >= %(time_delta_col_1)s
   '''
 # ---
 # name: test_in[session-tracked-bool-async-asyncpg_engine]
@@ -1495,7 +1495,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col <@ :dict_col_1
+  WHERE sql_data_types.dict_col <@ $1::JSONB
   '''
 # ---
 # name: test_json_filters[session-tracked-containedIn-async-psycopg_async_engine]
@@ -1503,7 +1503,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col <@ :dict_col_1
+  WHERE sql_data_types.dict_col <@ %(dict_col_1)s::JSONB
   '''
 # ---
 # name: test_json_filters[session-tracked-containedIn-sync-psycopg_engine]
@@ -1511,7 +1511,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col <@ :dict_col_1
+  WHERE sql_data_types.dict_col <@ %(dict_col_1)s::JSONB
   '''
 # ---
 # name: test_json_filters[session-tracked-contains-async-asyncpg_engine]
@@ -1519,7 +1519,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col @> :dict_col_1
+  WHERE sql_data_types.dict_col @> $1::JSONB
   '''
 # ---
 # name: test_json_filters[session-tracked-contains-async-psycopg_async_engine]
@@ -1527,7 +1527,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col @> :dict_col_1
+  WHERE sql_data_types.dict_col @> %(dict_col_1)s::JSONB
   '''
 # ---
 # name: test_json_filters[session-tracked-contains-sync-psycopg_engine]
@@ -1535,7 +1535,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col @> :dict_col_1
+  WHERE sql_data_types.dict_col @> %(dict_col_1)s::JSONB
   '''
 # ---
 # name: test_json_filters[session-tracked-hasKey-async-asyncpg_engine]
@@ -1543,7 +1543,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col ? :dict_col_1
+  WHERE sql_data_types.dict_col ? $1::VARCHAR
   '''
 # ---
 # name: test_json_filters[session-tracked-hasKey-async-psycopg_async_engine]
@@ -1551,7 +1551,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col ? :dict_col_1
+  WHERE sql_data_types.dict_col ? %(dict_col_1)s::VARCHAR
   '''
 # ---
 # name: test_json_filters[session-tracked-hasKey-sync-psycopg_engine]
@@ -1559,7 +1559,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col ? :dict_col_1
+  WHERE sql_data_types.dict_col ? %(dict_col_1)s::VARCHAR
   '''
 # ---
 # name: test_json_filters[session-tracked-hasKeyAll-async-asyncpg_engine]
@@ -1567,7 +1567,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col ? & CAST(:param_1 AS ARRAY)
+  WHERE sql_data_types.dict_col ? & CAST($1::TEXT[] AS TEXT[])
   '''
 # ---
 # name: test_json_filters[session-tracked-hasKeyAll-async-psycopg_async_engine]
@@ -1575,7 +1575,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col ? & CAST(:param_1 AS ARRAY)
+  WHERE sql_data_types.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
   '''
 # ---
 # name: test_json_filters[session-tracked-hasKeyAll-sync-psycopg_engine]
@@ -1583,7 +1583,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col ? & CAST(:param_1 AS ARRAY)
+  WHERE sql_data_types.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
   '''
 # ---
 # name: test_json_filters[session-tracked-hasKeyAny-async-asyncpg_engine]
@@ -1591,7 +1591,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col ? | CAST(:param_1 AS ARRAY)
+  WHERE sql_data_types.dict_col ? | CAST($1::TEXT[] AS TEXT[])
   '''
 # ---
 # name: test_json_filters[session-tracked-hasKeyAny-async-psycopg_async_engine]
@@ -1599,7 +1599,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col ? | CAST(:param_1 AS ARRAY)
+  WHERE sql_data_types.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
   '''
 # ---
 # name: test_json_filters[session-tracked-hasKeyAny-sync-psycopg_engine]
@@ -1607,7 +1607,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col ? | CAST(:param_1 AS ARRAY)
+  WHERE sql_data_types.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
   '''
 # ---
 # name: test_lt[session-tracked-date-lt-async-asyncpg_engine]
@@ -1615,7 +1615,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col < :date_col_1
+  WHERE sql_data_types.date_col < $1::DATE
   '''
 # ---
 # name: test_lt[session-tracked-date-lt-async-psycopg_async_engine]
@@ -1623,7 +1623,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col < :date_col_1
+  WHERE sql_data_types.date_col < %(date_col_1)s::DATE
   '''
 # ---
 # name: test_lt[session-tracked-date-lt-sync-psycopg_engine]
@@ -1631,7 +1631,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col < :date_col_1
+  WHERE sql_data_types.date_col < %(date_col_1)s::DATE
   '''
 # ---
 # name: test_lt[session-tracked-datetime-lt-async-asyncpg_engine]
@@ -1639,7 +1639,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col < :datetime_col_1
+  WHERE sql_data_types.datetime_col < $1::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_lt[session-tracked-datetime-lt-async-psycopg_async_engine]
@@ -1647,7 +1647,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col < :datetime_col_1
+  WHERE sql_data_types.datetime_col < %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_lt[session-tracked-datetime-lt-sync-psycopg_engine]
@@ -1655,7 +1655,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col < :datetime_col_1
+  WHERE sql_data_types.datetime_col < %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_lt[session-tracked-decimal-lt-async-asyncpg_engine]
@@ -1663,7 +1663,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col < :decimal_col_1
+  WHERE sql_data_types.decimal_col < $1::NUMERIC
   '''
 # ---
 # name: test_lt[session-tracked-decimal-lt-async-psycopg_async_engine]
@@ -1671,7 +1671,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col < :decimal_col_1
+  WHERE sql_data_types.decimal_col < %(decimal_col_1)s
   '''
 # ---
 # name: test_lt[session-tracked-decimal-lt-sync-psycopg_engine]
@@ -1679,7 +1679,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col < :decimal_col_1
+  WHERE sql_data_types.decimal_col < %(decimal_col_1)s
   '''
 # ---
 # name: test_lt[session-tracked-float-lt-async-asyncpg_engine]
@@ -1687,7 +1687,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col < :float_col_1
+  WHERE sql_data_types.float_col < $1::FLOAT
   '''
 # ---
 # name: test_lt[session-tracked-float-lt-async-psycopg_async_engine]
@@ -1695,7 +1695,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col < :float_col_1
+  WHERE sql_data_types.float_col < %(float_col_1)s
   '''
 # ---
 # name: test_lt[session-tracked-float-lt-sync-psycopg_engine]
@@ -1703,7 +1703,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col < :float_col_1
+  WHERE sql_data_types.float_col < %(float_col_1)s
   '''
 # ---
 # name: test_lt[session-tracked-int-lt-async-asyncpg_engine]
@@ -1711,7 +1711,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col < :int_col_1
+  WHERE sql_data_types.int_col < $1::INTEGER
   '''
 # ---
 # name: test_lt[session-tracked-int-lt-async-psycopg_async_engine]
@@ -1719,7 +1719,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col < :int_col_1
+  WHERE sql_data_types.int_col < %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_lt[session-tracked-int-lt-sync-psycopg_engine]
@@ -1727,7 +1727,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col < :int_col_1
+  WHERE sql_data_types.int_col < %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_lt[session-tracked-str-lt-async-asyncpg_engine]
@@ -1735,7 +1735,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < :str_col_1
+  WHERE sql_data_types.str_col < $1::VARCHAR
   '''
 # ---
 # name: test_lt[session-tracked-str-lt-async-psycopg_async_engine]
@@ -1743,7 +1743,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < :str_col_1
+  WHERE sql_data_types.str_col < %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_lt[session-tracked-str-lt-sync-psycopg_engine]
@@ -1751,7 +1751,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < :str_col_1
+  WHERE sql_data_types.str_col < %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_lt[session-tracked-time-lt-async-asyncpg_engine]
@@ -1759,7 +1759,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col < :time_col_1
+  WHERE sql_data_types.time_col < $1::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_lt[session-tracked-time-lt-async-psycopg_async_engine]
@@ -1767,7 +1767,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col < :time_col_1
+  WHERE sql_data_types.time_col < %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_lt[session-tracked-time-lt-sync-psycopg_engine]
@@ -1775,7 +1775,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col < :time_col_1
+  WHERE sql_data_types.time_col < %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_lt[session-tracked-timedelta-lt-async-asyncpg_engine]
@@ -1783,7 +1783,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col < :time_delta_col_1
+  WHERE sql_data_types.time_delta_col < $1::INTERVAL
   '''
 # ---
 # name: test_lt[session-tracked-timedelta-lt-async-psycopg_async_engine]
@@ -1791,7 +1791,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col < :time_delta_col_1
+  WHERE sql_data_types.time_delta_col < %(time_delta_col_1)s
   '''
 # ---
 # name: test_lt[session-tracked-timedelta-lt-sync-psycopg_engine]
@@ -1799,7 +1799,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col < :time_delta_col_1
+  WHERE sql_data_types.time_delta_col < %(time_delta_col_1)s
   '''
 # ---
 # name: test_lte[session-tracked-date-lte-async-asyncpg_engine]
@@ -1807,7 +1807,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col <= :date_col_1
+  WHERE sql_data_types.date_col <= $1::DATE
   '''
 # ---
 # name: test_lte[session-tracked-date-lte-async-psycopg_async_engine]
@@ -1815,7 +1815,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col <= :date_col_1
+  WHERE sql_data_types.date_col <= %(date_col_1)s::DATE
   '''
 # ---
 # name: test_lte[session-tracked-date-lte-sync-psycopg_engine]
@@ -1823,7 +1823,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col <= :date_col_1
+  WHERE sql_data_types.date_col <= %(date_col_1)s::DATE
   '''
 # ---
 # name: test_lte[session-tracked-datetime-lte-async-asyncpg_engine]
@@ -1831,7 +1831,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col <= :datetime_col_1
+  WHERE sql_data_types.datetime_col <= $1::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_lte[session-tracked-datetime-lte-async-psycopg_async_engine]
@@ -1839,7 +1839,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col <= :datetime_col_1
+  WHERE sql_data_types.datetime_col <= %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_lte[session-tracked-datetime-lte-sync-psycopg_engine]
@@ -1847,7 +1847,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col <= :datetime_col_1
+  WHERE sql_data_types.datetime_col <= %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_lte[session-tracked-decimal-lte-async-asyncpg_engine]
@@ -1855,7 +1855,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col <= :decimal_col_1
+  WHERE sql_data_types.decimal_col <= $1::NUMERIC
   '''
 # ---
 # name: test_lte[session-tracked-decimal-lte-async-psycopg_async_engine]
@@ -1863,7 +1863,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col <= :decimal_col_1
+  WHERE sql_data_types.decimal_col <= %(decimal_col_1)s
   '''
 # ---
 # name: test_lte[session-tracked-decimal-lte-sync-psycopg_engine]
@@ -1871,7 +1871,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col <= :decimal_col_1
+  WHERE sql_data_types.decimal_col <= %(decimal_col_1)s
   '''
 # ---
 # name: test_lte[session-tracked-float-lte-async-asyncpg_engine]
@@ -1879,7 +1879,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col <= :float_col_1
+  WHERE sql_data_types.float_col <= $1::FLOAT
   '''
 # ---
 # name: test_lte[session-tracked-float-lte-async-psycopg_async_engine]
@@ -1887,7 +1887,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col <= :float_col_1
+  WHERE sql_data_types.float_col <= %(float_col_1)s
   '''
 # ---
 # name: test_lte[session-tracked-float-lte-sync-psycopg_engine]
@@ -1895,7 +1895,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col <= :float_col_1
+  WHERE sql_data_types.float_col <= %(float_col_1)s
   '''
 # ---
 # name: test_lte[session-tracked-int-lte-async-asyncpg_engine]
@@ -1903,7 +1903,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col <= :int_col_1
+  WHERE sql_data_types.int_col <= $1::INTEGER
   '''
 # ---
 # name: test_lte[session-tracked-int-lte-async-psycopg_async_engine]
@@ -1911,7 +1911,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col <= :int_col_1
+  WHERE sql_data_types.int_col <= %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_lte[session-tracked-int-lte-sync-psycopg_engine]
@@ -1919,7 +1919,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col <= :int_col_1
+  WHERE sql_data_types.int_col <= %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_lte[session-tracked-str-lte-async-asyncpg_engine]
@@ -1927,7 +1927,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col <= :str_col_1
+  WHERE sql_data_types.str_col <= $1::VARCHAR
   '''
 # ---
 # name: test_lte[session-tracked-str-lte-async-psycopg_async_engine]
@@ -1935,7 +1935,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col <= :str_col_1
+  WHERE sql_data_types.str_col <= %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_lte[session-tracked-str-lte-sync-psycopg_engine]
@@ -1943,7 +1943,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col <= :str_col_1
+  WHERE sql_data_types.str_col <= %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_lte[session-tracked-time-lte-async-asyncpg_engine]
@@ -1951,7 +1951,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col <= :time_col_1
+  WHERE sql_data_types.time_col <= $1::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_lte[session-tracked-time-lte-async-psycopg_async_engine]
@@ -1959,7 +1959,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col <= :time_col_1
+  WHERE sql_data_types.time_col <= %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_lte[session-tracked-time-lte-sync-psycopg_engine]
@@ -1967,7 +1967,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col <= :time_col_1
+  WHERE sql_data_types.time_col <= %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_lte[session-tracked-timedelta-lte-async-asyncpg_engine]
@@ -1975,7 +1975,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col <= :time_delta_col_1
+  WHERE sql_data_types.time_delta_col <= $1::INTERVAL
   '''
 # ---
 # name: test_lte[session-tracked-timedelta-lte-async-psycopg_async_engine]
@@ -1983,7 +1983,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col <= :time_delta_col_1
+  WHERE sql_data_types.time_delta_col <= %(time_delta_col_1)s
   '''
 # ---
 # name: test_lte[session-tracked-timedelta-lte-sync-psycopg_engine]
@@ -1991,7 +1991,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col <= :time_delta_col_1
+  WHERE sql_data_types.time_delta_col <= %(time_delta_col_1)s
   '''
 # ---
 # name: test_neq[session-tracked-bool-async-asyncpg_engine]
@@ -2023,7 +2023,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col != :date_col_1
+  WHERE sql_data_types.date_col != $1::DATE
   '''
 # ---
 # name: test_neq[session-tracked-date-async-psycopg_async_engine]
@@ -2031,7 +2031,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col != :date_col_1
+  WHERE sql_data_types.date_col != %(date_col_1)s::DATE
   '''
 # ---
 # name: test_neq[session-tracked-date-sync-psycopg_engine]
@@ -2039,7 +2039,7 @@
   SELECT sql_data_types.date_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.date_col != :date_col_1
+  WHERE sql_data_types.date_col != %(date_col_1)s::DATE
   '''
 # ---
 # name: test_neq[session-tracked-datetime-async-asyncpg_engine]
@@ -2047,7 +2047,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col != :datetime_col_1
+  WHERE sql_data_types.datetime_col != $1::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_neq[session-tracked-datetime-async-psycopg_async_engine]
@@ -2055,7 +2055,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col != :datetime_col_1
+  WHERE sql_data_types.datetime_col != %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_neq[session-tracked-datetime-sync-psycopg_engine]
@@ -2063,7 +2063,7 @@
   SELECT sql_data_types.datetime_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.datetime_col != :datetime_col_1
+  WHERE sql_data_types.datetime_col != %(datetime_col_1)s::TIMESTAMP WITH TIME ZONE
   '''
 # ---
 # name: test_neq[session-tracked-decimal-async-asyncpg_engine]
@@ -2071,7 +2071,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col != :decimal_col_1
+  WHERE sql_data_types.decimal_col != $1::NUMERIC
   '''
 # ---
 # name: test_neq[session-tracked-decimal-async-psycopg_async_engine]
@@ -2079,7 +2079,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col != :decimal_col_1
+  WHERE sql_data_types.decimal_col != %(decimal_col_1)s
   '''
 # ---
 # name: test_neq[session-tracked-decimal-sync-psycopg_engine]
@@ -2087,7 +2087,7 @@
   SELECT sql_data_types.decimal_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.decimal_col != :decimal_col_1
+  WHERE sql_data_types.decimal_col != %(decimal_col_1)s
   '''
 # ---
 # name: test_neq[session-tracked-dict-async-asyncpg_engine]
@@ -2095,7 +2095,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col != :dict_col_1
+  WHERE sql_data_types.dict_col != $1::JSONB
   '''
 # ---
 # name: test_neq[session-tracked-dict-async-psycopg_async_engine]
@@ -2103,7 +2103,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col != :dict_col_1
+  WHERE sql_data_types.dict_col != %(dict_col_1)s::JSONB
   '''
 # ---
 # name: test_neq[session-tracked-dict-sync-psycopg_engine]
@@ -2111,7 +2111,7 @@
   SELECT sql_data_types.dict_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.dict_col != :dict_col_1
+  WHERE sql_data_types.dict_col != %(dict_col_1)s::JSONB
   '''
 # ---
 # name: test_neq[session-tracked-float-async-asyncpg_engine]
@@ -2119,7 +2119,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col != :float_col_1
+  WHERE sql_data_types.float_col != $1::FLOAT
   '''
 # ---
 # name: test_neq[session-tracked-float-async-psycopg_async_engine]
@@ -2127,7 +2127,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col != :float_col_1
+  WHERE sql_data_types.float_col != %(float_col_1)s
   '''
 # ---
 # name: test_neq[session-tracked-float-sync-psycopg_engine]
@@ -2135,7 +2135,7 @@
   SELECT sql_data_types.float_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.float_col != :float_col_1
+  WHERE sql_data_types.float_col != %(float_col_1)s
   '''
 # ---
 # name: test_neq[session-tracked-int-async-asyncpg_engine]
@@ -2143,7 +2143,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col != :int_col_1
+  WHERE sql_data_types.int_col != $1::INTEGER
   '''
 # ---
 # name: test_neq[session-tracked-int-async-psycopg_async_engine]
@@ -2151,7 +2151,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col != :int_col_1
+  WHERE sql_data_types.int_col != %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_neq[session-tracked-int-sync-psycopg_engine]
@@ -2159,7 +2159,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col != :int_col_1
+  WHERE sql_data_types.int_col != %(int_col_1)s::INTEGER
   '''
 # ---
 # name: test_neq[session-tracked-str-async-asyncpg_engine]
@@ -2167,7 +2167,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col != :str_col_1
+  WHERE sql_data_types.str_col != $1::VARCHAR
   '''
 # ---
 # name: test_neq[session-tracked-str-async-psycopg_async_engine]
@@ -2175,7 +2175,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col != :str_col_1
+  WHERE sql_data_types.str_col != %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_neq[session-tracked-str-sync-psycopg_engine]
@@ -2183,7 +2183,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col != :str_col_1
+  WHERE sql_data_types.str_col != %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_neq[session-tracked-time-async-asyncpg_engine]
@@ -2191,7 +2191,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col != :time_col_1
+  WHERE sql_data_types.time_col != $1::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_neq[session-tracked-time-async-psycopg_async_engine]
@@ -2199,7 +2199,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col != :time_col_1
+  WHERE sql_data_types.time_col != %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_neq[session-tracked-time-sync-psycopg_engine]
@@ -2207,7 +2207,7 @@
   SELECT sql_data_types.time_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_col != :time_col_1
+  WHERE sql_data_types.time_col != %(time_col_1)s::TIME WITHOUT TIME ZONE
   '''
 # ---
 # name: test_neq[session-tracked-timedelta-async-asyncpg_engine]
@@ -2215,7 +2215,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col != :time_delta_col_1
+  WHERE sql_data_types.time_delta_col != $1::INTERVAL
   '''
 # ---
 # name: test_neq[session-tracked-timedelta-async-psycopg_async_engine]
@@ -2223,7 +2223,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col != :time_delta_col_1
+  WHERE sql_data_types.time_delta_col != %(time_delta_col_1)s
   '''
 # ---
 # name: test_neq[session-tracked-timedelta-sync-psycopg_engine]
@@ -2231,7 +2231,7 @@
   SELECT sql_data_types.time_delta_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.time_delta_col != :time_delta_col_1
+  WHERE sql_data_types.time_delta_col != %(time_delta_col_1)s
   '''
 # ---
 # name: test_nin[session-tracked-bool-async-asyncpg_engine]
@@ -2473,7 +2473,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE NOT (sql_data_types.int_col = :int_col_1
+  WHERE NOT (sql_data_types.int_col = $1::INTEGER
              AND sql_data_types.int_col IS NOT NULL)
   '''
 # ---
@@ -2482,7 +2482,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE NOT (sql_data_types.int_col = :int_col_1
+  WHERE NOT (sql_data_types.int_col = %(int_col_1)s::INTEGER
              AND sql_data_types.int_col IS NOT NULL)
   '''
 # ---
@@ -2491,7 +2491,7 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE NOT (sql_data_types.int_col = :int_col_1
+  WHERE NOT (sql_data_types.int_col = %(int_col_1)s::INTEGER
              AND sql_data_types.int_col IS NOT NULL)
   '''
 # ---
@@ -2500,8 +2500,8 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col = :int_col_1
-    OR sql_data_types.int_col = :int_col_2
+  WHERE sql_data_types.int_col = $1::INTEGER
+    OR sql_data_types.int_col = $2::INTEGER
   '''
 # ---
 # name: test_or[session-tracked-async-psycopg_async_engine]
@@ -2509,8 +2509,8 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col = :int_col_1
-    OR sql_data_types.int_col = :int_col_2
+  WHERE sql_data_types.int_col = %(int_col_1)s::INTEGER
+    OR sql_data_types.int_col = %(int_col_2)s::INTEGER
   '''
 # ---
 # name: test_or[session-tracked-sync-psycopg_engine]
@@ -2518,8 +2518,8 @@
   SELECT sql_data_types.int_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.int_col = :int_col_1
-    OR sql_data_types.int_col = :int_col_2
+  WHERE sql_data_types.int_col = %(int_col_1)s::INTEGER
+    OR sql_data_types.int_col = %(int_col_2)s::INTEGER
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-containedIn-async-asyncpg_engine]
@@ -2527,7 +2527,7 @@
   SELECT sql_data_types.array_str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.array_str_col <@ :array_str_col_1
+  WHERE sql_data_types.array_str_col <@ $1::TEXT[]
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-containedIn-async-psycopg_async_engine]
@@ -2535,7 +2535,7 @@
   SELECT sql_data_types.array_str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.array_str_col <@ :array_str_col_1
+  WHERE sql_data_types.array_str_col <@ %(array_str_col_1)s::TEXT[]
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-containedIn-sync-psycopg_engine]
@@ -2543,7 +2543,7 @@
   SELECT sql_data_types.array_str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.array_str_col <@ :array_str_col_1
+  WHERE sql_data_types.array_str_col <@ %(array_str_col_1)s::TEXT[]
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-contains-async-asyncpg_engine]
@@ -2551,7 +2551,7 @@
   SELECT sql_data_types.array_str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.array_str_col @> :array_str_col_1
+  WHERE sql_data_types.array_str_col @> $1::TEXT[]
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-contains-async-psycopg_async_engine]
@@ -2559,7 +2559,7 @@
   SELECT sql_data_types.array_str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.array_str_col @> :array_str_col_1
+  WHERE sql_data_types.array_str_col @> %(array_str_col_1)s::TEXT[]
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-contains-sync-psycopg_engine]
@@ -2567,7 +2567,7 @@
   SELECT sql_data_types.array_str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.array_str_col @> :array_str_col_1
+  WHERE sql_data_types.array_str_col @> %(array_str_col_1)s::TEXT[]
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-overlap-async-asyncpg_engine]
@@ -2575,7 +2575,7 @@
   SELECT sql_data_types.array_str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.array_str_col && :array_str_col_1
+  WHERE sql_data_types.array_str_col && $1::TEXT[]
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-overlap-async-psycopg_async_engine]
@@ -2583,7 +2583,7 @@
   SELECT sql_data_types.array_str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.array_str_col && :array_str_col_1
+  WHERE sql_data_types.array_str_col && %(array_str_col_1)s::TEXT[]
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-overlap-sync-psycopg_engine]
@@ -2591,7 +2591,7 @@
   SELECT sql_data_types.array_str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.array_str_col && :array_str_col_1
+  WHERE sql_data_types.array_str_col && %(array_str_col_1)s::TEXT[]
   '''
 # ---
 # name: test_string_filters[session-tracked-contains-async-asyncpg_engine]
@@ -2599,7 +2599,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col LIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-contains-async-psycopg_async_engine]
@@ -2607,7 +2607,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col LIKE '%%' || %(str_col_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-contains-sync-psycopg_engine]
@@ -2615,7 +2615,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col LIKE '%%' || %(str_col_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-endswith-async-asyncpg_engine]
@@ -2623,7 +2623,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 ESCAPE '/')
+  WHERE (sql_data_types.str_col LIKE '%' || $1::VARCHAR ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-endswith-async-psycopg_async_engine]
@@ -2631,7 +2631,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 ESCAPE '/')
+  WHERE (sql_data_types.str_col LIKE '%%' || %(str_col_1)s::VARCHAR ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-endswith-sync-psycopg_engine]
@@ -2639,7 +2639,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE '%' || :str_col_1 ESCAPE '/')
+  WHERE (sql_data_types.str_col LIKE '%%' || %(str_col_1)s::VARCHAR ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-icontains-async-asyncpg_engine]
@@ -2647,7 +2647,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col ILIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-icontains-async-psycopg_async_engine]
@@ -2655,7 +2655,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col ILIKE '%%' || %(str_col_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-icontains-sync-psycopg_engine]
@@ -2663,7 +2663,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col ILIKE '%%' || %(str_col_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-iendswith-async-asyncpg_engine]
@@ -2671,7 +2671,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) ESCAPE '/')
+  WHERE (sql_data_types.str_col ILIKE '%' || $1::VARCHAR ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-iendswith-async-psycopg_async_engine]
@@ -2679,7 +2679,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) ESCAPE '/')
+  WHERE (sql_data_types.str_col ILIKE '%%' || %(str_col_1)s::VARCHAR ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-iendswith-sync-psycopg_engine]
@@ -2687,7 +2687,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (lower(sql_data_types.str_col) LIKE '%' || lower(:str_col_1) ESCAPE '/')
+  WHERE (sql_data_types.str_col ILIKE '%%' || %(str_col_1)s::VARCHAR ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-ilike-async-asyncpg_engine]
@@ -2695,7 +2695,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) LIKE lower(:str_col_1)
+  WHERE sql_data_types.str_col ILIKE $1::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-ilike-async-psycopg_async_engine]
@@ -2703,7 +2703,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) LIKE lower(:str_col_1)
+  WHERE sql_data_types.str_col ILIKE %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-ilike-sync-psycopg_engine]
@@ -2711,7 +2711,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) LIKE lower(:str_col_1)
+  WHERE sql_data_types.str_col ILIKE %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-inregexp0-async-asyncpg_engine]
@@ -2719,7 +2719,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  WHERE sql_data_types.str_col !~ $1::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-inregexp0-async-psycopg_async_engine]
@@ -2727,7 +2727,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  WHERE sql_data_types.str_col !~ %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-inregexp0-sync-psycopg_engine]
@@ -2735,7 +2735,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  WHERE sql_data_types.str_col !~ %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-inregexp1-async-asyncpg_engine]
@@ -2743,7 +2743,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) < not regexp > :lower_1
+  WHERE lower(sql_data_types.str_col) !~ $1::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-inregexp1-async-psycopg_async_engine]
@@ -2751,7 +2751,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) < not regexp > :lower_1
+  WHERE lower(sql_data_types.str_col) !~ %(lower_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-inregexp1-sync-psycopg_engine]
@@ -2759,7 +2759,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) < not regexp > :lower_1
+  WHERE lower(sql_data_types.str_col) !~ %(lower_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-iregexp-async-asyncpg_engine]
@@ -2767,7 +2767,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) < regexp > :lower_1
+  WHERE lower(sql_data_types.str_col) ~ $1::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-iregexp-async-psycopg_async_engine]
@@ -2775,7 +2775,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) < regexp > :lower_1
+  WHERE lower(sql_data_types.str_col) ~ %(lower_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-iregexp-sync-psycopg_engine]
@@ -2783,7 +2783,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) < regexp > :lower_1
+  WHERE lower(sql_data_types.str_col) ~ %(lower_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-istartswith-async-asyncpg_engine]
@@ -2791,7 +2791,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (lower(sql_data_types.str_col) LIKE lower(:str_col_1) || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col ILIKE $1::VARCHAR || '%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-istartswith-async-psycopg_async_engine]
@@ -2799,7 +2799,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (lower(sql_data_types.str_col) LIKE lower(:str_col_1) || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col ILIKE %(str_col_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-istartswith-sync-psycopg_engine]
@@ -2807,7 +2807,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (lower(sql_data_types.str_col) LIKE lower(:str_col_1) || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col ILIKE %(str_col_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-like-async-asyncpg_engine]
@@ -2815,7 +2815,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col LIKE :str_col_1
+  WHERE sql_data_types.str_col LIKE $1::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-like-async-psycopg_async_engine]
@@ -2823,7 +2823,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col LIKE :str_col_1
+  WHERE sql_data_types.str_col LIKE %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-like-sync-psycopg_engine]
@@ -2831,7 +2831,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col LIKE :str_col_1
+  WHERE sql_data_types.str_col LIKE %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-nilike-async-asyncpg_engine]
@@ -2839,7 +2839,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) NOT LIKE lower(:str_col_1)
+  WHERE sql_data_types.str_col NOT ILIKE $1::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-nilike-async-psycopg_async_engine]
@@ -2847,7 +2847,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) NOT LIKE lower(:str_col_1)
+  WHERE sql_data_types.str_col NOT ILIKE %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-nilike-sync-psycopg_engine]
@@ -2855,7 +2855,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE lower(sql_data_types.str_col) NOT LIKE lower(:str_col_1)
+  WHERE sql_data_types.str_col NOT ILIKE %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-nlike-async-asyncpg_engine]
@@ -2863,7 +2863,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col NOT LIKE :str_col_1
+  WHERE sql_data_types.str_col NOT LIKE $1::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-nlike-async-psycopg_async_engine]
@@ -2871,7 +2871,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col NOT LIKE :str_col_1
+  WHERE sql_data_types.str_col NOT LIKE %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-nlike-sync-psycopg_engine]
@@ -2879,7 +2879,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col NOT LIKE :str_col_1
+  WHERE sql_data_types.str_col NOT LIKE %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-nregexp-async-asyncpg_engine]
@@ -2911,7 +2911,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < regexp > :str_col_1
+  WHERE sql_data_types.str_col ~ $1::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-regexp-async-psycopg_async_engine]
@@ -2919,7 +2919,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < regexp > :str_col_1
+  WHERE sql_data_types.str_col ~ %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-regexp-sync-psycopg_engine]
@@ -2927,7 +2927,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < regexp > :str_col_1
+  WHERE sql_data_types.str_col ~ %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-startswith-async-asyncpg_engine]
@@ -2935,7 +2935,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE :str_col_1 || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col LIKE $1::VARCHAR || '%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-startswith-async-psycopg_async_engine]
@@ -2943,7 +2943,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE :str_col_1 || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col LIKE %(str_col_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
 # name: test_string_filters[session-tracked-startswith-sync-psycopg_engine]
@@ -2951,7 +2951,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE (sql_data_types.str_col LIKE :str_col_1 || '%' ESCAPE '/')
+  WHERE (sql_data_types.str_col LIKE %(str_col_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
 # name: test_time_components[session-tracked-hour-async-asyncpg_engine]
@@ -2960,7 +2960,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(HOUR
-                FROM sql_data_types.time_col) = :param_1
+                FROM sql_data_types.time_col) = $1::INTEGER
   '''
 # ---
 # name: test_time_components[session-tracked-hour-async-psycopg_async_engine]
@@ -2969,7 +2969,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(HOUR
-                FROM sql_data_types.time_col) = :param_1
+                FROM sql_data_types.time_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_time_components[session-tracked-hour-sync-psycopg_engine]
@@ -2978,7 +2978,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(HOUR
-                FROM sql_data_types.time_col) = :param_1
+                FROM sql_data_types.time_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_time_components[session-tracked-minute-async-asyncpg_engine]
@@ -2987,7 +2987,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MINUTE
-                FROM sql_data_types.time_col) = :param_1
+                FROM sql_data_types.time_col) = $1::INTEGER
   '''
 # ---
 # name: test_time_components[session-tracked-minute-async-psycopg_async_engine]
@@ -2996,7 +2996,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MINUTE
-                FROM sql_data_types.time_col) = :param_1
+                FROM sql_data_types.time_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_time_components[session-tracked-minute-sync-psycopg_engine]
@@ -3005,7 +3005,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(MINUTE
-                FROM sql_data_types.time_col) = :param_1
+                FROM sql_data_types.time_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_time_components[session-tracked-second-async-asyncpg_engine]
@@ -3014,7 +3014,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(SECOND
-                FROM sql_data_types.time_col) = :param_1
+                FROM sql_data_types.time_col) = $1::INTEGER
   '''
 # ---
 # name: test_time_components[session-tracked-second-async-psycopg_async_engine]
@@ -3023,7 +3023,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(SECOND
-                FROM sql_data_types.time_col) = :param_1
+                FROM sql_data_types.time_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_time_components[session-tracked-second-sync-psycopg_engine]
@@ -3032,7 +3032,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(SECOND
-                FROM sql_data_types.time_col) = :param_1
+                FROM sql_data_types.time_col) = %(param_1)s::INTEGER
   '''
 # ---
 # name: test_timedelta_components[session-tracked-days-async-asyncpg_engine]
@@ -3041,7 +3041,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) / CAST(:param_1 AS NUMERIC) = :param_2
+                FROM sql_data_types.time_delta_col) / CAST($1::INTEGER AS NUMERIC) = $2::NUMERIC
   '''
 # ---
 # name: test_timedelta_components[session-tracked-days-async-psycopg_async_engine]
@@ -3050,7 +3050,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) / CAST(:param_1 AS NUMERIC) = :param_2
+                FROM sql_data_types.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
   '''
 # ---
 # name: test_timedelta_components[session-tracked-days-sync-psycopg_engine]
@@ -3059,7 +3059,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) / CAST(:param_1 AS NUMERIC) = :param_2
+                FROM sql_data_types.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
   '''
 # ---
 # name: test_timedelta_components[session-tracked-hours-async-asyncpg_engine]
@@ -3068,7 +3068,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) / CAST(:param_1 AS NUMERIC) = :param_2
+                FROM sql_data_types.time_delta_col) / CAST($1::INTEGER AS NUMERIC) = $2::NUMERIC
   '''
 # ---
 # name: test_timedelta_components[session-tracked-hours-async-psycopg_async_engine]
@@ -3077,7 +3077,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) / CAST(:param_1 AS NUMERIC) = :param_2
+                FROM sql_data_types.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
   '''
 # ---
 # name: test_timedelta_components[session-tracked-hours-sync-psycopg_engine]
@@ -3086,7 +3086,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) / CAST(:param_1 AS NUMERIC) = :param_2
+                FROM sql_data_types.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
   '''
 # ---
 # name: test_timedelta_components[session-tracked-minutes-async-asyncpg_engine]
@@ -3095,7 +3095,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) / CAST(:param_1 AS NUMERIC) = :param_2
+                FROM sql_data_types.time_delta_col) / CAST($1::INTEGER AS NUMERIC) = $2::NUMERIC
   '''
 # ---
 # name: test_timedelta_components[session-tracked-minutes-async-psycopg_async_engine]
@@ -3104,7 +3104,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) / CAST(:param_1 AS NUMERIC) = :param_2
+                FROM sql_data_types.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
   '''
 # ---
 # name: test_timedelta_components[session-tracked-minutes-sync-psycopg_engine]
@@ -3113,7 +3113,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) / CAST(:param_1 AS NUMERIC) = :param_2
+                FROM sql_data_types.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
   '''
 # ---
 # name: test_timedelta_components[session-tracked-totalSeconds-async-asyncpg_engine]
@@ -3122,7 +3122,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) = :param_1
+                FROM sql_data_types.time_delta_col) = $1::FLOAT
   '''
 # ---
 # name: test_timedelta_components[session-tracked-totalSeconds-async-psycopg_async_engine]
@@ -3131,7 +3131,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) = :param_1
+                FROM sql_data_types.time_delta_col) = %(param_1)s
   '''
 # ---
 # name: test_timedelta_components[session-tracked-totalSeconds-sync-psycopg_engine]
@@ -3140,7 +3140,7 @@
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
   WHERE EXTRACT(EPOCH
-                FROM sql_data_types.time_delta_col) = :param_1
+                FROM sql_data_types.time_delta_col) = %(param_1)s
   '''
 # ---
 # name: test_uuid_filters[session-tracked-async-asyncpg_engine]
@@ -3148,7 +3148,7 @@
   SELECT sql_data_types.uuid_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.uuid_col = :uuid_col_1
+  WHERE sql_data_types.uuid_col = $1::UUID
   '''
 # ---
 # name: test_uuid_filters[session-tracked-async-psycopg_async_engine]
@@ -3156,7 +3156,7 @@
   SELECT sql_data_types.uuid_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.uuid_col = :uuid_col_1
+  WHERE sql_data_types.uuid_col = %(uuid_col_1)s::UUID
   '''
 # ---
 # name: test_uuid_filters[session-tracked-sync-psycopg_engine]
@@ -3164,6 +3164,6 @@
   SELECT sql_data_types.uuid_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.uuid_col = :uuid_col_1
+  WHERE sql_data_types.uuid_col = %(uuid_col_1)s::UUID
   '''
 # ---

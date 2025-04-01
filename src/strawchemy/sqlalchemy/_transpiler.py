@@ -64,10 +64,10 @@ if TYPE_CHECKING:
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.typing import SupportedDialect
 
-__all__ = ("Transpiler",)
+__all__ = ("QueryTranspiler",)
 
 
-class Transpiler(Generic[DeclarativeT]):
+class QueryTranspiler(Generic[DeclarativeT]):
     """Transpiles a GraphQL query into a SQLAlchemy query."""
 
     def __init__(
@@ -671,7 +671,7 @@ class Transpiler(Generic[DeclarativeT]):
 
         return query
 
-    def executor(
+    def select_executor(
         self,
         selection_tree: SQLAlchemyQueryNode | None = None,
         dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
