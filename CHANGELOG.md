@@ -2,7 +2,48 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.11.0](https://github.com/gazorby/strawchemy/compare/v0.10.0..v0.11.0) - 2025-03-25
+## [0.12.0](https://github.com/gazorby/strawchemy/compare/v0.11.0..v0.12.0) - 2025-04-01
+
+### 🚀 Features
+
+- *(cud)* Add create mutation - ([d9ef914](https://github.com/gazorby/strawchemy/commit/d9ef914c60f9396951736c4502f576aa02d16eea))
+- *(cud)* Add create mutation - ([b1af031](https://github.com/gazorby/strawchemy/commit/b1af031f64e39ca7e9eef368bedcb6e6c3e5a898))
+- *(query-hook)* Enable relationships loading - ([9100165](https://github.com/gazorby/strawchemy/commit/91001659cfb114df7b3ec6736c36b4b24008a1be))
+
+### 🐛 Bug Fixes
+
+- *(cud)* Mixed relations in create - ([7d140ed](https://github.com/gazorby/strawchemy/commit/7d140ed5bb59d829805bc92f5cf3da399fed3a36))
+- *(mapping)* Do not enable aggregations on input types - ([24cd763](https://github.com/gazorby/strawchemy/commit/24cd763af01d02d6abcbd174d346f2c938955d51))
+- *(mapping)* Override type fields would not be retracked - ([98f3375](https://github.com/gazorby/strawchemy/commit/98f33756547fd9a5773e67ae3cdbb6b1d037182a))
+- *(resolver)* Rely on sqlalchemy session type to use choose between sync/async resolver - ([92eabda](https://github.com/gazorby/strawchemy/commit/92eabdaf613e39787bfadb6361b11d11a3149120))
+
+### 💼 Other
+
+- *(doc)* Fix typo in license - ([57cf88d](https://github.com/gazorby/strawchemy/commit/57cf88d1545589a13bff87952110a08b2a842d23))
+
+### 🚜 Refactor
+
+- *(dto)* Improve dto caching reliability - ([ffa2ab1](https://github.com/gazorby/strawchemy/commit/ffa2ab1dc4d0a18ba98bdd4ae316f6b09731f64e))
+- *(dx)* Add an example app - ([ed3e5d6](https://github.com/gazorby/strawchemy/commit/ed3e5d635f42c7ddcf7b6d2195c2ef1bad434e91))
+- *(mapping)* Add foreign key inputs for relation - ([fda6b60](https://github.com/gazorby/strawchemy/commit/fda6b60e879697d85d62a0c6a311bf5f75ac9ac7))
+- *(transpiler)* Remove unused function - ([1636803](https://github.com/gazorby/strawchemy/commit/1636803ae724753afde977a5e95eb0eaaa8edda8))
+
+### 🧪 Testing
+
+- *(mutations)* Update snapshot assertions - ([ea9ea0a](https://github.com/gazorby/strawchemy/commit/ea9ea0a2c7dae79b895c64763c89fef9f21eb78d))
+- *(unit)* Add unit test case for distinct enum - ([2d01e1e](https://github.com/gazorby/strawchemy/commit/2d01e1e422ce989c80deb185b54cad4e4c18b680))
+- *(unit)* Remove old test - ([5603edd](https://github.com/gazorby/strawchemy/commit/5603edd9ddc591335073f3b43d3bf44a3bcd75e6))
+- *(unit)* Add test case for wrong relationship configuration in query hook - ([ece4d32](https://github.com/gazorby/strawchemy/commit/ece4d32ae1b02c25f4fcacac34ef7306c26ab718))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(gitignore)* Ignore .sqlite files - ([49928b3](https://github.com/gazorby/strawchemy/commit/49928b395f7f57395e9a9f9f59493d8a5b4c94e7))
+- *(release)* Bump to v0.12.0 - ([66ff56b](https://github.com/gazorby/strawchemy/commit/66ff56b8a2fa8dd1948d069333fdeaa57f10d55c))
+- *(renovate)* Enable lock file maintenance - ([5ab6f8e](https://github.com/gazorby/strawchemy/commit/5ab6f8e1dad7da666c9b593b241282814f9240b9))
+
+## New Contributors ❤️
+
+* @renovate[bot] made their first contribution## [0.11.0](https://github.com/gazorby/strawchemy/compare/v0.10.0..v0.11.0) - 2025-03-25
 
 ### 🚀 Features
 
