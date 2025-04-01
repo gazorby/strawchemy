@@ -135,8 +135,10 @@ def test_base_json_fails() -> None:
         import_module("tests.unit.schemas.filters.filters_base_json")
 
 
-def test_query_hooks_load_columns_relationship_fails() -> None:
-    with pytest.raises(QueryHookError, match=("Relationships are not supported `load_columns`")):
+def test_query_hooks_wrong_relationship_load_spec() -> None:
+    with pytest.raises(
+        QueryHookError, match=("Keys of mappings passed in `load` param must be relationship attributes: ")
+    ):
         import_module("tests.unit.schemas.query_hooks")
 
 

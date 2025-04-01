@@ -343,11 +343,9 @@ class Query:
 
 </details>
 
-### Custom Resolvers
-
 While Strawchemy automatically generates resolvers for most use cases, you can also create custom resolvers for more complex scenarios. There are two main approaches to creating custom resolvers:
 
-#### 1. Using Repository Directly
+### Using Repository Directly
 
 When using `strawchemy.field()` as a function, strawchemy creates a resolver that delegates data fetching to the `StrawchemySyncRepository` or `StrawchemyAsyncRepository` classes depending on the SQLAlchemy session type.
 You can create custom resolvers by using the `@strawchemy.field` as a decorator and working directly with the repository:
@@ -410,12 +408,18 @@ The repository provides several methods for fetching data:
 
 </details>
 
-#### 2. Using Query Hooks
+### Query Hooks
 
 Strawchemy provides query hooks that allow you to customize query behavior. Query hooks give you fine-grained control over how SQL queries are constructed and executed.
 
 <details>
 <summary>Using query hooks</summary>
+
+The `QueryHook` base class provides several methods that you can override to customize query behavior:
+
+#### Modifying the statement
+
+You can subclass `QueryHook` and override the `apply_hook` method apply changes to the statement. By default, it returns it unchanged. This method is only for filtering or ordering customizations, if you want to explicitly load columns or relationships, use the `load` parameter instead.
 
 ```python
 from strawchemy import ModelInstance, QueryHook
@@ -434,8 +438,8 @@ class Fruit(Base):
 class FruitTypeWithDescription:
     instance: ModelInstance[Fruit]
 
-    # Use LoadColumnsHook to ensure specific columns are loaded
-    @strawchemy.field(query_hook=QueryHook(load_columns=[Fruit.name, Fruit.adjectives]))
+    # Use QueryHook to ensure specific columns are loaded
+    @strawchemy.field(query_hook=QueryHook(load=[Fruit.name, Fruit.adjectives]))
     def description(self) -> str:
         return f"The {self.instance.name} is {', '.join(self.instance.adjectives)}"
 
@@ -451,23 +455,43 @@ class FilteredFruitType:
     pass
 ```
 
-> You must set a `ModelInstance` typed attribute if you want to access the model instance values.
-> The `instance` attribute is matched by the `ModelInstance[Fruit]` type hint, so you can give it any name you want.
-
-The `QueryHook` base class provides several methods that you can override to customize query behavior:
-
-1. **`apply_hook`**: Apply changes to the statement. By default, it returns it unchanged. This method is only for filtering or ordering customizations, if you want to explicitly load columns, use the `load_columns' parameter instead.
-
-2. **`load_columns`**: Specify columns that should always be loaded, even if not directly requested in the GraphQL query. This is useful for:
-   - Ensuring data needed for computed properties is available
-   - Loading columns required for custom resolvers
-   - Optimizing queries by explicitly loading only required columns
-
-Important notes when using query hooks:
+Important notes when implementing `apply_hooks`:
 
 - You must use the provided `alias` parameter to refer to columns of the model on which the hook is applied. Otherwise, the statement may fail.
-- For now, you can only refer to model columns; accessing columns from relationships (through joins) is not supported.
 - The GraphQL context is available through `self.info` within hook methods.
+- You must set a `ModelInstance` typed attribute if you want to access the model instance values.
+  The `instance` attribute is matched by the `ModelInstance[Fruit]` type hint, so you can give it any name you want.
+
+#### Load specific columns/relationships
+
+The `load` parameter specify columns and relationships that should always be loaded, even if not directly requested in the GraphQL query. This is useful for:
+
+- Ensuring data needed for computed properties is available
+- Loading columns or relationships required for custom resolvers
+
+Examples of using the `load` parameter:
+
+```python
+# Load specific columns
+@strawchemy.field(query_hook=QueryHook(load=[Fruit.name, Fruit.adjectives]))
+def description(self) -> str:
+    return f"The {self.instance.name} is {', '.join(self.instance.adjectives)}"
+
+# Load a relationship without specifying columns
+@strawchemy.field(query_hook=QueryHook(load=[Fruit.farms]))
+def pretty_farms(self) -> str:
+    return f"Farms are: {', '.join(farm.name for farm in self.instance.farms)}"
+
+# Load a relationship with specific columns
+@strawchemy.field(query_hook=QueryHook(load=[(Fruit.color, [Color.name, Color.created_at])]))
+def pretty_color(self) -> str:
+    return f"Color is {self.instance.color.name}" if self.instance.color else "No color!"
+
+# Load nested relationships
+@strawchemy.field(query_hook=QueryHook(load=[(Color.fruits, [(Fruit.farms, [FruitFarm.name])])]))
+def farms(self) -> str:
+    return f"Farms are: {', '.join(farm.name for fruit in self.instance.fruits for farm in fruit.farms)}"
+```
 
 </details>
 
