@@ -127,6 +127,13 @@ class ColorWithFilteredFruit:
         return f"Farms are: {', '.join(farm.name for fruit in self.instance.fruits for farm in fruit.farms)}"
 
 
+@strawchemy.type(Color, include="all")
+class ColorTypeHooks:
+    instance: ModelInstance[Color]
+
+    fruits: list[FruitTypeHooks]
+
+
 @strawchemy.input(Color, "create", include="all")
 class ColorCreateInput: ...
 
