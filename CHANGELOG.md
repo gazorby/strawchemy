@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.1](https://github.com/gazorby/strawchemy/compare/v0.12.0..v0.12.1) - 2025-04-02
+
+### 🐛 Bug Fixes
+
+- *(query-hook)* Relationship loading would fail if triggered by a nested field - ([601086a](https://github.com/gazorby/strawchemy/commit/601086aa3a10b88f7cc24d0518641cc7bce9fdaa))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.12.1 - ([3fba332](https://github.com/gazorby/strawchemy/commit/3fba3320097090572f150446d91c6fbe4b5e0633))
 ## [0.12.0](https://github.com/gazorby/strawchemy/compare/v0.11.0..v0.12.0) - 2025-04-01
 
 ### 🚀 Features
