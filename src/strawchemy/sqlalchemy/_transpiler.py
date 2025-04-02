@@ -20,7 +20,7 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, cast, override
+from typing import TYPE_CHECKING, Any, Generic, Self, cast, override
 
 from sqlalchemy import Dialect, Label, Select, and_, inspect, not_, null, or_, select, true
 from sqlalchemy.orm import (
@@ -31,11 +31,8 @@ from sqlalchemy.orm import (
     aliased,
     class_mapper,
     contains_eager,
-    joinedload,
     load_only,
     raiseload,
-    selectinload,
-    undefer,
 )
 from strawchemy.graphql.constants import AGGREGATIONS_KEY
 from strawchemy.graphql.dto import (
@@ -65,7 +62,7 @@ if TYPE_CHECKING:
     from sqlalchemy.sql.elements import NamedColumn
     from strawchemy.typing import SupportedDialect
 
-    from .hook import QueryHook, RelationshipLoadSpec
+    from .hook import ColumnLoadingMode, QueryHook
 
 __all__ = ("QueryTranspiler",)
 
@@ -388,69 +385,31 @@ class QueryTranspiler(Generic[DeclarativeT]):
 
         statement = statement.with_only_columns(*only_columns)
         statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
-
         statement, _ = self._apply_hooks(
-            statement, query_graph.root_join_tree.root, self.scope.root_alias, "add_columns", in_subquery=True
+            statement,
+            node=query_graph.root_join_tree.root,
+            alias=self.scope.root_alias,
+            loading_mode="add",
+            in_subquery=True,
         )
 
         return aliased(class_mapper(self.scope.model), statement.subquery(subquery_name), name=subquery_name)
-
-    def _load_columns_from_hook(
-        self,
-        statement: Select[tuple[DeclarativeT]],
-        alias: AliasedClass[Any],
-        hook: QueryHook[DeclarativeT],
-        mode: Literal["load_options", "add_columns"],
-    ) -> tuple[Select[tuple[DeclarativeT]], list[_AbstractLoad]]:
-        load_options: list[_AbstractLoad] = []
-        for column in hook.load_columns:
-            alias_attribute = getattr(alias, column.key)
-            if mode == "load_options":
-                load_options.append(undefer(alias_attribute))
-            else:
-                statement = statement.add_columns(alias_attribute)
-        return statement, load_options
-
-    def _load_relationships_from_hook(
-        self, load_spec: RelationshipLoadSpec, node: SQLAlchemyQueryNode, alias: AliasedClass[Any] | None = None
-    ) -> list[_AbstractLoad]:
-        load_options: list[_AbstractLoad] = []
-        relationship, attributes = load_spec
-        parent_alias = self.scope.alias_from_relation_node(node, "parent") if alias is None else alias
-        target_alias = aliased(relationship.entity.mapper)
-        alias_relationship = getattr(parent_alias, relationship.key).of_type(target_alias)
-        load = selectinload(alias_relationship) if alias is None else joinedload(alias_relationship)
-        columns = []
-        children_loads: list[_AbstractLoad] = []
-        for attribute in attributes:
-            if isinstance(attribute, tuple):
-                children_loads.extend(self._load_relationships_from_hook(attribute, node, target_alias))
-            else:
-                columns.append(getattr(target_alias, attribute.key))
-        if columns:
-            load = load.options(load_only(*columns))
-        if children_loads:
-            load = load.options(*children_loads)
-        load_options.append(load)
-        return load_options
 
     def _apply_hooks(
         self,
         statement: Select[tuple[DeclarativeT]],
         node: SQLAlchemyQueryNode,
         alias: AliasedClass[Any],
-        loading_mode: Literal["load_options", "add_columns"],
+        loading_mode: ColumnLoadingMode,
         in_subquery: bool = False,
     ) -> tuple[Select[tuple[DeclarativeT]], list[_AbstractLoad]]:
         options: list[_AbstractLoad] = []
         for hook in self._query_hooks[node]:
             statement = hook.apply_hook(statement, alias)
-            statement, column_options = self._load_columns_from_hook(statement, alias, hook, loading_mode)
+            statement, column_options = hook.load_columns(statement, alias, loading_mode)
             options.extend(column_options)
-            if in_subquery:
-                continue
-            for load_spec in hook.load_relationships:
-                options.extend(self._load_relationships_from_hook(load_spec, node))
+            if not in_subquery:
+                options.extend(hook.load_relationships(self.scope.alias_from_relation_node(node, "target")))
         return statement, options
 
     def _select_child(
@@ -475,12 +434,12 @@ class QueryTranspiler(Generic[DeclarativeT]):
         eager_options: list[_AbstractLoad] = []
         load = contains_eager(self.scope.aliased_attribute(node))
         if columns:
-            load = load.options(load_only(*columns))
             eager_options = [load_only(*columns)]
 
         node_alias = self.scope.alias_from_relation_node(node, "target")
-        statement, hook_options = self._apply_hooks(statement, node, node_alias, "load_options")
-        load = load.options(*eager_options, *hook_options)
+        statement, hook_options = self._apply_hooks(statement, node, node_alias, "undefer")
+        eager_options.extend(hook_options)
+        load = load.options(*eager_options)
 
         for child in node.children:
             if not child.value.is_relation or child.value.is_computed:
@@ -640,18 +599,16 @@ class QueryTranspiler(Generic[DeclarativeT]):
         # Only load selected root columns + those of child relations
         root_options = [load_only(*root_columns)] if root_columns else []
 
-        statement, hook_options = self._apply_hooks(
-            statement, selection_tree.root, self.scope.root_alias, "load_options"
-        )
+        statement, hook_options = self._apply_hooks(statement, selection_tree.root, self.scope.root_alias, "undefer")
         root_options.extend(hook_options)
-        statement = statement.options(raiseload("*"), *root_options)
 
         for child in selection_tree.children:
             if not child.value.is_relation or child.value.is_computed:
                 continue
             statement, options = self._select_child(statement, child)
-            statement = statement.options(options)
+            root_options.append(options)
 
+        statement = statement.options(raiseload("*"), *root_options)
         return statement, aggregation_joins
 
     def _build_query(

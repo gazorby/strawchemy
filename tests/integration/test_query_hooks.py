@@ -9,7 +9,14 @@ import strawberry
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-from .types import ColorWithFilteredFruit, FilteredFruitType, FruitTypeHooks, OrderedFruitType, strawchemy
+from .types import (
+    ColorTypeHooks,
+    ColorWithFilteredFruit,
+    FilteredFruitType,
+    FruitTypeHooks,
+    OrderedFruitType,
+    strawchemy,
+)
 from .typing import RawRecordData
 
 if TYPE_CHECKING:
@@ -38,6 +45,10 @@ class AsyncQuery:
     colors_paginated: list[ColorWithFilteredFruit] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
+    colors_hooks: list[ColorTypeHooks] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    colors_hooks_paginated: list[ColorTypeHooks] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository, pagination=True
+    )
 
 
 @strawberry.type
@@ -54,6 +65,11 @@ class SyncQuery:
     )
     colors: list[ColorWithFilteredFruit] = strawchemy.field(repository_type=StrawchemySyncRepository)
     colors_paginated: list[ColorWithFilteredFruit] = strawchemy.field(
+        repository_type=StrawchemySyncRepository, pagination=True
+    )
+
+    colors_hooks: list[ColorTypeHooks] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    colors_hooks_paginated: list[ColorTypeHooks] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
     )
 
@@ -148,6 +164,26 @@ async def test_load_relationships_nested(
         {"farms": "Farms are: Orange farm"},
         {"farms": "Farms are: Strawberry farm"},
         {"farms": "Farms are: Watermelon farm"},
+    ]
+
+    query_tracker.assert_statements(2, "select", sql_snapshot)
+
+
+@pytest.mark.parametrize("query", ["colorsHooks", "colorsHooksPaginated"])
+@pytest.mark.snapshot
+async def test_load_relationships_on_nested_field(
+    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(any_query(f"{{ {query} {{ fruits {{ prettyColor }} }} }}"))
+
+    assert not result.errors
+    assert result.data
+    assert result.data[query] == [
+        {"fruits": [{"prettyColor": "Color is Red"}]},
+        {"fruits": [{"prettyColor": "Color is Yellow"}]},
+        {"fruits": [{"prettyColor": "Color is Orange"}]},
+        {"fruits": [{"prettyColor": "Color is Green"}]},
+        {"fruits": [{"prettyColor": "Color is Pink"}]},
     ]
 
     query_tracker.assert_statements(2, "select", sql_snapshot)
