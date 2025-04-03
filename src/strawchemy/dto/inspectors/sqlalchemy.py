@@ -11,12 +11,14 @@ from typing_extensions import TypeIs
 
 from sqlalchemy import Column, SQLColumnExpression, event, inspect, orm, sql
 from sqlalchemy.orm import (
+    ColumnProperty,
     DeclarativeBase,
     Mapped,
     MappedAsDataclass,
     MappedSQLExpression,
     Mapper,
     QueryableAttribute,
+    RelationshipDirection,
     RelationshipProperty,
     registry,
 )
@@ -147,6 +149,10 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         return isinstance(elem, RelationshipProperty)
 
     @classmethod
+    def _is_column(cls, elem: Any) -> TypeIs[ColumnProperty[Any] | Column[Any]]:
+        return isinstance(elem, ColumnProperty | Column)
+
+    @classmethod
     def _column_or_relationship(
         cls, attribute: MapperProperty[Any]
     ) -> Column[Any] | RelationshipProperty[Any] | SQLColumnExpression[Any]:
@@ -156,7 +162,9 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             return attribute.parent.mapper.relationships[attribute.key]
 
     @classmethod
-    def _defaults(cls, attribute: MapperProperty[Any]) -> tuple[Any, Callable[..., Any] | DTOMissingType]:
+    def _defaults(
+        cls, attribute: MapperProperty[Any]
+    ) -> tuple[Any | DTOMissingType, Callable[..., Any] | DTOMissingType]:
         default, default_factory = DTO_MISSING, DTO_MISSING
         model = attribute.parent.class_
         element = cls._column_or_relationship(attribute)
@@ -294,15 +302,15 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     @override
     def id_field_definitions(
         self, model: type[DeclarativeBase], dto_config: DTOConfig
-    ) -> Generator[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
+    ) -> list[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
         mapper = inspect(model)
         primary_keys = {column.key for column in mapper.primary_key}
 
-        for key, type_hint in self.get_type_hints(model).items():
-            if key not in primary_keys:
-                continue
-            mapper_property = mapper.attrs[key]
-            yield key, self.field_definition(mapper_property.class_attribute, dto_config, type_hint=type_hint)
+        return [
+            (key, self.field_definition(mapper.attrs[key].class_attribute, dto_config, type_hint=type_hint))
+            for key, type_hint in self.get_type_hints(model).items()
+            if key in primary_keys
+        ]
 
     @override
     def relation_model(self, model_field: QueryableAttribute[Any]) -> type[DeclarativeBase]:
@@ -333,4 +341,30 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         return any(
             relationship in parent_relationships
             for relationship in field.model_field.property._reverse_property  # noqa: SLF001
+        )
+
+    @override
+    def has_default(self, model_field: QueryableAttribute[Any]) -> bool:
+        return any(default is not DTO_MISSING for default in self._defaults(model_field.property))
+
+    @override
+    def required(self, model_field: QueryableAttribute[Any]) -> bool:
+        if self._is_column(model_field.property):
+            return any(not column.nullable for column, _ in model_field.property.columns_to_assign)
+        if self._is_relationship(model_field.property):
+            if model_field.property.direction is RelationshipDirection.MANYTOONE:
+                return any(not column.nullable for column in model_field.property.local_columns)
+            return False
+        return False
+
+    @override
+    def is_foreign_key(self, model_field: QueryableAttribute[Any]) -> bool:
+        return self._is_column(model_field.property) and any(
+            column.foreign_keys for column in model_field.property.columns
+        )
+
+    @override
+    def is_primary_key(self, model_field: QueryableAttribute[Any]) -> bool:
+        return self._is_column(model_field.property) and any(
+            column.primary_key for column in model_field.property.columns
         )

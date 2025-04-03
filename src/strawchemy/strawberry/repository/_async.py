@@ -260,3 +260,11 @@ class StrawchemyAsyncRepository(Generic[T]):
     async def create(self, data: AnyMappedDTO) -> T:
         query_results = await self.graphql_repository().create(InputData([data]), self._tree)
         return self._tree.to_strawberry_type(query_results.one())
+
+    async def update_many(self, data: Sequence[AnyMappedDTO]) -> Sequence[T]:
+        query_results = await self.graphql_repository().update(InputData(data), self._tree)
+        return self._tree.query_result_to_strawberry_type(query_results)
+
+    async def update(self, data: AnyMappedDTO) -> T:
+        query_results = await self.graphql_repository().update(InputData([data]), self._tree)
+        return self._tree.to_strawberry_type(query_results.one())

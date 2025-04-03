@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import Optional, Self
 from uuid import UUID, uuid4
 
@@ -20,19 +19,6 @@ from tests.unit.dc_models import (
 )
 from tests.unit.models import Admin, Book, Color, Fruit, SponsoredUser, Tomato, UserWithGreeting
 from tests.utils import DTOInspect, factory_iterator
-
-
-def test_default_config() -> None:
-    assert asdict(DTOConfig(Purpose.READ)) == {
-        "purpose": Purpose.READ,
-        "include": set(),
-        "exclude": set(),
-        "partial": None,
-        "type_overrides": {},
-        "annotation_overrides": {},
-        "aliases": {},
-        "alias_generator": None,
-    }
 
 
 def test_config_function_produces_same_default() -> None:

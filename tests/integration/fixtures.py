@@ -39,7 +39,7 @@ from strawberry.scalars import JSON
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
-from .models import Color, Fruit, FruitFarm, SQLDataTypes, SQLDataTypesContainer, User, metadata
+from .models import Color, Fruit, FruitFarm, Group, SQLDataTypes, SQLDataTypesContainer, Topic, User, metadata
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, Iterator
@@ -294,8 +294,30 @@ async def async_session(async_engine: AsyncEngine) -> AsyncGenerator[AsyncSessio
 
 
 @pytest.fixture
+def raw_topics(raw_groups: RawRecordData) -> RawRecordData:
+    return [
+        {"id": str(uuid4()), "name": "Hello!", "group_id": raw_groups[0]["id"]},
+        {"id": str(uuid4()), "name": "Problems", "group_id": raw_groups[1]["id"]},
+        {"id": str(uuid4()), "name": "Solution", "group_id": raw_groups[2]["id"]},
+        {"id": str(uuid4()), "name": "How bake bread?", "group_id": raw_groups[3]["id"]},
+        {"id": str(uuid4()), "name": "My new basement!", "group_id": raw_groups[4]["id"]},
+    ]
+
+
+@pytest.fixture
 def raw_farms(raw_fruits: RawRecordData) -> RawRecordData:
-    return [{"name": f"{fruit['name']} farm", "fruit_id": fruit["id"]} for fruit in raw_fruits]
+    return [{"id": str(uuid4()), "name": f"{fruit['name']} farm", "fruit_id": fruit["id"]} for fruit in raw_fruits]
+
+
+@pytest.fixture
+def raw_groups() -> RawRecordData:
+    return [
+        {"id": str(uuid4()), "name": "Group 1"},
+        {"id": str(uuid4()), "name": "Group 2"},
+        {"id": str(uuid4()), "name": "Group 3"},
+        {"id": str(uuid4()), "name": "Group 4"},
+        {"id": str(uuid4()), "name": "Group 5"},
+    ]
 
 
 @pytest.fixture
@@ -517,10 +539,14 @@ def seed_insert_statements(
     raw_colors: RawRecordData,
     raw_users: RawRecordData,
     raw_farms: RawRecordData,
+    raw_groups: RawRecordData,
+    raw_topics: RawRecordData,
     raw_sql_data_types: RawRecordData,
     raw_sql_data_types_container: RawRecordData,
 ) -> list[Insert]:
     return [
+        insert(Group).values(raw_groups),
+        insert(Topic).values(raw_topics),
         insert(Color).values(raw_colors),
         insert(Fruit).values(raw_fruits),
         insert(FruitFarm).values(raw_farms),

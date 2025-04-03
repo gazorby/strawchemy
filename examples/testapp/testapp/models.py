@@ -14,7 +14,7 @@ metadata, geo_metadata = MetaData(), MetaData()
 class Base(DeclarativeBase):
     __abstract__ = True
 
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, info=READ_ONLY)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), info=READ_ONLY
     )

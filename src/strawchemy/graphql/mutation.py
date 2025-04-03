@@ -6,7 +6,7 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeVar, override
 
 from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT, ToMappedProtocol, VisitorProtocol
-from strawchemy.dto.types import DTO_MISSING, DTOMissingType
+from strawchemy.dto.types import DTO_UNSET, DTOUnsetType
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -29,15 +29,14 @@ class ToOneInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
     @override
     def to_mapped(
         self,
-        skip_dto_missing: bool = True,
         visitor: VisitorProtocol | None = None,
         override: dict[str, Any] | None = None,
         level: int = 0,
-    ) -> Any | DTOMissingType:
+    ) -> Any | DTOUnsetType:
         if self.create and self.set:
             msg = "You cannot use both `set` and `create` in a relation"
             raise ValueError(msg)
-        return self.create.to_mapped(skip_dto_missing, visitor, level=level) if self.create else DTO_MISSING
+        return self.create.to_mapped(visitor, level=level) if self.create else DTO_UNSET
 
 
 class ToManyCreateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
@@ -47,20 +46,12 @@ class ToManyCreateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
 
     @override
     def to_mapped(
-        self,
-        skip_dto_missing: bool = True,
-        visitor: VisitorProtocol | None = None,
-        override: dict[str, Any] | None = None,
-        level: int = 0,
-    ) -> list[Any] | DTOMissingType:
+        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+    ) -> list[Any] | DTOUnsetType:
         if self.set and (self.create or self.add):
             msg = "You cannot use `set` with `create` or `add`"
             raise ValueError(msg)
-        return (
-            [dto.to_mapped(skip_dto_missing, visitor, level=level) for dto in self.create]
-            if self.create
-            else DTO_MISSING
-        )
+        return [dto.to_mapped(visitor, level=level) for dto in self.create] if self.create else DTO_UNSET
 
 
 class ToManyUpdateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
@@ -71,20 +62,12 @@ class ToManyUpdateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
 
     @override
     def to_mapped(
-        self,
-        skip_dto_missing: bool = True,
-        visitor: VisitorProtocol | None = None,
-        override: dict[str, Any] | None = None,
-        level: int = 0,
-    ) -> list[Any] | DTOMissingType:
+        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+    ) -> list[Any] | DTOUnsetType:
         if self.set and (self.create or self.add):
             msg = "You cannot use `set` with `create` or `add`"
             raise ValueError(msg)
-        return (
-            [dto.to_mapped(skip_dto_missing, visitor, level=level) for dto in self.create]
-            if self.create
-            else DTO_MISSING
-        )
+        return [dto.to_mapped(visitor, level=level) for dto in self.create] if self.create else DTO_UNSET
 
 
 @dataclass
@@ -177,7 +160,7 @@ class InputData(Generic[ModelT, ModelFieldT]):
 
     def __post_init__(self) -> None:
         for index, dto in enumerate(self.input_dtos):
-            mapped = dto.to_mapped(skip_dto_missing=True, visitor=InputVisitor(self))
+            mapped = dto.to_mapped(visitor=InputVisitor(self))
             self.input_instances.append(mapped)
             for relation in self.relations:
                 self.max_level = max(self.max_level, relation.level)

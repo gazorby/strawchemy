@@ -491,7 +491,7 @@ async def test_lte(
         pytest.param("icontains", "STRING", [0, 1], id="icontains"),
         pytest.param("regexp", "^test", [0], id="regexp"),
         pytest.param("iregexp", ".*string$", [0, 1], id="iregexp"),
-        pytest.param("nregexp", "^test", [1, 2], id="inregexp"),
+        pytest.param("nregexp", "^test", [1, 2], id="nregexp"),
         pytest.param("inregexp", ".*string$", [2], id="inregexp"),
     ],
 )

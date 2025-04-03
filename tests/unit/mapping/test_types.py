@@ -7,6 +7,7 @@ from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from strawchemy.dto.exceptions import EmptyDTOError
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.sqlalchemy.exceptions import QueryHookError
@@ -119,7 +120,7 @@ def test_aggregation_type_mismatch() -> None:
         import_module("tests.unit.schemas.aggregations.type_mismatch")
 
 
-def test_base_array_fails() -> None:
+def test_base_array_fail() -> None:
     with pytest.raises(
         InspectorError,
         match=("""Base SQLAlchemy ARRAY type is not supported. Use backend-specific array type instead."""),
@@ -127,7 +128,7 @@ def test_base_array_fails() -> None:
         import_module("tests.unit.schemas.filters.filters_base_array")
 
 
-def test_base_json_fails() -> None:
+def test_base_json_fail() -> None:
     with pytest.raises(
         InspectorError,
         match=("""Base SQLAlchemy JSON type is not supported. Use backend-specific json type instead."""),
@@ -140,6 +141,24 @@ def test_query_hooks_wrong_relationship_load_spec() -> None:
         QueryHookError, match=("Keys of mappings passed in `load` param must be relationship attributes: ")
     ):
         import_module("tests.unit.schemas.query_hooks")
+
+
+def test_excluding_pk_from_update_input_fail() -> None:
+    with pytest.raises(
+        StrawchemyError,
+        match=("""You cannot exclude primary key columns from an input type intended for create or update mutations"""),
+    ):
+        import_module("tests.unit.schemas.mutations.invalid_update_input")
+
+
+def test_read_only_pk_on_update_input_fail() -> None:
+    with pytest.raises(
+        EmptyDTOError,
+        match=(
+            "Cannot generate `NewGroupUsersIdFieldsInput` input type from `NewUser` model because primary key columns are disabled for write purpose"
+        ),
+    ):
+        import_module("tests.unit.schemas.mutations.read_only_pk_with_update_input")
 
 
 @pytest.mark.parametrize(
@@ -204,7 +223,10 @@ def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
 
 @pytest.mark.parametrize(
     "path",
-    [pytest.param("input_type.Mutation", id="input_type"), pytest.param("create.Mutation", id="create_mutation")],
+    [
+        pytest.param("create.Mutation", id="create_mutation"),
+        pytest.param("update.Mutation", id="update_mutation"),
+    ],
 )
 @pytest.mark.snapshot
 def test_mutation_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
