@@ -362,3 +362,9 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         return self._is_column(model_field.property) and any(
             column.foreign_keys for column in model_field.property.columns
         )
+
+    @override
+    def is_primary_key(self, model_field: QueryableAttribute[Any]) -> bool:
+        return self._is_column(model_field.property) and any(
+            column.primary_key for column in model_field.property.columns
+        )

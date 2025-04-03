@@ -257,6 +257,8 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
 
     def is_foreign_key(self, model_field: ModelFieldT) -> bool: ...
 
+    def is_primary_key(self, model_field: ModelFieldT) -> bool: ...
+
 
 @dataclass
 class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
@@ -287,6 +289,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
     def __post_init__(self) -> None:
         self._name = self.model_field_name
 
+        # Purpose config
         if self.purpose_config.partial is not None:
             self.partial = self.purpose_config.partial
         if self.purpose_config.alias is not None:
@@ -295,6 +298,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
         if self.purpose_config.type_override is not DTO_MISSING:
             self.type_hint_override = self.purpose_config.type_override
 
+        # DTO config
         if self.dto_config.partial is not None:
             self.partial = self.dto_config.partial
         if (alias := self.dto_config.alias(self.model_field_name)) is not None:
@@ -340,12 +344,13 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
     def type_(self) -> Any:
         if self._type is not DTO_MISSING:
             return self._type
+
         type_hint = self.type_hint_override if self.has_type_override else self.type_hint
-        return Optional[type_hint] if self.partial else type_hint  # noqa: UP007
+        return type_hint | None if self.partial else type_hint
 
     @type_.setter
     def type_(self, value: Any) -> None:
-        self._type = Optional[value] if self.partial else value  # noqa: UP007
+        self._type = value
 
     @property
     def has_type_override(self) -> bool:

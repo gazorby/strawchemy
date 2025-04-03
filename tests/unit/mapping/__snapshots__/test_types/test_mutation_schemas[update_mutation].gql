@@ -23,7 +23,7 @@
   """GraphQL update input type"""
   input GroupTagInput {
     id: UUID!
-    name: String!
+    name: String = null
   }
   
   """GraphQL type"""
@@ -41,7 +41,7 @@
   """GraphQL update input type"""
   input GroupUpdate {
     id: UUID!
-    name: String!
+    name: String = null
     tag: GroupTagIdFieldsInputGroupTagInputToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
   }
@@ -49,7 +49,7 @@
   """GraphQL update input type"""
   input GroupUserInput {
     id: UUID!
-    name: String!
+    name: String = null
     tag: GroupTagIdFieldsInputGroupTagInputToOneInput = null
   }
   
@@ -113,18 +113,18 @@
   """GraphQL update input type"""
   input SQLDataTypesUpdate {
     id: UUID!
-    dateCol: Date!
-    timeCol: Time!
-    timeDeltaCol: Interval!
-    datetimeCol: DateTime!
-    strCol: String!
-    intCol: Int!
-    floatCol: Float!
-    decimalCol: Decimal!
-    boolCol: Boolean!
-    uuidCol: UUID!
-    dictCol: JSON!
-    arrayStrCol: [String!]!
+    dateCol: Date = null
+    timeCol: Time = null
+    timeDeltaCol: Interval = null
+    datetimeCol: DateTime = null
+    strCol: String = null
+    intCol: Int = null
+    floatCol: Float = null
+    decimalCol: Decimal = null
+    boolCol: Boolean = null
+    uuidCol: UUID = null
+    dictCol: JSON
+    arrayStrCol: [String!]
   }
   
   """GraphQL type"""

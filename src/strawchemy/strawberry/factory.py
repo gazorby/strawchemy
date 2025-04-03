@@ -14,6 +14,7 @@ from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.backend.pydantic import PydanticDTOBackend, PydanticDTOT
 from strawchemy.dto.base import (
     DTOBackend,
+    DTOBase,
     DTOBaseT,
     DTOFactory,
     DTOFieldDefinition,
@@ -50,7 +51,7 @@ from strawchemy.graphql.factories.inputs import (
 from strawchemy.graphql.factories.types import RootAggregateTypeDTOFactory, TypeDTOFactory
 from strawchemy.graphql.typing import DataclassGraphQLDTO, PydanticGraphQLDTO
 from strawchemy.types import DefaultOffsetPagination
-from strawchemy.utils import snake_to_camel
+from strawchemy.utils import non_optional_type_hint, snake_to_camel
 
 from ._instance import MapperModelInstance
 from ._registry import RegistryTypeInfo, StrawberryRegistry
@@ -58,7 +59,7 @@ from ._utils import pydantic_from_strawberry_type, strawchemy_type_from_pydantic
 from .types import ToManyCreateInput, ToManyUpdateInput, ToOneInput
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Hashable, Mapping, Sequence
+    from collections.abc import Callable, Generator, Hashable, Mapping, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
     from strawchemy import Strawchemy
@@ -327,23 +328,25 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
 
     def _root_input_config(self, model: type[Any], dto_config: DTOConfig, mode: MutationType) -> DTOConfig:
         annotations_overrides: dict[str, Any] = {}
+        partial = dto_config.partial
         id_fields = self.inspector.id_field_definitions(model, dto_config)
         # Add PKs for update/delete inputs
         if mode in ("update", "delete"):
-            if not dto_config.exclude:
-                annotations_overrides |= {name: field.type_hint for name, field in id_fields}
-            elif set(dto_config.exclude) & {name for name, _ in id_fields}:
+            if set(dto_config.exclude) & {name for name, _ in id_fields}:
                 msg = (
                     "You cannot exclude primary key columns from an input type intended for create or update mutations"
                 )
                 raise StrawchemyError(msg)
+            annotations_overrides |= {name: field.type_hint for name, field in id_fields}
+        if mode == "update":
+            partial = True
         # Exclude default generated PKs for create inputs, if not explicitly included
         elif dto_config.include == "all":
             for name, field in id_fields:
                 if self.inspector.has_default(field.model_field):
                     annotations_overrides[name] = field.type_hint | None
 
-        return dataclasses.replace(dto_config, annotation_overrides=annotations_overrides)
+        return dataclasses.replace(dto_config, annotation_overrides=annotations_overrides, partial=partial)
 
     @classmethod
     @override
@@ -940,7 +943,7 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         **factory_kwargs: Any,
     ) -> Any:
         if not field.is_relation:
-            return self._resolve_basic_type(field, dto_config)
+            return super()._resolve_basic_type(field, dto_config)
         if mode == "delete":
             return DTO_SKIP
         self._resolve_relation_type(field, dto_config, node, mode=mode, **factory_kwargs)
@@ -953,6 +956,26 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         else:
             input_type = ToOneInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
         return input_type if self.inspector.required(field.model_field) else input_type | None
+
+    @override
+    def iter_field_definitions(
+        self,
+        name: str,
+        model: type[T],
+        dto_config: DTOConfig,
+        base: type[DTOBase[ModelT]] | None,
+        node: Node[Relation[ModelT, MappedDataclassGraphQLDTO[ModelT]], None],
+        raise_if_no_fields: bool = False,
+        *,
+        mode: MutationType,
+        **factory_kwargs: Any,
+    ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT], None, None]:
+        for field in super().iter_field_definitions(
+            name, model, dto_config, base, node, raise_if_no_fields, mode=mode, **factory_kwargs
+        ):
+            if mode == "update" and self.inspector.is_primary_key(field.model_field):
+                field.type_ = non_optional_type_hint(field.type_)
+            yield field
 
     @override
     def factory(
