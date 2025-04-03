@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, Iterator
 
     from pytest import FixtureRequest, MonkeyPatch
-    from pytest_databases._service import DockerService
+    from pytest_databases._service import DockerService  # pyright: ignore[reportPrivateImportUsage]
     from pytest_databases.docker.postgres import PostgresService
     from pytest_databases.types import XdistIsolationLevel
     from strawchemy.sqlalchemy.typing import AnySession

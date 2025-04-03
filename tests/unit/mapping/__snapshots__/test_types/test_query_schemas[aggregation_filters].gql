@@ -57,6 +57,7 @@
   enum GroupCountFields {
     id
     name
+    tagId
   }
   
   """
@@ -68,6 +69,9 @@
     _not: GroupFilter
     id: UUIDComparison
     name: StringComparison
+    tagId: UUIDComparison
+    tagAggregate: TagAggregateBoolExp
+    tag: TagBoolExp
     usersAggregate: UserAggregateBoolExp
     users: UserBoolExp
   }
@@ -84,6 +88,8 @@
   type GroupType {
     id: UUID!
     name: String!
+    tagId: UUID
+    tag: TagType!
     usersAggregate: UserAggregate!
   
     """Fetch objects from the UserType collection"""

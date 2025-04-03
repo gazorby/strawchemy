@@ -9,6 +9,7 @@
     sweetness: Int!
   }
   
+  """Identifier input"""
   input ColorFruitsIdFieldsInput {
     id: UUID!
   }
@@ -51,6 +52,7 @@
     varPop: FruitNumericFields!
   }
   
+  """Identifier input"""
   input FruitColorIdFieldsInput {
     id: UUID!
   }
