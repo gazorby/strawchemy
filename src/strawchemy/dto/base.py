@@ -26,7 +26,7 @@ from typing import (
     runtime_checkable,
 )
 
-from strawchemy.dto.exceptions import DTOError
+from strawchemy.dto.exceptions import DTOError, EmptyDTOError
 from strawchemy.graph import Node
 from strawchemy.utils import is_type_hint_optional, non_optional_type_hint
 
@@ -594,11 +594,12 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
                 field_def.type_ = self._resolve_type(field_def, dto_config, node, **factory_kwargs)
 
             yield field_def
+            no_fields = False
 
         if no_fields:
             msg = f"{name} DTO generated from {model.__qualname__} have no fields"
             if raise_if_no_fields:
-                raise DTOError(msg)
+                raise EmptyDTOError(msg)
             warnings.warn(msg, stacklevel=2)
 
     def factory(

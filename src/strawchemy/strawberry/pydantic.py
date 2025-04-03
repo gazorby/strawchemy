@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING, Any, cast
 from pydantic import BaseModel
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.experimental.pydantic._compat import (
-    CompatModelField,
-    PydanticCompat,
+    CompatModelField,  # pyright: ignore[reportPrivateImportUsage]
+    PydanticCompat,  # pyright: ignore[reportPrivateImportUsage]
     smart_deepcopy,  # pyright: ignore[reportAttributeAccessIssue]
 )
 from strawberry.experimental.pydantic.conversion import (

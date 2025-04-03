@@ -6,12 +6,11 @@ from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints, override
 
 from typing_extensions import dataclass_transform
 
-import strawberry
 from strawberry.types.auto import StrawberryAuto
 from strawberry.types.field import StrawberryField
 from strawberry.types.object_type import _wrap_dataclass
 from strawberry.utils.typing import type_has_annotation
-from strawchemy.dto.backend.dataclass import DataclassDTOBackend, MappedDataclassDTO
+from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.backend.pydantic import PydanticDTOBackend, PydanticDTOT
 from strawchemy.dto.base import (
     DTOBackend,
@@ -884,11 +883,10 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
-        self._identifier_input_dto_builder = DataclassDTOBackend(MappedDataclassDTO[ModelT])
+        self._identifier_input_dto_builder = DataclassDTOBackend(MappedDataclassGraphQLDTO[ModelT])
 
     def _identifier_input(
         self,
-        dto_config: DTOConfig,
         field: DTOFieldDefinition[ModelT, ModelFieldT],
         node: Node[Relation[ModelT, MappedDataclassGraphQLDTO[Any]], None],
     ) -> type[MappedDTO[Any]]:
@@ -896,11 +894,13 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         related_model = field.related_model
         assert related_model
         id_fields = list(self.inspector.id_field_definitions(related_model, write_all_config))
+        dto_config = DTOConfig(Purpose.WRITE, include={name for name, _ in id_fields})
         base = self._identifier_input_dto_builder.build(name, related_model, [field for _, field in id_fields])
-        base.__dto_config__ = dataclasses.replace(dto_config, include={name for name, _ in id_fields})
+        base.__dto_config__ = dto_config
         base.__dto_model__ = related_model  # pyright: ignore[reportGeneralTypeIssues]
         base.__dto_field_definitions__ = dict(id_fields)
-        return strawberry.input(base, name=name)
+        base.__strawchemy_description__ = "Identifier input"
+        return self._register_dataclass(base, dto_config, node)
 
     @override
     def _cache_key(
@@ -939,7 +939,7 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         if not field.is_relation:
             return self._resolve_basic_type(field, dto_config)
         self._resolve_relation_type(field, dto_config, node, mode=mode, **factory_kwargs)
-        identifier_input = self._identifier_input(dto_config, field, node)
+        identifier_input = self._identifier_input(field, node)
         if field.uselist:
             input_type = (
                 ToManyCreateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]

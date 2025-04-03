@@ -5,6 +5,8 @@
   type GroupType {
     name: Int!
     id: UUID!
+    tagId: UUID
+    tag: TagType!
     usersAggregate: UserAggregate!
   
     """Fetch objects from the UserType collection"""

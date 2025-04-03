@@ -10,6 +10,63 @@
   """Decimal (fixed-point)"""
   scalar Decimal
   
+  """GraphQL input type"""
+  input GroupInput {
+    id: UUID!
+    name: String!
+    tagId: UUID = null
+    tag: GroupTagIdFieldsInputGroupTagInputToOneInput = null
+    users: GroupUsersIdFieldsInputGroupUserInputToManyCreateInput
+  }
+  
+  """Identifier input"""
+  input GroupTagIdFieldsInput {
+    id: UUID!
+  }
+  
+  input GroupTagIdFieldsInputGroupTagInputToOneInput {
+    set: GroupTagIdFieldsInput
+    create: GroupTagInput
+  }
+  
+  """GraphQL input type"""
+  input GroupTagInput {
+    id: UUID!
+    name: String!
+  }
+  
+  """GraphQL type"""
+  type GroupType {
+    id: UUID!
+    name: String!
+    tagId: UUID
+    tag: TagType!
+    usersAggregate: UserAggregate!
+  
+    """Fetch objects from the UserType collection"""
+    users: [UserType!]!
+  }
+  
+  """GraphQL input type"""
+  input GroupUserInput {
+    id: UUID!
+    name: String!
+    groupId: UUID = null
+    tagId: UUID = null
+    tag: GroupTagIdFieldsInputGroupTagInputToOneInput = null
+  }
+  
+  """Identifier input"""
+  input GroupUsersIdFieldsInput {
+    id: UUID!
+  }
+  
+  input GroupUsersIdFieldsInputGroupUserInputToManyCreateInput {
+    set: [GroupUsersIdFieldsInput!]
+    add: [GroupUsersIdFieldsInput!]
+    create: [GroupUserInput!]
+  }
+  
   """
   The `Interval` scalar type represents a duration of time as specified by [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations).
   """
@@ -26,6 +83,12 @@
   
     """Fetch objects from the SQLDataTypesType collection"""
     createDataTypes(data: [SQLDataTypesCreate!]!): [SQLDataTypesType!]!
+  
+    """Fetch object from the GroupType collection by id"""
+    createGroup(data: GroupInput!): GroupType!
+  
+    """Fetch objects from the GroupType collection"""
+    createGroups(data: [GroupInput!]!): [GroupType!]!
   }
   
   type Query {
@@ -66,9 +129,41 @@
     arrayStrCol: [String!]!
   }
   
+  """GraphQL type"""
+  type TagType {
+    id: UUID!
+    name: String!
+  }
+  
   """Time (isoformat)"""
   scalar Time
   
   scalar UUID
+  
+  """Aggregation fields"""
+  type UserAggregate {
+    count: Int
+    sum: UserSumFields!
+    min: UserMinMaxFields!
+    max: UserMinMaxFields!
+  }
+  
+  type UserMinMaxFields {
+    name: String
+  }
+  
+  type UserSumFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type UserType {
+    id: UUID!
+    name: String!
+    groupId: UUID
+    group: GroupType!
+    tagId: UUID
+    tag: TagType!
+  }
   '''
 # ---
