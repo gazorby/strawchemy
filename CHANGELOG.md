@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.2](https://github.com/gazorby/strawchemy/compare/v0.12.1..v0.12.2) - 2025-04-03
+
+### 🐛 Bug Fixes
+
+- *(mapping)* Input identifiers not managed by the registry - ([d28a11b](https://github.com/gazorby/strawchemy/commit/d28a11b8fa9b5f33a434644d30a0608c98239d1b))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.12.2 - ([67b8bb1](https://github.com/gazorby/strawchemy/commit/67b8bb1ea1e66090f3c1407e82189a54877709d2))
 ## [0.12.1](https://github.com/gazorby/strawchemy/compare/v0.12.0..v0.12.1) - 2025-04-02
 
 ### 🐛 Bug Fixes
