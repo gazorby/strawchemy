@@ -5,7 +5,7 @@
   type GroupType {
     name: Int!
     id: UUID!
-    tagId: UUID
+    tagId: UUID!
     tag: TagType!
     usersAggregate: UserAggregate!
   

@@ -92,3 +92,7 @@ class _StrawberryModelInspector(GraphQLInspectorProtocol[ModelT, ModelFieldT]):
     @override
     def has_default(self, model_field: ModelFieldT) -> bool:
         return self._inspector.has_default(model_field)
+
+    @override
+    def required(self, model_field: ModelFieldT) -> bool:
+        return self._inspector.required(model_field)

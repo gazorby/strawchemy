@@ -30,7 +30,7 @@
   type GroupType {
     id: UUID!
     name: String!
-    tagId: UUID
+    tagId: UUID!
     tag: TagType!
     usersAggregate: UserAggregate!
   
@@ -42,8 +42,8 @@
   input GroupUpdate {
     id: UUID!
     name: String!
-    tagId: UUID = null
-    tag: GroupTagIdFieldsInputGroupTagInputToOneInput = null
+    tagId: UUID!
+    tag: GroupTagIdFieldsInputGroupTagInputToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
   }
   

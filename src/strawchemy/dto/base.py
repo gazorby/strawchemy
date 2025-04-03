@@ -33,6 +33,7 @@ from strawchemy.utils import is_type_hint_optional, non_optional_type_hint
 from .types import (
     DTO_AUTO,
     DTO_MISSING,
+    DTO_SKIP,
     DTOConfig,
     DTOFieldConfig,
     DTOMissingType,
@@ -251,6 +252,8 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
     ) -> bool: ...
 
     def has_default(self, model_field: ModelFieldT) -> bool: ...
+
+    def required(self, model_field: ModelFieldT) -> bool: ...
 
 
 @dataclass
@@ -594,6 +597,8 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             if not has_override or has_auto_override:
                 no_fields = False
                 field_def.type_ = self._resolve_type(field_def, dto_config, node, **factory_kwargs)
+                if field_def.type_ is DTO_SKIP:
+                    continue
 
             yield field_def
             no_fields = False

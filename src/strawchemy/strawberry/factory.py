@@ -23,7 +23,7 @@ from strawchemy.dto.base import (
     Relation,
 )
 from strawchemy.dto.exceptions import EmptyDTOError
-from strawchemy.dto.types import DTO_AUTO, DTOConfig, DTOMissingType, Purpose
+from strawchemy.dto.types import DTO_AUTO, DTO_SKIP, DTOConfig, DTOMissingType, Purpose
 from strawchemy.dto.utils import config, read_all_partial_config, read_partial, write_all_config
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graph import Node
@@ -929,17 +929,18 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
     ) -> Any:
         if not field.is_relation:
             return self._resolve_basic_type(field, dto_config)
+        if mode == "delete":
+            return DTO_SKIP
         self._resolve_relation_type(field, dto_config, node, mode=mode, **factory_kwargs)
         identifier_input = self._identifier_input(field, node)
         if field.uselist:
-            input_type = (
-                ToManyCreateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
-                if mode == "create"
-                else ToManyUpdateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
-            )
+            if mode == "create":
+                input_type = ToManyCreateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
+            elif mode == "update":
+                input_type = ToManyUpdateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
         else:
             input_type = ToOneInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
-        return input_type | None
+        return input_type if self.inspector.required(field.model_field) else input_type | None
 
     @override
     def factory(

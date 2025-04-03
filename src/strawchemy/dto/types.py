@@ -27,8 +27,12 @@ class DTOMissingType:
 class DTOAutoType: ...
 
 
+class DTOSkipFieldType: ...
+
+
 DTO_MISSING = DTOMissingType()
 DTO_AUTO = DTOAutoType()
+DTO_SKIP = DTOAutoType()
 
 
 class Purpose(str, Enum):

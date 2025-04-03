@@ -11,12 +11,14 @@ from typing_extensions import TypeIs
 
 from sqlalchemy import Column, SQLColumnExpression, event, inspect, orm, sql
 from sqlalchemy.orm import (
+    ColumnProperty,
     DeclarativeBase,
     Mapped,
     MappedAsDataclass,
     MappedSQLExpression,
     Mapper,
     QueryableAttribute,
+    RelationshipDirection,
     RelationshipProperty,
     registry,
 )
@@ -145,6 +147,10 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         cls, elem: MapperProperty[Any] | Column[Any] | RelationshipProperty[Any]
     ) -> TypeIs[RelationshipProperty[Any]]:
         return isinstance(elem, RelationshipProperty)
+
+    @classmethod
+    def _is_column(cls, elem: Any) -> TypeIs[ColumnProperty[Any] | Column[Any]]:
+        return isinstance(elem, ColumnProperty | Column)
 
     @classmethod
     def _column_or_relationship(
@@ -340,3 +346,13 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     @override
     def has_default(self, model_field: QueryableAttribute[Any]) -> bool:
         return any(default is not DTO_MISSING for default in self._defaults(model_field.property))
+
+    @override
+    def required(self, model_field: QueryableAttribute[Any]) -> bool:
+        if self._is_column(model_field.property):
+            return any(not column.nullable for column, _ in model_field.property.columns_to_assign)
+        if self._is_relationship(model_field.property):
+            if model_field.property.direction is RelationshipDirection.MANYTOONE:
+                return any(not column.nullable for column in model_field.property.local_columns)
+            return False
+        return False

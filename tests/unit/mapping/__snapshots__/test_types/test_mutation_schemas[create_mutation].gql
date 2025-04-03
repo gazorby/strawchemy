@@ -14,8 +14,8 @@
   input GroupInput {
     id: UUID
     name: String!
-    tagId: UUID = null
-    tag: GroupTagIdFieldsInputGroupTagInputToOneInput = null
+    tagId: UUID!
+    tag: GroupTagIdFieldsInputGroupTagInputToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyCreateInput
   }
   
@@ -39,7 +39,7 @@
   type GroupType {
     id: UUID!
     name: String!
-    tagId: UUID
+    tagId: UUID!
     tag: TagType!
     usersAggregate: UserAggregate!
   
