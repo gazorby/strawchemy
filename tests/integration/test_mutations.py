@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from uuid import uuid4
-
 import pytest
 from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
@@ -70,37 +68,25 @@ async def test_create_mutation(
     assert select_tracker[0].statement_formatted == sql_snapshot
 
 
-@pytest.mark.parametrize(
-    "query",
-    [
-        pytest.param(
-            """
-            mutation {{
-                createColor(data: {{
-                    name: "new color",
-                    fruits: {{
-                        set: [{{ id: {fruit_id} }}]
-                    }}
-                }}) {{
-                    name
-                    fruits {{
-                        id
-                    }}
-                }}
-            }}
-            """,
-            id="set",
-        )
-    ],
-)
 @pytest.mark.snapshot
 async def test_create_mutation_nested_to_many(
-    query: str,
-    raw_fruits: RawRecordData,
-    any_query: AnyQueryExecutor,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
+    query = """
+        mutation {{
+            createColor(data: {{
+                name: "new color",
+                fruits: {{
+                    set: [{{ id: {fruit_id} }}]
+                }}
+            }}) {{
+                name
+                fruits {{
+                    id
+                }}
+            }}
+        }}
+    """
     result = await maybe_async(
         any_query(query.format(fruit_id=to_graphql_representation(raw_fruits[0]["id"], "input")))
     )
@@ -150,41 +136,28 @@ async def test_create_mutation_nested_to_many_create(
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
-@pytest.mark.parametrize(
-    "query",
-    [
-        pytest.param(
-            """
-            mutation {{
-                createFruit(data: {{
-                    name: "new fruit",
-                    adjectives: ["foo", "bar"],
-                    color: {{
-                        set: {{ id: {color_id} }}
-                    }}
-                }}) {{
-                    name
-                    color {{
-                        id
-                    }}
+@pytest.mark.snapshot
+async def test_create_mutation_nested_to_one_set(
+    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+        mutation {{
+            createFruit(data: {{
+                name: "new fruit",
+                adjectives: ["foo", "bar"],
+                color: {{
+                    set: {{ id: {color_id} }}
+                }}
+            }}) {{
+                name
+                color {{
+                    id
                 }}
             }}
-            """,
-            id="set",
-        )
-    ],
-)
-@pytest.mark.snapshot
-async def test_create_mutation_nested_to_one(
-    query: str,
-    raw_colors: RawRecordData,
-    any_query: AnyQueryExecutor,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    fruit_id = uuid4()
+        }}
+    """
     result = await maybe_async(
-        any_query(query.format(fruit_id=fruit_id, color_id=to_graphql_representation(raw_colors[0]["id"], "input")))
+        any_query(query.format(color_id=to_graphql_representation(raw_colors[0]["id"], "input")))
     )
     assert not result.errors
     assert result.data
