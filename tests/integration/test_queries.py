@@ -106,7 +106,7 @@ async def test_single(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> 
     assert result.data["user"] == {"name": raw_users[0]["name"]}
 
 
-async def test_typename_do_not_fails(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
+async def test_typename_do_not_fail(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
     result = await maybe_async(
         any_query(
             """
