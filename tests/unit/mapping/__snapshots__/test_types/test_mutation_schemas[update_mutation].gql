@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_mutation_schemas[create_mutation]
+# name: test_mutation_schemas[update_mutation]
   '''
   """Date (isoformat)"""
   scalar Date
@@ -9,15 +9,6 @@
   
   """Decimal (fixed-point)"""
   scalar Decimal
-  
-  """GraphQL create input type"""
-  input GroupInput {
-    id: UUID
-    name: String!
-    tagId: UUID = null
-    tag: GroupTagIdFieldsInputGroupTagInputToOneInput = null
-    users: GroupUsersIdFieldsInputGroupUserInputToManyCreateInput
-  }
   
   """Identifier input"""
   input GroupTagIdFieldsInput {
@@ -29,9 +20,9 @@
     create: GroupTagInput
   }
   
-  """GraphQL create input type"""
+  """GraphQL update input type"""
   input GroupTagInput {
-    id: UUID
+    id: UUID!
     name: String!
   }
   
@@ -47,9 +38,18 @@
     users: [UserType!]!
   }
   
-  """GraphQL create input type"""
+  """GraphQL update input type"""
+  input GroupUpdate {
+    id: UUID!
+    name: String!
+    tagId: UUID = null
+    tag: GroupTagIdFieldsInputGroupTagInputToOneInput = null
+    users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
+  }
+  
+  """GraphQL update input type"""
   input GroupUserInput {
-    id: UUID
+    id: UUID!
     name: String!
     groupId: UUID = null
     tagId: UUID = null
@@ -61,9 +61,10 @@
     id: UUID!
   }
   
-  input GroupUsersIdFieldsInputGroupUserInputToManyCreateInput {
+  input GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput {
     set: [GroupUsersIdFieldsInput!]
     add: [GroupUsersIdFieldsInput!]
+    remove: [GroupUsersIdFieldsInput!]
     create: [GroupUserInput!]
   }
   
@@ -79,25 +80,25 @@
   
   type Mutation {
     """Fetch object from the SQLDataTypesType collection by id"""
-    createDataType(data: SQLDataTypesCreate!): SQLDataTypesType!
+    updateDataType(data: SQLDataTypesUpdate!): SQLDataTypesType!
   
     """Fetch objects from the SQLDataTypesType collection"""
-    createDataTypes(data: [SQLDataTypesCreate!]!): [SQLDataTypesType!]!
+    updateDataTypes(data: [SQLDataTypesUpdate!]!): [SQLDataTypesType!]!
   
     """Fetch object from the GroupType collection by id"""
-    createGroup(data: GroupInput!): GroupType!
+    updateGroup(data: GroupUpdate!): GroupType!
   
     """Fetch objects from the GroupType collection"""
-    createGroups(data: [GroupInput!]!): [GroupType!]!
+    updateGroups(data: [GroupUpdate!]!): [GroupType!]!
   }
   
   type Query {
     hello: String!
   }
   
-  """GraphQL create input type"""
-  input SQLDataTypesCreate {
-    id: UUID
+  """GraphQL type"""
+  type SQLDataTypesType {
+    id: UUID!
     dateCol: Date!
     timeCol: Time!
     timeDeltaCol: Interval!
@@ -112,8 +113,8 @@
     arrayStrCol: [String!]!
   }
   
-  """GraphQL type"""
-  type SQLDataTypesType {
+  """GraphQL update input type"""
+  input SQLDataTypesUpdate {
     id: UUID!
     dateCol: Date!
     timeCol: Time!

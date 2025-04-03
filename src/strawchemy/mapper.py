@@ -200,9 +200,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
             registry_namespace=namespace,
             description=description,
         )
-        if resolver:
-            return field(resolver)
-        return field
+        return field(resolver) if resolver else field
 
     def create_mutation(
         self,
@@ -227,6 +225,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
 
         field = StrawchemyMutationField(
             input_type,
+            "create",
             repository_type=repository_type_,
             session_getter=self.settings.session_getter,
             inspector=self.inspector,
@@ -245,9 +244,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
             registry_namespace=namespace,
             description=description,
         )
-        if resolver:
-            return field(resolver)
-        return field
+        return field(resolver) if resolver else field
 
     def update_mutation(
         self,
@@ -273,6 +270,8 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
 
         field = StrawchemyMutationField(
             input_type,
+            "update",
+            filter_type=filter_input,
             repository_type=repository_type_,
             session_getter=self.settings.session_getter,
             inspector=self.inspector,
@@ -291,9 +290,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
             registry_namespace=namespace,
             description=description,
         )
-        if resolver:
-            return field(resolver)
-        return field
+        return field(resolver) if resolver else field
 
     def delete_mutation(
         self,
@@ -319,6 +316,8 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
 
         field = StrawchemyMutationField(
             input_type,
+            "delete",
+            filter_input=filter_input,
             repository_type=repository_type_,
             session_getter=self.settings.session_getter,
             inspector=self.inspector,
@@ -337,6 +336,4 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
             registry_namespace=namespace,
             description=description,
         )
-        if resolver:
-            return field(resolver)
-        return field
+        return field(resolver) if resolver else field

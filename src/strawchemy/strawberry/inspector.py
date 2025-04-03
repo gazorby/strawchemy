@@ -46,7 +46,7 @@ class _StrawberryModelInspector(GraphQLInspectorProtocol[ModelT, ModelFieldT]):
     @override
     def id_field_definitions(
         self, model: type[Any], dto_config: DTOConfig
-    ) -> Iterable[tuple[str, DTOFieldDefinition[ModelT, ModelFieldT]]]:
+    ) -> list[tuple[str, DTOFieldDefinition[ModelT, ModelFieldT]]]:
         return self._inspector.id_field_definitions(model, dto_config)
 
     @override
@@ -88,3 +88,7 @@ class _StrawberryModelInspector(GraphQLInspectorProtocol[ModelT, ModelFieldT]):
         self, field: DTOFieldDefinition[Any, ModelFieldT], node: Node[Relation[ModelT, Any], None]
     ) -> bool:
         return self._inspector.relation_cycle(field, node)
+
+    @override
+    def has_default(self, model_field: ModelFieldT) -> bool:
+        return self._inspector.has_default(model_field)

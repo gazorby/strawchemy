@@ -204,7 +204,10 @@ def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
 
 @pytest.mark.parametrize(
     "path",
-    [pytest.param("input_type.Mutation", id="input_type"), pytest.param("create.Mutation", id="create_mutation")],
+    [
+        pytest.param("create.Mutation", id="create_mutation"),
+        pytest.param("update.Mutation", id="update_mutation"),
+    ],
 )
 @pytest.mark.snapshot
 def test_mutation_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:

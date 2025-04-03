@@ -72,6 +72,7 @@ if TYPE_CHECKING:
     from .typing import (
         AnySessionGetter,
         FilterStatementCallable,
+        MutationType,
         StrawchemyTypeFromPydantic,
         StrawchemyTypeWithStrawberryObjectDefinition,
     )
@@ -85,7 +86,7 @@ ListResolverResult: TypeAlias = (
     "Sequence[StrawchemyTypeWithStrawberryObjectDefinition] | StrawchemyTypeWithStrawberryObjectDefinition"
 )
 GetByIdResolverResult: TypeAlias = "StrawchemyTypeWithStrawberryObjectDefinition | None"
-CreateResolverResult: TypeAlias = "Sequence[StrawchemyTypeWithStrawberryObjectDefinition]"
+CreateOrUpdateResolverResult: TypeAlias = "Sequence[StrawchemyTypeWithStrawberryObjectDefinition]"
 
 _OPTIONAL_UNION_ARG_SIZE: int = 2
 
@@ -470,33 +471,72 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
 
 
 class StrawchemyMutationField(StrawchemyField[ModelT, ModelFieldT]):
-    def __init__(self, input_type: type[AnyMappedDTO], *args: Any, **kwargs: Any) -> None:
+    def __init__(self, input_type: type[AnyMappedDTO], mutation_type: MutationType, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
-        self.input_type = input_type
         self.is_root_field = True
-
-    def _create_many_resolver(
-        self, info: Info, data: Sequence[AnyMappedDTO]
-    ) -> CreateResolverResult | Coroutine[CreateResolverResult, Any, Any]:
-        repository = self._get_repository(info)
-        return repository.create_many(data)
+        self._input_type = input_type
+        self._mutation_type: MutationType = mutation_type
 
     def _create_resolver(
         self, info: Info, data: AnyMappedDTO
-    ) -> CreateResolverResult | Coroutine[CreateResolverResult, Any, Any]:
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         return repository.create(data)
+
+    def _create_many_resolver(
+        self, info: Info, data: Sequence[AnyMappedDTO]
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        return repository.create_many(data)
+
+    def _update_resolver(
+        self, info: Info, data: AnyMappedDTO
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        return repository.create(data)
+
+    def _update_many_resolver(
+        self, info: Info, data: Sequence[AnyMappedDTO]
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        return repository.create_many(data)
+
+    def _delete_resolver(
+        self, info: Info, data: AnyMappedDTO
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        return repository.create(data)
+
+    def _delete_many_resolver(
+        self, info: Info, data: Sequence[AnyMappedDTO]
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        return repository.create_many(data)
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
         if self.is_list:
-            return [StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(list[self.input_type]))]
-        return [StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(self.input_type))]
+            return [StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(list[self._input_type]))]
+        return [StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(self._input_type))]
 
     @override
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
-    ) -> CreateResolverResult | Coroutine[CreateResolverResult, Any, Any]:
-        if self.is_list:
-            return self._create_many_resolver(info, *args, **kwargs)
-        return self._create_resolver(info, *args, **kwargs)
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        if self._mutation_type == "create":
+            return (
+                self._create_many_resolver(info, *args, **kwargs)
+                if self.is_list
+                else self._create_resolver(info, *args, **kwargs)
+            )
+        if self._mutation_type == "update":
+            return (
+                self._update_many_resolver(info, *args, **kwargs)
+                if self.is_list
+                else self._update_resolver(info, *args, **kwargs)
+            )
+        return (
+            self._delete_many_resolver(info, *args, **kwargs)
+            if self.is_list
+            else self._delete_resolver(info, *args, **kwargs)
+        )

@@ -228,7 +228,7 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
 
     def id_field_definitions(
         self, model: type[Any], dto_config: DTOConfig
-    ) -> Iterable[tuple[str, DTOFieldDefinition[ModelT, ModelFieldT]]]: ...
+    ) -> list[tuple[str, DTOFieldDefinition[ModelT, ModelFieldT]]]: ...
 
     def field_definition(
         self, model_field: ModelFieldT, dto_config: DTOConfig
@@ -249,6 +249,8 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
     def relation_cycle(
         self, field: DTOFieldDefinition[Any, ModelFieldT], node: Node[Relation[ModelT, Any], None]
     ) -> bool: ...
+
+    def has_default(self, model_field: ModelFieldT) -> bool: ...
 
 
 @dataclass
