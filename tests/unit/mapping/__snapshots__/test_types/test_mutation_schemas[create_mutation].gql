@@ -14,7 +14,6 @@
   input GroupInput {
     id: UUID
     name: String!
-    tagId: UUID!
     tag: GroupTagIdFieldsInputGroupTagInputToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyCreateInput
   }
@@ -51,8 +50,6 @@
   input GroupUserInput {
     id: UUID
     name: String!
-    groupId: UUID = null
-    tagId: UUID = null
     tag: GroupTagIdFieldsInputGroupTagInputToOneInput = null
   }
   

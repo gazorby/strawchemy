@@ -255,6 +255,8 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
 
     def required(self, model_field: ModelFieldT) -> bool: ...
 
+    def is_foreign_key(self, model_field: ModelFieldT) -> bool: ...
+
 
 @dataclass
 class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):

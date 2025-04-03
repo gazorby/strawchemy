@@ -918,6 +918,18 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         return f"{node.root.value.model.__name__ if node else ''}{base_name}Input"
 
     @override
+    def should_exclude_field(
+        self,
+        field: DTOFieldDefinition[Any, ModelFieldT],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, MappedDataclassGraphQLDTO[ModelT]], None],
+        has_override: bool,
+    ) -> bool:
+        return super().should_exclude_field(field, dto_config, node, has_override) or self.inspector.is_foreign_key(
+            field.model_field
+        )
+
+    @override
     def _resolve_type(
         self,
         field: DTOFieldDefinition[ModelT, ModelFieldT],

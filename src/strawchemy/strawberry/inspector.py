@@ -96,3 +96,7 @@ class _StrawberryModelInspector(GraphQLInspectorProtocol[ModelT, ModelFieldT]):
     @override
     def required(self, model_field: ModelFieldT) -> bool:
         return self._inspector.required(model_field)
+
+    @override
+    def is_foreign_key(self, model_field: ModelFieldT) -> bool:
+        return self._inspector.is_foreign_key(model_field)

@@ -356,3 +356,9 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                 return any(not column.nullable for column in model_field.property.local_columns)
             return False
         return False
+
+    @override
+    def is_foreign_key(self, model_field: QueryableAttribute[Any]) -> bool:
+        return self._is_column(model_field.property) and any(
+            column.foreign_keys for column in model_field.property.columns
+        )

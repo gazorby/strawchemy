@@ -42,7 +42,6 @@
   input GroupUpdate {
     id: UUID!
     name: String!
-    tagId: UUID!
     tag: GroupTagIdFieldsInputGroupTagInputToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
   }
@@ -51,8 +50,6 @@
   input GroupUserInput {
     id: UUID!
     name: String!
-    groupId: UUID = null
-    tagId: UUID = null
     tag: GroupTagIdFieldsInputGroupTagInputToOneInput = null
   }
   
