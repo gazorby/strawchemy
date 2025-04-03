@@ -43,6 +43,10 @@ class UserOrderBy: ...
 class UserFilter: ...
 
 
+@strawchemy.input(User, "create", include="all")
+class UserCreate: ...
+
+
 # Fruit
 
 

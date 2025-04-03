@@ -201,8 +201,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                 [self._to_dict(instance) for instance in data.input_instances],
             )
             instance_ids = result.all()
-            self._connect_to_many_relations(data, instance_ids)
             self._create_to_many_relations(data, instance_ids)
+            self._connect_to_many_relations(data, instance_ids)
             transaction.commit()
         return instance_ids
 
@@ -231,8 +231,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             update_values = [self._to_dict(instance) for instance in data.input_instances]
             instance_ids = [pk_tuple(*[instance[name] for name in pks]) for instance in update_values]
             self.session.execute(update(self.model), update_values)
-            self._connect_to_many_relations(data, instance_ids)
             self._create_to_many_relations(data, instance_ids)
+            self._connect_to_many_relations(data, instance_ids)
             transaction.commit()
         return instance_ids
 

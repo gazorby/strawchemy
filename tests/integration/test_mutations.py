@@ -10,7 +10,7 @@ from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import ColorCreateInput, ColorType, FruitCreateInput, FruitType, strawchemy
+from .types import ColorCreateInput, ColorType, FruitCreateInput, FruitType, UserCreate, UserType, strawchemy
 from .typing import RawRecordData
 
 pytestmark = [pytest.mark.integration]
@@ -28,6 +28,8 @@ class AsyncMutation:
         FruitCreateInput, repository_type=StrawchemyAsyncRepository
     )
 
+    create_user: UserType = strawchemy.create_mutation(UserCreate, repository_type=StrawchemyAsyncRepository)
+
 
 @strawberry.type
 class SyncMutation:
@@ -41,6 +43,8 @@ class SyncMutation:
         FruitCreateInput, repository_type=StrawchemySyncRepository
     )
 
+    create_user: UserType = strawchemy.create_mutation(UserCreate, repository_type=StrawchemySyncRepository)
+
 
 @pytest.fixture
 def sync_mutation() -> type[SyncMutation]:
@@ -53,7 +57,7 @@ def async_mutation() -> type[AsyncMutation]:
 
 
 @pytest.mark.snapshot
-async def test_create_mutation(
+async def test_create(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     result = await maybe_async(any_query('mutation { createColor(data: {  name: "new color" }) { name } }'))
@@ -69,75 +73,7 @@ async def test_create_mutation(
 
 
 @pytest.mark.snapshot
-async def test_create_mutation_nested_to_many(
-    raw_fruits: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
-) -> None:
-    query = """
-        mutation {{
-            createColor(data: {{
-                name: "new color",
-                fruits: {{
-                    set: [{{ id: {fruit_id} }}]
-                }}
-            }}) {{
-                name
-                fruits {{
-                    id
-                }}
-            }}
-        }}
-    """
-    result = await maybe_async(
-        any_query(query.format(fruit_id=to_graphql_representation(raw_fruits[0]["id"], "input")))
-    )
-    assert not result.errors
-    assert result.data
-    assert result.data["createColor"] == {
-        "name": "new color",
-        "fruits": [{"id": to_graphql_representation(raw_fruits[0]["id"], "output")}],
-    }
-
-    query_tracker.assert_statements(1, "select", sql_snapshot)
-    query_tracker.assert_statements(1, "insert", sql_snapshot)
-    query_tracker.assert_statements(1, "update", sql_snapshot)
-
-
-@pytest.mark.snapshot
-async def test_create_mutation_nested_to_many_create(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
-) -> None:
-    query = """
-            mutation {
-                createColor(data: {
-                    name: "new color",
-                    fruits: {
-                        create: [
-                            { name: "new fruit 1", adjectives: ["foo"] },
-                            { name: "new fruit 2", adjectives: ["bar"] }
-                        ]
-                    }
-                }) {
-                    name
-                    fruits {
-                        name
-                    }
-                }
-            }
-            """
-    result = await maybe_async(any_query(query))
-    assert not result.errors
-    assert result.data
-    assert result.data["createColor"] == {
-        "name": "new color",
-        "fruits": [{"name": "new fruit 1"}, {"name": "new fruit 2"}],
-    }
-
-    query_tracker.assert_statements(2, "insert", sql_snapshot)
-    query_tracker.assert_statements(1, "select", sql_snapshot)
-
-
-@pytest.mark.snapshot
-async def test_create_mutation_nested_to_one_set(
+async def test_create_nested_to_one_set(
     raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     query = """
@@ -171,7 +107,183 @@ async def test_create_mutation_nested_to_one_set(
 
 
 @pytest.mark.snapshot
-async def test_create_mutation_nested_mixed_relations_create(
+async def test_create_nested_to_one_create(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+            mutation {
+                createFruit(data: {
+                    name: "new color",
+                    adjectives: ["foo", "bar"],
+                    color: {
+                        create: { name: "new sub color" }
+                    }
+                }) {
+                    name
+                    color {
+                        name
+                    }
+                }
+            }
+            """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["createFruit"] == {"name": "new color", "color": {"name": "new sub color"}}
+
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+    query_tracker.assert_statements(2, "insert", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_create_nested_to_one_set_and_create(
+    raw_topics: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+            mutation {{
+                createUser(data: {{
+                    name: "Bob",
+                    group: {{
+                        create: {{
+                            name: "new group",
+                            topics: {{ set: [ {{ id: {topic_id} }} ] }}
+                        }}
+                    }}
+                }}) {{
+                    name
+                    group {{
+                        name
+                        topics {{
+                            id
+                        }}
+                    }}
+                }}
+            }}
+            """
+    result = await maybe_async(
+        any_query(query.format(topic_id=to_graphql_representation(raw_topics[0]["id"], "input")))
+    )
+    assert not result.errors
+    assert result.data
+    assert result.data["createUser"] == {
+        "name": "Bob",
+        "group": {"name": "new group", "topics": [{"id": to_graphql_representation(raw_topics[0]["id"], "output")}]},
+    }
+
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+    query_tracker.assert_statements(2, "insert", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_create_nested_to_many(
+    raw_fruits: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+        mutation {{
+            createColor(data: {{
+                name: "new color",
+                fruits: {{
+                    set: [{{ id: {fruit_id} }}]
+                }}
+            }}) {{
+                name
+                fruits {{
+                    id
+                }}
+            }}
+        }}
+    """
+    result = await maybe_async(
+        any_query(query.format(fruit_id=to_graphql_representation(raw_fruits[0]["id"], "input")))
+    )
+    assert not result.errors
+    assert result.data
+    assert result.data["createColor"] == {
+        "name": "new color",
+        "fruits": [{"id": to_graphql_representation(raw_fruits[0]["id"], "output")}],
+    }
+
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+    query_tracker.assert_statements(1, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "update", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_create_nested_to_many_create(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+            mutation {
+                createColor(data: {
+                    name: "new color",
+                    fruits: {
+                        create: [
+                            { name: "new fruit 1", adjectives: ["foo"] },
+                            { name: "new fruit 2", adjectives: ["bar"] }
+                        ]
+                    }
+                }) {
+                    name
+                    fruits {
+                        name
+                    }
+                }
+            }
+            """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["createColor"] == {
+        "name": "new color",
+        "fruits": [{"name": "new fruit 1"}, {"name": "new fruit 2"}],
+    }
+
+    query_tracker.assert_statements(2, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_create_nested_to_many_create_and_set(
+    raw_farms: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+            mutation {{
+                createColor(data: {{
+                    name: "White",
+                    fruits: {{
+                        create: [
+                            {{
+                                name: "Grape",
+                                adjectives: ["tangy", "juicy"],
+                                farms: {{ set: [ {{ id: {farm_id} }} ] }}
+                            }},
+                        ]
+                    }}
+                }}) {{
+                    name
+                    fruits {{
+                        name
+                        farms {{
+                            id
+                        }}
+                    }}
+                }}
+            }}
+            """
+    result = await maybe_async(any_query(query.format(farm_id=to_graphql_representation(raw_farms[0]["id"], "input"))))
+    assert not result.errors
+    assert result.data
+    assert result.data["createColor"] == {
+        "name": "White",
+        "fruits": [{"name": "Grape", "farms": [{"id": to_graphql_representation(raw_farms[0]["id"], "output")}]}],
+    }
+
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+    query_tracker.assert_statements(2, "insert", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_create_nested_mixed_relations_create(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     query = """
@@ -223,36 +335,7 @@ async def test_create_mutation_nested_mixed_relations_create(
 
 
 @pytest.mark.snapshot
-async def test_create_mutation_nested_to_one_create(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
-) -> None:
-    query = """
-            mutation {
-                createFruit(data: {
-                    name: "new color",
-                    adjectives: ["foo", "bar"],
-                    color: {
-                        create: { name: "new sub color" }
-                    }
-                }) {
-                    name
-                    color {
-                        name
-                    }
-                }
-            }
-            """
-    result = await maybe_async(any_query(query))
-    assert not result.errors
-    assert result.data
-    assert result.data["createFruit"] == {"name": "new color", "color": {"name": "new sub color"}}
-
-    query_tracker.assert_statements(1, "select", sql_snapshot)
-    query_tracker.assert_statements(2, "insert", sql_snapshot)
-
-
-@pytest.mark.snapshot
-async def test_create_many_mutation(
+async def test_create_many(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     result = await maybe_async(

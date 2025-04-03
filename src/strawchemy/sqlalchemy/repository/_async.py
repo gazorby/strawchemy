@@ -199,8 +199,8 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 [self._to_dict(instance) for instance in data.input_instances],
             )
             instance_ids = result.all()
-            await self._connect_to_many_relations(data, instance_ids)
             await self._create_to_many_relations(data, instance_ids)
+            await self._connect_to_many_relations(data, instance_ids)
             await transaction.commit()
         return instance_ids
 
@@ -229,8 +229,8 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             update_values = [self._to_dict(instance) for instance in data.input_instances]
             instance_ids = [pk_tuple(*[instance[name] for name in pks]) for instance in update_values]
             await self.session.execute(update(self.model), update_values)
-            await self._connect_to_many_relations(data, instance_ids)
             await self._create_to_many_relations(data, instance_ids)
+            await self._connect_to_many_relations(data, instance_ids)
             await transaction.commit()
         return instance_ids
 
