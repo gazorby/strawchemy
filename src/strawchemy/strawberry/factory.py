@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints, override
 
 from typing_extensions import dataclass_transform
 
+from strawberry import UNSET
 from strawberry.types.auto import StrawberryAuto
 from strawberry.types.field import StrawberryField
 from strawberry.types.object_type import _wrap_dataclass
@@ -346,7 +347,13 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
                 if self.inspector.has_default(field.model_field):
                     annotations_overrides[name] = field.type_hint | None
 
-        return dataclasses.replace(dto_config, annotation_overrides=annotations_overrides, partial=partial)
+        return dataclasses.replace(
+            dto_config,
+            annotation_overrides=annotations_overrides,
+            partial=partial,
+            partial_default=UNSET,
+            unset_sentinel=UNSET,
+        )
 
     @classmethod
     @override

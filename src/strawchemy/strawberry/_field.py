@@ -493,13 +493,13 @@ class StrawchemyMutationField(StrawchemyField[ModelT, ModelFieldT]):
         self, info: Info, data: AnyMappedDTO
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.create(data)
+        return repository.update(data)
 
     def _update_many_resolver(
         self, info: Info, data: Sequence[AnyMappedDTO]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.create_many(data)
+        return repository.update_many(data)
 
     def _delete_resolver(
         self, info: Info, data: AnyMappedDTO

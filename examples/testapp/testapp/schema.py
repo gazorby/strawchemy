@@ -2,7 +2,16 @@ from __future__ import annotations
 
 import strawberry
 
-from .types import MilestoneInput, MilestoneType, ProjectInput, ProjectType, TicketInput, TicketType, strawchemy
+from .types import (
+    MilestoneCreate,
+    MilestoneType,
+    ProjectCreate,
+    ProjectType,
+    TicketCreate,
+    TicketType,
+    TicketUpdate,
+    strawchemy,
+)
 
 
 @strawberry.type
@@ -18,13 +27,15 @@ class Query:
 
 @strawberry.type
 class Mutation:
-    create_ticket: TicketType = strawchemy.create_mutation(TicketInput)
-    create_tickets: list[TicketType] = strawchemy.create_mutation(TicketInput)
+    create_ticket: TicketType = strawchemy.create_mutation(TicketCreate)
+    create_tickets: list[TicketType] = strawchemy.create_mutation(TicketCreate)
 
-    create_project: ProjectType = strawchemy.create_mutation(ProjectInput)
-    create_projects: list[ProjectType] = strawchemy.create_mutation(ProjectInput)
+    create_project: ProjectType = strawchemy.create_mutation(ProjectCreate)
+    create_projects: list[ProjectType] = strawchemy.create_mutation(ProjectCreate)
 
-    create_milestone: MilestoneType = strawchemy.create_mutation(MilestoneInput)
+    create_milestone: MilestoneType = strawchemy.create_mutation(MilestoneCreate)
+
+    update_ticket: TicketType = strawchemy.update_mutation(TicketUpdate)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

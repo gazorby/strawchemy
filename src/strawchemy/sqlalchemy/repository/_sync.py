@@ -2,8 +2,8 @@
 # src/strawchemy/sqlalchemy/repository/_async.py
 from __future__ import annotations
 
-from collections import defaultdict
-from typing import TYPE_CHECKING, Any, TypeVar
+from collections import defaultdict, namedtuple
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, TypeVar
 
 from sqlalchemy import Row, insert, update
 from sqlalchemy.orm import RelationshipProperty
@@ -24,6 +24,8 @@ if TYPE_CHECKING:
 __all__ = ()
 
 T = TypeVar("T", bound=Any)
+
+RowLike: TypeAlias = "Row[Any] | NamedTuple"
 
 
 class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, AnySyncSession]):
@@ -72,7 +74,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                 self._insert(model_type, values, level)
 
     def _connect_to_many_relations(
-        self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], created_ids: Sequence[Row[Any]]
+        self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], created_ids: Sequence[RowLike]
     ) -> None:
         for level in data.filter_by_level(RelationType.TO_MANY, "set"):
             update_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
@@ -101,7 +103,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                 self.session.execute(update(model_type), values)
 
     def _create_to_many_relations(
-        self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], created_ids: Sequence[Row[Any]]
+        self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], created_ids: Sequence[RowLike]
     ) -> None:
         for level in data.filter_by_level(RelationType.TO_MANY, "create"):
             insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
@@ -121,10 +123,10 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             for model_type, values in insert_params.items():
                 self._insert(model_type, values, level)
 
-    def _create_many(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> Sequence[Row[Any]]:
+    def _create_many(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> Sequence[RowLike]:
         with self.session.begin_nested() as transaction:
-            self._create_nested_to_one_relations(data)
             self._connect_to_one_relations(data)
+            self._create_nested_to_one_relations(data)
             result = self.session.execute(
                 insert(self.model).returning(*self.model.__mapper__.primary_key, sort_by_parameter_order=True),
                 [self._to_dict(instance) for instance in data.input_instances],
@@ -134,6 +136,30 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             self._create_to_many_relations(data, instance_ids)
             transaction.commit()
         return instance_ids
+
+    def _update_many(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> Sequence[RowLike]:
+        pks = [column.key for column in self.model.__mapper__.primary_key]
+        pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
+        with self.session.begin_nested() as transaction:
+            self._connect_to_one_relations(data)
+            self._create_nested_to_one_relations(data)
+            update_values = [self._to_dict(instance) for instance in data.input_instances]
+            instance_ids = [pk_tuple(*[instance[name] for name in pks]) for instance in update_values]
+            self.session.execute(update(self.model), update_values)
+            self._connect_to_many_relations(data, instance_ids)
+            self._create_to_many_relations(data, instance_ids)
+            transaction.commit()
+        return instance_ids
+
+    def _list_by_ids(
+        self, id_rows: Sequence[RowLike], selection: SQLAlchemyQueryNode | None = None
+    ) -> QueryResult[DeclarativeT]:
+        executor = self._get_query_executor(SyncQueryExecutor, selection=selection)
+        id_fields = executor.scope.id_field_definitions(self.model)
+        executor.base_statement = executor.base_statement.where(
+            *[field.model_field.in_([getattr(row, field.model_field_name) for row in id_rows]) for field in id_fields]
+        )
+        return executor.list(self.session)
 
     def list(
         self,
@@ -212,14 +238,10 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], selection: SQLAlchemyQueryNode | None = None
     ) -> QueryResult[DeclarativeT]:
         created_ids = self._create_many(data)
-        executor = self._get_query_executor(SyncQueryExecutor, selection=selection)
-        id_fields = executor.scope.id_field_definitions(self.model)
-        # 6. Get the selection for newly added instances
-        instances_ids: dict[str, list[Any]] = {
-            field.model_field_name: [getattr(instance, field.model_field_name) for instance in created_ids]
-            for field in id_fields
-        }
-        executor.base_statement = executor.base_statement.where(
-            *[field_def.model_field.in_(instances_ids[field_def.model_field_name]) for field_def in id_fields]
-        )
-        return executor.list(self.session)
+        return self._list_by_ids(created_ids, selection)
+
+    def update(
+        self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], selection: SQLAlchemyQueryNode | None = None
+    ) -> QueryResult[DeclarativeT]:
+        update_ids = self._update_many(data)
+        return self._list_by_ids(update_ids, selection)

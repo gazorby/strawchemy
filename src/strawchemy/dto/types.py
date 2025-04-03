@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, get_type_hints
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, get_type_hints, override
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -30,7 +30,21 @@ class DTOAutoType: ...
 class DTOSkipFieldType: ...
 
 
+class DTOUnsetType:
+    @override
+    def __str__(self) -> str:
+        return ""
+
+    @override
+    def __repr__(self) -> str:
+        return "DTO_UNSET"
+
+    def __bool__(self) -> bool:
+        return False
+
+
 DTO_MISSING = DTOMissingType()
+DTO_UNSET = DTOUnsetType()
 DTO_AUTO = DTOAutoType()
 DTO_SKIP = DTOAutoType()
 
@@ -94,6 +108,8 @@ class DTOConfig:
     """Explicitly exclude fields from the generated DTO. Implies `include="all"`."""
     partial: bool | None = None
     """Make all field optional."""
+    partial_default: Any = None
+    unset_sentinel: Any = DTO_UNSET
     type_overrides: Mapping[Any, Any] = field(default_factory=dict)
     annotation_overrides: dict[str, Any] = field(default_factory=dict)
     aliases: Mapping[str, str] = field(default_factory=dict)

@@ -34,6 +34,7 @@ from .types import (
     DTO_AUTO,
     DTO_MISSING,
     DTO_SKIP,
+    DTO_UNSET,
     DTOConfig,
     DTOFieldConfig,
     DTOMissingType,
@@ -72,11 +73,7 @@ class VisitorProtocol(Protocol):
 @runtime_checkable
 class ToMappedProtocol(Protocol):
     def to_mapped(
-        self,
-        skip_dto_missing: bool = True,
-        visitor: VisitorProtocol | None = None,
-        override: dict[str, Any] | None = None,
-        level: int = 0,
+        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> Any: ...
 
 
@@ -92,11 +89,7 @@ class MappedDTO(DTOBase[ModelT]):
     """Base class to define DTO mapping classes."""
 
     def to_mapped(
-        self,
-        skip_dto_missing: bool = True,
-        visitor: VisitorProtocol | None = None,
-        override: dict[str, Any] | None = None,
-        level: int = 0,
+        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> ModelT:
         """Create an instance of `self.__sqla_model__`.
 
@@ -122,18 +115,16 @@ class MappedDTO(DTOBase[ModelT]):
 
             if isinstance(value, list | tuple):
                 value = [
-                    dto.to_mapped(skip_dto_missing, visitor, level=level + 1)
-                    if isinstance(dto, ToMappedProtocol)
-                    else cast(ModelT, dto)
+                    dto.to_mapped(visitor, level=level + 1) if isinstance(dto, ToMappedProtocol) else cast(ModelT, dto)
                     for dto in value
                 ]
             if isinstance(value, ToMappedProtocol):
-                value = value.to_mapped(skip_dto_missing, visitor, level=level + 1)
+                value = value.to_mapped(visitor, level=level + 1)
 
             if visitor is not None:
                 value = visitor.field_value(self, field_def, value, level + 1)
 
-            if skip_dto_missing and value is DTO_MISSING:
+            if value is DTO_UNSET or value is self.__dto_config__.unset_sentinel:
                 continue
 
             model_kwargs[field_def.model_field_name] = value
@@ -308,7 +299,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
             self.type_hint_override = type_override_
 
         if self.partial:
-            self.default = None
+            self.default = self.dto_config.partial_default
 
     @property
     def model_field(self) -> ModelFieldT:
@@ -344,7 +335,6 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
     def type_(self) -> Any:
         if self._type is not DTO_MISSING:
             return self._type
-
         type_hint = self.type_hint_override if self.has_type_override else self.type_hint
         return type_hint | None if self.partial else type_hint
 
