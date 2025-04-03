@@ -33,6 +33,23 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         values: list[dict[str, Any]],
         level: LevelInput[DeclarativeBase, QueryableAttribute[Any]],
     ) -> None:
+        """Inserts multiple records for a given model type and updates related instances.
+
+        This internal method performs a bulk insert operation for the specified
+        SQLAlchemy model type using the provided values. After insertion, it
+        retrieves the primary keys of the newly created records and updates
+        the corresponding instance objects within the provided `level` input
+        with these keys. It also handles updating foreign keys for to-one
+        relationships where applicable.
+
+        Args:
+            model_type: The SQLAlchemy declarative base class to insert records for.
+            values: A list of dictionaries, where each dictionary represents the
+                data for a single record to be inserted.
+            level: The input level containing information about the instances being
+                created and their relationships, used to update instances with
+                generated primary and foreign keys.
+        """
         results = await self.session.execute(
             insert(model_type).returning(*model_type.__mapper__.primary_key, sort_by_parameter_order=True),
             values,
@@ -61,6 +78,17 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             fk_index += 1
 
     async def _create_nested_to_one_relations(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> None:
+        """Creates nested related objects for to-one relationships.
+
+        Iterates through the input data levels filtered for 'create' operations
+        on to-one relationships. It groups the instances to be created by their
+        model type and then calls `_insert` for each type to perform bulk
+        insertions.
+
+        Args:
+            data: The processed input data containing nested structures and
+                relationship information.
+        """
         for level in data.filter_by_level(RelationType.TO_ONE, "create"):
             insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
 
@@ -74,6 +102,19 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def _connect_to_many_relations(
         self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], created_ids: Sequence[RowLike]
     ) -> None:
+        """Updates foreign keys to connect existing related objects for to-many relationships.
+
+        Iterates through the input data levels filtered for 'set' operations
+        on to-many relationships. For each relationship, it prepares bulk update
+        statements to set the foreign keys on the related models, linking them
+        to the parent objects (either newly created or existing).
+
+        Args:
+            data: The processed input data containing relationship information.
+            created_ids: A sequence of RowLike objects containing the primary keys
+                of the main objects created or updated in the parent operation.
+                Used to link the 'set' relations to the correct parent.
+        """
         for level in data.filter_by_level(RelationType.TO_MANY, "set"):
             update_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
             for set_input in level.inputs:
@@ -103,6 +144,20 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def _create_to_many_relations(
         self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], created_ids: Sequence[RowLike]
     ) -> None:
+        """Creates and connects new related objects for to-many relationships.
+
+        Iterates through the input data levels filtered for 'create' operations
+        on to-many relationships. It prepares the data for the new related
+        objects, including setting the foreign keys based on the parent object's
+        primary key, and then calls `_insert` to perform bulk insertions.
+
+        Args:
+            data: The processed input data containing nested structures and
+                relationship information.
+            created_ids: A sequence of RowLike objects containing the primary keys
+                of the main objects created in the parent operation. Used to set
+                foreign keys on the newly created related objects.
+        """
         for level in data.filter_by_level(RelationType.TO_MANY, "create"):
             insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
             for create_input in level.inputs:
@@ -122,6 +177,20 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 await self._insert(model_type, values, level)
 
     async def _create_many(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> Sequence[RowLike]:
+        """Performs a bulk creation operation, including nested relationships.
+
+        Handles the creation of multiple instances of the repository's main model,
+        along with any specified nested creations or connections for both to-one
+        and to-many relationships, within a single transaction.
+
+        Args:
+            data: The processed input data containing the instances to create and
+                their relationship details.
+
+        Returns:
+            A sequence of RowLike objects containing the primary keys of the
+            newly created main model instances.
+        """
         async with self.session.begin_nested() as transaction:
             self._connect_to_one_relations(data)
             await self._create_nested_to_one_relations(data)
@@ -136,6 +205,22 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         return instance_ids
 
     async def _update_many(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> Sequence[RowLike]:
+        """Performs a bulk update operation, including nested relationships.
+
+        Handles the update of multiple instances of the repository's main model.
+        It also processes nested creations ('create') and connections ('set')
+        for related objects within the same transaction. Note that nested updates
+        are not explicitly handled here but rely on the structure of `data`.
+
+        Args:
+            data: The processed input data containing the instances to update and
+                their relationship details. Primary keys must be present in the
+                input data for the update to target the correct records.
+
+        Returns:
+            A sequence of RowLike objects containing the primary keys of the
+            updated main model instances.
+        """
         pks = [column.key for column in self.model.__mapper__.primary_key]
         pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
         async with self.session.begin_nested() as transaction:
@@ -152,6 +237,21 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def _list_by_ids(
         self, id_rows: Sequence[RowLike], selection: SQLAlchemyQueryNode | None = None
     ) -> QueryResult[DeclarativeT]:
+        """Retrieves multiple records by their primary keys with optional selection.
+
+        Fetches records from the repository's main model that match the provided
+        primary key combinations. Allows specifying a GraphQL selection
+
+        Args:
+            id_rows: A sequence of RowLike objects, each containing the primary
+                key values for one record to retrieve.
+            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+                selection set to apply to the query.
+
+        Returns:
+            A QueryResult containing the list of fetched records matching the
+            provided IDs, structured according to the selection.
+        """
         executor = self._get_query_executor(AsyncQueryExecutor, selection=selection)
         id_fields = executor.scope.id_field_definitions(self.model)
         executor.base_statement = executor.base_statement.where(
@@ -172,6 +272,32 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
+        """Retrieves a list of records based on filtering, ordering, and pagination.
+
+        Fetches records from the repository's main model, applying optional
+        filtering, ordering, pagination (limit/offset), and distinct constraints.
+        Supports GraphQL selection sets for optimized data retrieval and query hooks
+        for customization.
+
+        Args:
+            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+                selection set.
+            dto_filter: An optional filter object derived from GraphQL input.
+            order_by: An optional list of ordering criteria.
+            limit: An optional integer limiting the number of results.
+            offset: An optional integer specifying the starting point for results.
+            distinct_on: An optional list of fields for DISTINCT ON clause (if supported).
+            allow_null: If True, allows certain operations even if parts of the
+                filter path are null (implementation specific to executor).
+            query_hooks: Optional hooks to modify the query at different stages.
+            execution_options: Optional dictionary of execution options passed to
+                SQLAlchemy.
+            **kwargs: Additional keyword arguments (currently unused but allows extension).
+
+        Returns:
+            A QueryResult containing the list of fetched records and potentially
+            pagination info or total count, structured according to the selection.
+        """
         executor = self._get_query_executor(
             executor_type=AsyncQueryExecutor,
             selection=selection,
@@ -199,6 +325,31 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
+        """Retrieves a single record based on filtering and ordering criteria.
+
+        Fetches a single record matching the provided filters. If multiple records
+        match, ordering, limit, and offset can be used to pinpoint one. Returns
+        None if no record matches. Supports GraphQL selection sets and query hooks.
+
+        Args:
+            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+                selection set.
+            dto_filter: An optional filter object derived from GraphQL input.
+            order_by: An optional list of ordering criteria.
+            limit: An optional integer limiting the number of potential matches
+                considered (usually 1 for get_one).
+            offset: An optional integer specifying the starting point.
+            distinct_on: An optional list of fields for DISTINCT ON clause.
+            allow_null: If True, allows certain operations even if parts of the
+                filter path are null.
+            query_hooks: Optional hooks to modify the query.
+            execution_options: Optional dictionary of execution options.
+            **kwargs: Additional keyword arguments passed to the query executor setup.
+
+        Returns:
+            A QueryResult containing the single fetched record or None, structured
+            according to the selection.
+        """
         executor = self._get_query_executor(
             executor_type=AsyncQueryExecutor,
             selection=selection,
@@ -221,6 +372,24 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
+        """Retrieves a single record by its primary key(s).
+
+        Fetches a single record matching the provided primary key values passed
+        as keyword arguments. Returns None if no record matches. Supports GraphQL
+        selection sets and query hooks.
+
+        Args:
+            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+                selection set.
+            query_hooks: Optional hooks to modify the query.
+            execution_options: Optional dictionary of execution options.
+            **kwargs: Keyword arguments where keys are the primary key field names
+                and values are the corresponding primary key values.
+
+        Returns:
+            A QueryResult containing the single fetched record or None, structured
+            according to the selection.
+        """
         executor = self._get_query_executor(
             AsyncQueryExecutor, selection=selection, query_hooks=query_hooks, execution_options=execution_options
         )
@@ -235,11 +404,41 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def create(
         self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], selection: SQLAlchemyQueryNode | None = None
     ) -> QueryResult[DeclarativeT]:
+        """Creates one or more records with nested relationships and returns them.
+
+        Takes processed input data, performs the creation using `_create_many`,
+        and then fetches the newly created records using `_list_by_ids` based on
+        the returned primary keys and the provided selection set.
+
+        Args:
+            data: The processed input data for creation.
+            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+                selection set for the returned data.
+
+        Returns:
+            A QueryResult containing the newly created records, structured
+            according to the selection.
+        """
         created_ids = await self._create_many(data)
         return await self._list_by_ids(created_ids, selection)
 
     async def update(
         self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], selection: SQLAlchemyQueryNode | None = None
     ) -> QueryResult[DeclarativeT]:
+        """Updates one or more records with nested relationships and returns them.
+
+        Takes processed input data, performs the update using `_update_many`,
+        and then fetches the updated records using `_list_by_ids` based on
+        the returned primary keys and the provided selection set.
+
+        Args:
+            data: The processed input data for update. Must include primary keys.
+            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+                selection set for the returned data.
+
+        Returns:
+            A QueryResult containing the updated records, structured
+            according to the selection.
+        """
         update_ids = await self._update_many(data)
         return await self._list_by_ids(update_ids, selection)
