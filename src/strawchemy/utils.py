@@ -4,10 +4,7 @@ import re
 from types import NoneType, UnionType
 from typing import TYPE_CHECKING, Any, Optional, Union, get_args, get_origin
 
-from typing_extensions import TypeIs
-
 if TYPE_CHECKING:
-    from collections.abc import Iterable
     from re import Pattern
 
 __all__ = (
@@ -93,12 +90,3 @@ def is_type_hint_optional(type_hint: Any) -> bool:
         args = get_args(type_hint)
         return any(arg is type(None) for arg in args)
     return False
-
-
-def is_iterable(value: Any) -> TypeIs[Iterable[Any]]:
-    try:
-        iter(value)
-    except TypeError:
-        return False
-    else:
-        return True
