@@ -1,11 +1,10 @@
 # serializer version: 1
 # name: test_query_and_mutations
   '''
-  """GraphQL input type"""
+  """GraphQL create input type"""
   input ColorFruitInput {
-    id: UUID!
+    id: UUID
     name: String!
-    colorId: UUID = null
     sweetness: Int!
   }
   
@@ -20,9 +19,9 @@
     create: [ColorFruitInput!]
   }
   
-  """GraphQL input type"""
+  """GraphQL create input type"""
   input ColorInput {
-    id: UUID!
+    id: UUID
     fruits: ColorFruitsIdFieldsInputColorFruitInputToManyCreateInput
     name: String!
   }
@@ -62,17 +61,16 @@
     create: FruitColorInput
   }
   
-  """GraphQL input type"""
+  """GraphQL create input type"""
   input FruitColorInput {
-    id: UUID!
+    id: UUID
     name: String!
   }
   
-  """GraphQL input type"""
+  """GraphQL create input type"""
   input FruitInput {
-    id: UUID!
+    id: UUID
     name: String!
-    colorId: UUID = null
     color: FruitColorIdFieldsInputFruitColorInputToOneInput = null
     sweetness: Int!
   }

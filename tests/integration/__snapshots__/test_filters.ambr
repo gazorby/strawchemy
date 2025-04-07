@@ -2714,6 +2714,30 @@
   WHERE sql_data_types.str_col ILIKE %(str_col_1)s::VARCHAR
   '''
 # ---
+# name: test_string_filters[session-tracked-inregexp-async-asyncpg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) !~ $1::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-inregexp-async-psycopg_async_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) !~ %(lower_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-inregexp-sync-psycopg_engine]
+  '''
+  SELECT sql_data_types.str_col,
+         sql_data_types.id
+  FROM sql_data_types AS sql_data_types
+  WHERE lower(sql_data_types.str_col) !~ %(lower_1)s::VARCHAR
+  '''
+# ---
 # name: test_string_filters[session-tracked-inregexp0-async-asyncpg_engine]
   '''
   SELECT sql_data_types.str_col,
@@ -2887,7 +2911,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  WHERE sql_data_types.str_col !~ $1::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-nregexp-async-psycopg_async_engine]
@@ -2895,7 +2919,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  WHERE sql_data_types.str_col !~ %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-nregexp-sync-psycopg_engine]
@@ -2903,7 +2927,7 @@
   SELECT sql_data_types.str_col,
          sql_data_types.id
   FROM sql_data_types AS sql_data_types
-  WHERE sql_data_types.str_col < not regexp > :str_col_1
+  WHERE sql_data_types.str_col !~ %(str_col_1)s::VARCHAR
   '''
 # ---
 # name: test_string_filters[session-tracked-regexp-async-asyncpg_engine]

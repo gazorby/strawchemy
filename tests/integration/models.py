@@ -19,7 +19,7 @@ metadata, geo_metadata = MetaData(), MetaData()
 
 
 class BaseColumns:
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4, info=READ_ONLY)
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), info=READ_ONLY
     )
@@ -77,11 +77,27 @@ class Color(UUIDBase):
     name: Mapped[str]
 
 
+class Group(UUIDBase):
+    __tablename__ = "group"
+
+    name: Mapped[str] = mapped_column()
+    topics: Mapped[list["Topic"]] = relationship("Topic")
+
+
+class Topic(UUIDBase):
+    __tablename__ = "topic"
+
+    name: Mapped[str] = mapped_column()
+    group_id: Mapped[UUID] = mapped_column(ForeignKey("group.id"))
+
+
 class User(UUIDBase):
     __tablename__ = "user"
 
     name: Mapped[str] = mapped_column()
     greeting: Mapped[str] = column_property("Hello, " + name)
+    group_id: Mapped[UUID | None] = mapped_column(ForeignKey("group.id"))
+    group: Mapped[Group | None] = relationship(Group)
 
 
 class SQLDataTypes(UUIDBase):

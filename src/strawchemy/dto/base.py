@@ -33,6 +33,8 @@ from strawchemy.utils import is_type_hint_optional, non_optional_type_hint
 from .types import (
     DTO_AUTO,
     DTO_MISSING,
+    DTO_SKIP,
+    DTO_UNSET,
     DTOConfig,
     DTOFieldConfig,
     DTOMissingType,
@@ -71,11 +73,7 @@ class VisitorProtocol(Protocol):
 @runtime_checkable
 class ToMappedProtocol(Protocol):
     def to_mapped(
-        self,
-        skip_dto_missing: bool = True,
-        visitor: VisitorProtocol | None = None,
-        override: dict[str, Any] | None = None,
-        level: int = 0,
+        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> Any: ...
 
 
@@ -91,11 +89,7 @@ class MappedDTO(DTOBase[ModelT]):
     """Base class to define DTO mapping classes."""
 
     def to_mapped(
-        self,
-        skip_dto_missing: bool = True,
-        visitor: VisitorProtocol | None = None,
-        override: dict[str, Any] | None = None,
-        level: int = 0,
+        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> ModelT:
         """Create an instance of `self.__sqla_model__`.
 
@@ -121,18 +115,16 @@ class MappedDTO(DTOBase[ModelT]):
 
             if isinstance(value, list | tuple):
                 value = [
-                    dto.to_mapped(skip_dto_missing, visitor, level=level + 1)
-                    if isinstance(dto, ToMappedProtocol)
-                    else cast(ModelT, dto)
+                    dto.to_mapped(visitor, level=level + 1) if isinstance(dto, ToMappedProtocol) else cast(ModelT, dto)
                     for dto in value
                 ]
             if isinstance(value, ToMappedProtocol):
-                value = value.to_mapped(skip_dto_missing, visitor, level=level + 1)
+                value = value.to_mapped(visitor, level=level + 1)
 
             if visitor is not None:
                 value = visitor.field_value(self, field_def, value, level + 1)
 
-            if skip_dto_missing and value is DTO_MISSING:
+            if value is DTO_UNSET or value is self.__dto_config__.unset_sentinel:
                 continue
 
             model_kwargs[field_def.model_field_name] = value
@@ -228,7 +220,7 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
 
     def id_field_definitions(
         self, model: type[Any], dto_config: DTOConfig
-    ) -> Iterable[tuple[str, DTOFieldDefinition[ModelT, ModelFieldT]]]: ...
+    ) -> list[tuple[str, DTOFieldDefinition[ModelT, ModelFieldT]]]: ...
 
     def field_definition(
         self, model_field: ModelFieldT, dto_config: DTOConfig
@@ -249,6 +241,14 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
     def relation_cycle(
         self, field: DTOFieldDefinition[Any, ModelFieldT], node: Node[Relation[ModelT, Any], None]
     ) -> bool: ...
+
+    def has_default(self, model_field: ModelFieldT) -> bool: ...
+
+    def required(self, model_field: ModelFieldT) -> bool: ...
+
+    def is_foreign_key(self, model_field: ModelFieldT) -> bool: ...
+
+    def is_primary_key(self, model_field: ModelFieldT) -> bool: ...
 
 
 @dataclass
@@ -280,6 +280,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
     def __post_init__(self) -> None:
         self._name = self.model_field_name
 
+        # Purpose config
         if self.purpose_config.partial is not None:
             self.partial = self.purpose_config.partial
         if self.purpose_config.alias is not None:
@@ -288,6 +289,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
         if self.purpose_config.type_override is not DTO_MISSING:
             self.type_hint_override = self.purpose_config.type_override
 
+        # DTO config
         if self.dto_config.partial is not None:
             self.partial = self.dto_config.partial
         if (alias := self.dto_config.alias(self.model_field_name)) is not None:
@@ -297,7 +299,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
             self.type_hint_override = type_override_
 
         if self.partial:
-            self.default = None
+            self.default = self.dto_config.partial_default
 
     @property
     def model_field(self) -> ModelFieldT:
@@ -334,11 +336,11 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
         if self._type is not DTO_MISSING:
             return self._type
         type_hint = self.type_hint_override if self.has_type_override else self.type_hint
-        return Optional[type_hint] if self.partial else type_hint  # noqa: UP007
+        return type_hint | None if self.partial else type_hint
 
     @type_.setter
     def type_(self, value: Any) -> None:
-        self._type = Optional[value] if self.partial else value  # noqa: UP007
+        self._type = value
 
     @property
     def has_type_override(self) -> bool:
@@ -592,6 +594,8 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             if not has_override or has_auto_override:
                 no_fields = False
                 field_def.type_ = self._resolve_type(field_def, dto_config, node, **factory_kwargs)
+                if field_def.type_ is DTO_SKIP:
+                    continue
 
             yield field_def
             no_fields = False

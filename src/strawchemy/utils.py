@@ -44,10 +44,10 @@ def snake_to_lower_camel_case(snake_str: str) -> Any:
     return snake_str[0].lower() + camel_string[1:]
 
 
-def snake_keys(dct: dict[str, Any]) -> dict[str, Any]:
+def snake_keys(value: dict[str, Any]) -> dict[str, Any]:
     """Recursively convert dict keys to from camel case to snake case."""
     res: dict[Any, Any] = {}
-    for k, v in dct.items():
+    for k, v in value.items():
         to_snake: str = camel_to_snake(k)
         if isinstance(v, list | tuple):
             res[to_snake] = [snake_keys(el) for el in v]
