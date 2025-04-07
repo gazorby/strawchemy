@@ -10,7 +10,18 @@ from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import ColorCreateInput, ColorType, FruitCreateInput, FruitType, UserCreate, UserType, strawchemy
+from .types import (  # Reformat imports for clarity
+    ColorCreateInput,
+    ColorType,
+    ColorUpdateInput,  # Add ColorUpdateInput
+    FruitCreateInput,
+    FruitType,
+    FruitUpdateInput,  # Add FruitUpdateInput
+    UserCreate,
+    UserType,
+    UserUpdateInput,  # Add UserUpdateInput
+    strawchemy,
+)
 from .typing import RawRecordData
 
 pytestmark = [pytest.mark.integration]
@@ -22,11 +33,24 @@ class AsyncMutation:
     create_colors: list[ColorType] = strawchemy.create_mutation(
         ColorCreateInput, repository_type=StrawchemyAsyncRepository
     )
+    # Add update mutations for Color
+    update_color: ColorType = strawchemy.update_mutation(ColorUpdateInput, repository_type=StrawchemyAsyncRepository)
+    update_colors: list[ColorType] = strawchemy.update_mutation(
+        ColorUpdateInput, repository_type=StrawchemyAsyncRepository
+    )
 
     create_fruit: FruitType = strawchemy.create_mutation(FruitCreateInput, repository_type=StrawchemyAsyncRepository)
     create_fruits: list[FruitType] = strawchemy.create_mutation(
         FruitCreateInput, repository_type=StrawchemyAsyncRepository
     )
+    # Add update mutations for Fruit
+    update_fruit: FruitType = strawchemy.update_mutation(FruitUpdateInput, repository_type=StrawchemyAsyncRepository)
+    update_fruits: list[FruitType] = strawchemy.update_mutation(
+        FruitUpdateInput, repository_type=StrawchemyAsyncRepository
+    )
+
+    # Add update mutation for User
+    update_user: UserType = strawchemy.update_mutation(UserUpdateInput, repository_type=StrawchemyAsyncRepository)
 
     create_user: UserType = strawchemy.create_mutation(UserCreate, repository_type=StrawchemyAsyncRepository)
 
@@ -39,11 +63,25 @@ class SyncMutation:
     )
 
     create_fruit: FruitType = strawchemy.create_mutation(FruitCreateInput, repository_type=StrawchemySyncRepository)
+    # Add update mutations for Color
+    update_color: ColorType = strawchemy.update_mutation(ColorUpdateInput, repository_type=StrawchemySyncRepository)
+    update_colors: list[ColorType] = strawchemy.update_mutation(
+        ColorUpdateInput, repository_type=StrawchemySyncRepository
+    )
+
     create_fruits: list[FruitType] = strawchemy.create_mutation(
         FruitCreateInput, repository_type=StrawchemySyncRepository
     )
 
     create_user: UserType = strawchemy.create_mutation(UserCreate, repository_type=StrawchemySyncRepository)
+    # Add update mutations for Fruit
+    update_fruit: FruitType = strawchemy.update_mutation(FruitUpdateInput, repository_type=StrawchemySyncRepository)
+    update_fruits: list[FruitType] = strawchemy.update_mutation(
+        FruitUpdateInput, repository_type=StrawchemySyncRepository
+    )
+
+    # Add update mutation for User
+    update_user: UserType = strawchemy.update_mutation(UserUpdateInput, repository_type=StrawchemySyncRepository)
 
 
 @pytest.fixture
@@ -54,6 +92,9 @@ def sync_mutation() -> type[SyncMutation]:
 @pytest.fixture
 def async_mutation() -> type[AsyncMutation]:
     return AsyncMutation
+
+
+# Create tests
 
 
 @pytest.mark.snapshot
@@ -136,7 +177,7 @@ async def test_create_nested_to_one_create(
 
 
 @pytest.mark.snapshot
-async def test_create_nested_to_one_set_and_create(
+async def test_create_nested_to_one_create_and_set(
     raw_topics: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     query = """
@@ -360,3 +401,448 @@ async def test_create_many(
 
     query_tracker.assert_statements(1, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+# Update tests
+
+
+@pytest.mark.snapshot
+async def test_update(
+    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Tests a simple update mutation."""
+    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
+    query = f"""
+        mutation {{
+            updateColor(
+                data: {{
+                    id: {color_id_gql},
+                    name: "updated color"
+                }}
+            ) {{
+                id
+                name
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["updateColor"] == {
+        "id": to_graphql_representation(raw_colors[0]["id"], "output"),
+        "name": "updated color",
+    }
+
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+
+
+@pytest.mark.snapshot
+async def test_update_nested_to_one_set(
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Tests updating a record and setting a to-one relationship."""
+    fruit_id_gql = to_graphql_representation(raw_fruits[0]["id"], "input")
+    # Use a different color to test the update
+    color_id_gql = to_graphql_representation(raw_colors[1]["id"], "input")
+    query = f"""
+        mutation {{
+            updateFruit(
+                data: {{
+                    id: {fruit_id_gql},
+                    name: "updated fruit name",
+                    color: {{ set: {{ id: {color_id_gql} }} }}
+                }}
+            ) {{
+                id
+                name
+                color {{
+                    id
+                }}
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["updateFruit"] == {
+        "id": to_graphql_representation(raw_fruits[0]["id"], "output"),
+        "name": "updated fruit name",
+        "color": {"id": to_graphql_representation(raw_colors[1]["id"], "output")},
+    }
+
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update fruit's color_id
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated fruit + color
+
+
+@pytest.mark.snapshot
+async def test_update_nested_to_one_create(
+    raw_fruits: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Tests updating a record and creating a new related record for a to-one relationship."""
+    fruit_id_gql = to_graphql_representation(raw_fruits[0]["id"], "input")
+    query = f"""
+        mutation {{
+            updateFruit(
+                data: {{
+                    id: {fruit_id_gql},
+                    name: "updated fruit name 2",
+                    color: {{ create: {{ name: "newly created color during update" }} }}
+                }}
+            ) {{
+                id
+                name
+                color {{
+                    name # Check the name of the newly created color
+                }}
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["updateFruit"] == {
+        "id": to_graphql_representation(raw_fruits[0]["id"], "output"),
+        "name": "updated fruit name 2",
+        "color": {"name": "newly created color during update"},
+    }
+
+    query_tracker.assert_statements(1, "insert", sql_snapshot)  # Insert new color
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update fruit's color_id
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated fruit + new color
+
+
+@pytest.mark.snapshot
+async def test_update_nested_to_one_create_and_set(
+    raw_users: RawRecordData,
+    raw_topics: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Tests updating a record and creating a nested related record which itself sets a relationship."""
+    user_id_gql = to_graphql_representation(raw_users[0]["id"], "input")
+    # Use a different topic to test the update/create
+    topic_id_gql = to_graphql_representation(raw_topics[1]["id"], "input")
+    query = f"""
+        mutation {{
+            updateUser(
+                data: {{
+                    id: {user_id_gql},
+                    name: "Updated Bob",
+                    group: {{
+                        create: {{
+                            name: "new group during update",
+                            topics: {{ set: [ {{ id: {topic_id_gql} }} ] }}
+                        }}
+                    }}
+                }}
+            ) {{
+                id
+                name
+                group {{
+                    name
+                    topics {{
+                        id
+                    }}
+                }}
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["updateUser"] == {
+        "id": to_graphql_representation(raw_users[0]["id"], "output"),
+        "name": "Updated Bob",
+        "group": {
+            "name": "new group during update",
+            "topics": [{"id": to_graphql_representation(raw_topics[1]["id"], "output")}],
+        },
+    }
+
+    query_tracker.assert_statements(1, "insert", sql_snapshot)  # Insert new group
+    query_tracker.assert_statements(2, "update", sql_snapshot)  # Update user's group_id and topic's group id
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated user + new group + topic
+
+
+@pytest.mark.snapshot
+async def test_update_nested_to_many_set(
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Tests updating a record and setting (replacing) a to-many relationship."""
+    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
+    # Use a different fruit to test the update
+    fruit_id_gql = to_graphql_representation(raw_fruits[1]["id"], "input")
+    query = f"""
+        mutation {{
+            updateColor(
+                data: {{
+                    id: {color_id_gql},
+                    name: "updated color name",
+                    fruits: {{ set: [{{ id: {fruit_id_gql} }}] }}
+                }}
+            ) {{
+                id
+                name
+                fruits {{
+                    id
+                }}
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["updateColor"] == {
+        "id": to_graphql_representation(raw_colors[0]["id"], "output"),
+        "name": "updated color name",
+        "fruits": [
+            {"id": to_graphql_representation(raw_fruits[0]["id"], "output")},
+            {"id": to_graphql_representation(raw_fruits[1]["id"], "output")},
+        ],
+    }
+
+    query_tracker.assert_statements(2, "update", sql_snapshot)  # Update fruit's color_id + color's name
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + fruit
+
+
+@pytest.mark.snapshot
+async def test_update_nested_to_many_create(
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Tests updating a record and creating new related records for a to-many relationship."""
+    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
+    query = f"""
+        mutation {{
+            updateColor(
+                data: {{
+                    id: {color_id_gql},
+                    name: "updated color name 2",
+                    fruits: {{
+                        create: [
+                            {{ name: "new fruit 3 during update", adjectives: ["baz"] }},
+                            {{ name: "new fruit 4 during update", adjectives: ["qux"] }}
+                        ]
+                    }}
+                }}
+            ) {{
+                id
+                name
+                fruits {{
+                    name # Check names of newly created fruits
+                }}
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    # The order might vary, sort for assertion stability
+    fruits_data = sorted(result.data["updateColor"]["fruits"], key=lambda x: x["name"])
+    assert result.data["updateColor"]["id"] == to_graphql_representation(raw_colors[0]["id"], "output")
+    assert result.data["updateColor"]["name"] == "updated color name 2"
+    assert fruits_data == [
+        {"name": raw_fruits[0]["name"]},
+        {"name": "new fruit 3 during update"},
+        {"name": "new fruit 4 during update"},
+    ]
+
+    query_tracker.assert_statements(1, "insert", sql_snapshot)  # Insert 2 new fruits, in a single batched query
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + new fruits
+
+
+@pytest.mark.snapshot
+async def test_update_nested_to_many_create_and_set(
+    raw_colors: RawRecordData,
+    raw_farms: RawRecordData,
+    raw_fruits: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Tests updating a record and creating a nested related record which itself sets a to-many relationship."""
+    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
+    # Use a different farm
+    farm_id_gql = to_graphql_representation(raw_farms[1]["id"], "input")
+    query = f"""
+        mutation {{
+            updateColor(
+                data: {{
+                    id: {color_id_gql},
+                    name: "Updated White",
+                    fruits: {{
+                        create: [
+                            {{
+                                name: "New Grape during update",
+                                adjectives: ["sour", "small"],
+                                farms: {{ set: [ {{ id: {farm_id_gql} }} ] }}
+                            }}
+                        ]
+                    }}
+                }}
+            ) {{
+                id
+                name
+                fruits {{
+                    name
+                    farms {{
+                        id
+                    }}
+                }}
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["updateColor"] == {
+        "id": to_graphql_representation(raw_colors[0]["id"], "output"),
+        "name": "Updated White",
+        "fruits": [
+            # Existing fruit
+            {
+                "name": raw_fruits[0]["name"],
+                "farms": [
+                    {
+                        "id": to_graphql_representation(farm["id"], "output")  # noqa: B035
+                        for farm in raw_farms
+                        if farm["fruit_id"] == raw_fruits[0]["id"]
+                    }
+                ],
+            },
+            # New one
+            {
+                "name": "New Grape during update",
+                "farms": [{"id": to_graphql_representation(raw_farms[1]["id"], "output")}],
+            },
+        ],
+    }
+
+    query_tracker.assert_statements(1, "insert", sql_snapshot)  # Insert new fruit
+    query_tracker.assert_statements(2, "update", sql_snapshot)  # Update color name + fruit's farm_id
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + new fruit + farm
+
+
+@pytest.mark.snapshot
+async def test_update_nested_mixed_relations_create(
+    raw_farms: RawRecordData,
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Tests updating a record and creating multiple nested relations with different structures."""
+    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
+    query = f"""
+        mutation {{
+            updateColor(
+                data: {{
+                    id: {color_id_gql},
+                    name: "Updated White 2",
+                    fruits: {{
+                        create: [
+                            {{
+                                name: "New Grape 2",
+                                product: {{ create: {{ name: "juice" }} }},
+                                adjectives: ["sweet"]
+                            }},
+                            {{
+                                name: "New Lychee 2",
+                                farms: {{ create: [ {{ name: "Organic farm" }} ] }},
+                                adjectives: ["exotic"]
+                            }},
+                        ]
+                    }}
+                }}
+            ) {{
+                id
+                name
+                fruits {{
+                    name
+                    product {{ name }}
+                    farms {{ name }}
+                }}
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    # Sort fruits for assertion stability
+    fruits_data = sorted(result.data["updateColor"]["fruits"], key=lambda x: x["name"])
+    assert result.data["updateColor"]["id"] == to_graphql_representation(raw_colors[0]["id"], "output")
+    assert result.data["updateColor"]["name"] == "Updated White 2"
+    assert fruits_data == [
+        # Existing fruit
+        {
+            "name": raw_fruits[0]["name"],
+            "farms": [
+                {
+                    "name": to_graphql_representation(farm["name"], "output")  # noqa: B035
+                    for farm in raw_farms
+                    if farm["fruit_id"] == raw_fruits[0]["id"]
+                }
+            ],
+            "product": None,
+        },
+        {"name": "New Grape 2", "product": {"name": "juice"}, "farms": []},
+        {"name": "New Lychee 2", "product": None, "farms": [{"name": "Organic farm"}]},
+    ]
+
+    # Heterogeneous params means inserts cannot be batched
+    query_tracker.assert_statements(4, "insert", sql_snapshot)  # product, farm, fruit1, fruit2
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # update color name
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # fetch updated color + new relations
+
+
+@pytest.mark.snapshot
+async def test_update_many(
+    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Tests updating multiple records in a single mutation."""
+    color_id1_gql = to_graphql_representation(raw_colors[0]["id"], "input")
+    color_id2_gql = to_graphql_representation(raw_colors[1]["id"], "input")
+    query = f"""
+        mutation {{
+            updateColors(
+                data: [
+                    {{ id: {color_id1_gql}, name: "batch updated color" }},
+                    {{ id: {color_id2_gql}, name: "batch updated color" }}
+                ]
+            ) {{
+                id
+                name
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    # Order might not be guaranteed, sort by ID
+    updated_colors = sorted(result.data["updateColors"], key=lambda x: x["id"])
+    expected_colors = sorted(
+        [
+            {"id": to_graphql_representation(raw_colors[0]["id"], "output"), "name": "batch updated color"},
+            {"id": to_graphql_representation(raw_colors[1]["id"], "output"), "name": "batch updated color"},
+        ],
+        key=lambda x: x["id"],
+    )
+    assert updated_colors == expected_colors
+
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update colors in a single query
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated records

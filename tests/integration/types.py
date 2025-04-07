@@ -47,6 +47,10 @@ class UserFilter: ...
 class UserCreate: ...
 
 
+@strawchemy.input(User, "update", include="all")
+class UserUpdateInput: ...
+
+
 # Fruit
 
 
@@ -105,6 +109,10 @@ class FruitOrderBy: ...
 class FruitCreateInput: ...
 
 
+@strawchemy.input(Fruit, "update", include="all")
+class FruitUpdateInput: ...
+
+
 # Color
 
 
@@ -140,6 +148,10 @@ class ColorTypeHooks:
 
 @strawchemy.input(Color, "create", include="all")
 class ColorCreateInput: ...
+
+
+@strawchemy.input(Color, "update", include="all")
+class ColorUpdateInput: ...
 
 
 # SQL Data types
