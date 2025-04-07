@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, namedtuple
-from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias, TypeVar
 
 from sqlalchemy import Row, insert, update
 from sqlalchemy.orm import RelationshipProperty
@@ -29,7 +29,7 @@ RowLike: TypeAlias = "Row[Any] | NamedTuple"
 
 
 class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, AnySyncSession]):
-    def _insert(
+    def _insert_nested(
         self,
         model_type: type[DeclarativeBase],
         values: list[dict[str, Any]],
@@ -99,7 +99,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                 insert_params[create_input.relation.field.related_model].append(self._to_dict(create_input.instance))
 
             for model_type, values in insert_params.items():
-                self._insert(model_type, values, level)
+                self._insert_nested(model_type, values, level)
 
     def _connect_to_many_relations(
         self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], created_ids: Sequence[RowLike]
@@ -176,61 +176,26 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                 insert_params[relation.field.related_model].append(self._to_dict(create_input.instance) | fks)
 
             for model_type, values in insert_params.items():
-                self._insert(model_type, values, level)
+                self._insert_nested(model_type, values, level)
 
-    def _create_many(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> Sequence[RowLike]:
-        """Performs a bulk creation operation, including nested relationships.
-
-        Handles the creation of multiple instances of the repository's main model,
-        along with any specified nested creations or connections for both to-one
-        and to-many relationships, within a single transaction.
-
-        Args:
-            data: The processed input data containing the instances to create and
-                their relationship details.
-
-        Returns:
-            A sequence of RowLike objects containing the primary keys of the
-            newly created main model instances.
-        """
+    def _mutate(
+        self, mode: Literal["insert", "update"], data: InputData[DeclarativeBase, QueryableAttribute[Any]]
+    ) -> Sequence[RowLike]:
+        model_pks = self.model.__mapper__.primary_key
         with self.session.begin_nested() as transaction:
             self._connect_to_one_relations(data)
             self._create_nested_to_one_relations(data)
-            result = self.session.execute(
-                insert(self.model).returning(*self.model.__mapper__.primary_key, sort_by_parameter_order=True),
-                [self._to_dict(instance) for instance in data.input_instances],
-            )
-            instance_ids = result.all()
-            self._create_to_many_relations(data, instance_ids)
-            self._connect_to_many_relations(data, instance_ids)
-            transaction.commit()
-        return instance_ids
-
-    def _update_many(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> Sequence[RowLike]:
-        """Performs a bulk update operation, including nested relationships.
-
-        Handles the update of multiple instances of the repository's main model.
-        It also processes nested creations ('create') and connections ('set')
-        for related objects within the same transaction. Note that nested updates
-        are not explicitly handled here but rely on the structure of `data`.
-
-        Args:
-            data: The processed input data containing the instances to update and
-                their relationship details. Primary keys must be present in the
-                input data for the update to target the correct records.
-
-        Returns:
-            A sequence of RowLike objects containing the primary keys of the
-            updated main model instances.
-        """
-        pks = [column.key for column in self.model.__mapper__.primary_key]
-        pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
-        with self.session.begin_nested() as transaction:
-            self._connect_to_one_relations(data)
-            self._create_nested_to_one_relations(data)
-            update_values = [self._to_dict(instance) for instance in data.input_instances]
-            instance_ids = [pk_tuple(*[instance[name] for name in pks]) for instance in update_values]
-            self.session.execute(update(self.model), update_values)
+            values = [self._to_dict(instance) for instance in data.input_instances]
+            if mode == "insert":
+                result = self.session.execute(
+                    insert(self.model).returning(*model_pks, sort_by_parameter_order=True), values
+                )
+                instance_ids = result.all()
+            else:
+                pks = [column.key for column in model_pks]
+                pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
+                self.session.execute(update(self.model), values)
+                instance_ids = [pk_tuple(*[instance[name] for name in pks]) for instance in values]
             self._create_to_many_relations(data, instance_ids)
             self._connect_to_many_relations(data, instance_ids)
             transaction.commit()
@@ -421,7 +386,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             A QueryResult containing the newly created records, structured
             according to the selection.
         """
-        created_ids = self._create_many(data)
+        created_ids = self._mutate("insert", data)
         return self._list_by_ids(created_ids, selection)
 
     def update(
@@ -442,5 +407,5 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             A QueryResult containing the updated records, structured
             according to the selection.
         """
-        update_ids = self._update_many(data)
-        return self._list_by_ids(update_ids, selection)
+        updated_ids = self._mutate("update", data)
+        return self._list_by_ids(updated_ids, selection)

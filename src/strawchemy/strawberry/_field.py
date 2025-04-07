@@ -57,7 +57,7 @@ from .exceptions import StrawchemyFieldError
 from .repository import StrawchemyAsyncRepository, StrawchemySyncRepository
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, Coroutine, Mapping, Sequence
+    from collections.abc import Awaitable, Callable, Coroutine, Mapping
 
     from sqlalchemy import Select
     from strawberry import BasePermission, Info
@@ -478,40 +478,16 @@ class StrawchemyMutationField(StrawchemyField[ModelT, ModelFieldT]):
         self._mutation_type: MutationType = mutation_type
 
     def _create_resolver(
-        self, info: Info, data: AnyMappedDTO
+        self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.create(data)
-
-    def _create_many_resolver(
-        self, info: Info, data: Sequence[AnyMappedDTO]
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
-        repository = self._get_repository(info)
-        return repository.create_many(data)
+        return repository.create_many(data) if isinstance(data, Sequence) else repository.create(data)
 
     def _update_resolver(
         self, info: Info, data: AnyMappedDTO
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.update(data)
-
-    def _update_many_resolver(
-        self, info: Info, data: Sequence[AnyMappedDTO]
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
-        repository = self._get_repository(info)
-        return repository.update_many(data)
-
-    def _delete_resolver(
-        self, info: Info, data: AnyMappedDTO
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
-        repository = self._get_repository(info)
-        return repository.create(data)
-
-    def _delete_many_resolver(
-        self, info: Info, data: Sequence[AnyMappedDTO]
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
-        repository = self._get_repository(info)
-        return repository.create_many(data)
+        return repository.update_many(data) if isinstance(data, Sequence) else repository.update(data)
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -524,19 +500,5 @@ class StrawchemyMutationField(StrawchemyField[ModelT, ModelFieldT]):
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         if self._mutation_type == "create":
-            return (
-                self._create_many_resolver(info, *args, **kwargs)
-                if self.is_list
-                else self._create_resolver(info, *args, **kwargs)
-            )
-        if self._mutation_type == "update":
-            return (
-                self._update_many_resolver(info, *args, **kwargs)
-                if self.is_list
-                else self._update_resolver(info, *args, **kwargs)
-            )
-        return (
-            self._delete_many_resolver(info, *args, **kwargs)
-            if self.is_list
-            else self._delete_resolver(info, *args, **kwargs)
-        )
+            return self._create_resolver(info, *args, **kwargs)
+        return self._update_resolver(info, *args, **kwargs)
