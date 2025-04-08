@@ -1,22 +1,25 @@
 # serializer version: 1
 # name: test_distinct[session-tracked-async-asyncpg_engine]
   '''
-  SELECT DISTINCT ON (color.name) color.name,
-                     color.id
-  FROM color AS color
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id
+    FROM color AS color
   '''
 # ---
 # name: test_distinct[session-tracked-async-psycopg_async_engine]
   '''
-  SELECT DISTINCT ON (color.name) color.name,
-                     color.id
-  FROM color AS color
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id
+    FROM color AS color
   '''
 # ---
 # name: test_distinct[session-tracked-sync-psycopg_engine]
   '''
-  SELECT DISTINCT ON (color.name) color.name,
-                     color.id
-  FROM color AS color
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id
+    FROM color AS color
   '''
 # ---

@@ -3,138 +3,144 @@
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  ORDER BY fruit.name ASC
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-orderedFruits-async-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  ORDER BY fruit.name ASC
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-orderedFruits-sync-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  ORDER BY fruit.name ASC
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-orderedFruitsPaginated-async-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM
-    (SELECT fruit.name AS name,
-            fruit.id AS id
-     FROM fruit AS fruit
-     ORDER BY fruit.name ASC
-     LIMIT $1::INTEGER
-     OFFSET $2::INTEGER) AS fruit
-  ORDER BY fruit.name ASC
-  LIMIT $3::INTEGER
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   ORDER BY fruit.name ASC
+   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-orderedFruitsPaginated-async-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM
-    (SELECT fruit.name AS name,
-            fruit.id AS id
-     FROM fruit AS fruit
-     ORDER BY fruit.name ASC
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS fruit
-  ORDER BY fruit.name ASC
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.name ASC
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-orderedFruitsPaginated-sync-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM
-    (SELECT fruit.name AS name,
-            fruit.id AS id
-     FROM fruit AS fruit
-     ORDER BY fruit.name ASC
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS fruit
-  ORDER BY fruit.name ASC
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.name ASC
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruits-async-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  WHERE fruit.name = $1::VARCHAR
+    FROM fruit AS fruit
+   WHERE fruit.name = $1::VARCHAR
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruits-async-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  WHERE fruit.name = %(name_1)s::VARCHAR
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruits-sync-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  WHERE fruit.name = %(name_1)s::VARCHAR
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruitsPaginated-async-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM
-    (SELECT fruit.name AS name,
-            fruit.id AS id
-     FROM fruit AS fruit
-     WHERE fruit.name = $1::VARCHAR
-     LIMIT $2::INTEGER
-     OFFSET $3::INTEGER) AS fruit
-  WHERE fruit.name = $4::VARCHAR
-  LIMIT $5::INTEGER
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           WHERE fruit.name = $1::VARCHAR
+           LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
+         ) AS fruit
+   WHERE fruit.name = $4::VARCHAR
+   LIMIT $5::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruitsPaginated-async-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM
-    (SELECT fruit.name AS name,
-            fruit.id AS id
-     FROM fruit AS fruit
-     WHERE fruit.name = %(name_1)s::VARCHAR
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS fruit
-  WHERE fruit.name = %(name_2)s::VARCHAR
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           WHERE fruit.name = %(name_1)s::VARCHAR
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   WHERE fruit.name = %(name_2)s::VARCHAR
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-filteredFruitsPaginated-sync-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM
-    (SELECT fruit.name AS name,
-            fruit.id AS id
-     FROM fruit AS fruit
-     WHERE fruit.name = %(name_1)s::VARCHAR
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS fruit
-  WHERE fruit.name = %(name_2)s::VARCHAR
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           WHERE fruit.name = %(name_1)s::VARCHAR
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   WHERE fruit.name = %(name_2)s::VARCHAR
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-fruits-async-asyncpg_engine]
@@ -142,7 +148,7 @@
   SELECT fruit.name,
          fruit.adjectives,
          fruit.id
-  FROM fruit AS fruit
+    FROM fruit AS fruit
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-fruits-async-psycopg_async_engine]
@@ -150,7 +156,7 @@
   SELECT fruit.name,
          fruit.adjectives,
          fruit.id
-  FROM fruit AS fruit
+    FROM fruit AS fruit
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-fruits-sync-psycopg_engine]
@@ -158,7 +164,7 @@
   SELECT fruit.name,
          fruit.adjectives,
          fruit.id
-  FROM fruit AS fruit
+    FROM fruit AS fruit
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-fruitsPaginated-async-asyncpg_engine]
@@ -166,14 +172,15 @@
   SELECT fruit.name,
          fruit.adjectives,
          fruit.id
-  FROM
-    (SELECT fruit.id AS id,
-            fruit.name AS name,
-            fruit.adjectives AS adjectives
-     FROM fruit AS fruit
-     LIMIT $1::INTEGER
-     OFFSET $2::INTEGER) AS fruit
-  LIMIT $3::INTEGER
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name,
+                 fruit.adjectives AS adjectives
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-fruitsPaginated-async-psycopg_async_engine]
@@ -181,14 +188,15 @@
   SELECT fruit.name,
          fruit.adjectives,
          fruit.id
-  FROM
-    (SELECT fruit.id AS id,
-            fruit.name AS name,
-            fruit.adjectives AS adjectives
-     FROM fruit AS fruit
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS fruit
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name,
+                 fruit.adjectives AS adjectives
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-fruitsPaginated-sync-psycopg_engine]
@@ -196,20 +204,21 @@
   SELECT fruit.name,
          fruit.adjectives,
          fruit.id
-  FROM
-    (SELECT fruit.id AS id,
-            fruit.name AS name,
-            fruit.adjectives AS adjectives
-     FROM fruit AS fruit
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS fruit
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name,
+                 fruit.adjectives AS adjectives
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colors-async-asyncpg_engine]
   '''
   SELECT color.id
-  FROM color AS color
+    FROM color AS color
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colors-async-asyncpg_engine].1
@@ -223,15 +232,16 @@
          fruit.updated_at AS fruit_updated_at,
          fruit_farm_1.name AS fruit_farm_1_name,
          fruit_farm_1.id AS fruit_farm_1_id
-  FROM fruit
-  LEFT OUTER JOIN fruit_farm AS fruit_farm_1 ON fruit.id = fruit_farm_1.fruit_id
-  WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit
+    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
+      ON fruit.id = fruit_farm_1.fruit_id
+   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colors-async-psycopg_async_engine]
   '''
   SELECT color.id
-  FROM color AS color
+    FROM color AS color
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colors-async-psycopg_async_engine].1
@@ -245,15 +255,16 @@
          fruit.updated_at AS fruit_updated_at,
          fruit_farm_1.name AS fruit_farm_1_name,
          fruit_farm_1.id AS fruit_farm_1_id
-  FROM fruit
-  LEFT OUTER JOIN fruit_farm AS fruit_farm_1 ON fruit.id = fruit_farm_1.fruit_id
-  WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit
+    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
+      ON fruit.id = fruit_farm_1.fruit_id
+   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colors-sync-psycopg_engine]
   '''
   SELECT color.id
-  FROM color AS color
+    FROM color AS color
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colors-sync-psycopg_engine].1
@@ -267,20 +278,22 @@
          fruit.updated_at AS fruit_updated_at,
          fruit_farm_1.name AS fruit_farm_1_name,
          fruit_farm_1.id AS fruit_farm_1_id
-  FROM fruit
-  LEFT OUTER JOIN fruit_farm AS fruit_farm_1 ON fruit.id = fruit_farm_1.fruit_id
-  WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit
+    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
+      ON fruit.id = fruit_farm_1.fruit_id
+   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colorsPaginated-async-asyncpg_engine]
   '''
   SELECT color.id
-  FROM
-    (SELECT color.id AS id
-     FROM color AS color
-     LIMIT $1::INTEGER
-     OFFSET $2::INTEGER) AS color
-  LIMIT $3::INTEGER
+    FROM (
+          SELECT color.id AS id
+            FROM color AS color
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS color
+   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colorsPaginated-async-asyncpg_engine].1
@@ -294,20 +307,22 @@
          fruit.updated_at AS fruit_updated_at,
          fruit_farm_1.name AS fruit_farm_1_name,
          fruit_farm_1.id AS fruit_farm_1_id
-  FROM fruit
-  LEFT OUTER JOIN fruit_farm AS fruit_farm_1 ON fruit.id = fruit_farm_1.fruit_id
-  WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit
+    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
+      ON fruit.id = fruit_farm_1.fruit_id
+   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colorsPaginated-async-psycopg_async_engine]
   '''
   SELECT color.id
-  FROM
-    (SELECT color.id AS id
-     FROM color AS color
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS color
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT color.id AS id
+            FROM color AS color
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS color
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colorsPaginated-async-psycopg_async_engine].1
@@ -321,20 +336,22 @@
          fruit.updated_at AS fruit_updated_at,
          fruit_farm_1.name AS fruit_farm_1_name,
          fruit_farm_1.id AS fruit_farm_1_id
-  FROM fruit
-  LEFT OUTER JOIN fruit_farm AS fruit_farm_1 ON fruit.id = fruit_farm_1.fruit_id
-  WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit
+    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
+      ON fruit.id = fruit_farm_1.fruit_id
+   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colorsPaginated-sync-psycopg_engine]
   '''
   SELECT color.id
-  FROM
-    (SELECT color.id AS id
-     FROM color AS color
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS color
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT color.id AS id
+            FROM color AS color
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS color
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-colorsPaginated-sync-psycopg_engine].1
@@ -348,15 +365,16 @@
          fruit.updated_at AS fruit_updated_at,
          fruit_farm_1.name AS fruit_farm_1_name,
          fruit_farm_1.id AS fruit_farm_1_id
-  FROM fruit
-  LEFT OUTER JOIN fruit_farm AS fruit_farm_1 ON fruit.id = fruit_farm_1.fruit_id
-  WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit
+    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
+      ON fruit.id = fruit_farm_1.fruit_id
+   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruits-async-asyncpg_engine]
   '''
   SELECT fruit.id
-  FROM fruit AS fruit
+    FROM fruit AS fruit
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruits-async-asyncpg_engine].1
@@ -366,14 +384,14 @@
          fruit_farm.id AS fruit_farm_id,
          fruit_farm.created_at AS fruit_farm_created_at,
          fruit_farm.updated_at AS fruit_farm_updated_at
-  FROM fruit_farm
-  WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit_farm
+   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruits-async-psycopg_async_engine]
   '''
   SELECT fruit.id
-  FROM fruit AS fruit
+    FROM fruit AS fruit
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruits-async-psycopg_async_engine].1
@@ -383,14 +401,14 @@
          fruit_farm.id AS fruit_farm_id,
          fruit_farm.created_at AS fruit_farm_created_at,
          fruit_farm.updated_at AS fruit_farm_updated_at
-  FROM fruit_farm
-  WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit_farm
+   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruits-sync-psycopg_engine]
   '''
   SELECT fruit.id
-  FROM fruit AS fruit
+    FROM fruit AS fruit
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruits-sync-psycopg_engine].1
@@ -400,19 +418,20 @@
          fruit_farm.id AS fruit_farm_id,
          fruit_farm.created_at AS fruit_farm_created_at,
          fruit_farm.updated_at AS fruit_farm_updated_at
-  FROM fruit_farm
-  WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit_farm
+   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruitsPaginated-async-asyncpg_engine]
   '''
   SELECT fruit.id
-  FROM
-    (SELECT fruit.id AS id
-     FROM fruit AS fruit
-     LIMIT $1::INTEGER
-     OFFSET $2::INTEGER) AS fruit
-  LIMIT $3::INTEGER
+    FROM (
+          SELECT fruit.id AS id
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruitsPaginated-async-asyncpg_engine].1
@@ -422,19 +441,20 @@
          fruit_farm.id AS fruit_farm_id,
          fruit_farm.created_at AS fruit_farm_created_at,
          fruit_farm.updated_at AS fruit_farm_updated_at
-  FROM fruit_farm
-  WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit_farm
+   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruitsPaginated-async-psycopg_async_engine]
   '''
   SELECT fruit.id
-  FROM
-    (SELECT fruit.id AS id
-     FROM fruit AS fruit
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS fruit
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT fruit.id AS id
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruitsPaginated-async-psycopg_async_engine].1
@@ -444,19 +464,20 @@
          fruit_farm.id AS fruit_farm_id,
          fruit_farm.created_at AS fruit_farm_created_at,
          fruit_farm.updated_at AS fruit_farm_updated_at
-  FROM fruit_farm
-  WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit_farm
+   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruitsPaginated-sync-psycopg_engine]
   '''
   SELECT fruit.id
-  FROM
-    (SELECT fruit.id AS id
-     FROM fruit AS fruit
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS fruit
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT fruit.id AS id
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-fruitsPaginated-sync-psycopg_engine].1
@@ -466,16 +487,17 @@
          fruit_farm.id AS fruit_farm_id,
          fruit_farm.created_at AS fruit_farm_created_at,
          fruit_farm.updated_at AS fruit_farm_updated_at
-  FROM fruit_farm
-  WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit_farm
+   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooks-async-asyncpg_engine]
   '''
   SELECT color__fruits.id,
          color.id AS id_1
-  FROM color AS color
-  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooks-async-asyncpg_engine].1
@@ -484,17 +506,19 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooks-async-psycopg_async_engine]
   '''
   SELECT color__fruits.id,
          color.id AS id_1
-  FROM color AS color
-  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooks-async-psycopg_async_engine].1
@@ -503,17 +527,19 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooks-sync-psycopg_engine]
   '''
   SELECT color__fruits.id,
          color.id AS id_1
-  FROM color AS color
-  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooks-sync-psycopg_engine].1
@@ -522,23 +548,26 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooksPaginated-async-asyncpg_engine]
   '''
   SELECT color__fruits.id,
          color.id AS id_1
-  FROM
-    (SELECT color.id AS id,
-            color.id AS id__1
-     FROM color AS color
-     LIMIT $1::INTEGER
-     OFFSET $2::INTEGER) AS color
-  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
-  LIMIT $3::INTEGER
+    FROM (
+          SELECT color.id AS id,
+                 color.id AS id__1
+            FROM color AS color
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooksPaginated-async-asyncpg_engine].1
@@ -547,23 +576,26 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooksPaginated-async-psycopg_async_engine]
   '''
   SELECT color__fruits.id,
          color.id AS id_1
-  FROM
-    (SELECT color.id AS id,
-            color.id AS id__1
-     FROM color AS color
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS color
-  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT color.id AS id,
+                 color.id AS id__1
+            FROM color AS color
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooksPaginated-async-psycopg_async_engine].1
@@ -572,23 +604,26 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooksPaginated-sync-psycopg_engine]
   '''
   SELECT color__fruits.id,
          color.id AS id_1
-  FROM
-    (SELECT color.id AS id,
-            color.id AS id__1
-     FROM color AS color
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS color
-  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT color.id AS id,
+                 color.id AS id__1
+            FROM color AS color
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-colorsHooksPaginated-sync-psycopg_engine].1
@@ -597,15 +632,16 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruits-async-asyncpg_engine]
   '''
   SELECT fruit.id
-  FROM fruit AS fruit
+    FROM fruit AS fruit
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruits-async-asyncpg_engine].1
@@ -614,15 +650,16 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruits-async-psycopg_async_engine]
   '''
   SELECT fruit.id
-  FROM fruit AS fruit
+    FROM fruit AS fruit
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruits-async-psycopg_async_engine].1
@@ -631,15 +668,16 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruits-sync-psycopg_engine]
   '''
   SELECT fruit.id
-  FROM fruit AS fruit
+    FROM fruit AS fruit
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruits-sync-psycopg_engine].1
@@ -648,20 +686,22 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruitsPaginated-async-asyncpg_engine]
   '''
   SELECT fruit.id
-  FROM
-    (SELECT fruit.id AS id
-     FROM fruit AS fruit
-     LIMIT $1::INTEGER
-     OFFSET $2::INTEGER) AS fruit
-  LIMIT $3::INTEGER
+    FROM (
+          SELECT fruit.id AS id
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruitsPaginated-async-asyncpg_engine].1
@@ -670,20 +710,22 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruitsPaginated-async-psycopg_async_engine]
   '''
   SELECT fruit.id
-  FROM
-    (SELECT fruit.id AS id
-     FROM fruit AS fruit
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS fruit
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT fruit.id AS id
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruitsPaginated-async-psycopg_async_engine].1
@@ -692,20 +734,22 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruitsPaginated-sync-psycopg_engine]
   '''
   SELECT fruit.id
-  FROM
-    (SELECT fruit.id AS id
-     FROM fruit AS fruit
-     LIMIT %(param_1)s::INTEGER
-     OFFSET %(param_2)s::INTEGER) AS fruit
-  LIMIT %(param_3)s::INTEGER
+    FROM (
+          SELECT fruit.id AS id
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-fruitsPaginated-sync-psycopg_engine].1
@@ -714,9 +758,10 @@
          color.name AS color_name,
          color.id AS color_id,
          color.created_at AS color_created_at
-  FROM fruit AS fruit_1
-  JOIN color ON color.id = fruit_1.color_id
-  WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
+    FROM fruit AS fruit_1
+    JOIN color
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-async-asyncpg_engine]
@@ -724,9 +769,10 @@
   SELECT color__fruits.name,
          color__fruits.id,
          color.id AS id_1
-  FROM color AS color
-  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
-  WHERE color__fruits.name = $1::VARCHAR
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color__fruits.name = $1::VARCHAR
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-async-psycopg_async_engine]
@@ -734,9 +780,10 @@
   SELECT color__fruits.name,
          color__fruits.id,
          color.id AS id_1
-  FROM color AS color
-  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
-  WHERE color__fruits.name = %(name_1)s::VARCHAR
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color__fruits.name = %(name_1)s::VARCHAR
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-sync-psycopg_engine]
@@ -744,8 +791,9 @@
   SELECT color__fruits.name,
          color__fruits.id,
          color.id AS id_1
-  FROM color AS color
-  LEFT OUTER JOIN fruit AS color__fruits ON color.id = color__fruits.color_id
-  WHERE color__fruits.name = %(name_1)s::VARCHAR
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color__fruits.name = %(name_1)s::VARCHAR
   '''
 # ---
