@@ -136,7 +136,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                             for local, remote in prop.local_remote_pairs
                             if local.key and remote.key
                         }
-                        for relation_model in relation.set
+                        for relation_model in (relation.set or [])
                     ]
                 )
 

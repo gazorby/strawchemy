@@ -14,13 +14,18 @@
   input GroupInput {
     id: UUID
     name: String!
-    tag: GroupTagIdFieldsInputGroupTagInputToOneInput!
+    tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyCreateInput
   }
   
   """Identifier input"""
   input GroupTagIdFieldsInput {
     id: UUID!
+  }
+  
+  input GroupTagIdFieldsInputGroupTagInputRequiredToOneInput {
+    set: GroupTagIdFieldsInput
+    create: GroupTagInput
   }
   
   input GroupTagIdFieldsInputGroupTagInputToOneInput {

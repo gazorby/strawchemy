@@ -73,7 +73,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         for relation in data.relations:
             prop = relation.field.model_field.property
             if (
-                not relation.set
+                (not relation.set and relation.set is not None)
                 or not isinstance(prop, RelationshipProperty)
                 or relation.relation_type is not RelationType.TO_ONE
             ):
@@ -83,4 +83,5 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                 assert local.key
                 assert remote.key
                 # We take the first input as it's a *ToOne relation
-                setattr(relation.parent, local.key, getattr(relation.set[0], remote.key))
+                value = getattr(relation.set[0], remote.key) if relation.set else None
+                setattr(relation.parent, local.key, value)

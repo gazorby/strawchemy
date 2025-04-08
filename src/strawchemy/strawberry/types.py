@@ -5,7 +5,12 @@ from typing import Any, TypeVar
 import strawberry
 from strawberry import UNSET
 from strawchemy.dto.base import MappedDTO
-from strawchemy.graphql.mutation import ToManyCreateInputMixin, ToManyUpdateInputMixin, ToOneInputMixin
+from strawchemy.graphql.mutation import (
+    RequiredToOneInputMixin,
+    ToManyCreateInputMixin,
+    ToManyUpdateInputMixin,
+    ToOneInputMixin,
+)
 
 T = TypeVar("T", bound=MappedDTO[Any])
 RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
@@ -13,6 +18,12 @@ RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
 
 @strawberry.input
 class ToOneInput(ToOneInputMixin[T, RelationInputT]):
+    set: T | None = UNSET
+    create: RelationInputT | None = UNSET
+
+
+@strawberry.input
+class RequiredToOneInput(RequiredToOneInputMixin[T, RelationInputT]):
     set: T | None = UNSET
     create: RelationInputT | None = UNSET
 

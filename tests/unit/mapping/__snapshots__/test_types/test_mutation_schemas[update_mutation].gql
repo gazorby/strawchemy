@@ -15,6 +15,11 @@
     id: UUID!
   }
   
+  input GroupTagIdFieldsInputGroupTagInputRequiredToOneInput {
+    set: GroupTagIdFieldsInput
+    create: GroupTagInput
+  }
+  
   input GroupTagIdFieldsInputGroupTagInputToOneInput {
     set: GroupTagIdFieldsInput
     create: GroupTagInput
@@ -42,7 +47,7 @@
   input GroupUpdate {
     id: UUID!
     name: String
-    tag: GroupTagIdFieldsInputGroupTagInputToOneInput!
+    tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
   }
   
