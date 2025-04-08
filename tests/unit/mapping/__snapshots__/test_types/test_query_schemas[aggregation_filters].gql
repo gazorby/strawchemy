@@ -16,6 +16,14 @@
     lte: Float
   }
   
+  """Aggregation fields"""
+  type GroupAggregate {
+    count: Int
+    sum: GroupSumFields!
+    min: GroupMinMaxFields!
+    max: GroupMinMaxFields!
+  }
+  
   """
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
@@ -76,8 +84,16 @@
     users: UserBoolExp
   }
   
+  type GroupMinMaxFields {
+    name: String
+  }
+  
   enum GroupMinMaxStringFieldsEnum {
     name
+  }
+  
+  type GroupSumFields {
+    name: String
   }
   
   enum GroupSumFieldsEnum {
@@ -191,6 +207,8 @@
     _or: [TagBoolExp!]
     _not: TagBoolExp
     id: UUIDComparison
+    groupsAggregate: GroupAggregateBoolExp
+    groups: GroupFilter
     name: StringComparison
   }
   
@@ -210,6 +228,10 @@
   """GraphQL type"""
   type TagType {
     id: UUID!
+    groupsAggregate: GroupAggregate!
+  
+    """Fetch objects from the GroupType collection"""
+    groups: [GroupType!]!
     name: String!
   }
   

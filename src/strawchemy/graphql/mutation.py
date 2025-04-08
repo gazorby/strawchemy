@@ -9,7 +9,7 @@ from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ModelFieldT, Mode
 from strawchemy.dto.types import DTO_UNSET, DTOUnsetType
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from strawchemy.graphql.typing import AnyMappedDTO
 
@@ -28,15 +28,23 @@ class ToOneInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
 
     @override
     def to_mapped(
-        self,
-        visitor: VisitorProtocol | None = None,
-        override: dict[str, Any] | None = None,
-        level: int = 0,
+        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> Any | DTOUnsetType:
         if self.create and self.set:
-            msg = "You cannot use both `set` and `create` in a relation"
+            msg = "You cannot use both `set` and `create` in a -to-one relation input"
             raise ValueError(msg)
         return self.create.to_mapped(visitor, level=level) if self.create else DTO_UNSET
+
+
+class RequiredToOneInputMixin(ToOneInputMixin[T, RelationInputT]):
+    @override
+    def to_mapped(
+        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+    ) -> Any | DTOUnsetType:
+        if not self.create and not self.set:
+            msg = "Relation is required, you must set either `set` or `create`."
+            raise ValueError(msg)
+        return super().to_mapped(visitor, level=level)
 
 
 class ToManyCreateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
@@ -49,32 +57,41 @@ class ToManyCreateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
         self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> list[Any] | DTOUnsetType:
         if self.set and (self.create or self.add):
-            msg = "You cannot use `set` with `create` or `add`"
+            msg = "You cannot use `set` with `create` or `add` in -to-many relation input"
             raise ValueError(msg)
         return [dto.to_mapped(visitor, level=level) for dto in self.create] if self.create else DTO_UNSET
 
 
-class ToManyUpdateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
-    set: list[T] | None
+class RequiredToManyUpdateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
     add: list[T] | None
-    remove: list[T] | None
     create: list[RelationInputT] | None
 
     @override
     def to_mapped(
         self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> list[Any] | DTOUnsetType:
-        if self.set and (self.create or self.add):
-            msg = "You cannot use `set` with `create` or `add`"
-            raise ValueError(msg)
         return [dto.to_mapped(visitor, level=level) for dto in self.create] if self.create else DTO_UNSET
+
+
+class ToManyUpdateInputMixin(RequiredToManyUpdateInputMixin[T, RelationInputT]):
+    set: list[T] | None
+    remove: list[T] | None
+
+    @override
+    def to_mapped(
+        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+    ) -> list[Any] | DTOUnsetType:
+        if self.set and (self.create or self.add or self.remove):
+            msg = "You cannot use `set` with `create`, `add` or `remove` in a -to-many relation input"
+            raise ValueError(msg)
+        return super().to_mapped(visitor, level=level)
 
 
 @dataclass
 class _UnboundRelationInput(Generic[ModelT, ModelFieldT]):
     field: DTOFieldDefinition[ModelT, ModelFieldT]
     relation_type: RelationType
-    set: list[ModelT] = dataclasses.field(default_factory=list)
+    set: list[ModelT] | None = dataclasses.field(default_factory=list)
     add: list[ModelT] = dataclasses.field(default_factory=list)
     remove: list[ModelT] = dataclasses.field(default_factory=list)
     create: list[ModelT] = dataclasses.field(default_factory=list)
@@ -108,26 +125,30 @@ class InputVisitor(VisitorProtocol, Generic[ModelT, ModelFieldT]):
     current_relations: list[_UnboundRelationInput[ModelT, ModelFieldT]] = dataclasses.field(default_factory=list)
 
     @override
-    def field_value(
-        self, parent: ToMappedProtocol, field: DTOFieldDefinition[Any, Any], value: Any, level: int = 0
-    ) -> Any:
+    def field_value(self, parent: ToMappedProtocol, field: DTOFieldDefinition[Any, Any], value: Any, level: int) -> Any:
         field_value = getattr(parent, field.model_field_name)
-        set_, add, remove, create = [], [], [], []
+        add, remove, create = [], [], []
+        set_: list[Any] | None = []
         relation_type = RelationType.TO_MANY
         if isinstance(field_value, ToOneInputMixin):
             relation_type = RelationType.TO_ONE
-            set_ = [field_value.set.to_mapped()] if field_value.set else []
+            if field_value.set is None:
+                set_ = None
+            elif field_value.set:
+                set_ = [field_value.set.to_mapped()]
         elif isinstance(field_value, ToManyUpdateInputMixin | ToManyCreateInputMixin):
-            set_ = [dto.to_mapped() for dto in field_value.set] if field_value.set else []
-            add = [dto.to_mapped() for dto in field_value.add] if field_value.add else []
-        if isinstance(field_value, ToManyUpdateInputMixin):
-            remove = [dto.to_mapped() for dto in field_value.remove] if field_value.remove else []
+            if field_value.set:
+                set_ = [dto.to_mapped() for dto in field_value.set]
+            if field_value.add:
+                add = [dto.to_mapped() for dto in field_value.add]
+        if isinstance(field_value, ToManyUpdateInputMixin) and field_value.remove:
+            remove = [dto.to_mapped() for dto in field_value.remove]
         if (
             isinstance(field_value, ToOneInputMixin | ToManyUpdateInputMixin | ToManyCreateInputMixin)
             and field_value.create
         ):
             create = value if isinstance(value, list) else [value]
-        if set_ or add or remove or create:
+        if set_ is None or set_ or add or remove or create:
             self.current_relations.append(
                 _UnboundRelationInput(
                     field=field,
@@ -142,7 +163,7 @@ class InputVisitor(VisitorProtocol, Generic[ModelT, ModelFieldT]):
         return value
 
     @override
-    def model(self, model: ModelT, level: int = 0) -> ModelT:
+    def model(self, model: ModelT, level: int) -> ModelT:
         for relation in self.current_relations:
             assert relation.field.related_model
             relation_input = RelationInput.from_unbound(relation, model)
@@ -168,7 +189,7 @@ class InputData(Generic[ModelT, ModelFieldT]):
                     relation.input_index = index
 
     def filter_by_level(
-        self, relation_type: RelationType, input_type: Literal["set", "create", "add", "remove"]
+        self, relation_type: RelationType, input_types: Iterable[Literal["set", "create", "add", "remove"]]
     ) -> list[LevelInput[ModelT, ModelFieldT]]:
         levels: list[LevelInput[ModelT, ModelFieldT]] = []
         level_range = (
@@ -178,14 +199,16 @@ class InputData(Generic[ModelT, ModelFieldT]):
             level_input = LevelInput()
             for relation in self.relations:
                 input_data: list[FilteredRelationInput[ModelT, ModelFieldT]] = []
-                if relation.level != level:
-                    continue
-                input_data.extend(
-                    FilteredRelationInput(relation, mapped)
-                    for mapped in getattr(relation, input_type)
-                    if relation.relation_type is relation_type
-                )
-                level_input.inputs.extend(input_data)
+                for input_type in input_types:
+                    relation_input = getattr(relation, input_type)
+                    if not relation_input or relation.level != level:
+                        continue
+                    input_data.extend(
+                        FilteredRelationInput(relation, mapped)
+                        for mapped in relation_input
+                        if relation.relation_type is relation_type
+                    )
+                    level_input.inputs.extend(input_data)
             if level_input.inputs:
                 levels.append(level_input)
 

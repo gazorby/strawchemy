@@ -3,144 +3,144 @@
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col ASC NULLS FIRST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col ASC NULLS FIRST
   '''
 # ---
 # name: test_nulls[session-tracked-ASC_NULLS_FIRST-async-psycopg_async_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col ASC NULLS FIRST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col ASC NULLS FIRST
   '''
 # ---
 # name: test_nulls[session-tracked-ASC_NULLS_FIRST-sync-psycopg_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col ASC NULLS FIRST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col ASC NULLS FIRST
   '''
 # ---
 # name: test_nulls[session-tracked-ASC_NULLS_LAST-async-asyncpg_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col ASC NULLS LAST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col ASC NULLS LAST
   '''
 # ---
 # name: test_nulls[session-tracked-ASC_NULLS_LAST-async-psycopg_async_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col ASC NULLS LAST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col ASC NULLS LAST
   '''
 # ---
 # name: test_nulls[session-tracked-ASC_NULLS_LAST-sync-psycopg_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col ASC NULLS LAST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col ASC NULLS LAST
   '''
 # ---
 # name: test_nulls[session-tracked-DESC_NULLS_FIRST-async-asyncpg_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col DESC NULLS FIRST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col DESC NULLS FIRST
   '''
 # ---
 # name: test_nulls[session-tracked-DESC_NULLS_FIRST-async-psycopg_async_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col DESC NULLS FIRST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col DESC NULLS FIRST
   '''
 # ---
 # name: test_nulls[session-tracked-DESC_NULLS_FIRST-sync-psycopg_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col DESC NULLS FIRST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col DESC NULLS FIRST
   '''
 # ---
 # name: test_nulls[session-tracked-DESC_NULLS_LAST-async-asyncpg_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col DESC NULLS LAST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col DESC NULLS LAST
   '''
 # ---
 # name: test_nulls[session-tracked-DESC_NULLS_LAST-async-psycopg_async_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col DESC NULLS LAST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col DESC NULLS LAST
   '''
 # ---
 # name: test_nulls[session-tracked-DESC_NULLS_LAST-sync-psycopg_engine]
   '''
   SELECT sql_data_types.optional_str_col,
          sql_data_types.id
-  FROM sql_data_types AS sql_data_types
-  ORDER BY sql_data_types.optional_str_col DESC NULLS LAST
+    FROM sql_data_types AS sql_data_types
+   ORDER BY sql_data_types.optional_str_col DESC NULLS LAST
   '''
 # ---
 # name: test_order_by[session-tracked-ASC-async-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  ORDER BY fruit.name ASC
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
   '''
 # ---
 # name: test_order_by[session-tracked-ASC-async-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  ORDER BY fruit.name ASC
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
   '''
 # ---
 # name: test_order_by[session-tracked-ASC-sync-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  ORDER BY fruit.name ASC
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
   '''
 # ---
 # name: test_order_by[session-tracked-DESC-async-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  ORDER BY fruit.name DESC
+    FROM fruit AS fruit
+   ORDER BY fruit.name DESC
   '''
 # ---
 # name: test_order_by[session-tracked-DESC-async-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  ORDER BY fruit.name DESC
+    FROM fruit AS fruit
+   ORDER BY fruit.name DESC
   '''
 # ---
 # name: test_order_by[session-tracked-DESC-sync-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
-  FROM fruit AS fruit
-  ORDER BY fruit.name DESC
+    FROM fruit AS fruit
+   ORDER BY fruit.name DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-avg-async-asyncpg_engine]
@@ -148,13 +148,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."avg_data_types__avg_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."avg_data_types__avg_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-avg-async-psycopg_async_engine]
@@ -162,13 +165,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."avg_data_types__avg_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."avg_data_types__avg_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-avg-sync-psycopg_engine]
@@ -176,13 +182,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."avg_data_types__avg_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."avg_data_types__avg_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-max-async-asyncpg_engine]
@@ -190,13 +199,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."max_data_types__max_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."max_data_types__max_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-max-async-psycopg_async_engine]
@@ -204,13 +216,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."max_data_types__max_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."max_data_types__max_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-max-sync-psycopg_engine]
@@ -218,13 +233,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."max_data_types__max_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."max_data_types__max_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-min-async-asyncpg_engine]
@@ -232,13 +250,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."min_data_types__min_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."min_data_types__min_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-min-async-psycopg_async_engine]
@@ -246,13 +267,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."min_data_types__min_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."min_data_types__min_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-min-sync-psycopg_engine]
@@ -260,13 +284,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."min_data_types__min_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."min_data_types__min_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-stddev-async-asyncpg_engine]
@@ -274,13 +301,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_data_types__stddev_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_data_types__stddev_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-stddev-async-psycopg_async_engine]
@@ -288,13 +318,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_data_types__stddev_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_data_types__stddev_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-stddev-sync-psycopg_engine]
@@ -302,13 +335,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_data_types__stddev_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_data_types__stddev_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-stddevPop-async-asyncpg_engine]
@@ -316,13 +352,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-stddevPop-async-psycopg_async_engine]
@@ -330,13 +369,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-stddevPop-sync-psycopg_engine]
@@ -344,13 +386,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-stddevSamp-async-asyncpg_engine]
@@ -358,13 +403,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-stddevSamp-async-psycopg_async_engine]
@@ -372,13 +420,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-stddevSamp-sync-psycopg_engine]
@@ -386,13 +437,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-sum-async-asyncpg_engine]
@@ -400,13 +454,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."sum_data_types__sum_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."sum_data_types__sum_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-sum-async-psycopg_async_engine]
@@ -414,13 +471,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."sum_data_types__sum_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."sum_data_types__sum_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-sum-sync-psycopg_engine]
@@ -428,13 +488,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."sum_data_types__sum_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."sum_data_types__sum_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-varPop-async-asyncpg_engine]
@@ -442,13 +505,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-varPop-async-psycopg_async_engine]
@@ -456,13 +522,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-varPop-sync-psycopg_engine]
@@ -470,13 +539,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-varSamp-async-asyncpg_engine]
@@ -484,13 +556,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-varSamp-async-psycopg_async_engine]
@@ -498,13 +573,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-varSamp-sync-psycopg_engine]
@@ -512,13 +590,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-variance-async-asyncpg_engine]
@@ -526,13 +607,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."variance_data_types__variance_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."variance_data_types__variance_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-variance-async-psycopg_async_engine]
@@ -540,13 +624,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."variance_data_types__variance_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."variance_data_types__variance_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-ASC-variance-sync-psycopg_engine]
@@ -554,13 +641,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."variance_data_types__variance_int_col" ASC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."variance_data_types__variance_int_col" ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-avg-async-asyncpg_engine]
@@ -568,13 +658,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."avg_data_types__avg_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."avg_data_types__avg_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-avg-async-psycopg_async_engine]
@@ -582,13 +675,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."avg_data_types__avg_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."avg_data_types__avg_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-avg-sync-psycopg_engine]
@@ -596,13 +692,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."avg_data_types__avg_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."avg_data_types__avg_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-max-async-asyncpg_engine]
@@ -610,13 +709,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."max_data_types__max_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."max_data_types__max_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-max-async-psycopg_async_engine]
@@ -624,13 +726,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."max_data_types__max_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."max_data_types__max_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-max-sync-psycopg_engine]
@@ -638,13 +743,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."max_data_types__max_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT max(sql_data_types_1.int_col) AS max_data_types__max_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."max_data_types__max_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-min-async-asyncpg_engine]
@@ -652,13 +760,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."min_data_types__min_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."min_data_types__min_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-min-async-psycopg_async_engine]
@@ -666,13 +777,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."min_data_types__min_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."min_data_types__min_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-min-sync-psycopg_engine]
@@ -680,13 +794,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."min_data_types__min_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT min(sql_data_types_1.int_col) AS min_data_types__min_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."min_data_types__min_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-stddev-async-asyncpg_engine]
@@ -694,13 +811,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_data_types__stddev_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_data_types__stddev_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-stddev-async-psycopg_async_engine]
@@ -708,13 +828,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_data_types__stddev_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_data_types__stddev_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-stddev-sync-psycopg_engine]
@@ -722,13 +845,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_data_types__stddev_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev(sql_data_types_1.int_col) AS stddev_data_types__stddev_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_data_types__stddev_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-stddevPop-async-asyncpg_engine]
@@ -736,13 +862,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-stddevPop-async-psycopg_async_engine]
@@ -750,13 +879,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-stddevPop-sync-psycopg_engine]
@@ -764,13 +896,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_pop(sql_data_types_1.int_col) AS stddev_pop_data_types__stddev_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_pop_data_types__stddev_pop_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-stddevSamp-async-asyncpg_engine]
@@ -778,13 +913,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-stddevSamp-async-psycopg_async_engine]
@@ -792,13 +930,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-stddevSamp-sync-psycopg_engine]
@@ -806,13 +947,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT stddev_samp(sql_data_types_1.int_col) AS stddev_samp_data_types__stddev_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."stddev_samp_data_types__stddev_samp_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-sum-async-asyncpg_engine]
@@ -820,13 +964,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."sum_data_types__sum_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."sum_data_types__sum_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-sum-async-psycopg_async_engine]
@@ -834,13 +981,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."sum_data_types__sum_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."sum_data_types__sum_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-sum-sync-psycopg_engine]
@@ -848,13 +998,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."sum_data_types__sum_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."sum_data_types__sum_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-varPop-async-asyncpg_engine]
@@ -862,13 +1015,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-varPop-async-psycopg_async_engine]
@@ -876,13 +1032,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-varPop-sync-psycopg_engine]
@@ -890,13 +1049,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_pop(sql_data_types_1.int_col) AS var_pop_data_types__var_pop_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_pop_data_types__var_pop_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-varSamp-async-asyncpg_engine]
@@ -904,13 +1066,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-varSamp-async-psycopg_async_engine]
@@ -918,13 +1083,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-varSamp-sync-psycopg_engine]
@@ -932,13 +1100,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT var_samp(sql_data_types_1.int_col) AS var_samp_data_types__var_samp_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."var_samp_data_types__var_samp_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-variance-async-asyncpg_engine]
@@ -946,13 +1117,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."variance_data_types__variance_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."variance_data_types__variance_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-variance-async-psycopg_async_engine]
@@ -960,13 +1134,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."variance_data_types__variance_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."variance_data_types__variance_int_col" DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-DESC-variance-sync-psycopg_engine]
@@ -974,13 +1151,16 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  JOIN LATERAL
-    (SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id) AS aggregation_0 ON TRUE
-  LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
-  ORDER BY aggregation_0."variance_data_types__variance_int_col" DESC
+    FROM sql_data_types_container AS sql_data_types_container
+    JOIN LATERAL (
+          SELECT variance(sql_data_types_1.int_col) AS variance_data_types__variance_int_col
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN sql_data_types AS sql_data_types_container__data_types
+      ON sql_data_types_container.id = sql_data_types_container__data_types.container_id
+   ORDER BY aggregation_0."variance_data_types__variance_int_col" DESC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-ASC-async-asyncpg_engine]
@@ -988,13 +1168,15 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  LEFT OUTER JOIN LATERAL
-    (SELECT sql_data_types_1.int_col AS int_col,
-            sql_data_types_1.id AS id
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id
-     ORDER BY sql_data_types_1.int_col ASC) AS sql_data_types_container__data_types ON TRUE
+    FROM sql_data_types_container AS sql_data_types_container
+    LEFT OUTER JOIN LATERAL (
+          SELECT sql_data_types_1.int_col AS int_col,
+                 sql_data_types_1.id AS id
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+           ORDER BY sql_data_types_1.int_col ASC
+         ) AS sql_data_types_container__data_types
+      ON TRUE
   '''
 # ---
 # name: test_relation_order_by[session-tracked-ASC-async-psycopg_async_engine]
@@ -1002,13 +1184,15 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  LEFT OUTER JOIN LATERAL
-    (SELECT sql_data_types_1.int_col AS int_col,
-            sql_data_types_1.id AS id
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id
-     ORDER BY sql_data_types_1.int_col ASC) AS sql_data_types_container__data_types ON TRUE
+    FROM sql_data_types_container AS sql_data_types_container
+    LEFT OUTER JOIN LATERAL (
+          SELECT sql_data_types_1.int_col AS int_col,
+                 sql_data_types_1.id AS id
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+           ORDER BY sql_data_types_1.int_col ASC
+         ) AS sql_data_types_container__data_types
+      ON TRUE
   '''
 # ---
 # name: test_relation_order_by[session-tracked-ASC-sync-psycopg_engine]
@@ -1016,13 +1200,15 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  LEFT OUTER JOIN LATERAL
-    (SELECT sql_data_types_1.int_col AS int_col,
-            sql_data_types_1.id AS id
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id
-     ORDER BY sql_data_types_1.int_col ASC) AS sql_data_types_container__data_types ON TRUE
+    FROM sql_data_types_container AS sql_data_types_container
+    LEFT OUTER JOIN LATERAL (
+          SELECT sql_data_types_1.int_col AS int_col,
+                 sql_data_types_1.id AS id
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+           ORDER BY sql_data_types_1.int_col ASC
+         ) AS sql_data_types_container__data_types
+      ON TRUE
   '''
 # ---
 # name: test_relation_order_by[session-tracked-DESC-async-asyncpg_engine]
@@ -1030,13 +1216,15 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  LEFT OUTER JOIN LATERAL
-    (SELECT sql_data_types_1.int_col AS int_col,
-            sql_data_types_1.id AS id
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id
-     ORDER BY sql_data_types_1.int_col DESC) AS sql_data_types_container__data_types ON TRUE
+    FROM sql_data_types_container AS sql_data_types_container
+    LEFT OUTER JOIN LATERAL (
+          SELECT sql_data_types_1.int_col AS int_col,
+                 sql_data_types_1.id AS id
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+           ORDER BY sql_data_types_1.int_col DESC
+         ) AS sql_data_types_container__data_types
+      ON TRUE
   '''
 # ---
 # name: test_relation_order_by[session-tracked-DESC-async-psycopg_async_engine]
@@ -1044,13 +1232,15 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  LEFT OUTER JOIN LATERAL
-    (SELECT sql_data_types_1.int_col AS int_col,
-            sql_data_types_1.id AS id
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id
-     ORDER BY sql_data_types_1.int_col DESC) AS sql_data_types_container__data_types ON TRUE
+    FROM sql_data_types_container AS sql_data_types_container
+    LEFT OUTER JOIN LATERAL (
+          SELECT sql_data_types_1.int_col AS int_col,
+                 sql_data_types_1.id AS id
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+           ORDER BY sql_data_types_1.int_col DESC
+         ) AS sql_data_types_container__data_types
+      ON TRUE
   '''
 # ---
 # name: test_relation_order_by[session-tracked-DESC-sync-psycopg_engine]
@@ -1058,12 +1248,14 @@
   SELECT sql_data_types_container__data_types.int_col,
          sql_data_types_container__data_types.id,
          sql_data_types_container.id AS id_1
-  FROM sql_data_types_container AS sql_data_types_container
-  LEFT OUTER JOIN LATERAL
-    (SELECT sql_data_types_1.int_col AS int_col,
-            sql_data_types_1.id AS id
-     FROM sql_data_types AS sql_data_types_1
-     WHERE sql_data_types_container.id = sql_data_types_1.container_id
-     ORDER BY sql_data_types_1.int_col DESC) AS sql_data_types_container__data_types ON TRUE
+    FROM sql_data_types_container AS sql_data_types_container
+    LEFT OUTER JOIN LATERAL (
+          SELECT sql_data_types_1.int_col AS int_col,
+                 sql_data_types_1.id AS id
+            FROM sql_data_types AS sql_data_types_1
+           WHERE sql_data_types_container.id = sql_data_types_1.container_id
+           ORDER BY sql_data_types_1.int_col DESC
+         ) AS sql_data_types_container__data_types
+      ON TRUE
   '''
 # ---

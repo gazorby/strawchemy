@@ -250,6 +250,8 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
 
     def is_primary_key(self, model_field: ModelFieldT) -> bool: ...
 
+    def reverse_relation_required(self, model_field: ModelFieldT) -> bool: ...
+
 
 @dataclass
 class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):

@@ -10,17 +10,38 @@
   """Decimal (fixed-point)"""
   scalar Decimal
   
+  """Aggregation fields"""
+  type GroupAggregate {
+    count: Int
+    sum: GroupSumFields!
+    min: GroupMinMaxFields!
+    max: GroupMinMaxFields!
+  }
+  
   """GraphQL create input type"""
   input GroupInput {
     id: UUID
     name: String!
-    tag: GroupTagIdFieldsInputGroupTagInputToOneInput!
+    tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyCreateInput
+  }
+  
+  type GroupMinMaxFields {
+    name: String
+  }
+  
+  type GroupSumFields {
+    name: String
   }
   
   """Identifier input"""
   input GroupTagIdFieldsInput {
     id: UUID!
+  }
+  
+  input GroupTagIdFieldsInputGroupTagInputRequiredToOneInput {
+    set: GroupTagIdFieldsInput
+    create: GroupTagInput
   }
   
   input GroupTagIdFieldsInputGroupTagInputToOneInput {
@@ -129,6 +150,10 @@
   """GraphQL type"""
   type TagType {
     id: UUID!
+    groupsAggregate: GroupAggregate!
+  
+    """Fetch objects from the GroupType collection"""
+    groups: [GroupType!]!
     name: String!
   }
   

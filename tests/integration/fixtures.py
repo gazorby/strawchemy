@@ -672,7 +672,9 @@ class QueryInspector:
 
     @property
     def statement_formatted(self) -> str:
-        return sqlparse.format(self.statement_str, reindent=True, use_space_around_operators=True, keyword_case="upper")
+        return sqlparse.format(
+            self.statement_str, reindent_aligned=True, use_space_around_operators=True, keyword_case="upper"
+        )
 
 
 @dataclass
