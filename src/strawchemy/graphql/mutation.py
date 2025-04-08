@@ -31,7 +31,7 @@ class ToOneInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
         self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> Any | DTOUnsetType:
         if self.create and self.set:
-            msg = "You cannot use both `set` and `create` in a relation"
+            msg = "You cannot use both `set` and `create` in a -to-one relation input"
             raise ValueError(msg)
         return self.create.to_mapped(visitor, level=level) if self.create else DTO_UNSET
 
@@ -57,7 +57,7 @@ class ToManyCreateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
         self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> list[Any] | DTOUnsetType:
         if self.set and (self.create or self.add):
-            msg = "You cannot use `set` with `create` or `add`"
+            msg = "You cannot use `set` with `create` or `add` in -to-many relation input"
             raise ValueError(msg)
         return [dto.to_mapped(visitor, level=level) for dto in self.create] if self.create else DTO_UNSET
 
@@ -82,7 +82,7 @@ class ToManyUpdateInputMixin(RequiredToManyUpdateInputMixin[T, RelationInputT]):
         self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> list[Any] | DTOUnsetType:
         if self.set and (self.create or self.add or self.remove):
-            msg = "You cannot use `set` with `create`, `add` or `remove`"
+            msg = "You cannot use `set` with `create`, `add` or `remove` in a -to-many relation input"
             raise ValueError(msg)
         return super().to_mapped(visitor, level=level)
 

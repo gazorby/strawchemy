@@ -342,6 +342,61 @@ async def test_create_with_to_many_create(
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param(
+            """
+            mutation {{
+                createColor(data: {{
+                    name: "new color",
+                    fruits: {{
+                        set: [ {{ id: {fruit_id} }} ],
+                        add: [ {{ id: {fruit_id} }} ]
+                    }}
+                }}) {{
+                    name
+                    fruits {{
+                        name
+                    }}
+                }}
+            }}
+        """,
+            id="add",
+        ),
+        pytest.param(
+            """
+            mutation {{
+                createColor(data: {{
+                    name: "new color",
+                    fruits: {{
+                        set: [ {{ id: {fruit_id} }} ],
+                        create: [ {{ name: "new fruit 1", adjectives: ["foo"] }} ]
+                    }}
+                }}) {{
+                    name
+                    fruits {{
+                        name
+                    }}
+                }}
+            }}
+        """,
+            id="create",
+        ),
+    ],
+)
+async def test_create_with_to_many_set_exclusive_with_add_and_create(
+    query: str, raw_fruits: RawRecordData, any_query: AnyQueryExecutor
+) -> None:
+    result = await maybe_async(
+        any_query(query.format(fruit_id=to_graphql_representation(raw_fruits[0]["id"], "input")))
+    )
+    assert not result.data
+    assert result.errors
+    assert len(result.errors) == 1
+    assert result.errors[0].args[0] == "You cannot use `set` with `create` or `add` in -to-many relation input"
+
+
 @pytest.mark.snapshot
 async def test_create_with_to_many_create_and_nested_set(
     raw_farms: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
@@ -609,6 +664,40 @@ async def test_update_with_to_one_create(
     query_tracker.assert_statements(1, "insert", sql_snapshot)  # Insert new color
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update fruit's color_id
     query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated fruit + new color
+
+
+async def test_update_with_to_one_set_and_create_fail(
+    raw_fruits: RawRecordData, raw_colors: RawRecordData, any_query: AnyQueryExecutor
+) -> None:
+    """Tests updating a record and setting a to-one relationship."""
+    fruit_id_gql = to_graphql_representation(raw_fruits[0]["id"], "input")
+    # Use a different color to test the update
+    color_id_gql = to_graphql_representation(raw_colors[1]["id"], "input")
+    query = f"""
+        mutation {{
+            updateFruit(
+                data: {{
+                    id: {fruit_id_gql},
+                    name: "updated fruit name",
+                    color: {{
+                        set: {{ id: {color_id_gql} }},
+                        create: {{ name: "newly created color during update" }}
+                    }}
+                }}
+            ) {{
+                id
+                name
+                color {{
+                    id
+                }}
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.data
+    assert result.errors
+    assert len(result.errors) == 1
+    assert result.errors[0].args[0] == "You cannot use both `set` and `create` in a -to-one relation input"
 
 
 @pytest.mark.snapshot
@@ -977,6 +1066,96 @@ async def test_update_with_to_many_add_and_create(
     query_tracker.assert_statements(2, "update", sql_snapshot)
     # Fetch updated color + fruit
     query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param(
+            """
+        mutation {{
+            updateColor(
+                data: {{
+                    id: {color_id_gql},
+                    name: "updated color name",
+                    fruits: {{
+                        set: [ {{ id: {fruit_id_gql} }} ]
+                        add: [ {{ id: {fruit_id_gql} }} ]
+                    }}
+                }}
+            ) {{
+                id
+                name
+                fruits {{
+                    id
+                }}
+            }}
+        }}
+        """,
+            id="add",
+        ),
+        pytest.param(
+            """
+        mutation {{
+            updateColor(
+                data: {{
+                    id: {color_id_gql},
+                    name: "updated color name",
+                    fruits: {{
+                        set: [ {{ id: {fruit_id_gql} }} ]
+                        create: [ {{ name: "new fruit 3 during update", adjectives: ["baz"] }} ]
+                    }}
+                }}
+            ) {{
+                id
+                name
+                fruits {{
+                    id
+                }}
+            }}
+        }}
+        """,
+            id="create",
+        ),
+        pytest.param(
+            """
+        mutation {{
+            updateColor(
+                data: {{
+                    id: {color_id_gql},
+                    name: "updated color name",
+                    fruits: {{
+                        set: [ {{ id: {fruit_id_gql} }} ]
+                        remove: [ {{ id: {fruit_id_gql} }} ]
+                    }}
+                }}
+            ) {{
+                id
+                name
+                fruits {{
+                    id
+                }}
+            }}
+        }}
+        """,
+            id="remove",
+        ),
+    ],
+)
+async def test_update_with_to_many_set_exclusive_with_add_create_remove(
+    query: str, raw_colors: RawRecordData, raw_fruits: RawRecordData, any_query: AnyQueryExecutor
+) -> None:
+    """Tests updating a record and setting (replacing) a to-many relationship."""
+    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
+    # Use a different fruit to test the update
+    fruit_id_gql = to_graphql_representation(raw_fruits[1]["id"], "input")
+    result = await maybe_async(any_query(query.format(color_id_gql=color_id_gql, fruit_id_gql=fruit_id_gql)))
+    assert not result.data
+    assert result.errors
+    assert len(result.errors) == 1
+    assert (
+        result.errors[0].args[0] == "You cannot use `set` with `create`, `add` or `remove` in a -to-many relation input"
+    )
 
 
 @pytest.mark.snapshot
