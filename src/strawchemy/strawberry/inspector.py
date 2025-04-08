@@ -104,3 +104,7 @@ class _StrawberryModelInspector(GraphQLInspectorProtocol[ModelT, ModelFieldT]):
     @override
     def is_primary_key(self, model_field: ModelFieldT) -> bool:
         return self._inspector.is_primary_key(model_field)
+
+    @override
+    def reverse_relation_required(self, model_field: ModelFieldT) -> bool:
+        return self._inspector.reverse_relation_required(model_field)

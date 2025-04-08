@@ -62,10 +62,9 @@ class ToManyCreateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
         return [dto.to_mapped(visitor, level=level) for dto in self.create] if self.create else DTO_UNSET
 
 
-class ToManyUpdateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
+class RequiredToManyUpdateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
     set: list[T] | None
     add: list[T] | None
-    remove: list[T] | None
     create: list[RelationInputT] | None
 
     @override
@@ -76,6 +75,10 @@ class ToManyUpdateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
             msg = "You cannot use `set` with `create` or `add`"
             raise ValueError(msg)
         return [dto.to_mapped(visitor, level=level) for dto in self.create] if self.create else DTO_UNSET
+
+
+class ToManyUpdateInputMixin(RequiredToManyUpdateInputMixin[T, RelationInputT]):
+    remove: list[T] | None
 
 
 @dataclass

@@ -224,6 +224,11 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             (type_hint,) = get_args(type_hint)
         return type_hint
 
+    def _relationship_required(self, prop: RelationshipProperty[Any]) -> bool:
+        if prop.direction is RelationshipDirection.MANYTOONE:
+            return any(not column.nullable for column in prop.local_columns)
+        return False
+
     @classmethod
     def pk_attributes(cls, mapper: Mapper[Any]) -> list[QueryableAttribute[Any]]:
         return [mapper.attrs[column.key].class_attribute for column in mapper.primary_key]
@@ -332,7 +337,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
         node: Node[Relation[DeclarativeBase, Any], None],
     ) -> bool:
-        if not isinstance(field.model_field.property, RelationshipProperty):
+        if not self._is_relationship(field.model_field.property):
             return False
         parent_relationships: set[RelationshipProperty[Any]] = set()
         for parent in node.iter_parents():
@@ -352,9 +357,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         if self._is_column(model_field.property):
             return any(not column.nullable for column, _ in model_field.property.columns_to_assign)
         if self._is_relationship(model_field.property):
-            if model_field.property.direction is RelationshipDirection.MANYTOONE:
-                return any(not column.nullable for column in model_field.property.local_columns)
-            return False
+            return self._relationship_required(model_field.property)
         return False
 
     @override
@@ -368,3 +371,9 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         return self._is_column(model_field.property) and any(
             column.primary_key for column in model_field.property.columns
         )
+
+    @override
+    def reverse_relation_required(self, model_field: QueryableAttribute[Any]) -> bool:
+        if not self._is_relationship(model_field.property):
+            return False
+        return any(self._relationship_required(relationship) for relationship in model_field.property._reverse_property)  # noqa: SLF001

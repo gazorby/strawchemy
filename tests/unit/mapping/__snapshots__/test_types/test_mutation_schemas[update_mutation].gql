@@ -10,6 +10,22 @@
   """Decimal (fixed-point)"""
   scalar Decimal
   
+  """Aggregation fields"""
+  type GroupAggregate {
+    count: Int
+    sum: GroupSumFields!
+    min: GroupMinMaxFields!
+    max: GroupMinMaxFields!
+  }
+  
+  type GroupMinMaxFields {
+    name: String
+  }
+  
+  type GroupSumFields {
+    name: String
+  }
+  
   """Identifier input"""
   input GroupTagIdFieldsInput {
     id: UUID!
@@ -23,6 +39,11 @@
   input GroupTagIdFieldsInputGroupTagInputToOneInput {
     set: GroupTagIdFieldsInput
     create: GroupTagInput
+  }
+  
+  input GroupTagIdFieldsInputTagUpdateToOneInput {
+    set: GroupTagIdFieldsInput
+    create: TagUpdate
   }
   
   """GraphQL update input type"""
@@ -70,6 +91,13 @@
     create: [GroupUserInput!]
   }
   
+  input GroupUsersIdFieldsInputTagUserInputToManyUpdateInput {
+    set: [GroupUsersIdFieldsInput!]
+    add: [GroupUsersIdFieldsInput!]
+    remove: [GroupUsersIdFieldsInput!]
+    create: [TagUserInput!]
+  }
+  
   """
   The `Interval` scalar type represents a duration of time as specified by [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations).
   """
@@ -92,6 +120,9 @@
   
     """Fetch objects from the GroupType collection"""
     updateGroups(data: [GroupUpdate!]!): [GroupType!]!
+  
+    """Fetch object from the TagType collection by id"""
+    updateTag(data: TagUpdate!): TagType!
   }
   
   type Query {
@@ -132,10 +163,46 @@
     arrayStrCol: [String!]
   }
   
+  """GraphQL update input type"""
+  input TagGroupInput {
+    id: UUID!
+    name: String
+    users: GroupUsersIdFieldsInputTagUserInputToManyUpdateInput
+  }
+  
+  """Identifier input"""
+  input TagGroupsIdFieldsInput {
+    id: UUID!
+  }
+  
+  input TagGroupsIdFieldsInputTagGroupInputRequiredToManyUpdateInput {
+    set: [TagGroupsIdFieldsInput!]
+    add: [TagGroupsIdFieldsInput!]
+    create: [TagGroupInput!]
+  }
+  
   """GraphQL type"""
   type TagType {
     id: UUID!
+    groupsAggregate: GroupAggregate!
+  
+    """Fetch objects from the GroupType collection"""
+    groups: [GroupType!]!
     name: String!
+  }
+  
+  """GraphQL update input type"""
+  input TagUpdate {
+    id: UUID!
+    groups: TagGroupsIdFieldsInputTagGroupInputRequiredToManyUpdateInput
+    name: String
+  }
+  
+  """GraphQL update input type"""
+  input TagUserInput {
+    id: UUID!
+    name: String
+    tag: GroupTagIdFieldsInputTagUpdateToOneInput
   }
   
   """Time (isoformat)"""

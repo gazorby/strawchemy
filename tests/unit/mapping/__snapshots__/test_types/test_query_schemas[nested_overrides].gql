@@ -1,6 +1,22 @@
 # serializer version: 1
 # name: test_query_schemas[nested_overrides]
   '''
+  """Aggregation fields"""
+  type GroupAggregate {
+    count: Int
+    sum: GroupSumFields!
+    min: GroupMinMaxFields!
+    max: GroupMinMaxFields!
+  }
+  
+  type GroupMinMaxFields {
+    name: String
+  }
+  
+  type GroupSumFields {
+    name: String
+  }
+  
   """GraphQL type"""
   type GroupType {
     name: Int!
@@ -25,6 +41,10 @@
   type TagType {
     name: Int!
     id: UUID!
+    groupsAggregate: GroupAggregate!
+  
+    """Fetch objects from the GroupType collection"""
+    groups: [GroupType!]!
   }
   
   scalar UUID

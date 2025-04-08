@@ -57,7 +57,7 @@ from strawchemy.utils import non_optional_type_hint, snake_to_camel
 from ._instance import MapperModelInstance
 from ._registry import RegistryTypeInfo, StrawberryRegistry
 from ._utils import pydantic_from_strawberry_type, strawchemy_type_from_pydantic
-from .types import RequiredToOneInput, ToManyCreateInput, ToManyUpdateInput, ToOneInput
+from .types import RequiredToManyUpdateInput, RequiredToOneInput, ToManyCreateInput, ToManyUpdateInput, ToOneInput
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Hashable, Mapping, Sequence
@@ -960,13 +960,15 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
             if mode == "create":
                 input_type = ToManyCreateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
             elif mode == "update":
-                input_type = ToManyUpdateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
+                type_ = (
+                    RequiredToManyUpdateInput
+                    if self.inspector.reverse_relation_required(field.model_field)
+                    else ToManyUpdateInput
+                )
+                input_type = type_[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
         else:
-            input_type = (
-                RequiredToOneInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
-                if field_required
-                else ToOneInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
-            )
+            type_ = RequiredToOneInput if field_required else ToOneInput
+            input_type = type_[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
         return input_type if field_required else input_type | None
 
     @override

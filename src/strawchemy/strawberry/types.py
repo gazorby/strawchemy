@@ -6,6 +6,7 @@ import strawberry
 from strawberry import UNSET
 from strawchemy.dto.base import MappedDTO
 from strawchemy.graphql.mutation import (
+    RequiredToManyUpdateInputMixin,
     RequiredToOneInputMixin,
     ToManyCreateInputMixin,
     ToManyUpdateInputMixin,
@@ -40,4 +41,11 @@ class ToManyUpdateInput(ToManyUpdateInputMixin[T, RelationInputT]):
     set: list[T] | None = UNSET
     add: list[T] | None = UNSET
     remove: list[T] | None = UNSET
+    create: list[RelationInputT] | None = UNSET
+
+
+@strawberry.input
+class RequiredToManyUpdateInput(RequiredToManyUpdateInputMixin[T, RelationInputT]):
+    set: list[T] | None = UNSET
+    add: list[T] | None = UNSET
     create: list[RelationInputT] | None = UNSET

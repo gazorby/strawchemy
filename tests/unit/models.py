@@ -127,7 +127,7 @@ class Group(UUIDBase):
 
     name: Mapped[str]
     tag_id: Mapped[UUID] = mapped_column(ForeignKey("tag.id"))
-    tag: Mapped[Tag] = relationship("Tag", uselist=False)
+    tag: Mapped[Tag] = relationship("Tag", uselist=False, back_populates="groups")
     users: Mapped[list[User]] = relationship("User", back_populates="group")
 
 
@@ -141,6 +141,7 @@ class Admin(UUIDBase):
 class Tag(UUIDBase):
     __tablename__ = "tag"
 
+    groups: Mapped[list[Group]] = relationship(Group, back_populates="tag")
     name: Mapped[str]
 
 
