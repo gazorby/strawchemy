@@ -21,7 +21,7 @@ strawchemy = Strawchemy()
 class BaseArrayType: ...
 
 
-@strawchemy.filter_input(BaseArray, include="all")
+@strawchemy.filter(BaseArray, include="all")
 class BaseArrayFilter: ...
 
 

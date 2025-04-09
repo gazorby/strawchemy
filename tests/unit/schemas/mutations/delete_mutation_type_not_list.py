@@ -14,4 +14,4 @@ class GroupType: ...
 
 @strawberry.type
 class Mutation:
-    delete_groups: GroupType = strawchemy.delete_mutation()
+    delete_groups: GroupType = strawchemy.delete()

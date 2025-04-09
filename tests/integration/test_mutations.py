@@ -30,65 +30,53 @@ pytestmark = [pytest.mark.integration]
 
 @strawberry.type
 class AsyncMutation:
-    create_color: ColorType = strawchemy.create_mutation(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
-    create_colors: list[ColorType] = strawchemy.create_mutation(
-        ColorCreateInput, repository_type=StrawchemyAsyncRepository
-    )
+    create_color: ColorType = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
+    create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
 
-    update_color: ColorType = strawchemy.update_mutation(ColorUpdateInput, repository_type=StrawchemyAsyncRepository)
-    update_colors: list[ColorType] = strawchemy.update_mutation(
+    update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemyAsyncRepository)
+    update_colors: list[ColorType] = strawchemy.update_by_ids(
         ColorUpdateInput, repository_type=StrawchemyAsyncRepository
     )
 
-    create_fruit: FruitType = strawchemy.create_mutation(FruitCreateInput, repository_type=StrawchemyAsyncRepository)
-    create_fruits: list[FruitType] = strawchemy.create_mutation(
-        FruitCreateInput, repository_type=StrawchemyAsyncRepository
-    )
+    create_fruit: FruitType = strawchemy.create(FruitCreateInput, repository_type=StrawchemyAsyncRepository)
+    create_fruits: list[FruitType] = strawchemy.create(FruitCreateInput, repository_type=StrawchemyAsyncRepository)
 
-    update_fruit: FruitType = strawchemy.update_mutation(FruitUpdateInput, repository_type=StrawchemyAsyncRepository)
-    update_fruits: list[FruitType] = strawchemy.update_mutation(
+    update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemyAsyncRepository)
+    update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemyAsyncRepository
     )
 
-    update_user: UserType = strawchemy.update_mutation(UserUpdateInput, repository_type=StrawchemyAsyncRepository)
+    update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemyAsyncRepository)
 
-    create_user: UserType = strawchemy.create_mutation(UserCreate, repository_type=StrawchemyAsyncRepository)
+    create_user: UserType = strawchemy.create(UserCreate, repository_type=StrawchemyAsyncRepository)
 
-    delete_users: list[UserType] = strawchemy.delete_mutation(repository_type=StrawchemyAsyncRepository)
-    delete_users_filter: list[UserType] = strawchemy.delete_mutation(
-        UserFilter, repository_type=StrawchemyAsyncRepository
-    )
+    delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemyAsyncRepository)
+    delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemyAsyncRepository)
 
 
 @strawberry.type
 class SyncMutation:
-    create_color: ColorType = strawchemy.create_mutation(ColorCreateInput, repository_type=StrawchemySyncRepository)
-    create_colors: list[ColorType] = strawchemy.create_mutation(
-        ColorCreateInput, repository_type=StrawchemySyncRepository
-    )
+    create_color: ColorType = strawchemy.create(ColorCreateInput, repository_type=StrawchemySyncRepository)
+    create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemySyncRepository)
 
-    create_fruit: FruitType = strawchemy.create_mutation(FruitCreateInput, repository_type=StrawchemySyncRepository)
-    update_color: ColorType = strawchemy.update_mutation(ColorUpdateInput, repository_type=StrawchemySyncRepository)
-    update_colors: list[ColorType] = strawchemy.update_mutation(
+    create_fruit: FruitType = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
+    update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemySyncRepository)
+    update_colors: list[ColorType] = strawchemy.update_by_ids(
         ColorUpdateInput, repository_type=StrawchemySyncRepository
     )
 
-    create_fruits: list[FruitType] = strawchemy.create_mutation(
-        FruitCreateInput, repository_type=StrawchemySyncRepository
-    )
+    create_fruits: list[FruitType] = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
 
-    create_user: UserType = strawchemy.create_mutation(UserCreate, repository_type=StrawchemySyncRepository)
+    create_user: UserType = strawchemy.create(UserCreate, repository_type=StrawchemySyncRepository)
 
-    update_fruit: FruitType = strawchemy.update_mutation(FruitUpdateInput, repository_type=StrawchemySyncRepository)
-    update_fruits: list[FruitType] = strawchemy.update_mutation(
+    update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemySyncRepository)
+    update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemySyncRepository
     )
 
-    update_user: UserType = strawchemy.update_mutation(UserUpdateInput, repository_type=StrawchemySyncRepository)
-    delete_users: list[UserType] = strawchemy.delete_mutation(repository_type=StrawchemySyncRepository)
-    delete_users_filter: list[UserType] = strawchemy.delete_mutation(
-        UserFilter, repository_type=StrawchemySyncRepository
-    )
+    update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemySyncRepository)
+    delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemySyncRepository)
+    delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemySyncRepository)
 
 
 @pytest.fixture

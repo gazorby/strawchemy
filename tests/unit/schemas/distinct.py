@@ -12,7 +12,7 @@ strawchemy = Strawchemy()
 class ColorType: ...
 
 
-@strawchemy.distinct_on_enum(Color, include="all")
+@strawchemy.distinct_on(Color, include="all")
 class ColorDistinctOnFields: ...
 
 

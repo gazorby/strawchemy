@@ -11,5 +11,5 @@ strawchemy = Strawchemy()
 class GeoFieldsType: ...
 
 
-@strawchemy.filter_input(GeoModel, include="all")
+@strawchemy.filter(GeoModel, include="all")
 class GeoFieldsFilter: ...

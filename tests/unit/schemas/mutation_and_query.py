@@ -16,11 +16,11 @@ class FruitType: ...
 class ColorType: ...
 
 
-@strawchemy.input(Fruit, "create", include="all")
+@strawchemy.create_input(Fruit, include="all")
 class FruitInput: ...
 
 
-@strawchemy.input(Color, "create", include="all", override=True)
+@strawchemy.create_input(Color, include="all", override=True)
 class ColorInput: ...
 
 
@@ -35,8 +35,8 @@ class Query:
 
 @strawberry.type
 class Mutation:
-    create_fruit: FruitType = strawchemy.create_mutation(FruitInput)
-    create_fruits: list[FruitType] = strawchemy.create_mutation(FruitInput)
+    create_fruit: FruitType = strawchemy.create(FruitInput)
+    create_fruits: list[FruitType] = strawchemy.create(FruitInput)
 
-    create_color: ColorType = strawchemy.create_mutation(ColorInput)
-    create_colors: list[ColorType] = strawchemy.create_mutation(ColorInput)
+    create_color: ColorType = strawchemy.create(ColorInput)
+    create_colors: list[ColorType] = strawchemy.create(ColorInput)

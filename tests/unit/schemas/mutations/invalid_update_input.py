@@ -7,5 +7,5 @@ from tests.unit.models import Group
 strawchemy = Strawchemy()
 
 
-@strawchemy.input(Group, "update", exclude={"id"})
+@strawchemy.update_input(Group, exclude={"id"})
 class GroupInput: ...

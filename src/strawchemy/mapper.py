@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+from functools import partial
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
@@ -57,13 +58,15 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self._input_factory = StrawberryInputFactory(self, dataclass_backend)
         self._aggregation_factory = StrawberryRootAggregateTypeFactory(self, dataclass_backend)
 
-        self.filter_input = self._filter_factory.input
-        self.aggregate_filter_input = self._aggregate_filter_factory.input
-        self.order_by_input = self._order_by_factory.input
-        self.distinct_on_enum = self._distinct_on_enum_factory.decorator
+        self.filter = self._filter_factory.input
+        self.aggregate_filter = self._aggregate_filter_factory.input
+        self.distinct_on = self._distinct_on_enum_factory.decorator
         self.input = self._input_factory.input
+        self.create_input = partial(self._input_factory.input, mode="create")
+        self.update_input = partial(self._input_factory.input, mode="update")
+        self.order = self._order_by_factory.input
         self.type = self._type_factory.type
-        self.aggregation_type = self._aggregation_factory.type
+        self.aggregate = self._aggregation_factory.type
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
 
@@ -202,7 +205,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         )
         return field(resolver) if resolver else field
 
-    def create_mutation(
+    def create(
         self,
         input_type: type[AnyMappedDTO],
         resolver: _RESOLVER_TYPE[Any] | None = None,
@@ -246,7 +249,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         )
         return field(resolver) if resolver else field
 
-    def update_mutation(
+    def update_by_ids(
         self,
         input_type: type[AnyMappedDTO],
         resolver: _RESOLVER_TYPE[Any] | None = None,
@@ -292,7 +295,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         )
         return field(resolver) if resolver else field
 
-    def delete_mutation(
+    def delete(
         self,
         filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
         resolver: _RESOLVER_TYPE[Any] | None = None,

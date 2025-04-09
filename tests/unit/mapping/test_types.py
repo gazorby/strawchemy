@@ -56,7 +56,7 @@ def test_type_instance_auto_as_str(strawchemy: Strawchemy[DeclarativeBase, Query
 
 
 def test_input_instance(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]) -> None:
-    @strawchemy.input(User, "create")
+    @strawchemy.create_input(User)
     class InputType:
         id: auto
         name: auto

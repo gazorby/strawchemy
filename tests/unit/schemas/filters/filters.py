@@ -12,7 +12,7 @@ strawchemy = Strawchemy()
 class SQLDataTypesType: ...
 
 
-@strawchemy.filter_input(SQLDataTypes, include="all")
+@strawchemy.filter(SQLDataTypes, include="all")
 class SQLDataTypesFilter: ...
 
 

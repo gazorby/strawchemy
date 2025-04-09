@@ -13,7 +13,7 @@ class FruitType:
     name: int
 
 
-@strawchemy.order_by_input(Fruit, include="all", override=True)
+@strawchemy.order(Fruit, include="all", override=True)
 class FruitOrderBy:
     override: bool = True
 

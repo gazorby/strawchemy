@@ -8,7 +8,7 @@ from tests.unit.models import SQLDataTypes
 strawchemy = Strawchemy()
 
 
-@strawchemy.filter_input(SQLDataTypes, include="all")
+@strawchemy.filter(SQLDataTypes, include="all")
 class SQLDataTypesFilter: ...
 
 

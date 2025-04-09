@@ -8,7 +8,7 @@ from tests.unit.models import SQLDataTypes
 strawchemy = Strawchemy()
 
 
-@strawchemy.aggregation_type(SQLDataTypes, include="all")
+@strawchemy.aggregate(SQLDataTypes, include="all")
 class SQLDataTypesAggregationType: ...
 
 

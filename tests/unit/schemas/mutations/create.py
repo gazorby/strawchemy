@@ -16,18 +16,18 @@ class SQLDataTypesType: ...
 class GroupType: ...
 
 
-@strawchemy.input(SQLDataTypes, "create", include="all")
+@strawchemy.create_input(SQLDataTypes, include="all")
 class SQLDataTypesCreate: ...
 
 
-@strawchemy.input(Group, "create", include="all")
+@strawchemy.create_input(Group, include="all")
 class GroupInput: ...
 
 
 @strawberry.type
 class Mutation:
-    create_data_type: SQLDataTypesType = strawchemy.create_mutation(SQLDataTypesCreate)
-    create_data_types: list[SQLDataTypesType] = strawchemy.create_mutation(SQLDataTypesCreate)
+    create_data_type: SQLDataTypesType = strawchemy.create(SQLDataTypesCreate)
+    create_data_types: list[SQLDataTypesType] = strawchemy.create(SQLDataTypesCreate)
 
-    create_group: GroupType = strawchemy.create_mutation(GroupInput)
-    create_groups: list[GroupType] = strawchemy.create_mutation(GroupInput)
+    create_group: GroupType = strawchemy.create(GroupInput)
+    create_groups: list[GroupType] = strawchemy.create(GroupInput)

@@ -23,7 +23,7 @@ strawchemy = Strawchemy()
 class BaseJSONType: ...
 
 
-@strawchemy.filter_input(BaseJSON, include="all")
+@strawchemy.filter(BaseJSON, include="all")
 class BaseJSONFilter: ...
 
 

@@ -12,11 +12,11 @@ strawchemy = Strawchemy()
 class GroupType: ...
 
 
-@strawchemy.filter_input(Group, include="all")
+@strawchemy.filter(Group, include="all")
 class GroupFilter: ...
 
 
 @strawberry.type
 class Mutation:
-    delete_groups: list[GroupType] = strawchemy.delete_mutation()
-    delete_groups_filter: list[GroupType] = strawchemy.delete_mutation(GroupFilter)
+    delete_groups: list[GroupType] = strawchemy.delete()
+    delete_groups_filter: list[GroupType] = strawchemy.delete(GroupFilter)
