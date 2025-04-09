@@ -50,8 +50,12 @@ class MilestoneType: ...
 class TicketCreate: ...
 
 
-@strawchemy.update_input(Ticket, include="all")
+@strawchemy.pk_update_input(Ticket, include="all")
 class TicketUpdate: ...
+
+
+@strawchemy.filter_update_input(Ticket, include="all")
+class TicketPartial: ...
 
 
 @strawchemy.create_input(Project, include="all", override=True)

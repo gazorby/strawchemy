@@ -9,6 +9,7 @@ from .types import (
     ProjectType,
     TicketCreate,
     TicketFilter,
+    TicketPartial,
     TicketType,
     TicketUpdate,
     strawchemy,
@@ -36,7 +37,8 @@ class Mutation:
 
     create_milestone: MilestoneType = strawchemy.create(MilestoneCreate)
 
-    update_ticket: TicketType = strawchemy.update_by_ids(TicketUpdate)
+    update_tickets_by_ids: TicketType = strawchemy.update_by_ids(TicketUpdate)
+    update_tickets: list[TicketType] = strawchemy.update(TicketPartial, TicketFilter)
 
     delete_ticket: list[TicketType] = strawchemy.delete(TicketFilter)
 

@@ -148,7 +148,7 @@ def test_excluding_pk_from_update_input_fail() -> None:
         StrawchemyError,
         match=("""You cannot exclude primary key columns from an input type intended for create or update mutations"""),
     ):
-        import_module("tests.unit.schemas.mutations.invalid_update_input")
+        import_module("tests.unit.schemas.mutations.invalid_pk_update_input")
 
 
 def test_read_only_pk_on_update_input_fail() -> None:
@@ -167,6 +167,14 @@ def test_delete_mutation_type_not_list_raise_error() -> None:
         match=("Type of delete mutation must be a list: delete_group"),
     ):
         import_module("tests.unit.schemas.mutations.delete_mutation_type_not_list")
+
+
+def test_update_mutation_by_filter_type_not_list_raise_error() -> None:
+    with pytest.raises(
+        StrawchemyFieldError,
+        match=("Type of update mutation by filter must be a list: update_groups"),
+    ):
+        import_module("tests.unit.schemas.mutations.invalid_filter_update_field")
 
 
 @pytest.mark.parametrize(

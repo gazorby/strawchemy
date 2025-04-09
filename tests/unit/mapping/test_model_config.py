@@ -25,7 +25,7 @@ def test_type_no_purpose_excluded(
     assert type_def.get_field("private") is None
 
 
-@pytest.mark.parametrize("decorator", ["create_input", "update_input"])
+@pytest.mark.parametrize("decorator", ["create_input", "pk_update_input", "filter_update_input"])
 def test_type_no_purpose_excluded_input(
     decorator: str, strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]
 ) -> None:

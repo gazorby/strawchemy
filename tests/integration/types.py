@@ -47,7 +47,7 @@ class UserFilter: ...
 class UserCreate: ...
 
 
-@strawchemy.update_input(User, include="all")
+@strawchemy.pk_update_input(User, include="all")
 class UserUpdateInput: ...
 
 
@@ -109,7 +109,7 @@ class FruitOrderBy: ...
 class FruitCreateInput: ...
 
 
-@strawchemy.update_input(Fruit, include="all")
+@strawchemy.pk_update_input(Fruit, include="all")
 class FruitUpdateInput: ...
 
 
@@ -150,8 +150,16 @@ class ColorTypeHooks:
 class ColorCreateInput: ...
 
 
-@strawchemy.update_input(Color, include="all")
+@strawchemy.pk_update_input(Color, include="all")
 class ColorUpdateInput: ...
+
+
+@strawchemy.filter_update_input(Color, include="all")
+class ColorPartial: ...
+
+
+@strawchemy.filter(Color, include="all")
+class ColorFilter: ...
 
 
 # SQL Data types
