@@ -520,11 +520,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         lateral_statement = select(*function_columns).where(root_relation).lateral(lateral_name)
         return AggregationJoin(join=lateral_statement, onclause=true(), node=node, subquery_alias=alias)
 
-    def _where(
-        self,
-        query_filter: Filter[DeclarativeBase, QueryableAttribute[Any]],
-        allow_null: bool = False,
-    ) -> Where:
+    def _where(self, query_filter: Filter[DeclarativeBase, QueryableAttribute[Any]], allow_null: bool = False) -> Where:
         """Creates WHERE expressions and joins from a filter.
 
         Args:
@@ -737,6 +733,13 @@ class QueryTranspiler(Generic[DeclarativeT]):
             scope=self.scope,
             execution_options=execution_options,
         )
+
+    def filter_expressions(
+        self, dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]]
+    ) -> list[ColumnElement[bool]]:
+        query_graph = QueryGraph(self.scope, dto_filter=dto_filter)
+        query = self._build_query(query_graph)
+        return query.where.expressions if query.where else []
 
     @override
     def __repr__(self) -> str:

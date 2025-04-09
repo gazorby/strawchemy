@@ -268,3 +268,11 @@ class StrawchemyAsyncRepository(Generic[T]):
     async def update(self, data: AnyMappedDTO) -> T:
         query_results = await self.graphql_repository().update(InputData([data]), self._tree)
         return self._tree.to_strawberry_type(query_results.one())
+
+    async def delete(
+        self, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None
+    ) -> Sequence[T]:
+        query_results = await self.graphql_repository().delete(
+            self._tree, filter_input.to_pydantic() if filter_input else None
+        )
+        return self._tree.query_result_to_strawberry_type(query_results)

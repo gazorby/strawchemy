@@ -3,10 +3,11 @@ from __future__ import annotations
 from collections import defaultdict, namedtuple
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias, TypeVar
 
-from sqlalchemy import Row, and_, insert, update
+from sqlalchemy import Row, and_, delete, insert, inspect, update
 from sqlalchemy.orm import RelationshipProperty
 from strawchemy.graphql.mutation import InputData, LevelInput, RelationType
 from strawchemy.sqlalchemy._executor import AsyncQueryExecutor, QueryResult
+from strawchemy.sqlalchemy._transpiler import QueryTranspiler
 from strawchemy.sqlalchemy.typing import AnyAsyncSession, DeclarativeT, SQLAlchemyQueryNode
 
 from ._base import SQLAlchemyGraphQLRepository
@@ -466,3 +467,20 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         """
         updated_ids = await self._mutate("update", data)
         return await self._list_by_ids(updated_ids, selection)
+
+    async def delete(
+        self,
+        selection: SQLAlchemyQueryNode | None = None,
+        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
+        execution_options: dict[str, Any] | None = None,
+    ) -> QueryResult[DeclarativeT]:
+        async with self.session.begin_nested() as transaction:
+            transpiler = QueryTranspiler(self.model, self._dialect, statement=self.statement)
+            alias = inspect(transpiler.scope.root_alias)
+            statement = delete(alias)
+            if dto_filter:
+                statement = statement.where(*transpiler.filter_expressions(dto_filter))
+            to_be_deleted = await self.list(selection, dto_filter=dto_filter)
+            await self.session.execute(statement, execution_options=execution_options or {})
+            await transaction.commit()
+        return to_be_deleted

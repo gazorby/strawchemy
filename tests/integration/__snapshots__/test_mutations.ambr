@@ -827,6 +827,171 @@
   VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
   '''
 # ---
+# name: test_delete_all[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = "user".group_id
+  '''
+# ---
+# name: test_delete_all[session-tracked-async-asyncpg_engine].1
+  '''
+  DELETE
+    FROM "user" AS "user"
+  '''
+# ---
+# name: test_delete_all[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = "user".group_id
+  '''
+# ---
+# name: test_delete_all[session-tracked-async-psycopg_async_engine].1
+  '''
+  DELETE
+    FROM "user" AS "user"
+  '''
+# ---
+# name: test_delete_all[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = "user".group_id
+  '''
+# ---
+# name: test_delete_all[session-tracked-sync-psycopg_engine].1
+  '''
+  DELETE
+    FROM "user" AS "user"
+  '''
+# ---
+# name: test_delete_filter[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = "user".group_id
+   WHERE "user".name = $1::VARCHAR
+  '''
+# ---
+# name: test_delete_filter[session-tracked-async-asyncpg_engine].1
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = $1::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_delete_filter[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = "user".group_id
+   WHERE "user".name = %(name_2)s::VARCHAR
+  '''
+# ---
+# name: test_delete_filter[session-tracked-async-psycopg_async_engine].1
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_delete_filter[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = "user".group_id
+   WHERE "user".name = %(name_2)s::VARCHAR
+  '''
+# ---
+# name: test_delete_filter[session-tracked-sync-psycopg_engine].1
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_delete_many[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = "user".group_id
+   WHERE "user".name = $1::VARCHAR
+  '''
+# ---
+# name: test_delete_many[session-tracked-async-asyncpg_engine].1
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = $1::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_delete_many[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = "user".group_id
+   WHERE "user".name = %(name_2)s::VARCHAR
+  '''
+# ---
+# name: test_delete_many[session-tracked-async-psycopg_async_engine].1
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_delete_many[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = "user".group_id
+   WHERE "user".name = %(name_2)s::VARCHAR
+  '''
+# ---
+# name: test_delete_many[session-tracked-sync-psycopg_engine].1
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id
+  '''
+# ---
 # name: test_update[session-tracked-async-asyncpg_engine]
   '''
   UPDATE color

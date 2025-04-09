@@ -10,7 +10,7 @@ from strawchemy.dto.base import ModelFieldT, ModelT
 from .config import StrawchemyConfig
 from .graphql.dto import BooleanFilterDTO, EnumDTO, MappedDataclassGraphQLDTO, OrderByDTO, OrderByEnum
 from .graphql.factories.types import DistinctOnFieldsDTOFactory
-from .strawberry import StrawchemyField, StrawchemyMutationField
+from .strawberry import StrawchemyCreateUpdateMutationField, StrawchemyDeleteMutationField, StrawchemyField
 from .strawberry.factory import (
     StrawberryAggregateFilterInputFactory,
     StrawberryFilterInputFactory,
@@ -223,7 +223,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
 
-        field = StrawchemyMutationField(
+        field = StrawchemyCreateUpdateMutationField(
             input_type,
             "create",
             repository_type=repository_type_,
@@ -268,7 +268,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
 
-        field = StrawchemyMutationField(
+        field = StrawchemyCreateUpdateMutationField(
             input_type,
             "update",
             filter_type=filter_input,
@@ -294,10 +294,9 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
 
     def delete_mutation(
         self,
-        input_type: type[AnyMappedDTO],
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
         repository_type: AnyRepository | None = None,
         name: str | None = None,
         description: str | None = None,
@@ -314,10 +313,8 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
 
-        field = StrawchemyMutationField(
-            input_type,
-            "delete",
-            filter_input=filter_input,
+        field = StrawchemyDeleteMutationField(
+            filter_input,
             repository_type=repository_type_,
             session_getter=self.settings.session_getter,
             inspector=self.inspector,

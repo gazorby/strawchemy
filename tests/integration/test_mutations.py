@@ -10,16 +10,17 @@ from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import (  # Reformat imports for clarity
+from .types import (
     ColorCreateInput,
     ColorType,
-    ColorUpdateInput,  # Add ColorUpdateInput
+    ColorUpdateInput,
     FruitCreateInput,
     FruitType,
-    FruitUpdateInput,  # Add FruitUpdateInput
+    FruitUpdateInput,
     UserCreate,
+    UserFilter,
     UserType,
-    UserUpdateInput,  # Add UserUpdateInput
+    UserUpdateInput,
     strawchemy,
 )
 from .typing import RawRecordData
@@ -33,7 +34,7 @@ class AsyncMutation:
     create_colors: list[ColorType] = strawchemy.create_mutation(
         ColorCreateInput, repository_type=StrawchemyAsyncRepository
     )
-    # Add update mutations for Color
+
     update_color: ColorType = strawchemy.update_mutation(ColorUpdateInput, repository_type=StrawchemyAsyncRepository)
     update_colors: list[ColorType] = strawchemy.update_mutation(
         ColorUpdateInput, repository_type=StrawchemyAsyncRepository
@@ -43,16 +44,20 @@ class AsyncMutation:
     create_fruits: list[FruitType] = strawchemy.create_mutation(
         FruitCreateInput, repository_type=StrawchemyAsyncRepository
     )
-    # Add update mutations for Fruit
+
     update_fruit: FruitType = strawchemy.update_mutation(FruitUpdateInput, repository_type=StrawchemyAsyncRepository)
     update_fruits: list[FruitType] = strawchemy.update_mutation(
         FruitUpdateInput, repository_type=StrawchemyAsyncRepository
     )
 
-    # Add update mutation for User
     update_user: UserType = strawchemy.update_mutation(UserUpdateInput, repository_type=StrawchemyAsyncRepository)
 
     create_user: UserType = strawchemy.create_mutation(UserCreate, repository_type=StrawchemyAsyncRepository)
+
+    delete_users: list[UserType] = strawchemy.delete_mutation(repository_type=StrawchemyAsyncRepository)
+    delete_users_filter: list[UserType] = strawchemy.delete_mutation(
+        UserFilter, repository_type=StrawchemyAsyncRepository
+    )
 
 
 @strawberry.type
@@ -63,7 +68,6 @@ class SyncMutation:
     )
 
     create_fruit: FruitType = strawchemy.create_mutation(FruitCreateInput, repository_type=StrawchemySyncRepository)
-    # Add update mutations for Color
     update_color: ColorType = strawchemy.update_mutation(ColorUpdateInput, repository_type=StrawchemySyncRepository)
     update_colors: list[ColorType] = strawchemy.update_mutation(
         ColorUpdateInput, repository_type=StrawchemySyncRepository
@@ -74,14 +78,17 @@ class SyncMutation:
     )
 
     create_user: UserType = strawchemy.create_mutation(UserCreate, repository_type=StrawchemySyncRepository)
-    # Add update mutations for Fruit
+
     update_fruit: FruitType = strawchemy.update_mutation(FruitUpdateInput, repository_type=StrawchemySyncRepository)
     update_fruits: list[FruitType] = strawchemy.update_mutation(
         FruitUpdateInput, repository_type=StrawchemySyncRepository
     )
 
-    # Add update mutation for User
     update_user: UserType = strawchemy.update_mutation(UserUpdateInput, repository_type=StrawchemySyncRepository)
+    delete_users: list[UserType] = strawchemy.delete_mutation(repository_type=StrawchemySyncRepository)
+    delete_users_filter: list[UserType] = strawchemy.delete_mutation(
+        UserFilter, repository_type=StrawchemySyncRepository
+    )
 
 
 @pytest.fixture
@@ -1267,3 +1274,65 @@ async def test_update_many(
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update colors in a single query
     query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated records
+
+
+# Delete
+
+
+@pytest.mark.snapshot
+async def test_delete_filter(
+    raw_users: RawRecordData,
+    raw_groups: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        mutation {
+            deleteUsersFilter(
+                filter: {
+                    name: { eq: "Alice" }
+                }
+            ) {
+                id
+                name
+                group {
+                    name
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert len(result.data["deleteUsersFilter"]) == 1
+    apple_fruit = next(fruit for fruit in raw_users if fruit["name"] == "Alice")
+    assert result.data["deleteUsersFilter"] == [
+        {"id": apple_fruit["id"], "name": "Alice", "group": {"name": raw_groups[0]["name"]}}
+    ]
+
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+    query_tracker.assert_statements(1, "delete", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_delete_all(
+    raw_users: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+        mutation {
+            deleteUsers {
+                id
+                name
+                group {
+                    name
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert len(result.data["deleteUsers"]) == len(raw_users)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+    query_tracker.assert_statements(1, "delete", sql_snapshot)

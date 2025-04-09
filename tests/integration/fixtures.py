@@ -21,6 +21,7 @@ from sqlalchemy import (
     Compiled,
     Connection,
     CursorResult,
+    Delete,
     Dialect,
     Engine,
     Executable,
@@ -75,7 +76,7 @@ __all__ = (
     "session",
 )
 
-FilterableStatement: TypeAlias = Literal["insert", "update", "select"]
+FilterableStatement: TypeAlias = Literal["insert", "update", "select", "delete"]
 scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval}
 
 if find_spec("geoalchemy2") is not None:
@@ -368,11 +369,11 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
 
 
 @pytest.fixture
-def raw_users() -> RawRecordData:
+def raw_users(raw_groups: RawRecordData) -> RawRecordData:
     return [
-        {"id": str(uuid4()), "name": "Alice"},
-        {"id": str(uuid4()), "name": "Bob"},
-        {"id": str(uuid4()), "name": "Charlie"},
+        {"id": str(uuid4()), "name": "Alice", "group_id": raw_groups[0]["id"]},
+        {"id": str(uuid4()), "name": "Bob", "group_id": None},
+        {"id": str(uuid4()), "name": "Charlie", "group_id": None},
     ]
 
 
@@ -684,7 +685,7 @@ class QueryTracker:
     executions: list[QueryInspector] = dataclasses.field(default_factory=list)
 
     def __post_init__(self) -> None:
-        self._clause_map = {"insert": Insert, "select": Select, "update": Update}
+        self._clause_map = {"insert": Insert, "select": Select, "update": Update, "delete": Delete}
         listens_for(self.session.get_bind(), "after_execute")(self._event_listener)
 
     def _event_listener(
