@@ -67,7 +67,6 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self.aggregate_filter = self._aggregate_filter_factory.input
         self.distinct_on = self._distinct_on_enum_factory.decorator
         self.input = self._input_factory.input
-        self.filter_update_input = partial(self._input_factory.input, mode="update_by_filter", partial=True)
         self.create_input = partial(self._input_factory.input, mode="create")
         self.pk_update_input = partial(self._input_factory.input, mode="update_by_pk")
         self.filter_update_input = partial(self._input_factory.input, mode="update_by_filter")
