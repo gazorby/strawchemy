@@ -161,6 +161,14 @@ def test_read_only_pk_on_update_input_fail() -> None:
         import_module("tests.unit.schemas.mutations.read_only_pk_with_update_input")
 
 
+def test_delete_mutation_type_not_list_raise_error() -> None:
+    with pytest.raises(
+        StrawchemyFieldError,
+        match=("Type of delete mutation must be a list: delete_group"),
+    ):
+        import_module("tests.unit.schemas.mutations.delete_mutation_type_not_list")
+
+
 @pytest.mark.parametrize(
     "path",
     [
@@ -226,6 +234,7 @@ def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     [
         pytest.param("create.Mutation", id="create_mutation"),
         pytest.param("update.Mutation", id="update_mutation"),
+        pytest.param("delete.Mutation", id="delete_mutation"),
     ],
 )
 @pytest.mark.snapshot

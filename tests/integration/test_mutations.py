@@ -54,7 +54,10 @@ class AsyncMutation:
 
     create_user: UserType = strawchemy.create_mutation(UserCreate, repository_type=StrawchemyAsyncRepository)
 
-    delete_users: list[UserType] = strawchemy.delete_mutation(UserFilter, repository_type=StrawchemyAsyncRepository)
+    delete_users: list[UserType] = strawchemy.delete_mutation(repository_type=StrawchemyAsyncRepository)
+    delete_users_filter: list[UserType] = strawchemy.delete_mutation(
+        UserFilter, repository_type=StrawchemyAsyncRepository
+    )
 
 
 @strawberry.type
@@ -82,8 +85,10 @@ class SyncMutation:
     )
 
     update_user: UserType = strawchemy.update_mutation(UserUpdateInput, repository_type=StrawchemySyncRepository)
-
-    delete_users: list[UserType] = strawchemy.delete_mutation(UserFilter, repository_type=StrawchemySyncRepository)
+    delete_users: list[UserType] = strawchemy.delete_mutation(repository_type=StrawchemySyncRepository)
+    delete_users_filter: list[UserType] = strawchemy.delete_mutation(
+        UserFilter, repository_type=StrawchemySyncRepository
+    )
 
 
 @pytest.fixture
@@ -1275,7 +1280,7 @@ async def test_update_many(
 
 
 @pytest.mark.snapshot
-async def test_delete_many(
+async def test_delete_filter(
     raw_users: RawRecordData,
     raw_groups: RawRecordData,
     any_query: AnyQueryExecutor,
@@ -1284,7 +1289,7 @@ async def test_delete_many(
 ) -> None:
     query = """
         mutation {
-            deleteUsers(
+            deleteUsersFilter(
                 filter: {
                     name: { eq: "Alice" }
                 }
@@ -1300,11 +1305,34 @@ async def test_delete_many(
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert len(result.data["deleteUsers"]) == 1
+    assert len(result.data["deleteUsersFilter"]) == 1
     apple_fruit = next(fruit for fruit in raw_users if fruit["name"] == "Alice")
-    assert result.data["deleteUsers"] == [
+    assert result.data["deleteUsersFilter"] == [
         {"id": apple_fruit["id"], "name": "Alice", "group": {"name": raw_groups[0]["name"]}}
     ]
 
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+    query_tracker.assert_statements(1, "delete", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_delete_all(
+    raw_users: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+        mutation {
+            deleteUsers {
+                id
+                name
+                group {
+                    name
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert len(result.data["deleteUsers"]) == len(raw_users)
     query_tracker.assert_statements(1, "select", sql_snapshot)
     query_tracker.assert_statements(1, "delete", sql_snapshot)

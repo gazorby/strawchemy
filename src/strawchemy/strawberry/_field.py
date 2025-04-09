@@ -518,7 +518,7 @@ class StrawchemyDeleteMutationField(StrawchemyField[ModelT, ModelFieldT]):
         self._input_type = input_type
 
     def _delete_resolver(
-        self, info: Info, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]] | None
+        self, info: Info, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]] | None = None
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         return repository.delete(filter_input)
@@ -527,8 +527,8 @@ class StrawchemyDeleteMutationField(StrawchemyField[ModelT, ModelFieldT]):
     def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
         # Calling self.is_list cause a recursion loop
         if not _is_list(type_):
-            msg = "Type of delete mutation must be a list"
-            raise ValueError(msg)
+            msg = f"Type of delete mutation must be a list: {self.name}"
+            raise StrawchemyFieldError(msg)
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
