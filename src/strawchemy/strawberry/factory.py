@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints, override
+from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, TypeVar, get_type_hints, override
 
 from typing_extensions import dataclass_transform
 
@@ -87,6 +87,8 @@ PydanticGraphQLDTOT = TypeVar("PydanticGraphQLDTOT", bound=PydanticGraphQLDTO)
 DataclassGraphQLDTOT = TypeVar("DataclassGraphQLDTOT", bound=DataclassGraphQLDTO)
 MappedDataclassGraphQLDTOT = TypeVar("MappedDataclassGraphQLDTOT", bound=MappedDataclassGraphQLDTO[Any])
 StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound=StrawchemyDTOAttributes)
+
+UpdateType: TypeAlias = Literal["pk", "filter"]
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
@@ -330,29 +332,32 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
     def _root_input_config(self, model: type[Any], dto_config: DTOConfig, mode: InputType) -> DTOConfig:
         annotations_overrides: dict[str, Any] = {}
         partial = dto_config.partial
+        exclude_defaults = dto_config.exclude_defaults
         id_fields = self.inspector.id_field_definitions(model, dto_config)
         # Add PKs for update/delete inputs
-        if mode in ("update", "delete"):
+        if mode == "update_by_pk":
             if set(dto_config.exclude) & {name for name, _ in id_fields}:
                 msg = (
                     "You cannot exclude primary key columns from an input type intended for create or update mutations"
                 )
                 raise StrawchemyError(msg)
             annotations_overrides |= {name: field.type_hint for name, field in id_fields}
-        if mode == "update":
+        if mode == "update_by_filter":
+            exclude_defaults = True
+        if mode in {"update_by_pk", "update_by_filter"}:
             partial = True
         # Exclude default generated PKs for create inputs, if not explicitly included
         elif dto_config.include == "all":
             for name, field in id_fields:
                 if self.inspector.has_default(field.model_field):
                     annotations_overrides[name] = field.type_hint | None
-
         return dataclasses.replace(
             dto_config,
             annotation_overrides=annotations_overrides,
             partial=partial,
             partial_default=UNSET,
             unset_sentinel=UNSET,
+            exclude_defaults=exclude_defaults,
         )
 
     @classmethod
@@ -812,8 +817,9 @@ class StrawberryTypeFactory(
         node: Node[Relation[Any, MappedDataclassGraphQLDTO[Any]], None],
         *,
         child_options: _ChildOptions | None = None,
+        **factory_kwargs: Any,
     ) -> Hashable:
-        return (super()._cache_key(model, dto_config, node), child_options)
+        return (super()._cache_key(model, dto_config, node, **factory_kwargs), child_options)
 
     @override
     def factory(
@@ -911,8 +917,14 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         node: Node[Relation[Any, MappedDataclassGraphQLDTO[Any]], None],
         *,
         child_options: _ChildOptions | None = None,
+        mode: InputType,
+        **factory_kwargs: Any,
     ) -> Hashable:
-        return (super()._cache_key(model, dto_config, node, child_options=child_options), node.root.value.model)
+        return (
+            super()._cache_key(model, dto_config, node, child_options=child_options, **factory_kwargs),
+            node.root.value.model,
+            mode,
+        )
 
     @override
     def type_description(self) -> str:
@@ -957,7 +969,7 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         if field.uselist:
             if mode == "create":
                 input_type = ToManyCreateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
-            elif mode == "update":
+            else:
                 type_ = (
                     RequiredToManyUpdateInput
                     if self.inspector.reverse_relation_required(field.model_field)
@@ -985,7 +997,7 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         for field in super().iter_field_definitions(
             name, model, dto_config, base, node, raise_if_no_fields, mode=mode, **factory_kwargs
         ):
-            if mode == "update" and self.inspector.is_primary_key(field.model_field):
+            if mode == "update_by_pk" and self.inspector.is_primary_key(field.model_field):
                 field.type_ = non_optional_type_hint(field.type_)
             yield field
 

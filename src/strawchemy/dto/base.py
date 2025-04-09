@@ -491,7 +491,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         return Node(Relation(model=model, name=name)) if node is None else node
 
     def _cache_key(
-        self, model: type[Any], dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None]
+        self, model: type[Any], dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None], **factory_kwargs: Any
     ) -> Hashable:
         base_key = frozenset(
             [
@@ -626,7 +626,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             name = base.__name__ if base else self.dto_name(model.__name__, dto_config, current_node)
         node = self._node_or_root(model, name, current_node)
 
-        cache_key = self._cache_key(model, dto_config, node)
+        cache_key = self._cache_key(model, dto_config, node, **kwargs)
 
         if dto := self._dto_cache.get(cache_key):
             return self.backend.copy(dto, name) if node.is_root else dto

@@ -261,13 +261,21 @@ class StrawchemyAsyncRepository(Generic[T]):
         query_results = await self.graphql_repository().create(InputData([data]), self._tree)
         return self._tree.to_strawberry_type(query_results.one())
 
-    async def update_many(self, data: Sequence[AnyMappedDTO]) -> Sequence[T]:
-        query_results = await self.graphql_repository().update(InputData(data), self._tree)
+    async def update_many_by_id(self, data: Sequence[AnyMappedDTO]) -> Sequence[T]:
+        query_results = await self.graphql_repository().update_by_ids(InputData(data), self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)
 
-    async def update(self, data: AnyMappedDTO) -> T:
-        query_results = await self.graphql_repository().update(InputData([data]), self._tree)
+    async def update_by_id(self, data: AnyMappedDTO) -> T:
+        query_results = await self.graphql_repository().update_by_ids(InputData([data]), self._tree)
         return self._tree.to_strawberry_type(query_results.one())
+
+    async def update_by_filter(
+        self, data: AnyMappedDTO, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]
+    ) -> Sequence[T]:
+        query_results = await self.graphql_repository().update_by_filter(
+            InputData([data]), filter_input.to_pydantic(), self._tree
+        )
+        return self._tree.query_result_to_strawberry_type(query_results)
 
     async def delete(
         self, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None

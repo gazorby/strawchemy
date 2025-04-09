@@ -252,7 +252,10 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         prop = mapper.attrs[model_field.key]
         elem = prop if isinstance(prop, MappedSQLExpression) else mapper.attrs[model_field.key]
         config = self._field_config(elem)
-        default, default_factory = self._defaults(elem)
+        if dto_config.exclude_defaults:
+            default, default_factory = DTO_MISSING, DTO_MISSING
+        else:
+            default, default_factory = self._defaults(elem)
         uselist = self._uselist(elem)
         is_relation = self._is_relationship(elem)
 

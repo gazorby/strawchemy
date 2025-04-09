@@ -12,6 +12,8 @@ from tests.utils import maybe_async
 from .fixtures import QueryTracker
 from .types import (
     ColorCreateInput,
+    ColorFilter,
+    ColorPartial,
     ColorType,
     ColorUpdateInput,
     FruitCreateInput,
@@ -36,6 +38,9 @@ class AsyncMutation:
     update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemyAsyncRepository)
     update_colors: list[ColorType] = strawchemy.update_by_ids(
         ColorUpdateInput, repository_type=StrawchemyAsyncRepository
+    )
+    update_colors_filter: list[ColorType] = strawchemy.update(
+        ColorPartial, ColorFilter, repository_type=StrawchemyAsyncRepository
     )
 
     create_fruit: FruitType = strawchemy.create(FruitCreateInput, repository_type=StrawchemyAsyncRepository)
@@ -63,6 +68,9 @@ class SyncMutation:
     update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemySyncRepository)
     update_colors: list[ColorType] = strawchemy.update_by_ids(
         ColorUpdateInput, repository_type=StrawchemySyncRepository
+    )
+    update_colors_filter: list[ColorType] = strawchemy.update(
+        ColorPartial, ColorFilter, repository_type=StrawchemySyncRepository
     )
 
     create_fruits: list[FruitType] = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
@@ -541,6 +549,69 @@ async def test_update(
         "id": to_graphql_representation(raw_colors[0]["id"], "output"),
         "name": "updated color",
     }
+
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+
+
+@pytest.mark.snapshot
+async def test_update_by_filter(
+    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Tests a simple update mutation."""
+    query = """
+        mutation {
+            updateColorsFilter(
+                data: {
+                    name: "updated color"
+                },
+                filter: {
+                    name: { eq: "Red" }
+                }
+            ) {
+                id
+                name
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["updateColorsFilter"] == [
+        {
+            "id": to_graphql_representation(raw_colors[0]["id"], "output"),
+            "name": "updated color",
+        }
+    ]
+
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+
+
+@pytest.mark.snapshot
+async def test_update_by_filter_only_return_affected_objects(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Tests a simple update mutation."""
+    query = """
+        mutation {
+            updateColorsFilter(
+                data: {
+                    name: "updated color"
+                },
+                filter: {
+                    name: { eq: "unknown" }
+                }
+            ) {
+                id
+                name
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["updateColorsFilter"] == []
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
     query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name

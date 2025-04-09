@@ -1052,6 +1052,96 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
+# name: test_update_by_filter[session-tracked-async-asyncpg_engine]
+  '''
+  UPDATE color AS color
+     SET name = $1::VARCHAR
+   WHERE color.name = $2::VARCHAR RETURNING color.id
+  '''
+# ---
+# name: test_update_by_filter[session-tracked-async-asyncpg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_update_by_filter[session-tracked-async-psycopg_async_engine]
+  '''
+  UPDATE color AS color
+     SET name = %(name)s::VARCHAR
+   WHERE color.name = %(name_1)s::VARCHAR RETURNING color.id
+  '''
+# ---
+# name: test_update_by_filter[session-tracked-async-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_update_by_filter[session-tracked-sync-psycopg_engine]
+  '''
+  UPDATE color AS color
+     SET name = %(name)s::VARCHAR
+   WHERE color.name = %(name_1)s::VARCHAR RETURNING color.id
+  '''
+# ---
+# name: test_update_by_filter[session-tracked-sync-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_update_by_filter_only_return_affected_objects[session-tracked-async-asyncpg_engine]
+  '''
+  UPDATE color AS color
+     SET name = $1::VARCHAR
+   WHERE color.name = $2::VARCHAR RETURNING color.id
+  '''
+# ---
+# name: test_update_by_filter_only_return_affected_objects[session-tracked-async-asyncpg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_update_by_filter_only_return_affected_objects[session-tracked-async-psycopg_async_engine]
+  '''
+  UPDATE color AS color
+     SET name = %(name)s::VARCHAR
+   WHERE color.name = %(name_1)s::VARCHAR RETURNING color.id
+  '''
+# ---
+# name: test_update_by_filter_only_return_affected_objects[session-tracked-async-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_update_by_filter_only_return_affected_objects[session-tracked-sync-psycopg_engine]
+  '''
+  UPDATE color AS color
+     SET name = %(name)s::VARCHAR
+   WHERE color.name = %(name_1)s::VARCHAR RETURNING color.id
+  '''
+# ---
+# name: test_update_by_filter_only_return_affected_objects[session-tracked-sync-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
 # name: test_update_many[session-tracked-async-asyncpg_engine]
   '''
   UPDATE color

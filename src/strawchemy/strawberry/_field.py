@@ -72,13 +72,12 @@ if TYPE_CHECKING:
     from .typing import (
         AnySessionGetter,
         FilterStatementCallable,
-        InputType,
         StrawchemyTypeFromPydantic,
         StrawchemyTypeWithStrawberryObjectDefinition,
     )
 
 
-__all__ = ("StrawchemyCreateUpdateMutationField", "StrawchemyDeleteMutationField", "StrawchemyField")
+__all__ = ("StrawchemyCreateMutationField", "StrawchemyDeleteMutationField", "StrawchemyField")
 
 T = TypeVar("T")
 
@@ -472,24 +471,17 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         return super().get_result(source, info, args, kwargs)
 
 
-class StrawchemyCreateUpdateMutationField(StrawchemyField[ModelT, ModelFieldT]):
-    def __init__(self, input_type: type[AnyMappedDTO], mutation_type: InputType, *args: Any, **kwargs: Any) -> None:
+class StrawchemyCreateMutationField(StrawchemyField[ModelT, ModelFieldT]):
+    def __init__(self, input_type: type[AnyMappedDTO], *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.is_root_field = True
         self._input_type = input_type
-        self._mutation_type: InputType = mutation_type
 
     def _create_resolver(
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         return repository.create_many(data) if isinstance(data, Sequence) else repository.create(data)
-
-    def _update_resolver(
-        self, info: Info, data: AnyMappedDTO
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
-        repository = self._get_repository(info)
-        return repository.update_many(data) if isinstance(data, Sequence) else repository.update(data)
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -501,9 +493,56 @@ class StrawchemyCreateUpdateMutationField(StrawchemyField[ModelT, ModelFieldT]):
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
-        if self._mutation_type == "create":
-            return self._create_resolver(info, *args, **kwargs)
-        return self._update_resolver(info, *args, **kwargs)
+        return self._create_resolver(info, *args, **kwargs)
+
+
+class StrawchemyUpdateMutationField(StrawchemyField[ModelT, ModelFieldT]):
+    def __init__(self, input_type: type[AnyMappedDTO], *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self.is_root_field = True
+        self._input_type = input_type
+
+    @override
+    def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
+        if self._filter is not None and not _is_list(type_):
+            msg = f"Type of update mutation by filter must be a list: {self.name}"
+            raise StrawchemyFieldError(msg)
+
+    def _update_by_ids_resolver(
+        self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        return repository.update_many_by_id(data) if isinstance(data, Sequence) else repository.update_by_id(data)
+
+    def _update_by_filter_resolver(
+        self, info: Info, data: AnyMappedDTO, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        return repository.update_by_filter(data, filter_input)
+
+    @override
+    def auto_arguments(self) -> list[StrawberryArgument]:
+        if self.filter:
+            return [
+                StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(self._input_type)),
+                StrawberryArgument(
+                    python_name="filter_input",
+                    graphql_name=FILTER_KEY,
+                    type_annotation=StrawberryAnnotation(self.filter | None),
+                    default=None,
+                ),
+            ]
+        if self.is_list:
+            return [StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(list[self._input_type]))]
+        return [StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(self._input_type))]
+
+    @override
+    def resolver(
+        self, info: Info[Any, Any], *args: Any, **kwargs: Any
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        if self.filter:
+            return self._update_by_filter_resolver(info, *args, **kwargs)
+        return self._update_by_ids_resolver(info, *args, **kwargs)
 
 
 class StrawchemyDeleteMutationField(StrawchemyField[ModelT, ModelFieldT]):

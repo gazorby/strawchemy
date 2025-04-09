@@ -154,7 +154,7 @@ class DTOConfig:
     type_overrides: Mapping[Any, Any] = field(default_factory=dict)
     annotation_overrides: dict[str, Any] = field(default_factory=dict)
     aliases: Mapping[str, str] = field(default_factory=dict)
-
+    exclude_defaults: bool = False
     alias_generator: Callable[[str], str] | None = None
 
     def __post_init__(self) -> None:

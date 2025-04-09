@@ -20,15 +20,23 @@ class GroupType: ...
 class TagType: ...
 
 
-@strawchemy.update_input(SQLDataTypes, include="all")
+@strawchemy.pk_update_input(SQLDataTypes, include="all")
 class SQLDataTypesUpdate: ...
 
 
-@strawchemy.update_input(Group, include="all")
+@strawchemy.pk_update_input(Group, include="all")
 class GroupUpdate: ...
 
 
-@strawchemy.update_input(Tag, include="all")
+@strawchemy.filter_update_input(Group, include="all")
+class GroupPartial: ...
+
+
+@strawchemy.filter(Group, include="all")
+class GroupFilter: ...
+
+
+@strawchemy.pk_update_input(Tag, include="all")
 class TagUpdate: ...
 
 
@@ -37,7 +45,8 @@ class Mutation:
     update_data_type: SQLDataTypesType = strawchemy.update_by_ids(SQLDataTypesUpdate)
     update_data_types: list[SQLDataTypesType] = strawchemy.update_by_ids(SQLDataTypesUpdate)
 
-    update_group: GroupType = strawchemy.update_by_ids(GroupUpdate)
-    update_groups: list[GroupType] = strawchemy.update_by_ids(GroupUpdate)
+    update_groups: list[GroupType] = strawchemy.update(GroupPartial, GroupFilter)
+    update_group_by_id: GroupType = strawchemy.update_by_ids(GroupUpdate)
+    update_groups_by_ids: list[GroupType] = strawchemy.update_by_ids(GroupUpdate)
 
     update_tag: TagType = strawchemy.update_by_ids(TagUpdate)

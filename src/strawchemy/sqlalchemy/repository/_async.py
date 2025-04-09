@@ -25,7 +25,7 @@ __all__ = ("SQLAlchemyGraphQLAsyncRepository",)
 T = TypeVar("T", bound=Any)
 
 _RowLike: TypeAlias = "Row[Any] | NamedTuple"
-_InsertOrUpdate: TypeAlias = Literal["insert", "update"]
+_InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where"]
 
 
 class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, AnyAsyncSession]):
@@ -170,7 +170,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 assert prop.local_remote_pairs
                 assert relation.field.related_model
                 parent = created_ids[relation.input_index] if relation.level == 1 else relation.parent
-                if relation.level == 1 and mode == "update":
+                if relation.level == 1 and mode in {"update_by_pks", "update_where"}:
                     for local, remote in prop.local_remote_pairs:
                         remove_old_ids[relation.field.related_model][remote.key].append(getattr(parent, local.key))
                 for relation_model in relation.set or []:
@@ -235,24 +235,44 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             for model_type, values in insert_params.items():
                 await self._insert_nested(model_type, values, level)
 
-    async def _mutate(
-        self, mode: _InsertOrUpdate, data: InputData[DeclarativeBase, QueryableAttribute[Any]]
+    async def _execute_insert_or_update(
+        self,
+        mode: _InsertOrUpdate,
+        data: InputData[DeclarativeBase, QueryableAttribute[Any]],
+        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None,
     ) -> Sequence[_RowLike]:
         model_pks = self.model.__mapper__.primary_key
+        values = [self._to_dict(instance) for instance in data.input_instances]
+        if mode == "insert":
+            statement = insert(self.model).returning(*model_pks, sort_by_parameter_order=True)
+            result = await self.session.execute(statement, values)
+            return result.all()
+
+        pks = [column.key for column in self.model.__mapper__.primary_key]
+        pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
+
+        if mode == "update_by_pks":
+            await self.session.execute(update(self.model), values)
+            return [pk_tuple(*[instance[name] for name in pks]) for instance in values]
+
+        transpiler = QueryTranspiler(self.model, self._dialect, statement=self.statement)
+        alias = inspect(transpiler.scope.root_alias)
+        statement = update(alias).values(**values[0]).returning(*model_pks)
+        if dto_filter:
+            statement = statement.where(*transpiler.filter_expressions(dto_filter))
+        result = await self.session.execute(statement)
+        return result.all()
+
+    async def _mutate(
+        self,
+        mode: _InsertOrUpdate,
+        data: InputData[DeclarativeBase, QueryableAttribute[Any]],
+        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
+    ) -> Sequence[_RowLike]:
         async with self.session.begin_nested() as transaction:
             self._connect_to_one_relations(data)
             await self._create_nested_to_one_relations(data)
-            values = [self._to_dict(instance) for instance in data.input_instances]
-            if mode == "insert":
-                result = await self.session.execute(
-                    insert(self.model).returning(*model_pks, sort_by_parameter_order=True), values
-                )
-                instance_ids = result.all()
-            else:
-                pks = [column.key for column in model_pks]
-                pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
-                await self.session.execute(update(self.model), values)
-                instance_ids = [pk_tuple(*[instance[name] for name in pks]) for instance in values]
+            instance_ids = await self._execute_insert_or_update(mode, data, dto_filter)
             await self._create_to_many_relations(data, instance_ids)
             await self._update_to_many_relations(data, instance_ids)
             await self._set_to_many_relations(mode, data, instance_ids)
@@ -447,7 +467,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         created_ids = await self._mutate("insert", data)
         return await self._list_by_ids(created_ids, selection)
 
-    async def update(
+    async def update_by_ids(
         self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], selection: SQLAlchemyQueryNode | None = None
     ) -> QueryResult[DeclarativeT]:
         """Updates one or more records with nested relationships and returns them.
@@ -465,7 +485,16 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             A QueryResult containing the updated records, structured
             according to the selection.
         """
-        updated_ids = await self._mutate("update", data)
+        updated_ids = await self._mutate("update_by_pks", data)
+        return await self._list_by_ids(updated_ids, selection)
+
+    async def update_by_filter(
+        self,
+        data: InputData[DeclarativeBase, QueryableAttribute[Any]],
+        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]],
+        selection: SQLAlchemyQueryNode | None = None,
+    ) -> QueryResult[DeclarativeT]:
+        updated_ids = await self._mutate("update_where", data, dto_filter)
         return await self._list_by_ids(updated_ids, selection)
 
     async def delete(
