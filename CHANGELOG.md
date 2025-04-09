@@ -2,6 +2,51 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.0](https://github.com/gazorby/strawchemy/compare/v0.12.2..v0.13.0) - 2025-04-09
+
+### 🚀 Features
+
+- *(cud)* Allow settings null on to-one relations - ([1efe0ed](https://github.com/gazorby/strawchemy/commit/1efe0ed9fa118ae95a2ac572d829936195c6880a))
+- *(cud)* Add delete mutation - ([289d9be](https://github.com/gazorby/strawchemy/commit/289d9bea3bbd38d826578f44607a8978c3b8dffa))
+- *(cud)* Add filter update mutation - ([c15f60c](https://github.com/gazorby/strawchemy/commit/c15f60c1f7618de8529711e33639b28c8ba6362c))
+
+### 🐛 Bug Fixes
+
+- *(cud)* Enable add/remove on to-mnay relations; set overwrite previous to-many relations - ([08ee2e7](https://github.com/gazorby/strawchemy/commit/08ee2e79e75161e597d59ca3a1727ca233cce53b))
+- *(mapping)* Respect nullability when generating input types - ([f87f3b6](https://github.com/gazorby/strawchemy/commit/f87f3b6d6df840540077d079d28bd2d095c57016))
+- *(mapping)* Exclude foreign keys from inputs - ([17678f2](https://github.com/gazorby/strawchemy/commit/17678f21578675d8f16100208756b9bb934f542c))
+- *(schema)* Do not allow removing to-many relations if remote fk is not nullable - ([c7203bc](https://github.com/gazorby/strawchemy/commit/c7203bccd4912e2c923515d12bde2097a806dd98))
+
+### 🚜 Refactor
+
+- *(cud)* Implement update input - ([5fd3d9f](https://github.com/gazorby/strawchemy/commit/5fd3d9f91d4dab42419c29eb2b092c8364f165b8))
+- *(cud)* Implement update repository method - ([1080c25](https://github.com/gazorby/strawchemy/commit/1080c25bf134a7ae509be0194367f7d7dff0dc4e))
+- *(cud)* Merge create and update transaction logic - ([769e4ef](https://github.com/gazorby/strawchemy/commit/769e4efa78e9140bab0f0d7d18caba5151d65cff))
+- *(mapper)* Update api - ([a486384](https://github.com/gazorby/strawchemy/commit/a48638470223a426cf02fd9021098b2dd1e4876f))
+- *(mapper)* Remove duplicate assignement - ([f22e1de](https://github.com/gazorby/strawchemy/commit/f22e1deab11a24320f7a17139b83942c98da342b))
+- *(repository)* Update code documentation - ([ae39957](https://github.com/gazorby/strawchemy/commit/ae3995739fbb5d60ac11077e00618943eb695b4a))
+- *(update-input)* Make all fields partial, except pks - ([64a6f3e](https://github.com/gazorby/strawchemy/commit/64a6f3e58108e9b7f5e1419b759747f7f01a6a68))
+- *(utils)* Remove unused function - ([68a970b](https://github.com/gazorby/strawchemy/commit/68a970b8a7da0baa4d37ba084dcacd806ad90b2c))
+
+### 📚 Documentation
+
+- *(readme)* Add mutation documention - ([5de832a](https://github.com/gazorby/strawchemy/commit/5de832a3d7868f5c544a8c40f6683df9ac045cfd))
+
+### 🧪 Testing
+
+- *(cud)* Add update test cases - ([06814aa](https://github.com/gazorby/strawchemy/commit/06814aa0b9020910a65e74ad9cf6bd8c2041ff48))
+- *(cud)* Update query snapshots - ([d2ba852](https://github.com/gazorby/strawchemy/commit/d2ba852fb8e93e3cf68fb5484f3b53f23a899361))
+- *(cud)* Add test cases for invalid relation inputs - ([1535b75](https://github.com/gazorby/strawchemy/commit/1535b751225b60d7cb4e0220b64d56df7fc27e56))
+- *(cud)* Add test cases for delete mutation - ([3bd3fb3](https://github.com/gazorby/strawchemy/commit/3bd3fb3746d3998bc8d58609f117958b39200eda))
+- *(integration)* Update query snapshots - ([6a11b24](https://github.com/gazorby/strawchemy/commit/6a11b24a4f16f31d9b6a09851acb1ff01e3b5bdc))
+- *(integration)* Add create mutation test cases - ([a84d5b1](https://github.com/gazorby/strawchemy/commit/a84d5b166b3b78fd0f9dee54c54f5e11e7305a64))
+- *(integration)* Better sql snapshot formatting - ([4238c2f](https://github.com/gazorby/strawchemy/commit/4238c2f97b7d173aa14764f3deec75837d28460b))
+- *(unit)* Add test cases for invalid inputs - ([502be53](https://github.com/gazorby/strawchemy/commit/502be5365cabf61e46aa37b5843e53da65e6aad9))
+- *(unit)* Remove default dto_config test case - ([dc06ca9](https://github.com/gazorby/strawchemy/commit/dc06ca9f173a16baaa2100b4e568930698e03dd0))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.13.0 - ([fd1d725](https://github.com/gazorby/strawchemy/commit/fd1d7257c906f2e2131c079840e33abd3af8d681))
 ## [0.12.2](https://github.com/gazorby/strawchemy/compare/v0.12.1..v0.12.2) - 2025-04-03
 
 ### 🐛 Bug Fixes
