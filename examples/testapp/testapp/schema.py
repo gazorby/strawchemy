@@ -8,6 +8,7 @@ from .types import (
     ProjectCreate,
     ProjectType,
     TicketCreate,
+    TicketFilter,
     TicketType,
     TicketUpdate,
     strawchemy,
@@ -36,6 +37,8 @@ class Mutation:
     create_milestone: MilestoneType = strawchemy.create_mutation(MilestoneCreate)
 
     update_ticket: TicketType = strawchemy.update_mutation(TicketUpdate)
+
+    delete_ticket: list[TicketType] = strawchemy.delete_mutation(TicketFilter)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)

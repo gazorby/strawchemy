@@ -78,7 +78,7 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("StrawchemyField",)
+__all__ = ("StrawchemyCreateUpdateMutationField", "StrawchemyDeleteMutationField", "StrawchemyField")
 
 T = TypeVar("T")
 
@@ -88,7 +88,21 @@ ListResolverResult: TypeAlias = (
 GetByIdResolverResult: TypeAlias = "StrawchemyTypeWithStrawberryObjectDefinition | None"
 CreateOrUpdateResolverResult: TypeAlias = "Sequence[StrawchemyTypeWithStrawberryObjectDefinition]"
 
+
 _OPTIONAL_UNION_ARG_SIZE: int = 2
+
+
+def _is_list(type_: StrawberryType | type[WithStrawberryObjectDefinition] | object | str) -> bool:
+    if isinstance(type_, StrawberryOptional):
+        type_ = type_.of_type
+    if origin := get_origin(type_):
+        type_ = origin
+        if origin is Optional:
+            type_ = get_args(type_)[0]
+        if origin in (Union, UnionType) and len(args := get_args(type_)) == _OPTIONAL_UNION_ARG_SIZE:
+            type_ = args[0] if args[0] is not type(None) else args[1]
+
+    return isinstance(type_, StrawberryList) or type_ is list
 
 
 class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
@@ -224,7 +238,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         repository = self._get_repository(info)
         return repository.list(filter_input, order_by, distinct_on, limit, offset)
 
-    def _check_root_aggregations(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
+    def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
         inner_type = strawberry_contained_type(type_)
         if (
             self.root_aggregations
@@ -327,19 +341,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
 
     @cached_property
     def is_list(self) -> bool:
-        if self.root_aggregations:
-            return True
-        type_ = self._type_or_annotation()
-        if isinstance(type_, StrawberryOptional):
-            type_ = type_.of_type
-        if origin := get_origin(type_):
-            type_ = origin
-            if origin is Optional:
-                type_ = get_args(type_)[0]
-            if origin in (Union, UnionType) and len(args := get_args(type_)) == _OPTIONAL_UNION_ARG_SIZE:
-                type_ = args[0] if args[0] is not type(None) else args[1]
-
-        return isinstance(type_, StrawberryList) or type_ is list
+        return True if self.root_aggregations else _is_list(self._type_or_annotation())
 
     @cached_property
     def is_optional(self) -> bool:
@@ -445,7 +447,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         self, *, type_definition: StrawberryObjectDefinition | None = None
     ) -> StrawberryType | type[WithStrawberryObjectDefinition] | Any:
         type_ = super().resolve_type(type_definition=type_definition)
-        self._check_root_aggregations(type_)
+        self._validate_type(type_)
         return type_
 
     def resolver(
@@ -470,7 +472,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         return super().get_result(source, info, args, kwargs)
 
 
-class StrawchemyMutationField(StrawchemyField[ModelT, ModelFieldT]):
+class StrawchemyCreateUpdateMutationField(StrawchemyField[ModelT, ModelFieldT]):
     def __init__(self, input_type: type[AnyMappedDTO], mutation_type: MutationType, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.is_root_field = True
@@ -502,3 +504,47 @@ class StrawchemyMutationField(StrawchemyField[ModelT, ModelFieldT]):
         if self._mutation_type == "create":
             return self._create_resolver(info, *args, **kwargs)
         return self._update_resolver(info, *args, **kwargs)
+
+
+class StrawchemyDeleteMutationField(StrawchemyField[ModelT, ModelFieldT]):
+    def __init__(
+        self,
+        input_type: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(*args, **kwargs)
+        self.is_root_field = True
+        self._input_type = input_type
+
+    def _delete_resolver(
+        self, info: Info, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]] | None
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        return repository.delete(filter_input)
+
+    @override
+    def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
+        # Calling self.is_list cause a recursion loop
+        if not _is_list(type_):
+            msg = "Type of delete mutation must be a list"
+            raise ValueError(msg)
+
+    @override
+    def auto_arguments(self) -> list[StrawberryArgument]:
+        if self._input_type:
+            return [
+                StrawberryArgument(
+                    python_name="filter_input",
+                    graphql_name=FILTER_KEY,
+                    default=None,
+                    type_annotation=StrawberryAnnotation(self._input_type),
+                )
+            ]
+        return []
+
+    @override
+    def resolver(
+        self, info: Info[Any, Any], *args: Any, **kwargs: Any
+    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+        return self._delete_resolver(info, *args, **kwargs)

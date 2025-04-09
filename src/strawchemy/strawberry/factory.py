@@ -987,7 +987,7 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         for field in super().iter_field_definitions(
             name, model, dto_config, base, node, raise_if_no_fields, mode=mode, **factory_kwargs
         ):
-            if mode == "update" and self.inspector.is_primary_key(field.model_field):
+            if mode in {"update", "delete"} and self.inspector.is_primary_key(field.model_field):
                 field.type_ = non_optional_type_hint(field.type_)
             yield field
 
