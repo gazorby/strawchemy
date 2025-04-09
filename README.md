@@ -29,6 +29,8 @@ Generates GraphQL types, inputs, queries and resolvers directly from SQLAlchemy 
 - [Pagination](#pagination)
 - [Filtering](#filtering)
 - [Aggregations](#aggregations)
+- [Mutations](#mutations)
+- [Async Support](#async-support)
 - [Configuration](#configuration)
 - [Contributing](#contributing)
 - [License](#license)
@@ -961,6 +963,639 @@ Now you can use aggregation functions on the result of your query:
 ```
 
 </details>
+
+## Mutations
+
+Strawchemy provides a powerful way to create GraphQL mutations for your SQLAlchemy models. These mutations allow you to create, update, and delete data through your GraphQL API.
+
+<details>
+<summary>Mutations example</summary>
+
+```python
+import strawberry
+from strawchemy import Strawchemy, StrawchemySyncRepository, StrawchemyAsyncRepository
+
+# Initialize the strawchemy mapper
+strawchemy = Strawchemy()
+
+# Define input types for mutations
+@strawchemy.input(User, include=["name", "email"])
+class UserCreateInput:
+    pass
+
+@strawchemy.input(User, include=["id", "name", "email"])
+class UserUpdateInput:
+    pass
+
+@strawchemy.filter(User, include="all")
+class UserFilter:
+    pass
+
+# Define GraphQL mutation fields
+@strawberry.type
+class Mutation:
+    # Create mutations
+    create_user: UserType = strawchemy.create(UserCreateInput)
+    create_users: list[UserType] = strawchemy.create(UserCreateInput)  # Batch creation
+
+    # Update mutations
+    update_user: UserType = strawchemy.update_by_ids(UserUpdateInput)
+    update_users: list[UserType] = strawchemy.update_by_ids(UserUpdateInput)  # Batch update
+    update_users_filter: list[UserType] = strawchemy.update(UserUpdateInput, UserFilter)  # Update with filter
+
+    # Delete mutations
+    delete_users: list[UserType] = strawchemy.delete()  # Delete all
+    delete_users_filter: list[UserType] = strawchemy.delete(UserFilter)  # Delete with filter
+
+# Create schema with mutations
+schema = strawberry.Schema(query=Query, mutation=Mutation)
+```
+
+</details>
+
+### Create Mutations
+
+Create mutations allow you to insert new records into your database. Strawchemy provides two types of create mutations:
+
+1. **Single entity creation**: Creates a single record
+2. **Batch creation**: Creates multiple records in a single operation
+
+<details>
+<summary>Create mutation examples</summary>
+
+#### Basic Create Mutation
+
+```python
+# Define input type for creation
+@strawchemy.input(Color, include=["name"])
+class ColorCreateInput:
+    pass
+
+@strawberry.type
+class Mutation:
+    # Single entity creation
+    create_color: ColorType = strawchemy.create(ColorCreateInput)
+
+    # Batch creation
+    create_colors: list[ColorType] = strawchemy.create(ColorCreateInput)
+```
+
+GraphQL usage:
+
+```graphql
+# Create a single color
+mutation {
+  createColor(data: { name: "Purple" }) {
+    id
+    name
+  }
+}
+
+# Create multiple colors in one operation
+mutation {
+  createColors(data: [{ name: "Teal" }, { name: "Magenta" }]) {
+    id
+    name
+  }
+}
+```
+
+</details>
+
+### Working with Relationships in Create Mutations
+
+Strawchemy supports creating entities with relationships. You can:
+
+1. **Set existing relationships**: Link to existing records
+2. **Create nested relationships**: Create related records in the same mutation
+3. **Set to null**: Remove relationships
+
+<details>
+<summary>Create with relationships examples</summary>
+
+#### To-One Relationships
+
+```python
+@strawchemy.input(Fruit, include=["name", "adjectives"])
+class FruitCreateInput:
+    # Define relationship inputs
+    color: auto  # 'auto' will generate appropriate relationship inputs
+```
+
+GraphQL usage:
+
+```graphql
+# Set an existing relationship
+mutation {
+  createFruit(
+    data: {
+      name: "Apple"
+      adjectives: ["sweet", "crunchy"]
+      color: { set: { id: "123e4567-e89b-12d3-a456-426614174000" } }
+    }
+  ) {
+    id
+    name
+    color {
+      id
+      name
+    }
+  }
+}
+
+# Create a new related entity
+mutation {
+  createFruit(
+    data: {
+      name: "Banana"
+      adjectives: ["yellow", "soft"]
+      color: { create: { name: "Yellow" } }
+    }
+  ) {
+    id
+    name
+    color {
+      id
+      name
+    }
+  }
+}
+
+# Set relationship to null
+mutation {
+  createFruit(
+    data: {
+      name: "Strawberry"
+      adjectives: ["red", "sweet"]
+      color: { set: null }
+    }
+  ) {
+    id
+    name
+    color {
+      id
+    }
+  }
+}
+```
+
+#### To-Many Relationships
+
+```python
+@strawchemy.input(Color, include=["name"])
+class ColorCreateInput:
+    # Define to-many relationship inputs
+    fruits: auto  # 'auto' will generate appropriate relationship inputs
+```
+
+GraphQL usage:
+
+```graphql
+# Set existing to-many relationships
+mutation {
+  createColor(
+    data: {
+      name: "Red"
+      fruits: { set: [{ id: "123e4567-e89b-12d3-a456-426614174000" }] }
+    }
+  ) {
+    id
+    name
+    fruits {
+      id
+      name
+    }
+  }
+}
+
+# Add to existing to-many relationships
+mutation {
+  createColor(
+    data: {
+      name: "Green"
+      fruits: { add: [{ id: "123e4567-e89b-12d3-a456-426614174000" }] }
+    }
+  ) {
+    id
+    name
+    fruits {
+      id
+      name
+    }
+  }
+}
+
+# Create new related entities
+mutation {
+  createColor(
+    data: {
+      name: "Blue"
+      fruits: {
+        create: [
+          { name: "Blueberry", adjectives: ["small", "blue"] }
+          { name: "Plum", adjectives: ["juicy", "purple"] }
+        ]
+      }
+    }
+  ) {
+    id
+    name
+    fruits {
+      id
+      name
+    }
+  }
+}
+```
+
+#### Nested Relationships
+
+You can create deeply nested relationships:
+
+```graphql
+mutation {
+  createColor(
+    data: {
+      name: "White"
+      fruits: {
+        create: [
+          {
+            name: "Grape"
+            adjectives: ["tangy", "juicy"]
+            farms: { create: [{ name: "Bio farm" }] }
+          }
+        ]
+      }
+    }
+  ) {
+    name
+    fruits {
+      name
+      farms {
+        name
+      }
+    }
+  }
+}
+```
+
+</details>
+
+### Update Mutations
+
+Update mutations allow you to modify existing records. Strawchemy provides several types of update mutations:
+
+1. **Update by primary key**: Update a specific record by its ID
+2. **Batch update by primary keys**: Update multiple records by their IDs
+3. **Update with filter**: Update records that match a filter condition
+
+<details>
+<summary>Update mutation examples</summary>
+
+#### Basic Update Mutation
+
+```python
+# Define input type for updates
+@strawchemy.input(Color, include=["id", "name"])
+class ColorUpdateInput:
+    pass
+
+@strawchemy.filter(Color, include="all")
+class ColorFilter:
+    pass
+
+@strawberry.type
+class Mutation:
+    # Update by ID
+    update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput)
+
+    # Batch update by IDs
+    update_colors: list[ColorType] = strawchemy.update_by_ids(ColorUpdateInput)
+
+    # Update with filter
+    update_colors_filter: list[ColorType] = strawchemy.update(
+        ColorUpdateInput, ColorFilter
+    )
+```
+
+GraphQL usage:
+
+```graphql
+# Update by ID
+mutation {
+  updateColor(
+    data: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Crimson" }
+  ) {
+    id
+    name
+  }
+}
+
+# Batch update by IDs
+mutation {
+  updateColors(
+    data: [
+      { id: "123e4567-e89b-12d3-a456-426614174000", name: "Crimson" }
+      { id: "223e4567-e89b-12d3-a456-426614174000", name: "Navy" }
+    ]
+  ) {
+    id
+    name
+  }
+}
+
+# Update with filter
+mutation {
+  updateColorsFilter(
+    data: { name: "Bright Red" }
+    filter: { name: { eq: "Red" } }
+  ) {
+    id
+    name
+  }
+}
+```
+
+</details>
+
+### Working with Relationships in Update Mutations
+
+Similar to create mutations, update mutations support modifying relationships:
+
+<details>
+<summary>Update with relationships examples</summary>
+
+#### To-One Relationships
+
+```python
+@strawchemy.input(Fruit, include=["id", "name"])
+class FruitUpdateInput:
+    # Define relationship inputs
+    color: auto
+```
+
+GraphQL usage:
+
+```graphql
+# Set an existing relationship
+mutation {
+  updateFruit(
+    data: {
+      id: "123e4567-e89b-12d3-a456-426614174000"
+      name: "Red Apple"
+      color: { set: { id: "223e4567-e89b-12d3-a456-426614174000" } }
+    }
+  ) {
+    id
+    name
+    color {
+      id
+      name
+    }
+  }
+}
+
+# Create a new related entity
+mutation {
+  updateFruit(
+    data: {
+      id: "123e4567-e89b-12d3-a456-426614174000"
+      name: "Green Apple"
+      color: { create: { name: "Green" } }
+    }
+  ) {
+    id
+    name
+    color {
+      id
+      name
+    }
+  }
+}
+
+# Set relationship to null
+mutation {
+  updateFruit(
+    data: {
+      id: "123e4567-e89b-12d3-a456-426614174000"
+      name: "Plain Apple"
+      color: { set: null }
+    }
+  ) {
+    id
+    name
+    color {
+      id
+    }
+  }
+}
+```
+
+#### To-Many Relationships
+
+```python
+@strawchemy.input(Color, include=["id", "name"])
+class ColorUpdateInput:
+    # Define to-many relationship inputs
+    fruits: auto
+```
+
+GraphQL usage:
+
+```graphql
+# Set (replace) to-many relationships
+mutation {
+  updateColor(
+    data: {
+      id: "123e4567-e89b-12d3-a456-426614174000"
+      name: "Red"
+      fruits: { set: [{ id: "223e4567-e89b-12d3-a456-426614174000" }] }
+    }
+  ) {
+    id
+    name
+    fruits {
+      id
+      name
+    }
+  }
+}
+
+# Add to existing to-many relationships
+mutation {
+  updateColor(
+    data: {
+      id: "123e4567-e89b-12d3-a456-426614174000"
+      name: "Red"
+      fruits: { add: [{ id: "223e4567-e89b-12d3-a456-426614174000" }] }
+    }
+  ) {
+    id
+    name
+    fruits {
+      id
+      name
+    }
+  }
+}
+
+# Remove from to-many relationships
+mutation {
+  updateColor(
+    data: {
+      id: "123e4567-e89b-12d3-a456-426614174000"
+      name: "Red"
+      fruits: { remove: [{ id: "223e4567-e89b-12d3-a456-426614174000" }] }
+    }
+  ) {
+    id
+    name
+    fruits {
+      id
+      name
+    }
+  }
+}
+
+# Create new related entities
+mutation {
+  updateColor(
+    data: {
+      id: "123e4567-e89b-12d3-a456-426614174000"
+      name: "Red"
+      fruits: {
+        create: [
+          { name: "Cherry", adjectives: ["small", "red"] }
+          { name: "Strawberry", adjectives: ["sweet", "red"] }
+        ]
+      }
+    }
+  ) {
+    id
+    name
+    fruits {
+      id
+      name
+    }
+  }
+}
+```
+
+#### Combining Operations
+
+You can combine `add` and `create` operations in a single update:
+
+```graphql
+mutation {
+  updateColor(
+    data: {
+      id: "123e4567-e89b-12d3-a456-426614174000"
+      name: "Red"
+      fruits: {
+        add: [{ id: "223e4567-e89b-12d3-a456-426614174000" }]
+        create: [{ name: "Raspberry", adjectives: ["tart", "red"] }]
+      }
+    }
+  ) {
+    id
+    name
+    fruits {
+      id
+      name
+    }
+  }
+}
+```
+
+Note: You cannot use `set` with `add`, `remove`, or `create` in the same operation for to-many relationships.
+
+</details>
+
+### Delete Mutations
+
+Delete mutations allow you to remove records from your database. Strawchemy provides two types of delete mutations:
+
+1. **Delete all**: Removes all records of a specific type
+2. **Delete with filter**: Removes records that match a filter condition
+
+<details>
+<summary>Delete mutation examples</summary>
+
+```python
+@strawchemy.filter(User, include="all")
+class UserFilter:
+    pass
+
+@strawberry.type
+class Mutation:
+    # Delete all users
+    delete_users: list[UserType] = strawchemy.delete()
+
+    # Delete users that match a filter
+    delete_users_filter: list[UserType] = strawchemy.delete(UserFilter)
+```
+
+GraphQL usage:
+
+```graphql
+# Delete all users
+mutation {
+  deleteUsers {
+    id
+    name
+  }
+}
+
+# Delete users that match a filter
+mutation {
+  deleteUsersFilter(filter: { name: { eq: "Alice" } }) {
+    id
+    name
+  }
+}
+```
+
+The returned data contains the records that were deleted.
+
+</details>
+
+## Async Support
+
+Strawchemy supports both synchronous and asynchronous operations. You can use either `StrawchemySyncRepository` or `StrawchemyAsyncRepository` depending on your needs:
+
+```python
+from strawchemy import StrawchemySyncRepository, StrawchemyAsyncRepository
+
+# Synchronous resolver
+@strawchemy.field
+def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
+    repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
+    return repo.get_one_or_none()
+
+# Asynchronous resolver
+@strawchemy.field
+async def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
+    repo = StrawchemyAsyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
+    return await repo.get_one_or_none()
+
+# Synchronous mutation
+@strawberry.type
+class Mutation:
+    create_user: UserType = strawchemy.create(
+        UserCreateInput,
+        repository_type=StrawchemySyncRepository
+    )
+
+# Asynchronous mutation
+@strawberry.type
+class AsyncMutation:
+    create_user: UserType = strawchemy.create(
+        UserCreateInput,
+        repository_type=StrawchemyAsyncRepository
+    )
+```
+
+If you don't specify a repository type, Strawchemy will automatically choose between sync and async repositories based on the session type. This is controlled by the `repository_type` configuration option, which defaults to `"auto"`.
 
 ## Configuration
 
