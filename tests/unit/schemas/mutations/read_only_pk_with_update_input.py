@@ -25,5 +25,5 @@ class NewGroup(UUIDBase):
     users: Mapped[list[NewUser]] = relationship(NewUser)
 
 
-@strawchemy.input(NewGroup, "update", include="all")
+@strawchemy.update_input(NewGroup, include="all")
 class GroupInput: ...

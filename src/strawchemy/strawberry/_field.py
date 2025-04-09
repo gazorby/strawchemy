@@ -72,7 +72,7 @@ if TYPE_CHECKING:
     from .typing import (
         AnySessionGetter,
         FilterStatementCallable,
-        MutationType,
+        InputType,
         StrawchemyTypeFromPydantic,
         StrawchemyTypeWithStrawberryObjectDefinition,
     )
@@ -473,11 +473,11 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
 
 
 class StrawchemyCreateUpdateMutationField(StrawchemyField[ModelT, ModelFieldT]):
-    def __init__(self, input_type: type[AnyMappedDTO], mutation_type: MutationType, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, input_type: type[AnyMappedDTO], mutation_type: InputType, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         self.is_root_field = True
         self._input_type = input_type
-        self._mutation_type: MutationType = mutation_type
+        self._mutation_type: InputType = mutation_type
 
     def _create_resolver(
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]

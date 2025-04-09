@@ -13,7 +13,7 @@ class FruitType:
     pass
 
 
-@strawchemy.filter_input(Fruit, include="all")
+@strawchemy.filter(Fruit, include="all")
 class FruitFilter:
     pass
 

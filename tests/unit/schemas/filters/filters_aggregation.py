@@ -12,7 +12,7 @@ strawchemy = Strawchemy()
 class GroupType: ...
 
 
-@strawchemy.filter_input(Group, include="all")
+@strawchemy.filter(Group, include="all")
 class GroupFilter: ...
 
 

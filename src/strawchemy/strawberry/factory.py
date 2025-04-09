@@ -25,7 +25,7 @@ from strawchemy.dto.base import (
     Relation,
 )
 from strawchemy.dto.exceptions import EmptyDTOError
-from strawchemy.dto.types import DTO_AUTO, DTO_SKIP, DTOConfig, DTOMissingType, Purpose
+from strawchemy.dto.types import DTO_AUTO, DTOConfig, DTOMissingType, Purpose
 from strawchemy.dto.utils import config, read_all_partial_config, read_partial, write_all_config
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graph import Node
@@ -71,7 +71,7 @@ if TYPE_CHECKING:
     from strawchemy.graphql.typing import AggregationType
     from strawchemy.sqlalchemy.hook import QueryHook
 
-    from .typing import GraphQLType, MutationType, StrawchemyTypeFromPydantic
+    from .typing import GraphQLType, InputType, StrawchemyTypeFromPydantic
 
 __all__ = (
     "StraberryAggregateFactory",
@@ -327,7 +327,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
 
-    def _root_input_config(self, model: type[Any], dto_config: DTOConfig, mode: MutationType) -> DTOConfig:
+    def _root_input_config(self, model: type[Any], dto_config: DTOConfig, mode: InputType) -> DTOConfig:
         annotations_overrides: dict[str, Any] = {}
         partial = dto_config.partial
         id_fields = self.inspector.id_field_definitions(model, dto_config)
@@ -414,7 +414,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
     def input(
         self,
         model: type[T],
-        mode: MutationType,
+        mode: InputType,
         include: IncludeFields | None = None,
         exclude: ExcludeFields | None = None,
         partial: bool | None = None,
@@ -946,13 +946,11 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         dto_config: DTOConfig,
         node: Node[Relation[ModelT, MappedDataclassGraphQLDTO[Any]], None],
         *,
-        mode: MutationType,
+        mode: InputType,
         **factory_kwargs: Any,
     ) -> Any:
         if not field.is_relation:
             return super()._resolve_basic_type(field, dto_config)
-        if mode == "delete":
-            return DTO_SKIP
         self._resolve_relation_type(field, dto_config, node, mode=mode, **factory_kwargs)
         identifier_input = self._identifier_input(field, node)
         field_required = self.inspector.required(field.model_field)
@@ -981,13 +979,13 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         node: Node[Relation[ModelT, MappedDataclassGraphQLDTO[ModelT]], None],
         raise_if_no_fields: bool = False,
         *,
-        mode: MutationType,
+        mode: InputType,
         **factory_kwargs: Any,
     ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT], None, None]:
         for field in super().iter_field_definitions(
             name, model, dto_config, base, node, raise_if_no_fields, mode=mode, **factory_kwargs
         ):
-            if mode in {"update", "delete"} and self.inspector.is_primary_key(field.model_field):
+            if mode == "update" and self.inspector.is_primary_key(field.model_field):
                 field.type_ = non_optional_type_hint(field.type_)
             yield field
 
@@ -1004,7 +1002,7 @@ class StrawberryInputFactory(StrawberryTypeFactory[ModelT, ModelFieldT]):
         backend_kwargs: dict[str, Any] | None = None,
         *,
         description: str | None = None,
-        mode: MutationType,
+        mode: InputType,
         **kwargs: Any,
     ) -> type[MappedDataclassGraphQLDTO[Any]]:
         return super().factory(

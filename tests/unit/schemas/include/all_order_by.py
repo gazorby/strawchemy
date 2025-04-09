@@ -13,7 +13,7 @@ class FruitType:
     pass
 
 
-@strawchemy.order_by_input(Fruit, include="all")
+@strawchemy.order(Fruit, include="all")
 class FruitOrderBy:
     pass
 

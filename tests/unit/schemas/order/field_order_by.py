@@ -8,7 +8,7 @@ from tests.unit.models import SQLDataTypes
 strawchemy = Strawchemy()
 
 
-@strawchemy.order_by_input(SQLDataTypes, include="all")
+@strawchemy.order(SQLDataTypes, include="all")
 class SQLDataTypesOrderBy: ...
 
 

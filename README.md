@@ -98,23 +98,23 @@ class PostType:
 
 
 # Create filter inputs
-@strawchemy.filter_input(User, include="all")
+@strawchemy.filter(User, include="all")
 class UserFilter:
     pass
 
 
-@strawchemy.filter_input(Post, include="all")
+@strawchemy.filter(Post, include="all")
 class PostFilter:
     pass
 
 
 # Create order by inputs
-@strawchemy.order_by_input(User, include="all")
+@strawchemy.order(User, include="all")
 class UserOrderBy:
     pass
 
 
-@strawchemy.order_by_input(Post, include="all")
+@strawchemy.order(Post, include="all")
 class PostOrderBy:
     pass
 
@@ -314,7 +314,7 @@ This happens when Strawchemy tries to auto-generate a type for a model that alre
 You can also use `override=True` with input types:
 
 ```python
-@strawchemy.order_by_input(Fruit, include="all", override=True)
+@strawchemy.order(Fruit, include="all", override=True)
 class FruitOrderBy:
     # Custom order by fields
     override: bool = True
@@ -561,7 +561,7 @@ Strawchemy provides powerful filtering capabilities.
 First, create a filter input type:
 
 ```python
-@strawchemy.filter_input(User, include="all")
+@strawchemy.filter(User, include="all")
 class UserFilter:
     pass
 ```
@@ -666,7 +666,7 @@ class GeoModel(Base):
 @strawchemy.type(GeoModel, include="all")
 class GeoType: ...
 
-@strawchemy.filter_input(GeoModel, include="all")
+@strawchemy.filter(GeoModel, include="all")
 class GeoFieldsFilter: ...
 
 @strawberry.type
@@ -803,7 +803,7 @@ You can also filter entities based on aggregations of their related entities.
 Define types with filters:
 
 ```python
-@strawchemy.filter_input(User, include="all")
+@strawchemy.filter(User, include="all")
 class UserFilter:
     pass
 
@@ -903,7 +903,7 @@ Strawchemy supports query level aggregations.
 First, create an aggregation type:
 
 ```python
-@strawchemy.aggregation_type(User, include="all")
+@strawchemy.aggregate(User, include="all")
 class UserAggregationType:
     pass
 ```

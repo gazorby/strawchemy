@@ -35,19 +35,19 @@ class FruitOrderingHook(QueryHook[Fruit]):
 class UserType: ...
 
 
-@strawchemy.order_by_input(User, include="all", override=True)
+@strawchemy.order(User, include="all", override=True)
 class UserOrderBy: ...
 
 
-@strawchemy.filter_input(User, include="all")
+@strawchemy.filter(User, include="all")
 class UserFilter: ...
 
 
-@strawchemy.input(User, "create", include="all")
+@strawchemy.create_input(User, include="all")
 class UserCreate: ...
 
 
-@strawchemy.input(User, "update", include="all")
+@strawchemy.update_input(User, include="all")
 class UserUpdateInput: ...
 
 
@@ -89,7 +89,7 @@ class FilteredFruitType: ...
 class OrderedFruitType: ...
 
 
-@strawchemy.aggregation_type(Fruit, include="all")
+@strawchemy.aggregate(Fruit, include="all")
 class FruitAggregationType: ...
 
 
@@ -97,19 +97,19 @@ class FruitAggregationType: ...
 class FruitTypeWithPaginationAndOrderBy: ...
 
 
-@strawchemy.filter_input(Fruit, include="all")
+@strawchemy.filter(Fruit, include="all")
 class FruitFilter: ...
 
 
-@strawchemy.order_by_input(Fruit, include="all", override=True)
+@strawchemy.order(Fruit, include="all", override=True)
 class FruitOrderBy: ...
 
 
-@strawchemy.input(Fruit, "create", include="all")
+@strawchemy.create_input(Fruit, include="all")
 class FruitCreateInput: ...
 
 
-@strawchemy.input(Fruit, "update", include="all")
+@strawchemy.update_input(Fruit, include="all")
 class FruitUpdateInput: ...
 
 
@@ -120,7 +120,7 @@ class FruitUpdateInput: ...
 class ColorType: ...
 
 
-@strawchemy.distinct_on_enum(Color, include="all", override=True)
+@strawchemy.distinct_on(Color, include="all", override=True)
 class ColorDistinctOn: ...
 
 
@@ -146,22 +146,22 @@ class ColorTypeHooks:
     fruits: list[FruitTypeHooks]
 
 
-@strawchemy.input(Color, "create", include="all")
+@strawchemy.create_input(Color, include="all")
 class ColorCreateInput: ...
 
 
-@strawchemy.input(Color, "update", include="all")
+@strawchemy.update_input(Color, include="all")
 class ColorUpdateInput: ...
 
 
 # SQL Data types
 
 
-@strawchemy.filter_input(SQLDataTypes, include="all")
+@strawchemy.filter(SQLDataTypes, include="all")
 class SQLDataTypesFilter: ...
 
 
-@strawchemy.order_by_input(SQLDataTypes, include="all", override=True)
+@strawchemy.order(SQLDataTypes, include="all", override=True)
 class SQLDataTypesOrderBy: ...
 
 
@@ -169,7 +169,7 @@ class SQLDataTypesOrderBy: ...
 class SQLDataTypesType: ...
 
 
-@strawchemy.aggregation_type(SQLDataTypes, include="all")
+@strawchemy.aggregate(SQLDataTypes, include="all")
 class SQLDataTypesAggregationType: ...
 
 
@@ -180,9 +180,9 @@ class SQLDataTypesAggregationType: ...
 class SQLDataTypesContainerType: ...
 
 
-@strawchemy.filter_input(SQLDataTypesContainer, include="all")
+@strawchemy.filter(SQLDataTypesContainer, include="all")
 class SQLDataTypesContainerFilter: ...
 
 
-@strawchemy.order_by_input(SQLDataTypesContainer, include="all", override=True)
+@strawchemy.order(SQLDataTypesContainer, include="all", override=True)
 class SQLDataTypesContainerOrderBy: ...

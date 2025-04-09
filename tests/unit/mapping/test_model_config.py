@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -11,13 +11,7 @@ from tests.unit.models import User
 if TYPE_CHECKING:
     from strawchemy.mapper import Strawchemy
 
-TYPE_DECORATOR_NAMES: list[str] = [
-    "type",
-    "aggregation_type",
-    "filter_input",
-    "aggregate_filter_input",
-    "order_by_input",
-]
+TYPE_DECORATOR_NAMES: list[str] = ["type", "aggregate", "filter", "aggregate_filter", "order"]
 
 
 @pytest.mark.parametrize("decorator", TYPE_DECORATOR_NAMES)
@@ -31,11 +25,11 @@ def test_type_no_purpose_excluded(
     assert type_def.get_field("private") is None
 
 
-@pytest.mark.parametrize("mode", ["create", "update"])
+@pytest.mark.parametrize("decorator", ["create_input", "update_input"])
 def test_type_no_purpose_excluded_input(
-    mode: Literal["create", "update"], strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]
+    decorator: str, strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]
 ) -> None:
-    @strawchemy.input(User, mode, include="all")
+    @getattr(strawchemy, decorator)(User, include="all")
     class UserType: ...
 
     type_def = get_object_definition(UserType, strict=True)

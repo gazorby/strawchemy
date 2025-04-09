@@ -9,22 +9,22 @@ strawchemy = Strawchemy()
 # Filter
 
 
-@strawchemy.filter_input(Ticket, include="all")
+@strawchemy.filter(Ticket, include="all")
 class TicketFilter: ...
 
 
-@strawchemy.filter_input(Project, include="all")
+@strawchemy.filter(Project, include="all")
 class ProjectFilter: ...
 
 
 # Order
 
 
-@strawchemy.order_by_input(Ticket, include="all")
+@strawchemy.order(Ticket, include="all")
 class TicketOrder: ...
 
 
-@strawchemy.order_by_input(Project, include="all")
+@strawchemy.order(Project, include="all")
 class ProjectOrder: ...
 
 
@@ -46,17 +46,17 @@ class MilestoneType: ...
 # Input types
 
 
-@strawchemy.input(Ticket, "create", include="all")
+@strawchemy.create_input(Ticket, include="all")
 class TicketCreate: ...
 
 
-@strawchemy.input(Ticket, "update", include="all")
+@strawchemy.update_input(Ticket, include="all")
 class TicketUpdate: ...
 
 
-@strawchemy.input(Project, "create", include="all", override=True)
+@strawchemy.create_input(Project, include="all", override=True)
 class ProjectCreate: ...
 
 
-@strawchemy.input(Milestone, "create", include="all", override=True)
+@strawchemy.create_input(Milestone, include="all", override=True)
 class MilestoneCreate: ...
