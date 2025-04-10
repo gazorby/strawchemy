@@ -23,13 +23,11 @@ from typing import (
 
 from typing_extensions import TypeIs
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.base import StrawberryList, StrawberryOptional, StrawberryType, WithStrawberryObjectDefinition
 from strawberry.types.field import UNRESOLVED, StrawberryField
-from strawberry.utils.inspect import in_async_context
 from strawchemy.dto.base import MappedDTO, ModelFieldT, ModelInspector, ModelT
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.graphql.constants import (
@@ -54,7 +52,7 @@ from strawchemy.utils import is_type_hint_optional
 
 from ._utils import dto_model_from_type, strawberry_contained_type
 from .exceptions import StrawchemyFieldError
-from .repository import StrawchemyAsyncRepository, StrawchemySyncRepository
+from .repository import StrawchemyAsyncRepository
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Coroutine, Mapping
@@ -69,6 +67,7 @@ if TYPE_CHECKING:
     from strawchemy.sqlalchemy.typing import QueryHookCallable
     from strawchemy.typing import AnyRepository
 
+    from .repository import StrawchemySyncRepository
     from .typing import (
         AnySessionGetter,
         FilterStatementCallable,
@@ -202,16 +201,9 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         return cast("type[StrawchemyTypeWithStrawberryObjectDefinition]", self.type)
 
     def _get_repository(self, info: Info[Any, Any]) -> StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]:
-        session = self._session_getter(info)
-        if self._repository_type == "auto":
-            repository_type = (
-                StrawchemyAsyncRepository if isinstance(session, AsyncSession) else StrawchemySyncRepository
-            )
-        else:
-            repository_type = self._repository_type
-        return repository_type(
+        return self._repository_type(
             self._strawchemy_type,
-            session=session,  # pyright: ignore[reportArgumentType]
+            session=self._session_getter(info),  # pyright: ignore[reportArgumentType]
             info=info,
             auto_snake_case=self.auto_snake_case,
             root_aggregations=self.root_aggregations,
@@ -355,7 +347,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
     @cached_property
     @override
     def is_async(self) -> bool:
-        return in_async_context() if self.base_resolver is None else super().is_async
+        return issubclass(self._repository_type, StrawchemyAsyncRepository)
 
     @override
     def __copy__(self) -> Self:

@@ -12,6 +12,6 @@ class DataclassProtocol(Protocol):
     __dataclass_fields__: ClassVar[dict[str, Any]]
 
 
-AnyRepository: TypeAlias = "type[StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]] | Literal['auto']"
+AnyRepository: TypeAlias = "type[StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]]"
 SupportedDialect: TypeAlias = Literal["postgresql"]
 """Must match SQLAlchemy dialect."""

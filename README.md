@@ -1595,7 +1595,7 @@ class AsyncMutation:
     )
 ```
 
-If you don't specify a repository type, Strawchemy will automatically choose between sync and async repositories based on the session type. This is controlled by the `repository_type` configuration option, which defaults to `"auto"`.
+By default, Strawchemy uses the StrawchemySyncRepository as its repository type. You can override this behavior by specifying a different repository using the `repository_type` configuration option.
 
 ## Configuration
 
@@ -1603,17 +1603,17 @@ Strawchemy can be configured when initializing the mapper.
 
 ### Configuration Options
 
-| Option                     | Type                                                        | Default                  | Description                                                                                                                                                           |
-| -------------------------- | ----------------------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `session_getter`           | `Callable[[Info], Session]`                                 | `default_session_getter` | Function to retrieve SQLAlchemy session from strawberry `Info` object. By default, it retrieves the session from `info.context.session`.                              |
-| `auto_snake_case`          | `bool`                                                      | `True`                   | Automatically convert snake cased names to camel case in GraphQL schema.                                                                                              |
-| `repository_type`          | `type[Repository] \| "auto"`                                | `"auto"`                 | Repository class to use for auto resolvers. When set to `"auto"`, Strawchemy will automatically choose between sync and async repositories based on the session type. |
-| `filter_overrides`         | `OrderedDict[tuple[type, ...], type[SQLAlchemyFilterBase]]` | `None`                   | Override default filters with custom filters. This allows you to provide custom filter implementations for specific column types.                                     |
-| `execution_options`        | `dict[str, Any]`                                            | `None`                   | SQLAlchemy execution options for repository operations. These options are passed to the SQLAlchemy `execution_options()` method.                                      |
-| `pagination_default_limit` | `int`                                                       | `100`                    | Default pagination limit when `pagination=True`.                                                                                                                      |
-| `pagination`               | `bool`                                                      | `False`                  | Enable/disable pagination on list resolvers by default.                                                                                                               |
-| `default_id_field_name`    | `str`                                                       | `"id"`                   | Name for primary key fields arguments on primary key resolvers.                                                                                                       |
-| `dialect`                  | `Literal["postgresql"]`                                     | `"postgresql"`           | Database dialect to use. Currently, only PostgreSQL is supported.                                                                                                     |
+| Option                     | Type                                                        | Default                    | Description                                                                                                                              |
+| -------------------------- | ----------------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `session_getter`           | `Callable[[Info], Session]`                                 | `default_session_getter`   | Function to retrieve SQLAlchemy session from strawberry `Info` object. By default, it retrieves the session from `info.context.session`. |
+| `auto_snake_case`          | `bool`                                                      | `True`                     | Automatically convert snake cased names to camel case in GraphQL schema.                                                                 |
+| `repository_type`          | `type[Repository] \| StrawchemySyncRepository`              | `StrawchemySyncRepository` | Repository class to use for auto resolvers.                                                                                              |
+| `filter_overrides`         | `OrderedDict[tuple[type, ...], type[SQLAlchemyFilterBase]]` | `None`                     | Override default filters with custom filters. This allows you to provide custom filter implementations for specific column types.        |
+| `execution_options`        | `dict[str, Any]`                                            | `None`                     | SQLAlchemy execution options for repository operations. These options are passed to the SQLAlchemy `execution_options()` method.         |
+| `pagination_default_limit` | `int`                                                       | `100`                      | Default pagination limit when `pagination=True`.                                                                                         |
+| `pagination`               | `bool`                                                      | `False`                    | Enable/disable pagination on list resolvers by default.                                                                                  |
+| `default_id_field_name`    | `str`                                                       | `"id"`                     | Name for primary key fields arguments on primary key resolvers.                                                                          |
+| `dialect`                  | `Literal["postgresql"]`                                     | `"postgresql"`             | Database dialect to use. Currently, only PostgreSQL is supported.                                                                        |
 
 ### Example
 
