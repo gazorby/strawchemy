@@ -1595,7 +1595,7 @@ class AsyncMutation:
     )
 ```
 
-If you don't specify a repository type, Strawchemy will automatically choose between sync and async repositories based on the session type. This is controlled by the `repository_type` configuration option.
+By default, Strawchemy uses the StrawchemySyncRepository as its repository type. You can override this behavior by specifying a different repository using the `repository_type` configuration option.
 
 ## Configuration
 
