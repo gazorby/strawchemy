@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.1](https://github.com/gazorby/strawchemy/compare/v0.13.0..v0.13.1) - 2025-04-10
+
+### 🐛 Bug Fixes
+
+- *(config)* Field would not marked as async when it should - ([1b8d74e](https://github.com/gazorby/strawchemy/commit/1b8d74eb1173b33894ef0afff4be83538622b80a))
+
+### 📚 Documentation
+
+- *(readme)* Clarify default repository_type value - ([893eeb8](https://github.com/gazorby/strawchemy/commit/893eeb86bacdb61a7762bb0ee6b2b9f0d146c7e8))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.13.1 - ([5bb99a6](https://github.com/gazorby/strawchemy/commit/5bb99a6a07d62cc1df9c0e5875ab6f50c769bb9a))
 ## [0.13.0](https://github.com/gazorby/strawchemy/compare/v0.12.2..v0.13.0) - 2025-04-09
 
 ### 🚀 Features
