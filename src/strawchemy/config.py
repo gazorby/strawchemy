@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 from .sqlalchemy import SQLAlchemyGraphQLInspector
 from .strawberry import default_session_getter
+from .strawberry.repository import StrawchemySyncRepository
 
 if TYPE_CHECKING:
     from typing import Any
@@ -21,7 +22,7 @@ class StrawchemyConfig:
     """Function to retrieve SQLAlchemy session from strawberry `Info` object."""
     auto_snake_case: bool = True
     """Automatically convert snake cased names to camel case"""
-    repository_type: AnyRepository = "auto"
+    repository_type: AnyRepository = StrawchemySyncRepository
     """Repository class to use for auto resolvers."""
     filter_overrides: FilterMap | None = None
     """Override default filters with custom filters."""
