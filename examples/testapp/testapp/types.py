@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from strawchemy import Strawchemy
+from strawchemy import Strawchemy, StrawchemyAsyncRepository
+from strawchemy.config import StrawchemyConfig
 
 from .models import Milestone, Project, Ticket
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy(StrawchemyConfig(repository_type=StrawchemyAsyncRepository))
 
 # Filter
 
