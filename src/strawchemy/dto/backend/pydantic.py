@@ -28,9 +28,7 @@ PydanticDTOT = TypeVar("PydanticDTOT", bound="PydanticDTO[Any] | MappedPydanticD
 
 
 class _PydanticDTOBase(BaseModel):
-    model_config = ConfigDict(
-        from_attributes=True, arbitrary_types_allowed=True, defer_build=True, populate_by_name=True
-    )
+    model_config = ConfigDict(from_attributes=True, arbitrary_types_allowed=True, populate_by_name=True)
 
 
 class PydanticDTO(_PydanticDTOBase, DTOBase[ModelT]): ...
