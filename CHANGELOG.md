@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.2](https://github.com/gazorby/strawchemy/compare/v0.13.1..v0.13.2) - 2025-04-14
+
+### 🚜 Refactor
+
+- *(pydantic)* Remove defer_build=True on base config - ([4457996](https://github.com/gazorby/strawchemy/commit/445799619b6dbc617b65c3b643b592e001991a4c))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.13.2 - ([80021fa](https://github.com/gazorby/strawchemy/commit/80021facb7bcb582a9a997ede45f9f2bc21e0ebe))
 ## [0.13.1](https://github.com/gazorby/strawchemy/compare/v0.13.0..v0.13.1) - 2025-04-10
 
 ### 🐛 Bug Fixes
