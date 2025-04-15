@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.4](https://github.com/gazorby/strawchemy/compare/v0.13.3..v0.13.4) - 2025-04-15
+
+### 🐛 Bug Fixes
+
+- *(dto)* Not all unresolved dto would be tracked - ([cb384c4](https://github.com/gazorby/strawchemy/commit/cb384c48995cfeca6bb922dad9a7389cbdeeb23e))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.13.4 - ([3f4da43](https://github.com/gazorby/strawchemy/commit/3f4da43678ac34732bb97b5b28edd2e1ed45577f))
 ## [0.13.3](https://github.com/gazorby/strawchemy/compare/v0.13.2..v0.13.3) - 2025-04-15
 
 ### 🐛 Bug Fixes
