@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.3](https://github.com/gazorby/strawchemy/compare/v0.13.2..v0.13.3) - 2025-04-15
+
+### 🐛 Bug Fixes
+
+- *(dto)* Track unresolved forward refs - ([57d8bf1](https://github.com/gazorby/strawchemy/commit/57d8bf11d7f44aff91f2ede42ca0d02d1699cb32))
+- *(testapp)* Explictly set StrawchemyAsyncRepository - ([2fd99a5](https://github.com/gazorby/strawchemy/commit/2fd99a59f2269f61dd9a334b67dd3343a13182b2))
+
+### 🧪 Testing
+
+- *(order-by)* Remove flaky test - ([6aa09e1](https://github.com/gazorby/strawchemy/commit/6aa09e1a8949e8d4246cfabc30e0294d4ef5fa6b))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.13.3 - ([4b04bb8](https://github.com/gazorby/strawchemy/commit/4b04bb8a28366045ffd764db016c3b65b28c7623))
 ## [0.13.2](https://github.com/gazorby/strawchemy/compare/v0.13.1..v0.13.2) - 2025-04-14
 
 ### 🚜 Refactor
