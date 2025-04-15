@@ -198,8 +198,9 @@ def test_self_reference(factory: AnyFactory, model: type[SponsoredUser | Sponsor
     assert DTOInspect(user_dto).field_type("sponsored") == list[Self]  # pyright: ignore[reportGeneralTypeIssues]
 
 
-def test_forward_refs(sqlalchemy_pydantic_factory: MappedPydanticFactory) -> None:
-    tag_dto = sqlalchemy_pydantic_factory.factory(Tag, read_all_config)
+@pytest.mark.parametrize("name", ["SomeTag", None])
+def test_forward_refs_resolved(name: str, sqlalchemy_pydantic_factory: MappedPydanticFactory) -> None:
+    tag_dto = sqlalchemy_pydantic_factory.factory(Tag, read_all_config, name=name)
     tag_dto.model_validate(
         {
             "id": uuid4(),
