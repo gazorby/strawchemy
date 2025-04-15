@@ -1045,15 +1045,15 @@ class StrawberryFilterInputFactory(
         backend: PydanticDTOBackend[BooleanFilterDTO[Any, ModelFieldT]] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
+        aggregate_filter_factory: StrawberryAggregateFilterInputFactory[ModelT, ModelFieldT] | None = None,
     ) -> None:
         super().__init__(
             mapper=mapper,
             backend=backend or PydanticDTOBackend(BooleanFilterDTO),
             handle_cycles=handle_cycles,
             type_map=type_map,
-            aggregation_filter_factory=StrawberryAggregateFilterInputFactory(
-                mapper, handle_cycles=handle_cycles, type_map=type_map
-            ),
+            aggregation_filter_factory=aggregate_filter_factory
+            or StrawberryAggregateFilterInputFactory(mapper, handle_cycles=handle_cycles, type_map=type_map),
         )
 
     @override
@@ -1095,6 +1095,7 @@ class StrawberryRootAggregateTypeFactory(
         backend: DataclassDTOBackend[MappedDataclassGraphQLDTO[Any]],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
+        type_factory: StrawberryTypeFactory[ModelT, ModelFieldT] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(
@@ -1102,6 +1103,7 @@ class StrawberryRootAggregateTypeFactory(
             backend,
             handle_cycles,
             type_map,
-            type_factory=StrawberryTypeFactory(mapper, backend, handle_cycles=handle_cycles, type_map=type_map),
+            type_factory=type_factory
+            or StrawberryTypeFactory(mapper, backend, handle_cycles=handle_cycles, type_map=type_map),
             **kwargs,
         )
