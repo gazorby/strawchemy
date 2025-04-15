@@ -55,13 +55,17 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self.registry = StrawberryRegistry()
         self.inspector = _StrawberryModelInspector(self.settings.inspector, self.registry)
 
-        self._filter_factory = StrawberryFilterInputFactory(self)
         self._aggregate_filter_factory = StrawberryAggregateFilterInputFactory(self)
+        self._filter_factory = StrawberryFilterInputFactory(
+            self, aggregate_filter_factory=self._aggregate_filter_factory
+        )
         self._order_by_factory = StrawberryOrderByInputFactory(self)
         self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.inspector)
         self._type_factory = StrawberryTypeFactory(self, dataclass_backend, order_by_factory=self._order_by_factory)
         self._input_factory = StrawberryInputFactory(self, dataclass_backend)
-        self._aggregation_factory = StrawberryRootAggregateTypeFactory(self, dataclass_backend)
+        self._aggregation_factory = StrawberryRootAggregateTypeFactory(
+            self, dataclass_backend, type_factory=self._type_factory
+        )
 
         self.filter = self._filter_factory.input
         self.aggregate_filter = self._aggregate_filter_factory.input
