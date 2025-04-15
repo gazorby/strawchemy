@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import contextlib
 import dataclasses
 import types
 import typing
 import warnings
+from collections import defaultdict
 from contextlib import suppress
 from dataclasses import dataclass, field
 from types import new_class
@@ -166,7 +168,7 @@ class DTOBackend(Protocol, Generic[DTOBaseT]):
         """
         raise NotImplementedError
 
-    def update_forward_refs(self, dto: type[DTOBaseT], namespace: dict[str, type[DTOBaseT]]) -> None:
+    def update_forward_refs(self, dto: type[DTOBaseT], namespace: dict[str, type[DTOBaseT]]) -> None | bool:
         """Update forward refs for the given DTO.
 
         Args:
@@ -176,7 +178,8 @@ class DTOBackend(Protocol, Generic[DTOBaseT]):
         Raises:
             NotImplementedError: _description_
         """
-        get_type_hints(dto, localns={**TYPING_NS, **namespace}, include_extras=True)
+        with contextlib.suppress(NameError):
+            dto.__annotations__ = get_type_hints(dto, localns={**TYPING_NS, **namespace}, include_extras=True)
 
     @classmethod
     def copy(cls, dto: type[DTOBaseT], name: str) -> type[DTOBaseT]:
@@ -393,7 +396,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self.type_map = type_map or {}
 
         self._dto_cache: dict[Hashable, type[DTOBaseT]] = {}
-        self._unresolved_refs: dict[str, type[DTOBaseT]] = {}
+        self._unresolved_refs: defaultdict[str, list[type[DTOBaseT]]] = defaultdict(list)
 
     def should_exclude_field(
         self,
@@ -651,11 +654,12 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             self.dtos[base.__name__] = dto
         node.value.dto = dto
 
-        if self.handle_cycles and node.value.dto and name in self._unresolved_refs:
-            self.backend.update_forward_refs(self._unresolved_refs.pop(name), self.type_hint_namespace())
+        if self.handle_cycles and node.value.dto:
+            for incomplete_dto in self._unresolved_refs.pop(name, []):
+                self.backend.update_forward_refs(incomplete_dto, self.type_hint_namespace())
 
         for ref in node.value.forward_refs:
-            self._unresolved_refs[ref.name] = dto
+            self._unresolved_refs[ref.name].append(dto)
 
         self._dto_cache[cache_key] = dto
 

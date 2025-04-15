@@ -57,7 +57,7 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         return Field(**kwargs)
 
     @override
-    def update_forward_refs(self, dto: type[PydanticDTOT], namespace: dict[str, type[PydanticDTOT]]) -> None:
+    def update_forward_refs(self, dto: type[PydanticDTOT], namespace: dict[str, type[PydanticDTOT]]) -> None | bool:
         dto.model_rebuild(_types_namespace=namespace, raise_errors=False)
 
     @override

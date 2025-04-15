@@ -8,7 +8,7 @@ from strawchemy.dto import DTOConfig, Purpose, PurposeConfig, config, field
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.utils import DTOFieldConfig, read_all_config, write_all_config
 
-from tests.typing import AnyFactory
+from tests.typing import AnyFactory, MappedPydanticFactory
 from tests.unit.dc_models import (
     AdminDataclass,
     ColorDataclass,
@@ -17,7 +17,7 @@ from tests.unit.dc_models import (
     TomatoDataclass,
     UserWithGreetingDataclass,
 )
-from tests.unit.models import Admin, Book, Color, Fruit, SponsoredUser, Tomato, UserWithGreeting
+from tests.unit.models import Admin, Book, Color, Fruit, SponsoredUser, Tag, Tomato, UserWithGreeting
 from tests.utils import DTOInspect, factory_iterator
 
 
@@ -196,3 +196,50 @@ def test_self_reference(factory: AnyFactory, model: type[SponsoredUser | Sponsor
     user_dto = factory.factory(model, read_all_config)
     assert DTOInspect(user_dto).field_type("sponsor") == Optional[Self]  # pyright: ignore[reportGeneralTypeIssues]  # noqa: UP007
     assert DTOInspect(user_dto).field_type("sponsored") == list[Self]  # pyright: ignore[reportGeneralTypeIssues]
+
+
+def test_forward_refs(sqlalchemy_pydantic_factory: MappedPydanticFactory) -> None:
+    tag_dto = sqlalchemy_pydantic_factory.factory(Tag, read_all_config)
+    tag_dto.model_validate(
+        {
+            "id": uuid4(),
+            "name": "tag 1",
+            "groups": [
+                {
+                    "id": uuid4(),
+                    "tag_id": uuid4(),
+                    "tag": {
+                        "id": uuid4(),
+                        "name": "group tag",
+                        "groups": [
+                            {
+                                "id": uuid4(),
+                                "name": "another group",
+                                "tag_id": uuid4(),
+                                "color_id": uuid4(),
+                                "color": {"id": uuid4(), "name": "red", "fruits": []},
+                                "tag": {"id": uuid4(), "name": "group tag", "groups": []},
+                                "users": [],
+                            }
+                        ],
+                    },
+                    "name": "group 1",
+                    "color_id": uuid4(),
+                    "color": {
+                        "id": uuid4(),
+                        "name": "red",
+                        "fruits": [
+                            {
+                                "id": uuid4(),
+                                "name": "Banana",
+                                "color_id": uuid4(),
+                                "sweetness": 2.0,
+                                "color": {"id": uuid4(), "name": "Yellow", "fruits": []},
+                            }
+                        ],
+                    },
+                    "users": [],
+                }
+            ],
+        }
+    )
