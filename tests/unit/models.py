@@ -129,6 +129,8 @@ class Group(UUIDBase):
     tag_id: Mapped[UUID] = mapped_column(ForeignKey("tag.id"))
     tag: Mapped[Tag] = relationship("Tag", uselist=False, back_populates="groups")
     users: Mapped[list[User]] = relationship("User", back_populates="group")
+    color_id: Mapped[UUID] = mapped_column(ForeignKey("color.id"))
+    color: Mapped[Color] = relationship(Color)
 
 
 class Admin(UUIDBase):

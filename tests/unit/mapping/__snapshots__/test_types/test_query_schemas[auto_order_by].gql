@@ -1,0 +1,271 @@
+# serializer version: 1
+# name: test_query_schemas[auto_order_by]
+  '''
+  input ColorAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input ColorAggregateNumericFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input ColorAggregateOrderBy {
+    count: OrderByEnum
+    sum: ColorAggregateNumericFieldsOrderBy
+    minString: ColorAggregateMinMaxStringFieldsOrderBy
+    maxString: ColorAggregateMinMaxStringFieldsOrderBy
+  }
+  
+  """Ordering options"""
+  input ColorOrderBy {
+    id: OrderByEnum
+    fruitsAggregate: FruitAggregateOrderBy
+    fruits: FruitOrderBy
+    name: OrderByEnum
+  }
+  
+  """GraphQL type"""
+  type ColorType {
+    id: UUID!
+    fruitsAggregate: FruitAggregate!
+  
+    """Fetch objects from the FruitType collection"""
+    fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
+    name: String!
+  }
+  
+  """Aggregation fields"""
+  type FruitAggregate {
+    count: Int
+    sum: FruitSumFields!
+    min: FruitMinMaxFields!
+    max: FruitMinMaxFields!
+    avg: FruitNumericFields!
+    stddev: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    stddevPop: FruitNumericFields!
+    variance: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    varPop: FruitNumericFields!
+  }
+  
+  input FruitAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input FruitAggregateNumericFieldsOrderBy {
+    name: OrderByEnum
+    sweetness: OrderByEnum
+  }
+  
+  input FruitAggregateOrderBy {
+    count: OrderByEnum
+    sum: FruitAggregateNumericFieldsOrderBy
+    min: FruitAggregateNumericFieldsOrderBy
+    max: FruitAggregateNumericFieldsOrderBy
+    minString: FruitAggregateMinMaxStringFieldsOrderBy
+    maxString: FruitAggregateMinMaxStringFieldsOrderBy
+    avg: FruitAggregateNumericFieldsOrderBy
+    stddev: FruitAggregateNumericFieldsOrderBy
+    stddevSamp: FruitAggregateNumericFieldsOrderBy
+    stddevPop: FruitAggregateNumericFieldsOrderBy
+    variance: FruitAggregateNumericFieldsOrderBy
+    varSamp: FruitAggregateNumericFieldsOrderBy
+    varPop: FruitAggregateNumericFieldsOrderBy
+  }
+  
+  type FruitMinMaxFields {
+    name: String
+    sweetness: Int
+  }
+  
+  type FruitNumericFields {
+    sweetness: Float
+  }
+  
+  """Ordering options"""
+  input FruitOrderBy {
+    id: OrderByEnum
+    name: OrderByEnum
+    colorId: OrderByEnum
+    colorAggregate: ColorAggregateOrderBy
+    color: ColorOrderBy
+    sweetness: OrderByEnum
+  }
+  
+  type FruitSumFields {
+    name: String
+    sweetness: Int
+  }
+  
+  """GraphQL type"""
+  type FruitType {
+    id: UUID!
+    name: String!
+    colorId: UUID
+    color: ColorType!
+    sweetness: Int!
+  }
+  
+  """Aggregation fields"""
+  type GroupAggregate {
+    count: Int
+    sum: GroupSumFields!
+    min: GroupMinMaxFields!
+    max: GroupMinMaxFields!
+  }
+  
+  input GroupAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input GroupAggregateNumericFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input GroupAggregateOrderBy {
+    count: OrderByEnum
+    sum: GroupAggregateNumericFieldsOrderBy
+    minString: GroupAggregateMinMaxStringFieldsOrderBy
+    maxString: GroupAggregateMinMaxStringFieldsOrderBy
+  }
+  
+  type GroupMinMaxFields {
+    name: String
+  }
+  
+  """Ordering options"""
+  input GroupOrderBy {
+    id: OrderByEnum
+    name: OrderByEnum
+    tagId: OrderByEnum
+    tagAggregate: TagAggregateOrderBy
+    tag: TagOrderBy
+    usersAggregate: UserAggregateOrderBy
+    users: UserOrderBy
+    colorId: OrderByEnum
+    colorAggregate: ColorAggregateOrderBy
+    color: ColorOrderBy
+  }
+  
+  type GroupSumFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type GroupType {
+    id: UUID!
+    name: String!
+    tagId: UUID!
+    tag: TagType!
+    usersAggregate: UserAggregate!
+  
+    """Fetch objects from the UserType collection"""
+    users(orderBy: [UserOrderBy!] = null): [UserType!]!
+    colorId: UUID!
+    color: ColorType!
+  }
+  
+  enum OrderByEnum {
+    ASC
+    ASC_NULLS_FIRST
+    ASC_NULLS_LAST
+    DESC
+    DESC_NULLS_FIRST
+    DESC_NULLS_LAST
+  }
+  
+  type Query {
+    """Fetch objects from the GroupType collection"""
+    group: [GroupType!]!
+  }
+  
+  input TagAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input TagAggregateNumericFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input TagAggregateOrderBy {
+    count: OrderByEnum
+    sum: TagAggregateNumericFieldsOrderBy
+    minString: TagAggregateMinMaxStringFieldsOrderBy
+    maxString: TagAggregateMinMaxStringFieldsOrderBy
+  }
+  
+  """Ordering options"""
+  input TagOrderBy {
+    id: OrderByEnum
+    groupsAggregate: GroupAggregateOrderBy
+    groups: GroupOrderBy
+    name: OrderByEnum
+  }
+  
+  """GraphQL type"""
+  type TagType {
+    id: UUID!
+    groupsAggregate: GroupAggregate!
+  
+    """Fetch objects from the GroupType collection"""
+    groups(orderBy: [GroupOrderBy!] = null): [GroupType!]!
+    name: String!
+  }
+  
+  scalar UUID
+  
+  """Aggregation fields"""
+  type UserAggregate {
+    count: Int
+    sum: UserSumFields!
+    min: UserMinMaxFields!
+    max: UserMinMaxFields!
+  }
+  
+  input UserAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input UserAggregateNumericFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input UserAggregateOrderBy {
+    count: OrderByEnum
+    sum: UserAggregateNumericFieldsOrderBy
+    minString: UserAggregateMinMaxStringFieldsOrderBy
+    maxString: UserAggregateMinMaxStringFieldsOrderBy
+  }
+  
+  type UserMinMaxFields {
+    name: String
+  }
+  
+  """Ordering options"""
+  input UserOrderBy {
+    id: OrderByEnum
+    name: OrderByEnum
+    groupId: OrderByEnum
+    groupAggregate: GroupAggregateOrderBy
+    group: GroupOrderBy
+    tagId: OrderByEnum
+    tagAggregate: TagAggregateOrderBy
+    tag: TagOrderBy
+  }
+  
+  type UserSumFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type UserType {
+    id: UUID!
+    name: String!
+    groupId: UUID
+    group: GroupType!
+    tagId: UUID
+    tag: TagType!
+  }
+  '''
+# ---

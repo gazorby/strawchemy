@@ -1,6 +1,80 @@
 # serializer version: 1
 # name: test_mutation_schemas[update_mutation]
   '''
+  """
+  Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
+  """
+  input ColorAggregateBoolExp {
+    count: ColorAggregateBoolExpCount
+    sum: ColorAggregateBoolExpSum
+    minString: ColorAggregateBoolExpMinstring
+    maxString: ColorAggregateBoolExpMaxstring
+  }
+  
+  """Boolean expression to compare count aggregation."""
+  input ColorAggregateBoolExpCount {
+    arguments: [ColorCountFields!]
+    predicate: IntComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare max aggregation."""
+  input ColorAggregateBoolExpMaxstring {
+    arguments: [ColorMinMaxStringFieldsEnum!]!
+    predicate: StringComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare min aggregation."""
+  input ColorAggregateBoolExpMinstring {
+    arguments: [ColorMinMaxStringFieldsEnum!]!
+    predicate: StringComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare sum aggregation."""
+  input ColorAggregateBoolExpSum {
+    arguments: [ColorSumFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input ColorBoolExp {
+    _and: [ColorBoolExp!]
+    _or: [ColorBoolExp!]
+    _not: ColorBoolExp
+    id: UUIDComparison
+    fruitsAggregate: FruitAggregateBoolExp
+    fruits: FruitBoolExp
+    name: StringComparison
+  }
+  
+  enum ColorCountFields {
+    id
+    name
+  }
+  
+  enum ColorMinMaxStringFieldsEnum {
+    name
+  }
+  
+  enum ColorSumFieldsEnum {
+    name
+  }
+  
+  """GraphQL type"""
+  type ColorType {
+    id: UUID!
+    fruitsAggregate: FruitAggregate!
+  
+    """Fetch objects from the FruitType collection"""
+    fruits: [FruitType!]!
+    name: String!
+  }
+  
   """Date (isoformat)"""
   scalar Date
   
@@ -23,6 +97,193 @@
     gte: Float
     lt: Float
     lte: Float
+  }
+  
+  """Aggregation fields"""
+  type FruitAggregate {
+    count: Int
+    sum: FruitSumFields!
+    min: FruitMinMaxFields!
+    max: FruitMinMaxFields!
+    avg: FruitNumericFields!
+    stddev: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    stddevPop: FruitNumericFields!
+    variance: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    varPop: FruitNumericFields!
+  }
+  
+  """
+  Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
+  """
+  input FruitAggregateBoolExp {
+    count: FruitAggregateBoolExpCount
+    sum: FruitAggregateBoolExpSum
+    min: FruitAggregateBoolExpMin
+    max: FruitAggregateBoolExpMax
+    minString: FruitAggregateBoolExpMinstring
+    maxString: FruitAggregateBoolExpMaxstring
+    avg: FruitAggregateBoolExpAvg
+    stddev: FruitAggregateBoolExpStddev
+    stddevSamp: FruitAggregateBoolExpStddevsamp
+    stddevPop: FruitAggregateBoolExpStddevpop
+    variance: FruitAggregateBoolExpVariance
+    varSamp: FruitAggregateBoolExpVarsamp
+    varPop: FruitAggregateBoolExpVarpop
+  }
+  
+  """Boolean expression to compare avg aggregation."""
+  input FruitAggregateBoolExpAvg {
+    arguments: [FruitNumericFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare count aggregation."""
+  input FruitAggregateBoolExpCount {
+    arguments: [FruitCountFields!]
+    predicate: IntComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare max aggregation."""
+  input FruitAggregateBoolExpMax {
+    arguments: [FruitMinMaxNumericFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare max aggregation."""
+  input FruitAggregateBoolExpMaxstring {
+    arguments: [FruitMinMaxStringFieldsEnum!]!
+    predicate: StringComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare min aggregation."""
+  input FruitAggregateBoolExpMin {
+    arguments: [FruitMinMaxNumericFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare min aggregation."""
+  input FruitAggregateBoolExpMinstring {
+    arguments: [FruitMinMaxStringFieldsEnum!]!
+    predicate: StringComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare stddev aggregation."""
+  input FruitAggregateBoolExpStddev {
+    arguments: [FruitNumericFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare stddev_pop aggregation."""
+  input FruitAggregateBoolExpStddevpop {
+    arguments: [FruitNumericFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare stddev_samp aggregation."""
+  input FruitAggregateBoolExpStddevsamp {
+    arguments: [FruitNumericFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare sum aggregation."""
+  input FruitAggregateBoolExpSum {
+    arguments: [FruitSumFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare variance aggregation."""
+  input FruitAggregateBoolExpVariance {
+    arguments: [FruitNumericFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare var_pop aggregation."""
+  input FruitAggregateBoolExpVarpop {
+    arguments: [FruitNumericFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """Boolean expression to compare var_samp aggregation."""
+  input FruitAggregateBoolExpVarsamp {
+    arguments: [FruitNumericFieldsEnum!]!
+    predicate: FloatComparison!
+    distinct: Boolean
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input FruitBoolExp {
+    _and: [FruitBoolExp!]
+    _or: [FruitBoolExp!]
+    _not: FruitBoolExp
+    id: UUIDComparison
+    name: StringComparison
+    colorId: UUIDComparison
+    colorAggregate: ColorAggregateBoolExp
+    color: ColorBoolExp
+    sweetness: IntComparison
+  }
+  
+  enum FruitCountFields {
+    id
+    name
+    colorId
+    sweetness
+  }
+  
+  type FruitMinMaxFields {
+    name: String
+    sweetness: Int
+  }
+  
+  enum FruitMinMaxNumericFieldsEnum {
+    sweetness
+  }
+  
+  enum FruitMinMaxStringFieldsEnum {
+    name
+  }
+  
+  type FruitNumericFields {
+    sweetness: Float
+  }
+  
+  enum FruitNumericFieldsEnum {
+    sweetness
+  }
+  
+  type FruitSumFields {
+    name: String
+    sweetness: Int
+  }
+  
+  enum FruitSumFieldsEnum {
+    name
+    sweetness
+  }
+  
+  """GraphQL type"""
+  type FruitType {
+    id: UUID!
+    name: String!
+    colorId: UUID
+    color: ColorType!
+    sweetness: Int!
   }
   
   """Aggregation fields"""
@@ -71,10 +332,33 @@
     distinct: Boolean
   }
   
+  """Identifier input"""
+  input GroupColorIdFieldsInput {
+    id: UUID!
+  }
+  
+  input GroupColorIdFieldsInputGroupColorInputRequiredToOneInput {
+    set: GroupColorIdFieldsInput
+    create: GroupColorInput
+  }
+  
+  input GroupColorIdFieldsInputTagColorInputRequiredToOneInput {
+    set: GroupColorIdFieldsInput
+    create: TagColorInput
+  }
+  
+  """GraphQL update_by_pk input type"""
+  input GroupColorInput {
+    id: UUID!
+    fruits: GroupFruitsIdFieldsInputGroupFruitInputToManyUpdateInput
+    name: String
+  }
+  
   enum GroupCountFields {
     id
     name
     tagId
+    colorId
   }
   
   """
@@ -91,6 +375,35 @@
     tag: TagBoolExp
     usersAggregate: UserAggregateBoolExp
     users: UserBoolExp
+    colorId: UUIDComparison
+    colorAggregate: ColorAggregateBoolExp
+    color: ColorBoolExp
+  }
+  
+  """GraphQL update_by_pk input type"""
+  input GroupFruitInput {
+    id: UUID!
+    name: String
+    sweetness: Int
+  }
+  
+  """Identifier input"""
+  input GroupFruitsIdFieldsInput {
+    id: UUID!
+  }
+  
+  input GroupFruitsIdFieldsInputGroupFruitInputToManyUpdateInput {
+    set: [GroupFruitsIdFieldsInput!]
+    add: [GroupFruitsIdFieldsInput!]
+    remove: [GroupFruitsIdFieldsInput!]
+    create: [GroupFruitInput!]
+  }
+  
+  input GroupFruitsIdFieldsInputTagFruitInputToManyUpdateInput {
+    set: [GroupFruitsIdFieldsInput!]
+    add: [GroupFruitsIdFieldsInput!]
+    remove: [GroupFruitsIdFieldsInput!]
+    create: [TagFruitInput!]
   }
   
   type GroupMinMaxFields {
@@ -107,6 +420,7 @@
     name: String
     tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
+    color: GroupColorIdFieldsInputGroupColorInputRequiredToOneInput!
   }
   
   type GroupSumFields {
@@ -153,6 +467,8 @@
   
     """Fetch objects from the UserType collection"""
     users: [UserType!]!
+    colorId: UUID!
+    color: ColorType!
   }
   
   """GraphQL update_by_pk input type"""
@@ -161,6 +477,7 @@
     name: String
     tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
+    color: GroupColorIdFieldsInputGroupColorInputRequiredToOneInput!
   }
   
   """GraphQL update_by_pk input type"""
@@ -352,9 +669,23 @@
     name: StringComparison
   }
   
+  """GraphQL update_by_pk input type"""
+  input TagColorInput {
+    id: UUID!
+    fruits: GroupFruitsIdFieldsInputTagFruitInputToManyUpdateInput
+    name: String
+  }
+  
   enum TagCountFields {
     id
     name
+  }
+  
+  """GraphQL update_by_pk input type"""
+  input TagFruitInput {
+    id: UUID!
+    name: String
+    sweetness: Int
   }
   
   """GraphQL update_by_pk input type"""
@@ -362,6 +693,7 @@
     id: UUID!
     name: String
     users: GroupUsersIdFieldsInputTagUserInputToManyUpdateInput
+    color: GroupColorIdFieldsInputTagColorInputRequiredToOneInput!
   }
   
   """Identifier input"""

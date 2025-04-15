@@ -393,6 +393,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self.type_map = type_map or {}
 
         self._dto_cache: dict[Hashable, type[DTOBaseT]] = {}
+        self._unresolved_refs: dict[str, type[DTOBaseT]] = {}
 
     def should_exclude_field(
         self,
@@ -650,8 +651,11 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             self.dtos[base.__name__] = dto
         node.value.dto = dto
 
-        if self.handle_cycles and node.is_root and node.value.dto:
-            self.backend.update_forward_refs(node.value.dto, self.type_hint_namespace())
+        if self.handle_cycles and node.value.dto and name in self._unresolved_refs:
+            self.backend.update_forward_refs(self._unresolved_refs.pop(name), self.type_hint_namespace())
+
+        for ref in node.value.forward_refs:
+            self._unresolved_refs[ref.name] = dto
 
         self._dto_cache[cache_key] = dto
 
