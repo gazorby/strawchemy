@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.6](https://github.com/gazorby/strawchemy/compare/v0.13.5..v0.13.6) - 2025-04-15
+
+### 🚜 Refactor
+
+- *(mapper)* More factory reuse - ([1c00afc](https://github.com/gazorby/strawchemy/commit/1c00afce6f1795b11a4e3c30b47560fbaa1f3f70))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.13.6 - ([ac39d47](https://github.com/gazorby/strawchemy/commit/ac39d47bf85a5134c93d1b4fb13f83ee3ae88c8d))
 ## [0.13.5](https://github.com/gazorby/strawchemy/compare/v0.13.4..v0.13.5) - 2025-04-15
 
 ### 🐛 Bug Fixes
