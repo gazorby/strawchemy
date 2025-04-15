@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.5](https://github.com/gazorby/strawchemy/compare/v0.13.4..v0.13.5) - 2025-04-15
+
+### 🐛 Bug Fixes
+
+- *(dto)* Reuse order_by factory to generate orderBy args - ([3640dc0](https://github.com/gazorby/strawchemy/commit/3640dc0c509c9a530d0b1b844aa5cd3fe162b581))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.13.5 - ([a379b35](https://github.com/gazorby/strawchemy/commit/a379b35ebf13832a6c2c341fa98950cadbf27d4b))
 ## [0.13.4](https://github.com/gazorby/strawchemy/compare/v0.13.3..v0.13.4) - 2025-04-15
 
 ### 🐛 Bug Fixes
