@@ -16,7 +16,8 @@ from .fixtures import QueryTracker
 from .models import Color, Fruit, SQLDataTypes, SQLDataTypesContainer
 from .types import (
     FruitOrderBy,
-    FruitType,
+    FruitTypeWithPaginationAndOrderBy,
+    GroupType,
     SQLDataTypesContainerOrderBy,
     SQLDataTypesContainerType,
     SQLDataTypesOrderBy,
@@ -31,24 +32,30 @@ pytestmark = [pytest.mark.integration]
 
 @strawberry.type
 class AsyncQuery:
-    fruits: list[FruitType] = strawchemy.field(order_by=FruitOrderBy, repository_type=StrawchemyAsyncRepository)
+    fruits: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
+        order_by=FruitOrderBy, repository_type=StrawchemyAsyncRepository
+    )
     data_types: list[SQLDataTypesType] = strawchemy.field(
         order_by=SQLDataTypesOrderBy, repository_type=StrawchemyAsyncRepository
     )
     containers: list[SQLDataTypesContainerType] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, order_by=SQLDataTypesContainerOrderBy
     )
+    groups: list[GroupType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
 
 
 @strawberry.type
 class SyncQuery:
-    fruits: list[FruitType] = strawchemy.field(order_by=FruitOrderBy, repository_type=StrawchemySyncRepository)
+    fruits: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
+        order_by=FruitOrderBy, repository_type=StrawchemySyncRepository
+    )
     data_types: list[SQLDataTypesType] = strawchemy.field(
         order_by=SQLDataTypesOrderBy, repository_type=StrawchemySyncRepository
     )
     containers: list[SQLDataTypesContainerType] = strawchemy.field(
         repository_type=StrawchemySyncRepository, order_by=SQLDataTypesContainerOrderBy
     )
+    groups: list[GroupType] = strawchemy.field(repository_type=StrawchemySyncRepository)
 
 
 @pytest.fixture
@@ -230,6 +237,36 @@ async def test_relation_order_by(
         )
         expected_order = sorted([x["int_col"] for x in raw_data_types], reverse=order_by == "DESC")
         assert [row["intCol"] for row in container["dataTypes"]] == expected_order
+
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize("order_by", ["ASC", "DESC"])
+@pytest.mark.snapshot
+async def test_relation_order_by_2(
+    order_by: Literal["ASC", "DESC"],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    result = await maybe_async(
+        any_query(
+            f"""{{
+            fruits {{
+                id
+                color {{
+                    groups(orderBy: {{ name: {order_by} }}) {{
+                        id
+                    }}
+                }}
+            }}
+        }}"""
+        )
+    )
+    assert not result.errors
+    assert result.data
 
     # Verify SQL query
     assert query_tracker.query_count == 1

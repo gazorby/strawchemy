@@ -75,6 +75,7 @@ class Color(UUIDBase):
 
     fruits: Mapped[list[Fruit]] = relationship("Fruit", back_populates="color")
     name: Mapped[str]
+    groups: Mapped[list[Group]] = relationship("Group", back_populates="color")
 
 
 class Group(UUIDBase):
@@ -82,6 +83,8 @@ class Group(UUIDBase):
 
     name: Mapped[str] = mapped_column()
     topics: Mapped[list["Topic"]] = relationship("Topic")
+    color_id: Mapped[UUID | None] = mapped_column(ForeignKey("color.id"), default=None)
+    color: Mapped[Color | None] = relationship(Color)
 
 
 class Topic(UUIDBase):
@@ -96,8 +99,6 @@ class User(UUIDBase):
 
     name: Mapped[str] = mapped_column()
     greeting: Mapped[str] = column_property("Hello, " + name)
-    group_id: Mapped[UUID | None] = mapped_column(ForeignKey("group.id"))
-    group: Mapped[Group | None] = relationship(Group)
 
 
 class SQLDataTypes(UUIDBase):

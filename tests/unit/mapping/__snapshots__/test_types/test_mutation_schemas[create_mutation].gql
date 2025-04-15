@@ -1,6 +1,16 @@
 # serializer version: 1
 # name: test_mutation_schemas[create_mutation]
   '''
+  """GraphQL type"""
+  type ColorType {
+    id: UUID!
+    fruitsAggregate: FruitAggregate!
+  
+    """Fetch objects from the FruitType collection"""
+    fruits: [FruitType!]!
+    name: String!
+  }
+  
   """Date (isoformat)"""
   scalar Date
   
@@ -11,11 +21,84 @@
   scalar Decimal
   
   """Aggregation fields"""
+  type FruitAggregate {
+    count: Int
+    sum: FruitSumFields!
+    min: FruitMinMaxFields!
+    max: FruitMinMaxFields!
+    avg: FruitNumericFields!
+    stddev: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    stddevPop: FruitNumericFields!
+    variance: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    varPop: FruitNumericFields!
+  }
+  
+  type FruitMinMaxFields {
+    name: String
+    sweetness: Int
+  }
+  
+  type FruitNumericFields {
+    sweetness: Float
+  }
+  
+  type FruitSumFields {
+    name: String
+    sweetness: Int
+  }
+  
+  """GraphQL type"""
+  type FruitType {
+    id: UUID!
+    name: String!
+    colorId: UUID
+    color: ColorType!
+    sweetness: Int!
+  }
+  
+  """Aggregation fields"""
   type GroupAggregate {
     count: Int
     sum: GroupSumFields!
     min: GroupMinMaxFields!
     max: GroupMinMaxFields!
+  }
+  
+  """Identifier input"""
+  input GroupColorIdFieldsInput {
+    id: UUID!
+  }
+  
+  input GroupColorIdFieldsInputGroupColorInputRequiredToOneInput {
+    set: GroupColorIdFieldsInput
+    create: GroupColorInput
+  }
+  
+  """GraphQL create input type"""
+  input GroupColorInput {
+    id: UUID
+    fruits: GroupFruitsIdFieldsInputGroupFruitInputToManyCreateInput
+    name: String!
+  }
+  
+  """GraphQL create input type"""
+  input GroupFruitInput {
+    id: UUID
+    name: String!
+    sweetness: Int!
+  }
+  
+  """Identifier input"""
+  input GroupFruitsIdFieldsInput {
+    id: UUID!
+  }
+  
+  input GroupFruitsIdFieldsInputGroupFruitInputToManyCreateInput {
+    set: [GroupFruitsIdFieldsInput!]
+    add: [GroupFruitsIdFieldsInput!]
+    create: [GroupFruitInput!]
   }
   
   """GraphQL create input type"""
@@ -24,6 +107,7 @@
     name: String!
     tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyCreateInput
+    color: GroupColorIdFieldsInputGroupColorInputRequiredToOneInput!
   }
   
   type GroupMinMaxFields {
@@ -65,6 +149,8 @@
   
     """Fetch objects from the UserType collection"""
     users: [UserType!]!
+    colorId: UUID!
+    color: ColorType!
   }
   
   """GraphQL create input type"""

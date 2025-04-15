@@ -1,6 +1,54 @@
 # serializer version: 1
 # name: test_query_schemas[nested_overrides]
   '''
+  """GraphQL type"""
+  type ColorType {
+    id: UUID!
+    fruitsAggregate: FruitAggregate!
+  
+    """Fetch objects from the FruitType collection"""
+    fruits: [FruitType!]!
+    name: Int!
+  }
+  
+  """Aggregation fields"""
+  type FruitAggregate {
+    count: Int
+    sum: FruitSumFields!
+    min: FruitMinMaxFields!
+    max: FruitMinMaxFields!
+    avg: FruitNumericFields!
+    stddev: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    stddevPop: FruitNumericFields!
+    variance: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    varPop: FruitNumericFields!
+  }
+  
+  type FruitMinMaxFields {
+    name: String
+    sweetness: Int
+  }
+  
+  type FruitNumericFields {
+    sweetness: Float
+  }
+  
+  type FruitSumFields {
+    name: String
+    sweetness: Int
+  }
+  
+  """GraphQL type"""
+  type FruitType {
+    id: UUID!
+    name: Int!
+    colorId: UUID
+    color: ColorType!
+    sweetness: Int!
+  }
+  
   """Aggregation fields"""
   type GroupAggregate {
     count: Int
@@ -27,6 +75,8 @@
   
     """Fetch objects from the UserType collection"""
     users: [UserType!]!
+    colorId: UUID!
+    color: ColorType!
   }
   
   type Query {

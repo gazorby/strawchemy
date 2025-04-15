@@ -208,6 +208,8 @@ def test_update_mutation_by_filter_type_not_list_raise_error() -> None:
         pytest.param("filters.filters_aggregation.Query", id="aggregation_filters"),
         pytest.param("filters.type_filter.Query", id="type_filter"),
         pytest.param("order.type_order_by.Query", id="type_order_by"),
+        pytest.param("order.field_order_by.Query", id="field_order_by"),
+        pytest.param("order.auto_order_by.Query", id="auto_order_by"),
         pytest.param("aggregations.root_aggregations.Query", id="root_aggregations"),
         pytest.param("distinct.Query", id="distinct"),
     ],
