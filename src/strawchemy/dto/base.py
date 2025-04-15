@@ -198,18 +198,10 @@ class Reference(Generic[T, DTOBaseT]):
 
 @dataclass(slots=True)
 class Relation(Generic[T, DTOBaseT]):
-    model: type[T]
-    name: str
-    dto: type[DTOBaseT] | None = None
-    forward_refs: list[Reference[T, DTOBaseT]] = field(default_factory=list)
-
-    @override
-    def __eq__(self, value: object, /) -> bool:
-        match value:
-            case Relation():
-                return self.model == value.model
-            case _:
-                return False
+    model: type[T] = field(compare=True)
+    name: str = field(compare=False)
+    dto: type[DTOBaseT] | None = field(default=None, compare=False)
+    forward_refs: list[Reference[T, DTOBaseT]] = field(default_factory=list, compare=False)
 
     @override
     def __repr__(self) -> str:
@@ -452,7 +444,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         elif parent is not None:
             dto = ForwardRef(parent.value.name)
             if self.handle_cycles:
-                node.value.forward_refs.append(Reference(dto_name, parent))
+                node.value.forward_refs.append(Reference(parent.value.name, parent))
             field.related_dto = dto
         else:
             child = node.insert_child(relation_child)
