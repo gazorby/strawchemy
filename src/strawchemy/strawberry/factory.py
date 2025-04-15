@@ -746,6 +746,7 @@ class StrawberryTypeFactory(
         backend: DataclassDTOBackend[MappedDataclassGraphQLDTO[Any]],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
+        order_by_factory: StrawberryOrderByInputFactory[ModelT, ModelFieldT] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(
@@ -756,7 +757,9 @@ class StrawberryTypeFactory(
             aggregation_factory=StraberryAggregateFactory(mapper, handle_cycles=handle_cycles, type_map=type_map),
             **kwargs,
         )
-        self._order_by_factory = StrawberryOrderByInputFactory(mapper, handle_cycles=handle_cycles, type_map=type_map)
+        self._order_by_factory = order_by_factory or StrawberryOrderByInputFactory(
+            mapper, handle_cycles=handle_cycles, type_map=type_map
+        )
 
     def _dataclass_merge(
         self,
