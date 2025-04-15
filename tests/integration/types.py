@@ -7,7 +7,7 @@ from strawchemy import ModelInstance, QueryHook, Strawchemy
 from sqlalchemy import Select
 from sqlalchemy.orm.util import AliasedClass
 
-from .models import Color, Fruit, FruitFarm, Group, SQLDataTypes, SQLDataTypesContainer, User
+from .models import Color, Fruit, FruitFarm, SQLDataTypes, SQLDataTypesContainer, User
 
 strawchemy = Strawchemy()
 
@@ -194,10 +194,3 @@ class SQLDataTypesContainerFilter: ...
 
 @strawchemy.order(SQLDataTypesContainer, include="all", override=True)
 class SQLDataTypesContainerOrderBy: ...
-
-
-# Group
-
-
-@strawchemy.type(Group, include="all", child_order_by=True, override=True)
-class GroupType: ...
