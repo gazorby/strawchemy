@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.7](https://github.com/gazorby/strawchemy/compare/v0.13.6..v0.13.7) - 2025-04-15
+
+### 🐛 Bug Fixes
+
+- *(dto)* Incorrect forward ref name set in the tracking graph when building recursive dtos - ([ac20b7b](https://github.com/gazorby/strawchemy/commit/ac20b7b1f2e745e7e41ed5ec40ee66ba2d31ec7e))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.13.7 - ([70619a5](https://github.com/gazorby/strawchemy/commit/70619a5b92ad1e837e4bd04fb535537e8acc984b))
 ## [0.13.6](https://github.com/gazorby/strawchemy/compare/v0.13.5..v0.13.6) - 2025-04-15
 
 ### 🚜 Refactor
