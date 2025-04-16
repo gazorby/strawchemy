@@ -131,7 +131,7 @@ class MappedDTO(DTOBase[ModelT]):
 
             model_kwargs[field_def.model_field_name] = value
         try:
-            model = self.__dto_model__(**model_kwargs, **override)
+            model = self.__dto_model__(**model_kwargs)
             return visitor.model(model, level + 1) if visitor else model
         except TypeError as error:
             original_message = error.args[0] if isinstance(error.args[0], str) else repr(error)

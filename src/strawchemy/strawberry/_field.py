@@ -46,6 +46,7 @@ from strawchemy.graphql.dto import (
     OrderByDTO,
     StrawchemyDTOAttributes,
 )
+from strawchemy.graphql.mutation import Input
 from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
 from strawchemy.types import DefaultOffsetPagination
 from strawchemy.utils import is_type_hint_optional
@@ -90,7 +91,9 @@ CreateOrUpdateResolverResult: TypeAlias = "Sequence[StrawchemyTypeWithStrawberry
 _OPTIONAL_UNION_ARG_SIZE: int = 2
 
 
-def _is_list(type_: StrawberryType | type[WithStrawberryObjectDefinition] | object | str) -> bool:
+def _is_list(
+    type_: StrawberryType | type[WithStrawberryObjectDefinition] | object | str,
+) -> TypeIs[type[list[Any]] | StrawberryList]:
     if isinstance(type_, StrawberryOptional):
         type_ = type_.of_type
     if origin := get_origin(type_):
@@ -473,7 +476,7 @@ class StrawchemyCreateMutationField(StrawchemyField[ModelT, ModelFieldT]):
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.create_many(data) if isinstance(data, Sequence) else repository.create(data)
+        return repository.create_many(Input(data)) if isinstance(data, Sequence) else repository.create(Input(data))
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -504,13 +507,17 @@ class StrawchemyUpdateMutationField(StrawchemyField[ModelT, ModelFieldT]):
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.update_many_by_id(data) if isinstance(data, Sequence) else repository.update_by_id(data)
+        return (
+            repository.update_many_by_id(Input(data))
+            if isinstance(data, Sequence)
+            else repository.update_by_id(Input(data))
+        )
 
     def _update_by_filter_resolver(
         self, info: Info, data: AnyMappedDTO, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.update_by_filter(data, filter_input)
+        return repository.update_by_filter(Input(data), filter_input)
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:

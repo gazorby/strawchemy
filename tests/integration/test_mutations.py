@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
+from strawchemy.graphql.mutation import Input
 
 import strawberry
 from syrupy.assertion import SnapshotAssertion
@@ -58,6 +59,10 @@ class AsyncMutation:
     delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemyAsyncRepository)
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemyAsyncRepository)
 
+    @strawberry.field
+    async def color_create_blue(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
+        return await StrawchemyAsyncRepository(ColorType, info).create(Input(data, name="Blue"))
+
 
 @strawberry.type
 class SyncMutation:
@@ -85,6 +90,10 @@ class SyncMutation:
     update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemySyncRepository)
     delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemySyncRepository)
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemySyncRepository)
+
+    @strawberry.field
+    def color_create_blue(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
+        return StrawchemySyncRepository(ColorType, info).create(Input(data, name="Blue"))
 
 
 @pytest.fixture
@@ -1395,3 +1404,25 @@ async def test_delete_all(
     assert len(result.data["deleteUsers"]) == len(raw_users)
     query_tracker.assert_statements(1, "select", sql_snapshot)
     query_tracker.assert_statements(1, "delete", sql_snapshot)
+
+
+# Custom mutations
+
+
+@pytest.mark.snapshot
+async def test_custom_mutation_with_arg_override(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+        mutation {
+            colorCreateBlue(data: { name: "Green" }) {
+                name
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["colorCreateBlue"] == {"name": "Blue"}
+    query_tracker.assert_statements(1, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)

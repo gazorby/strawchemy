@@ -416,6 +416,7 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
 
         return wrapper
 
+    @dataclass_transform(order_default=True, kw_only_default=True)
     def input(
         self,
         model: type[T],
@@ -456,6 +457,84 @@ class StrawberryDataclassFactory(_StrawberryFactory[ModelT, ModelFieldT, Datacla
             )
 
         return wrapper
+
+
+class StrawberryMappedDataclassFactory(StrawberryDataclassFactory[ModelT, ModelFieldT, MappedDataclassGraphQLDTO[Any]]):
+    @override
+    @dataclass_transform(order_default=True, kw_only_default=True)
+    def input(
+        self,
+        model: type[T],
+        mode: InputType,
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool | None = None,
+        type_map: Mapping[Any, Any] | None = None,
+        aliases: Mapping[str, str] | None = None,
+        alias_generator: Callable[[str], str] | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        directives: Sequence[object] | None = (),
+        override: bool = False,
+        purpose: Purpose = Purpose.WRITE,
+    ) -> Callable[[type[Any]], type[MappedDataclassGraphQLDTO[T]]]:
+        return super().input(
+            model=model,
+            mode=mode,
+            include=include,
+            exclude=exclude,
+            partial=partial,
+            type_map=type_map,
+            aliases=aliases,
+            alias_generator=alias_generator,
+            name=name,
+            description=description,
+            directives=directives,
+            override=override,
+            purpose=purpose,
+        )
+
+    @override
+    @dataclass_transform(order_default=True, kw_only_default=True)
+    def type(
+        self,
+        model: type[T],
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool | None = None,
+        type_map: Mapping[Any, Any] | None = None,
+        aliases: Mapping[str, str] | None = None,
+        alias_generator: Callable[[str], str] | None = None,
+        child_pagination: bool | DefaultOffsetPagination = False,
+        child_order_by: bool = False,
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
+        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        directives: Sequence[object] | None = (),
+        query_hook: QueryHook[T] | Sequence[QueryHook[T]] | None = None,
+        override: bool = False,
+        purpose: Purpose = Purpose.READ,
+    ) -> Callable[[type[Any]], type[MappedDataclassGraphQLDTO[T]]]:
+        return super().type(
+            model=model,
+            include=include,
+            exclude=exclude,
+            partial=partial,
+            type_map=type_map,
+            aliases=aliases,
+            alias_generator=alias_generator,
+            child_pagination=child_pagination,
+            child_order_by=child_order_by,
+            filter_input=filter_input,
+            order_by=order_by,
+            name=name,
+            description=description,
+            directives=directives,
+            query_hook=query_hook,
+            override=override,
+            purpose=purpose,
+        )
 
 
 class StrawberryPydanticInputFactory(_StrawberryFactory[ModelT, ModelFieldT, PydanticDTOT]):
@@ -737,7 +816,7 @@ class StrawberryAggregateFilterInputFactory(
 
 
 class StrawberryTypeFactory(
-    StrawberryDataclassFactory[ModelT, ModelFieldT, MappedDataclassGraphQLDTO[Any]],
+    StrawberryMappedDataclassFactory[ModelT, ModelFieldT],
     TypeDTOFactory[ModelT, ModelFieldT, MappedDataclassGraphQLDTO[Any]],
 ):
     def __init__(

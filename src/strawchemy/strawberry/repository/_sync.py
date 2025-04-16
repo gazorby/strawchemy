@@ -24,7 +24,6 @@ from strawchemy.graphql.dto import (
     RelationFilterDTO,
     StrawchemyDTOAttributes,
 )
-from strawchemy.graphql.mutation import InputData
 from strawchemy.sqlalchemy.repository import SQLAlchemyGraphQLSyncRepository
 from strawchemy.strawberry._utils import (
     default_session_getter,
@@ -42,8 +41,8 @@ if TYPE_CHECKING:
     from strawberry import Info
     from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
     from strawberry.types.field import StrawberryField
-    from strawchemy.graphql.typing import AnyMappedDTO
     from strawchemy.sqlalchemy.hook import QueryHook
+    from strawchemy.sqlalchemy.repository.typing import SQLAlchemyInput
     from strawchemy.sqlalchemy.typing import AnySyncSession
     from strawchemy.strawberry.typing import (
         StrawchemyTypeFromPydantic,
@@ -255,28 +254,26 @@ class StrawchemySyncRepository(Generic[T]):
             return self._tree.aggregation_query_result_to_strawberry_type(query_results)
         return self._tree.query_result_to_strawberry_type(query_results)
 
-    def create_many(self, data: Sequence[AnyMappedDTO]) -> Sequence[T]:
-        query_results = self.graphql_repository().create(InputData(data), self._tree)
+    def create_many(self, data: SQLAlchemyInput) -> Sequence[T]:
+        query_results = self.graphql_repository().create(data, self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)
 
-    def create(self, data: AnyMappedDTO) -> T:
-        query_results = self.graphql_repository().create(InputData([data]), self._tree)
+    def create(self, data: SQLAlchemyInput) -> T:
+        query_results = self.graphql_repository().create(data, self._tree)
         return self._tree.to_strawberry_type(query_results.one())
 
-    def update_many_by_id(self, data: Sequence[AnyMappedDTO]) -> Sequence[T]:
-        query_results = self.graphql_repository().update_by_ids(InputData(data), self._tree)
+    def update_many_by_id(self, data: SQLAlchemyInput) -> Sequence[T]:
+        query_results = self.graphql_repository().update_by_ids(data, self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)
 
-    def update_by_id(self, data: AnyMappedDTO) -> T:
-        query_results = self.graphql_repository().update_by_ids(InputData([data]), self._tree)
+    def update_by_id(self, data: SQLAlchemyInput) -> T:
+        query_results = self.graphql_repository().update_by_ids(data, self._tree)
         return self._tree.to_strawberry_type(query_results.one())
 
     def update_by_filter(
-        self, data: AnyMappedDTO, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]
+        self, data: SQLAlchemyInput, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]
     ) -> Sequence[T]:
-        query_results = self.graphql_repository().update_by_filter(
-            InputData([data]), filter_input.to_pydantic(), self._tree
-        )
+        query_results = self.graphql_repository().update_by_filter(data, filter_input.to_pydantic(), self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)
 
     def delete(self, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None) -> Sequence[T]:
