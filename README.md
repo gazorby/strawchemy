@@ -6,19 +6,31 @@ Generates GraphQL types, inputs, queries and resolvers directly from SQLAlchemy 
 
 ## Features
 
-- 🔄 **Automatic Type Generation**: Generate strawberry types from SQLAlchemy models
+- 🔄 **Type Generation**: Generate strawberry types from SQLAlchemy models
 
 - 🧠 **Smart Resolvers**: Automatically generates single, optimized database queries for a given GraphQL request
 
-- 🔍 **Comprehensive Filtering**: Rich filtering capabilities on most data types, including PostGIS geo columns
+- 🔍 **Filtering**: Rich filtering capabilities on most data types, including PostGIS geo columns
 
-- 📄 **Pagination Support**: Built-in offset-based pagination
+- 📄 **Pagination**: Built-in offset-based pagination
 
-- 📊 **Aggregation Queries**: Support for aggregation functions like count, sum, avg, min, max, and statistical functions
+- 📊 **Aggregation**: Support for aggregation functions like count, sum, avg, min, max, and statistical functions
 
-- ⚡ **Sync/Async Support**: Works with both synchronous and asynchronous SQLAlchemy sessions
+- 🔀 **CRUD**: Full support for Create, Read, Update, and Delete mutations with relationship handling
 
-- 🛢 **Database Support**: Currently only PostgreSQL is officially supported and tested (using [asyncpg](https://github.com/MagicStack/asyncpg) or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
+- 🪝 **Hooks**: Customize query behavior with query hooks: add filtering, load extra column etc.
+
+- ⚡ **Sync/Async**: Works with both sync and async SQLAlchemy sessions
+
+- 🛢 **Database**: Currently, only PostgreSQL is officially supported and tested (using [asyncpg](https://github.com/MagicStack/asyncpg) or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
+
+> [!Warning]
+>
+> Please note that strawchemy is currently in a pre-release stage of development. This means that the library is still under active development and the initial API is subject to change. We encourage you to experiment with strawchemy and provide feedback, but be sure to pin and update carefully until a stable release is available.
+
+## Database support
+
+Currently, only PostgreSQL is officially supported and tested (using [asyncpg](https://github.com/MagicStack/asyncpg) or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
 
 ## Table of Contents
 
