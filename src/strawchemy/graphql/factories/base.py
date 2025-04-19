@@ -15,6 +15,7 @@ allowing for efficient data transfer and filtering in GraphQL queries.
 from __future__ import annotations
 
 from collections.abc import Generator
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
 from strawchemy.dto.base import DTOBase, DTOFactory, DTOFieldDefinition, ModelFieldT, ModelT, Relation
@@ -35,8 +36,6 @@ __all__ = ("GraphQLDTOFactory",)
 
 T = TypeVar("T")
 
-_TYPING_NS = vars(strawchemy_typing)
-
 
 class GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
     inspector: GraphQLInspectorProtocol[Any, ModelFieldT]
@@ -44,9 +43,15 @@ class GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
     def type_description(self) -> str:
         return "GraphQL type"
 
+    @cached_property
+    def _namespace(self) -> dict[str, Any]:
+        from strawchemy.sqlalchemy import hook
+
+        return vars(strawchemy_typing) | vars(hook)
+
     @override
     def type_hint_namespace(self) -> dict[str, Any]:
-        return super().type_hint_namespace() | _TYPING_NS
+        return super().type_hint_namespace() | self._namespace
 
     @override
     def iter_field_definitions(

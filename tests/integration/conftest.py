@@ -33,7 +33,6 @@ from .fixtures import (
     seed_insert_statements,
     session,
     sync_mutation,
-    sync_query,
 )
 
 __all__ = (
@@ -69,5 +68,4 @@ __all__ = (
     "seed_insert_statements",
     "session",
     "sync_mutation",
-    "sync_query",
 )

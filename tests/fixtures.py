@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 from strawchemy.mapper import Strawchemy
 
+import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from syrupy.assertion import SnapshotAssertion
 from syrupy.extensions.amber import AmberSnapshotExtension
@@ -42,3 +43,15 @@ def fx_sqlalchemy_dataclass_factory() -> MappedDataclassFactory:
 @pytest.fixture(name="sqlalchemy_pydantic_factory")
 def fx_sqlalchemy_pydantic_factory() -> MappedPydanticFactory:
     return sqlalchemy_pydantic_factory()
+
+
+@pytest.fixture
+def sync_query() -> type[DefaultQuery]:
+    return DefaultQuery
+
+
+@strawberry.type
+class DefaultQuery:
+    @strawberry.field
+    def hello(self) -> str:
+        return "World"

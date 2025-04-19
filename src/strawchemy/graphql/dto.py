@@ -45,12 +45,12 @@ from typing import (
 )
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
+
 from strawchemy.dto.backend.dataclass import DataclassDTO, MappedDataclassDTO
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, Purpose
 from strawchemy.graph import GraphError, MatchOn, Node, UndefinedType, undefined
-from strawchemy.sqlalchemy.hook import QueryHook  # noqa: TC001
 from strawchemy.utils import camel_to_snake
 
 from .constants import LIMIT_KEY, OFFSET_KEY, ORDER_BY_KEY
@@ -59,6 +59,8 @@ from .typing import OrderByDTOT
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
+
+    from strawchemy.sqlalchemy.hook import QueryHook
 
     from .filters import GenericComparison, GraphQLComparison, OrderComparison
     from .typing import AggregationFunction, AggregationType, FunctionInfo
@@ -88,6 +90,7 @@ class StrawchemyDTOAttributes:
     __strawchemy_query_hook__: QueryHook[Any] | Sequence[QueryHook[Any]] | None = None
     __strawchemy_filter__: type[Any] | None = None
     __strawchemy_order_by__: type[Any] | None = None
+    __strawchemy_validation_cls__: type[MappedPydanticDTO[Any]] | None = None
 
 
 class _Key(Generic[T]):

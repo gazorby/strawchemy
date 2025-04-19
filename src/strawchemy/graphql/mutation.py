@@ -6,11 +6,17 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, override
 
+from pydantic import ValidationError
+
 from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT, ToMappedProtocol, VisitorProtocol
 from strawchemy.dto.types import DTO_UNSET, DTOUnsetType
 
+from .exceptions import InputValidationError
+
 if TYPE_CHECKING:
     from collections.abc import Iterable
+
+    from strawchemy.dto.backend.pydantic import MappedPydanticDTO
 
 
 __all__ = (
@@ -184,7 +190,14 @@ class _InputVisitor(VisitorProtocol, Generic[ModelT, ModelFieldT]):
         return value
 
     @override
-    def model(self, model: ModelT, level: int) -> ModelT:
+    def model(self, parent: ToMappedProtocol, model_cls: type[ModelT], params: dict[str, Any], level: int) -> ModelT:
+        if level == 1 and self.input_data.pydantic_model is not None:
+            try:
+                model = self.input_data.pydantic_model(**params).to_mapped()
+            except ValidationError as error:
+                raise InputValidationError(error) from error
+        else:
+            model = model_cls(**params)
         for relation in self.current_relations:
             assert relation.field.related_model
             relation_input = _RelationInput.from_unbound(relation, model)
@@ -205,10 +218,16 @@ class LevelInput(Generic[ModelT, ModelFieldT]):
 
 
 class Input(Generic[ModelT, ModelFieldT, InputModel]):
-    def __init__(self, dtos: MappedDTO[InputModel] | Sequence[MappedDTO[InputModel]], **override: Any) -> None:
+    def __init__(
+        self,
+        dtos: MappedDTO[InputModel] | Sequence[MappedDTO[InputModel]],
+        pydantic_model: type[MappedPydanticDTO[InputModel]] | None = None,
+        **override: Any,
+    ) -> None:
         self.max_level = 0
         self.relations: list[_RelationInput[ModelT, ModelFieldT]] = []
         self.instances: list[InputModel] = []
+        self.pydantic_model = pydantic_model
 
         dtos = dtos if isinstance(dtos, Sequence) else [dtos]
         for index, dto in enumerate(dtos):

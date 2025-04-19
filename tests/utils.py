@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload, override
 
+from pydantic import BaseModel
 from strawchemy.dto.backend.dataclass import DataclassDTOBackend, MappedDataclassDTO
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
 from strawchemy.dto.base import DTOFactory
@@ -13,7 +14,6 @@ from strawchemy.sqlalchemy.inspector import SQLAlchemyInspector
 from typing_extensions import TypeIs
 
 import strawberry
-from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.types.execution import ExecutionResult
 from tests.typing import AnyFactory, MappedDataclassFactory, MappedPydanticFactory

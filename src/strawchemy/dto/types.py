@@ -186,7 +186,7 @@ class DTOConfig:
         include_all = self.include == "all" or self.exclude
         annotation_overrides: dict[str, Any] = self.annotation_overrides
         try:
-            base_annotations = get_type_hints(base)
+            base_annotations = get_type_hints(base, include_extras=True)
         except NameError:
             base_annotations = base.__annotations__
         for name, annotation in base_annotations.items():

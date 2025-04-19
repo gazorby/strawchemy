@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Any
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
-from strawchemy.dto.base import DTOFactory
-from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
+
+from .backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
+from .base import DTOFactory
+from .inspectors.sqlalchemy import SQLAlchemyInspector
 
 __all__ = ("factory", "pydantic_dto")
 

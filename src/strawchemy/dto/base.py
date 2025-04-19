@@ -69,7 +69,9 @@ class VisitorProtocol(Protocol):
         self, parent: ToMappedProtocol, field: DTOFieldDefinition[Any, Any], value: Any, level: int
     ) -> Any: ...
 
-    def model(self, model: ModelT, level: int) -> ModelT: ...
+    def model(
+        self, parent: ToMappedProtocol, model_cls: type[ModelT], params: dict[str, Any], level: int
+    ) -> ModelT: ...
 
 
 @runtime_checkable
@@ -93,7 +95,7 @@ class MappedDTO(DTOBase[ModelT]):
     def to_mapped(
         self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> ModelT:
-        """Create an instance of `self.__sqla_model__`.
+        """Create an instance of `self.__d_model__`.
 
         Fill the bound SQLAlchemy model recursively with values from this dataclass.
         """
@@ -131,8 +133,11 @@ class MappedDTO(DTOBase[ModelT]):
 
             model_kwargs[field_def.model_field_name] = value
         try:
-            model = self.__dto_model__(**model_kwargs)
-            return visitor.model(model, level + 1) if visitor else model
+            return (
+                visitor.model(self, self.__dto_model__, model_kwargs, level + 1)
+                if visitor
+                else self.__dto_model__(**model_kwargs)
+            )
         except TypeError as error:
             original_message = error.args[0] if isinstance(error.args[0], str) else repr(error)
             msg = f"{original_message} (model: {self.__dto_model__.__name__})"

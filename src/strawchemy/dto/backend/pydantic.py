@@ -18,8 +18,6 @@ from strawchemy.dto.types import DTO_MISSING, DTOMissingType
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
-    from pydantic.functional_validators import _V2Validator
-
 
 __all__ = ("MappedPydanticDTO", "PydanticDTO", "PydanticDTOBackend")
 
@@ -72,7 +70,6 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         **kwargs: Any,
     ) -> type[PydanticDTOT]:
         fields: dict[str, tuple[Any, FieldInfo]] = {}
-        validators: dict[str, _V2Validator] = {}
         base_annotations = base.__annotations__ if base else {}
 
         for field_def in field_definitions:
@@ -102,7 +99,7 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
             __base__=(self.dto_base,),
             __config__=None,
             __module__=module,
-            __validators__=validators,
+            __validators__=None,
             __doc__=f"Pydantic generated DTO for {model.__name__} model" if docstring else None,
             __cls_kwargs__=None,
             **fields,

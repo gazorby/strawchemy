@@ -13,6 +13,7 @@ from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.sqlalchemy.exceptions import QueryHookError
 from strawchemy.strawberry.exceptions import StrawchemyFieldError
 from strawchemy.strawberry.scalars import Interval
+from strawchemy.testing.pytest_plugin import MockContext
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -21,6 +22,7 @@ from strawberry.scalars import JSON
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 from syrupy.assertion import SnapshotAssertion
+from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
 from tests.unit.models import User
 
@@ -288,3 +290,43 @@ def test_field_order_by_equals_type_order_by() -> None:
     type_filter_schema = strawberry.Schema(query=TypeOrderQuery, scalar_overrides=SCALAR_OVERRIDES)
 
     assert textwrap.dedent(str(field_filter_schema)).strip() == textwrap.dedent(str(type_filter_schema)).strip()
+
+
+def test_create_validation() -> None:
+    from tests.unit.schemas.validation import Mutation
+
+    query = """
+        mutation {
+            createUser(data: { name: "Bob" }) {
+                __typename
+                ... on UserType {
+                    name
+                }
+                ... on ValidationErrorType {
+                    id
+                    errors {
+                        id
+                        loc
+                        message
+                        type
+                    }
+                }
+            }
+        }
+    """
+    schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
+    result = schema.execute_sync(query, context_value=MockContext())
+    assert not result.errors
+    assert result.data
+    assert result.data["createUser"] == {
+        "__typename": "ValidationErrorType",
+        "id": "ERROR",
+        "errors": [
+            {
+                "id": "ERROR",
+                "loc": ["name"],
+                "message": "Value error, Name must be lower cased",
+                "type": "value_error",
+            }
+        ],
+    }

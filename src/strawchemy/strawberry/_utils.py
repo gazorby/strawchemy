@@ -6,6 +6,9 @@ from strawberry.experimental.pydantic import UnregisteredTypeException
 from strawberry.experimental.pydantic.utils import get_strawberry_type_from_model
 from strawberry.types.base import StrawberryContainer, StrawberryType
 from strawberry.types.lazy_type import LazyType
+from strawberry.types.union import StrawberryUnion
+
+from .types import ValidationErrorType
 
 if TYPE_CHECKING:
     from strawberry import Info
@@ -68,9 +71,21 @@ def dto_model_from_type(type_: Any) -> Any:
     return strawberry_type.__dto_model__
 
 
-def strawberry_contained_type(type_: StrawberryType | Any) -> Any:
+def strawberry_contained_types(type_: StrawberryType | Any) -> tuple[Any, ...]:
     if isinstance(type_, LazyType):
-        return strawberry_contained_type(type_.resolve_type())
+        return strawberry_contained_types(type_.resolve_type())
     if isinstance(type_, StrawberryContainer):
-        return strawberry_contained_type(type_.of_type)
-    return type_
+        return strawberry_contained_types(type_.of_type)
+    if isinstance(type_, StrawberryUnion):
+        union_types = []
+        for union_type in type_.types:
+            union_types.extend(strawberry_contained_types(union_type))
+        return tuple(union_types)
+    return (type_,)
+
+
+def strawberry_contained_user_type(type_: StrawberryType | Any) -> Any:
+    inner_types = [
+        inner_type for inner_type in strawberry_contained_types(type_) if inner_type is not ValidationErrorType
+    ]
+    return inner_types[0]
