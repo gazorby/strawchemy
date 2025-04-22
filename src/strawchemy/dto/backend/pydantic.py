@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Annotated, Any, TypeVar, override
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, create_model
 from pydantic.fields import Field, FieldInfo
+
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOMissingType
 

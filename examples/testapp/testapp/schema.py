@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from strawchemy import ValidationErrorType  # noqa: TC002
+
 import strawberry
 
 from .types import (
@@ -8,6 +10,7 @@ from .types import (
     ProjectCreate,
     ProjectType,
     TicketCreate,
+    TicketCreateValidation,
     TicketFilter,
     TicketPartial,
     TicketType,
@@ -29,7 +32,7 @@ class Query:
 
 @strawberry.type
 class Mutation:
-    create_ticket: TicketType = strawchemy.create(TicketCreate)
+    create_ticket: TicketType | ValidationErrorType = strawchemy.create(TicketCreate, validation=TicketCreateValidation)
     create_tickets: list[TicketType] = strawchemy.create(TicketCreate)
 
     create_project: ProjectType = strawchemy.create(ProjectCreate)

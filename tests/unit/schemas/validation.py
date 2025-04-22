@@ -4,8 +4,6 @@ from typing import Annotated
 
 from pydantic import AfterValidator
 from strawchemy import Strawchemy, ValidationErrorType
-from strawchemy.dto.pydantic import pydantic_dto
-from strawchemy.dto.types import Purpose
 
 import strawberry
 from tests.unit.models import User
@@ -20,8 +18,18 @@ def _check_lower_case(value: str) -> str:
     return value
 
 
-@pydantic_dto(User, Purpose.WRITE, include="all")
-class UserValidation:
+@strawchemy.create_validation(User, include="all")
+class UserCreateValidation:
+    name: Annotated[str, AfterValidator(_check_lower_case)]
+
+
+@strawchemy.pk_update_validation(User, include="all")
+class UserPkUpdateValidation:
+    name: Annotated[str, AfterValidator(_check_lower_case)]
+
+
+@strawchemy.filter_update_validation(User, include="all")
+class UserFilterValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
 
 
@@ -29,10 +37,31 @@ class UserValidation:
 class UserCreate: ...
 
 
+@strawchemy.filter_update_input(User, include="all")
+class UserUpdate: ...
+
+
+@strawchemy.pk_update_input(User, include="all")
+class UserPkUpdate: ...
+
+
 @strawchemy.type(User, include="all")
 class UserType: ...
 
 
+@strawchemy.filter(User, include="all")
+class UserFilter: ...
+
+
 @strawberry.type
 class Mutation:
-    create_user: UserType | ValidationErrorType = strawchemy.create(UserCreate, validation=UserValidation)
+    create_user: UserType | ValidationErrorType = strawchemy.create(UserCreate, validation=UserCreateValidation)
+    update_users: list[UserType | ValidationErrorType] = strawchemy.update(
+        UserUpdate, filter_input=UserFilter, validation=UserFilterValidation
+    )
+    update_user_by_id: UserType | ValidationErrorType = strawchemy.update_by_ids(
+        UserPkUpdate, validation=UserPkUpdateValidation
+    )
+    update_user_by_ids: list[UserType | ValidationErrorType] = strawchemy.update_by_ids(
+        UserPkUpdate, validation=UserPkUpdateValidation
+    )

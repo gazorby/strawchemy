@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawchemy.dto.backend.dataclass import DataclassDTOBackend
+from strawchemy.dto.backend.pydantic import PydanticDTOBackend
 from strawchemy.dto.base import ModelFieldT, ModelT
 
 from .config import StrawchemyConfig
@@ -13,6 +14,7 @@ from .graphql.dto import (
     BooleanFilterDTO,
     EnumDTO,
     MappedDataclassGraphQLDTO,
+    MappedPydanticGraphQLDTO,
     OrderByDTO,
     OrderByEnum,
 )
@@ -28,6 +30,7 @@ from .strawberry.factory import (
     StrawberryAggregateFilterInputFactory,
     StrawberryFilterInputFactory,
     StrawberryInputFactory,
+    StrawberryInputValidationFactory,
     StrawberryOrderByInputFactory,
     StrawberryRegistry,
     StrawberryRootAggregateTypeFactory,
@@ -61,6 +64,8 @@ __all__ = ("Strawchemy",)
 class Strawchemy(Generic[ModelT, ModelFieldT]):
     def __init__(self, settings: StrawchemyConfig | None = None) -> None:
         dataclass_backend = DataclassDTOBackend(MappedDataclassGraphQLDTO)
+        pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
+
         self.settings = settings or StrawchemyConfig()
         self.registry = StrawberryRegistry()
         self.inspector = _StrawberryModelInspector(self.settings.inspector, self.registry)
@@ -73,6 +78,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.inspector)
         self._type_factory = StrawberryTypeFactory(self, dataclass_backend, order_by_factory=self._order_by_factory)
         self._input_factory = StrawberryInputFactory(self, dataclass_backend)
+        self._validation_factory = StrawberryInputValidationFactory(self, pydantic_backend)
         self._aggregation_factory = StrawberryRootAggregateTypeFactory(
             self, dataclass_backend, type_factory=self._type_factory
         )
@@ -87,6 +93,11 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self.order = self._order_by_factory.input
         self.type = self._type_factory.type
         self.aggregate = self._aggregation_factory.type
+
+        self.create_validation = partial(self._validation_factory.input, mode="create")
+        self.pk_update_validation = partial(self._validation_factory.input, mode="update_by_pk")
+        self.filter_update_validation = partial(self._validation_factory.input, mode="update_by_filter")
+
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
 

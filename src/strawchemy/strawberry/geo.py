@@ -17,10 +17,10 @@ from geojson_pydantic.geometries import (
     Point,
     Polygon,
 )
+from pydantic import TypeAdapter
 from shapely import Geometry, to_geojson
 
 import strawberry
-from pydantic import TypeAdapter
 
 __all__ = (
     "GEO_SCALAR_OVERRIDES",

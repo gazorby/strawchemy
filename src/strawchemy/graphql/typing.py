@@ -43,3 +43,4 @@ AnyMappedDTO: TypeAlias = "MappedDataclassGraphQLDTO[Any] | MappedPydanticGraphQ
 GraphQLDTO: TypeAlias = "PydanticGraphQLDTO[T] | DataclassGraphQLDTO[T]"
 FunctionInfo: TypeAlias = "FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]] | OutputFunctionInfo"
 MappedGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[T] | MappedPydanticGraphQLDTO[T]"
+UnmappedGraphQLDTO: TypeAlias = "UnmappedDataclassGraphQLDTO[T] | UnmappedPydanticGraphQLDTO[T]"

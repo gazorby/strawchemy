@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from typing import override
+from typing import Annotated, override
 
+from pydantic import AfterValidator
 from strawchemy import ModelInstance, QueryHook, Strawchemy
 
 from sqlalchemy import Select
@@ -10,6 +11,14 @@ from sqlalchemy.orm.util import AliasedClass
 from .models import Color, Fruit, FruitFarm, SQLDataTypes, SQLDataTypesContainer, User
 
 strawchemy = Strawchemy()
+
+
+def _check_lower_case(value: str) -> str:
+    if not value.islower():
+        msg = "Name must be lower cased"
+        raise ValueError(msg)
+    return value
+
 
 # Hooks
 
@@ -148,6 +157,11 @@ class ColorTypeHooks:
 
 @strawchemy.create_input(Color, include="all")
 class ColorCreateInput: ...
+
+
+@strawchemy.create_validation(Color, include="all")
+class ColorCreateValidation:
+    name: Annotated[str, AfterValidator(_check_lower_case)]
 
 
 @strawchemy.pk_update_input(Color, include="all")

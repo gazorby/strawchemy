@@ -8,6 +8,7 @@ from .sqlalchemy.hook import QueryHook
 from .strawberry import ModelInstance
 from .strawberry.repository import StrawchemyAsyncRepository, StrawchemySyncRepository
 from .strawberry.types import (
+    ErrorType,
     RequiredToManyUpdateInput,
     RequiredToOneInput,
     ToManyCreateInput,
@@ -17,6 +18,7 @@ from .strawberry.types import (
 )
 
 __all__ = (
+    "ErrorType",
     "Input",
     "ModelInstance",
     "QueryHook",

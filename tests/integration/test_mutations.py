@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
+from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository, ValidationErrorType
 from strawchemy.graphql.mutation import Input
 
 import strawberry
@@ -13,6 +13,7 @@ from tests.utils import maybe_async
 from .fixtures import QueryTracker
 from .types import (
     ColorCreateInput,
+    ColorCreateValidation,
     ColorFilter,
     ColorPartial,
     ColorType,
@@ -34,6 +35,9 @@ pytestmark = [pytest.mark.integration]
 @strawberry.type
 class AsyncMutation:
     create_color: ColorType = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
+    create_validated_color: ColorType | ValidationErrorType = strawchemy.create(
+        ColorCreateInput, validation=ColorCreateValidation, repository_type=StrawchemyAsyncRepository
+    )
     create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
 
     update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemyAsyncRepository)
@@ -67,6 +71,9 @@ class AsyncMutation:
 @strawberry.type
 class SyncMutation:
     create_color: ColorType = strawchemy.create(ColorCreateInput, repository_type=StrawchemySyncRepository)
+    create_validated_color: ColorType | ValidationErrorType = strawchemy.create(
+        ColorCreateInput, validation=ColorCreateValidation, repository_type=StrawchemySyncRepository
+    )
     create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemySyncRepository)
 
     create_fruit: FruitType = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
@@ -109,14 +116,69 @@ def async_mutation() -> type[AsyncMutation]:
 # Create tests
 
 
+@pytest.mark.parametrize(
+    ("query_name", "query"),
+    [
+        pytest.param(
+            "createColor",
+            """
+            mutation {
+                createColor(data: {  name: "new color" }) {
+                    name
+                }
+            }
+            """,
+            id="createColor",
+        ),
+        pytest.param(
+            "createValidatedColor",
+            """
+            mutation {
+                createValidatedColor(data: {  name: "new color" }) {
+                    ... on ColorType {
+                        name
+                    }
+                }
+            }
+            """,
+            id="createValidatedColor",
+        ),
+        pytest.param(
+            "createValidatedColor",
+            """
+            mutation {
+                createValidatedColor(data: {  name: "new color" }) {
+                    ... on ColorType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            id="createValidatedColorAllFragments",
+        ),
+    ],
+)
 @pytest.mark.snapshot
 async def test_create(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query_name: str,
+    query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
-    result = await maybe_async(any_query('mutation { createColor(data: {  name: "new color" }) { name } }'))
+    result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["createColor"] == {"name": "new color"}
+    assert result.data[query_name] == {"name": "new color"}
 
     insert_tracker, select_tracker = query_tracker.filter("insert"), query_tracker.filter("select")
     assert insert_tracker.query_count == 1

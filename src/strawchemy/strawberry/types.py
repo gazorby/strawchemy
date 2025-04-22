@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
 
 import strawberry
 from strawberry import UNSET
+from strawberry.types import get_object_definition
 from strawchemy.dto.base import MappedDTO
 from strawchemy.graphql.mutation import (
     RequiredToManyUpdateInputMixin,
@@ -25,6 +26,10 @@ RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
 _TO_ONE_DESCRIPTION = "Add a new or existing object"
 _TO_MANY_DESCRIPTION = "Add new or existing objects"
 _TO_MANY_UPDATE_DESCRIPTION = "Add new objects or update existing ones"
+
+
+def error_type_names() -> set[str]:
+    return {get_object_definition(type_, strict=True).name for type_ in ErrorType.__error_types__}
 
 
 class ErrorId(Enum):
@@ -71,7 +76,14 @@ class RequiredToManyUpdateInput(RequiredToManyUpdateInputMixin[T, RelationInputT
 class ErrorType:
     """Base class for GraphQL errors."""
 
+    __error_types__: ClassVar[set[type[Any]]] = set()
+
     id: str = ErrorId.ERROR.value
+
+    def __init_subclass__(cls) -> None:
+        if not cls.__error_types__:
+            cls.__error_types__.add(ErrorType)
+        cls.__error_types__.add(cls)
 
 
 @strawberry.type(description="Indicate validation error type and location.", name="LocalizedErrorType")

@@ -5,6 +5,7 @@ from functools import partial
 from typing import NewType
 
 from pydantic import TypeAdapter
+
 from strawberry import scalar
 
 __all__ = ("Interval",)

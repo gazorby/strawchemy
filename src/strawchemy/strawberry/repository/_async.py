@@ -10,7 +10,7 @@ from typing_extensions import TypeIs
 
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.lazy_type import LazyType
-from strawberry.types.nodes import SelectedField, Selection
+from strawberry.types.nodes import FragmentSpread, InlineFragment, SelectedField, Selection
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graphql.constants import ORDER_BY_KEY
 from strawchemy.graphql.dto import (
@@ -29,6 +29,7 @@ from strawchemy.strawberry._utils import (
     pydantic_from_strawberry_type,
     strawberry_contained_user_type,
 )
+from strawchemy.strawberry.types import error_type_names
 from strawchemy.utils import camel_to_snake, snake_keys
 
 from ._node import _StrawberryQueryNode
@@ -90,6 +91,7 @@ class StrawchemyAsyncRepository(Generic[T]):
             strawberry_type=inner_root_type,
             root_aggregations=self.root_aggregations,
         )
+
         self._build(inner_root_type, resolver_selection.selections, node)
         self._tree = node.merge_same_children(match_on="value_equality")
 
@@ -132,31 +134,37 @@ class StrawchemyAsyncRepository(Generic[T]):
         selected_fields: list[Selection],
         node: _StrawberryQueryNode[Any],
     ) -> None:
-        strawberry_type = strawberry_contained_user_type(strawberry_type)
-        if isinstance(strawberry_type, LazyType):
-            strawberry_type = strawberry_type.resolve_type()
-        strawberry_definition = get_object_definition(strawberry_type, strict=True)
+        selection_type = strawberry_contained_user_type(strawberry_type)
+        if isinstance(selection_type, LazyType):
+            selection_type = selection_type.resolve_type()
+        strawberry_definition = get_object_definition(selection_type, strict=True)
 
-        if strawberry_type.__strawchemy_query_hook__:
-            self._add_query_hooks(strawberry_type.__strawchemy_query_hook__, node)
+        if selection_type.__strawchemy_query_hook__:
+            self._add_query_hooks(selection_type.__strawchemy_query_hook__, node)
 
         for selection in selected_fields:
+            if (
+                isinstance(selection, FragmentSpread | InlineFragment)
+                and selection.type_condition not in error_type_names()
+            ):
+                self._build(strawberry_type, selection.selections, node)
+                continue
             if not isinstance(selection, SelectedField) or selection.name in self._ignored_field_names:
                 continue
             model_field_name = camel_to_snake(selection.name) if self.auto_snake_case else selection.name
             strawberry_field = next(field for field in strawberry_definition.fields if field.name == model_field_name)
             strawberry_field_type = strawberry_contained_user_type(strawberry_field.type)
-            dto_model = dto_model_from_type(strawberry_type)
+            dto_model = dto_model_from_type(selection_type)
 
             if (hooks := self._get_field_hooks(strawberry_field)) is not None:
                 self._add_query_hooks(hooks, node)
 
-            if _has_pydantic_type(strawberry_type):
-                dto = pydantic_from_strawberry_type(strawberry_type)
-            elif has_object_definition(strawberry_type):
-                dto = strawberry_type
+            if _has_pydantic_type(selection_type):
+                dto = pydantic_from_strawberry_type(selection_type)
+            elif has_object_definition(selection_type):
+                dto = selection_type
             else:
-                msg = f"Unsupported type: {strawberry_type}"
+                msg = f"Unsupported type: {selection_type}"
                 raise StrawchemyError(msg)
             assert issubclass(dto, StrawchemyDTOAttributes)
 

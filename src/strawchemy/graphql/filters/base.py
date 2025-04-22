@@ -14,6 +14,7 @@ import re
 from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Generic, TypeAlias, TypeVar, override
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, PrivateAttr
+
 from strawchemy.dto.base import ModelFieldT, ModelT
 
 if TYPE_CHECKING:

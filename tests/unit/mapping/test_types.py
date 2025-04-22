@@ -292,33 +292,137 @@ def test_field_order_by_equals_type_order_by() -> None:
     assert textwrap.dedent(str(field_filter_schema)).strip() == textwrap.dedent(str(type_filter_schema)).strip()
 
 
-def test_create_validation() -> None:
-    from tests.unit.schemas.validation import Mutation
-
-    query = """
-        mutation {
-            createUser(data: { name: "Bob" }) {
-                __typename
-                ... on UserType {
-                    name
-                }
-                ... on ValidationErrorType {
-                    id
-                    errors {
+@pytest.mark.parametrize(
+    ("query", "name", "is_list"),
+    [
+        pytest.param(
+            """
+            mutation {
+                createUser(
+                    data: {
+                        name: "Bob",
+                        group: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } },
+                        tag: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } }
+                    }
+                ) {
+                    __typename
+                    ... on UserType {
+                        name
+                    }
+                    ... on ValidationErrorType {
                         id
-                        loc
-                        message
-                        type
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
                     }
                 }
             }
-        }
-    """
+            """,
+            "createUser",
+            False,
+            id="create",
+        ),
+        pytest.param(
+            """
+            mutation {
+                updateUsers(
+                    filter: { id: { eq: "da636751-b276-4546-857f-3c73ea914467" } },
+                    data: { name: "Bob" }
+                ) {
+                    __typename
+                    ... on UserType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            "updateUsers",
+            True,
+            id="update_by_filter",
+        ),
+        pytest.param(
+            """
+            mutation {
+                updateUserByIds(
+                    data: [
+                        {
+                            id: "da636751-b276-4546-857f-3c73ea914467",
+                            name: "Bob"
+                        }
+                    ]
+                ) {
+                    __typename
+                    ... on UserType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            "updateUserByIds",
+            True,
+            id="update_by_ids",
+        ),
+        pytest.param(
+            """
+            mutation {
+                updateUserById(
+                    data: {
+                        id: "da636751-b276-4546-857f-3c73ea914467",
+                        name: "Bob"
+                    }
+                ) {
+                    __typename
+                    ... on UserType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            "updateUserById",
+            False,
+            id="update_by_id",
+        ),
+    ],
+)
+def test_create_validation(query: str, name: str, is_list: bool) -> None:
+    from tests.unit.schemas.validation import Mutation
+
     schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
     result = schema.execute_sync(query, context_value=MockContext())
     assert not result.errors
     assert result.data
-    assert result.data["createUser"] == {
+
+    expected = {
         "__typename": "ValidationErrorType",
         "id": "ERROR",
         "errors": [
@@ -330,3 +434,4 @@ def test_create_validation() -> None:
             }
         ],
     }
+    assert result.data[name] == [expected] if is_list else expected

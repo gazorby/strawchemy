@@ -43,6 +43,7 @@ from strawchemy.graphql.dto import (
     BooleanFilterDTO,
     EnumDTO,
     MappedDataclassGraphQLDTO,
+    MappedPydanticGraphQLDTO,
     OrderByDTO,
     StrawchemyDTOAttributes,
 )
@@ -88,7 +89,9 @@ ListResolverResult: TypeAlias = (
     "Sequence[StrawchemyTypeWithStrawberryObjectDefinition] | StrawchemyTypeWithStrawberryObjectDefinition"
 )
 GetByIdResolverResult: TypeAlias = "StrawchemyTypeWithStrawberryObjectDefinition | None"
-CreateOrUpdateResolverResult: TypeAlias = "Sequence[StrawchemyTypeWithStrawberryObjectDefinition] | ValidationErrorType"
+CreateOrUpdateResolverResult: TypeAlias = (
+    "Sequence[StrawchemyTypeWithStrawberryObjectDefinition] | ValidationErrorType | Sequence[ValidationErrorType]"
+)
 
 
 _OPTIONAL_UNION_ARG_SIZE: int = 2
@@ -255,14 +258,14 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
 
     @cached_property
     def filter(self) -> type[StrawchemyTypeFromPydantic[BooleanFilterDTO[ModelT, ModelFieldT]]] | None:
-        inner_type = strawberry_contained_types(self.type)
+        inner_type = strawberry_contained_user_type(self.type)
         if self._filter is None and self._is_strawchemy_type(inner_type):
             return inner_type.__strawchemy_filter__
         return self._filter
 
     @cached_property
     def order_by(self) -> type[StrawchemyTypeFromPydantic[OrderByDTO[ModelT, ModelFieldT]]] | None:
-        inner_type = strawberry_contained_types(self.type)
+        inner_type = strawberry_contained_user_type(self.type)
         if self._order_by is None and self._is_strawchemy_type(inner_type):
             return inner_type.__strawchemy_order_by__
         return self._order_by
@@ -316,7 +319,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
                         default=None,
                     )
                 )
-        elif issubclass(inner_type, MappedGraphQLDTO):
+        elif issubclass(inner_type, MappedDataclassGraphQLDTO | MappedPydanticGraphQLDTO):
             model = dto_model_from_type(inner_type)
             id_fields = list(self.inspector.id_field_definitions(model, DTOConfig(Purpose.READ)))
             if len(id_fields) == 1:
@@ -523,14 +526,16 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField[ModelT, ModelF
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
+        list_input = isinstance(data, Sequence)
         try:
             return (
                 repository.update_many_by_id(Input(data, self._validation_type))
-                if isinstance(data, Sequence)
+                if list_input
                 else repository.update_by_id(Input(data, self._validation_type))
             )
         except InputValidationError as error:
-            return ValidationErrorType.from_pydantic_error(error.pydantic_error)
+            error = ValidationErrorType.from_pydantic_error(error.pydantic_error)
+            return [error] if list_input else error
 
     def _update_by_filter_resolver(
         self, info: Info, data: AnyMappedDTO, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]
@@ -539,7 +544,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField[ModelT, ModelF
         try:
             return repository.update_by_filter(Input(data, self._validation_type), filter_input)
         except InputValidationError as error:
-            return ValidationErrorType.from_pydantic_error(error.pydantic_error)
+            return [ValidationErrorType.from_pydantic_error(error.pydantic_error)]
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:

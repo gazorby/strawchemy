@@ -129,9 +129,11 @@ class StrawberryRegistry:
         self._tracked_type_names[graphql_type].add(object_definition.name)
         for field in object_definition.fields:
             for argument in field.arguments:
-                if get_object_definition(strawberry_contained_types(argument.type)) is None:
-                    continue
-                self._update_references(argument, "input")
+                if any(
+                    get_object_definition(inner_type) is not None
+                    for inner_type in strawberry_contained_types(argument.type)
+                ):
+                    self._update_references(argument, "input")
             self._update_references(field, graphql_type)
 
     def _register_type(self, type_info: RegistryTypeInfo, strawberry_type: type[Any]) -> None:

@@ -8,7 +8,7 @@ from strawberry.types.base import StrawberryContainer, StrawberryType
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.union import StrawberryUnion
 
-from .types import ValidationErrorType
+from .types import ErrorType
 
 if TYPE_CHECKING:
     from strawberry import Info
@@ -86,6 +86,6 @@ def strawberry_contained_types(type_: StrawberryType | Any) -> tuple[Any, ...]:
 
 def strawberry_contained_user_type(type_: StrawberryType | Any) -> Any:
     inner_types = [
-        inner_type for inner_type in strawberry_contained_types(type_) if inner_type is not ValidationErrorType
+        inner_type for inner_type in strawberry_contained_types(type_) if inner_type not in ErrorType.__error_types__
     ]
     return inner_types[0]
