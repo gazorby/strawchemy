@@ -18,17 +18,17 @@ def _check_lower_case(value: str) -> str:
     return value
 
 
-@strawchemy.create_validation(User, include="all")
+@strawchemy.pydantic.create(User, include="all")
 class UserCreateValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
 
 
-@strawchemy.pk_update_validation(User, include="all")
+@strawchemy.pydantic.pk_update(User, include="all")
 class UserPkUpdateValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
 
 
-@strawchemy.filter_update_validation(User, include="all")
+@strawchemy.pydantic.filter_update(User, include="all")
 class UserFilterValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
 
@@ -56,6 +56,7 @@ class UserFilter: ...
 @strawberry.type
 class Mutation:
     create_user: UserType | ValidationErrorType = strawchemy.create(UserCreate, validation=UserCreateValidation)
+    missing_validation_in_type: UserType = strawchemy.create(UserCreate, validation=UserCreateValidation)
     update_users: list[UserType | ValidationErrorType] = strawchemy.update(
         UserUpdate, filter_input=UserFilter, validation=UserFilterValidation
     )

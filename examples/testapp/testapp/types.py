@@ -81,6 +81,6 @@ def _check_ticket_name(value: str) -> str:
     return value
 
 
-@strawchemy.create_validation(Ticket, include="all")
+@strawchemy.pydantic.create(Ticket, include="all")
 class TicketCreateValidation:
     name: Annotated[str, AfterValidator(_check_ticket_name)]

@@ -159,9 +159,17 @@ class ColorTypeHooks:
 class ColorCreateInput: ...
 
 
-@strawchemy.create_validation(Color, include="all")
+@strawchemy.pydantic.create(Color, include="all")
 class ColorCreateValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
+
+
+@strawchemy.pydantic.pk_update(Color, include="all")
+class ColorPkUpdateValidation: ...
+
+
+@strawchemy.pydantic.filter_update(Color, include="all")
+class ColorFilterUpdateValidation: ...
 
 
 @strawchemy.pk_update_input(Color, include="all")

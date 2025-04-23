@@ -576,13 +576,11 @@ class StrawchemyDeleteMutationField(StrawchemyField[ModelT, ModelFieldT]):
         self,
         input_type: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
         *args: Any,
-        validation: type[MappedPydanticDTO[T]] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.is_root_field = True
         self._input_type = input_type
-        self._validation_type = validation
 
     def _delete_resolver(
         self, info: Info, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]] | None = None

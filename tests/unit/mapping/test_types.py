@@ -163,7 +163,7 @@ def test_read_only_pk_on_update_input_fail() -> None:
         import_module("tests.unit.schemas.mutations.read_only_pk_with_update_input")
 
 
-def test_delete_mutation_type_not_list_raise_error() -> None:
+def test_delete_mutation_type_not_list_fail() -> None:
     with pytest.raises(
         StrawchemyFieldError,
         match=("Type of delete mutation must be a list: delete_group"),
@@ -171,7 +171,7 @@ def test_delete_mutation_type_not_list_raise_error() -> None:
         import_module("tests.unit.schemas.mutations.delete_mutation_type_not_list")
 
 
-def test_update_mutation_by_filter_type_not_list_raise_error() -> None:
+def test_update_mutation_by_filter_type_not_list_fail() -> None:
     with pytest.raises(
         StrawchemyFieldError,
         match=("Type of update mutation by filter must be a list: update_groups"),
@@ -414,8 +414,8 @@ def test_field_order_by_equals_type_order_by() -> None:
         ),
     ],
 )
-def test_create_validation(query: str, name: str, is_list: bool) -> None:
-    from tests.unit.schemas.validation import Mutation
+def test_pydantic_validation(query: str, name: str, is_list: bool) -> None:
+    from tests.unit.schemas.pydantic.validation import Mutation
 
     schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
     result = schema.execute_sync(query, context_value=MockContext())

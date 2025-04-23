@@ -16,6 +16,7 @@ from .types import (
     ColorCreateValidation,
     ColorFilter,
     ColorPartial,
+    ColorPkUpdateValidation,
     ColorType,
     ColorUpdateInput,
     FruitCreateInput,
@@ -41,6 +42,9 @@ class AsyncMutation:
     create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
 
     update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemyAsyncRepository)
+    update_validated_color: ColorType | ValidationErrorType = strawchemy.update_by_ids(
+        ColorUpdateInput, validation=ColorPkUpdateValidation, repository_type=StrawchemyAsyncRepository
+    )
     update_colors: list[ColorType] = strawchemy.update_by_ids(
         ColorUpdateInput, repository_type=StrawchemyAsyncRepository
     )
@@ -78,6 +82,9 @@ class SyncMutation:
 
     create_fruit: FruitType = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
     update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemySyncRepository)
+    update_validated_color: ColorType | ValidationErrorType = strawchemy.update_by_ids(
+        ColorUpdateInput, validation=ColorPkUpdateValidation, repository_type=StrawchemySyncRepository
+    )
     update_colors: list[ColorType] = strawchemy.update_by_ids(
         ColorUpdateInput, repository_type=StrawchemySyncRepository
     )
@@ -594,29 +601,91 @@ async def test_create_many(
 # Update tests
 
 
+@pytest.mark.parametrize(
+    ("query", "query_name"),
+    [
+        pytest.param(
+            """
+                mutation {{
+                    updateColor(
+                        data: {{
+                            id: {color_id},
+                            name: "updated color"
+                        }}
+                    ) {{
+                        id
+                        name
+                    }}
+                }}
+                """,
+            "updateColor",
+            id="no-validation",
+        ),
+        pytest.param(
+            """
+                mutation {{
+                    updateValidatedColor(
+                        data: {{
+                            id: {color_id},
+                            name: "updated color"
+                        }}
+                    ) {{
+                        ... on ColorType {{
+                            id
+                            name
+                        }}
+                        ... on ValidationErrorType {{
+                            errorId: id
+                            errors {{
+                                id
+                                loc
+                                message
+                                type
+                            }}
+                        }}
+                    }}
+                }}
+                """,
+            "updateValidatedColor",
+            id="validation-fragment",
+        ),
+        pytest.param(
+            """
+                mutation {{
+                    updateValidatedColor(
+                        data: {{
+                            id: {color_id},
+                            name: "updated color"
+                        }}
+                    ) {{
+                        ... on ColorType {{
+                            id
+                            name
+                        }}
+                    }}
+                }}
+                """,
+            "updateValidatedColor",
+            id="validation-no-fragment",
+        ),
+    ],
+)
 @pytest.mark.snapshot
 async def test_update(
-    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query_name: str,
+    query: str,
+    raw_colors: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Tests a simple update mutation."""
-    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
-    query = f"""
-        mutation {{
-            updateColor(
-                data: {{
-                    id: {color_id_gql},
-                    name: "updated color"
-                }}
-            ) {{
-                id
-                name
-            }}
-        }}
-    """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(
+        any_query(query.format(color_id=to_graphql_representation(raw_colors[0]["id"], "input")))
+    )
     assert not result.errors
     assert result.data
-    assert result.data["updateColor"] == {
+    assert result.data[query_name] == {
         "id": to_graphql_representation(raw_colors[0]["id"], "output"),
         "name": "updated color",
     }
