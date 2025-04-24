@@ -2,7 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.14.1](https://github.com/gazorby/strawchemy/compare/v0.14.0..v0.14.1) - 2025-04-24
+## [0.14.2](https://github.com/gazorby/strawchemy/compare/v0.14.1..v0.14.2) - 2025-04-24
+
+### 🐛 Bug Fixes
+
+- *(mutation-input)* Override would not be applied in certain cases - ([a70791f](https://github.com/gazorby/strawchemy/commit/a70791f09c5bdff38baf14e36943c726d7297407))
+- *(mutation-input)* Override would not be applied in certain cases - ([bbe75a8](https://github.com/gazorby/strawchemy/commit/bbe75a8165d38f21ae9ff4c5195513534f804373))
+
+### 🚜 Refactor
+
+- Update _StrawberryQueryNode method names - ([783855d](https://github.com/gazorby/strawchemy/commit/783855d2add7a155db0ed5c58fd57edc79f7292d))
+
+### 🧪 Testing
+
+- *(pytest-plugin)* Improve coverage - ([15b2a86](https://github.com/gazorby/strawchemy/commit/15b2a861b43cfdd7f55b4470506c26aafed7625b))
+- *(unit)* Remove test_pydantic_to_mapped_override test case - ([36b1131](https://github.com/gazorby/strawchemy/commit/36b11318e799e921f377147537de5f9c0b341136))
+- *(unit)* Remove test_pydantic_to_mapped_override test case - ([7e1f79c](https://github.com/gazorby/strawchemy/commit/7e1f79c7f2745822a4c0b59bdc6617c9d3e4137a))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.14.2 - ([d5c6038](https://github.com/gazorby/strawchemy/commit/d5c6038bac18959f5ad0d1e5998bddfa410b044b))
+- Run tests in renovate/dependabot branches - ([17b761f](https://github.com/gazorby/strawchemy/commit/17b761f95af77cf209a803b3e7c95e51b89bafe9))
+- Run tests in renovate/dependabot branches - ([9e137f5](https://github.com/gazorby/strawchemy/commit/9e137f5e334241b66164fa49edcfaca440acb82a))
+
+## New Contributors ❤️
+
+* @dependabot[bot] made their first contribution## [0.14.1](https://github.com/gazorby/strawchemy/compare/v0.14.0..v0.14.1) - 2025-04-24
 
 ### 🐛 Bug Fixes
 
