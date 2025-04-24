@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.1](https://github.com/gazorby/strawchemy/compare/v0.14.0..v0.14.1) - 2025-04-24
+
+### 🐛 Bug Fixes
+
+- *(dto)* Override params passed to .to_mapped() would not apply if they were excluded in dto - ([eb39a92](https://github.com/gazorby/strawchemy/commit/eb39a929249e6a758989cc9539aa7888238e542d))
+
+### 🚜 Refactor
+
+- *(strawchemy-repository)* Update `root_type` param to `type` - ([4354c51](https://github.com/gazorby/strawchemy/commit/4354c510c216f42a88bf6b4649aecedcbd17ddfc))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.14.1 - ([cf2c732](https://github.com/gazorby/strawchemy/commit/cf2c73266a3e004f3122098b0e15bfeb1493ff60))
+- *(renovate)* Extend config:semverAllMonthly config - ([063b476](https://github.com/gazorby/strawchemy/commit/063b476c46c1019526cf5f2d0e28f39288069afb))
 ## [0.14.0](https://github.com/gazorby/strawchemy/compare/v0.13.7..v0.14.0) - 2025-04-24
 
 ### 🚀 Features
