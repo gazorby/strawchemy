@@ -29,13 +29,15 @@ def make_execute(computed_values: dict[str, Any], model_instance: Any) -> SyncEx
         if computed_values:
             row_tuple = (model_instance, *computed_values.values())
             row_fields = (model_instance, *computed_values.keys())
-            rows = [MagicMock(name="RowMock", __iter__=MagicMock(return_value=iter(row_tuple)), _fields=row_fields)]
+        else:
+            row_tuple, row_fields = (model_instance,), (model_instance,)
+        rows = [MagicMock(name="RowMock", __iter__=MagicMock(return_value=iter(row_tuple)), _fields=row_fields)]
         self.statement()
         result = MagicMock(
             spec=Result,
             name="ResultMock",
             all=MagicMock(return_value=iter(rows)),
-            one_or_none=MagicMock(return_value=rows[0] if rows else None),
+            one_or_none=MagicMock(return_value=rows[0]),
         )
 
         result.unique.return_value = result
@@ -53,22 +55,6 @@ def make_async_execute(computed_values: dict[str, Any], model_instance: Any) -> 
     return _execute
 
 
-def node_result_value(self: executor.NodeResult[ModelT], key: QueryNode[Any, Any]) -> Any:
-    key_str = self.node_key(key)
-    if any(func in key_str for func in NodeInspect.sqla_functions_map):
-        return 0
-    if key.value.is_computed:
-        return self.computed_values[key_str]
-    return getattr(self.model, key.value.model_field_name)
-
-
-def query_result_value(self: executor.QueryResult[ModelT], key: QueryNode[Any, Any]) -> Any:
-    key_str = self.node_key(key)
-    if any(func in key_str for func in NodeInspect.sqla_functions_map):
-        return 0
-    return self.query_computed_values[key_str]
-
-
 @pytest.fixture(name="model_instance")
 def fx_model_instance() -> dict[str, Any]:
     return MagicMock(name="InstanceMock")
@@ -81,6 +67,25 @@ def fx_computed_values() -> dict[str, Any]:
 
 @pytest.fixture(name="patch_query", autouse=True)
 def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, Any], model_instance: Any) -> None:
+    def node_result_value(self: executor.NodeResult[ModelT], key: QueryNode[Any, Any]) -> Any:
+        key_str = self.node_key(key)
+        if key.value.is_computed:
+            for name, value in self.computed_values.items():
+                if name in key_str:
+                    return value
+        if any(func in key_str for func in NodeInspect.sqla_functions_map):
+            return 0
+        return getattr(self.model, key.value.model_field_name)
+
+    def query_result_value(self: executor.QueryResult[ModelT], key: QueryNode[Any, Any]) -> Any:
+        key_str = self.node_key(key)
+        for name, value in computed_values.items():
+            if name in key_str:
+                return value
+        if any(func in key_str for func in NodeInspect.sqla_functions_map):
+            return 0
+        return None
+
     monkeypatch.setattr(
         executor.AsyncQueryExecutor[Any], "execute", make_async_execute(computed_values, model_instance)
     )

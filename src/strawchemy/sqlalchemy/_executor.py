@@ -132,12 +132,12 @@ class QueryExecutor(Generic[DeclarativeT]):
 
         root_aggregations_set = {function.name for function in self.root_aggregation_functions}
         first_computed = computed[0] if computed else {}
-        query_comuted_values = {name: value for name, value in first_computed.items() if name in root_aggregations_set}
+        query_computed_values = {name: value for name, value in first_computed.items() if name in root_aggregations_set}
 
         return QueryResult(
             nodes=nodes,
             node_computed_values=computed,
-            query_computed_values=defaultdict(lambda: None) | query_comuted_values,
+            query_computed_values=defaultdict(lambda: None) | query_computed_values,
             node_key=self.scope.key,
         )
 
