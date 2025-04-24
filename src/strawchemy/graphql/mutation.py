@@ -190,10 +190,17 @@ class _InputVisitor(VisitorProtocol, Generic[ModelT, ModelFieldT]):
         return value
 
     @override
-    def model(self, parent: ToMappedProtocol, model_cls: type[ModelT], params: dict[str, Any], level: int) -> Any:
+    def model(
+        self,
+        parent: ToMappedProtocol,
+        model_cls: type[ModelT],
+        params: dict[str, Any],
+        override: dict[str, Any],
+        level: int,
+    ) -> Any:
         if level == 1 and self.input_data.pydantic_model is not None:
             try:
-                model = self.input_data.pydantic_model.model_validate(params).to_mapped()
+                model = self.input_data.pydantic_model.model_validate(params).to_mapped(override=override)
             except ValidationError as error:
                 raise InputValidationError(error) from error
         else:

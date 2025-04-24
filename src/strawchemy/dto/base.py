@@ -70,7 +70,12 @@ class VisitorProtocol(Protocol):
     ) -> Any: ...
 
     def model(
-        self, parent: ToMappedProtocol, model_cls: type[ModelT], params: dict[str, Any], level: int
+        self,
+        parent: ToMappedProtocol,
+        model_cls: type[ModelT],
+        params: dict[str, Any],
+        override: dict[str, Any],
+        level: int,
     ) -> ModelT: ...
 
 
@@ -135,7 +140,7 @@ class MappedDTO(DTOBase[ModelT]):
         model_kwargs |= override
         try:
             return (
-                visitor.model(self, self.__dto_model__, model_kwargs, level + 1)
+                visitor.model(self, self.__dto_model__, model_kwargs, override, level + 1)
                 if visitor
                 else self.__dto_model__(**model_kwargs)
             )
