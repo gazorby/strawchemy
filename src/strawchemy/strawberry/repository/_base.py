@@ -53,7 +53,7 @@ def _has_pydantic_type(type_: Any) -> TypeIs[type[StrawberryTypeFromPydantic[Bas
 class StrawchemyRepository(Generic[T]):
     _ignored_field_names: ClassVar[frozenset[str]] = frozenset({"__typename"})
 
-    root_type: type[T]
+    type: type[T]
     info: Info[Any, Any]
     root_aggregations: bool = False
     auto_snake_case: bool = True
@@ -64,7 +64,7 @@ class StrawchemyRepository(Generic[T]):
     _tree: _StrawberryQueryNode[T] = dataclasses.field(init=False)
 
     def __post_init__(self) -> None:
-        inner_root_type = strawberry_contained_user_type(self.root_type)
+        inner_root_type = strawberry_contained_user_type(self.type)
         resolver_selection = next(
             selection
             for selection in self.info.selected_fields

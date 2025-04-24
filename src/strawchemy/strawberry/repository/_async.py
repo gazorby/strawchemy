@@ -28,7 +28,7 @@ T = TypeVar("T")
 class StrawchemyAsyncRepository(StrawchemyRepository[T]):
     _ignored_field_names: ClassVar[frozenset[str]] = frozenset({"__typename"})
 
-    root_type: type[T]
+    type: type[T]
     info: Info[Any, Any]
     root_aggregations: bool = False
     auto_snake_case: bool = True
@@ -41,7 +41,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
 
     def graphql_repository(self) -> SQLAlchemyGraphQLAsyncRepository[Any]:
         return SQLAlchemyGraphQLAsyncRepository(
-            model=dto_model_from_type(strawberry_contained_user_type(self.root_type)),
+            model=dto_model_from_type(strawberry_contained_user_type(self.type)),
             session=self.session or self.session_getter(self.info),
             statement=self.filter_statement,
             execution_options=self.execution_options,
