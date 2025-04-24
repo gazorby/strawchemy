@@ -422,16 +422,65 @@ def test_pydantic_validation(query: str, name: str, is_list: bool) -> None:
     assert not result.errors
     assert result.data
 
-    expected = {
-        "__typename": "ValidationErrorType",
-        "id": "ERROR",
-        "errors": [
-            {
-                "id": "ERROR",
-                "loc": ["name"],
-                "message": "Value error, Name must be lower cased",
-                "type": "value_error",
+    error = result.data[name][0] if is_list else result.data[name]
+    assert error["__typename"] == "ValidationErrorType"
+    assert error["id"] == "ERROR"
+    assert error["errors"] == [
+        {
+            "id": "ERROR",
+            "loc": ["name"],
+            "message": "Value error, Name must be lower cased",
+            "type": "value_error",
+        }
+    ]
+
+
+def test_pydantic_validation_nested() -> None:
+    from tests.unit.schemas.pydantic.validation import Mutation
+
+    query = """
+        mutation {
+            createUser(
+                data: {
+                    name: "bob",
+                    tag: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } }
+                    group: {
+                        create: {
+                            name: "Group",
+                            tag: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } },
+                            color: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } }
+                        }
+                    }
+                }
+            ) {
+                __typename
+                ... on UserType {
+                    name
+                }
+                ... on ValidationErrorType {
+                    id
+                    errors {
+                        id
+                        loc
+                        message
+                        type
+                    }
+                }
             }
-        ],
-    }
-    assert result.data[name] == [expected] if is_list else expected
+        }
+    """
+    schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
+    result = schema.execute_sync(query, context_value=MockContext())
+    assert not result.errors
+    assert result.data
+
+    assert result.data["createUser"]["__typename"] == "ValidationErrorType"
+    assert result.data["createUser"]["id"] == "ERROR"
+    assert result.data["createUser"]["errors"] == [
+        {
+            "id": "ERROR",
+            "loc": ["group", "name"],
+            "message": "Value error, Name must be lower cased",
+            "type": "value_error",
+        }
+    ]

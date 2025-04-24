@@ -6,7 +6,7 @@ from pydantic import AfterValidator
 from strawchemy import Strawchemy, ValidationErrorType
 
 import strawberry
-from tests.unit.models import User
+from tests.unit.models import Group, User
 
 strawchemy = Strawchemy()
 
@@ -16,21 +16,6 @@ def _check_lower_case(value: str) -> str:
         msg = "Name must be lower cased"
         raise ValueError(msg)
     return value
-
-
-@strawchemy.pydantic.create(User, include="all")
-class UserCreateValidation:
-    name: Annotated[str, AfterValidator(_check_lower_case)]
-
-
-@strawchemy.pydantic.pk_update(User, include="all")
-class UserPkUpdateValidation:
-    name: Annotated[str, AfterValidator(_check_lower_case)]
-
-
-@strawchemy.pydantic.filter_update(User, include="all")
-class UserFilterValidation:
-    name: Annotated[str, AfterValidator(_check_lower_case)]
 
 
 @strawchemy.create_input(User, include="all")
@@ -51,6 +36,30 @@ class UserType: ...
 
 @strawchemy.filter(User, include="all")
 class UserFilter: ...
+
+
+# Validation
+
+
+@strawchemy.pydantic.create(Group, include="all")
+class GroupCreateValidation:
+    name: Annotated[str, AfterValidator(_check_lower_case)]
+
+
+@strawchemy.pydantic.create(User, include="all")
+class UserCreateValidation:
+    name: Annotated[str, AfterValidator(_check_lower_case)]
+    group: GroupCreateValidation | None = strawberry.UNSET
+
+
+@strawchemy.pydantic.pk_update(User, include="all")
+class UserPkUpdateValidation:
+    name: Annotated[str, AfterValidator(_check_lower_case)]
+
+
+@strawchemy.pydantic.filter_update(User, include="all")
+class UserFilterValidation:
+    name: Annotated[str, AfterValidator(_check_lower_case)]
 
 
 @strawberry.type
