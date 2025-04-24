@@ -132,6 +132,7 @@ class MappedDTO(DTOBase[ModelT]):
                 continue
 
             model_kwargs[field_def.model_field_name] = value
+        model_kwargs |= override
         try:
             return (
                 visitor.model(self, self.__dto_model__, model_kwargs, level + 1)

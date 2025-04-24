@@ -102,6 +102,26 @@ def test_to_mapped(
     assert instance.color.name == "red"
 
 
+@pytest.mark.parametrize("model", [Color, ColorDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_to_mapped_override(factory: AnyFactory, model: type[Color | ColorDataclass]) -> None:
+    fruit_dto = factory.factory(model, read_all_config)
+    uuid = uuid4()
+    dto_instance = fruit_dto(**{"id": uuid, "name": "Green", "fruits": []})  # noqa: PIE804
+    instance = dto_instance.to_mapped(override={"name": "Red"})
+    assert instance.name == "Red"
+
+
+@pytest.mark.parametrize("model", [Color, ColorDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_to_mapped_override_excluded(factory: AnyFactory, model: type[Color | ColorDataclass]) -> None:
+    fruit_dto = factory.factory(model, DTOConfig(Purpose.READ, exclude={"name"}))
+    uuid = uuid4()
+    dto_instance = fruit_dto(**{"id": uuid, "fruits": []})  # noqa: PIE804
+    instance = dto_instance.to_mapped(override={"name": "Red"})
+    assert instance.name == "Red"
+
+
 @pytest.mark.parametrize("model", [Admin, AdminDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
 def test_default_read_write(factory: AnyFactory, model: type[Admin | AdminDataclass]) -> None:
