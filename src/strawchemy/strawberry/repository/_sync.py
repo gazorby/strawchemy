@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
 
 from strawchemy.sqlalchemy.repository import SQLAlchemyGraphQLSyncRepository
 from strawchemy.strawberry._utils import default_session_getter, dto_model_from_type, strawberry_contained_user_type
@@ -28,12 +28,9 @@ T = TypeVar("T")
 
 @dataclass
 class StrawchemySyncRepository(StrawchemyRepository[T]):
-    _ignored_field_names: ClassVar[frozenset[str]] = frozenset({"__typename"})
-
     type: type[T]
     info: Info[Any, Any]
     root_aggregations: bool = False
-    auto_snake_case: bool = True
 
     # sqlalchemy related settings
     session_getter: SyncSessionGetter = default_session_getter
@@ -67,7 +64,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
             query_hooks=self._query_hooks,
         )
         if result := query_results.one_or_none():
-            return self._tree.to_strawberry_type(result)
+            return self._tree.node_result_to_strawberry_type(result)
         return None
 
     def get_one(
@@ -87,7 +84,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
             offset=offset,
             query_hooks=self._query_hooks,
         )
-        return self._tree.to_strawberry_type(query_results.one())
+        return self._tree.node_result_to_strawberry_type(query_results.one())
 
     @overload
     def get_by_id(self, strict: Literal[True]) -> T: ...
@@ -103,7 +100,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
             selection=self._tree, query_hooks=self._query_hooks, **kwargs
         )
         result = query_results.one() if strict else query_results.one_or_none()
-        return self._tree.to_strawberry_type(result) if result else None
+        return self._tree.node_result_to_strawberry_type(result) if result else None
 
     def list(
         self,
@@ -132,7 +129,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
 
     def create(self, data: SQLAlchemyInput) -> T:
         query_results = self.graphql_repository().create(data, self._tree)
-        return self._tree.to_strawberry_type(query_results.one())
+        return self._tree.node_result_to_strawberry_type(query_results.one())
 
     def update_many_by_id(self, data: SQLAlchemyInput) -> Sequence[T]:
         query_results = self.graphql_repository().update_by_ids(data, self._tree)
@@ -140,7 +137,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
 
     def update_by_id(self, data: SQLAlchemyInput) -> T:
         query_results = self.graphql_repository().update_by_ids(data, self._tree)
-        return self._tree.to_strawberry_type(query_results.one())
+        return self._tree.node_result_to_strawberry_type(query_results.one())
 
     def update_by_filter(
         self, data: SQLAlchemyInput, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]

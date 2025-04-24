@@ -56,7 +56,7 @@ class _StrawberryQueryNode(QueryNode[Any, Any], Generic[T]):
             kwargs[child.value.name] = self.computed_value(child, result)
         return node.strawberry_type(**kwargs)
 
-    def to_strawberry_type(self, node_result: NodeResult[Any]) -> T:
+    def node_result_to_strawberry_type(self, node_result: NodeResult[Any]) -> T:
         kwargs = self._default_type_kwargs(self)
         for child in self.children:
             if child.value.is_computed:
@@ -65,10 +65,10 @@ class _StrawberryQueryNode(QueryNode[Any, Any], Generic[T]):
                 value = node_result.value(child)
                 if isinstance(value, list | tuple):
                     kwargs[child.value.name] = [
-                        child.to_strawberry_type(node_result.copy_with(element)) for element in value
+                        child.node_result_to_strawberry_type(node_result.copy_with(element)) for element in value
                     ]
                 elif value is not None:
-                    kwargs[child.value.name] = child.to_strawberry_type(node_result.copy_with(value))
+                    kwargs[child.value.name] = child.node_result_to_strawberry_type(node_result.copy_with(value))
                 else:
                     kwargs[child.value.name] = None
             else:
@@ -86,7 +86,7 @@ class _StrawberryQueryNode(QueryNode[Any, Any], Generic[T]):
         Returns:
             A sequence of Strawberry type instances.
         """
-        return [self.to_strawberry_type(node_result) for node_result in results]
+        return [self.node_result_to_strawberry_type(node_result) for node_result in results]
 
     def aggregation_query_result_to_strawberry_type(self, results: QueryResult[Any]) -> T:
         """Recursively constructs a Strawberry type instance from an aggregation query result.
@@ -102,7 +102,7 @@ class _StrawberryQueryNode(QueryNode[Any, Any], Generic[T]):
         aggregations_child = self.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
         kwargs[NODES_KEY], kwargs[AGGREGATIONS_KEY] = [], None
         if nodes_child:
-            kwargs[NODES_KEY] = [nodes_child.to_strawberry_type(node_results) for node_results in results]
+            kwargs[NODES_KEY] = [nodes_child.node_result_to_strawberry_type(node_results) for node_results in results]
         if aggregations_child:
             aggregations = self._default_type_kwargs(aggregations_child)
             aggregations.update(
