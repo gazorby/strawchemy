@@ -82,12 +82,3 @@ class Mutation:
             return StrawchemySyncRepository(UserType, info).create(Input(data, validation=UserCreateValidation))
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
-
-    @strawberry.field
-    def create_user_with_override(self, info: strawberry.Info, data: UserCreate) -> UserType | ValidationErrorType:
-        try:
-            return StrawchemySyncRepository(UserType, info).create(
-                Input(data, validation=UserCreateValidation, name="overridden")
-            )
-        except InputValidationError as error:
-            return ValidationErrorType.from_pydantic(error.pydantic_error)
