@@ -436,81 +436,6 @@ class _StrawberryFactory(DTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
                 )
         return dto
 
-    @dataclass_transform(order_default=True, kw_only_default=True)
-    def type(
-        self,
-        model: type[T],
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        child_pagination: bool | DefaultOffsetPagination = False,
-        child_order_by: bool = False,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        query_hook: QueryHook[T] | Sequence[QueryHook[T]] | None = None,
-        override: bool = False,
-        purpose: Purpose = Purpose.READ,
-    ) -> Callable[[type[Any]], type[Any]]:
-        return self._type_wrapper(
-            model=model,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            type_map=type_map,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            child_pagination=child_pagination,
-            child_order_by=child_order_by,
-            filter_input=filter_input,
-            order_by=order_by,
-            name=name,
-            description=description,
-            directives=directives,
-            query_hook=query_hook,
-            override=override,
-            purpose=purpose,
-        )
-
-    @dataclass_transform(order_default=True, kw_only_default=True)
-    def input(
-        self,
-        model: type[T],
-        *,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        override: bool = False,
-        purpose: Purpose = Purpose.WRITE,
-        **kwargs: Any,
-    ) -> Callable[[type[Any]], type[Any]]:
-        return self._input_wrapper(
-            model=model,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            type_map=type_map,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            name=name,
-            description=description,
-            directives=directives,
-            override=override,
-            purpose=purpose,
-            **kwargs,
-        )
-
 
 class StrawberryMappedFactory(_StrawberryFactory[ModelT, ModelFieldT, MappedGraphQLDTOT]):
     def __init__(
@@ -554,7 +479,6 @@ class StrawberryMappedFactory(_StrawberryFactory[ModelT, ModelFieldT, MappedGrap
             exclude_defaults=exclude_defaults,
         )
 
-    @override
     @dataclass_transform(order_default=True, kw_only_default=True)
     def type(
         self,
@@ -596,7 +520,6 @@ class StrawberryMappedFactory(_StrawberryFactory[ModelT, ModelFieldT, MappedGrap
             purpose=purpose,
         )
 
-    @override
     @dataclass_transform(order_default=True, kw_only_default=True)
     def input(
         self,
@@ -665,7 +588,6 @@ class StrawberryMappedFactory(_StrawberryFactory[ModelT, ModelFieldT, MappedGrap
 
 
 class StrawberryUnMappedDTOFactory(_StrawberryFactory[ModelT, ModelFieldT, UnmappedGraphQLDTOT]):
-    @override
     @dataclass_transform(order_default=True, kw_only_default=True)
     def input(
         self,
@@ -700,7 +622,6 @@ class StrawberryUnMappedDTOFactory(_StrawberryFactory[ModelT, ModelFieldT, Unmap
             **kwargs,
         )
 
-    @override
     @dataclass_transform(order_default=True, kw_only_default=True)
     def type(
         self,
@@ -760,7 +681,6 @@ class StrawberryPydanticInputFactory(_StrawberryFactory[ModelT, ModelFieldT, Pyd
     def graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
         return "input"
 
-    @override
     def input(
         self,
         model: type[T],
