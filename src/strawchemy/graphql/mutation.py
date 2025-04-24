@@ -1,20 +1,39 @@
 from __future__ import annotations
 
 import dataclasses
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeVar, override
+from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, override
+
+from pydantic import ValidationError
 
 from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT, ToMappedProtocol, VisitorProtocol
 from strawchemy.dto.types import DTO_UNSET, DTOUnsetType
 
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+from .exceptions import InputValidationError
 
-    from strawchemy.graphql.typing import AnyMappedDTO
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from strawchemy.dto.backend.pydantic import MappedPydanticDTO
+
+
+__all__ = (
+    "Input",
+    "LevelInput",
+    "RelationType",
+    "RequiredToManyUpdateInputMixin",
+    "RequiredToOneInputMixin",
+    "ToManyCreateInputMixin",
+    "ToManyUpdateInputMixin",
+    "ToOneInputMixin",
+)
 
 T = TypeVar("T", bound=MappedDTO[Any])
+InputModel = TypeVar("InputModel")
 RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
+RelationInputType: TypeAlias = Literal["set", "create", "add", "remove"]
 
 
 class RelationType(Enum):
@@ -33,7 +52,7 @@ class ToOneInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
         if self.create and self.set:
             msg = "You cannot use both `set` and `create` in a -to-one relation input"
             raise ValueError(msg)
-        return self.create.to_mapped(visitor, level=level) if self.create else DTO_UNSET
+        return self.create.to_mapped(visitor, level=level, override=override) if self.create else DTO_UNSET
 
 
 class RequiredToOneInputMixin(ToOneInputMixin[T, RelationInputT]):
@@ -44,7 +63,7 @@ class RequiredToOneInputMixin(ToOneInputMixin[T, RelationInputT]):
         if not self.create and not self.set:
             msg = "Relation is required, you must set either `set` or `create`."
             raise ValueError(msg)
-        return super().to_mapped(visitor, level=level)
+        return super().to_mapped(visitor, level=level, override=override)
 
 
 class ToManyCreateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
@@ -59,7 +78,11 @@ class ToManyCreateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
         if self.set and (self.create or self.add):
             msg = "You cannot use `set` with `create` or `add` in -to-many relation input"
             raise ValueError(msg)
-        return [dto.to_mapped(visitor, level=level) for dto in self.create] if self.create else DTO_UNSET
+        return (
+            [dto.to_mapped(visitor, level=level, override=override) for dto in self.create]
+            if self.create
+            else DTO_UNSET
+        )
 
 
 class RequiredToManyUpdateInputMixin(ToMappedProtocol, Generic[T, RelationInputT]):
@@ -70,7 +93,11 @@ class RequiredToManyUpdateInputMixin(ToMappedProtocol, Generic[T, RelationInputT
     def to_mapped(
         self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> list[Any] | DTOUnsetType:
-        return [dto.to_mapped(visitor, level=level) for dto in self.create] if self.create else DTO_UNSET
+        return (
+            [dto.to_mapped(visitor, level=level, override=override) for dto in self.create]
+            if self.create
+            else DTO_UNSET
+        )
 
 
 class ToManyUpdateInputMixin(RequiredToManyUpdateInputMixin[T, RelationInputT]):
@@ -84,7 +111,7 @@ class ToManyUpdateInputMixin(RequiredToManyUpdateInputMixin[T, RelationInputT]):
         if self.set and (self.create or self.add or self.remove):
             msg = "You cannot use `set` with `create`, `add` or `remove` in a -to-many relation input"
             raise ValueError(msg)
-        return super().to_mapped(visitor, level=level)
+        return super().to_mapped(visitor, level=level, override=override)
 
 
 @dataclass
@@ -100,7 +127,7 @@ class _UnboundRelationInput(Generic[ModelT, ModelFieldT]):
 
 
 @dataclass(kw_only=True)
-class RelationInput(_UnboundRelationInput[ModelT, ModelFieldT], Generic[ModelT, ModelFieldT]):
+class _RelationInput(_UnboundRelationInput[ModelT, ModelFieldT], Generic[ModelT, ModelFieldT]):
     parent: ModelT
 
     @classmethod
@@ -119,8 +146,8 @@ class RelationInput(_UnboundRelationInput[ModelT, ModelFieldT], Generic[ModelT, 
 
 
 @dataclass
-class InputVisitor(VisitorProtocol, Generic[ModelT, ModelFieldT]):
-    input_data: InputData[ModelT, ModelFieldT]
+class _InputVisitor(VisitorProtocol, Generic[ModelT, ModelFieldT]):
+    input_data: Input[ModelT, ModelFieldT, Any]
 
     current_relations: list[_UnboundRelationInput[ModelT, ModelFieldT]] = dataclasses.field(default_factory=list)
 
@@ -163,33 +190,59 @@ class InputVisitor(VisitorProtocol, Generic[ModelT, ModelFieldT]):
         return value
 
     @override
-    def model(self, model: ModelT, level: int) -> ModelT:
+    def model(self, parent: ToMappedProtocol, model_cls: type[ModelT], params: dict[str, Any], level: int) -> Any:
+        if level == 1 and self.input_data.pydantic_model is not None:
+            try:
+                model = self.input_data.pydantic_model.model_validate(params).to_mapped()
+            except ValidationError as error:
+                raise InputValidationError(error) from error
+        else:
+            model = model_cls(**params)
         for relation in self.current_relations:
             assert relation.field.related_model
-            relation_input = RelationInput.from_unbound(relation, model)
+            relation_input = _RelationInput.from_unbound(relation, model)
             self.input_data.relations.append(relation_input)
         self.current_relations.clear()
+        # Return dict because .model_validate will be called at root level
+        if level != 1 and self.input_data.pydantic_model is not None:
+            return params
         return model
 
 
 @dataclass
-class InputData(Generic[ModelT, ModelFieldT]):
-    input_dtos: Sequence[AnyMappedDTO]
-    input_instances: list[ModelT] = field(init=False, default_factory=list)
-    relations: list[RelationInput[ModelT, ModelFieldT]] = field(default_factory=list)
-    max_level: int = 0
+class _FilteredRelationInput(Generic[ModelT, ModelFieldT]):
+    relation: _RelationInput[ModelT, ModelFieldT]
+    instance: ModelT
 
-    def __post_init__(self) -> None:
-        for index, dto in enumerate(self.input_dtos):
-            mapped = dto.to_mapped(visitor=InputVisitor(self))
-            self.input_instances.append(mapped)
+
+@dataclass
+class LevelInput(Generic[ModelT, ModelFieldT]):
+    inputs: list[_FilteredRelationInput[ModelT, ModelFieldT]] = field(default_factory=list)
+
+
+class Input(Generic[ModelT, ModelFieldT, InputModel]):
+    def __init__(
+        self,
+        dtos: MappedDTO[InputModel] | Sequence[MappedDTO[InputModel]],
+        validation: type[MappedPydanticDTO[InputModel]] | None = None,
+        **override: Any,
+    ) -> None:
+        self.max_level = 0
+        self.relations: list[_RelationInput[ModelT, ModelFieldT]] = []
+        self.instances: list[InputModel] = []
+        self.pydantic_model = validation
+
+        dtos = dtos if isinstance(dtos, Sequence) else [dtos]
+        for index, dto in enumerate(dtos):
+            mapped = dto.to_mapped(visitor=_InputVisitor(self), override=override)
+            self.instances.append(mapped)
             for relation in self.relations:
                 self.max_level = max(self.max_level, relation.level)
                 if relation.input_index == -1:
                     relation.input_index = index
 
     def filter_by_level(
-        self, relation_type: RelationType, input_types: Iterable[Literal["set", "create", "add", "remove"]]
+        self, relation_type: RelationType, input_types: Iterable[RelationInputType]
     ) -> list[LevelInput[ModelT, ModelFieldT]]:
         levels: list[LevelInput[ModelT, ModelFieldT]] = []
         level_range = (
@@ -198,13 +251,13 @@ class InputData(Generic[ModelT, ModelFieldT]):
         for level in level_range:
             level_input = LevelInput()
             for relation in self.relations:
-                input_data: list[FilteredRelationInput[ModelT, ModelFieldT]] = []
+                input_data: list[_FilteredRelationInput[ModelT, ModelFieldT]] = []
                 for input_type in input_types:
                     relation_input = getattr(relation, input_type)
                     if not relation_input or relation.level != level:
                         continue
                     input_data.extend(
-                        FilteredRelationInput(relation, mapped)
+                        _FilteredRelationInput(relation, mapped)
                         for mapped in relation_input
                         if relation.relation_type is relation_type
                     )
@@ -213,14 +266,3 @@ class InputData(Generic[ModelT, ModelFieldT]):
                 levels.append(level_input)
 
         return levels
-
-
-@dataclass
-class FilteredRelationInput(Generic[ModelT, ModelFieldT]):
-    relation: RelationInput[ModelT, ModelFieldT]
-    instance: ModelT
-
-
-@dataclass
-class LevelInput(Generic[ModelT, ModelFieldT]):
-    inputs: list[FilteredRelationInput[ModelT, ModelFieldT]] = field(default_factory=list)

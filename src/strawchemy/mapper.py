@@ -6,21 +6,31 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawchemy.dto.backend.dataclass import DataclassDTOBackend
+from strawchemy.dto.backend.pydantic import PydanticDTOBackend
 from strawchemy.dto.base import ModelFieldT, ModelT
 
 from .config import StrawchemyConfig
-from .graphql.dto import BooleanFilterDTO, EnumDTO, MappedDataclassGraphQLDTO, OrderByDTO, OrderByEnum
+from .graphql.dto import (
+    BooleanFilterDTO,
+    EnumDTO,
+    MappedDataclassGraphQLDTO,
+    MappedPydanticGraphQLDTO,
+    OrderByDTO,
+    OrderByEnum,
+)
 from .graphql.factories.types import DistinctOnFieldsDTOFactory
 from .strawberry import (
     StrawchemyCreateMutationField,
     StrawchemyDeleteMutationField,
     StrawchemyField,
     StrawchemyUpdateMutationField,
+    types,
 )
 from .strawberry.factory import (
     StrawberryAggregateFilterInputFactory,
     StrawberryFilterInputFactory,
     StrawberryInputFactory,
+    StrawberryInputValidationFactory,
     StrawberryOrderByInputFactory,
     StrawberryRegistry,
     StrawberryRootAggregateTypeFactory,
@@ -35,7 +45,8 @@ if TYPE_CHECKING:
     from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.field import _RESOLVER_TYPE
-    from strawchemy.graphql.typing import AnyMappedDTO
+    from strawchemy.dto.pydantic import MappedPydanticDTO
+    from strawchemy.graphql.typing import MappedGraphQLDTO
 
     from .sqlalchemy.hook import QueryHook
     from .sqlalchemy.typing import QueryHookCallable
@@ -45,12 +56,27 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 
+_TYPES_NS = vars(types)
+
 __all__ = ("Strawchemy",)
+
+
+class _PydanticNamespace(Generic[ModelT, ModelFieldT]):
+    def __init__(self, strawchemy: Strawchemy[ModelT, ModelFieldT]) -> None:
+        pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
+        self._strawchemy = strawchemy
+        self._validation_factory = StrawberryInputValidationFactory(self._strawchemy, pydantic_backend)
+
+        self.create = partial(self._validation_factory.input, mode="create")
+        self.pk_update = partial(self._validation_factory.input, mode="update_by_pk")
+        self.filter_update = partial(self._validation_factory.input, mode="update_by_filter")
 
 
 class Strawchemy(Generic[ModelT, ModelFieldT]):
     def __init__(self, settings: StrawchemyConfig | None = None) -> None:
         dataclass_backend = DataclassDTOBackend(MappedDataclassGraphQLDTO)
+        pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
+
         self.settings = settings or StrawchemyConfig()
         self.registry = StrawberryRegistry()
         self.inspector = _StrawberryModelInspector(self.settings.inspector, self.registry)
@@ -63,6 +89,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.inspector)
         self._type_factory = StrawberryTypeFactory(self, dataclass_backend, order_by_factory=self._order_by_factory)
         self._input_factory = StrawberryInputFactory(self, dataclass_backend)
+        self._validation_factory = StrawberryInputValidationFactory(self, pydantic_backend)
         self._aggregation_factory = StrawberryRootAggregateTypeFactory(
             self, dataclass_backend, type_factory=self._type_factory
         )
@@ -77,8 +104,14 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self.order = self._order_by_factory.input
         self.type = self._type_factory.type
         self.aggregate = self._aggregation_factory.type
+
+        self.pydantic = _PydanticNamespace(self)
+
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
+
+    def _registry_namespace(self) -> dict[str, Any]:
+        return self.registry.namespace("object") | _TYPES_NS
 
     def clear(self) -> None:
         self.registry.clear()
@@ -173,7 +206,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         extensions: list[FieldExtension] | None = None,
         root_field: bool = True,
     ) -> Any:
-        namespace = self.registry.namespace("object")
+        namespace = self._registry_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
         execution_options_ = execution_options if execution_options is not None else self.settings.execution_options
@@ -217,7 +250,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
 
     def create(
         self,
-        input_type: type[AnyMappedDTO],
+        input_type: type[MappedGraphQLDTO[T]],
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
         repository_type: AnyRepository | None = None,
@@ -231,8 +264,9 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         directives: Sequence[object] = (),
         graphql_type: Any | None = None,
         extensions: list[FieldExtension] | None = None,
+        validation: type[MappedPydanticDTO[T]] | None = None,
     ) -> Any:
-        namespace = self.registry.namespace("object")
+        namespace = self._registry_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
 
@@ -255,12 +289,13 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
             extensions=extensions or [],
             registry_namespace=namespace,
             description=description,
+            validation=validation,
         )
         return field(resolver) if resolver else field
 
     def update(
         self,
-        input_type: type[AnyMappedDTO],
+        input_type: type[MappedGraphQLDTO[T]],
         filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]],
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
@@ -275,8 +310,9 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         directives: Sequence[object] = (),
         graphql_type: Any | None = None,
         extensions: list[FieldExtension] | None = None,
+        validation: type[MappedPydanticDTO[T]] | None = None,
     ) -> Any:
-        namespace = self.registry.namespace("object")
+        namespace = self._registry_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
 
@@ -300,12 +336,13 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
             extensions=extensions or [],
             registry_namespace=namespace,
             description=description,
+            validation=validation,
         )
         return field(resolver) if resolver else field
 
     def update_by_ids(
         self,
-        input_type: type[AnyMappedDTO],
+        input_type: type[MappedGraphQLDTO[T]],
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
         repository_type: AnyRepository | None = None,
@@ -319,8 +356,9 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         directives: Sequence[object] = (),
         graphql_type: Any | None = None,
         extensions: list[FieldExtension] | None = None,
+        validation: type[MappedPydanticDTO[T]] | None = None,
     ) -> Any:
-        namespace = self.registry.namespace("object")
+        namespace = self._registry_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
 
@@ -343,6 +381,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
             extensions=extensions or [],
             registry_namespace=namespace,
             description=description,
+            validation=validation,
         )
         return field(resolver) if resolver else field
 
@@ -363,7 +402,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         graphql_type: Any | None = None,
         extensions: list[FieldExtension] | None = None,
     ) -> Any:
-        namespace = self.registry.namespace("object")
+        namespace = self._registry_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
 

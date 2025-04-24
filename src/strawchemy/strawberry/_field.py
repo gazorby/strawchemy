@@ -28,7 +28,7 @@ from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.base import StrawberryList, StrawberryOptional, StrawberryType, WithStrawberryObjectDefinition
 from strawberry.types.field import UNRESOLVED, StrawberryField
-from strawchemy.dto.base import MappedDTO, ModelFieldT, ModelInspector, ModelT
+from strawchemy.dto.base import ModelFieldT, ModelInspector, ModelT
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.graphql.constants import (
     DATA_KEY,
@@ -43,14 +43,18 @@ from strawchemy.graphql.dto import (
     BooleanFilterDTO,
     EnumDTO,
     MappedDataclassGraphQLDTO,
+    MappedPydanticGraphQLDTO,
     OrderByDTO,
     StrawchemyDTOAttributes,
 )
+from strawchemy.graphql.exceptions import InputValidationError
+from strawchemy.graphql.mutation import Input
+from strawchemy.strawberry.types import ValidationErrorType
 from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
 from strawchemy.types import DefaultOffsetPagination
 from strawchemy.utils import is_type_hint_optional
 
-from ._utils import dto_model_from_type, strawberry_contained_type
+from ._utils import dto_model_from_type, strawberry_contained_types, strawberry_contained_user_type
 from .exceptions import StrawchemyFieldError
 from .repository import StrawchemyAsyncRepository
 
@@ -62,8 +66,9 @@ if TYPE_CHECKING:
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.base import StrawberryObjectDefinition, StrawberryType, WithStrawberryObjectDefinition
     from strawberry.types.fields.resolver import StrawberryResolver
+    from strawchemy.dto.backend.pydantic import MappedPydanticDTO
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.graphql.typing import AnyMappedDTO
+    from strawchemy.graphql.typing import AnyMappedDTO, MappedGraphQLDTO
     from strawchemy.sqlalchemy.typing import QueryHookCallable
     from strawchemy.typing import AnyRepository
 
@@ -84,13 +89,17 @@ ListResolverResult: TypeAlias = (
     "Sequence[StrawchemyTypeWithStrawberryObjectDefinition] | StrawchemyTypeWithStrawberryObjectDefinition"
 )
 GetByIdResolverResult: TypeAlias = "StrawchemyTypeWithStrawberryObjectDefinition | None"
-CreateOrUpdateResolverResult: TypeAlias = "Sequence[StrawchemyTypeWithStrawberryObjectDefinition]"
+CreateOrUpdateResolverResult: TypeAlias = (
+    "Sequence[StrawchemyTypeWithStrawberryObjectDefinition] | ValidationErrorType | Sequence[ValidationErrorType]"
+)
 
 
 _OPTIONAL_UNION_ARG_SIZE: int = 2
 
 
-def _is_list(type_: StrawberryType | type[WithStrawberryObjectDefinition] | object | str) -> bool:
+def _is_list(
+    type_: StrawberryType | type[WithStrawberryObjectDefinition] | object | str,
+) -> TypeIs[type[list[Any]] | StrawberryList]:
     if isinstance(type_, StrawberryOptional):
         type_ = type_.of_type
     if origin := get_origin(type_):
@@ -230,14 +239,14 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         return repository.list(filter_input, order_by, distinct_on, limit, offset)
 
     def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
-        inner_type = strawberry_contained_type(type_)
-        if (
-            self.root_aggregations
-            and issubclass(inner_type, StrawchemyDTOAttributes)
-            and not inner_type.__strawchemy_is_root_aggregation_type__
-        ):
-            msg = f"The `{self.name}` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."
-            raise StrawchemyFieldError(msg)
+        for inner_type in strawberry_contained_types(type_):
+            if (
+                self.root_aggregations
+                and issubclass(inner_type, StrawchemyDTOAttributes)
+                and not inner_type.__strawchemy_is_root_aggregation_type__
+            ):
+                msg = f"The `{self.name}` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."
+                raise StrawchemyFieldError(msg)
 
     @classmethod
     def _is_strawchemy_type(
@@ -249,21 +258,21 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
 
     @cached_property
     def filter(self) -> type[StrawchemyTypeFromPydantic[BooleanFilterDTO[ModelT, ModelFieldT]]] | None:
-        inner_type = strawberry_contained_type(self.type)
+        inner_type = strawberry_contained_user_type(self.type)
         if self._filter is None and self._is_strawchemy_type(inner_type):
             return inner_type.__strawchemy_filter__
         return self._filter
 
     @cached_property
     def order_by(self) -> type[StrawchemyTypeFromPydantic[OrderByDTO[ModelT, ModelFieldT]]] | None:
-        inner_type = strawberry_contained_type(self.type)
+        inner_type = strawberry_contained_user_type(self.type)
         if self._order_by is None and self._is_strawchemy_type(inner_type):
             return inner_type.__strawchemy_order_by__
         return self._order_by
 
     def auto_arguments(self) -> list[StrawberryArgument]:
         arguments: list[StrawberryArgument] = []
-        inner_type = strawberry_contained_type(self.type)
+        inner_type = strawberry_contained_user_type(self.type)
 
         if self.is_list:
             if self.pagination:
@@ -310,7 +319,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
                         default=None,
                     )
                 )
-        elif issubclass(inner_type, MappedDTO):
+        elif issubclass(inner_type, MappedDataclassGraphQLDTO | MappedPydanticGraphQLDTO):
             model = dto_model_from_type(inner_type)
             id_fields = list(self.inspector.id_field_definitions(model, DTOConfig(Purpose.READ)))
             if len(id_fields) == 1:
@@ -402,7 +411,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
     def description(self) -> str | None:
         if self._description is not None:
             return self._description
-        definition = get_object_definition(strawberry_contained_type(self.type), strict=False)
+        definition = get_object_definition(strawberry_contained_user_type(self.type), strict=False)
         named_template = "Fetch {object} from the {name} collection"
         if not definition or definition.is_input:
             return None
@@ -411,7 +420,7 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
             return description if self.base_resolver else f"{description} by id"
         if self.root_aggregations:
             nodes_field = next(field for field in definition.fields if field.python_name == NODES_KEY)
-            definition = get_object_definition(strawberry_contained_type(nodes_field.type), strict=True)
+            definition = get_object_definition(strawberry_contained_user_type(nodes_field.type), strict=True)
             return named_template.format(object="aggregation data", name=definition.name)
         return named_template.format(object="objects", name=definition.name)
 
@@ -448,6 +457,8 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         | Coroutine[ListResolverResult, Any, Any]
         | GetByIdResolverResult
         | Coroutine[GetByIdResolverResult, Any, Any]
+        | CreateOrUpdateResolverResult
+        | Coroutine[CreateOrUpdateResolverResult, Any, Any]
     ):
         if self.is_list:
             return self._list_resolver(info, *args, **kwargs)
@@ -463,17 +474,33 @@ class StrawchemyField(StrawberryField, Generic[ModelT, ModelFieldT]):
         return super().get_result(source, info, args, kwargs)
 
 
-class StrawchemyCreateMutationField(StrawchemyField[ModelT, ModelFieldT]):
-    def __init__(self, input_type: type[AnyMappedDTO], *args: Any, **kwargs: Any) -> None:
+class _StrawchemyInputMutationField(StrawchemyField[ModelT, ModelFieldT]):
+    def __init__(
+        self,
+        input_type: type[MappedGraphQLDTO[T]],
+        *args: Any,
+        validation: type[MappedPydanticDTO[T]] | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.is_root_field = True
         self._input_type = input_type
+        self._validation_type = validation
 
+
+class StrawchemyCreateMutationField(_StrawchemyInputMutationField[ModelT, ModelFieldT]):
     def _create_resolver(
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.create_many(data) if isinstance(data, Sequence) else repository.create(data)
+        try:
+            return (
+                repository.create_many(Input(data, self._validation_type))
+                if isinstance(data, Sequence)
+                else repository.create(Input(data, self._validation_type))
+            )
+        except InputValidationError as error:
+            return ValidationErrorType.from_pydantic(error.pydantic_error)
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -488,12 +515,7 @@ class StrawchemyCreateMutationField(StrawchemyField[ModelT, ModelFieldT]):
         return self._create_resolver(info, *args, **kwargs)
 
 
-class StrawchemyUpdateMutationField(StrawchemyField[ModelT, ModelFieldT]):
-    def __init__(self, input_type: type[AnyMappedDTO], *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self.is_root_field = True
-        self._input_type = input_type
-
+class StrawchemyUpdateMutationField(_StrawchemyInputMutationField[ModelT, ModelFieldT]):
     @override
     def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
         if self._filter is not None and not _is_list(type_):
@@ -504,13 +526,25 @@ class StrawchemyUpdateMutationField(StrawchemyField[ModelT, ModelFieldT]):
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.update_many_by_id(data) if isinstance(data, Sequence) else repository.update_by_id(data)
+        list_input = isinstance(data, Sequence)
+        try:
+            return (
+                repository.update_many_by_id(Input(data, self._validation_type))
+                if list_input
+                else repository.update_by_id(Input(data, self._validation_type))
+            )
+        except InputValidationError as error:
+            error = ValidationErrorType.from_pydantic(error.pydantic_error)
+            return [error] if list_input else error
 
     def _update_by_filter_resolver(
         self, info: Info, data: AnyMappedDTO, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.update_by_filter(data, filter_input)
+        try:
+            return repository.update_by_filter(Input(data, self._validation_type), filter_input)
+        except InputValidationError as error:
+            return [ValidationErrorType.from_pydantic(error.pydantic_error)]
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -540,7 +574,7 @@ class StrawchemyUpdateMutationField(StrawchemyField[ModelT, ModelFieldT]):
 class StrawchemyDeleteMutationField(StrawchemyField[ModelT, ModelFieldT]):
     def __init__(
         self,
-        input_type: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None,
+        input_type: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:

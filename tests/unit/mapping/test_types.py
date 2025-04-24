@@ -13,6 +13,7 @@ from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.sqlalchemy.exceptions import QueryHookError
 from strawchemy.strawberry.exceptions import StrawchemyFieldError
 from strawchemy.strawberry.scalars import Interval
+from strawchemy.testing.pytest_plugin import MockContext
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -21,6 +22,7 @@ from strawberry.scalars import JSON
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 from syrupy.assertion import SnapshotAssertion
+from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
 from tests.unit.models import User
 
@@ -161,7 +163,7 @@ def test_read_only_pk_on_update_input_fail() -> None:
         import_module("tests.unit.schemas.mutations.read_only_pk_with_update_input")
 
 
-def test_delete_mutation_type_not_list_raise_error() -> None:
+def test_delete_mutation_type_not_list_fail() -> None:
     with pytest.raises(
         StrawchemyFieldError,
         match=("Type of delete mutation must be a list: delete_group"),
@@ -169,7 +171,7 @@ def test_delete_mutation_type_not_list_raise_error() -> None:
         import_module("tests.unit.schemas.mutations.delete_mutation_type_not_list")
 
 
-def test_update_mutation_by_filter_type_not_list_raise_error() -> None:
+def test_update_mutation_by_filter_type_not_list_fail() -> None:
     with pytest.raises(
         StrawchemyFieldError,
         match=("Type of update mutation by filter must be a list: update_groups"),
@@ -288,3 +290,227 @@ def test_field_order_by_equals_type_order_by() -> None:
     type_filter_schema = strawberry.Schema(query=TypeOrderQuery, scalar_overrides=SCALAR_OVERRIDES)
 
     assert textwrap.dedent(str(field_filter_schema)).strip() == textwrap.dedent(str(type_filter_schema)).strip()
+
+
+@pytest.mark.parametrize(
+    ("query", "name", "is_list"),
+    [
+        pytest.param(
+            """
+            mutation {
+                createUser(
+                    data: {
+                        name: "Bob",
+                        group: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } },
+                        tag: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } }
+                    }
+                ) {
+                    __typename
+                    ... on UserType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            "createUser",
+            False,
+            id="create",
+        ),
+        pytest.param(
+            """
+            mutation {
+                createUserCustom(
+                    data: {
+                        name: "Bob",
+                        group: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } },
+                        tag: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } }
+                    }
+                ) {
+                    __typename
+                    ... on UserType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            "createUserCustom",
+            False,
+            id="create-custom",
+        ),
+        pytest.param(
+            """
+            mutation {
+                updateUsers(
+                    filter: { id: { eq: "da636751-b276-4546-857f-3c73ea914467" } },
+                    data: { name: "Bob" }
+                ) {
+                    __typename
+                    ... on UserType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            "updateUsers",
+            True,
+            id="update_by_filter",
+        ),
+        pytest.param(
+            """
+            mutation {
+                updateUserByIds(
+                    data: [
+                        {
+                            id: "da636751-b276-4546-857f-3c73ea914467",
+                            name: "Bob"
+                        }
+                    ]
+                ) {
+                    __typename
+                    ... on UserType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            "updateUserByIds",
+            True,
+            id="update_by_ids",
+        ),
+        pytest.param(
+            """
+            mutation {
+                updateUserById(
+                    data: {
+                        id: "da636751-b276-4546-857f-3c73ea914467",
+                        name: "Bob"
+                    }
+                ) {
+                    __typename
+                    ... on UserType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            "updateUserById",
+            False,
+            id="update_by_id",
+        ),
+    ],
+)
+def test_pydantic_validation(query: str, name: str, is_list: bool) -> None:
+    from tests.unit.schemas.pydantic.validation import Mutation
+
+    schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
+    result = schema.execute_sync(query, context_value=MockContext())
+    assert not result.errors
+    assert result.data
+
+    error = result.data[name][0] if is_list else result.data[name]
+    assert error["__typename"] == "ValidationErrorType"
+    assert error["id"] == "ERROR"
+    assert error["errors"] == [
+        {
+            "id": "ERROR",
+            "loc": ["name"],
+            "message": "Value error, Name must be lower cased",
+            "type": "value_error",
+        }
+    ]
+
+
+def test_pydantic_validation_nested() -> None:
+    from tests.unit.schemas.pydantic.validation import Mutation
+
+    query = """
+        mutation {
+            createUser(
+                data: {
+                    name: "bob",
+                    tag: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } }
+                    group: {
+                        create: {
+                            name: "Group",
+                            tag: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } },
+                            color: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } }
+                        }
+                    }
+                }
+            ) {
+                __typename
+                ... on UserType {
+                    name
+                }
+                ... on ValidationErrorType {
+                    id
+                    errors {
+                        id
+                        loc
+                        message
+                        type
+                    }
+                }
+            }
+        }
+    """
+    schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
+    result = schema.execute_sync(query, context_value=MockContext())
+    assert not result.errors
+    assert result.data
+
+    assert result.data["createUser"]["__typename"] == "ValidationErrorType"
+    assert result.data["createUser"]["id"] == "ERROR"
+    assert result.data["createUser"]["errors"] == [
+        {
+            "id": "ERROR",
+            "loc": ["group", "name"],
+            "message": "Value error, Name must be lower cased",
+            "type": "value_error",
+        }
+    ]

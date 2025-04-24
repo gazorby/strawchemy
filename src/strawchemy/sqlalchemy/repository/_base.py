@@ -14,8 +14,9 @@ if TYPE_CHECKING:
     from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.graphql.mutation import InputData
     from strawchemy.sqlalchemy.hook import QueryHook
+
+    from .typing import SQLAlchemyInput
 
 
 __all__ = ("SQLAlchemyGraphQLRepository",)
@@ -69,7 +70,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         loaded_attr = {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
         return {field: getattr(model, field) for field in model.__mapper__.columns.keys() if field in loaded_attr}  # noqa: SIM118
 
-    def _connect_to_one_relations(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> None:
+    def _connect_to_one_relations(self, data: SQLAlchemyInput) -> None:
         for relation in data.relations:
             prop = relation.field.model_field.property
             if (

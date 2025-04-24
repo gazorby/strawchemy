@@ -2,66 +2,32 @@
 # src/strawchemy/strawberry/repository/_async.py
 from __future__ import annotations
 
-import dataclasses
-from collections import defaultdict
-from collections.abc import Collection, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, TypeVar, overload
 
-from typing_extensions import TypeIs
-
-from strawberry.types import get_object_definition, has_object_definition
-from strawberry.types.lazy_type import LazyType
-from strawberry.types.nodes import SelectedField, Selection
-from strawchemy.exceptions import StrawchemyError
-from strawchemy.graphql.constants import ORDER_BY_KEY
-from strawchemy.graphql.dto import (
-    BooleanFilterDTO,
-    DTOKey,
-    EnumDTO,
-    OrderByDTO,
-    QueryNode,
-    RelationFilterDTO,
-    StrawchemyDTOAttributes,
-)
-from strawchemy.graphql.mutation import InputData
 from strawchemy.sqlalchemy.repository import SQLAlchemyGraphQLSyncRepository
-from strawchemy.strawberry._utils import (
-    default_session_getter,
-    dto_model_from_type,
-    pydantic_from_strawberry_type,
-    strawberry_contained_type,
-)
-from strawchemy.utils import camel_to_snake, snake_keys
+from strawchemy.strawberry._utils import default_session_getter, dto_model_from_type, strawberry_contained_user_type
 
-from ._node import _StrawberryQueryNode
+from ._base import StrawchemyRepository
 
 if TYPE_CHECKING:
-    from pydantic import BaseModel
+    from collections.abc import Sequence
+
     from sqlalchemy import Select
     from strawberry import Info
-    from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
-    from strawberry.types.field import StrawberryField
-    from strawchemy.graphql.typing import AnyMappedDTO
-    from strawchemy.sqlalchemy.hook import QueryHook
+    from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.sqlalchemy.repository.typing import SQLAlchemyInput
     from strawchemy.sqlalchemy.typing import AnySyncSession
-    from strawchemy.strawberry.typing import (
-        StrawchemyTypeFromPydantic,
-        StrawchemyTypeWithStrawberryObjectDefinition,
-        SyncSessionGetter,
-    )
+    from strawchemy.strawberry.typing import StrawchemyTypeFromPydantic, SyncSessionGetter
+
 
 __all__ = ()
 
 T = TypeVar("T")
 
 
-def _has_pydantic_type(type_: Any) -> TypeIs[type[StrawberryTypeFromPydantic[BaseModel]]]:
-    return hasattr(type_, "_pydantic_type")
-
-
 @dataclass
-class StrawchemySyncRepository(Generic[T]):
+class StrawchemySyncRepository(StrawchemyRepository[T]):
     _ignored_field_names: ClassVar[frozenset[str]] = frozenset({"__typename"})
 
     root_type: type[T]
@@ -75,108 +41,13 @@ class StrawchemySyncRepository(Generic[T]):
     filter_statement: Select[tuple[Any]] | None = None
     execution_options: dict[str, Any] | None = None
 
-    _query_hooks: defaultdict[QueryNode[Any, Any], list[QueryHook[Any]]] = dataclasses.field(
-        default_factory=lambda: defaultdict(list), init=False
-    )
-    _tree: _StrawberryQueryNode[T] = dataclasses.field(init=False)
-
-    def __post_init__(self) -> None:
-        inner_root_type = strawberry_contained_type(self.root_type)
-        resolver_selection = next(
-            selection
-            for selection in self.info.selected_fields
-            if isinstance(selection, SelectedField) and selection.name == self.info.field_name
-        )
-        node = _StrawberryQueryNode.root_node(
-            dto_model_from_type(inner_root_type),
-            strawberry_type=inner_root_type,
-            root_aggregations=self.root_aggregations,
-        )
-        self._build(inner_root_type, resolver_selection.selections, node)
-        self._tree = node.merge_same_children(match_on="value_equality")
-
     def graphql_repository(self) -> SQLAlchemyGraphQLSyncRepository[Any]:
         return SQLAlchemyGraphQLSyncRepository(
-            model=dto_model_from_type(strawberry_contained_type(self.root_type)),
+            model=dto_model_from_type(strawberry_contained_user_type(self.root_type)),
             session=self.session or self.session_getter(self.info),
             statement=self.filter_statement,
             execution_options=self.execution_options,
         )
-
-    @classmethod
-    def _relation_filter(
-        cls, selection: SelectedField, strawberry_field: StrawberryField, auto_snake_case: bool = True
-    ) -> RelationFilterDTO[Any]:
-        argument_types = {arg.python_name: arg.type for arg in strawberry_field.arguments}
-        selection_arguments = snake_keys(selection.arguments) if auto_snake_case else selection.arguments
-        if order_by_type := argument_types.get(ORDER_BY_KEY):
-            order_by_model = pydantic_from_strawberry_type(strawberry_contained_type(order_by_type))
-            return RelationFilterDTO[order_by_model].model_validate(selection_arguments)
-        return RelationFilterDTO.model_validate(selection_arguments)
-
-    @classmethod
-    def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]] | None:
-        from strawchemy.strawberry import StrawchemyField
-
-        return field.query_hook if isinstance(field, StrawchemyField) else None
-
-    def _add_query_hooks(
-        self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: _StrawberryQueryNode[Any]
-    ) -> None:
-        hooks = query_hooks if isinstance(query_hooks, Collection) else [query_hooks]
-        for hook in hooks:
-            hook.info_var.set(self.info)
-            self._query_hooks[node].append(hook)
-
-    def _build(
-        self,
-        strawberry_type: type[StrawchemyTypeWithStrawberryObjectDefinition],
-        selected_fields: list[Selection],
-        node: _StrawberryQueryNode[Any],
-    ) -> None:
-        strawberry_type = strawberry_contained_type(strawberry_type)
-        if isinstance(strawberry_type, LazyType):
-            strawberry_type = strawberry_type.resolve_type()
-        strawberry_definition = get_object_definition(strawberry_type, strict=True)
-
-        if strawberry_type.__strawchemy_query_hook__:
-            self._add_query_hooks(strawberry_type.__strawchemy_query_hook__, node)
-
-        for selection in selected_fields:
-            if not isinstance(selection, SelectedField) or selection.name in self._ignored_field_names:
-                continue
-            model_field_name = camel_to_snake(selection.name) if self.auto_snake_case else selection.name
-            strawberry_field = next(field for field in strawberry_definition.fields if field.name == model_field_name)
-            strawberry_field_type = strawberry_contained_type(strawberry_field.type)
-            dto_model = dto_model_from_type(strawberry_type)
-
-            if (hooks := self._get_field_hooks(strawberry_field)) is not None:
-                self._add_query_hooks(hooks, node)
-
-            if _has_pydantic_type(strawberry_type):
-                dto = pydantic_from_strawberry_type(strawberry_type)
-            elif has_object_definition(strawberry_type):
-                dto = strawberry_type
-            else:
-                msg = f"Unsupported type: {strawberry_type}"
-                raise StrawchemyError(msg)
-            assert issubclass(dto, StrawchemyDTOAttributes)
-
-            key = DTOKey.from_query_node(QueryNode.root_node(dto_model)) + strawberry_field.name
-
-            try:
-                field_definition = dto.__strawchemy_field_map__[key]
-            except KeyError:
-                continue
-
-            child_node = _StrawberryQueryNode(
-                value=field_definition,
-                strawberry_type=strawberry_field_type,
-                relation_filter=self._relation_filter(selection, strawberry_field),
-            )
-            child = node.insert_node(child_node)
-            if selection.selections:
-                self._build(strawberry_field_type, selection.selections, child)
 
     def get_one_or_none(
         self,
@@ -255,28 +126,26 @@ class StrawchemySyncRepository(Generic[T]):
             return self._tree.aggregation_query_result_to_strawberry_type(query_results)
         return self._tree.query_result_to_strawberry_type(query_results)
 
-    def create_many(self, data: Sequence[AnyMappedDTO]) -> Sequence[T]:
-        query_results = self.graphql_repository().create(InputData(data), self._tree)
+    def create_many(self, data: SQLAlchemyInput) -> Sequence[T]:
+        query_results = self.graphql_repository().create(data, self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)
 
-    def create(self, data: AnyMappedDTO) -> T:
-        query_results = self.graphql_repository().create(InputData([data]), self._tree)
+    def create(self, data: SQLAlchemyInput) -> T:
+        query_results = self.graphql_repository().create(data, self._tree)
         return self._tree.to_strawberry_type(query_results.one())
 
-    def update_many_by_id(self, data: Sequence[AnyMappedDTO]) -> Sequence[T]:
-        query_results = self.graphql_repository().update_by_ids(InputData(data), self._tree)
+    def update_many_by_id(self, data: SQLAlchemyInput) -> Sequence[T]:
+        query_results = self.graphql_repository().update_by_ids(data, self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)
 
-    def update_by_id(self, data: AnyMappedDTO) -> T:
-        query_results = self.graphql_repository().update_by_ids(InputData([data]), self._tree)
+    def update_by_id(self, data: SQLAlchemyInput) -> T:
+        query_results = self.graphql_repository().update_by_ids(data, self._tree)
         return self._tree.to_strawberry_type(query_results.one())
 
     def update_by_filter(
-        self, data: AnyMappedDTO, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]
+        self, data: SQLAlchemyInput, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]
     ) -> Sequence[T]:
-        query_results = self.graphql_repository().update_by_filter(
-            InputData([data]), filter_input.to_pydantic(), self._tree
-        )
+        query_results = self.graphql_repository().update_by_filter(data, filter_input.to_pydantic(), self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)
 
     def delete(self, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None) -> Sequence[T]:

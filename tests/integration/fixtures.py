@@ -14,7 +14,6 @@ from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
 from strawchemy.strawberry.scalars import Interval
 
-import strawberry
 from sqlalchemy import (
     URL,
     ClauseElement,
@@ -37,6 +36,7 @@ from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session, sessionmaker
 from strawberry.scalars import JSON
+from tests.fixtures import DefaultQuery
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
@@ -603,11 +603,6 @@ async def seed_db_async(
 
 
 @pytest.fixture
-def sync_query() -> type[DefaultQuery]:
-    return DefaultQuery
-
-
-@pytest.fixture
 def async_query() -> type[DefaultQuery]:
     return DefaultQuery
 
@@ -727,10 +722,3 @@ class QueryTracker:
         if snapshot is not None:
             for query in filtered:
                 assert query.statement_formatted == snapshot
-
-
-@strawberry.type
-class DefaultQuery:
-    @strawberry.field
-    def hello(self) -> str:
-        return "World"

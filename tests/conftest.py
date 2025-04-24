@@ -4,6 +4,7 @@ from .fixtures import (
     graphql_snapshot,
     sql_snapshot,
     strawchemy,
+    sync_query,
 )
 
 pytest_plugins = ("pytest_databases.docker.postgres", "pytester")
@@ -14,4 +15,5 @@ __all__ = (
     "graphql_snapshot",
     "sql_snapshot",
     "strawchemy",
+    "sync_query",
 )

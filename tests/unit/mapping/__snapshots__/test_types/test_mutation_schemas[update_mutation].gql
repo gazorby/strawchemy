@@ -337,11 +337,13 @@
     id: UUID!
   }
   
+  """Add a new or existing object"""
   input GroupColorIdFieldsInputGroupColorInputRequiredToOneInput {
     set: GroupColorIdFieldsInput
     create: GroupColorInput
   }
   
+  """Add a new or existing object"""
   input GroupColorIdFieldsInputTagColorInputRequiredToOneInput {
     set: GroupColorIdFieldsInput
     create: TagColorInput
@@ -392,6 +394,7 @@
     id: UUID!
   }
   
+  """Add new objects or update existing ones"""
   input GroupFruitsIdFieldsInputGroupFruitInputToManyUpdateInput {
     set: [GroupFruitsIdFieldsInput!]
     add: [GroupFruitsIdFieldsInput!]
@@ -399,6 +402,7 @@
     create: [GroupFruitInput!]
   }
   
+  """Add new objects or update existing ones"""
   input GroupFruitsIdFieldsInputTagFruitInputToManyUpdateInput {
     set: [GroupFruitsIdFieldsInput!]
     add: [GroupFruitsIdFieldsInput!]
@@ -436,16 +440,19 @@
     id: UUID!
   }
   
+  """Add a new or existing object"""
   input GroupTagIdFieldsInputGroupTagInputRequiredToOneInput {
     set: GroupTagIdFieldsInput
     create: GroupTagInput
   }
   
+  """Add a new or existing object"""
   input GroupTagIdFieldsInputGroupTagInputToOneInput {
     set: GroupTagIdFieldsInput
     create: GroupTagInput
   }
   
+  """Add a new or existing object"""
   input GroupTagIdFieldsInputTagUpdateToOneInput {
     set: GroupTagIdFieldsInput
     create: TagUpdate
@@ -492,6 +499,7 @@
     id: UUID!
   }
   
+  """Add new objects or update existing ones"""
   input GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput {
     set: [GroupUsersIdFieldsInput!]
     add: [GroupUsersIdFieldsInput!]
@@ -499,6 +507,7 @@
     create: [GroupUserInput!]
   }
   
+  """Add new objects or update existing ones"""
   input GroupUsersIdFieldsInputTagUserInputToManyUpdateInput {
     set: [GroupUsersIdFieldsInput!]
     add: [GroupUsersIdFieldsInput!]
@@ -701,6 +710,7 @@
     id: UUID!
   }
   
+  """Add new objects or update existing ones"""
   input TagGroupsIdFieldsInputTagGroupInputRequiredToManyUpdateInput {
     set: [TagGroupsIdFieldsInput!]
     add: [TagGroupsIdFieldsInput!]

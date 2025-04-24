@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
+from strawchemy import InputValidationError, StrawchemyAsyncRepository, StrawchemySyncRepository, ValidationErrorType
+from strawchemy.graphql.mutation import Input
 
 import strawberry
 from syrupy.assertion import SnapshotAssertion
@@ -12,8 +13,10 @@ from tests.utils import maybe_async
 from .fixtures import QueryTracker
 from .types import (
     ColorCreateInput,
+    ColorCreateValidation,
     ColorFilter,
     ColorPartial,
+    ColorPkUpdateValidation,
     ColorType,
     ColorUpdateInput,
     FruitCreateInput,
@@ -33,9 +36,15 @@ pytestmark = [pytest.mark.integration]
 @strawberry.type
 class AsyncMutation:
     create_color: ColorType = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
+    create_validated_color: ColorType | ValidationErrorType = strawchemy.create(
+        ColorCreateInput, validation=ColorCreateValidation, repository_type=StrawchemyAsyncRepository
+    )
     create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
 
     update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemyAsyncRepository)
+    update_validated_color: ColorType | ValidationErrorType = strawchemy.update_by_ids(
+        ColorUpdateInput, validation=ColorPkUpdateValidation, repository_type=StrawchemyAsyncRepository
+    )
     update_colors: list[ColorType] = strawchemy.update_by_ids(
         ColorUpdateInput, repository_type=StrawchemyAsyncRepository
     )
@@ -58,14 +67,35 @@ class AsyncMutation:
     delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemyAsyncRepository)
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemyAsyncRepository)
 
+    @strawberry.field
+    async def color_create_blue(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
+        return await StrawchemyAsyncRepository(ColorType, info).create(Input(data, name="Blue"))
+
+    @strawberry.field
+    async def create_color_manual_validation(
+        self, info: strawberry.Info, data: ColorCreateInput
+    ) -> ColorType | ValidationErrorType:
+        try:
+            return await StrawchemyAsyncRepository(ColorType, info).create(
+                Input(data, validation=ColorCreateValidation)
+            )
+        except InputValidationError as error:
+            return ValidationErrorType.from_pydantic(error.pydantic_error)
+
 
 @strawberry.type
 class SyncMutation:
     create_color: ColorType = strawchemy.create(ColorCreateInput, repository_type=StrawchemySyncRepository)
+    create_validated_color: ColorType | ValidationErrorType = strawchemy.create(
+        ColorCreateInput, validation=ColorCreateValidation, repository_type=StrawchemySyncRepository
+    )
     create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemySyncRepository)
 
     create_fruit: FruitType = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
     update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemySyncRepository)
+    update_validated_color: ColorType | ValidationErrorType = strawchemy.update_by_ids(
+        ColorUpdateInput, validation=ColorPkUpdateValidation, repository_type=StrawchemySyncRepository
+    )
     update_colors: list[ColorType] = strawchemy.update_by_ids(
         ColorUpdateInput, repository_type=StrawchemySyncRepository
     )
@@ -86,6 +116,19 @@ class SyncMutation:
     delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemySyncRepository)
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemySyncRepository)
 
+    @strawberry.field
+    def color_create_blue(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
+        return StrawchemySyncRepository(ColorType, info).create(Input(data, name="Blue"))
+
+    @strawberry.field
+    def create_color_manual_validation(
+        self, info: strawberry.Info, data: ColorCreateInput
+    ) -> ColorType | ValidationErrorType:
+        try:
+            return StrawchemySyncRepository(ColorType, info).create(Input(data, validation=ColorCreateValidation))
+        except InputValidationError as error:
+            return ValidationErrorType.from_pydantic(error.pydantic_error)
+
 
 @pytest.fixture
 def sync_mutation() -> type[SyncMutation]:
@@ -100,14 +143,104 @@ def async_mutation() -> type[AsyncMutation]:
 # Create tests
 
 
+@pytest.mark.parametrize(
+    ("query_name", "query"),
+    [
+        pytest.param(
+            "createColor",
+            """
+            mutation {
+                createColor(data: {  name: "new color" }) {
+                    name
+                }
+            }
+            """,
+            id="createColor",
+        ),
+        pytest.param(
+            "createValidatedColor",
+            """
+            mutation {
+                createValidatedColor(data: {  name: "new color" }) {
+                    ... on ColorType {
+                        name
+                    }
+                }
+            }
+            """,
+            id="createValidatedColor",
+        ),
+        pytest.param(
+            "createColorManualValidation",
+            """
+            mutation {
+                createColorManualValidation(data: {  name: "new color" }) {
+                    ... on ColorType {
+                        name
+                    }
+                }
+            }
+            """,
+            id="createValidatedColor-manual",
+        ),
+        pytest.param(
+            "createValidatedColor",
+            """
+            mutation {
+                createValidatedColor(data: {  name: "new color" }) {
+                    ... on ColorType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            id="createValidatedColorAllFragments",
+        ),
+        pytest.param(
+            "createColorManualValidation",
+            """
+            mutation {
+                createColorManualValidation(data: {  name: "new color" }) {
+                    ... on ColorType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            id="createValidatedColorAllFragments-manual",
+        ),
+    ],
+)
 @pytest.mark.snapshot
 async def test_create(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query_name: str,
+    query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
-    result = await maybe_async(any_query('mutation { createColor(data: {  name: "new color" }) { name } }'))
+    result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["createColor"] == {"name": "new color"}
+    assert result.data[query_name] == {"name": "new color"}
 
     insert_tracker, select_tracker = query_tracker.filter("insert"), query_tracker.filter("select")
     assert insert_tracker.query_count == 1
@@ -523,29 +656,91 @@ async def test_create_many(
 # Update tests
 
 
+@pytest.mark.parametrize(
+    ("query", "query_name"),
+    [
+        pytest.param(
+            """
+                mutation {{
+                    updateColor(
+                        data: {{
+                            id: {color_id},
+                            name: "updated color"
+                        }}
+                    ) {{
+                        id
+                        name
+                    }}
+                }}
+                """,
+            "updateColor",
+            id="no-validation",
+        ),
+        pytest.param(
+            """
+                mutation {{
+                    updateValidatedColor(
+                        data: {{
+                            id: {color_id},
+                            name: "updated color"
+                        }}
+                    ) {{
+                        ... on ColorType {{
+                            id
+                            name
+                        }}
+                        ... on ValidationErrorType {{
+                            errorId: id
+                            errors {{
+                                id
+                                loc
+                                message
+                                type
+                            }}
+                        }}
+                    }}
+                }}
+                """,
+            "updateValidatedColor",
+            id="validation-fragment",
+        ),
+        pytest.param(
+            """
+                mutation {{
+                    updateValidatedColor(
+                        data: {{
+                            id: {color_id},
+                            name: "updated color"
+                        }}
+                    ) {{
+                        ... on ColorType {{
+                            id
+                            name
+                        }}
+                    }}
+                }}
+                """,
+            "updateValidatedColor",
+            id="validation-no-fragment",
+        ),
+    ],
+)
 @pytest.mark.snapshot
 async def test_update(
-    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query_name: str,
+    query: str,
+    raw_colors: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Tests a simple update mutation."""
-    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
-    query = f"""
-        mutation {{
-            updateColor(
-                data: {{
-                    id: {color_id_gql},
-                    name: "updated color"
-                }}
-            ) {{
-                id
-                name
-            }}
-        }}
-    """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(
+        any_query(query.format(color_id=to_graphql_representation(raw_colors[0]["id"], "input")))
+    )
     assert not result.errors
     assert result.data
-    assert result.data["updateColor"] == {
+    assert result.data[query_name] == {
         "id": to_graphql_representation(raw_colors[0]["id"], "output"),
         "name": "updated color",
     }
@@ -1395,3 +1590,25 @@ async def test_delete_all(
     assert len(result.data["deleteUsers"]) == len(raw_users)
     query_tracker.assert_statements(1, "select", sql_snapshot)
     query_tracker.assert_statements(1, "delete", sql_snapshot)
+
+
+# Custom mutations
+
+
+@pytest.mark.snapshot
+async def test_custom_mutation_with_arg_override(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+        mutation {
+            colorCreateBlue(data: { name: "Green" }) {
+                name
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["colorCreateBlue"] == {"name": "Blue"}
+    query_tracker.assert_statements(1, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)

@@ -9,6 +9,7 @@ import warnings
 from typing import TYPE_CHECKING, Any, cast
 
 from pydantic import BaseModel
+
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.experimental.pydantic._compat import (
     CompatModelField,  # pyright: ignore[reportPrivateImportUsage]

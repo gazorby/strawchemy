@@ -20,10 +20,12 @@ if TYPE_CHECKING:
     )
     from .filters import OrderComparison
 
+
+T = TypeVar("T")
 QueryObject = TypeVar("QueryObject", bound=Any)
 GraphQLFilterDTOT = TypeVar("GraphQLFilterDTOT", bound="GraphQLFilterDTO[Any]")
 AggregateDTOT = TypeVar("AggregateDTOT", bound="AggregateDTO[Any]")
-GraphQLDTOT = TypeVar("GraphQLDTOT", bound="GraphQLDTO")
+GraphQLDTOT = TypeVar("GraphQLDTOT", bound="GraphQLDTO[Any]")
 OrderByDTOT = TypeVar("OrderByDTOT", bound="OrderByDTO[Any, Any]")
 
 AggregationFunction = Literal[
@@ -35,8 +37,10 @@ AggregationType = Literal[
 
 QueryHookCallable: TypeAlias = "Callable[..., Any]"
 
-PydanticGraphQLDTO: TypeAlias = "UnmappedPydanticGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
-DataclassGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[Any] | UnmappedDataclassGraphQLDTO[Any]"
+PydanticGraphQLDTO: TypeAlias = "UnmappedPydanticGraphQLDTO[T] | MappedPydanticGraphQLDTO[T]"
+DataclassGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[T] | UnmappedDataclassGraphQLDTO[T]"
 AnyMappedDTO: TypeAlias = "MappedDataclassGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
-GraphQLDTO: TypeAlias = "PydanticGraphQLDTO | DataclassGraphQLDTO"
+GraphQLDTO: TypeAlias = "PydanticGraphQLDTO[T] | DataclassGraphQLDTO[T]"
 FunctionInfo: TypeAlias = "FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]] | OutputFunctionInfo"
+MappedGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[T] | MappedPydanticGraphQLDTO[T]"
+UnmappedGraphQLDTO: TypeAlias = "UnmappedDataclassGraphQLDTO[T] | UnmappedPydanticGraphQLDTO[T]"

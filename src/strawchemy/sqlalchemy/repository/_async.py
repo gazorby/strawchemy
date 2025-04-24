@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias, TypeVar
 
 from sqlalchemy import Row, and_, delete, insert, inspect, update
 from sqlalchemy.orm import RelationshipProperty
-from strawchemy.graphql.mutation import InputData, LevelInput, RelationType
+from strawchemy.graphql.mutation import Input, LevelInput, RelationType
 from strawchemy.sqlalchemy._executor import AsyncQueryExecutor, QueryResult
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
 from strawchemy.sqlalchemy.typing import AnyAsyncSession, DeclarativeT, SQLAlchemyQueryNode
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.sqlalchemy.hook import QueryHook
 
+    from .typing import SQLAlchemyInput
 
 __all__ = ("SQLAlchemyGraphQLAsyncRepository",)
 
@@ -79,7 +80,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 setattr(relation_input.relation.parent, local.key, instance_ids[fk_index][pk_names.index(remote.key)])
             fk_index += 1
 
-    async def _create_nested_to_one_relations(self, data: InputData[DeclarativeBase, QueryableAttribute[Any]]) -> None:
+    async def _create_nested_to_one_relations(self, data: SQLAlchemyInput) -> None:
         """Creates nested related objects for to-one relationships.
 
         Iterates through the input data levels filtered for 'create' operations
@@ -101,9 +102,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             for model_type, values in insert_params.items():
                 await self._insert_nested(model_type, values, level)
 
-    async def _update_to_many_relations(
-        self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], created_ids: Sequence[_RowLike]
-    ) -> None:
+    async def _update_to_many_relations(self, data: SQLAlchemyInput, created_ids: Sequence[_RowLike]) -> None:
         """Updates foreign keys to connect existing related objects for to-many relationships.
 
         Iterates through the input data levels filtered for 'set' operations
@@ -156,7 +155,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def _set_to_many_relations(
         self,
         mode: _InsertOrUpdate,
-        data: InputData[DeclarativeBase, QueryableAttribute[Any]],
+        data: SQLAlchemyInput,
         created_ids: Sequence[_RowLike],
     ) -> None:
         for level in data.filter_by_level(RelationType.TO_MANY, ["set"]):
@@ -200,9 +199,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                     await self.session.execute(remove_previous_stmt, {key: None for key in current_ids})
                 await self.session.execute(update(model_type), set_values)
 
-    async def _create_to_many_relations(
-        self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], created_ids: Sequence[_RowLike]
-    ) -> None:
+    async def _create_to_many_relations(self, data: SQLAlchemyInput, created_ids: Sequence[_RowLike]) -> None:
         """Creates and connects new related objects for to-many relationships.
 
         Iterates through the input data levels filtered for 'create' operations
@@ -238,11 +235,11 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def _execute_insert_or_update(
         self,
         mode: _InsertOrUpdate,
-        data: InputData[DeclarativeBase, QueryableAttribute[Any]],
+        data: SQLAlchemyInput,
         dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None,
     ) -> Sequence[_RowLike]:
         model_pks = self.model.__mapper__.primary_key
-        values = [self._to_dict(instance) for instance in data.input_instances]
+        values = [self._to_dict(instance) for instance in data.instances]
         if mode == "insert":
             statement = insert(self.model).returning(*model_pks, sort_by_parameter_order=True)
             result = await self.session.execute(statement, values)
@@ -266,7 +263,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def _mutate(
         self,
         mode: _InsertOrUpdate,
-        data: InputData[DeclarativeBase, QueryableAttribute[Any]],
+        data: SQLAlchemyInput,
         dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
     ) -> Sequence[_RowLike]:
         async with self.session.begin_nested() as transaction:
@@ -447,7 +444,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         return await executor.get_one_or_none(self.session)
 
     async def create(
-        self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], selection: SQLAlchemyQueryNode | None = None
+        self, data: SQLAlchemyInput, selection: SQLAlchemyQueryNode | None = None
     ) -> QueryResult[DeclarativeT]:
         """Creates one or more records with nested relationships and returns them.
 
@@ -468,7 +465,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         return await self._list_by_ids(created_ids, selection)
 
     async def update_by_ids(
-        self, data: InputData[DeclarativeBase, QueryableAttribute[Any]], selection: SQLAlchemyQueryNode | None = None
+        self, data: SQLAlchemyInput, selection: SQLAlchemyQueryNode | None = None
     ) -> QueryResult[DeclarativeT]:
         """Updates one or more records with nested relationships and returns them.
 
@@ -490,7 +487,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
 
     async def update_by_filter(
         self,
-        data: InputData[DeclarativeBase, QueryableAttribute[Any]],
+        data: Input[DeclarativeBase, QueryableAttribute[Any], Any],
         dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]],
         selection: SQLAlchemyQueryNode | None = None,
     ) -> QueryResult[DeclarativeT]:

@@ -71,6 +71,7 @@
     id: UUID!
   }
   
+  """Add a new or existing object"""
   input GroupColorIdFieldsInputGroupColorInputRequiredToOneInput {
     set: GroupColorIdFieldsInput
     create: GroupColorInput
@@ -95,6 +96,7 @@
     id: UUID!
   }
   
+  """Add new or existing objects"""
   input GroupFruitsIdFieldsInputGroupFruitInputToManyCreateInput {
     set: [GroupFruitsIdFieldsInput!]
     add: [GroupFruitsIdFieldsInput!]
@@ -123,11 +125,13 @@
     id: UUID!
   }
   
+  """Add a new or existing object"""
   input GroupTagIdFieldsInputGroupTagInputRequiredToOneInput {
     set: GroupTagIdFieldsInput
     create: GroupTagInput
   }
   
+  """Add a new or existing object"""
   input GroupTagIdFieldsInputGroupTagInputToOneInput {
     set: GroupTagIdFieldsInput
     create: GroupTagInput
@@ -165,6 +169,7 @@
     id: UUID!
   }
   
+  """Add new or existing objects"""
   input GroupUsersIdFieldsInputGroupUserInputToManyCreateInput {
     set: [GroupUsersIdFieldsInput!]
     add: [GroupUsersIdFieldsInput!]

@@ -13,6 +13,7 @@
     id: UUID!
   }
   
+  """Add new or existing objects"""
   input ColorFruitsIdFieldsInputColorFruitInputToManyCreateInput {
     set: [ColorFruitsIdFieldsInput!]
     add: [ColorFruitsIdFieldsInput!]
@@ -56,6 +57,7 @@
     id: UUID!
   }
   
+  """Add a new or existing object"""
   input FruitColorIdFieldsInputFruitColorInputToOneInput {
     set: FruitColorIdFieldsInput
     create: FruitColorInput

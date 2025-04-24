@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from typing import Annotated
+
+from pydantic import AfterValidator
 from strawchemy import Strawchemy, StrawchemyAsyncRepository
 from strawchemy.config import StrawchemyConfig
 
@@ -65,3 +68,19 @@ class ProjectCreate: ...
 
 @strawchemy.create_input(Milestone, include="all", override=True)
 class MilestoneCreate: ...
+
+
+# Validation
+
+
+def _check_ticket_name(value: str) -> str:
+    prefixes = ("bug:", "feature:", "perf:", "build:")
+    if not any(value.startswith(prefix) for prefix in prefixes):
+        msg = f"Ticket name must start with one of: {', '.join(prefixes)}"
+        raise ValueError(msg)
+    return value
+
+
+@strawchemy.pydantic.create(Ticket, include="all")
+class TicketCreateValidation:
+    name: Annotated[str, AfterValidator(_check_ticket_name)]

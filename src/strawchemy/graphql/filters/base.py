@@ -10,11 +10,12 @@ compare fields of DTOs in GraphQL queries.
 # ruff: noqa: TC003, TC002, TC001
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeAlias, TypeVar, override
+import re
+from typing import TYPE_CHECKING, Annotated, Any, ClassVar, Generic, TypeAlias, TypeVar, override
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, PrivateAttr
+
 from strawchemy.dto.base import ModelFieldT, ModelT
-from strawchemy.pydantic import RegexPatternStr
 
 if TYPE_CHECKING:
     from strawchemy.graphql.dto import OrderByEnum, QueryNode
@@ -37,6 +38,16 @@ AnyOrderComparison = TypeVar("AnyOrderComparison", bound="OrderComparison[Any, A
 GraphQLFilter: TypeAlias = "GraphQLComparison[ModelT, ModelFieldT] | OrderByEnum"
 
 
+def _valid_regex(string: str) -> str:
+    try:
+        re.compile(string)
+    except re.error as error:
+        msg = f"Invalid regular expression: '{string}'"
+        raise ValueError(msg) from error
+    else:
+        return string
+
+
 def _normalize_field_name(type_: type[Any]) -> str:
     name = type_.__name__
     if name.isupper():
@@ -47,6 +58,9 @@ def _normalize_field_name(type_: type[Any]) -> str:
     if name == "Str":
         return "String"
     return name
+
+
+RegexPatternStr = Annotated[str, AfterValidator(_valid_regex)]
 
 
 class GraphQLComparison(BaseModel, Generic[ModelT, ModelFieldT]):

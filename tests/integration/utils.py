@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
 from pydantic import TypeAdapter
+
 from sqlalchemy import inspect
 
 if TYPE_CHECKING:
