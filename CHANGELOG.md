@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.0](https://github.com/gazorby/strawchemy/compare/v0.13.7..v0.14.0) - 2025-04-24
+
+### 🚀 Features
+
+- *(mutation)* Expose Input to strawchemy repository - ([fe1d1f5](https://github.com/gazorby/strawchemy/commit/fe1d1f5752e1745d4632ab0f9885f378d6f0636a))
+- *(schema)* Add pydantic input validation - ([580bbef](https://github.com/gazorby/strawchemy/commit/580bbefd610468f8aba47f20198e8331130d1753))
+
+### 🐛 Bug Fixes
+
+- *(validation)* Handle nested models - ([1fa7e14](https://github.com/gazorby/strawchemy/commit/1fa7e14b60e7e7de52ae91645036611cbffe1f0b))
+
+### 🚜 Refactor
+
+- *(factory)* Remove type/input decorators on _StrawberryFactory - ([de5a75d](https://github.com/gazorby/strawchemy/commit/de5a75d7c3c923b18ec37fae6b65a1f5cd67701b))
+- *(repository)* Move common logic in a base class for sync/async strawchemy repositories - ([4b31d3a](https://github.com/gazorby/strawchemy/commit/4b31d3ab5c8ebf9f9f185f5fc49fdbdcb2ba444c))
+- *(validation)* Update mapper api - ([299fb0a](https://github.com/gazorby/strawchemy/commit/299fb0a32f870482db0aef32260dccffaf677d65))
+- Wip - ([a3b6aef](https://github.com/gazorby/strawchemy/commit/a3b6aef4ea15d7bc355c8c62f4fea756e796279e))
+
+### 📚 Documentation
+
+- *(readme)* Update - ([2ade51e](https://github.com/gazorby/strawchemy/commit/2ade51eb1645c79198af327ec3cc25e678e2eba5))
+- *(readme)* Add a section for input validation - ([fea65c5](https://github.com/gazorby/strawchemy/commit/fea65c5fda2afebf0663e50a76c52e83f7c487de))
+
+### 🧪 Testing
+
+- *(mutation)* Add missing snapshots - ([6cdbbca](https://github.com/gazorby/strawchemy/commit/6cdbbcacc5b9125c70ab21fc35a78819be54d458))
+- *(validation)* Add test cases for validation in custom resolvers - ([e4db99a](https://github.com/gazorby/strawchemy/commit/e4db99a1dd6f10c7bd97448264873db1369902d2))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.14.0 - ([ada7bcb](https://github.com/gazorby/strawchemy/commit/ada7bcb5a5e778599f878bc1619d3e015f1e480d))
 ## [0.13.7](https://github.com/gazorby/strawchemy/compare/v0.13.6..v0.13.7) - 2025-04-15
 
 ### 🐛 Bug Fixes
