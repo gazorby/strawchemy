@@ -8,7 +8,7 @@ from strawchemy import ModelInstance, QueryHook, Strawchemy
 from sqlalchemy import Select
 from sqlalchemy.orm.util import AliasedClass
 
-from .models import Color, Fruit, FruitFarm, SQLDataTypes, SQLDataTypesContainer, User
+from .models import Color, Fruit, FruitFarm, RankedUser, SQLDataTypes, SQLDataTypesContainer, User
 
 strawchemy = Strawchemy()
 
@@ -157,6 +157,19 @@ class ColorTypeHooks:
 
 @strawchemy.create_input(Color, include="all")
 class ColorCreateInput: ...
+
+
+@strawchemy.create_input(RankedUser, include="all")
+class RankedUserCreateInput: ...
+
+
+@strawchemy.type(RankedUser, include="all")
+class RankedUserType: ...
+
+
+@strawchemy.pydantic.create(RankedUser, include="all")
+class RankedUserCreateValidation:
+    name: Annotated[str, AfterValidator(_check_lower_case)]
 
 
 @strawchemy.pydantic.create(Color, include="all")

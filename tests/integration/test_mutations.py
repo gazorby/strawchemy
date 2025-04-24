@@ -22,6 +22,9 @@ from .types import (
     FruitCreateInput,
     FruitType,
     FruitUpdateInput,
+    RankedUserCreateInput,
+    RankedUserCreateValidation,
+    RankedUserType,
     UserCreate,
     UserFilter,
     UserType,
@@ -82,6 +85,21 @@ class AsyncMutation:
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
 
+    @strawberry.field
+    async def create_validated_ranked_user(
+        self, info: strawberry.Info, data: RankedUserCreateInput
+    ) -> RankedUserType | ValidationErrorType:
+        try:
+            return await StrawchemyAsyncRepository(RankedUserType, info).create(
+                Input(data, validation=RankedUserCreateValidation, rank=1)
+            )
+        except InputValidationError as error:
+            return ValidationErrorType.from_pydantic(error.pydantic_error)
+
+    @strawberry.field
+    async def create_ranked_user(self, info: strawberry.Info, data: RankedUserCreateInput) -> RankedUserType:
+        return await StrawchemyAsyncRepository(RankedUserType, info).create(Input(data, rank=1))
+
 
 @strawberry.type
 class SyncMutation:
@@ -128,6 +146,21 @@ class SyncMutation:
             return StrawchemySyncRepository(ColorType, info).create(Input(data, validation=ColorCreateValidation))
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
+
+    @strawberry.field
+    def create_validated_ranked_user(
+        self, info: strawberry.Info, data: RankedUserCreateInput
+    ) -> RankedUserType | ValidationErrorType:
+        try:
+            return StrawchemySyncRepository(RankedUserType, info).create(
+                Input(data, validation=RankedUserCreateValidation, rank=1)
+            )
+        except InputValidationError as error:
+            return ValidationErrorType.from_pydantic(error.pydantic_error)
+
+    @strawberry.field
+    def create_ranked_user(self, info: strawberry.Info, data: RankedUserCreateInput) -> RankedUserType:
+        return StrawchemySyncRepository(RankedUserType, info).create(Input(data, rank=1))
 
 
 @pytest.fixture
@@ -1612,3 +1645,50 @@ async def test_custom_mutation_with_arg_override(
     assert result.data["colorCreateBlue"] == {"name": "Blue"}
     query_tracker.assert_statements(1, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+@pytest.mark.parametrize(
+    ("query_name", "query"),
+    [
+        pytest.param(
+            "createValidatedRankedUser",
+            """
+        mutation {
+            createValidatedRankedUser(data: {  name: "batman" }) {
+                ... on RankedUserType {
+                    name
+                    rank
+                }
+                ... on ValidationErrorType {
+                    id
+                    errors {
+                        id
+                        loc
+                        message
+                        type
+                    }
+                }
+            }
+        }
+        """,
+            id="validation",
+        ),
+        pytest.param(
+            "createRankedUser",
+            """
+        mutation {
+            createRankedUser(data: {  name: "batman" }) {
+                name
+                rank
+            }
+        }
+        """,
+            id="validation",
+        ),
+    ],
+)
+async def test_read_only_override(query_name: str, query: str, any_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data[query_name] == {"name": "batman", "rank": 1}

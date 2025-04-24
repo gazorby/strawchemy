@@ -514,3 +514,40 @@ def test_pydantic_validation_nested() -> None:
             "type": "value_error",
         }
     ]
+
+
+def test_pydantic_to_mapped_override() -> None:
+    from tests.unit.schemas.pydantic.validation import Mutation
+
+    query = """
+        mutation {
+            createUser(
+                data: {
+                    name: "bob",
+                    group: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } },
+                    tag: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } }
+                }
+            ) {
+                __typename
+                ... on UserType {
+                    name
+                }
+                ... on ValidationErrorType {
+                    id
+                    errors {
+                        id
+                        loc
+                        message
+                        type
+                    }
+                }
+            }
+        }
+    """
+
+    schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
+    result = schema.execute_sync(query, context_value=MockContext())
+    assert not result.errors
+    assert result.data
+
+    assert result.data["createUser"]["name"] == "overridden"

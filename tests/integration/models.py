@@ -100,6 +100,13 @@ class User(UUIDBase):
     group: Mapped[Group | None] = relationship(Group)
 
 
+class RankedUser(UUIDBase):
+    __tablename__ = "ranked_user"
+
+    name: Mapped[str] = mapped_column()
+    rank: Mapped[int] = mapped_column(info=READ_ONLY)
+
+
 class SQLDataTypes(UUIDBase):
     __tablename__ = "sql_data_types"
 
