@@ -328,6 +328,36 @@ def test_field_order_by_equals_type_order_by() -> None:
         pytest.param(
             """
             mutation {
+                createUserCustom(
+                    data: {
+                        name: "Bob",
+                        group: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } },
+                        tag: { set: { id: "da636751-b276-4546-857f-3c73ea914467" } }
+                    }
+                ) {
+                    __typename
+                    ... on UserType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            "createUserCustom",
+            False,
+            id="create-custom",
+        ),
+        pytest.param(
+            """
+            mutation {
                 updateUsers(
                     filter: { id: { eq: "da636751-b276-4546-857f-3c73ea914467" } },
                     data: { name: "Bob" }

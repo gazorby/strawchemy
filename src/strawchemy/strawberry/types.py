@@ -112,5 +112,5 @@ class ValidationErrorType(ErrorType):
         )
 
     @classmethod
-    def from_pydantic_error(cls, exc: ValidationError, to_camel: bool = True) -> ValidationErrorType:
+    def from_pydantic(cls, exc: ValidationError, to_camel: bool = True) -> ValidationErrorType:
         return ValidationErrorType(errors=[cls._to_localized_error(err, to_camel) for err in exc.errors()])

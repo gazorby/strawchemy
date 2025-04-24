@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository, ValidationErrorType
+from strawchemy import InputValidationError, StrawchemyAsyncRepository, StrawchemySyncRepository, ValidationErrorType
 from strawchemy.graphql.mutation import Input
 
 import strawberry
@@ -71,6 +71,17 @@ class AsyncMutation:
     async def color_create_blue(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         return await StrawchemyAsyncRepository(ColorType, info).create(Input(data, name="Blue"))
 
+    @strawberry.field
+    async def create_color_manual_validation(
+        self, info: strawberry.Info, data: ColorCreateInput
+    ) -> ColorType | ValidationErrorType:
+        try:
+            return await StrawchemyAsyncRepository(ColorType, info).create(
+                Input(data, validation=ColorCreateValidation)
+            )
+        except InputValidationError as error:
+            return ValidationErrorType.from_pydantic(error.pydantic_error)
+
 
 @strawberry.type
 class SyncMutation:
@@ -108,6 +119,15 @@ class SyncMutation:
     @strawberry.field
     def color_create_blue(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         return StrawchemySyncRepository(ColorType, info).create(Input(data, name="Blue"))
+
+    @strawberry.field
+    def create_color_manual_validation(
+        self, info: strawberry.Info, data: ColorCreateInput
+    ) -> ColorType | ValidationErrorType:
+        try:
+            return StrawchemySyncRepository(ColorType, info).create(Input(data, validation=ColorCreateValidation))
+        except InputValidationError as error:
+            return ValidationErrorType.from_pydantic(error.pydantic_error)
 
 
 @pytest.fixture
@@ -151,6 +171,19 @@ def async_mutation() -> type[AsyncMutation]:
             id="createValidatedColor",
         ),
         pytest.param(
+            "createColorManualValidation",
+            """
+            mutation {
+                createColorManualValidation(data: {  name: "new color" }) {
+                    ... on ColorType {
+                        name
+                    }
+                }
+            }
+            """,
+            id="createValidatedColor-manual",
+        ),
+        pytest.param(
             "createValidatedColor",
             """
             mutation {
@@ -171,6 +204,28 @@ def async_mutation() -> type[AsyncMutation]:
             }
             """,
             id="createValidatedColorAllFragments",
+        ),
+        pytest.param(
+            "createColorManualValidation",
+            """
+            mutation {
+                createColorManualValidation(data: {  name: "new color" }) {
+                    ... on ColorType {
+                        name
+                    }
+                    ... on ValidationErrorType {
+                        id
+                        errors {
+                            id
+                            loc
+                            message
+                            type
+                        }
+                    }
+                }
+            }
+            """,
+            id="createValidatedColorAllFragments-manual",
         ),
     ],
 )

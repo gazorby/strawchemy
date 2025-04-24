@@ -500,7 +500,7 @@ class StrawchemyCreateMutationField(_StrawchemyInputMutationField[ModelT, ModelF
                 else repository.create(Input(data, self._validation_type))
             )
         except InputValidationError as error:
-            return ValidationErrorType.from_pydantic_error(error.pydantic_error)
+            return ValidationErrorType.from_pydantic(error.pydantic_error)
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -534,7 +534,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField[ModelT, ModelF
                 else repository.update_by_id(Input(data, self._validation_type))
             )
         except InputValidationError as error:
-            error = ValidationErrorType.from_pydantic_error(error.pydantic_error)
+            error = ValidationErrorType.from_pydantic(error.pydantic_error)
             return [error] if list_input else error
 
     def _update_by_filter_resolver(
@@ -544,7 +544,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField[ModelT, ModelF
         try:
             return repository.update_by_filter(Input(data, self._validation_type), filter_input)
         except InputValidationError as error:
-            return [ValidationErrorType.from_pydantic_error(error.pydantic_error)]
+            return [ValidationErrorType.from_pydantic(error.pydantic_error)]
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:

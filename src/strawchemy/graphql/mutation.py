@@ -224,13 +224,13 @@ class Input(Generic[ModelT, ModelFieldT, InputModel]):
     def __init__(
         self,
         dtos: MappedDTO[InputModel] | Sequence[MappedDTO[InputModel]],
-        pydantic_model: type[MappedPydanticDTO[InputModel]] | None = None,
+        validation: type[MappedPydanticDTO[InputModel]] | None = None,
         **override: Any,
     ) -> None:
         self.max_level = 0
         self.relations: list[_RelationInput[ModelT, ModelFieldT]] = []
         self.instances: list[InputModel] = []
-        self.pydantic_model = pydantic_model
+        self.pydantic_model = validation
 
         dtos = dtos if isinstance(dtos, Sequence) else [dtos]
         for index, dto in enumerate(dtos):

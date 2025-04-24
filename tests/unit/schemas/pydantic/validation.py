@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from pydantic import AfterValidator
-from strawchemy import Strawchemy, ValidationErrorType
+from strawchemy import Input, InputValidationError, Strawchemy, StrawchemySyncRepository, ValidationErrorType
 
 import strawberry
 from tests.unit.models import Group, User
@@ -75,3 +75,10 @@ class Mutation:
     update_user_by_ids: list[UserType | ValidationErrorType] = strawchemy.update_by_ids(
         UserPkUpdate, validation=UserPkUpdateValidation
     )
+
+    @strawberry.field
+    def create_user_custom(self, info: strawberry.Info, data: UserCreate) -> UserType | ValidationErrorType:
+        try:
+            return StrawchemySyncRepository(UserType, info).create(Input(data, validation=UserCreateValidation))
+        except InputValidationError as error:
+            return ValidationErrorType.from_pydantic(error.pydantic_error)
