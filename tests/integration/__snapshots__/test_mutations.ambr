@@ -1,4 +1,46 @@
 # serializer version: 1
+# name: test_column_override[session-tracked-async-asyncpg_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_column_override[session-tracked-async-asyncpg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_column_override[session-tracked-async-psycopg_async_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_column_override[session-tracked-async-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_column_override[session-tracked-sync-psycopg_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
+  '''
+# ---
+# name: test_column_override[session-tracked-sync-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
 # name: test_create[session-tracked-createColor-async-asyncpg_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
@@ -174,48 +216,6 @@
   '''
 # ---
 # name: test_create[session-tracked-createValidatedColorAllFragments-manual-async-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-override-async-asyncpg_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE)
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-override-async-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-override-async-psycopg_async_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-override-async-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-override-sync-psycopg_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-override-sync-psycopg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -1035,48 +1035,6 @@
   '''
   INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
-  '''
-# ---
-# name: test_custom_mutation_with_arg_override[session-tracked-async-asyncpg_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE)
-  '''
-# ---
-# name: test_custom_mutation_with_arg_override[session-tracked-async-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_custom_mutation_with_arg_override[session-tracked-async-psycopg_async_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
-  '''
-# ---
-# name: test_custom_mutation_with_arg_override[session-tracked-async-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_custom_mutation_with_arg_override[session-tracked-sync-psycopg_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE)
-  '''
-# ---
-# name: test_custom_mutation_with_arg_override[session-tracked-sync-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
 # name: test_delete_all[session-tracked-async-asyncpg_engine]

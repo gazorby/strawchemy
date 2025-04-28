@@ -2,13 +2,22 @@ from __future__ import annotations
 
 import dataclasses
 from functools import partial
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, overload
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.backend.pydantic import PydanticDTOBackend
-from strawchemy.dto.base import ModelFieldT, ModelT
 
+from ._factories import (
+    StrawberryRegistry,
+    StrawchemyAggregateFilterInputFactory,
+    StrawchemyFilterInputFactory,
+    StrawchemyInputFactory,
+    StrawchemyInputValidationFactory,
+    StrawchemyOrderByInputFactory,
+    StrawchemyRootAggregateTypeFactory,
+    StrawchemyTypeFactory,
+)
 from .config import StrawchemyConfig
 from .graphql.dto import (
     BooleanFilterDTO,
@@ -26,22 +35,13 @@ from .strawberry import (
     StrawchemyUpdateMutationField,
     types,
 )
-from .strawberry.factory import (
-    StrawberryAggregateFilterInputFactory,
-    StrawberryFilterInputFactory,
-    StrawberryInputFactory,
-    StrawberryInputValidationFactory,
-    StrawberryOrderByInputFactory,
-    StrawberryRegistry,
-    StrawberryRootAggregateTypeFactory,
-    StrawberryTypeFactory,
-)
 from .strawberry.inspector import _StrawberryModelInspector
 from .types import DefaultOffsetPagination
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
+    from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.field import _RESOLVER_TYPE
@@ -54,25 +54,25 @@ if TYPE_CHECKING:
     from .typing import AnyRepository
 
 
-T = TypeVar("T")
+T = TypeVar("T", bound="DeclarativeBase")
 
 _TYPES_NS = vars(types)
 
 __all__ = ("Strawchemy",)
 
 
-class _PydanticNamespace(Generic[ModelT, ModelFieldT]):
-    def __init__(self, strawchemy: Strawchemy[ModelT, ModelFieldT]) -> None:
+class _PydanticNamespace:
+    def __init__(self, strawchemy: Strawchemy) -> None:
         pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
         self._strawchemy = strawchemy
-        self._validation_factory = StrawberryInputValidationFactory(self._strawchemy, pydantic_backend)
+        self._validation_factory = StrawchemyInputValidationFactory(self._strawchemy, pydantic_backend)
 
         self.create = partial(self._validation_factory.input, mode="create")
         self.pk_update = partial(self._validation_factory.input, mode="update_by_pk")
         self.filter_update = partial(self._validation_factory.input, mode="update_by_filter")
 
 
-class Strawchemy(Generic[ModelT, ModelFieldT]):
+class Strawchemy:
     def __init__(self, settings: StrawchemyConfig | None = None) -> None:
         dataclass_backend = DataclassDTOBackend(MappedDataclassGraphQLDTO)
         pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
@@ -81,16 +81,16 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self.registry = StrawberryRegistry()
         self.inspector = _StrawberryModelInspector(self.settings.inspector, self.registry)
 
-        self._aggregate_filter_factory = StrawberryAggregateFilterInputFactory(self)
-        self._filter_factory = StrawberryFilterInputFactory(
+        self._aggregate_filter_factory = StrawchemyAggregateFilterInputFactory(self)
+        self._filter_factory = StrawchemyFilterInputFactory(
             self, aggregate_filter_factory=self._aggregate_filter_factory
         )
-        self._order_by_factory = StrawberryOrderByInputFactory(self)
+        self._order_by_factory = StrawchemyOrderByInputFactory(self)
         self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.inspector)
-        self._type_factory = StrawberryTypeFactory(self, dataclass_backend, order_by_factory=self._order_by_factory)
-        self._input_factory = StrawberryInputFactory(self, dataclass_backend)
-        self._validation_factory = StrawberryInputValidationFactory(self, pydantic_backend)
-        self._aggregation_factory = StrawberryRootAggregateTypeFactory(
+        self._type_factory = StrawchemyTypeFactory(self, dataclass_backend, order_by_factory=self._order_by_factory)
+        self._input_factory = StrawchemyInputFactory(self, dataclass_backend)
+        self._validation_factory = StrawchemyInputValidationFactory(self, pydantic_backend)
+        self._aggregation_factory = StrawchemyRootAggregateTypeFactory(
             self, dataclass_backend, type_factory=self._type_factory
         )
 
@@ -130,8 +130,8 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self,
         resolver: _RESOLVER_TYPE[Any],
         *,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
+        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
@@ -151,14 +151,14 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         graphql_type: Any | None = None,
         extensions: list[FieldExtension] | None = None,
         root_field: bool = True,
-    ) -> StrawchemyField[ModelT, ModelFieldT]: ...
+    ) -> StrawchemyField: ...
 
     @overload
     def field(
         self,
         *,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
+        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
@@ -184,8 +184,8 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
         self,
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, ModelFieldT]]] | None = None,
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
+        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
@@ -296,7 +296,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
     def update(
         self,
         input_type: type[MappedGraphQLDTO[T]],
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]],
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]],
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
         repository_type: AnyRepository | None = None,
@@ -387,7 +387,7 @@ class Strawchemy(Generic[ModelT, ModelFieldT]):
 
     def delete(
         self,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, ModelFieldT]]] | None = None,
+        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
         repository_type: AnyRepository | None = None,

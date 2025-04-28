@@ -1,11 +1,21 @@
 from __future__ import annotations
 
+from typing import cast
+
 import pytest
-from strawchemy import InputValidationError, StrawchemyAsyncRepository, StrawchemySyncRepository, ValidationErrorType
-from strawchemy.graphql.mutation import Input
+from strawchemy import (
+    Input,
+    InputValidationError,
+    StrawchemyAsyncRepository,
+    StrawchemySyncRepository,
+    ValidationErrorType,
+)
 
 import strawberry
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 from syrupy.assertion import SnapshotAssertion
+from tests.integration.models import Color, Fruit
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
@@ -71,8 +81,41 @@ class AsyncMutation:
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemyAsyncRepository)
 
     @strawberry.field
-    async def color_create_blue(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
+    async def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         return await StrawchemyAsyncRepository(ColorType, info).create(Input(data, name="Blue"))
+
+    @strawberry.field
+    async def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
+        color_input = Input(data)
+        color_input.instances[0].fruits.extend([Fruit(name="Apple"), Fruit(name="Strawberry")])
+        return await StrawchemyAsyncRepository(ColorType, info).create(color_input)
+
+    @strawberry.field
+    async def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
+        color_input = Input(data)
+        session = cast(AsyncSession, info.context.session)
+        apple, strawberry = Fruit(name="Apple"), Fruit(name="Strawberry")
+        session.add_all([apple, strawberry])
+        await session.commit()
+        session.expire(strawberry)
+        color_input.instances[0].fruits.extend([apple, strawberry])
+        return await StrawchemyAsyncRepository(ColorType, info).create(color_input)
+
+    @strawberry.field
+    async def create_red_fruit(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
+        fruit_input = Input(data)
+        fruit_input.instances[0].color = Color(name="Red")
+        return await StrawchemyAsyncRepository(FruitType, info).create(fruit_input)
+
+    @strawberry.field
+    async def create_fruit_for_existing_color(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
+        fruit_input = Input(data)
+        session = cast(AsyncSession, info.context.session)
+        red = Color(name="Red")
+        session.add(red)
+        await session.commit()
+        fruit_input.instances[0].color = red
+        return await StrawchemyAsyncRepository(FruitType, info).create(fruit_input)
 
     @strawberry.field
     async def create_color_manual_validation(
@@ -135,8 +178,41 @@ class SyncMutation:
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemySyncRepository)
 
     @strawberry.field
-    def color_create_blue(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
+    def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         return StrawchemySyncRepository(ColorType, info).create(Input(data, name="Blue"))
+
+    @strawberry.field
+    def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
+        color_input = Input(data)
+        color_input.instances[0].fruits.extend([Fruit(name="Apple"), Fruit(name="Strawberry")])
+        return StrawchemySyncRepository(ColorType, info).create(color_input)
+
+    @strawberry.field
+    def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
+        color_input = Input(data)
+        session = cast(Session, info.context.session)
+        apple, strawberry = Fruit(name="Apple"), Fruit(name="Strawberry")
+        session.add_all([apple, strawberry])
+        session.commit()
+        session.expire(strawberry)
+        color_input.instances[0].fruits.extend([apple, strawberry])
+        return StrawchemySyncRepository(ColorType, info).create(color_input)
+
+    @strawberry.field
+    def create_red_fruit(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
+        fruit_input = Input(data)
+        fruit_input.instances[0].color = Color(name="Red")
+        return StrawchemySyncRepository(FruitType, info).create(fruit_input)
+
+    @strawberry.field
+    def create_fruit_for_existing_color(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
+        fruit_input = Input(data)
+        session = cast(Session, info.context.session)
+        red = Color(name="Red")
+        session.add(red)
+        session.commit()
+        fruit_input.instances[0].color = red
+        return StrawchemySyncRepository(FruitType, info).create(fruit_input)
 
     @strawberry.field
     def create_color_manual_validation(
@@ -1629,12 +1705,12 @@ async def test_delete_all(
 
 
 @pytest.mark.snapshot
-async def test_custom_mutation_with_arg_override(
+async def test_column_override(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     query = """
         mutation {
-            colorCreateBlue(data: { name: "Green" }) {
+            createBlueColor(data: { name: "Green" }) {
                 name
             }
         }
@@ -1642,7 +1718,7 @@ async def test_custom_mutation_with_arg_override(
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["colorCreateBlue"] == {"name": "Blue"}
+    assert result.data["createBlueColor"] == {"name": "Blue"}
     query_tracker.assert_statements(1, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
@@ -1687,8 +1763,88 @@ async def test_custom_mutation_with_arg_override(
         ),
     ],
 )
-async def test_read_only_override(query_name: str, query: str, any_query: AnyQueryExecutor) -> None:
+async def test_read_only_column_override(query_name: str, query: str, any_query: AnyQueryExecutor) -> None:
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
     assert result.data[query_name] == {"name": "batman", "rank": 1}
+
+
+@pytest.mark.parametrize(
+    ("query_name", "query"),
+    [
+        pytest.param(
+            "createAppleColor",
+            """
+                mutation {
+                    createAppleColor(data: { name: "Red" }) {
+                        name
+                        fruits {
+                            name
+                        }
+                    }
+                }
+                """,
+            id="not-existing",
+        ),
+        pytest.param(
+            "createColorForExistingFruits",
+            """
+                mutation {
+                    createColorForExistingFruits(data: { name: "Red" }) {
+                        name
+                        fruits {
+                            name
+                        }
+                    }
+                }
+                """,
+            id="existing",
+        ),
+    ],
+)
+async def test_relationship_to_many_override(query_name: str, query: str, any_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data[query_name] == {"name": "Red", "fruits": [{"name": "Apple"}, {"name": "Strawberry"}]}
+
+
+@pytest.mark.parametrize(
+    ("query_name", "query"),
+    [
+        pytest.param(
+            "createRedFruit",
+            """
+            mutation {
+                createRedFruit(data: { name: "Apple", adjectives: ["juicy"] }) {
+                    name
+                    color {
+                        name
+                    }
+                }
+            }
+            """,
+            id="not-existing",
+        ),
+        pytest.param(
+            "createFruitForExistingColor",
+            """
+            mutation {
+                createFruitForExistingColor(data: { name: "Apple", adjectives: ["juicy"] }) {
+                    name
+                    color {
+                        name
+                    }
+                }
+            }
+            """,
+            id="existing",
+        ),
+    ],
+)
+async def test_relationship_to_one_override(query_name: str, query: str, any_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data[query_name] == {"name": "Apple", "color": {"name": "Red"}}

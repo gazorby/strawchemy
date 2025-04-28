@@ -16,7 +16,6 @@ from strawchemy.strawberry.scalars import Interval
 from strawchemy.testing.pytest_plugin import MockContext
 
 import strawberry
-from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import auto
 from strawberry.scalars import JSON
 from strawberry.types import get_object_definition
@@ -35,7 +34,7 @@ if TYPE_CHECKING:
 SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval}
 
 
-def test_type_instance(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]) -> None:
+def test_type_instance(strawchemy: Strawchemy) -> None:
     @strawchemy.type(User)
     class UserType:
         id: auto
@@ -46,7 +45,7 @@ def test_type_instance(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribut
     assert user.name == "user"
 
 
-def test_type_instance_auto_as_str(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]) -> None:
+def test_type_instance_auto_as_str(strawchemy: Strawchemy) -> None:
     @strawchemy.type(User)
     class UserType:
         id: "auto"
@@ -57,7 +56,7 @@ def test_type_instance_auto_as_str(strawchemy: Strawchemy[DeclarativeBase, Query
     assert user.name == "user"
 
 
-def test_input_instance(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]) -> None:
+def test_input_instance(strawchemy: Strawchemy) -> None:
     @strawchemy.create_input(User)
     class InputType:
         id: auto
@@ -68,7 +67,7 @@ def test_input_instance(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribu
     assert user.name == "user"  # pyright: ignore[reportAttributeAccessIssue]
 
 
-def test_field_metadata_default(strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]) -> None:
+def test_field_metadata_default(strawchemy: Strawchemy) -> None:
     """Test metadata default.
 
     Test that textual metadata from the SQLAlchemy model isn't reflected in the Strawberry

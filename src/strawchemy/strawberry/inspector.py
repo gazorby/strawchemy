@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.base import Relation
     from strawchemy.graph import Node
 
-    from .factory import StrawberryRegistry
+    from ._registry import StrawberryRegistry
 
 __all__ = ("_StrawberryModelInspector",)
 

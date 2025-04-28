@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
 
-from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry.types import get_object_definition
 from tests.unit.models import User
 
@@ -15,9 +14,7 @@ TYPE_DECORATOR_NAMES: list[str] = ["type", "aggregate", "filter", "aggregate_fil
 
 
 @pytest.mark.parametrize("decorator", TYPE_DECORATOR_NAMES)
-def test_type_no_purpose_excluded(
-    decorator: str, strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]
-) -> None:
+def test_type_no_purpose_excluded(decorator: str, strawchemy: Strawchemy) -> None:
     @getattr(strawchemy, decorator)(User, include="all", override=True)
     class UserType: ...
 
@@ -26,9 +23,7 @@ def test_type_no_purpose_excluded(
 
 
 @pytest.mark.parametrize("decorator", ["create_input", "pk_update_input", "filter_update_input"])
-def test_type_no_purpose_excluded_input(
-    decorator: str, strawchemy: Strawchemy[DeclarativeBase, QueryableAttribute[Any]]
-) -> None:
+def test_type_no_purpose_excluded_input(decorator: str, strawchemy: Strawchemy) -> None:
     @getattr(strawchemy, decorator)(User, include="all")
     class UserType: ...
 

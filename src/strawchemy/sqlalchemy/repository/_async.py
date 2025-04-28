@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias, TypeVar
 
 from sqlalchemy import Row, and_, delete, insert, inspect, update
 from sqlalchemy.orm import RelationshipProperty
-from strawchemy.graphql.mutation import Input, LevelInput, RelationType
+from strawchemy.graphql.mutation import RelationType
 from strawchemy.sqlalchemy._executor import AsyncQueryExecutor, QueryResult
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
 from strawchemy.sqlalchemy.typing import AnyAsyncSession, DeclarativeT, SQLAlchemyQueryNode
@@ -17,9 +17,8 @@ if TYPE_CHECKING:
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.input import Input, LevelInput
     from strawchemy.sqlalchemy.hook import QueryHook
-
-    from .typing import SQLAlchemyInput
 
 __all__ = ("SQLAlchemyGraphQLAsyncRepository",)
 
@@ -31,10 +30,7 @@ _InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where"]
 
 class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, AnyAsyncSession]):
     async def _insert_nested(
-        self,
-        model_type: type[DeclarativeBase],
-        values: list[dict[str, Any]],
-        level: LevelInput[DeclarativeBase, QueryableAttribute[Any]],
+        self, model_type: type[DeclarativeBase], values: list[dict[str, Any]], level: LevelInput
     ) -> None:
         """Inserts multiple records for a given model type and updates related instances.
 
@@ -71,7 +67,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             if relation_input.relation.relation_type is RelationType.TO_MANY:
                 continue
             # Update Fks
-            prop = relation_input.relation.field.model_field.property
+            prop = relation_input.relation.attribute
             assert isinstance(prop, RelationshipProperty)
             assert prop.local_remote_pairs
             for local, remote in prop.local_remote_pairs:
@@ -80,7 +76,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 setattr(relation_input.relation.parent, local.key, instance_ids[fk_index][pk_names.index(remote.key)])
             fk_index += 1
 
-    async def _create_nested_to_one_relations(self, data: SQLAlchemyInput) -> None:
+    async def _create_nested_to_one_relations(self, data: Input[DeclarativeT]) -> None:
         """Creates nested related objects for to-one relationships.
 
         Iterates through the input data levels filtered for 'create' operations
@@ -96,13 +92,12 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
 
             for create_input in level.inputs:
-                assert create_input.relation.field.related_model
-                insert_params[create_input.relation.field.related_model].append(self._to_dict(create_input.instance))
+                insert_params[create_input.relation.related].append(self._to_dict(create_input.instance))
 
             for model_type, values in insert_params.items():
                 await self._insert_nested(model_type, values, level)
 
-    async def _update_to_many_relations(self, data: SQLAlchemyInput, created_ids: Sequence[_RowLike]) -> None:
+    async def _update_to_many_relations(self, data: Input[DeclarativeT], created_ids: Sequence[_RowLike]) -> None:
         """Updates foreign keys to connect existing related objects for to-many relationships.
 
         Iterates through the input data levels filtered for 'set' operations
@@ -120,11 +115,10 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             update_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
             for level_input in level.inputs:
                 relation = level_input.relation
-                prop = relation.field.model_field.property
+                prop = relation.attribute
                 assert prop.local_remote_pairs
-                assert relation.field.related_model
                 parent = created_ids[relation.input_index] if relation.level == 1 else relation.parent
-                update_params[relation.field.related_model].extend(
+                update_params[relation.related].extend(
                     [
                         {
                             column.key: getattr(relation_model, column.key)
@@ -138,7 +132,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                         for relation_model in relation.add
                     ]
                 )
-                update_params[relation.field.related_model].extend(
+                update_params[relation.related].extend(
                     [
                         {
                             column.key: getattr(relation_model, column.key)
@@ -155,7 +149,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def _set_to_many_relations(
         self,
         mode: _InsertOrUpdate,
-        data: SQLAlchemyInput,
+        data: Input[DeclarativeT],
         created_ids: Sequence[_RowLike],
     ) -> None:
         for level in data.filter_by_level(RelationType.TO_MANY, ["set"]):
@@ -165,15 +159,14 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             set_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
             for level_input in level.inputs:
                 relation = level_input.relation
-                prop = relation.field.model_field.property
+                prop = relation.attribute
                 assert prop.local_remote_pairs
-                assert relation.field.related_model
                 parent = created_ids[relation.input_index] if relation.level == 1 else relation.parent
                 if relation.level == 1 and mode in {"update_by_pks", "update_where"}:
                     for local, remote in prop.local_remote_pairs:
-                        remove_old_ids[relation.field.related_model][remote.key].append(getattr(parent, local.key))
+                        remove_old_ids[relation.related][remote.key].append(getattr(parent, local.key))
                 for relation_model in relation.set or []:
-                    set_params[relation.field.related_model].append(
+                    set_params[relation.related].append(
                         {
                             column.key: getattr(relation_model, column.key)
                             for column in relation_model.__mapper__.primary_key
@@ -199,7 +192,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                     await self.session.execute(remove_previous_stmt, {key: None for key in current_ids})
                 await self.session.execute(update(model_type), set_values)
 
-    async def _create_to_many_relations(self, data: SQLAlchemyInput, created_ids: Sequence[_RowLike]) -> None:
+    async def _create_to_many_relations(self, data: Input[DeclarativeT], created_ids: Sequence[_RowLike]) -> None:
         """Creates and connects new related objects for to-many relationships.
 
         Iterates through the input data levels filtered for 'create' operations
@@ -218,16 +211,15 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
             for create_input in level.inputs:
                 relation = create_input.relation
-                prop = relation.field.model_field.property
+                prop = relation.attribute
                 assert prop.local_remote_pairs
-                assert relation.field.related_model
                 parent = created_ids[relation.input_index] if relation.level == 1 else relation.parent
                 fks = {
                     remote.key: getattr(parent, local.key)
                     for local, remote in prop.local_remote_pairs
                     if local.key and remote.key
                 }
-                insert_params[relation.field.related_model].append(self._to_dict(create_input.instance) | fks)
+                insert_params[relation.related].append(self._to_dict(create_input.instance) | fks)
 
             for model_type, values in insert_params.items():
                 await self._insert_nested(model_type, values, level)
@@ -235,7 +227,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def _execute_insert_or_update(
         self,
         mode: _InsertOrUpdate,
-        data: SQLAlchemyInput,
+        data: Input[DeclarativeT],
         dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None,
     ) -> Sequence[_RowLike]:
         model_pks = self.model.__mapper__.primary_key
@@ -263,11 +255,12 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     async def _mutate(
         self,
         mode: _InsertOrUpdate,
-        data: SQLAlchemyInput,
+        data: Input[DeclarativeT],
         dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
     ) -> Sequence[_RowLike]:
+        self._connect_to_one_relations(data)
+        data.add_non_input_relations()
         async with self.session.begin_nested() as transaction:
-            self._connect_to_one_relations(data)
             await self._create_nested_to_one_relations(data)
             instance_ids = await self._execute_insert_or_update(mode, data, dto_filter)
             await self._create_to_many_relations(data, instance_ids)
@@ -444,7 +437,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         return await executor.get_one_or_none(self.session)
 
     async def create(
-        self, data: SQLAlchemyInput, selection: SQLAlchemyQueryNode | None = None
+        self, data: Input[DeclarativeT], selection: SQLAlchemyQueryNode | None = None
     ) -> QueryResult[DeclarativeT]:
         """Creates one or more records with nested relationships and returns them.
 
@@ -465,7 +458,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         return await self._list_by_ids(created_ids, selection)
 
     async def update_by_ids(
-        self, data: SQLAlchemyInput, selection: SQLAlchemyQueryNode | None = None
+        self, data: Input[DeclarativeT], selection: SQLAlchemyQueryNode | None = None
     ) -> QueryResult[DeclarativeT]:
         """Updates one or more records with nested relationships and returns them.
 
@@ -487,7 +480,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
 
     async def update_by_filter(
         self,
-        data: Input[DeclarativeBase, QueryableAttribute[Any], Any],
+        data: Input[DeclarativeT],
         dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]],
         selection: SQLAlchemyQueryNode | None = None,
     ) -> QueryResult[DeclarativeT]:

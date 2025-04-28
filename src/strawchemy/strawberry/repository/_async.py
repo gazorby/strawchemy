@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from sqlalchemy import Select
     from strawberry import Info
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.sqlalchemy.repository.typing import SQLAlchemyInput
+    from strawchemy.input import Input
     from strawchemy.sqlalchemy.typing import AnyAsyncSession
     from strawchemy.strawberry.typing import AsyncSessionGetter, StrawchemyTypeFromPydantic
 
@@ -121,24 +121,24 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
             return self._tree.aggregation_query_result_to_strawberry_type(query_results)
         return self._tree.query_result_to_strawberry_type(query_results)
 
-    async def create_many(self, data: SQLAlchemyInput) -> Sequence[T]:
+    async def create_many(self, data: Input[Any]) -> Sequence[T]:
         query_results = await self.graphql_repository().create(data, self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)
 
-    async def create(self, data: SQLAlchemyInput) -> T:
+    async def create(self, data: Input[Any]) -> T:
         query_results = await self.graphql_repository().create(data, self._tree)
         return self._tree.node_result_to_strawberry_type(query_results.one())
 
-    async def update_many_by_id(self, data: SQLAlchemyInput) -> Sequence[T]:
+    async def update_many_by_id(self, data: Input[Any]) -> Sequence[T]:
         query_results = await self.graphql_repository().update_by_ids(data, self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)
 
-    async def update_by_id(self, data: SQLAlchemyInput) -> T:
+    async def update_by_id(self, data: Input[Any]) -> T:
         query_results = await self.graphql_repository().update_by_ids(data, self._tree)
         return self._tree.node_result_to_strawberry_type(query_results.one())
 
     async def update_by_filter(
-        self, data: SQLAlchemyInput, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]
+        self, data: Input[Any], filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]
     ) -> Sequence[T]:
         query_results = await self.graphql_repository().update_by_filter(data, filter_input.to_pydantic(), self._tree)
         return self._tree.query_result_to_strawberry_type(query_results)

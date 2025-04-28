@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from .graphql.exceptions import InputValidationError
-from .graphql.mutation import Input
+from .exceptions import InputValidationError
+from .input import Input
 from .mapper import Strawchemy
 from .sqlalchemy.hook import QueryHook
 from .strawberry import ModelInstance
