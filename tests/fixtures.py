@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
 from strawchemy.mapper import Strawchemy
 
 import strawberry
-from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from syrupy.assertion import SnapshotAssertion
 from syrupy.extensions.amber import AmberSnapshotExtension
 from tests.utils import sqlalchemy_dataclass_factory, sqlalchemy_pydantic_factory
@@ -31,7 +30,7 @@ def sql_snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
 
 
 @pytest.fixture
-def strawchemy() -> Strawchemy[DeclarativeBase, QueryableAttribute[Any]]:
+def strawchemy() -> Strawchemy:
     return Strawchemy()
 
 

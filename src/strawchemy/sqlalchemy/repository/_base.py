@@ -14,9 +14,8 @@ if TYPE_CHECKING:
     from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.input import Input
     from strawchemy.sqlalchemy.hook import QueryHook
-
-    from .typing import SQLAlchemyInput
 
 
 __all__ = ("SQLAlchemyGraphQLRepository",)
@@ -66,13 +65,20 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
             execution_options=execution_options if execution_options is not None else self.execution_options,
         )
 
-    def _to_dict(self, model: DeclarativeBase) -> dict[str, Any]:
-        loaded_attr = {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
-        return {field: getattr(model, field) for field in model.__mapper__.columns.keys() if field in loaded_attr}  # noqa: SIM118
+    @classmethod
+    def _loaded_attributes(cls, model: DeclarativeBase) -> set[str]:
+        return {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
 
-    def _connect_to_one_relations(self, data: SQLAlchemyInput) -> None:
+    def _to_dict(self, model: DeclarativeBase) -> dict[str, Any]:
+        return {
+            field: getattr(model, field)
+            for field in model.__mapper__.columns.keys()  # noqa: SIM118
+            if field in self._loaded_attributes(model)
+        }
+
+    def _connect_to_one_relations(self, data: Input[DeclarativeT]) -> None:
         for relation in data.relations:
-            prop = relation.field.model_field.property
+            prop = relation.attribute
             if (
                 (not relation.set and relation.set is not None)
                 or not isinstance(prop, RelationshipProperty)
