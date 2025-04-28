@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15.0](https://github.com/gazorby/strawchemy/compare/v0.14.2..v0.15.0) - 2025-04-28
+
+### 🚀 Features
+
+- *(input)* Track relationship changes - ([feee547](https://github.com/gazorby/strawchemy/commit/feee5478028556cbc419041b9bfa12dd9712dd0e))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.15.0 - ([aeb1ed3](https://github.com/gazorby/strawchemy/commit/aeb1ed33a6e67803e42f7f85236211cf2edcaafe))
 ## [0.14.2](https://github.com/gazorby/strawchemy/compare/v0.14.1..v0.14.2) - 2025-04-24
 
 ### 🐛 Bug Fixes
