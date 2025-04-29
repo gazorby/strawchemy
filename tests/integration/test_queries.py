@@ -130,11 +130,7 @@ async def test_many(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> No
 
     assert not result.errors
     assert result.data
-    assert result.data["users"] == [
-        {"name": raw_users[0]["name"]},
-        {"name": raw_users[1]["name"]},
-        {"name": raw_users[2]["name"]},
-    ]
+    assert result.data["users"] == [{"name": user["name"]} for user in raw_users]
 
 
 async def test_relation(any_query: AnyQueryExecutor, raw_colors: RawRecordData) -> None:
