@@ -422,9 +422,9 @@
   input GroupPartial {
     id: UUID
     name: String
-    tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput!
+    tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput
     users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
-    color: GroupColorIdFieldsInputGroupColorInputRequiredToOneInput!
+    color: GroupColorIdFieldsInputGroupColorInputRequiredToOneInput
   }
   
   type GroupSumFields {
@@ -482,9 +482,9 @@
   input GroupUpdate {
     id: UUID!
     name: String
-    tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput!
+    tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput
     users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
-    color: GroupColorIdFieldsInputGroupColorInputRequiredToOneInput!
+    color: GroupColorIdFieldsInputGroupColorInputRequiredToOneInput
   }
   
   """GraphQL update_by_pk input type"""
@@ -702,7 +702,7 @@
     id: UUID!
     name: String
     users: GroupUsersIdFieldsInputTagUserInputToManyUpdateInput
-    color: GroupColorIdFieldsInputTagColorInputRequiredToOneInput!
+    color: GroupColorIdFieldsInputTagColorInputRequiredToOneInput
   }
   
   """Identifier input"""

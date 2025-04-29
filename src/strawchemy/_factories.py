@@ -1188,7 +1188,7 @@ class StrawchemyInputFactory(StrawchemyTypeFactory[MappedGraphQLDTOT]):
         else:
             type_ = RequiredToOneInput if field_required else ToOneInput
             input_type = type_[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
-        return input_type if field_required else input_type | None
+        return input_type if field_required and mode == "create" else input_type | None
 
     @override
     def iter_field_definitions(
