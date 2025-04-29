@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15.4](https://github.com/gazorby/strawchemy/compare/v0.15.3..v0.15.4) - 2025-04-29
+
+### 🐛 Bug Fixes
+
+- *(input)* Dataclass models tracking not working - ([14bfe33](https://github.com/gazorby/strawchemy/commit/14bfe33faa5c3619e80150e5ab31e19a1b1410b1))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.15.4 - ([9fc7cde](https://github.com/gazorby/strawchemy/commit/9fc7cdeb8e9fe242baece19b7e8efbc61dbea5a4))
 ## [0.15.3](https://github.com/gazorby/strawchemy/compare/v0.15.2..v0.15.3) - 2025-04-29
 
 ### ⚙️ Miscellaneous Tasks
