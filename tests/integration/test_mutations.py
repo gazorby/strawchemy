@@ -756,7 +756,10 @@ async def test_create_many(
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
-async def test_create_init_defaults(any_query: AnyQueryExecutor) -> None:
+@pytest.mark.snapshot
+async def test_create_init_defaults(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
     result = await maybe_async(
         any_query(
             """
@@ -775,6 +778,8 @@ async def test_create_init_defaults(any_query: AnyQueryExecutor) -> None:
         "name": "Jeanne",
         "bio": "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
     }
+
+    query_tracker.assert_statements(1, "insert", sql_snapshot)
 
 
 # Update tests
@@ -1654,12 +1659,15 @@ async def test_update_many(
     query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated records
 
 
-async def test_update_no_init_defaults(raw_users: RawRecordData, any_query: AnyQueryExecutor) -> None:
+@pytest.mark.snapshot
+async def test_update_no_init_defaults(
+    raw_users: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
     result = await maybe_async(
         any_query(
             f"""
             mutation {{
-                updateUser(data: {{ id: "{raw_users[0]["id"]}", name: "Jeanne" }}) {{
+                updateUser(data: {{ id: "{raw_users[3]["id"]}", name: "Jeanne" }}) {{
                     name
                     bio
                 }}
@@ -1669,7 +1677,9 @@ async def test_update_no_init_defaults(raw_users: RawRecordData, any_query: AnyQ
     )
     assert not result.errors
     assert result.data
-    assert result.data["updateUser"] == {"name": "Jeanne", "bio": None}
+    assert result.data["updateUser"] == {"name": "Jeanne", "bio": raw_users[3]["bio"]}
+
+    query_tracker.assert_statements(1, "update", sql_snapshot)
 
 
 # Delete

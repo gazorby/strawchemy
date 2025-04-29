@@ -107,7 +107,8 @@ class User(Base):
 
     def __init__(self, **kw: Any) -> None:
         super().__init__(**kw)
-        self.bio = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
+        if self.bio is None:
+            self.bio = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
 
 
 class RankedUser(Base):
