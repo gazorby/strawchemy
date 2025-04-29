@@ -15,7 +15,6 @@ local_pytest_options = "-n=6 -vv"
 pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
 ci_pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --junit-xml=./junit.xml -o junit_family=legacy"
 nox_py13 = "uv run nox -r -p=3.13"
-
 cleanable_paths = '''{{
 [
   ".nox",
@@ -46,12 +45,10 @@ description = "Install dependencies"
 hide = true
 run = "uv sync --all-extras --dev"
 
-
 [tasks."_install:geo"]
 description = "Install dependencies with geo extras"
 hide = true
 run = "uv sync --extra=geo --dev"
-
 
 [tasks.install]
 description = "Install dependencies and pre-commit hooks"
@@ -134,8 +131,7 @@ run = 'uv run nox -r -t integration -- {{vars.local_pytest_options}} {{arg(name=
 [tasks."test:update-snapshot"]
 description = "Run snapshot-based tests and update snapshots"
 depends = "_install"
-run = 'uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update'
-
+run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update"
 
 # CI
 
@@ -225,7 +221,7 @@ run = "uv run bump-my-version bump --new-version $(uv run git cliff --unreleased
 [tasks.clean]
 description = "Clean working directory"
 alias = "c"
-confirm = 'Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files.'
+confirm = "Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files."
 run = [
   "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
   "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
