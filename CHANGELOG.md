@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15.5](https://github.com/gazorby/strawchemy/compare/v0.15.4..v0.15.5) - 2025-04-29
+
+### 🐛 Bug Fixes
+
+- *(input)* Fields on update input were not partial - ([3f94f2e](https://github.com/gazorby/strawchemy/commit/3f94f2e0bd44d079ba3f254951982a1166bb9f84))
+
+### 🚜 Refactor
+
+- *(formatting)* Apply ruff - ([8d3375f](https://github.com/gazorby/strawchemy/commit/8d3375f5b63fe36292f9956909c93606581b042a))
+
+### 🧪 Testing
+
+- *(integration)* Test  multiple query/mutations sequentially - ([6f879ca](https://github.com/gazorby/strawchemy/commit/6f879cae181de625415258f03c552182c1f4f840))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.15.5 - ([83487ca](https://github.com/gazorby/strawchemy/commit/83487ca24114bfe7d44fdb10e2218c87f49452e0))
+- *(uv)* Upgrade - ([c973d96](https://github.com/gazorby/strawchemy/commit/c973d96fd0d1dc9ea46cd9f82e453f86cf04309c))
 ## [0.15.4](https://github.com/gazorby/strawchemy/compare/v0.15.3..v0.15.4) - 2025-04-29
 
 ### 🐛 Bug Fixes
