@@ -206,7 +206,7 @@ def psycopg_engine(database_service: PostgresService) -> Engine:
     ],
 )
 def engine(request: FixtureRequest) -> Engine:
-    return cast(Engine, request.getfixturevalue(request.param))
+    return cast("Engine", request.getfixturevalue(request.param))
 
 
 @pytest.fixture
@@ -278,7 +278,7 @@ def psycopg_async_engine(database_service: PostgresService) -> AsyncEngine:
     ],
 )
 def async_engine(request: FixtureRequest) -> AsyncEngine:
-    return cast(AsyncEngine, request.getfixturevalue(request.param))
+    return cast("AsyncEngine", request.getfixturevalue(request.param))
 
 
 @pytest.fixture

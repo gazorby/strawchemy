@@ -71,7 +71,7 @@ class EnumDTOBackend(DTOBackend[EnumDTO], Generic[ModelT]):
         if model_module := getmodule(model):
             module = model_module.__name__
         return cast(
-            type[EnumDTO],
+            "type[EnumDTO]",
             EnumDTO(value=name, names=[(value, value) for value in list(field_map)], type=base, module=module),
         )
 

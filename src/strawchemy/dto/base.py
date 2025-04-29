@@ -124,7 +124,9 @@ class MappedDTO(DTOBase[ModelT]):
 
             if isinstance(value, list | tuple):
                 value = [
-                    dto.to_mapped(visitor, level=level + 1) if isinstance(dto, ToMappedProtocol) else cast(ModelT, dto)
+                    dto.to_mapped(visitor, level=level + 1)
+                    if isinstance(dto, ToMappedProtocol)
+                    else cast("ModelT", dto)
                     for dto in value
                 ]
             if isinstance(value, ToMappedProtocol):

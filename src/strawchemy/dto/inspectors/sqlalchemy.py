@@ -212,7 +212,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         return default, default_factory
 
     def _field_config(self, elem: MapperProperty[Any]) -> DTOFieldConfig:
-        config = cast(DTOFieldConfig, elem.class_attribute.info.get(DTO_INFO_KEY, DTOFieldConfig()))
+        config = cast("DTOFieldConfig", elem.class_attribute.info.get(DTO_INFO_KEY, DTOFieldConfig()))
         if isinstance(elem, MappedSQLExpression):
             config.purposes = {Purpose.READ}
         return config
