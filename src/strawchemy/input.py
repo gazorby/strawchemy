@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Sequence
+from collections.abc import Hashable, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, cast, override
 
@@ -235,15 +235,19 @@ class Input(Generic[InputModel]):
                 if relation.input_index == -1:
                     relation.input_index = index
 
+    @classmethod
+    def _model_identity(cls, model: DeclarativeBase) -> Hashable:
+        return inspect(model)
+
     def _add_non_input_relations(
-        self, model: DeclarativeBase, input_index: int, _level: int = 0, _seen: set[DeclarativeBase] | None = None
+        self, model: DeclarativeBase, input_index: int, _level: int = 0, _seen: set[Hashable] | None = None
     ) -> None:
         seen = _seen or set()
         _level += 1
         loaded_attributes = {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
         level_relations = {relation.attribute.key for relation in self.relations if relation.level == _level}
         mapper = object_mapper(model)
-        seen.add(model)
+        seen.add(self._model_identity(model))
         for relationship in mapper.relationships:
             if relationship.key not in loaded_attributes or relationship.key in level_relations:
                 continue
@@ -268,11 +272,11 @@ class Input(Generic[InputModel]):
             if isinstance(relationship_value, tuple | list):
                 model_list = cast("list[DeclarativeBase]", relationship_value)
                 for value in model_list:
-                    if value in seen:
+                    if self._model_identity(value) in seen:
                         continue
                     self._add_non_input_relations(value, input_index, _level, seen)
                     relation.add_instance(value)
-            elif relationship_value not in seen:
+            elif self._model_identity(relationship_value) not in seen:
                 self._add_non_input_relations(relationship_value, input_index, _level, seen)
                 relation.add_instance(relationship_value)
             self.add_relation(relation)
