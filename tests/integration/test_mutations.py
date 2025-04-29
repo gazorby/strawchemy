@@ -93,7 +93,7 @@ class AsyncMutation:
     @strawberry.field
     async def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
-        session = cast(AsyncSession, info.context.session)
+        session = cast("AsyncSession", info.context.session)
         apple, strawberry = Fruit(name="Apple"), Fruit(name="Strawberry")
         session.add_all([apple, strawberry])
         await session.commit()
@@ -110,7 +110,7 @@ class AsyncMutation:
     @strawberry.field
     async def create_fruit_for_existing_color(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
         fruit_input = Input(data)
-        session = cast(AsyncSession, info.context.session)
+        session = cast("AsyncSession", info.context.session)
         red = Color(name="Red")
         session.add(red)
         await session.commit()
@@ -190,7 +190,7 @@ class SyncMutation:
     @strawberry.field
     def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
-        session = cast(Session, info.context.session)
+        session = cast("Session", info.context.session)
         apple, strawberry = Fruit(name="Apple"), Fruit(name="Strawberry")
         session.add_all([apple, strawberry])
         session.commit()
@@ -207,7 +207,7 @@ class SyncMutation:
     @strawberry.field
     def create_fruit_for_existing_color(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
         fruit_input = Input(data)
-        session = cast(Session, info.context.session)
+        session = cast("Session", info.context.session)
         red = Color(name="Red")
         session.add(red)
         session.commit()

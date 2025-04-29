@@ -290,7 +290,7 @@ class StrawberryRegistry:
     ) -> type[EnumT]:
         type_name = name or f"{enum_type.__name__}Enum"
         if existing := self.namespace("enum").get(type_name):
-            return cast(type[EnumT], existing)
+            return cast("type[EnumT]", existing)
         strawberry_enum_type = strawberry.enum(cls=enum_type, name=name, description=description, directives=directives)
         self.namespace("enum")[type_name] = strawberry_enum_type
         return strawberry_enum_type

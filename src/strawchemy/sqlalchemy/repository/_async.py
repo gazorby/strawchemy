@@ -189,7 +189,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                             ]
                         )
                     )
-                    await self.session.execute(remove_previous_stmt, {key: None for key in current_ids})
+                    await self.session.execute(remove_previous_stmt, dict.fromkeys(current_ids))
                 await self.session.execute(update(model_type), set_values)
 
     async def _create_to_many_relations(self, data: Input[DeclarativeT], created_ids: Sequence[_RowLike]) -> None:

@@ -13,12 +13,12 @@ from strawchemy.graphql.dto import (
 )
 from strawchemy.sqlalchemy import SQLAlchemyGraphQLRepository
 from strawchemy.strawberry._instance import MapperModelInstance
-from strawchemy.typing import DataclassProtocol
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from strawchemy.sqlalchemy._executor import NodeResult, QueryResult
+    from strawchemy.typing import DataclassProtocol
 
 
 __all__ = ("SQLAlchemyGraphQLRepository",)
@@ -36,7 +36,7 @@ class _StrawberryQueryNode(QueryNode[Any, Any], Generic[T]):
         return next(
             (
                 field.name
-                for field in dataclasses.fields(cast(DataclassProtocol, self.strawberry_type))
+                for field in dataclasses.fields(cast("DataclassProtocol", self.strawberry_type))
                 if type_has_annotation(field.type, MapperModelInstance)
             ),
             None,

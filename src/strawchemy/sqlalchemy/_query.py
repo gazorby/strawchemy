@@ -52,7 +52,7 @@ class Join:
 
     @property
     def relationship(self) -> RelationshipProperty[Any]:
-        return cast(RelationshipProperty[Any], self.node.value.model_field.property)
+        return cast("RelationshipProperty[Any]", self.node.value.model_field.property)
 
     @property
     def to_many(self) -> bool:
@@ -87,8 +87,8 @@ class AggregationJoin(Join):
 
     @property
     def _lateral_select(self) -> Select[Any]:
-        self_join = cast(AliasedReturnsRows, self.join)
-        return cast(Select[Any], cast(Subquery, self_join.element).element)
+        self_join = cast("AliasedReturnsRows", self.join)
+        return cast("Select[Any]", cast("Subquery", self_join.element).element)
 
     def _existing_function_column(self, new_column: ColumnElement[Any]) -> ColumnElement[Any] | None:
         for column in self._lateral_select.selected_columns:
@@ -114,7 +114,7 @@ class AggregationJoin(Join):
         return column.label(name)
 
     def add_column_to_subquery(self, column: ColumnElement[Any]) -> None:
-        self_join = cast(AliasedReturnsRows, self.join)
+        self_join = cast("AliasedReturnsRows", self.join)
         new_sub_select = self._lateral_select.add_columns(self._ensure_unique_name(column))
 
         def _replace(
