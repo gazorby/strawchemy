@@ -36,6 +36,7 @@ AggregationType = Literal[
 ]
 
 QueryHookCallable: TypeAlias = "Callable[..., Any]"
+InputType: TypeAlias = Literal["create", "update_by_pk", "update_by_filter"]
 
 PydanticGraphQLDTO: TypeAlias = "UnmappedPydanticGraphQLDTO[T] | MappedPydanticGraphQLDTO[T]"
 DataclassGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[T] | UnmappedDataclassGraphQLDTO[T]"

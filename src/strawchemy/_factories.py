@@ -43,7 +43,14 @@ from .graphql.factories.inputs import (
     OrderByDTOFactory,
 )
 from .graphql.factories.types import RootAggregateTypeDTOFactory, TypeDTOFactory
-from .graphql.typing import DataclassGraphQLDTO, GraphQLDTOT, MappedGraphQLDTO, PydanticGraphQLDTO, UnmappedGraphQLDTO
+from .graphql.typing import (
+    DataclassGraphQLDTO,
+    GraphQLDTOT,
+    InputType,
+    MappedGraphQLDTO,
+    PydanticGraphQLDTO,
+    UnmappedGraphQLDTO,
+)
 from .strawberry._instance import MapperModelInstance
 from .strawberry._registry import RegistryTypeInfo, StrawberryRegistry
 from .strawberry._utils import pydantic_from_strawberry_type, strawchemy_type_from_pydantic
@@ -67,7 +74,7 @@ if TYPE_CHECKING:
     from .graphql.inspector import GraphQLInspectorProtocol
     from .graphql.typing import AggregationType
     from .sqlalchemy.hook import QueryHook
-    from .strawberry.typing import GraphQLType, InputType, StrawchemyTypeFromPydantic
+    from .strawberry.typing import GraphQLType, StrawchemyTypeFromPydantic
 
 __all__ = (
     "StrawchemyAggregateFactory",
@@ -329,6 +336,8 @@ class _StrawchemyFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gr
     def _input_wrapper(
         self,
         model: type[T],
+        *,
+        mode: InputType,
         include: IncludeFields | None = None,
         exclude: ExcludeFields | None = None,
         partial: bool | None = None,
@@ -352,7 +361,7 @@ class _StrawchemyFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gr
                 alias_generator=alias_generator,
                 aliases=aliases,
             )
-            return self.factory(
+            dto = self.factory(
                 model=model,
                 dto_config=dto_config,
                 base=class_,
@@ -361,8 +370,11 @@ class _StrawchemyFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gr
                 directives=directives,
                 override=override,
                 user_defined=True,
+                mode=mode,
                 **kwargs,
             )
+            dto.__strawchemy_input_type__ = mode
+            return dto
 
         return wrapper
 

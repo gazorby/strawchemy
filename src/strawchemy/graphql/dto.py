@@ -55,7 +55,7 @@ from strawchemy.utils import camel_to_snake
 
 from .constants import LIMIT_KEY, OFFSET_KEY, ORDER_BY_KEY
 from .filters import AnyOrderComparison
-from .typing import OrderByDTOT
+from .typing import InputType, OrderByDTOT
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
@@ -91,6 +91,7 @@ class StrawchemyDTOAttributes:
     __strawchemy_filter__: type[Any] | None = None
     __strawchemy_order_by__: type[Any] | None = None
     __strawchemy_validation_cls__: type[MappedPydanticDTO[Any]] | None = None
+    __strawchemy_input_type__: ClassVar[InputType] | None = None
 
 
 class _Key(Generic[T]):

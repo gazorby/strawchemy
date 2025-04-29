@@ -74,9 +74,7 @@ class AsyncMutation:
     )
 
     update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemyAsyncRepository)
-
     create_user: UserType = strawchemy.create(UserCreate, repository_type=StrawchemyAsyncRepository)
-
     delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemyAsyncRepository)
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemyAsyncRepository)
 
@@ -122,9 +120,7 @@ class AsyncMutation:
         self, info: strawberry.Info, data: ColorCreateInput
     ) -> ColorType | ValidationErrorType:
         try:
-            return await StrawchemyAsyncRepository(ColorType, info).create(
-                Input(data, validation=ColorCreateValidation)
-            )
+            return await StrawchemyAsyncRepository(ColorType, info).create(Input(data, ColorCreateValidation))
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
 
@@ -134,7 +130,7 @@ class AsyncMutation:
     ) -> RankedUserType | ValidationErrorType:
         try:
             return await StrawchemyAsyncRepository(RankedUserType, info).create(
-                Input(data, validation=RankedUserCreateValidation, rank=1)
+                Input(data, RankedUserCreateValidation, rank=1)
             )
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
@@ -165,14 +161,12 @@ class SyncMutation:
     )
 
     create_fruits: list[FruitType] = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
-
-    create_user: UserType = strawchemy.create(UserCreate, repository_type=StrawchemySyncRepository)
-
     update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemySyncRepository)
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemySyncRepository
     )
 
+    create_user: UserType = strawchemy.create(UserCreate, repository_type=StrawchemySyncRepository)
     update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemySyncRepository)
     delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemySyncRepository)
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemySyncRepository)
@@ -219,7 +213,7 @@ class SyncMutation:
         self, info: strawberry.Info, data: ColorCreateInput
     ) -> ColorType | ValidationErrorType:
         try:
-            return StrawchemySyncRepository(ColorType, info).create(Input(data, validation=ColorCreateValidation))
+            return StrawchemySyncRepository(ColorType, info).create(Input(data, ColorCreateValidation))
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
 
@@ -229,7 +223,7 @@ class SyncMutation:
     ) -> RankedUserType | ValidationErrorType:
         try:
             return StrawchemySyncRepository(RankedUserType, info).create(
-                Input(data, validation=RankedUserCreateValidation, rank=1)
+                Input(data, RankedUserCreateValidation, rank=1)
             )
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
@@ -760,6 +754,27 @@ async def test_create_many(
 
     query_tracker.assert_statements(1, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+async def test_create_init_defaults(any_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(
+        any_query(
+            """
+            mutation {
+                createUser(data: { name: "Jeanne" }) {
+                    name
+                    bio
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert result.data["createUser"] == {
+        "name": "Jeanne",
+        "bio": "Lorem ipsum dolor sit amet, consectetur adipiscing elit",
+    }
 
 
 # Update tests
@@ -1637,6 +1652,24 @@ async def test_update_many(
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update colors in a single query
     query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated records
+
+
+async def test_update_no_init_defaults(raw_users: RawRecordData, any_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(
+        any_query(
+            f"""
+            mutation {{
+                updateUser(data: {{ id: "{raw_users[0]["id"]}", name: "Jeanne" }}) {{
+                    name
+                    bio
+                }}
+            }}
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert result.data["updateUser"] == {"name": "Jeanne", "bio": None}
 
 
 # Delete

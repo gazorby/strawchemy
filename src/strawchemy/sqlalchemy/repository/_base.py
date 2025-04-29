@@ -6,6 +6,7 @@ from sqlalchemy import inspect
 from sqlalchemy.orm import NO_VALUE, RelationshipProperty
 from strawchemy.graphql.mutation import RelationType
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
+from strawchemy.sqlalchemy.inspector import loaded_attributes
 from strawchemy.sqlalchemy.typing import DeclarativeT, QueryExecutorT, SessionT, SQLAlchemyQueryNode
 
 if TYPE_CHECKING:
@@ -73,7 +74,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         return {
             field: getattr(model, field)
             for field in model.__mapper__.columns.keys()  # noqa: SIM118
-            if field in self._loaded_attributes(model)
+            if field in loaded_attributes(model)
         }
 
     def _connect_to_one_relations(self, data: Input[DeclarativeT]) -> None:

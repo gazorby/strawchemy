@@ -17,7 +17,6 @@ __all__ = (
     "AnySessionGetter",
     "AsyncSessionGetter",
     "FilterStatementCallable",
-    "InputType",
     "StrawchemyTypeFromPydantic",
     "StrawchemyTypeWithStrawberryObjectDefinition",
     "SyncSessionGetter",
@@ -28,7 +27,6 @@ AsyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnyAsyncSession]"
 SyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnySyncSession]"
 AnySessionGetter: TypeAlias = "AsyncSessionGetter | SyncSessionGetter"
 FilterStatementCallable: TypeAlias = "Callable[[Info[Any, Any]], Select[tuple[Any]]]"
-InputType: TypeAlias = Literal["create", "update_by_pk", "update_by_filter"]
 
 
 class StrawchemyTypeWithStrawberryObjectDefinition(StrawchemyDTOAttributes, WithStrawberryObjectDefinition): ...
