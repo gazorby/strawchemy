@@ -1,6 +1,6 @@
 [project]
 name = "strawchemy"
-version = "0.15.5"
+version = "0.15.6"
 description = "Generate GraphQL API from SQLAlchemy models"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -79,7 +79,7 @@ build-backend = "hatchling.build"
 allow_dirty = true
 commit = true
 commit_args = "--no-verify"
-current_version = "0.15.5"
+current_version = "0.15.6"
 ignore_missing_files = false
 ignore_missing_version = false
 message = "build(release): bump to v{new_version}"
