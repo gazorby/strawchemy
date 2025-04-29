@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15.3](https://github.com/gazorby/strawchemy/compare/v0.15.2..v0.15.3) - 2025-04-29
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.15.3 - ([6c6207e](https://github.com/gazorby/strawchemy/commit/6c6207eb52f31b9f762d2bc8928d5184be757ffc))
+- Fix python 3.13 - ([2b4cf16](https://github.com/gazorby/strawchemy/commit/2b4cf169e317cf4d5d1362fa1e07b3acc4f31ace))
 ## [0.15.2](https://github.com/gazorby/strawchemy/compare/v0.15.1..v0.15.2) - 2025-04-29
 
 ### ⚙️ Miscellaneous Tasks
