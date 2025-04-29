@@ -18,70 +18,65 @@ def fx_pyproject(pytester: pytest.Pytester) -> None:
     )
 
 
-def test_patch_query_fixture_async(pytester: pytest.Pytester) -> None:
+@pytest.mark.parametrize(
+    ("query"),
+    [
+        pytest.param("{ fruits { name sweetness } }", id="basic"),
+        pytest.param("{ fruits { name color { id name } } }", id="relation"),
+    ],
+)
+def test_patch_query_fixture(query: str, pytester: pytest.Pytester) -> None:
     pytester.makepyfile(
-        """
+        f"""
         import pytest
         import strawberry
-        from strawchemy import Strawchemy, StrawchemyAsyncRepository
+        from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository
         from strawchemy.testing import MockContext
-        from tests.unit.models import Fruit
+        from tests.unit.models import Fruit, SQLDataTypes
+        from strawberry.scalars import JSON
+        from typing import Any
+        from datetime import timedelta
+        from strawchemy.strawberry.scalars import Interval
 
+        SCALAR_OVERRIDES: dict[object, Any] = {{dict[str, Any]: JSON, timedelta: Interval}}
         pytest_plugins = ["strawchemy.testing.pytest_plugin", "pytest_asyncio"]
 
         strawchemy = Strawchemy()
 
         @strawchemy.type(Fruit, include="all")
         class FruitType:
-            pass
+            ...
+
+        @strawchemy.type(SQLDataTypes, include="all")
+        class DataTypes:
+            ...
 
         @strawberry.type
-        class Query:
+        class QueryAsync:
             fruits: list[FruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
-
-        async def test(context: MockContext) -> None:
-            schema = strawberry.Schema(query=Query)
-            result = await schema.execute("{ fruits { name } }", context_value=context)
-            assert result.errors is None
-            assert result.data is not None
-        """
-    )
-
-    result = pytester.runpytest(_PYTEST_ARGS)
-    result.assert_outcomes(passed=1)
-
-
-def test_patch_query_fixture_sync(pytester: pytest.Pytester) -> None:
-    pytester.makepyfile(
-        """
-        import pytest
-        import strawberry
-        from strawchemy import Strawchemy
-        from strawchemy.testing import MockContext
-        from tests.unit.models import Fruit
-
-        pytest_plugins = ["strawchemy.testing.pytest_plugin"]
-
-        strawchemy = Strawchemy()
-
-        @strawchemy.type(Fruit, include="all")
-        class FruitType:
-            pass
+            data_types: list[DataTypes] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
 
         @strawberry.type
-        class Query:
-            fruits: list[FruitType] = strawchemy.field()
+        class QuerySync:
+            fruits: list[FruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+            data_types: list[DataTypes] = strawchemy.field(repository_type=StrawchemySyncRepository)
 
-        def test(context: MockContext) -> None:
-            schema = strawberry.Schema(query=Query)
-            result = schema.execute_sync("{ fruits { name } }", context_value=context)
+        async def test_async(context: MockContext) -> None:
+            schema = strawberry.Schema(query=QueryAsync, scalar_overrides=SCALAR_OVERRIDES)
+            result = await schema.execute("{query}", context_value=context)
+            assert result.errors is None
+            assert result.data is not None
+
+        def test_sync(context: MockContext) -> None:
+            schema = strawberry.Schema(query=QuerySync, scalar_overrides=SCALAR_OVERRIDES)
+            result = schema.execute_sync("{query}", context_value=context)
             assert result.errors is None
             assert result.data is not None
         """
     )
 
     result = pytester.runpytest(_PYTEST_ARGS)
-    result.assert_outcomes(passed=1)
+    result.assert_outcomes(passed=2)
 
 
 @pytest.mark.parametrize(
