@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.15.6](https://github.com/gazorby/strawchemy/compare/v0.15.5..v0.15.6) - 2025-04-29
+
+### 🐛 Bug Fixes
+
+- *(input)* Discard attributes set during model init when parsing update inputs - ([62f4327](https://github.com/gazorby/strawchemy/commit/62f432796c0bef4bf4a7767f49cc391954541c6a))
+
+### 🧪 Testing
+
+- *(integration)* Better sql snapshots for insert/update statements - ([b849961](https://github.com/gazorby/strawchemy/commit/b849961c5f9ef8a781ec78095d5249add7e26fa1))
+- *(integration)* Fixup - ([12fd07e](https://github.com/gazorby/strawchemy/commit/12fd07e49a5a85a7afb25aaff17f7f97e9b464b1))
+- *(pytest-plugin)* Rework test cases - ([71bad56](https://github.com/gazorby/strawchemy/commit/71bad56d269c704f66030dc67e06bd20961a11d7))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.15.6 - ([bad48a6](https://github.com/gazorby/strawchemy/commit/bad48a6a5932284dd7e41548ebdcdab4176f8046))
 ## [0.15.5](https://github.com/gazorby/strawchemy/compare/v0.15.4..v0.15.5) - 2025-04-29
 
 ### 🐛 Bug Fixes
