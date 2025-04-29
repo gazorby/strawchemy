@@ -250,11 +250,11 @@ Run unit tests without extras dependencies
 
 #### `[test]`
 
-## `test:update-snapshot`
+## `test:update-snapshots`
 
 - Depends: _install
 
-- **Usage**: `test:update-snapshot`
+- **Usage**: `test:update-snapshots`
 
 Run snapshot-based tests and update snapshots
 

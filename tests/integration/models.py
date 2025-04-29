@@ -12,10 +12,10 @@ from strawchemy.dto.utils import PRIVATE, READ_ONLY
 from sqlalchemy import DateTime, ForeignKey, MetaData, Text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
 from sqlalchemy.orm import registry as Registry  # noqa: N812
 
-metadata, geo_metadata = MetaData(), MetaData()
+metadata, geo_metadata, dc_metadata = MetaData(), MetaData(), MetaData()
 
 
 class BaseColumns:
@@ -29,9 +29,14 @@ class BaseColumns:
     )
 
 
-class UUIDBase(BaseColumns, DeclarativeBase):
+class Base(BaseColumns, DeclarativeBase):
     __abstract__ = True
     registry = Registry(metadata=metadata)
+
+
+class DataclassBase(BaseColumns, MappedAsDataclass, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=dc_metadata)
 
 
 class GeoUUIDBase(BaseColumns, DeclarativeBase):
@@ -39,20 +44,20 @@ class GeoUUIDBase(BaseColumns, DeclarativeBase):
     registry = Registry(metadata=geo_metadata)
 
 
-class FruitFarm(UUIDBase):
+class FruitFarm(Base):
     __tablename__ = "fruit_farm"
 
     name: Mapped[str]
     fruit_id: Mapped[UUID] = mapped_column(ForeignKey("fruit.id"), info=PRIVATE)
 
 
-class DerivedProduct(UUIDBase):
+class DerivedProduct(Base):
     __tablename__ = "derived_product"
 
     name: Mapped[str]
 
 
-class Fruit(UUIDBase):
+class Fruit(Base):
     __tablename__ = "fruit"
 
     name: Mapped[str]
@@ -70,44 +75,50 @@ class Fruit(UUIDBase):
         return f"The {self.name} is {', '.join(self.adjectives)}"
 
 
-class Color(UUIDBase):
+class Color(Base):
     __tablename__ = "color"
 
     fruits: Mapped[list[Fruit]] = relationship("Fruit", back_populates="color")
     name: Mapped[str]
 
 
-class Group(UUIDBase):
+class Group(Base):
     __tablename__ = "group"
 
     name: Mapped[str] = mapped_column()
     topics: Mapped[list["Topic"]] = relationship("Topic")
 
 
-class Topic(UUIDBase):
+class Topic(Base):
     __tablename__ = "topic"
 
     name: Mapped[str] = mapped_column()
     group_id: Mapped[UUID] = mapped_column(ForeignKey("group.id"))
 
 
-class User(UUIDBase):
+class User(Base):
     __tablename__ = "user"
 
     name: Mapped[str] = mapped_column()
     greeting: Mapped[str] = column_property("Hello, " + name)
     group_id: Mapped[UUID | None] = mapped_column(ForeignKey("group.id"))
     group: Mapped[Group | None] = relationship(Group)
+    bio: Mapped[str | None] = mapped_column(default=None)
+
+    def __init__(self, **kw: Any) -> None:
+        super().__init__(**kw)
+        if self.bio is None:
+            self.bio = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
 
 
-class RankedUser(UUIDBase):
+class RankedUser(Base):
     __tablename__ = "ranked_user"
 
     name: Mapped[str] = mapped_column()
     rank: Mapped[int] = mapped_column(info=READ_ONLY)
 
 
-class SQLDataTypes(UUIDBase):
+class SQLDataTypes(Base):
     __tablename__ = "sql_data_types"
 
     date_col: Mapped[date]
@@ -127,7 +138,7 @@ class SQLDataTypes(UUIDBase):
     container: Mapped[SQLDataTypesContainer] = relationship("SQLDataTypesContainer")
 
 
-class SQLDataTypesContainer(UUIDBase):
+class SQLDataTypesContainer(Base):
     __tablename__ = "sql_data_types_container"
 
     data_types: Mapped[list[SQLDataTypes]] = relationship("SQLDataTypes", back_populates="container")

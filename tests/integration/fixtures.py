@@ -371,9 +371,10 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
 @pytest.fixture
 def raw_users(raw_groups: RawRecordData) -> RawRecordData:
     return [
-        {"id": str(uuid4()), "name": "Alice", "group_id": raw_groups[0]["id"]},
-        {"id": str(uuid4()), "name": "Bob", "group_id": None},
-        {"id": str(uuid4()), "name": "Charlie", "group_id": None},
+        {"id": str(uuid4()), "name": "Alice", "group_id": raw_groups[0]["id"], "bio": None},
+        {"id": str(uuid4()), "name": "Bob", "group_id": None, "bio": None},
+        {"id": str(uuid4()), "name": "Charlie", "group_id": None, "bio": None},
+        {"id": str(uuid4()), "name": "Tango", "group_id": None, "bio": "Tango's bio"},
     ]
 
 
@@ -663,7 +664,8 @@ class QueryInspector:
     def statement_str(self) -> str:
         compiled = self.clause_element
         if isinstance(self.clause_element, ClauseElement):
-            compiled = self.clause_element.compile(dialect=self.dialect)
+            column_keys = list(self.params) or list(self.multiparams[0] if self.multiparams else []) or None
+            compiled = self.clause_element.compile(dialect=self.dialect, column_keys=column_keys)
         return str(compiled)
 
     @property
@@ -719,6 +721,7 @@ class QueryTracker:
     ) -> None:
         filtered = self.filter(statement_type) if statement_type is not None else self
         assert filtered.query_count == count
-        if snapshot is not None:
-            for query in filtered:
-                assert query.statement_formatted == snapshot
+        if snapshot is None:
+            return
+        for query in filtered:
+            assert query.statement_formatted == snapshot

@@ -128,7 +128,7 @@ alias = "tia"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -t integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
-[tasks."test:update-snapshot"]
+[tasks."test:update-snapshots"]
 description = "Run snapshot-based tests and update snapshots"
 depends = "_install"
 run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update"

@@ -8,9 +8,12 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVa
 from pydantic import ValidationError
 
 from sqlalchemy import event, inspect
-from sqlalchemy.orm import NO_VALUE, MapperProperty, RelationshipDirection, object_mapper
-from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
-from strawchemy.graphql.mutation import (
+from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
+from strawchemy.sqlalchemy.inspector import loaded_attributes
+
+from .dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
+from .exceptions import InputValidationError
+from .graphql.mutation import (
     RelationType,
     RequiredToManyUpdateInputMixin,
     RequiredToOneInputMixin,
@@ -19,13 +22,13 @@ from strawchemy.graphql.mutation import (
     ToOneInputMixin,
 )
 
-from .exceptions import InputValidationError
-
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-    from strawchemy.dto.backend.pydantic import MappedPydanticDTO
+
+    from .dto.backend.pydantic import MappedPydanticDTO
+    from .graphql.typing import MappedGraphQLDTO
 
 
 __all__ = (
@@ -128,6 +131,7 @@ class RelationInput(_UnboundRelationInput):
 @dataclass
 class _InputVisitor(VisitorProtocol, Generic[InputModel]):
     input_data: Input[InputModel]
+    is_update: bool = False
 
     current_relations: list[_UnboundRelationInput] = dataclasses.field(default_factory=list)
 
@@ -193,6 +197,13 @@ class _InputVisitor(VisitorProtocol, Generic[InputModel]):
                 raise InputValidationError(error) from error
         else:
             model = model_cls(**params)
+
+        # In update mode, we ensure only input params are set in the instance
+        if self.is_update:
+            for attribute in loaded_attributes(model):
+                if attribute not in params:
+                    delattr(model, attribute)
+
         for relation in self.current_relations:
             self.input_data.add_relation(RelationInput.from_unbound(relation, model))
         self.current_relations.clear()
@@ -216,19 +227,24 @@ class LevelInput:
 class Input(Generic[InputModel]):
     def __init__(
         self,
-        dtos: MappedDTO[InputModel] | Sequence[MappedDTO[InputModel]],
-        validation: type[MappedPydanticDTO[InputModel]] | None = None,
+        dtos: MappedGraphQLDTO[InputModel] | Sequence[MappedGraphQLDTO[InputModel]],
+        _pydantic_model_: type[MappedPydanticDTO[InputModel]] | None = None,
         **override: Any,
     ) -> None:
         self.max_level = 0
         self.relations: list[RelationInput] = []
         self.instances: list[InputModel] = []
         self.dtos: list[MappedDTO[InputModel]] = []
-        self.pydantic_model = validation
+        self.pydantic_model = _pydantic_model_
 
         dtos = dtos if isinstance(dtos, Sequence) else [dtos]
         for index, dto in enumerate(dtos):
-            mapped = dto.to_mapped(visitor=_InputVisitor(self), override=override)
+            mapped = dto.to_mapped(
+                visitor=_InputVisitor(
+                    self, is_update=dto.__strawchemy_input_type__ in ("update_by_pk", "update_by_filter")
+                ),
+                override=override,
+            )
             self.instances.append(mapped)
             self.dtos.append(dto)
             for relation in self.relations:
@@ -244,12 +260,11 @@ class Input(Generic[InputModel]):
     ) -> None:
         seen = _seen or set()
         _level += 1
-        loaded_attributes = {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
         level_relations = {relation.attribute.key for relation in self.relations if relation.level == _level}
         mapper = object_mapper(model)
         seen.add(self._model_identity(model))
         for relationship in mapper.relationships:
-            if relationship.key not in loaded_attributes or relationship.key in level_relations:
+            if relationship.key not in loaded_attributes(model) or relationship.key in level_relations:
                 continue
             relationship_value = getattr(model, relationship.key)
             # We do not merge this check with the one above to avoid MissingGreenlet error

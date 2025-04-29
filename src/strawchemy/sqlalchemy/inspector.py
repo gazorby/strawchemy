@@ -5,8 +5,9 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
+from sqlalchemy import inspect
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.orm import DeclarativeBase, QueryableAttribute, registry
+from sqlalchemy.orm import NO_VALUE, DeclarativeBase, QueryableAttribute, registry
 from sqlalchemy.types import ARRAY, JSON
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
@@ -33,7 +34,7 @@ if TYPE_CHECKING:
     from .typing import FilterMap
 
 
-__all__ = ("SQLAlchemyGraphQLInspector",)
+__all__ = ("SQLAlchemyGraphQLInspector", "loaded_attributes")
 
 
 T = TypeVar("T", bound=Any)
@@ -50,6 +51,10 @@ _DEFAULT_FILTERS_MAP: FilterMap = OrderedDict(
         (str,): TextSQLAlchemyFilter,
     }
 )
+
+
+def loaded_attributes(model: DeclarativeBase) -> set[str]:
+    return {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
 
 
 class SQLAlchemyGraphQLInspector(
