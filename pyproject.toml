@@ -373,13 +373,11 @@ SQLAlchemyGraphQLAsyncRepository = "SQLAlchemyGraphQLSyncRepository"
 "strawchemy.strawberry.typing.AsyncSessionGetter" = "strawchemy.strawberry.typing.SyncSessionGetter"
 StrawchemyAsyncRepository = "StrawchemySyncRepository"
 
-# #################
-# External Tools #
-# #################
 [tool.uv]
 default-groups = ["test", "lint"]
 
 [tool.uv.sources]
+unasyncd = { git = "https://github.com/provinzkraut/unasyncd", rev = "a8c8bba24ebdd84e04dbca103a0f704011484d40" }
 testapp = { workspace = true }
 
 [tool.uv.workspace]
