@@ -378,26 +378,26 @@ class Query:
         # Create a repository with a predefined filter
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == "Red"))
         # Return a single result (will raise an exception if not found)
-        return repo.get_one()
+        return repo.get_one().graphql_type()
 
     @strawchemy.field
     def get_color_by_name(self, info: strawberry.Info, color: str) -> ColorType | None:
         # Create a repository with a custom filter statement
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
         # Return a single result or None if not found
-        return repo.get_one_or_none()
+        return repo.get_one_or_none().graphql_type_or_none()
 
     @strawchemy.field
     def get_color_by_id(self, info: strawberry.Info, id: str) -> ColorType | None:
         repo = StrawchemySyncRepository(ColorType, info)
         # Return a single result or None if not found
-        return repo.get_by_id(id=id)
+        return repo.get_by_id(id=id).graphql_type_or_none()
 
     @strawchemy.field
     def public_colors(self, info: strawberry.Info) -> ColorType:
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.public.is_(true())))
         # Return a list of results
-        return repo.list()
+        return repo.list().graphql_list()
 ```
 
 For async resolvers, use `StrawchemyAsyncRepository` which is the async variant of `StrawchemySyncRepository`:
@@ -410,7 +410,7 @@ class Query:
     @strawchemy.field
     async def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
         repo = StrawchemyAsyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
-        return await repo.get_one_or_none()
+        return (await repo.get_one_or_none()).graphql_type_or_none()
 ```
 
 The repository provides several methods for fetching data:
@@ -1285,9 +1285,7 @@ class Mutation:
     update_colors: list[ColorType] = strawchemy.update_by_ids(ColorUpdateInput)
 
     # Update with filter
-    update_colors_filter: list[ColorType] = strawchemy.update(
-        ColorUpdateInput, ColorFilter
-    )
+    update_colors_filter: list[ColorType] = strawchemy.update(ColorUpdateInput, ColorFilter)
 ```
 
 GraphQL usage:
@@ -1690,13 +1688,13 @@ from strawchemy import StrawchemySyncRepository, StrawchemyAsyncRepository
 @strawchemy.field
 def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
     repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
-    return repo.get_one_or_none()
+    return repo.get_one_or_none().graphql_type_or_none()
 
 # Asynchronous resolver
 @strawchemy.field
 async def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
     repo = StrawchemyAsyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
-    return await repo.get_one_or_none()
+    return await repo.get_one_or_none().graphql_type_or_none()
 
 # Synchronous mutation
 @strawberry.type
