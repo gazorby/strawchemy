@@ -70,6 +70,7 @@ if TYPE_CHECKING:
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.graphql.typing import AnyMappedDTO, MappedGraphQLDTO
     from strawchemy.sqlalchemy.typing import QueryHookCallable
+    from strawchemy.strawberry.repository._base import GraphQLResult
     from strawchemy.typing import AnyRepository
 
     from .repository import StrawchemySyncRepository
@@ -85,13 +86,12 @@ __all__ = ("StrawchemyCreateMutationField", "StrawchemyDeleteMutationField", "St
 
 T = TypeVar("T", bound="DeclarativeBase")
 
-ListResolverResult: TypeAlias = (
+_OneOrManyResult: TypeAlias = (
     "Sequence[StrawchemyTypeWithStrawberryObjectDefinition] | StrawchemyTypeWithStrawberryObjectDefinition"
 )
-GetByIdResolverResult: TypeAlias = "StrawchemyTypeWithStrawberryObjectDefinition | None"
-CreateOrUpdateResolverResult: TypeAlias = (
-    "Sequence[StrawchemyTypeWithStrawberryObjectDefinition] | ValidationErrorType | Sequence[ValidationErrorType]"
-)
+_ListResolverResult: TypeAlias = _OneOrManyResult
+_GetByIdResolverResult: TypeAlias = "StrawchemyTypeWithStrawberryObjectDefinition | None"
+_CreateOrUpdateResolverResult: TypeAlias = "_OneOrManyResult | ValidationErrorType | Sequence[ValidationErrorType]"
 
 
 _OPTIONAL_UNION_ARG_SIZE: int = 2
@@ -220,11 +220,28 @@ class StrawchemyField(StrawberryField):
             execution_options=self._execution_options,
         )
 
+    async def _list_result_async(self, repository_call: Awaitable[GraphQLResult[Any, Any]]) -> _ListResolverResult:
+        return (await repository_call).graphql_list(root_aggregations=self.root_aggregations)
+
+    def _list_result_sync(self, repository_call: GraphQLResult[Any, Any]) -> _ListResolverResult:
+        return repository_call.graphql_list(root_aggregations=self.root_aggregations)
+
+    async def _get_by_id_result_async(
+        self, repository_call: Awaitable[GraphQLResult[Any, Any]]
+    ) -> _GetByIdResolverResult:
+        result = await repository_call
+        return result.graphql_type_or_none() if self.is_optional else result.graphql_type()
+
+    def _get_by_id_result_sync(self, repository_call: GraphQLResult[Any, Any]) -> _GetByIdResolverResult:
+        return repository_call.graphql_type_or_none() if self.is_optional else repository_call.graphql_type()
+
     def _get_by_id_resolver(
         self, info: Info, **kwargs: Any
-    ) -> GetByIdResolverResult | Coroutine[GetByIdResolverResult, Any, Any]:
+    ) -> _GetByIdResolverResult | Coroutine[_GetByIdResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.get_by_id(strict=not self.is_optional, **kwargs)
+        if isinstance(repository, StrawchemyAsyncRepository):
+            return self._get_by_id_result_async(repository.get_by_id(**kwargs))
+        return self._get_by_id_result_sync(repository.get_by_id(**kwargs))
 
     def _list_resolver(
         self,
@@ -234,9 +251,11 @@ class StrawchemyField(StrawberryField):
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> ListResolverResult | Coroutine[ListResolverResult, Any, Any]:
+    ) -> _ListResolverResult | Coroutine[_ListResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.list(filter_input, order_by, distinct_on, limit, offset)
+        if isinstance(repository, StrawchemyAsyncRepository):
+            return self._list_result_async(repository.list(filter_input, order_by, distinct_on, limit, offset))
+        return self._list_result_sync(repository.list(filter_input, order_by, distinct_on, limit, offset))
 
     def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
         for inner_type in strawberry_contained_types(type_):
@@ -455,12 +474,12 @@ class StrawchemyField(StrawberryField):
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
     ) -> (
-        ListResolverResult
-        | Coroutine[ListResolverResult, Any, Any]
-        | GetByIdResolverResult
-        | Coroutine[GetByIdResolverResult, Any, Any]
-        | CreateOrUpdateResolverResult
-        | Coroutine[CreateOrUpdateResolverResult, Any, Any]
+        _ListResolverResult
+        | Coroutine[_ListResolverResult, Any, Any]
+        | _GetByIdResolverResult
+        | Coroutine[_GetByIdResolverResult, Any, Any]
+        | _CreateOrUpdateResolverResult
+        | Coroutine[_CreateOrUpdateResolverResult, Any, Any]
     ):
         if self.is_list:
             return self._list_resolver(info, *args, **kwargs)
@@ -490,19 +509,31 @@ class _StrawchemyInputMutationField(StrawchemyField):
         self._validation_type = validation
 
 
-class StrawchemyCreateMutationField(_StrawchemyInputMutationField):
+class _StrawchemyMutationField:
+    async def _input_result_async(
+        self, repository_call: Awaitable[GraphQLResult[Any, Any]], input_data: Input[Any]
+    ) -> _ListResolverResult:
+        result = await repository_call
+        return result.graphql_list() if input_data.list_input else result.graphql_type()
+
+    def _input_result_sync(
+        self, repository_call: GraphQLResult[Any, Any], input_data: Input[Any]
+    ) -> _ListResolverResult:
+        return repository_call.graphql_list() if input_data.list_input else repository_call.graphql_type()
+
+
+class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMutationField):
     def _create_resolver(
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
-            return (
-                repository.create_many(Input(data, self._validation_type))
-                if isinstance(data, Sequence)
-                else repository.create(Input(data, self._validation_type))
-            )
+            input_data = Input(data, self._validation_type)
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
+        if isinstance(repository, StrawchemyAsyncRepository):
+            return self._input_result_async(repository.create(input_data), input_data)
+        return self._input_result_sync(repository.create(input_data), input_data)
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -513,11 +544,11 @@ class StrawchemyCreateMutationField(_StrawchemyInputMutationField):
     @override
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         return self._create_resolver(info, *args, **kwargs)
 
 
-class StrawchemyUpdateMutationField(_StrawchemyInputMutationField):
+class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMutationField):
     @override
     def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
         if self._filter is not None and not _is_list(type_):
@@ -526,30 +557,31 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField):
 
     def _update_by_ids_resolver(
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        list_input = isinstance(data, Sequence)
         try:
-            return (
-                repository.update_many_by_id(Input(data, self._validation_type))
-                if list_input
-                else repository.update_by_id(Input(data, self._validation_type))
-            )
+            input_data = Input(data, self._validation_type)
         except InputValidationError as error:
             error = ValidationErrorType.from_pydantic(error.pydantic_error)
-            return [error] if list_input else error
+            return [error] if isinstance(data, Sequence) else error
+        if isinstance(repository, StrawchemyAsyncRepository):
+            return self._input_result_async(repository.update_by_id(input_data), input_data)
+        return self._input_result_sync(repository.update_by_id(input_data), input_data)
 
     def _update_by_filter_resolver(
         self,
         info: Info,
         data: AnyMappedDTO,
         filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]],
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
-            return repository.update_by_filter(Input(data, self._validation_type), filter_input)
+            input_data = Input(data, self._validation_type)
         except InputValidationError as error:
             return [ValidationErrorType.from_pydantic(error.pydantic_error)]
+        if isinstance(repository, StrawchemyAsyncRepository):
+            return self._list_result_async(repository.update_by_filter(input_data, filter_input))
+        return self._list_result_sync(repository.update_by_filter(input_data, filter_input))
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -570,13 +602,13 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField):
     @override
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         if self.filter:
             return self._update_by_filter_resolver(info, *args, **kwargs)
         return self._update_by_ids_resolver(info, *args, **kwargs)
 
 
-class StrawchemyDeleteMutationField(StrawchemyField):
+class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
     def __init__(
         self,
         input_type: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
@@ -591,9 +623,11 @@ class StrawchemyDeleteMutationField(StrawchemyField):
         self,
         info: Info,
         filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]] | None = None,
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        return repository.delete(filter_input)
+        if isinstance(repository, StrawchemyAsyncRepository):
+            return self._list_result_async(repository.delete(filter_input))
+        return self._list_result_sync(repository.delete(filter_input))
 
     @override
     def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
@@ -618,5 +652,5 @@ class StrawchemyDeleteMutationField(StrawchemyField):
     @override
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
-    ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         return self._delete_resolver(info, *args, **kwargs)

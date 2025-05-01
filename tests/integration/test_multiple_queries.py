@@ -67,7 +67,7 @@ class AsyncMutation:
     async def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
         color_input.instances[0].fruits.extend([Fruit(name="Apple"), Fruit(name="Strawberry")])
-        return await StrawchemyAsyncRepository(ColorType, info).create(color_input)
+        return (await StrawchemyAsyncRepository(ColorType, info).create(color_input)).graphql_type()
 
     @strawberry.field
     async def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
@@ -78,7 +78,7 @@ class AsyncMutation:
         await session.commit()
         session.expire(strawberry)
         color_input.instances[0].fruits.extend([apple, strawberry])
-        return await StrawchemyAsyncRepository(ColorType, info).create(color_input)
+        return (await StrawchemyAsyncRepository(ColorType, info).create(color_input)).graphql_type()
 
 
 @strawberry.type
@@ -109,7 +109,7 @@ class SyncMutation:
     def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
         color_input.instances[0].fruits.extend([Fruit(name="Apple"), Fruit(name="Strawberry")])
-        return StrawchemySyncRepository(ColorType, info).create(color_input)
+        return (StrawchemySyncRepository(ColorType, info).create(color_input)).graphql_type()
 
     @strawberry.field
     def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
@@ -120,7 +120,7 @@ class SyncMutation:
         session.commit()
         session.expire(strawberry)
         color_input.instances[0].fruits.extend([apple, strawberry])
-        return StrawchemySyncRepository(ColorType, info).create(color_input)
+        return (StrawchemySyncRepository(ColorType, info).create(color_input)).graphql_type()
 
 
 @pytest.fixture

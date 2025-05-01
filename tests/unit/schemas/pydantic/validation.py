@@ -79,6 +79,6 @@ class Mutation:
     @strawberry.field
     def create_user_custom(self, info: strawberry.Info, data: UserCreate) -> UserType | ValidationErrorType:
         try:
-            return StrawchemySyncRepository(UserType, info).create(Input(data, UserCreateValidation))
+            return StrawchemySyncRepository(UserType, info).create(Input(data, UserCreateValidation)).graphql_type()
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)

@@ -1,20 +1,18 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from strawchemy.sqlalchemy.repository import SQLAlchemyGraphQLAsyncRepository
 from strawchemy.strawberry._utils import default_session_getter, dto_model_from_type, strawberry_contained_user_type
 
-from ._base import StrawchemyRepository
+from ._base import GraphQLResult, StrawchemyRepository
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
-
     from sqlalchemy import Select
     from strawberry import Info
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.input import Input
+    from strawchemy.input import Input, InputModel
     from strawchemy.sqlalchemy.typing import AnyAsyncSession
     from strawchemy.strawberry.typing import AsyncSessionGetter, StrawchemyTypeFromPydantic
 
@@ -28,7 +26,6 @@ T = TypeVar("T")
 class StrawchemyAsyncRepository(StrawchemyRepository[T]):
     type: type[T]
     info: Info[Any, Any]
-    root_aggregations: bool = False
 
     # sqlalchemy related settings
     session_getter: AsyncSessionGetter = default_session_getter
@@ -51,7 +48,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> T | None:
+    ) -> GraphQLResult[Any, T]:
         query_results = await self.graphql_repository().get_one(
             selection=self._tree,
             dto_filter=filter_input.to_pydantic() if filter_input else None,
@@ -61,9 +58,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
             offset=offset,
             query_hooks=self._query_hooks,
         )
-        if result := query_results.one_or_none():
-            return self._tree.node_result_to_strawberry_type(result)
-        return None
+        return GraphQLResult(query_results, self._tree)
 
     async def get_one(
         self,
@@ -72,7 +67,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> T:
+    ) -> GraphQLResult[Any, T]:
         query_results = await self.graphql_repository().get_one(
             selection=self._tree,
             dto_filter=filter_input.to_pydantic() if filter_input else None,
@@ -82,23 +77,13 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
             offset=offset,
             query_hooks=self._query_hooks,
         )
-        return self._tree.node_result_to_strawberry_type(query_results.one())
+        return GraphQLResult(query_results, self._tree)
 
-    @overload
-    async def get_by_id(self, strict: Literal[True]) -> T: ...
-
-    @overload
-    async def get_by_id(self, strict: Literal[False]) -> T | None: ...
-
-    @overload
-    async def get_by_id(self, strict: bool = False) -> T | None: ...
-
-    async def get_by_id(self, strict: bool = False, **kwargs: Any) -> T | None:
+    async def get_by_id(self, **kwargs: Any) -> GraphQLResult[Any, T]:
         query_results = await self.graphql_repository().get_by_id(
             selection=self._tree, query_hooks=self._query_hooks, **kwargs
         )
-        result = query_results.one() if strict else query_results.one_or_none()
-        return self._tree.node_result_to_strawberry_type(result) if result else None
+        return GraphQLResult(query_results, self._tree)
 
     async def list(
         self,
@@ -107,7 +92,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
-    ) -> Sequence[T] | T:
+    ) -> GraphQLResult[Any, T]:
         query_results = await self.graphql_repository().list(
             selection=self._tree,
             dto_filter=filter_input.to_pydantic() if filter_input else None,
@@ -117,36 +102,26 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
             offset=offset,
             query_hooks=self._query_hooks,
         )
-        if self.root_aggregations:
-            return self._tree.aggregation_query_result_to_strawberry_type(query_results)
-        return self._tree.query_result_to_strawberry_type(query_results)
+        return GraphQLResult(query_results, self._tree)
 
-    async def create_many(self, data: Input[Any]) -> Sequence[T]:
+    async def create(self, data: Input[InputModel]) -> GraphQLResult[InputModel, T]:
         query_results = await self.graphql_repository().create(data, self._tree)
-        return self._tree.query_result_to_strawberry_type(query_results)
+        return GraphQLResult(query_results, self._tree)
 
-    async def create(self, data: Input[Any]) -> T:
-        query_results = await self.graphql_repository().create(data, self._tree)
-        return self._tree.node_result_to_strawberry_type(query_results.one())
-
-    async def update_many_by_id(self, data: Input[Any]) -> Sequence[T]:
+    async def update_by_id(self, data: Input[InputModel]) -> GraphQLResult[InputModel, T]:
         query_results = await self.graphql_repository().update_by_ids(data, self._tree)
-        return self._tree.query_result_to_strawberry_type(query_results)
-
-    async def update_by_id(self, data: Input[Any]) -> T:
-        query_results = await self.graphql_repository().update_by_ids(data, self._tree)
-        return self._tree.node_result_to_strawberry_type(query_results.one())
+        return GraphQLResult(query_results, self._tree)
 
     async def update_by_filter(
-        self, data: Input[Any], filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]
-    ) -> Sequence[T]:
+        self, data: Input[InputModel], filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]
+    ) -> GraphQLResult[InputModel, T]:
         query_results = await self.graphql_repository().update_by_filter(data, filter_input.to_pydantic(), self._tree)
-        return self._tree.query_result_to_strawberry_type(query_results)
+        return GraphQLResult(query_results, self._tree)
 
     async def delete(
         self, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None
-    ) -> Sequence[T]:
+    ) -> GraphQLResult[Any, T]:
         query_results = await self.graphql_repository().delete(
             self._tree, filter_input.to_pydantic() if filter_input else None
         )
-        return self._tree.query_result_to_strawberry_type(query_results)
+        return GraphQLResult(query_results, self._tree)

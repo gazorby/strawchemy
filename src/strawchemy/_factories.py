@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, TypeVar, get_type_hints, override
+from typing import TYPE_CHECKING, Any, Self, TypeVar, get_type_hints, override
 
 from typing_extensions import dataclass_transform
 
@@ -44,7 +44,6 @@ from .graphql.factories.inputs import (
 )
 from .graphql.factories.types import RootAggregateTypeDTOFactory, TypeDTOFactory
 from .graphql.typing import (
-    DataclassGraphQLDTO,
     GraphQLDTOT,
     InputType,
     MappedGraphQLDTO,
@@ -87,14 +86,9 @@ __all__ = (
 
 T = TypeVar("T", bound="DeclarativeBase")
 PydanticGraphQLDTOT = TypeVar("PydanticGraphQLDTOT", bound="PydanticGraphQLDTO[Any]")
-DataclassGraphQLDTOT = TypeVar("DataclassGraphQLDTOT", bound="DataclassGraphQLDTO[Any]")
 MappedGraphQLDTOT = TypeVar("MappedGraphQLDTOT", bound="MappedGraphQLDTO[Any]")
 UnmappedGraphQLDTOT = TypeVar("UnmappedGraphQLDTOT", bound="UnmappedGraphQLDTO[Any]")
-MappedDataclassGraphQLDTOT = TypeVar("MappedDataclassGraphQLDTOT", bound="MappedDataclassGraphQLDTO[Any]")
 StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyDTOAttributes")
-
-
-UpdateType: TypeAlias = Literal["pk", "filter"]
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
@@ -777,6 +771,30 @@ class StrawchemyAggregateFactory(
             **kwargs,
         )
 
+    if TYPE_CHECKING:
+
+        @override
+        def type(
+            self,
+            model: type[T],
+            include: IncludeFields | None = None,
+            exclude: ExcludeFields | None = None,
+            partial: bool | None = None,
+            type_map: Mapping[Any, Any] | None = None,
+            aliases: Mapping[str, str] | None = None,
+            alias_generator: Callable[[str], str] | None = None,
+            child_pagination: bool | DefaultOffsetPagination = False,
+            child_order_by: bool = False,
+            filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
+            order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
+            name: str | None = None,
+            description: str | None = None,
+            directives: Sequence[object] | None = (),
+            query_hook: QueryHook[T] | Sequence[QueryHook[T]] | None = None,
+            override: bool = False,
+            purpose: Purpose = Purpose.READ,
+        ) -> Callable[[type[Any]], type[AggregateDTO[T]]]: ...
+
 
 class StrawchemyOrderByInputFactory(
     StrawchemyPydanticInputFactory[OrderByDTO[Any, QueryableAttribute[Any]]],
@@ -897,6 +915,27 @@ class StrawchemyOrderByInputFactory(
             **kwargs,
         )
 
+    if TYPE_CHECKING:
+
+        @override
+        def input(
+            self,
+            model: type[T],
+            *,
+            include: IncludeFields | None = None,
+            exclude: ExcludeFields | None = None,
+            partial: bool | None = True,
+            type_map: Mapping[Any, Any] | None = None,
+            aliases: Mapping[str, str] | None = None,
+            alias_generator: Callable[[str], str] | None = None,
+            name: str | None = None,
+            description: str | None = None,
+            directives: Sequence[object] | None = (),
+            override: bool = False,
+            purpose: Purpose = Purpose.READ,
+            **kwargs: Any,
+        ) -> Callable[[type[Any]], type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]]]: ...
+
 
 class StrawchemyAggregateFilterInputFactory(
     StrawchemyPydanticInputFactory[AggregateFilterDTO[Any]],
@@ -947,6 +986,27 @@ class StrawchemyAggregateFilterInputFactory(
             description=f"Boolean expression to compare {aggregation.function} aggregation.",
         )
         return pydantic_from_strawberry_type(strawberry_type)
+
+    if TYPE_CHECKING:
+
+        @override
+        def input(
+            self,
+            model: type[T],
+            *,
+            include: IncludeFields | None = None,
+            exclude: ExcludeFields | None = None,
+            partial: bool | None = True,
+            type_map: Mapping[Any, Any] | None = None,
+            aliases: Mapping[str, str] | None = None,
+            alias_generator: Callable[[str], str] | None = None,
+            name: str | None = None,
+            description: str | None = None,
+            directives: Sequence[object] | None = (),
+            override: bool = False,
+            purpose: Purpose = Purpose.READ,
+            **kwargs: Any,
+        ) -> Callable[[type[Any]], type[StrawchemyTypeFromPydantic[AggregateFilterDTO[T]]]]: ...
 
 
 class StrawchemyTypeFactory(
@@ -1268,42 +1328,27 @@ class StrawchemyInputValidationFactory(StrawchemyInputFactory[MappedPydanticGrap
             return self._resolve_basic_type(field, dto_config)
         return self._resolve_relation_type(field, dto_config, node, mode=mode, **factory_kwargs)
 
-    @override
-    @dataclass_transform(order_default=True, kw_only_default=True)
-    def input(
-        self,
-        model: type[T],
-        *,
-        mode: InputType,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        override: bool = False,
-        purpose: Purpose = Purpose.WRITE,
-        **kwargs: Any,
-    ) -> Callable[[type[Any]], type[MappedPydanticGraphQLDTO[T]]]:
-        return self._input_wrapper(
-            model=model,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            type_map=type_map,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            name=name,
-            description=description,
-            directives=directives,
-            override=override,
-            purpose=purpose,
-            mode=mode,
-            **kwargs,
-        )
+    if TYPE_CHECKING:
+
+        @override
+        def input(
+            self,
+            model: type[T],
+            *,
+            mode: InputType,
+            include: IncludeFields | None = None,
+            exclude: ExcludeFields | None = None,
+            partial: bool | None = None,
+            type_map: Mapping[Any, Any] | None = None,
+            aliases: Mapping[str, str] | None = None,
+            alias_generator: Callable[[str], str] | None = None,
+            name: str | None = None,
+            description: str | None = None,
+            directives: Sequence[object] | None = (),
+            override: bool = False,
+            purpose: Purpose = Purpose.WRITE,
+            **kwargs: Any,
+        ) -> Callable[[type[Any]], type[MappedPydanticGraphQLDTO[T]]]: ...
 
     @override
     def factory(
@@ -1385,6 +1430,27 @@ class StrawchemyFilterInputFactory(
             aggregate_filters=aggregate_filters,
             **kwargs,
         )
+
+    if TYPE_CHECKING:
+
+        @override
+        def input(
+            self,
+            model: type[T],
+            *,
+            include: IncludeFields | None = None,
+            exclude: ExcludeFields | None = None,
+            partial: bool | None = True,
+            type_map: Mapping[Any, Any] | None = None,
+            aliases: Mapping[str, str] | None = None,
+            alias_generator: Callable[[str], str] | None = None,
+            name: str | None = None,
+            description: str | None = None,
+            directives: Sequence[object] | None = (),
+            override: bool = False,
+            purpose: Purpose = Purpose.READ,
+            **kwargs: Any,
+        ) -> Callable[[type[Any]], type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]]]: ...
 
 
 class StrawchemyRootAggregateTypeFactory(
