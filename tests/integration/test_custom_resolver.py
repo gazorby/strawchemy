@@ -28,12 +28,12 @@ class AsyncQuery:
     @strawchemy.field
     async def red_color(self, info: strawberry.Info) -> ColorType:
         repo = StrawchemyAsyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == "Red"))
-        return await repo.get_one()
+        return (await repo.get_one()).graphql_type()
 
     @strawchemy.field
     async def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
         repo = StrawchemyAsyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
-        return await repo.get_one_or_none()
+        return (await repo.get_one_or_none()).graphql_type_or_none()
 
 
 @strawberry.type
@@ -41,12 +41,12 @@ class SyncQuery:
     @strawchemy.field
     def red_color(self, info: strawberry.Info) -> ColorType:
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == "Red"))
-        return repo.get_one()
+        return repo.get_one().graphql_type()
 
     @strawchemy.field
     def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
-        return repo.get_one_or_none()
+        return repo.get_one_or_none().graphql_type_or_none()
 
 
 @pytest.fixture

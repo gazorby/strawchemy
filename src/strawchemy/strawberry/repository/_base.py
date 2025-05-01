@@ -4,21 +4,17 @@ import dataclasses
 from collections import defaultdict
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
 
 from typing_extensions import TypeIs
 
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.nodes import FragmentSpread, InlineFragment, SelectedField, Selection
+from strawchemy.dto.base import ModelT
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graphql.constants import ORDER_BY_KEY
-from strawchemy.graphql.dto import (
-    DTOKey,
-    QueryNode,
-    RelationFilterDTO,
-    StrawchemyDTOAttributes,
-)
+from strawchemy.graphql.dto import DTOKey, QueryNode, RelationFilterDTO, StrawchemyDTOAttributes
 from strawchemy.strawberry._utils import (
     dto_model_from_type,
     pydantic_from_strawberry_type,
@@ -35,18 +31,52 @@ if TYPE_CHECKING:
     from strawberry import Info
     from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
     from strawberry.types.field import StrawberryField
+    from strawchemy.sqlalchemy._executor import QueryResult
     from strawchemy.sqlalchemy.hook import QueryHook
-    from strawchemy.strawberry.typing import (
-        StrawchemyTypeWithStrawberryObjectDefinition,
-    )
+    from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
 
-__all__ = ("StrawchemyRepository",)
+__all__ = ("GraphQLResult", "StrawchemyRepository")
 
 T = TypeVar("T")
 
 
 def _has_pydantic_type(type_: Any) -> TypeIs[type[StrawberryTypeFromPydantic[BaseModel]]]:
     return hasattr(type_, "_pydantic_type")
+
+
+@dataclass
+class GraphQLResult(Generic[ModelT, T]):
+    query_result: QueryResult[ModelT]
+    tree: _StrawberryQueryNode[T]
+
+    def graphql_type(self) -> T:
+        return self.tree.node_result_to_strawberry_type(self.query_result.one())
+
+    def graphql_type_or_none(self) -> T | None:
+        node_result = self.query_result.one_or_none()
+        return self.tree.node_result_to_strawberry_type(node_result) if node_result else None
+
+    @overload
+    def graphql_list(self, root_aggregations: Literal[False]) -> list[T]: ...
+
+    @overload
+    def graphql_list(self, root_aggregations: Literal[True]) -> T: ...
+
+    @overload
+    def graphql_list(self) -> list[T]: ...
+
+    def graphql_list(self, root_aggregations: bool = False) -> list[T] | T:
+        if root_aggregations:
+            return self.tree.aggregation_query_result_to_strawberry_type(self.query_result)
+        return [self.tree.node_result_to_strawberry_type(node_result) for node_result in self.query_result]
+
+    @property
+    def instances(self) -> Sequence[ModelT]:
+        return self.query_result.nodes
+
+    @property
+    def instance(self) -> ModelT:
+        return self.query_result.one().model
 
 
 @dataclass

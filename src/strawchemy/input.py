@@ -236,6 +236,7 @@ class Input(Generic[InputModel]):
         self.instances: list[InputModel] = []
         self.dtos: list[MappedDTO[InputModel]] = []
         self.pydantic_model = _pydantic_model_
+        self.list_input = isinstance(dtos, Sequence)
 
         dtos = dtos if isinstance(dtos, Sequence) else [dtos]
         for index, dto in enumerate(dtos):

@@ -80,13 +80,13 @@ class AsyncMutation:
 
     @strawberry.field
     async def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
-        return await StrawchemyAsyncRepository(ColorType, info).create(Input(data, name="Blue"))
+        return (await StrawchemyAsyncRepository(ColorType, info).create(Input(data, name="Blue"))).graphql_type()
 
     @strawberry.field
     async def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
         color_input.instances[0].fruits.extend([Fruit(name="Apple"), Fruit(name="Strawberry")])
-        return await StrawchemyAsyncRepository(ColorType, info).create(color_input)
+        return (await StrawchemyAsyncRepository(ColorType, info).create(color_input)).graphql_type()
 
     @strawberry.field
     async def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
@@ -97,13 +97,13 @@ class AsyncMutation:
         await session.commit()
         session.expire(strawberry)
         color_input.instances[0].fruits.extend([apple, strawberry])
-        return await StrawchemyAsyncRepository(ColorType, info).create(color_input)
+        return (await StrawchemyAsyncRepository(ColorType, info).create(color_input)).graphql_type()
 
     @strawberry.field
     async def create_red_fruit(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
         fruit_input = Input(data)
         fruit_input.instances[0].color = Color(name="Red")
-        return await StrawchemyAsyncRepository(FruitType, info).create(fruit_input)
+        return (await StrawchemyAsyncRepository(FruitType, info).create(fruit_input)).graphql_type()
 
     @strawberry.field
     async def create_fruit_for_existing_color(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
@@ -113,14 +113,16 @@ class AsyncMutation:
         session.add(red)
         await session.commit()
         fruit_input.instances[0].color = red
-        return await StrawchemyAsyncRepository(FruitType, info).create(fruit_input)
+        return (await StrawchemyAsyncRepository(FruitType, info).create(fruit_input)).graphql_type()
 
     @strawberry.field
     async def create_color_manual_validation(
         self, info: strawberry.Info, data: ColorCreateInput
     ) -> ColorType | ValidationErrorType:
         try:
-            return await StrawchemyAsyncRepository(ColorType, info).create(Input(data, ColorCreateValidation))
+            return (
+                await StrawchemyAsyncRepository(ColorType, info).create(Input(data, ColorCreateValidation))
+            ).graphql_type()
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
 
@@ -129,15 +131,14 @@ class AsyncMutation:
         self, info: strawberry.Info, data: RankedUserCreateInput
     ) -> RankedUserType | ValidationErrorType:
         try:
-            return await StrawchemyAsyncRepository(RankedUserType, info).create(
-                Input(data, RankedUserCreateValidation, rank=1)
-            )
+            user_input = Input(data, RankedUserCreateValidation, rank=1)
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
+        return (await StrawchemyAsyncRepository(RankedUserType, info).create(user_input)).graphql_type()
 
     @strawberry.field
     async def create_ranked_user(self, info: strawberry.Info, data: RankedUserCreateInput) -> RankedUserType:
-        return await StrawchemyAsyncRepository(RankedUserType, info).create(Input(data, rank=1))
+        return (await StrawchemyAsyncRepository(RankedUserType, info).create(Input(data, rank=1))).graphql_type()
 
 
 @strawberry.type
@@ -173,13 +174,13 @@ class SyncMutation:
 
     @strawberry.field
     def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
-        return StrawchemySyncRepository(ColorType, info).create(Input(data, name="Blue"))
+        return StrawchemySyncRepository(ColorType, info).create(Input(data, name="Blue")).graphql_type()
 
     @strawberry.field
     def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
         color_input.instances[0].fruits.extend([Fruit(name="Apple"), Fruit(name="Strawberry")])
-        return StrawchemySyncRepository(ColorType, info).create(color_input)
+        return StrawchemySyncRepository(ColorType, info).create(color_input).graphql_type()
 
     @strawberry.field
     def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
@@ -190,13 +191,13 @@ class SyncMutation:
         session.commit()
         session.expire(strawberry)
         color_input.instances[0].fruits.extend([apple, strawberry])
-        return StrawchemySyncRepository(ColorType, info).create(color_input)
+        return StrawchemySyncRepository(ColorType, info).create(color_input).graphql_type()
 
     @strawberry.field
     def create_red_fruit(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
         fruit_input = Input(data)
         fruit_input.instances[0].color = Color(name="Red")
-        return StrawchemySyncRepository(FruitType, info).create(fruit_input)
+        return StrawchemySyncRepository(FruitType, info).create(fruit_input).graphql_type()
 
     @strawberry.field
     def create_fruit_for_existing_color(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
@@ -206,14 +207,14 @@ class SyncMutation:
         session.add(red)
         session.commit()
         fruit_input.instances[0].color = red
-        return StrawchemySyncRepository(FruitType, info).create(fruit_input)
+        return StrawchemySyncRepository(FruitType, info).create(fruit_input).graphql_type()
 
     @strawberry.field
     def create_color_manual_validation(
         self, info: strawberry.Info, data: ColorCreateInput
     ) -> ColorType | ValidationErrorType:
         try:
-            return StrawchemySyncRepository(ColorType, info).create(Input(data, ColorCreateValidation))
+            return StrawchemySyncRepository(ColorType, info).create(Input(data, ColorCreateValidation)).graphql_type()
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
 
@@ -222,15 +223,14 @@ class SyncMutation:
         self, info: strawberry.Info, data: RankedUserCreateInput
     ) -> RankedUserType | ValidationErrorType:
         try:
-            return StrawchemySyncRepository(RankedUserType, info).create(
-                Input(data, RankedUserCreateValidation, rank=1)
-            )
+            user_input = Input(data, RankedUserCreateValidation, rank=1)
         except InputValidationError as error:
             return ValidationErrorType.from_pydantic(error.pydantic_error)
+        return StrawchemySyncRepository(RankedUserType, info).create(user_input).graphql_type()
 
     @strawberry.field
     def create_ranked_user(self, info: strawberry.Info, data: RankedUserCreateInput) -> RankedUserType:
-        return StrawchemySyncRepository(RankedUserType, info).create(Input(data, rank=1))
+        return StrawchemySyncRepository(RankedUserType, info).create(Input(data, rank=1)).graphql_type()
 
 
 @pytest.fixture
