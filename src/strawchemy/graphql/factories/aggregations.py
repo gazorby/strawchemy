@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from strawchemy.graph import Node
     from strawchemy.graphql.filters import OrderComparison
     from strawchemy.graphql.inspector import GraphQLInspectorProtocol
-    from strawchemy.graphql.typing import AggregationType, FunctionInfo
+    from strawchemy.graphql.typing import AggregationFunction, AggregationType, FunctionInfo
 
 T = TypeVar("T")
 
@@ -257,6 +257,9 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
         self._min_max_time_fields_factory = _MinMaxTimeFieldsDTOFactory(inspector)
         self._min_max_fields_factory = _MinMaxFieldsDTOFactory(inspector)
 
+    def _supports_aggregations(self, *function: AggregationFunction) -> bool:
+        return set(function).issubset(self._inspector.database_features.aggregation_functions)
+
     def arguments_type(
         self, model: type[T], dto_config: DTOConfig, aggregation: AggregationType
     ) -> type[EnumDTO] | None:
@@ -305,18 +308,17 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
             dto_config, type_overrides={int: float | None, int | None: float | None}
         )
         numeric_fields = self.numeric_field_type(model, int_as_float_config)
-        min_max_fields = self.min_max_field_type(model, dto_config)
-        sum_fields = self.sum_field_type(model, dto_config)
+        aggregations: list[OutputFunctionInfo] = []
 
-        aggregations: list[OutputFunctionInfo] = [
-            OutputFunctionInfo(
-                function="count", require_arguments=False, output_type=int | None if dto_config.partial else int
+        if self._supports_aggregations("count"):
+            aggregations.append(
+                OutputFunctionInfo(
+                    function="count", require_arguments=False, output_type=int | None if dto_config.partial else int
+                )
             )
-        ]
-
-        if sum_fields:
+        if self._supports_aggregations("sum") and (sum_fields := self.sum_field_type(model, dto_config)):
             aggregations.append(OutputFunctionInfo(function="sum", output_type=sum_fields))
-        if min_max_fields:
+        if self._supports_aggregations("min", "max") and (min_max_fields := self.min_max_field_type(model, dto_config)):
             aggregations.extend(
                 [
                     OutputFunctionInfo(function="min", output_type=min_max_fields),
@@ -327,14 +329,109 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
         if numeric_fields:
             aggregations.extend(
                 [
-                    OutputFunctionInfo(function="avg", output_type=numeric_fields),
-                    OutputFunctionInfo(function="stddev", output_type=numeric_fields),
-                    OutputFunctionInfo(function="stddev_samp", output_type=numeric_fields),
-                    OutputFunctionInfo(function="stddev_pop", output_type=numeric_fields),
-                    OutputFunctionInfo(function="variance", output_type=numeric_fields),
-                    OutputFunctionInfo(function="var_samp", output_type=numeric_fields),
-                    OutputFunctionInfo(function="var_pop", output_type=numeric_fields),
+                    OutputFunctionInfo(function=function, output_type=numeric_fields)
+                    for function in self._inspector.database_features.aggregation_functions
                 ]
+            )
+        return aggregations
+
+    def _min_max_filters(
+        self, model: type[Any], dto_config: DTOConfig
+    ) -> list[FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]]]:
+        aggregations: list[FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]]] = []
+
+        if min_max_numeric_fields := self.arguments_type(model, dto_config, "min_max_numeric"):
+            aggregations.extend(
+                (
+                    FilterFunctionInfo(
+                        enum_fields=min_max_numeric_fields,
+                        function="min",
+                        aggregation_type="numeric",
+                        comparison_type=self._inspector.get_type_comparison(float),
+                    ),
+                    FilterFunctionInfo(
+                        enum_fields=min_max_numeric_fields,
+                        function="max",
+                        aggregation_type="numeric",
+                        comparison_type=self._inspector.get_type_comparison(float),
+                    ),
+                )
+            )
+        if min_max_datetime_fields := self.arguments_type(model, dto_config, "min_max_datetime"):
+            aggregations.extend(
+                (
+                    FilterFunctionInfo(
+                        enum_fields=min_max_datetime_fields,
+                        function="min",
+                        aggregation_type="min_max_datetime",
+                        comparison_type=self._inspector.get_type_comparison(datetime),
+                        field_name_="min_datetime",
+                    ),
+                    FilterFunctionInfo(
+                        enum_fields=min_max_datetime_fields,
+                        function="max",
+                        aggregation_type="min_max_datetime",
+                        comparison_type=self._inspector.get_type_comparison(datetime),
+                        field_name_="max_datetime",
+                    ),
+                )
+            )
+        if min_max_date_fields := self.arguments_type(model, dto_config, "min_max_date"):
+            aggregations.extend(
+                (
+                    FilterFunctionInfo(
+                        enum_fields=min_max_date_fields,
+                        function="min",
+                        aggregation_type="min_max_date",
+                        comparison_type=self._inspector.get_type_comparison(date),
+                        field_name_="min_date",
+                    ),
+                    FilterFunctionInfo(
+                        enum_fields=min_max_date_fields,
+                        function="max",
+                        aggregation_type="min_max_date",
+                        comparison_type=self._inspector.get_type_comparison(date),
+                        field_name_="max_date",
+                    ),
+                )
+            )
+        if min_max_time_fields := self.arguments_type(model, dto_config, "min_max_time"):
+            aggregations.extend(
+                (
+                    FilterFunctionInfo(
+                        enum_fields=min_max_time_fields,
+                        function="min",
+                        aggregation_type="min_max_time",
+                        comparison_type=self._inspector.get_type_comparison(time),
+                        field_name_="min_time",
+                    ),
+                    FilterFunctionInfo(
+                        enum_fields=min_max_time_fields,
+                        function="max",
+                        aggregation_type="min_max_time",
+                        comparison_type=self._inspector.get_type_comparison(time),
+                        field_name_="max_time",
+                    ),
+                )
+            )
+        if min_max_string_fields := self.arguments_type(model, dto_config, "min_max_string"):
+            aggregations.extend(
+                (
+                    FilterFunctionInfo(
+                        enum_fields=min_max_string_fields,
+                        function="min",
+                        aggregation_type="min_max_string",
+                        comparison_type=self._inspector.get_type_comparison(str),
+                        field_name_="min_string",
+                    ),
+                    FilterFunctionInfo(
+                        enum_fields=min_max_string_fields,
+                        function="max",
+                        aggregation_type="min_max_string",
+                        comparison_type=self._inspector.get_type_comparison(str),
+                        field_name_="max_string",
+                    ),
+                )
             )
         return aggregations
 
@@ -345,16 +442,19 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
         numeric_arg_fields = self.arguments_type(model, dto_config, "numeric")
         sum_arg_fields = self.arguments_type(model, dto_config, "sum")
 
-        aggregations: list[FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]]] = [
-            FilterFunctionInfo(
-                enum_fields=count_fields,
-                function="count",
-                aggregation_type="numeric",
-                comparison_type=self._inspector.get_type_comparison(int),
-                require_arguments=False,
+        aggregations: list[FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]]] = []
+
+        if self._supports_aggregations("count"):
+            aggregations.append(
+                FilterFunctionInfo(
+                    enum_fields=count_fields,
+                    function="count",
+                    aggregation_type="numeric",
+                    comparison_type=self._inspector.get_type_comparison(int),
+                    require_arguments=False,
+                )
             )
-        ]
-        if sum_arg_fields:
+        if self._supports_aggregations("sum") and sum_arg_fields:
             aggregations.append(
                 FilterFunctionInfo(
                     enum_fields=sum_arg_fields,
@@ -363,145 +463,21 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
                     comparison_type=self._inspector.get_type_comparison(float),
                 )
             )
-        if min_max_numeric_fields := self.arguments_type(model, dto_config, "min_max_numeric"):
-            aggregations.append(
-                FilterFunctionInfo(
-                    enum_fields=min_max_numeric_fields,
-                    function="min",
-                    aggregation_type="numeric",
-                    comparison_type=self._inspector.get_type_comparison(float),
-                )
-            )
-            aggregations.append(
-                FilterFunctionInfo(
-                    enum_fields=min_max_numeric_fields,
-                    function="max",
-                    aggregation_type="numeric",
-                    comparison_type=self._inspector.get_type_comparison(float),
-                )
-            )
-        if min_max_datetime_fields := self.arguments_type(model, dto_config, "min_max_datetime"):
-            aggregations.append(
-                FilterFunctionInfo(
-                    enum_fields=min_max_datetime_fields,
-                    function="min",
-                    aggregation_type="min_max_datetime",
-                    comparison_type=self._inspector.get_type_comparison(datetime),
-                    field_name_="min_datetime",
-                )
-            )
-            aggregations.append(
-                FilterFunctionInfo(
-                    enum_fields=min_max_datetime_fields,
-                    function="max",
-                    aggregation_type="min_max_datetime",
-                    comparison_type=self._inspector.get_type_comparison(datetime),
-                    field_name_="max_datetime",
-                )
-            )
-        if min_max_date_fields := self.arguments_type(model, dto_config, "min_max_date"):
-            aggregations.append(
-                FilterFunctionInfo(
-                    enum_fields=min_max_date_fields,
-                    function="min",
-                    aggregation_type="min_max_date",
-                    comparison_type=self._inspector.get_type_comparison(date),
-                    field_name_="min_date",
-                )
-            )
-            aggregations.append(
-                FilterFunctionInfo(
-                    enum_fields=min_max_date_fields,
-                    function="max",
-                    aggregation_type="min_max_date",
-                    comparison_type=self._inspector.get_type_comparison(date),
-                    field_name_="max_date",
-                )
-            )
-        if min_max_time_fields := self.arguments_type(model, dto_config, "min_max_time"):
-            aggregations.append(
-                FilterFunctionInfo(
-                    enum_fields=min_max_time_fields,
-                    function="min",
-                    aggregation_type="min_max_time",
-                    comparison_type=self._inspector.get_type_comparison(time),
-                    field_name_="min_time",
-                )
-            )
-            aggregations.append(
-                FilterFunctionInfo(
-                    enum_fields=min_max_time_fields,
-                    function="max",
-                    aggregation_type="min_max_time",
-                    comparison_type=self._inspector.get_type_comparison(time),
-                    field_name_="max_time",
-                )
-            )
-        if min_max_string_fields := self.arguments_type(model, dto_config, "min_max_string"):
-            aggregations.append(
-                FilterFunctionInfo(
-                    enum_fields=min_max_string_fields,
-                    function="min",
-                    aggregation_type="min_max_string",
-                    comparison_type=self._inspector.get_type_comparison(str),
-                    field_name_="min_string",
-                )
-            )
-            aggregations.append(
-                FilterFunctionInfo(
-                    enum_fields=min_max_string_fields,
-                    function="max",
-                    aggregation_type="min_max_string",
-                    comparison_type=self._inspector.get_type_comparison(str),
-                    field_name_="max_string",
-                )
-            )
+
+        if self._supports_aggregations("min", "max"):
+            aggregations.extend(self._min_max_filters(model, dto_config))
+
         if numeric_arg_fields:
             comparison = self._inspector.get_type_comparison(float)
             aggregations.extend(
                 [
                     FilterFunctionInfo(
                         enum_fields=numeric_arg_fields,
-                        function="avg",
+                        function=function,
                         aggregation_type="numeric",
                         comparison_type=comparison,
-                    ),
-                    FilterFunctionInfo(
-                        enum_fields=numeric_arg_fields,
-                        function="stddev",
-                        aggregation_type="numeric",
-                        comparison_type=comparison,
-                    ),
-                    FilterFunctionInfo(
-                        enum_fields=numeric_arg_fields,
-                        function="stddev_samp",
-                        aggregation_type="numeric",
-                        comparison_type=comparison,
-                    ),
-                    FilterFunctionInfo(
-                        enum_fields=numeric_arg_fields,
-                        function="stddev_pop",
-                        aggregation_type="numeric",
-                        comparison_type=comparison,
-                    ),
-                    FilterFunctionInfo(
-                        enum_fields=numeric_arg_fields,
-                        function="variance",
-                        aggregation_type="numeric",
-                        comparison_type=comparison,
-                    ),
-                    FilterFunctionInfo(
-                        enum_fields=numeric_arg_fields,
-                        function="var_samp",
-                        aggregation_type="numeric",
-                        comparison_type=comparison,
-                    ),
-                    FilterFunctionInfo(
-                        enum_fields=numeric_arg_fields,
-                        function="var_pop",
-                        aggregation_type="numeric",
-                        comparison_type=comparison,
-                    ),
+                    )
+                    for function in self._inspector.database_features.aggregation_functions
                 ]
             )
         return aggregations

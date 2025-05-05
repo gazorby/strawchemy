@@ -34,6 +34,7 @@ from sqlalchemy.orm import (
     load_only,
     raiseload,
 )
+from strawchemy.config import DatabaseFeatures
 from strawchemy.graphql.constants import AGGREGATIONS_KEY
 from strawchemy.graphql.dto import (
     AggregationFilter,
@@ -78,7 +79,9 @@ class QueryTranspiler(Generic[DeclarativeT]):
         scope: QueryScope[DeclarativeT] | None = None,
         query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[Any]]] | None = None,
     ) -> None:
-        self._inspector = SQLAlchemyGraphQLInspector(cast("SupportedDialect", dialect.name), [model.registry])
+        self._inspector = SQLAlchemyGraphQLInspector(
+            DatabaseFeatures.new(cast("SupportedDialect", dialect.name)), [model.registry]
+        )
         self._sub_query_root_alias = aliased(class_mapper(model), name=model.__tablename__, flat=True)
         self._aggregation_name_prefix: str = "aggregation"
         self._aggregation_joins: dict[SQLAlchemyQueryNode, AggregationJoin] = {}
