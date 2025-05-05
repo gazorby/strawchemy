@@ -481,14 +481,14 @@
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::UUID, $4::INTEGER, $5::FLOAT, $6::UUID, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].3
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::TIMESTAMP WITH TIME ZONE, $6::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::INTEGER, $4::FLOAT, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].4
@@ -531,14 +531,14 @@
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(derived_product_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].3
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].4
@@ -581,14 +581,14 @@
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(derived_product_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].3
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].4
@@ -625,8 +625,8 @@
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-asyncpg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::TIMESTAMP WITH TIME ZONE, $6::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::INTEGER, $4::FLOAT, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-asyncpg_engine].2
@@ -649,8 +649,8 @@
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-psycopg_async_engine].1
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-psycopg_async_engine].2
@@ -673,8 +673,8 @@
 # ---
 # name: test_create_with_to_many_create[session-tracked-sync-psycopg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-sync-psycopg_engine].2
@@ -712,8 +712,8 @@
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-asyncpg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::TIMESTAMP WITH TIME ZONE, $6::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::INTEGER, $4::FLOAT, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-psycopg_async_engine]
@@ -739,8 +739,8 @@
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-psycopg_async_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-sync-psycopg_engine]
@@ -766,8 +766,8 @@
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-sync-psycopg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-asyncpg_engine]
@@ -790,8 +790,8 @@
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-asyncpg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::TIMESTAMP WITH TIME ZONE, $6::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::INTEGER, $4::FLOAT, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-psycopg_async_engine]
@@ -814,8 +814,8 @@
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-psycopg_async_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-sync-psycopg_engine]
@@ -838,8 +838,8 @@
 # ---
 # name: test_create_with_to_one_create[session-tracked-sync-psycopg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_create_and_nested_set[session-tracked-async-asyncpg_engine]
@@ -936,8 +936,8 @@
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-asyncpg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::TIMESTAMP WITH TIME ZONE, $6::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::INTEGER, $4::FLOAT, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-psycopg_async_engine]
@@ -953,8 +953,8 @@
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-psycopg_async_engine].1
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_set[session-tracked-sync-psycopg_engine]
@@ -970,8 +970,8 @@
 # ---
 # name: test_create_with_to_one_set[session-tracked-sync-psycopg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-asyncpg_engine]
@@ -987,8 +987,8 @@
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-asyncpg_engine].1
   '''
-  INSERT INTO fruit (name, adjectives, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::TEXT[], $3::UUID, $4::TIMESTAMP WITH TIME ZONE, $5::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::UUID, $5::TIMESTAMP WITH TIME ZONE, $6::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-psycopg_async_engine]
@@ -1004,8 +1004,8 @@
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-psycopg_async_engine].1
   '''
-  INSERT INTO fruit (name, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-sync-psycopg_engine]
@@ -1021,8 +1021,8 @@
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-sync-psycopg_engine].1
   '''
-  INSERT INTO fruit (name, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_delete_all[session-tracked-async-asyncpg_engine]
@@ -1462,14 +1462,14 @@
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::UUID, $4::INTEGER, $5::FLOAT, $6::UUID, $7::TIMESTAMP WITH TIME ZONE, $8::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::TIMESTAMP WITH TIME ZONE, $6::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::INTEGER, $4::FLOAT, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].3
@@ -1515,14 +1515,14 @@
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].1
   '''
-  INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(derived_product_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].3
@@ -1568,14 +1568,14 @@
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, adjectives, derived_product_id, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(derived_product_id)s::UUID, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(derived_product_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].3
@@ -1702,8 +1702,8 @@
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-asyncpg_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::TIMESTAMP WITH TIME ZONE, $6::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::INTEGER, $4::FLOAT, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-asyncpg_engine].1
@@ -1738,8 +1738,8 @@
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-psycopg_async_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-psycopg_async_engine].1
@@ -1774,8 +1774,8 @@
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-sync-psycopg_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-sync-psycopg_engine].1
@@ -1810,8 +1810,8 @@
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-asyncpg_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::TIMESTAMP WITH TIME ZONE, $6::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::INTEGER, $4::FLOAT, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-asyncpg_engine].1
@@ -1837,8 +1837,8 @@
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-psycopg_async_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-psycopg_async_engine].1
@@ -1864,8 +1864,8 @@
 # ---
 # name: test_update_with_to_many_create[session-tracked-sync-psycopg_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-sync-psycopg_engine].1
@@ -1891,8 +1891,8 @@
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-asyncpg_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES ($1::VARCHAR, $2::UUID, $3::TEXT[], $4::UUID, $5::TIMESTAMP WITH TIME ZONE, $6::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES ($1::VARCHAR, $2::UUID, $3::INTEGER, $4::FLOAT, $5::UUID, $6::TIMESTAMP WITH TIME ZONE, $7::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-asyncpg_engine].1
@@ -1930,8 +1930,8 @@
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-psycopg_async_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-psycopg_async_engine].1
@@ -1969,8 +1969,8 @@
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-sync-psycopg_engine]
   '''
-  INSERT INTO fruit (name, color_id, adjectives, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(adjectives)s::TEXT[], %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::UUID, %(sweetness)s::INTEGER, %(water_percent)s, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-sync-psycopg_engine].1
@@ -2218,9 +2218,9 @@
   UPDATE fruit
      SET name = $1::VARCHAR,
          color_id = $2::UUID,
-         adjectives = $3::TEXT[], updated_at = $4::TIMESTAMP WITH TIME
+         updated_at = $3::TIMESTAMP WITH TIME
     ZONE
-   WHERE fruit.id = $5::UUID
+   WHERE fruit.id = $4::UUID
   '''
 # ---
 # name: test_update_with_to_one_create[session-tracked-async-asyncpg_engine].2
@@ -2246,7 +2246,7 @@
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
          color_id = %(color_id)s::UUID,
-         adjectives = %(adjectives)s::TEXT[], updated_at = %(updated_at)s::TIMESTAMP WITH TIME
+         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
     ZONE
    WHERE fruit.id = %(fruit_id)s::UUID
   '''
@@ -2274,7 +2274,7 @@
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
          color_id = %(color_id)s::UUID,
-         adjectives = %(adjectives)s::TEXT[], updated_at = %(updated_at)s::TIMESTAMP WITH TIME
+         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
     ZONE
    WHERE fruit.id = %(fruit_id)s::UUID
   '''
@@ -2416,9 +2416,9 @@
   UPDATE fruit
      SET name = $1::VARCHAR,
          color_id = $2::UUID,
-         adjectives = $3::TEXT[], updated_at = $4::TIMESTAMP WITH TIME
+         updated_at = $3::TIMESTAMP WITH TIME
     ZONE
-   WHERE fruit.id = $5::UUID
+   WHERE fruit.id = $4::UUID
   '''
 # ---
 # name: test_update_with_to_one_set[session-tracked-async-asyncpg_engine].1
@@ -2437,7 +2437,7 @@
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
          color_id = %(color_id)s::UUID,
-         adjectives = %(adjectives)s::TEXT[], updated_at = %(updated_at)s::TIMESTAMP WITH TIME
+         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
     ZONE
    WHERE fruit.id = %(fruit_id)s::UUID
   '''
@@ -2458,7 +2458,7 @@
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
          color_id = %(color_id)s::UUID,
-         adjectives = %(adjectives)s::TEXT[], updated_at = %(updated_at)s::TIMESTAMP WITH TIME
+         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
     ZONE
    WHERE fruit.id = %(fruit_id)s::UUID
   '''
@@ -2479,9 +2479,9 @@
   UPDATE fruit
      SET name = $1::VARCHAR,
          color_id = $2::UUID,
-         adjectives = $3::TEXT[], updated_at = $4::TIMESTAMP WITH TIME
+         updated_at = $3::TIMESTAMP WITH TIME
     ZONE
-   WHERE fruit.id = $5::UUID
+   WHERE fruit.id = $4::UUID
   '''
 # ---
 # name: test_update_with_to_one_set_null[session-tracked-async-asyncpg_engine].1
@@ -2500,7 +2500,7 @@
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
          color_id = %(color_id)s::UUID,
-         adjectives = %(adjectives)s::TEXT[], updated_at = %(updated_at)s::TIMESTAMP WITH TIME
+         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
     ZONE
    WHERE fruit.id = %(fruit_id)s::UUID
   '''
@@ -2521,7 +2521,7 @@
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
          color_id = %(color_id)s::UUID,
-         adjectives = %(adjectives)s::TEXT[], updated_at = %(updated_at)s::TIMESTAMP WITH TIME
+         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
     ZONE
    WHERE fruit.id = %(fruit_id)s::UUID
   '''

@@ -66,7 +66,7 @@ async def test_pagination(any_query: AnyQueryExecutor) -> None:
     assert result.data
     assert isinstance(result.data["fruits"], list)
     assert len(result.data["fruits"]) == 1
-    assert result.data["fruits"] == [{"name": "Banana"}]
+    assert result.data["fruits"] == [{"name": "Cherry"}]
 
 
 async def test_nested_pagination(any_query: AnyQueryExecutor) -> None:
@@ -109,4 +109,4 @@ async def test_pagination_on_aggregation_query(any_query: AnyQueryExecutor) -> N
     assert result.data
     assert isinstance(result.data["fruitsAggregations"]["nodes"], list)
     assert len(result.data["fruitsAggregations"]["nodes"]) == 1
-    assert result.data["fruitsAggregations"]["nodes"] == [{"name": "Banana"}]
+    assert result.data["fruitsAggregations"]["nodes"] == [{"name": "Cherry"}]

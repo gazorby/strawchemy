@@ -11,7 +11,12 @@ from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import SQLDataTypesContainerFilter, SQLDataTypesContainerOrderBy, SQLDataTypesContainerType, strawchemy
+from .types import (
+    ColorFilter,
+    ColorOrder,
+    ColorType,
+    strawchemy,
+)
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
@@ -21,19 +26,15 @@ pytestmark = [pytest.mark.integration]
 
 @strawberry.type
 class AsyncQuery:
-    containers: list[SQLDataTypesContainerType] = strawchemy.field(
-        repository_type=StrawchemyAsyncRepository,
-        filter_input=SQLDataTypesContainerFilter,
-        order_by=SQLDataTypesContainerOrderBy,
+    colors: list[ColorType] = strawchemy.field(
+        order_by=ColorOrder, filter_input=ColorFilter, repository_type=StrawchemyAsyncRepository
     )
 
 
 @strawberry.type
 class SyncQuery:
-    containers: list[SQLDataTypesContainerType] = strawchemy.field(
-        repository_type=StrawchemySyncRepository,
-        filter_input=SQLDataTypesContainerFilter,
-        order_by=SQLDataTypesContainerOrderBy,
+    colors: list[ColorType] = strawchemy.field(
+        order_by=ColorOrder, filter_input=ColorFilter, repository_type=StrawchemySyncRepository
     )
 
 
@@ -53,8 +54,8 @@ def async_query() -> type[AsyncQuery]:
         pytest.param(
             """
         {
-            containers(orderBy: { dataTypesAggregate: { count: ASC } }) {
-                dataTypesAggregate {
+            colors(orderBy: { fruitsAggregate: { count: ASC } }) {
+                fruitsAggregate {
                     count
                 }
             }
@@ -65,8 +66,8 @@ def async_query() -> type[AsyncQuery]:
         pytest.param(
             """
         {
-            containers(filter: { dataTypesAggregate: { count: { predicate: { gt: 0 } } } }) {
-                dataTypesAggregate {
+            colors(filter: { fruitsAggregate: { count: { predicate: { gt: 0 } } } }) {
+                fruitsAggregate {
                     count
                 }
             }
@@ -77,11 +78,11 @@ def async_query() -> type[AsyncQuery]:
         pytest.param(
             """
         {
-            containers(
-                filter: { dataTypesAggregate: { count: { predicate: { gt: 0 } } } },
-                orderBy: { dataTypesAggregate: { avg: { floatCol: ASC } } }
+            colors(
+                filter: { fruitsAggregate: { count: { predicate: { gt: 0 } } } },
+                orderBy: { fruitsAggregate: { avg: { waterPercent: ASC } } }
             ) {
-                dataTypes {
+                fruits {
                     id
                 }
             }
@@ -92,11 +93,11 @@ def async_query() -> type[AsyncQuery]:
         pytest.param(
             """
         {
-            containers(
-                filter: { dataTypesAggregate: { avg: { arguments: [floatCol] predicate: { gt: 0 } } } },
-                orderBy: { dataTypesAggregate: { avg: { floatCol: ASC } } }
+            colors(
+                filter: { fruitsAggregate: { avg: { arguments: [waterPercent] predicate: { gt: 0 } } } },
+                orderBy: { fruitsAggregate: { avg: { waterPercent: ASC } } }
             ) {
-                dataTypes {
+                fruits {
                     id
                 }
             }
@@ -107,12 +108,12 @@ def async_query() -> type[AsyncQuery]:
         pytest.param(
             """
         {
-            containers {
-                dataTypesAggregate {
-                    sum {
-                        intCol
-                        floatCol
-                        decimalCol
+            colors {
+                fruitsAggregate {
+                    max {
+                        sweetness
+                        waterPercent
+                        name
                     }
                 }
             }
@@ -123,15 +124,15 @@ def async_query() -> type[AsyncQuery]:
         pytest.param(
             """
         {
-            containers(
+            colors(
                 filter: {
-                    dataTypesAggregate: {
-                        sum: { arguments: [intCol], predicate: { gt: 0 } },
-                        avg: { arguments: [floatCol], predicate: { gt: 0 } }
+                    fruitsAggregate: {
+                        sum: { arguments: [sweetness], predicate: { gt: 0 } },
+                        avg: { arguments: [waterPercent], predicate: { gt: 0 } }
                     }
                 }
             ) {
-                dataTypes {
+                fruits {
                     id
                 }
             }
@@ -142,10 +143,10 @@ def async_query() -> type[AsyncQuery]:
         pytest.param(
             """
         {
-            containers(
-                orderBy: { dataTypesAggregate: { sum: { intCol: ASC }, avg: { floatCol: ASC } } }
+            colors(
+                orderBy: { fruitsAggregate: { sum: { sweetness: ASC }, avg: { waterPercent: ASC } } }
             ) {
-                dataTypes {
+                fruits {
                     id
                 }
             }
@@ -171,48 +172,52 @@ async def test_aggregation_computation_is_reused(
 
 
 @pytest.mark.parametrize(
-    ("query", "rewrite"),
+    ("query", "inner_join_expected"),
     [
         pytest.param(
             """
                     {
-                        containers(filter: { dataTypes: { intCol: { gt: 1 } } }) {
-                            dataTypes {
-                                intCol
+                        colors(filter: { fruits: { sweetness: { gt: 1 } } }) {
+                            fruits {
+                                sweetness
                             }
                         }
                     }
                 """,
             True,
-            id="join-rewrite",
+            id="inner-join-rewrite",
         ),
         pytest.param(
             """
                     {
-                        containers(filter: { createdAt: { gt: "1220-01-01T00:00:00+00:00" } }) {
-                            dataTypes {
-                                intCol
+                        colors(filter: { createdAt: { gt: "1220-01-01T00:00:00+00:00" } }) {
+                            fruits {
+                                sweetness
                             }
                         }
                     }
                 """,
             False,
-            id="no-join-rewrite",
+            id="no-inner-join-rewrite",
         ),
     ],
 )
 @pytest.mark.snapshot
 async def test_inner_join_rewriting(
-    query: str, rewrite: bool, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query: str,
+    inner_join_expected: bool,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that if WHERE condition only references columns from the null-supplyign side of the join, use an inner join."""
+    """Test that if WHERE condition only references columns from the null-supplying side of the join, use an inner join."""
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
 
-    if rewrite:
+    if inner_join_expected:
         assert "LEFT OUTER JOIN" not in query_tracker[0].statement_str
         assert query_tracker[0].statement_str.count("JOIN") == 1
     else:

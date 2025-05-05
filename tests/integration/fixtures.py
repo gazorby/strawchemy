@@ -44,6 +44,7 @@ from .models import Color, Fruit, FruitFarm, Group, SQLDataTypes, SQLDataTypesCo
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, Iterator
+    from pathlib import Path
 
     from pytest import FixtureRequest, MonkeyPatch
     from pytest_databases._service import DockerService  # pyright: ignore[reportPrivateImportUsage]
@@ -176,9 +177,9 @@ def database_service(postgres_service: PostgresService) -> PostgresService:
 
 
 @pytest.fixture
-def psycopg_engine(database_service: PostgresService) -> Engine:
+def psycopg_engine(database_service: PostgresService) -> Generator[Engine, None, None]:
     """Postgresql instance for end-to-end testing."""
-    return create_engine(
+    engine = create_engine(
         URL(
             drivername="postgresql+psycopg",
             username="postgres",
@@ -190,6 +191,19 @@ def psycopg_engine(database_service: PostgresService) -> Engine:
         ),
         poolclass=NullPool,
     )
+    try:
+        yield engine
+    finally:
+        engine.dispose()
+
+
+@pytest.fixture
+def sqlite_engine(tmp_path: Path) -> Generator[Engine, None, None]:
+    engine = create_engine(f"sqlite:///{tmp_path}/test.db", poolclass=NullPool)
+    try:
+        yield engine
+    finally:
+        engine.dispose()
 
 
 @pytest.fixture(
@@ -223,9 +237,18 @@ def session(engine: Engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-def asyncpg_engine(database_service: PostgresService) -> AsyncEngine:
+async def aiosqlite_engine(tmp_path: Path) -> AsyncGenerator[AsyncEngine, None]:
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path}/test.db", poolclass=NullPool)
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture
+async def asyncpg_engine(database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
     """Postgresql instance for end-to-end testing."""
-    return create_async_engine(
+    engine = create_async_engine(
         URL(
             drivername="postgresql+asyncpg",
             username="postgres",
@@ -237,12 +260,16 @@ def asyncpg_engine(database_service: PostgresService) -> AsyncEngine:
         ),
         poolclass=NullPool,
     )
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
 
 
 @pytest.fixture
-def psycopg_async_engine(database_service: PostgresService) -> AsyncEngine:
+async def psycopg_async_engine(database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
     """Postgresql instance for end-to-end testing."""
-    return create_async_engine(
+    engine = create_async_engine(
         URL(
             drivername="postgresql+psycopg",
             username="postgres",
@@ -254,6 +281,10 @@ def psycopg_async_engine(database_service: PostgresService) -> AsyncEngine:
         ),
         poolclass=NullPool,
     )
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
 
 
 @pytest.fixture(
@@ -335,35 +366,46 @@ def raw_colors() -> RawRecordData:
 @pytest.fixture
 def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
     return [
+        {"id": str(uuid4()), "name": "Apple", "sweetness": 4, "water_percent": 0.84, "color_id": raw_colors[0]["id"]},
+        {"id": str(uuid4()), "name": "Cherry", "sweetness": 9, "water_percent": 0.81, "color_id": raw_colors[0]["id"]},
+        {"id": str(uuid4()), "name": "Banana", "sweetness": 2, "water_percent": 0.75, "color_id": raw_colors[1]["id"]},
+        {"id": str(uuid4()), "name": "Lemon", "sweetness": 1, "water_percent": 0.88, "color_id": raw_colors[1]["id"]},
+        {"id": str(uuid4()), "name": "Quince", "sweetness": 3, "water_percent": 0.81, "color_id": raw_colors[1]["id"]},
+        {"id": str(uuid4()), "name": "Orange", "sweetness": 8, "water_percent": 0.86, "color_id": raw_colors[2]["id"]},
         {
             "id": str(uuid4()),
-            "name": "Apple",
-            "color_id": raw_colors[0]["id"],
-            "adjectives": ["crisp", "juicy", "sweet"],
-        },
-        {
-            "id": str(uuid4()),
-            "name": "Banana",
-            "color_id": raw_colors[1]["id"],
-            "adjectives": ["soft", "sweet", "tropical"],
-        },
-        {
-            "id": str(uuid4()),
-            "name": "Orange",
+            "name": "Clementine",
+            "sweetness": 9,
+            "water_percent": 0.9,
             "color_id": raw_colors[2]["id"],
-            "adjectives": ["tangy", "juicy", "citrusy"],
         },
         {
             "id": str(uuid4()),
             "name": "Strawberry",
+            "sweetness": 5,
+            "water_percent": 0.91,
             "color_id": raw_colors[3]["id"],
-            "adjectives": ["sweet", "fragrant", "small"],
+        },
+        {
+            "id": str(uuid4()),
+            "name": "Cantaloupe",
+            "sweetness": 0,
+            "water_percent": 0.51,
+            "color_id": raw_colors[3]["id"],
         },
         {
             "id": str(uuid4()),
             "name": "Watermelon",
+            "sweetness": 7,
+            "water_percent": 0.92,
             "color_id": raw_colors[4]["id"],
-            "adjectives": ["juicy", "refreshing", "summery"],
+        },
+        {
+            "id": str(uuid4()),
+            "name": "Pears",
+            "sweetness": 11,
+            "water_percent": 0.15,
+            "color_id": raw_colors[4]["id"],
         },
     ]
 

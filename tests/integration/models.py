@@ -62,17 +62,18 @@ class Fruit(Base):
 
     name: Mapped[str]
     color_id: Mapped[UUID | None] = mapped_column(ForeignKey("color.id"), nullable=True, default=None)
-    adjectives: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
     color: Mapped[Color | None] = relationship("Color", back_populates="fruits")
     farms: Mapped[list[FruitFarm]] = relationship(FruitFarm)
     derived_product_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("derived_product.id"), nullable=True, default=None
     )
     product: Mapped[DerivedProduct | None] = relationship(DerivedProduct)
+    sweetness: Mapped[int]
+    water_percent: Mapped[float]
 
     @hybrid_property
     def description(self) -> str:
-        return f"The {self.name} is {', '.join(self.adjectives)}"
+        return f"The {self.name} color id is {self.color_id}"
 
 
 class Color(Base):

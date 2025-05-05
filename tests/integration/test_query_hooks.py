@@ -98,11 +98,7 @@ async def test_load_columns_hook(
     assert not result.errors
     assert result.data
     assert result.data[fruits_query] == [
-        {"description": f"The {raw_fruits[0]['name']} is {', '.join(raw_fruits[0]['adjectives'])}"},
-        {"description": f"The {raw_fruits[1]['name']} is {', '.join(raw_fruits[1]['adjectives'])}"},
-        {"description": f"The {raw_fruits[2]['name']} is {', '.join(raw_fruits[2]['adjectives'])}"},
-        {"description": f"The {raw_fruits[3]['name']} is {', '.join(raw_fruits[3]['adjectives'])}"},
-        {"description": f"The {raw_fruits[4]['name']} is {', '.join(raw_fruits[4]['adjectives'])}"},
+        {"description": f"The {fruit['name']} color id is {fruit['color_id']}"} for fruit in raw_fruits
     ]
 
     assert query_tracker.query_count == 1
@@ -112,18 +108,20 @@ async def test_load_columns_hook(
 @pytest.mark.parametrize("fruits_query", ["fruits", "fruitsPaginated"])
 @pytest.mark.snapshot
 async def test_load_relationships_with_columns(
-    fruits_query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    fruits_query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
 ) -> None:
     result = await maybe_async(any_query(f"{{ {fruits_query} {{ prettyColor }} }}"))
 
     assert not result.errors
     assert result.data
     assert result.data[fruits_query] == [
-        {"prettyColor": "Color is Red"},
-        {"prettyColor": "Color is Yellow"},
-        {"prettyColor": "Color is Orange"},
-        {"prettyColor": "Color is Green"},
-        {"prettyColor": "Color is Pink"},
+        {"prettyColor": f"Color is {next(color['name'] for color in raw_colors if color['id'] == fruit['color_id'])}"}
+        for fruit in raw_fruits
     ]
 
     query_tracker.assert_statements(2, "select", sql_snapshot)
@@ -132,19 +130,17 @@ async def test_load_relationships_with_columns(
 @pytest.mark.parametrize("fruits_query", ["fruits", "fruitsPaginated"])
 @pytest.mark.snapshot
 async def test_load_relationships_no_columns(
-    fruits_query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    fruits_query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
 ) -> None:
     result = await maybe_async(any_query(f"{{ {fruits_query} {{ prettyFarms }} }}"))
 
     assert not result.errors
     assert result.data
-    assert result.data[fruits_query] == [
-        {"prettyFarms": "Farms are: Apple farm"},
-        {"prettyFarms": "Farms are: Banana farm"},
-        {"prettyFarms": "Farms are: Orange farm"},
-        {"prettyFarms": "Farms are: Strawberry farm"},
-        {"prettyFarms": "Farms are: Watermelon farm"},
-    ]
+    assert result.data[fruits_query] == [{"prettyFarms": f"Farms are: {fruit['name']} farm"} for fruit in raw_fruits]
 
     query_tracker.assert_statements(2, "select", sql_snapshot)
 
@@ -152,18 +148,22 @@ async def test_load_relationships_no_columns(
 @pytest.mark.parametrize("query", ["colors", "colorsPaginated"])
 @pytest.mark.snapshot
 async def test_load_relationships_nested(
-    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
 ) -> None:
     result = await maybe_async(any_query(f"{{ {query} {{ farms }} }}"))
 
     assert not result.errors
     assert result.data
     assert result.data[query] == [
-        {"farms": "Farms are: Apple farm"},
-        {"farms": "Farms are: Banana farm"},
-        {"farms": "Farms are: Orange farm"},
-        {"farms": "Farms are: Strawberry farm"},
-        {"farms": "Farms are: Watermelon farm"},
+        {
+            "farms": f"Farms are: {', '.join(f'{fruit["name"]} farm' for fruit in raw_fruits if fruit['color_id'] == color['id'])}"
+        }
+        for color in raw_colors
     ]
 
     query_tracker.assert_statements(2, "select", sql_snapshot)
@@ -172,31 +172,39 @@ async def test_load_relationships_nested(
 @pytest.mark.parametrize("query", ["colorsHooks", "colorsHooksPaginated"])
 @pytest.mark.snapshot
 async def test_load_relationships_on_nested_field(
-    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ {query} {{ fruits {{ prettyColor }} }} }}"))
+    result = await maybe_async(any_query(f"{{ {query} {{ id fruits {{ prettyColor }} }} }}"))
 
     assert not result.errors
     assert result.data
     assert result.data[query] == [
-        {"fruits": [{"prettyColor": "Color is Red"}]},
-        {"fruits": [{"prettyColor": "Color is Yellow"}]},
-        {"fruits": [{"prettyColor": "Color is Orange"}]},
-        {"fruits": [{"prettyColor": "Color is Green"}]},
-        {"fruits": [{"prettyColor": "Color is Pink"}]},
+        {
+            "id": color["id"],
+            "fruits": [
+                {"prettyColor": f"Color is {color['name']}"}
+                for _ in range(len([fruit for fruit in raw_fruits if fruit["color_id"] == color["id"]]))
+            ],
+        }
+        for color in raw_colors
     ]
 
     query_tracker.assert_statements(2, "select", sql_snapshot)
 
 
 @pytest.mark.parametrize("fruits_query", ["fruits", "fruitsPaginated"])
-async def test_empty_query_hook(fruits_query: str, any_query: AnyQueryExecutor) -> None:
+async def test_empty_query_hook(fruits_query: str, any_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
     result = await maybe_async(any_query(f"{{ {fruits_query} {{ emptyQueryHook }} }}"))
 
     assert not result.errors
     assert result.data
-    assert len(result.data[fruits_query]) == 5
-    assert result.data[fruits_query] == [{"emptyQueryHook": "success"} for _ in range(5)]
+    assert len(result.data[fruits_query]) == len(raw_fruits)
+    assert result.data[fruits_query] == [{"emptyQueryHook": "success"} for _ in range(len(raw_fruits))]
 
 
 @pytest.mark.parametrize("query", ["filteredFruits", "filteredFruitsPaginated"])
@@ -218,20 +226,20 @@ async def test_custom_query_hook_where(
 @pytest.mark.parametrize("query", ["orderedFruits", "orderedFruitsPaginated"])
 @pytest.mark.snapshot
 async def test_custom_query_hook_order_by(
-    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
 ) -> None:
     result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
 
     assert not result.errors
     assert result.data
-    assert len(result.data[query]) == 5
-    assert result.data[query] == [
-        {"name": "Apple"},
-        {"name": "Banana"},
-        {"name": "Orange"},
-        {"name": "Strawberry"},
-        {"name": "Watermelon"},
-    ]
+    assert len(result.data[query]) == len(raw_fruits)
+    assert result.data[query] == sorted(
+        [{"name": fruit["name"]} for fruit in raw_fruits], key=lambda fruit: fruit["name"]
+    )
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

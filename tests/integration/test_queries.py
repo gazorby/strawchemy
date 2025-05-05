@@ -133,44 +133,27 @@ async def test_many(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> No
     assert result.data["users"] == [{"name": user["name"]} for user in raw_users]
 
 
-async def test_relation(any_query: AnyQueryExecutor, raw_colors: RawRecordData) -> None:
+async def test_relation(any_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
     result = await maybe_async(any_query("{ fruits { color { id } } }"))
 
     assert not result.errors
     assert result.data
-    assert result.data["fruits"] == [
-        {"color": {"id": raw_colors[0]["id"]}},
-        {"color": {"id": raw_colors[1]["id"]}},
-        {"color": {"id": raw_colors[2]["id"]}},
-        {"color": {"id": raw_colors[3]["id"]}},
-        {"color": {"id": raw_colors[4]["id"]}},
-    ]
+    assert result.data["fruits"] == [{"color": {"id": fruit["color_id"]}} for fruit in raw_fruits]
 
 
-async def test_list_relation(any_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
+async def test_list_relation(any_query: AnyQueryExecutor, raw_colors: RawRecordData, raw_fruits: RawRecordData) -> None:
     result = await maybe_async(any_query("{ colors { fruits { name id } } }"))
 
     assert not result.errors
-
+    assert result.data
     expected = [
         {
-            "fruits": [{"name": "Apple", "id": raw_fruits[0]["id"]}],
-        },
-        {
-            "fruits": [{"name": "Banana", "id": raw_fruits[1]["id"]}],
-        },
-        {
-            "fruits": [{"name": "Orange", "id": raw_fruits[2]["id"]}],
-        },
-        {
-            "fruits": [{"name": "Strawberry", "id": raw_fruits[3]["id"]}],
-        },
-        {
-            "fruits": [{"name": "Watermelon", "id": raw_fruits[4]["id"]}],
-        },
+            "fruits": [
+                {"name": fruit["name"], "id": fruit["id"]} for fruit in raw_fruits if fruit["color_id"] == color["id"]
+            ]
+        }
+        for color in raw_colors
     ]
-
-    assert result.data
     assert all(fruit in result.data["colors"] for fruit in expected)
 
 

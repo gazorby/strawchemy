@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .fixtures import (
+    aiosqlite_engine,
     any_query,
     any_session,
     async_engine,
@@ -32,10 +33,12 @@ from .fixtures import (
     seed_db_sync,
     seed_insert_statements,
     session,
+    sqlite_engine,
     sync_mutation,
 )
 
 __all__ = (
+    "aiosqlite_engine",
     "any_query",
     "any_session",
     "async_engine",
@@ -67,5 +70,6 @@ __all__ = (
     "seed_db_sync",
     "seed_insert_statements",
     "session",
+    "sqlite_engine",
     "sync_mutation",
 )
