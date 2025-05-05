@@ -11,9 +11,9 @@
   
   input ColorAggregateOrderBy {
     count: OrderByEnum
-    sum: ColorAggregateNumericFieldsOrderBy
-    minString: ColorAggregateMinMaxStringFieldsOrderBy
     maxString: ColorAggregateMinMaxStringFieldsOrderBy
+    minString: ColorAggregateMinMaxStringFieldsOrderBy
+    sum: ColorAggregateNumericFieldsOrderBy
   }
   
   """Ordering options"""
@@ -36,17 +36,17 @@
   
   """Aggregation fields"""
   type FruitAggregate {
-    count: Int
-    sum: FruitSumFields!
-    min: FruitMinMaxFields!
-    max: FruitMinMaxFields!
     avg: FruitNumericFields!
+    count: Int
+    max: FruitMinMaxFields!
+    min: FruitMinMaxFields!
     stddev: FruitNumericFields!
-    stddevSamp: FruitNumericFields!
     stddevPop: FruitNumericFields!
-    variance: FruitNumericFields!
-    varSamp: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    sum: FruitSumFields!
     varPop: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    variance: FruitNumericFields!
   }
   
   input FruitAggregateMinMaxStringFieldsOrderBy {
@@ -54,24 +54,23 @@
   }
   
   input FruitAggregateNumericFieldsOrderBy {
-    name: OrderByEnum
     sweetness: OrderByEnum
   }
   
   input FruitAggregateOrderBy {
-    count: OrderByEnum
-    sum: FruitAggregateNumericFieldsOrderBy
-    min: FruitAggregateNumericFieldsOrderBy
-    max: FruitAggregateNumericFieldsOrderBy
-    minString: FruitAggregateMinMaxStringFieldsOrderBy
-    maxString: FruitAggregateMinMaxStringFieldsOrderBy
     avg: FruitAggregateNumericFieldsOrderBy
+    count: OrderByEnum
+    max: FruitAggregateNumericFieldsOrderBy
+    maxString: FruitAggregateMinMaxStringFieldsOrderBy
+    min: FruitAggregateNumericFieldsOrderBy
+    minString: FruitAggregateMinMaxStringFieldsOrderBy
     stddev: FruitAggregateNumericFieldsOrderBy
-    stddevSamp: FruitAggregateNumericFieldsOrderBy
     stddevPop: FruitAggregateNumericFieldsOrderBy
-    variance: FruitAggregateNumericFieldsOrderBy
-    varSamp: FruitAggregateNumericFieldsOrderBy
+    stddevSamp: FruitAggregateNumericFieldsOrderBy
+    sum: FruitAggregateNumericFieldsOrderBy
     varPop: FruitAggregateNumericFieldsOrderBy
+    varSamp: FruitAggregateNumericFieldsOrderBy
+    variance: FruitAggregateNumericFieldsOrderBy
   }
   
   type FruitMinMaxFields {

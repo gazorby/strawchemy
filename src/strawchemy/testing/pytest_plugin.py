@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-import dataclasses
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypeAlias
 from unittest.mock import MagicMock
 
@@ -17,6 +16,7 @@ if TYPE_CHECKING:
     from strawchemy.dto import ModelT
     from strawchemy.graphql.dto import QueryNode
     from strawchemy.sqlalchemy.typing import AnySession, DeclarativeT
+    from strawchemy.typing import SupportedDialect
 
 
 SyncExecuteCallable: TypeAlias = "Callable[[executor.QueryExecutor[DeclarativeT], AnySession], MagicMock]"
@@ -96,9 +96,16 @@ def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, A
 
 @pytest.fixture
 def context() -> MockContext:
-    return MockContext()
+    return MockContext("postgresql")
 
 
 @dataclass
 class MockContext:
-    session: MagicMock = dataclasses.field(default_factory=lambda: MagicMock(name="SessionMock"))
+    dialect: SupportedDialect
+    session: MagicMock = field(init=False)
+
+    def __post_init__(self) -> None:
+        dialect = MagicMock(name="DialectMock")
+        dialect.name = "postgresql"
+        engine = MagicMock(name="EngineMock", dialect=dialect)
+        self.session = MagicMock(name="SessionMock", get_bind=MagicMock(return_value=engine))

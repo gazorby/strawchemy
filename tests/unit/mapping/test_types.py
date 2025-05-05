@@ -447,7 +447,7 @@ def test_pydantic_validation(query: str, name: str, is_list: bool) -> None:
     from tests.unit.schemas.pydantic.validation import Mutation
 
     schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
-    result = schema.execute_sync(query, context_value=MockContext())
+    result = schema.execute_sync(query, context_value=MockContext("postgresql"))
     assert not result.errors
     assert result.data
 
@@ -499,7 +499,7 @@ def test_pydantic_validation_nested() -> None:
         }
     """
     schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
-    result = schema.execute_sync(query, context_value=MockContext())
+    result = schema.execute_sync(query, context_value=MockContext("postgresql"))
     assert not result.errors
     assert result.data
 

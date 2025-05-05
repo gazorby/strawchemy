@@ -9,6 +9,7 @@ from sqlalchemy import inspect
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import NO_VALUE, DeclarativeBase, QueryableAttribute, registry
 from sqlalchemy.types import ARRAY, JSON
+from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.graphql.exceptions import InspectorError
@@ -27,9 +28,9 @@ from .filters import (
 from .filters.postgresql import JSONBSQLAlchemyFilter, PostgresArraySQLAlchemyFilter
 
 if TYPE_CHECKING:
-    from strawchemy.config import DatabaseFeatures
     from strawchemy.dto.base import DTOFieldDefinition
     from strawchemy.graphql.dto import GraphQLComparison
+    from strawchemy.typing import SupportedDialect
 
     from .typing import FilterMap
 
@@ -62,15 +63,15 @@ class SQLAlchemyGraphQLInspector(
 ):
     def __init__(
         self,
-        db_features: DatabaseFeatures,
+        dialect: SupportedDialect,
         registries: list[registry] | None = None,
         filter_overrides: FilterMap | None = None,
     ) -> None:
         super().__init__(registries)
-        self.db_features = db_features
+        self.database_features = DatabaseFeatures.new(dialect)
         self.filters_map = _DEFAULT_FILTERS_MAP
         self._dialect_json_types: tuple[type[JSON], ...] | None = None
-        if self.db_features.dialect == "postgresql":
+        if self.database_features.dialect == "postgresql":
             self._dialect_json_types = (postgresql.JSON, postgresql.JSONB)
             self.filters_map |= {(dict,): JSONBSQLAlchemyFilter}
             if GEO_INSTALLED:

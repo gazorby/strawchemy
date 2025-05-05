@@ -3,7 +3,8 @@ from __future__ import annotations
 import dataclasses
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar, override
+from functools import cached_property
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar, cast, override
 
 from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, ModelInspector, ModelT, Relation
@@ -260,80 +261,12 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
     def _supports_aggregations(self, *function: AggregationFunction) -> bool:
         return set(function).issubset(self._inspector.database_features.aggregation_functions)
 
-    def arguments_type(
-        self, model: type[T], dto_config: DTOConfig, aggregation: AggregationType
-    ) -> type[EnumDTO] | None:
-        try:
-            if aggregation == "numeric":
-                dto = self._numeric_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "sum":
-                dto = self._sum_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "min_max_date":
-                dto = self._min_max_date_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "min_max_datetime":
-                dto = self._min_max_datetime_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "min_max_string":
-                dto = self._min_max_string_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "min_max_numeric":
-                dto = self._min_max_numeric_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "min_max_time":
-                dto = self._min_max_time_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-        except DTOError:
-            return None
-        return dto
-
-    def numeric_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
-        try:
-            dto = self._numeric_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
-        except DTOError:
-            return None
-        return dto
-
-    def min_max_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
-        try:
-            dto = self._min_max_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
-        except DTOError:
-            return None
-        return dto
-
-    def sum_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
-        try:
-            dto = self._sum_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
-        except DTOError:
-            return None
-        return dto
-
-    def output_functions(self, model: type[Any], dto_config: DTOConfig) -> list[OutputFunctionInfo]:
-        int_as_float_config = dataclasses.replace(
-            dto_config, type_overrides={int: float | None, int | None: float | None}
+    @cached_property
+    def _statistical_aggregations(self) -> list[AggregationFunction]:
+        return list(
+            self._inspector.database_features.aggregation_functions
+            - cast("set[AggregationFunction]", {"min", "max", "sum", "count"})
         )
-        numeric_fields = self.numeric_field_type(model, int_as_float_config)
-        aggregations: list[OutputFunctionInfo] = []
-
-        if self._supports_aggregations("count"):
-            aggregations.append(
-                OutputFunctionInfo(
-                    function="count", require_arguments=False, output_type=int | None if dto_config.partial else int
-                )
-            )
-        if self._supports_aggregations("sum") and (sum_fields := self.sum_field_type(model, dto_config)):
-            aggregations.append(OutputFunctionInfo(function="sum", output_type=sum_fields))
-        if self._supports_aggregations("min", "max") and (min_max_fields := self.min_max_field_type(model, dto_config)):
-            aggregations.extend(
-                [
-                    OutputFunctionInfo(function="min", output_type=min_max_fields),
-                    OutputFunctionInfo(function="max", output_type=min_max_fields),
-                ]
-            )
-
-        if numeric_fields:
-            aggregations.extend(
-                [
-                    OutputFunctionInfo(function=function, output_type=numeric_fields)
-                    for function in self._inspector.database_features.aggregation_functions
-                ]
-            )
-        return aggregations
 
     def _min_max_filters(
         self, model: type[Any], dto_config: DTOConfig
@@ -435,6 +368,81 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
             )
         return aggregations
 
+    def arguments_type(
+        self, model: type[T], dto_config: DTOConfig, aggregation: AggregationType
+    ) -> type[EnumDTO] | None:
+        try:
+            if aggregation == "numeric":
+                dto = self._numeric_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+            elif aggregation == "sum":
+                dto = self._sum_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+            elif aggregation == "min_max_date":
+                dto = self._min_max_date_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+            elif aggregation == "min_max_datetime":
+                dto = self._min_max_datetime_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+            elif aggregation == "min_max_string":
+                dto = self._min_max_string_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+            elif aggregation == "min_max_numeric":
+                dto = self._min_max_numeric_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+            elif aggregation == "min_max_time":
+                dto = self._min_max_time_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+        except DTOError:
+            return None
+        return dto
+
+    def numeric_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
+        try:
+            dto = self._numeric_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+        except DTOError:
+            return None
+        return dto
+
+    def min_max_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
+        try:
+            dto = self._min_max_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+        except DTOError:
+            return None
+        return dto
+
+    def sum_field_type(self, model: type[T], dto_config: DTOConfig) -> type[UnmappedDataclassGraphQLDTO[T]] | None:
+        try:
+            dto = self._sum_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+        except DTOError:
+            return None
+        return dto
+
+    def output_functions(self, model: type[Any], dto_config: DTOConfig) -> list[OutputFunctionInfo]:
+        int_as_float_config = dataclasses.replace(
+            dto_config, type_overrides={int: float | None, int | None: float | None}
+        )
+        numeric_fields = self.numeric_field_type(model, int_as_float_config)
+        aggregations: list[OutputFunctionInfo] = []
+
+        if self._supports_aggregations("count"):
+            aggregations.append(
+                OutputFunctionInfo(
+                    function="count", require_arguments=False, output_type=int | None if dto_config.partial else int
+                )
+            )
+        if self._supports_aggregations("sum") and (sum_fields := self.sum_field_type(model, dto_config)):
+            aggregations.append(OutputFunctionInfo(function="sum", output_type=sum_fields))
+        if self._supports_aggregations("min", "max") and (min_max_fields := self.min_max_field_type(model, dto_config)):
+            aggregations.extend(
+                [
+                    OutputFunctionInfo(function="min", output_type=min_max_fields),
+                    OutputFunctionInfo(function="max", output_type=min_max_fields),
+                ]
+            )
+
+        if numeric_fields:
+            aggregations.extend(
+                [
+                    OutputFunctionInfo(function=function, output_type=numeric_fields)
+                    for function in self._statistical_aggregations
+                ]
+            )
+        return sorted(aggregations, key=lambda aggregation: aggregation.function)
+
     def filter_functions(
         self, model: type[Any], dto_config: DTOConfig
     ) -> list[FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]]]:
@@ -477,7 +485,7 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
                         aggregation_type="numeric",
                         comparison_type=comparison,
                     )
-                    for function in self._inspector.database_features.aggregation_functions
+                    for function in self._statistical_aggregations
                 ]
             )
-        return aggregations
+        return sorted(aggregations, key=lambda aggregation: aggregation.function)

@@ -18,7 +18,7 @@ from ._factories import (
     StrawchemyRootAggregateTypeFactory,
     StrawchemyTypeFactory,
 )
-from .config import StrawchemyConfig
+from .config.base import StrawchemyConfig
 from .graphql.dto import (
     BooleanFilterDTO,
     EnumDTO,

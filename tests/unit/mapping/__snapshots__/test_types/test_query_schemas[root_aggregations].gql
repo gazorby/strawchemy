@@ -27,17 +27,17 @@
   
   """Aggregation fields"""
   type SQLDataTypesAggregate {
-    count: Int
-    sum: SQLDataTypesSumFields!
-    min: SQLDataTypesMinMaxFields!
-    max: SQLDataTypesMinMaxFields!
     avg: SQLDataTypesNumericFields!
+    count: Int
+    max: SQLDataTypesMinMaxFields!
+    min: SQLDataTypesMinMaxFields!
     stddev: SQLDataTypesNumericFields!
-    stddevSamp: SQLDataTypesNumericFields!
     stddevPop: SQLDataTypesNumericFields!
-    variance: SQLDataTypesNumericFields!
-    varSamp: SQLDataTypesNumericFields!
+    stddevSamp: SQLDataTypesNumericFields!
+    sum: SQLDataTypesSumFields!
     varPop: SQLDataTypesNumericFields!
+    varSamp: SQLDataTypesNumericFields!
+    variance: SQLDataTypesNumericFields!
   }
   
   """GraphQL type"""

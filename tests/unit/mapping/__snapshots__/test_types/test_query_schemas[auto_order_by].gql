@@ -11,9 +11,9 @@
   
   input ColorAggregateOrderBy {
     count: OrderByEnum
-    sum: ColorAggregateNumericFieldsOrderBy
-    minString: ColorAggregateMinMaxStringFieldsOrderBy
     maxString: ColorAggregateMinMaxStringFieldsOrderBy
+    minString: ColorAggregateMinMaxStringFieldsOrderBy
+    sum: ColorAggregateNumericFieldsOrderBy
   }
   
   """Ordering options"""
@@ -36,17 +36,17 @@
   
   """Aggregation fields"""
   type FruitAggregate {
-    count: Int
-    sum: FruitSumFields!
-    min: FruitMinMaxFields!
-    max: FruitMinMaxFields!
     avg: FruitNumericFields!
+    count: Int
+    max: FruitMinMaxFields!
+    min: FruitMinMaxFields!
     stddev: FruitNumericFields!
-    stddevSamp: FruitNumericFields!
     stddevPop: FruitNumericFields!
-    variance: FruitNumericFields!
-    varSamp: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    sum: FruitSumFields!
     varPop: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    variance: FruitNumericFields!
   }
   
   input FruitAggregateMinMaxStringFieldsOrderBy {
@@ -54,24 +54,23 @@
   }
   
   input FruitAggregateNumericFieldsOrderBy {
-    name: OrderByEnum
     sweetness: OrderByEnum
   }
   
   input FruitAggregateOrderBy {
-    count: OrderByEnum
-    sum: FruitAggregateNumericFieldsOrderBy
-    min: FruitAggregateNumericFieldsOrderBy
-    max: FruitAggregateNumericFieldsOrderBy
-    minString: FruitAggregateMinMaxStringFieldsOrderBy
-    maxString: FruitAggregateMinMaxStringFieldsOrderBy
     avg: FruitAggregateNumericFieldsOrderBy
+    count: OrderByEnum
+    max: FruitAggregateNumericFieldsOrderBy
+    maxString: FruitAggregateMinMaxStringFieldsOrderBy
+    min: FruitAggregateNumericFieldsOrderBy
+    minString: FruitAggregateMinMaxStringFieldsOrderBy
     stddev: FruitAggregateNumericFieldsOrderBy
-    stddevSamp: FruitAggregateNumericFieldsOrderBy
     stddevPop: FruitAggregateNumericFieldsOrderBy
-    variance: FruitAggregateNumericFieldsOrderBy
-    varSamp: FruitAggregateNumericFieldsOrderBy
+    stddevSamp: FruitAggregateNumericFieldsOrderBy
+    sum: FruitAggregateNumericFieldsOrderBy
     varPop: FruitAggregateNumericFieldsOrderBy
+    varSamp: FruitAggregateNumericFieldsOrderBy
+    variance: FruitAggregateNumericFieldsOrderBy
   }
   
   type FruitMinMaxFields {
@@ -110,9 +109,9 @@
   """Aggregation fields"""
   type GroupAggregate {
     count: Int
-    sum: GroupSumFields!
-    min: GroupMinMaxFields!
     max: GroupMinMaxFields!
+    min: GroupMinMaxFields!
+    sum: GroupSumFields!
   }
   
   input GroupAggregateMinMaxStringFieldsOrderBy {
@@ -125,9 +124,9 @@
   
   input GroupAggregateOrderBy {
     count: OrderByEnum
-    sum: GroupAggregateNumericFieldsOrderBy
-    minString: GroupAggregateMinMaxStringFieldsOrderBy
     maxString: GroupAggregateMinMaxStringFieldsOrderBy
+    minString: GroupAggregateMinMaxStringFieldsOrderBy
+    sum: GroupAggregateNumericFieldsOrderBy
   }
   
   type GroupMinMaxFields {
@@ -190,9 +189,9 @@
   
   input TagAggregateOrderBy {
     count: OrderByEnum
-    sum: TagAggregateNumericFieldsOrderBy
-    minString: TagAggregateMinMaxStringFieldsOrderBy
     maxString: TagAggregateMinMaxStringFieldsOrderBy
+    minString: TagAggregateMinMaxStringFieldsOrderBy
+    sum: TagAggregateNumericFieldsOrderBy
   }
   
   """Ordering options"""
@@ -218,9 +217,9 @@
   """Aggregation fields"""
   type UserAggregate {
     count: Int
-    sum: UserSumFields!
-    min: UserMinMaxFields!
     max: UserMinMaxFields!
+    min: UserMinMaxFields!
+    sum: UserSumFields!
   }
   
   input UserAggregateMinMaxStringFieldsOrderBy {
@@ -233,9 +232,9 @@
   
   input UserAggregateOrderBy {
     count: OrderByEnum
-    sum: UserAggregateNumericFieldsOrderBy
-    minString: UserAggregateMinMaxStringFieldsOrderBy
     maxString: UserAggregateMinMaxStringFieldsOrderBy
+    minString: UserAggregateMinMaxStringFieldsOrderBy
+    sum: UserAggregateNumericFieldsOrderBy
   }
   
   type UserMinMaxFields {

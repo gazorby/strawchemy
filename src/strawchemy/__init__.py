@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from .config.base import StrawchemyConfig
 from .exceptions import InputValidationError
 from .input import Input
 from .mapper import Strawchemy
@@ -28,6 +29,7 @@ __all__ = (
     "RequiredToOneInput",
     "Strawchemy",
     "StrawchemyAsyncRepository",
+    "StrawchemyConfig",
     "StrawchemySyncRepository",
     "ToManyCreateInput",
     "ToManyUpdateInput",

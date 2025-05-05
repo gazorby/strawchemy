@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 from strawchemy.dto import DTOFieldDefinition, ModelFieldT, ModelInspector, ModelT
 
 if TYPE_CHECKING:
-    from strawchemy.config import DatabaseFeatures
+    from strawchemy.config.databases import DatabaseFeatures
 
     from . import GraphQLFilter
     from .dto import GraphQLComparison

@@ -6,9 +6,9 @@
   """
   input ColorAggregateBoolExp {
     count: ColorAggregateBoolExpCount
-    sum: ColorAggregateBoolExpSum
-    minString: ColorAggregateBoolExpMinstring
     maxString: ColorAggregateBoolExpMaxstring
+    minString: ColorAggregateBoolExpMinstring
+    sum: ColorAggregateBoolExpSum
   }
   
   """Boolean expression to compare count aggregation."""
@@ -92,36 +92,36 @@
   
   """Aggregation fields"""
   type FruitAggregate {
-    count: Int
-    sum: FruitSumFields!
-    min: FruitMinMaxFields!
-    max: FruitMinMaxFields!
     avg: FruitNumericFields!
+    count: Int
+    max: FruitMinMaxFields!
+    min: FruitMinMaxFields!
     stddev: FruitNumericFields!
-    stddevSamp: FruitNumericFields!
     stddevPop: FruitNumericFields!
-    variance: FruitNumericFields!
-    varSamp: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    sum: FruitSumFields!
     varPop: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    variance: FruitNumericFields!
   }
   
   """
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input FruitAggregateBoolExp {
-    count: FruitAggregateBoolExpCount
-    sum: FruitAggregateBoolExpSum
-    min: FruitAggregateBoolExpMin
-    max: FruitAggregateBoolExpMax
-    minString: FruitAggregateBoolExpMinstring
-    maxString: FruitAggregateBoolExpMaxstring
     avg: FruitAggregateBoolExpAvg
+    count: FruitAggregateBoolExpCount
+    max: FruitAggregateBoolExpMax
+    maxString: FruitAggregateBoolExpMaxstring
+    min: FruitAggregateBoolExpMin
+    minString: FruitAggregateBoolExpMinstring
     stddev: FruitAggregateBoolExpStddev
-    stddevSamp: FruitAggregateBoolExpStddevsamp
     stddevPop: FruitAggregateBoolExpStddevpop
-    variance: FruitAggregateBoolExpVariance
-    varSamp: FruitAggregateBoolExpVarsamp
+    stddevSamp: FruitAggregateBoolExpStddevsamp
+    sum: FruitAggregateBoolExpSum
     varPop: FruitAggregateBoolExpVarpop
+    varSamp: FruitAggregateBoolExpVarsamp
+    variance: FruitAggregateBoolExpVariance
   }
   
   """Boolean expression to compare avg aggregation."""
@@ -280,9 +280,9 @@
   """Aggregation fields"""
   type GroupAggregate {
     count: Int
-    sum: GroupSumFields!
-    min: GroupMinMaxFields!
     max: GroupMinMaxFields!
+    min: GroupMinMaxFields!
+    sum: GroupSumFields!
   }
   
   """
@@ -290,9 +290,9 @@
   """
   input GroupAggregateBoolExp {
     count: GroupAggregateBoolExpCount
-    sum: GroupAggregateBoolExpSum
-    minString: GroupAggregateBoolExpMinstring
     maxString: GroupAggregateBoolExpMaxstring
+    minString: GroupAggregateBoolExpMinstring
+    sum: GroupAggregateBoolExpSum
   }
   
   """Boolean expression to compare count aggregation."""
@@ -440,9 +440,9 @@
   """
   input TagAggregateBoolExp {
     count: TagAggregateBoolExpCount
-    sum: TagAggregateBoolExpSum
-    minString: TagAggregateBoolExpMinstring
     maxString: TagAggregateBoolExpMaxstring
+    minString: TagAggregateBoolExpMinstring
+    sum: TagAggregateBoolExpSum
   }
   
   """Boolean expression to compare count aggregation."""
@@ -525,9 +525,9 @@
   """Aggregation fields"""
   type UserAggregate {
     count: Int
-    sum: UserSumFields!
-    min: UserMinMaxFields!
     max: UserMinMaxFields!
+    min: UserMinMaxFields!
+    sum: UserSumFields!
   }
   
   """
@@ -535,9 +535,9 @@
   """
   input UserAggregateBoolExp {
     count: UserAggregateBoolExpCount
-    sum: UserAggregateBoolExpSum
-    minString: UserAggregateBoolExpMinstring
     maxString: UserAggregateBoolExpMaxstring
+    minString: UserAggregateBoolExpMinstring
+    sum: UserAggregateBoolExpSum
   }
   
   """Boolean expression to compare count aggregation."""
