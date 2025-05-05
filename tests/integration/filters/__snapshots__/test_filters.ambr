@@ -1,0 +1,730 @@
+# serializer version: 1
+# name: test_and[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > $1::INTEGER
+     AND (fruit.name LIKE '%' || $2::VARCHAR || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_and[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
+     AND (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_and[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
+     AND (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_complex_logical_operators[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.sweetness > $1::INTEGER AND (fruit.name LIKE '%' || $2::VARCHAR || '%' ESCAPE '/'))
+      OR (fruit.water_percent > $3::FLOAT AND fruit.sweetness < $4::INTEGER)
+  '''
+# ---
+# name: test_complex_logical_operators[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.sweetness > %(sweetness_1)s::INTEGER AND (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/'))
+      OR (fruit.water_percent > %(water_percent_1)s AND fruit.sweetness < %(sweetness_2)s::INTEGER)
+  '''
+# ---
+# name: test_complex_logical_operators[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.sweetness > %(sweetness_1)s::INTEGER AND (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/'))
+      OR (fruit.water_percent > %(water_percent_1)s AND fruit.sweetness < %(sweetness_2)s::INTEGER)
+  '''
+# ---
+# name: test_eq[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = $1::VARCHAR
+  '''
+# ---
+# name: test_eq[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_eq[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_filter_on_paginated_query[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           WHERE NOT (fruit.sweetness > $1::INTEGER AND fruit.sweetness IS NOT NULL)
+           LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
+         ) AS fruit
+   LIMIT $4::INTEGER
+  '''
+# ---
+# name: test_filter_on_paginated_query[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           WHERE NOT (fruit.sweetness > %(sweetness_1)s::INTEGER AND fruit.sweetness IS NOT NULL)
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_filter_on_paginated_query[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           WHERE NOT (fruit.sweetness > %(sweetness_1)s::INTEGER AND fruit.sweetness IS NOT NULL)
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_gt[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > $1::INTEGER
+  '''
+# ---
+# name: test_gt[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
+  '''
+# ---
+# name: test_gt[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
+  '''
+# ---
+# name: test_gte[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness >= $1::INTEGER
+  '''
+# ---
+# name: test_gte[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness >= %(sweetness_1)s::INTEGER
+  '''
+# ---
+# name: test_gte[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness >= %(sweetness_1)s::INTEGER
+  '''
+# ---
+# name: test_in[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness IN (__[POSTCOMPILE_sweetness_1])
+  '''
+# ---
+# name: test_in[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness IN (__[POSTCOMPILE_sweetness_1])
+  '''
+# ---
+# name: test_in[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness IN (__[POSTCOMPILE_sweetness_1])
+  '''
+# ---
+# name: test_isnull[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT "user".bio,
+         "user".id
+    FROM "user" AS "user"
+   WHERE "user".bio IS NULL
+  '''
+# ---
+# name: test_isnull[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT "user".bio,
+         "user".id
+    FROM "user" AS "user"
+   WHERE "user".bio IS NULL
+  '''
+# ---
+# name: test_isnull[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT "user".bio,
+         "user".id
+    FROM "user" AS "user"
+   WHERE "user".bio IS NULL
+  '''
+# ---
+# name: test_lt[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness < $1::INTEGER
+  '''
+# ---
+# name: test_lt[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness < %(sweetness_1)s::INTEGER
+  '''
+# ---
+# name: test_lt[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness < %(sweetness_1)s::INTEGER
+  '''
+# ---
+# name: test_lte[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness <= $1::INTEGER
+  '''
+# ---
+# name: test_lte[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness <= %(sweetness_1)s::INTEGER
+  '''
+# ---
+# name: test_lte[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness <= %(sweetness_1)s::INTEGER
+  '''
+# ---
+# name: test_neq[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name != $1::VARCHAR
+  '''
+# ---
+# name: test_neq[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name != %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_neq[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name != %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_nin[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.sweetness NOT IN (__[POSTCOMPILE_sweetness_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.sweetness NOT IN (__[POSTCOMPILE_sweetness_1]))
+  '''
+# ---
+# name: test_nin[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.sweetness NOT IN (__[POSTCOMPILE_sweetness_1]))
+  '''
+# ---
+# name: test_no_filtering[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_no_filtering[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_no_filtering[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_not[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE NOT (fruit.sweetness < $1::INTEGER AND fruit.sweetness IS NOT NULL)
+  '''
+# ---
+# name: test_not[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE NOT (fruit.sweetness < %(sweetness_1)s::INTEGER AND fruit.sweetness IS NOT NULL)
+  '''
+# ---
+# name: test_not[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE NOT (fruit.sweetness < %(sweetness_1)s::INTEGER AND fruit.sweetness IS NOT NULL)
+  '''
+# ---
+# name: test_or[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > $1::INTEGER
+      OR (fruit.name LIKE '%' || $2::VARCHAR || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_or[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
+      OR (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_or[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
+      OR (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-contains-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-contains-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-contains-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-endswith-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE '%' || $1::VARCHAR ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-endswith-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE '%%' || %(name_1)s::VARCHAR ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-endswith-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE '%%' || %(name_1)s::VARCHAR ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-icontains-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name ILIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-icontains-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name ILIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-icontains-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name ILIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-iendswith-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name ILIKE '%' || $1::VARCHAR ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-iendswith-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name ILIKE '%%' || %(name_1)s::VARCHAR ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-iendswith-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name ILIKE '%%' || %(name_1)s::VARCHAR ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-ilike-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name ILIKE $1::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-ilike-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name ILIKE %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-ilike-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name ILIKE %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-inregexp-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) !~ $1::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-inregexp-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) !~ %(lower_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-inregexp-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) !~ %(lower_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-iregexp-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) ~ $1::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-iregexp-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) ~ %(lower_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-iregexp-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) ~ %(lower_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-istartswith-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name ILIKE $1::VARCHAR || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-istartswith-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name ILIKE %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-istartswith-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name ILIKE %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-like-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name LIKE $1::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-like-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name LIKE %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-like-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name LIKE %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-nilike-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name NOT ILIKE $1::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-nilike-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name NOT ILIKE %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-nilike-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name NOT ILIKE %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-nlike-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name NOT LIKE $1::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-nlike-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name NOT LIKE %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-nlike-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name NOT LIKE %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-nregexp-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name !~ $1::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-nregexp-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name !~ %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-nregexp-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name !~ %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-regexp-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name ~ $1::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-regexp-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name ~ %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-regexp-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name ~ %(name_1)s::VARCHAR
+  '''
+# ---
+# name: test_string_filters[session-tracked-startswith-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE $1::VARCHAR || '%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-startswith-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_string_filters[session-tracked-startswith-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---

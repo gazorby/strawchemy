@@ -129,7 +129,7 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
     """
 
     def _like_expressions(
-        self, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
+        self, model_attribute: QueryableAttribute[str] | ColumnElement[str]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -145,7 +145,7 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
         return expressions
 
     def _regexp_expressions(
-        self, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
+        self, model_attribute: QueryableAttribute[str] | ColumnElement[str]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -164,7 +164,7 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
     def to_expressions(
         self,
         dialect: Dialect,
-        model_attribute: QueryableAttribute[Any] | ColumnElement[Any],
+        model_attribute: QueryableAttribute[str] | ColumnElement[str],
     ) -> list[ColumnElement[bool]]:
         """Convert filter to SQLAlchemy expressions.
 
@@ -205,7 +205,7 @@ class BaseDateSQLAlchemyFilter(DateComparison[OrderSQLAlchemyFilter[int], Declar
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
     ) -> list[ColumnElement[bool]]:
         """Convert filter to SQLAlchemy expressions.
 
@@ -247,7 +247,7 @@ class BaseTimeSQLAlchemyFilter(TimeComparison[OrderSQLAlchemyFilter[int], Declar
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+        self, dialect: Dialect, model_attribute: ColumnElement[time] | QueryableAttribute[time]
     ) -> list[ColumnElement[bool]]:
         """Convert filter to SQLAlchemy expressions.
 
@@ -287,7 +287,7 @@ class TimeDeltaSQLAlchemyFilter(
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
     ) -> list[ColumnElement[bool]]:
         expressions = super().to_expressions(dialect, model_attribute)
 

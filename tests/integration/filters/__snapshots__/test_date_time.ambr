@@ -1,0 +1,529 @@
+# serializer version: 1
+# name: test_date_components[session-tracked-day-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DAY FROM date_time_model.date_col) = $1::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-day-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DAY FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-day-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DAY FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-isoWeekDay-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISODOW FROM date_time_model.date_col) = $1::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-isoWeekDay-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISODOW FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-isoWeekDay-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISODOW FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-isoYear-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISOYEAR FROM date_time_model.date_col) = $1::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-isoYear-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISOYEAR FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-isoYear-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISOYEAR FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-month-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MONTH FROM date_time_model.date_col) = $1::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-month-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MONTH FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-month-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MONTH FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-quarter-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(QUARTER FROM date_time_model.date_col) = $1::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-quarter-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(QUARTER FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-quarter-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(QUARTER FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-week-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(WEEK FROM date_time_model.date_col) = $1::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-week-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(WEEK FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-week-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(WEEK FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-weekDay-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DOW FROM date_time_model.date_col) = $1::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-weekDay-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DOW FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-weekDay-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DOW FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-year-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(YEAR FROM date_time_model.date_col) = $1::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-year-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(YEAR FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_date_components[session-tracked-year-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.date_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(YEAR FROM date_time_model.date_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-day-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DAY FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-day-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DAY FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-day-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DAY FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-hour-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(HOUR FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-hour-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(HOUR FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-hour-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(HOUR FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoWeekDay-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISODOW FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoWeekDay-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISODOW FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoWeekDay-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISODOW FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoYear-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISOYEAR FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoYear-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISOYEAR FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-isoYear-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(ISOYEAR FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-minute-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MINUTE FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-minute-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MINUTE FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-minute-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MINUTE FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-month-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MONTH FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-month-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MONTH FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-month-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MONTH FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-quarter-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(QUARTER FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-quarter-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(QUARTER FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-quarter-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(QUARTER FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-second-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(SECOND FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-second-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(SECOND FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-second-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(SECOND FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-week-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(WEEK FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-week-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(WEEK FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-week-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(WEEK FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-weekDay-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DOW FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-weekDay-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DOW FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-weekDay-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(DOW FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-year-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(YEAR FROM date_time_model.datetime_col) = $1::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-year-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(YEAR FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_datetime_components[session-tracked-year-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.datetime_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(YEAR FROM date_time_model.datetime_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_time_components[session-tracked-hour-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.time_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(HOUR FROM date_time_model.time_col) = $1::INTEGER
+  '''
+# ---
+# name: test_time_components[session-tracked-hour-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.time_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(HOUR FROM date_time_model.time_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_time_components[session-tracked-hour-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.time_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(HOUR FROM date_time_model.time_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_time_components[session-tracked-minute-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.time_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MINUTE FROM date_time_model.time_col) = $1::INTEGER
+  '''
+# ---
+# name: test_time_components[session-tracked-minute-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.time_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MINUTE FROM date_time_model.time_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_time_components[session-tracked-minute-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.time_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(MINUTE FROM date_time_model.time_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_time_components[session-tracked-second-async-asyncpg_engine]
+  '''
+  SELECT date_time_model.time_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(SECOND FROM date_time_model.time_col) = $1::INTEGER
+  '''
+# ---
+# name: test_time_components[session-tracked-second-async-psycopg_async_engine]
+  '''
+  SELECT date_time_model.time_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(SECOND FROM date_time_model.time_col) = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_time_components[session-tracked-second-sync-psycopg_engine]
+  '''
+  SELECT date_time_model.time_col,
+         date_time_model.id
+    FROM date_time_model AS date_time_model
+   WHERE EXTRACT(SECOND FROM date_time_model.time_col) = %(param_1)s::INTEGER
+  '''
+# ---

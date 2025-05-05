@@ -24,7 +24,7 @@ from .types import (
     strawchemy,
 )
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.postgres]
 
 
 @strawberry.type

@@ -21,7 +21,7 @@ from .types import (
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.postgres]
 
 
 @strawberry.type

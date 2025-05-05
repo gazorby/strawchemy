@@ -8,7 +8,17 @@ from strawchemy import ModelInstance, QueryHook, Strawchemy
 from sqlalchemy import Select
 from sqlalchemy.orm.util import AliasedClass
 
-from .models import Color, Fruit, FruitFarm, RankedUser, SQLDataTypes, SQLDataTypesContainer, User
+from .models import (
+    ArrayModel,
+    Color,
+    DateTimeModel,
+    Fruit,
+    FruitFarm,
+    IntervalModel,
+    JSONModel,
+    RankedUser,
+    User,
+)
 
 strawchemy = Strawchemy()
 
@@ -163,19 +173,6 @@ class ColorTypeHooks:
 class ColorCreateInput: ...
 
 
-@strawchemy.create_input(RankedUser, include="all")
-class RankedUserCreateInput: ...
-
-
-@strawchemy.type(RankedUser, include="all")
-class RankedUserType: ...
-
-
-@strawchemy.pydantic.create(RankedUser, include="all")
-class RankedUserCreateValidation:
-    name: Annotated[str, AfterValidator(_check_lower_case)]
-
-
 @strawchemy.pydantic.create(Color, include="all")
 class ColorCreateValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
@@ -197,27 +194,61 @@ class ColorPartial: ...
 class ColorFilter: ...
 
 
-# SQL Data types
+# Ranked User
 
 
-@strawchemy.filter(SQLDataTypes, include="all")
-class SQLDataTypesFilter: ...
+@strawchemy.create_input(RankedUser, include="all")
+class RankedUserCreateInput: ...
 
 
-@strawchemy.type(SQLDataTypes, include="all", override=True)
-class SQLDataTypesType: ...
+@strawchemy.type(RankedUser, include="all")
+class RankedUserType: ...
 
 
-@strawchemy.aggregate(SQLDataTypes, include="all")
-class SQLDataTypesAggregationType: ...
+@strawchemy.pydantic.create(RankedUser, include="all")
+class RankedUserCreateValidation:
+    name: Annotated[str, AfterValidator(_check_lower_case)]
 
 
-# SQL Data types Container
+# Array type
 
 
-@strawchemy.type(SQLDataTypesContainer, include="all", override=True, child_order_by=True)
-class SQLDataTypesContainerType: ...
+@strawchemy.filter(ArrayModel, include="all")
+class ArrayFilter: ...
 
 
-@strawchemy.filter(SQLDataTypesContainer, include="all")
-class SQLDataTypesContainerFilter: ...
+@strawchemy.type(ArrayModel, include="all")
+class ArrayType: ...
+
+
+# Interval type
+
+
+@strawchemy.filter(IntervalModel, include="all")
+class IntervalFilter: ...
+
+
+@strawchemy.type(IntervalModel, include="all")
+class IntervalType: ...
+
+
+# JSON type
+
+
+@strawchemy.filter(JSONModel, include="all")
+class JSONFilter: ...
+
+
+@strawchemy.type(JSONModel, include="all")
+class JSONType: ...
+
+
+# Date/Time
+
+
+@strawchemy.filter(DateTimeModel, include="all")
+class DateTimeFilter: ...
+
+
+@strawchemy.type(DateTimeModel, include="all")
+class DateTimeType: ...

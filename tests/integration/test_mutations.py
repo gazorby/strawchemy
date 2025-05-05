@@ -43,7 +43,7 @@ from .types import (
 )
 from .typing import RawRecordData
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.postgres]
 
 
 @strawberry.type

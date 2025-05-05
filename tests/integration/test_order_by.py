@@ -26,7 +26,7 @@ from .utils import compute_aggregation
 if TYPE_CHECKING:
     from decimal import Decimal
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.postgres]
 
 
 @strawberry.type
@@ -67,7 +67,7 @@ async def test_order_by(
     assert result.data
     # Sort records
     expected_sort = [{"id": row["id"], "name": row["name"]} for row in raw_fruits]
-    expected_sort = sorted(expected_sort, key=lambda x: x["name"], reverse=order_by == "DESC")
+    expected_sort = sorted(expected_sort, key=lambda x: x["name"].lower(), reverse=order_by == "DESC")
     assert [{"id": row["id"], "name": row["name"]} for row in result.data["fruits"]] == expected_sort
     # Verify SQL query
     assert query_tracker.query_count == 1

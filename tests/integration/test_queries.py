@@ -30,7 +30,7 @@ if TYPE_CHECKING:
 
     from .fixtures import QueryTracker
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.postgres]
 
 
 @strawberry.type

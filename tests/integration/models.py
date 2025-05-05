@@ -9,13 +9,26 @@ from uuid import UUID, uuid4
 
 from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
-from sqlalchemy import DateTime, ForeignKey, MetaData, Text
+from sqlalchemy import ARRAY, JSON, DateTime, ForeignKey, MetaData, Text
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
 from sqlalchemy.orm import registry as Registry  # noqa: N812
 
-metadata, geo_metadata, dc_metadata = MetaData(), MetaData(), MetaData()
+metadata = MetaData()
+geo_metadata = MetaData()
+dc_metadata = MetaData()
+json_metadata = MetaData()
+array_metadata = MetaData()
+interval_metadata = MetaData()
+date_time_metadata = MetaData()
+
+
+TextArrayType = ARRAY(Text).with_variant(postgresql.ARRAY(Text), "postgresql")
+JSONType = JSON().with_variant(postgresql.JSONB, "postgresql")
+
+
+# Bases
 
 
 class BaseColumns:
@@ -44,6 +57,29 @@ class GeoUUIDBase(BaseColumns, DeclarativeBase):
     registry = Registry(metadata=geo_metadata)
 
 
+class ArrayBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=array_metadata)
+
+
+class JSONBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=json_metadata)
+
+
+class IntervalBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=interval_metadata)
+
+
+class DateTimeBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=date_time_metadata)
+
+
+# Models
+
+
 class FruitFarm(Base):
     __tablename__ = "fruit_farm"
 
@@ -70,6 +106,8 @@ class Fruit(Base):
     product: Mapped[DerivedProduct | None] = relationship(DerivedProduct)
     sweetness: Mapped[int]
     water_percent: Mapped[float]
+    rarity: Mapped[Decimal] = mapped_column(default=Decimal("0"))
+    best_time_to_pick: Mapped[time] = mapped_column(default=time(hour=9))
 
     @hybrid_property
     def description(self) -> str:
@@ -119,27 +157,36 @@ class RankedUser(Base):
     rank: Mapped[int] = mapped_column(info=READ_ONLY)
 
 
-class SQLDataTypes(Base):
-    __tablename__ = "sql_data_types"
+# Specific data types models
+
+
+class ArrayModel(ArrayBase):
+    __tablename__ = "array_model"
+
+    array_str_col: Mapped[list[str]] = mapped_column(TextArrayType, default=list)
+
+
+class IntervalModel(IntervalBase):
+    __tablename__ = "interval_model"
+
+    registry = Registry(metadata=interval_metadata)
+
+    time_delta_col: Mapped[timedelta]
+
+
+class JSONModel(JSONBase):
+    __tablename__ = "json_model"
+
+    registry = Registry(metadata=json_metadata)
+
+    dict_col: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+
+
+class DateTimeModel(DateTimeBase):
+    __tablename__ = "date_time_model"
+
+    registry = Registry(metadata=date_time_metadata)
 
     date_col: Mapped[date]
     time_col: Mapped[time]
-    time_delta_col: Mapped[timedelta]
     datetime_col: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    str_col: Mapped[str]
-    int_col: Mapped[int]
-    float_col: Mapped[float]
-    decimal_col: Mapped[Decimal]
-    bool_col: Mapped[bool]
-    uuid_col: Mapped[UUID]
-    dict_col: Mapped[dict[str, Any]] = mapped_column(postgresql.JSONB, default=dict)
-    array_str_col: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
-    optional_str_col: Mapped[str | None] = mapped_column(nullable=True, default=None)
-    container_id: Mapped[UUID] = mapped_column(ForeignKey("sql_data_types_container.id"))
-    container: Mapped[SQLDataTypesContainer] = relationship("SQLDataTypesContainer")
-
-
-class SQLDataTypesContainer(Base):
-    __tablename__ = "sql_data_types_container"
-
-    data_types: Mapped[list[SQLDataTypes]] = relationship("SQLDataTypes", back_populates="container")

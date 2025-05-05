@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
     from .fixtures import QueryTracker
 
-pytestmark = [pytest.mark.integration]
+pytestmark = [pytest.mark.integration, pytest.mark.postgres]
 
 
 @strawberry.type
@@ -238,7 +238,7 @@ async def test_custom_query_hook_order_by(
     assert result.data
     assert len(result.data[query]) == len(raw_fruits)
     assert result.data[query] == sorted(
-        [{"name": fruit["name"]} for fruit in raw_fruits], key=lambda fruit: fruit["name"]
+        [{"name": fruit["name"]} for fruit in raw_fruits], key=lambda fruit: fruit["name"].lower()
     )
 
     assert query_tracker.query_count == 1

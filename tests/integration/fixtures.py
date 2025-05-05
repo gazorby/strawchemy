@@ -40,7 +40,7 @@ from tests.fixtures import DefaultQuery
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
-from .models import Color, Fruit, FruitFarm, Group, SQLDataTypes, SQLDataTypesContainer, Topic, User, metadata
+from .models import Color, Fruit, FruitFarm, Group, Topic, User, metadata
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, Iterator
@@ -68,9 +68,6 @@ __all__ = (
     "psycopg_engine",
     "raw_colors",
     "raw_fruits",
-    "raw_sql_data_types",
-    "raw_sql_data_types_set1",
-    "raw_sql_data_types_set2",
     "raw_users",
     "seed_db_async",
     "seed_db_sync",
@@ -212,6 +209,7 @@ def sqlite_engine(tmp_path: Path) -> Generator[Engine, None, None]:
         pytest.param(
             "psycopg_engine",
             marks=[
+                pytest.mark.postgres,
                 pytest.mark.psycopg_sync,
                 pytest.mark.integration,
                 pytest.mark.xdist_group("postgres"),
@@ -293,6 +291,7 @@ async def psycopg_async_engine(database_service: PostgresService) -> AsyncGenera
         pytest.param(
             "asyncpg_engine",
             marks=[
+                pytest.mark.postgres,
                 pytest.mark.asyncpg,
                 pytest.mark.integration,
                 pytest.mark.xdist_group("postgres"),
@@ -301,6 +300,7 @@ async def psycopg_async_engine(database_service: PostgresService) -> AsyncGenera
         pytest.param(
             "psycopg_async_engine",
             marks=[
+                pytest.mark.postgres,
                 pytest.mark.psycopg_async,
                 pytest.mark.integration,
                 pytest.mark.xdist_group("postgres"),
@@ -366,45 +366,114 @@ def raw_colors() -> RawRecordData:
 @pytest.fixture
 def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
     return [
-        {"id": str(uuid4()), "name": "Apple", "sweetness": 4, "water_percent": 0.84, "color_id": raw_colors[0]["id"]},
-        {"id": str(uuid4()), "name": "Cherry", "sweetness": 9, "water_percent": 0.81, "color_id": raw_colors[0]["id"]},
-        {"id": str(uuid4()), "name": "Banana", "sweetness": 2, "water_percent": 0.75, "color_id": raw_colors[1]["id"]},
-        {"id": str(uuid4()), "name": "Lemon", "sweetness": 1, "water_percent": 0.88, "color_id": raw_colors[1]["id"]},
-        {"id": str(uuid4()), "name": "Quince", "sweetness": 3, "water_percent": 0.81, "color_id": raw_colors[1]["id"]},
-        {"id": str(uuid4()), "name": "Orange", "sweetness": 8, "water_percent": 0.86, "color_id": raw_colors[2]["id"]},
         {
             "id": str(uuid4()),
-            "name": "Clementine",
+            "created_at": datetime.now(UTC),
+            "name": "Apple",
+            "sweetness": 4,
+            "water_percent": 0.84,
+            "rarity": Decimal("0.1"),
+            "best_time_to_pick": time(hour=9),
+            "color_id": raw_colors[0]["id"],
+        },
+        {
+            "id": str(uuid4()),
+            "created_at": datetime.now(UTC),
+            "name": "Cherry",
             "sweetness": 9,
-            "water_percent": 0.9,
+            "water_percent": 0.81,
+            "rarity": Decimal("0.2"),
+            "best_time_to_pick": time(hour=10, minute=30),
+            "color_id": raw_colors[0]["id"],
+        },
+        {
+            "id": str(uuid4()),
+            "created_at": datetime.now(UTC),
+            "name": "Banana",
+            "sweetness": 2,
+            "water_percent": 0.75,
+            "rarity": Decimal("0.3"),
+            "best_time_to_pick": time(hour=17, minute=15),
+            "color_id": raw_colors[1]["id"],
+        },
+        {
+            "id": str(uuid4()),
+            "created_at": datetime.now(UTC),
+            "name": "Lemon",
+            "sweetness": 1,
+            "water_percent": 0.88,
+            "rarity": Decimal("0.4"),
+            "best_time_to_pick": time(hour=20),
+            "color_id": raw_colors[1]["id"],
+        },
+        {
+            "id": str(uuid4()),
+            "created_at": datetime.now(UTC),
+            "name": "Quince",
+            "sweetness": 3,
+            "water_percent": 0.81,
+            "rarity": Decimal("0.5"),
+            "best_time_to_pick": time(hour=13),
+            "color_id": raw_colors[1]["id"],
+        },
+        {
+            "id": str(uuid4()),
+            "created_at": datetime.now(UTC),
+            "name": "Orange",
+            "sweetness": 8,
+            "water_percent": 0.86,
+            "rarity": Decimal("0.6"),
+            "best_time_to_pick": time(hour=12, minute=12),
             "color_id": raw_colors[2]["id"],
         },
         {
             "id": str(uuid4()),
+            "created_at": datetime.now(UTC),
+            "name": "clementine",
+            "sweetness": 9,
+            "water_percent": 0.9,
+            "rarity": Decimal("0.7"),
+            "best_time_to_pick": time(hour=0, minute=0),
+            "color_id": raw_colors[2]["id"],
+        },
+        {
+            "id": str(uuid4()),
+            "created_at": datetime.now(UTC),
             "name": "Strawberry",
             "sweetness": 5,
             "water_percent": 0.91,
+            "rarity": Decimal("0.8"),
+            "best_time_to_pick": time(hour=9),
             "color_id": raw_colors[3]["id"],
         },
         {
             "id": str(uuid4()),
+            "created_at": datetime.now(UTC),
             "name": "Cantaloupe",
             "sweetness": 0,
             "water_percent": 0.51,
+            "rarity": Decimal("0.9"),
+            "best_time_to_pick": time(hour=20, minute=45, second=15, microsecond=10),
             "color_id": raw_colors[3]["id"],
         },
         {
             "id": str(uuid4()),
+            "created_at": datetime.now(UTC),
             "name": "Watermelon",
             "sweetness": 7,
             "water_percent": 0.92,
+            "rarity": Decimal("0.55"),
+            "best_time_to_pick": time(hour=19, microsecond=55),
             "color_id": raw_colors[4]["id"],
         },
         {
             "id": str(uuid4()),
+            "created_at": datetime.now(UTC),
             "name": "Pears",
             "sweetness": 11,
             "water_percent": 0.15,
+            "rarity": Decimal("0.26"),
+            "best_time_to_pick": time(hour=2),
             "color_id": raw_colors[4]["id"],
         },
     ]
@@ -421,150 +490,64 @@ def raw_users(raw_groups: RawRecordData) -> RawRecordData:
 
 
 @pytest.fixture
-def raw_sql_data_types_container() -> RawRecordData:
-    return [{"id": str(uuid4())}]
+def raw_arrays() -> RawRecordData:
+    return [
+        # Standard case with typical values
+        {"id": str(uuid4()), "array_str_col": ["one", "two", "three"]},
+        # Case with negative numbers and different values
+        {"id": str(uuid4()), "array_str_col": ["apple", "banana", "cherry", "date"]},
+        # empty array
+        {"id": str(uuid4()), "array_str_col": []},
+    ]
 
 
 @pytest.fixture
-def raw_sql_data_types(raw_sql_data_types_container: RawRecordData) -> RawRecordData:
+def raw_intervals() -> RawRecordData:
+    return [
+        # Standard case with typical values
+        {"id": str(uuid4()), "time_delta_col": timedelta(days=2, hours=23, minutes=59, seconds=59)},
+        # Case with negative numbers and different values
+        {"id": str(uuid4()), "time_delta_col": timedelta(weeks=1, days=3, hours=12)},
+        # empty array
+        {"id": str(uuid4()), "time_delta_col": timedelta(microseconds=500000, seconds=1)},
+    ]
+
+
+@pytest.fixture
+def raw_json() -> RawRecordData:
+    return [
+        # Standard case with typical values
+        {"id": str(uuid4()), "dict_col": {"key1": "value1", "key2": 2, "nested": {"inner": "value"}}},
+        # Case with negative numbers and different values
+        {"id": str(uuid4()), "dict_col": {"status": "pending", "count": 0}},
+        # empty array
+        {"id": str(uuid4()), "dict_col": {}},
+    ]
+
+
+@pytest.fixture
+def raw_date_times() -> RawRecordData:
     return [
         # Standard case with typical values
         {
             "id": str(uuid4()),
             "date_col": date(2023, 1, 15),
             "time_col": time(14, 30, 45),
-            "time_delta_col": timedelta(days=2, hours=23, minutes=59, seconds=59),
             "datetime_col": datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC),
-            "str_col": "test string",
-            "int_col": 42,
-            "float_col": 3.14159,
-            "decimal_col": Decimal("123.45"),
-            "bool_col": True,
-            "uuid_col": uuid4(),
-            "dict_col": {"key1": "value1", "key2": 2, "nested": {"inner": "value"}},
-            "array_str_col": ["one", "two", "three"],
-            "optional_str_col": "optional string",
-            "container_id": raw_sql_data_types_container[0]["id"],
         },
         # Case with negative numbers and different values
         {
             "id": str(uuid4()),
             "date_col": date(2022, 12, 31),
             "time_col": time(8, 15, 0),
-            "time_delta_col": timedelta(weeks=1, days=3, hours=12),
             "datetime_col": datetime(2022, 12, 31, 23, 59, 59, tzinfo=UTC),
-            "str_col": "another STRING",
-            "int_col": -10,
-            "float_col": 2.71828,
-            "decimal_col": Decimal("-99.99"),
-            "bool_col": False,
-            "uuid_col": uuid4(),
-            "dict_col": {"status": "pending", "count": 0},
-            "array_str_col": ["apple", "banana", "cherry", "date"],
-            "optional_str_col": "another optional string",
-            "container_id": raw_sql_data_types_container[0]["id"],
         },
-        # Edge case with empty values
+        # empty array
         {
             "id": str(uuid4()),
             "date_col": date(2024, 2, 29),  # leap year
             "time_col": time(0, 0, 0),
-            "time_delta_col": timedelta(microseconds=500000, seconds=1),
             "datetime_col": datetime(2024, 2, 29, 0, 0, 0, tzinfo=UTC),
-            "str_col": "",  # empty string
-            "int_col": 0,
-            "float_col": 0.0,
-            "decimal_col": Decimal("0.00"),
-            "bool_col": False,
-            "uuid_col": uuid4(),
-            "dict_col": {},  # empty dict
-            "array_str_col": [],  # empty array
-            "optional_str_col": None,
-            "container_id": raw_sql_data_types_container[0]["id"],
-        },
-    ]
-
-
-@pytest.fixture
-def raw_sql_data_types_set1(raw_containers: RawRecordData) -> RawRecordData:
-    return [
-        # First set with moderate values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2021, 6, 15),
-            "time_col": time(10, 45, 30),
-            "time_delta_col": timedelta(days=-5, hours=18, minutes=30, seconds=15),
-            "datetime_col": datetime(2021, 6, 15, 10, 45, 30, tzinfo=UTC),
-            "str_col": "data set 1 string",
-            "int_col": 100,
-            "float_col": 5.5,
-            "decimal_col": Decimal("50.75"),
-            "bool_col": True,
-            "uuid_col": uuid4(),
-            "dict_col": {"category": "electronics", "price": 299.99},
-            "array_str_col": ["red", "green", "blue"],
-            "optional_str_col": "set1 optional",
-            "container_id": raw_containers[0]["id"],
-        },
-        # Second entry with different values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2021, 7, 20),
-            "time_col": time(15, 20, 10),
-            "time_delta_col": timedelta(weeks=2, hours=9, minutes=45, seconds=30, microseconds=123456),
-            "datetime_col": datetime(2021, 7, 20, 15, 20, 10, tzinfo=UTC),
-            "str_col": "another set 1 string",
-            "int_col": 75,
-            "float_col": 7.25,
-            "decimal_col": Decimal("75.50"),
-            "bool_col": False,
-            "uuid_col": uuid4(),
-            "dict_col": {"category": "clothing", "price": 49.99, "size": "medium"},
-            "array_str_col": ["circle", "square", "triangle"],
-            "optional_str_col": "set1 optional",
-            "container_id": raw_containers[0]["id"],
-        },
-    ]
-
-
-@pytest.fixture
-def raw_sql_data_types_set2(raw_containers: RawRecordData) -> RawRecordData:
-    return [
-        # First entry with moderate values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2020, 3, 10),
-            "time_col": time(9, 15, 25),
-            "time_delta_col": timedelta(days=30, hours=16, minutes=45),
-            "datetime_col": datetime(2020, 3, 10, 9, 15, 25, tzinfo=UTC),
-            "str_col": "data set 2 string",
-            "int_col": 250,
-            "float_col": 9.8,
-            "decimal_col": Decimal("199.99"),
-            "bool_col": True,
-            "uuid_col": uuid4(),
-            "dict_col": {"category": "furniture", "price": 599.99, "color": "brown"},
-            "array_str_col": ["monday", "wednesday", "friday"],
-            "optional_str_col": "set2 optional",
-            "container_id": raw_containers[1]["id"],
-        },
-        # Second entry with different values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2020, 9, 5),
-            "time_col": time(13, 0, 0),
-            "time_delta_col": timedelta(days=-10, hours=-5, minutes=15, seconds=45, microseconds=999999),
-            "datetime_col": datetime(2020, 9, 5, 13, 0, 0, tzinfo=UTC),
-            "str_col": "another set 2 string",
-            "int_col": 180,
-            "float_col": 12.34,
-            "decimal_col": Decimal("150.25"),
-            "bool_col": False,
-            "uuid_col": uuid4(),
-            "dict_col": {"category": "books", "price": 24.99, "author": "John Doe"},
-            "array_str_col": ["cat", "dog", "bird", "fish"],
-            "optional_str_col": "another set2 optional",
-            "container_id": raw_containers[1]["id"],
         },
     ]
 
@@ -585,8 +568,6 @@ def seed_insert_statements(
     raw_farms: RawRecordData,
     raw_groups: RawRecordData,
     raw_topics: RawRecordData,
-    raw_sql_data_types: RawRecordData,
-    raw_sql_data_types_container: RawRecordData,
 ) -> list[Insert]:
     return [
         insert(Group).values(raw_groups),
@@ -595,8 +576,6 @@ def seed_insert_statements(
         insert(Fruit).values(raw_fruits),
         insert(FruitFarm).values(raw_farms),
         insert(User).values(raw_users),
-        insert(SQLDataTypesContainer).values(raw_sql_data_types_container),
-        insert(SQLDataTypes).values(raw_sql_data_types),
     ]
 
 

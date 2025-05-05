@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_timedelta_components[session-tracked-days-async-asyncpg_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST($1::INTEGER AS NUMERIC) = $2::NUMERIC
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-days-async-psycopg_async_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-days-sync-psycopg_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-hours-async-asyncpg_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST($1::INTEGER AS NUMERIC) = $2::NUMERIC
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-hours-async-psycopg_async_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-hours-sync-psycopg_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-minutes-async-asyncpg_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST($1::INTEGER AS NUMERIC) = $2::NUMERIC
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-minutes-async-psycopg_async_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-minutes-sync-psycopg_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-totalSeconds-async-asyncpg_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) = $1::FLOAT
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-totalSeconds-async-psycopg_async_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) = %(param_1)s
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-totalSeconds-sync-psycopg_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) = %(param_1)s
+  '''
+# ---

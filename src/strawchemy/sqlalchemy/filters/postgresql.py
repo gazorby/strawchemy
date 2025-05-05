@@ -1,7 +1,8 @@
-from typing import Any, Generic, TypeVar, override
+from typing import Any, Generic, TypeVar, cast, override
 
-from sqlalchemy import ColumnElement, Dialect, Text, cast
-from sqlalchemy.dialects import postgresql
+from sqlalchemy import ARRAY, ColumnElement, Dialect, Text, type_coerce
+from sqlalchemy import cast as sqla_cast
+from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.graphql.filters import JSONComparison, PostgresArrayComparison
 from strawchemy.sqlalchemy.filters.base import GenericSQLAlchemyFilter
@@ -23,7 +24,7 @@ class JSONBSQLAlchemyFilter(
     def to_expressions(
         self,
         dialect: Dialect,
-        model_attribute: QueryableAttribute[Any] | ColumnElement[Any],
+        model_attribute: QueryableAttribute[pg.JSON | pg.JSONB] | ColumnElement[pg.JSON | pg.JSONB],
     ) -> list[ColumnElement[bool]]:
         """Convert filter to SQLAlchemy expressions.
 
@@ -35,17 +36,18 @@ class JSONBSQLAlchemyFilter(
             A list of SQLAlchemy boolean expressions.
         """
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
+        as_postgres_jsonb = type_coerce(model_attribute, pg.JSONB)
 
         if "contains" in self.model_fields_set:
-            expressions.append(model_attribute.contains(self.contains))
+            expressions.append(as_postgres_jsonb.contains(self.contains))
         if "contained_in" in self.model_fields_set:
-            expressions.append(model_attribute.contained_by(self.contained_in))
+            expressions.append(as_postgres_jsonb.contained_by(self.contained_in))
         if "has_key" in self.model_fields_set:
-            expressions.append(model_attribute.has_key(self.has_key))
+            expressions.append(as_postgres_jsonb.has_key(self.has_key))
         if "has_key_all" in self.model_fields_set:
-            expressions.append(model_attribute.has_all(cast(self.has_key_all, postgresql.ARRAY(Text))))
+            expressions.append(as_postgres_jsonb.has_all(sqla_cast(self.has_key_all, pg.ARRAY(Text))))
         if "has_key_any" in self.model_fields_set:
-            expressions.append(model_attribute.has_any(cast(self.has_key_any, postgresql.ARRAY(Text))))
+            expressions.append(as_postgres_jsonb.has_any(sqla_cast(self.has_key_any, pg.ARRAY(Text))))
         return expressions
 
 
@@ -60,7 +62,7 @@ class PostgresArraySQLAlchemyFilter(
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+        self, dialect: Dialect, model_attribute: ColumnElement[ARRAY[Any]] | QueryableAttribute[ARRAY[Any]]
     ) -> list[ColumnElement[bool]]:
         """Convert filter to SQLAlchemy expressions.
 
@@ -72,11 +74,12 @@ class PostgresArraySQLAlchemyFilter(
             A list of SQLAlchemy boolean expressions.
         """
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
+        as_postgres_array = type_coerce(model_attribute, pg.ARRAY(cast("ARRAY[Any]", model_attribute.type).item_type))
 
         if "contains" in self.model_fields_set:
-            expressions.append(model_attribute.contains(self.contains))
+            expressions.append(as_postgres_array.contains(self.contains))
         if "contained_in" in self.model_fields_set:
-            expressions.append(model_attribute.contained_by(self.contained_in))
+            expressions.append(as_postgres_array.contained_by(self.contained_in))
         if "overlap" in self.model_fields_set:
-            expressions.append(model_attribute.overlap(self.overlap))
+            expressions.append(as_postgres_array.overlap(self.overlap))
         return expressions
