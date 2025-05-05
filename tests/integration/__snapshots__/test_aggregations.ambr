@@ -41,6 +41,48 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
+# name: test_max_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-async-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_best_time_to_pick" AS max_fruits__max_best_time_to_pick
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.best_time_to_pick) AS max_fruits__max_best_time_to_pick
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-async-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_best_time_to_pick" AS max_fruits__max_best_time_to_pick
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.best_time_to_pick) AS max_fruits__max_best_time_to_pick
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-sync-psycopg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_best_time_to_pick" AS max_fruits__max_best_time_to_pick
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.best_time_to_pick) AS max_fruits__max_best_time_to_pick
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
 # name: test_max_aggregation[session-tracked-createdAt-created_at-async-asyncpg_engine]
   '''
   SELECT color.id,
@@ -244,6 +286,48 @@
     FROM color AS color
     JOIN LATERAL (
           SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-async-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_best_time_to_pick" AS min_fruits__min_best_time_to_pick
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.best_time_to_pick) AS min_fruits__min_best_time_to_pick
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-async-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_best_time_to_pick" AS min_fruits__min_best_time_to_pick
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.best_time_to_pick) AS min_fruits__min_best_time_to_pick
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-sync-psycopg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_best_time_to_pick" AS min_fruits__min_best_time_to_pick
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.best_time_to_pick) AS min_fruits__min_best_time_to_pick
             FROM fruit AS fruit_1
            WHERE color.id = fruit_1.color_id
          ) AS aggregation_0
