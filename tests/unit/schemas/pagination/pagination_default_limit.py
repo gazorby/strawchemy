@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from strawchemy.config import StrawchemyConfig
-from strawchemy.mapper import Strawchemy
+from strawchemy import Strawchemy, StrawchemyConfig
 
 import strawberry
 from tests.unit.models import Fruit

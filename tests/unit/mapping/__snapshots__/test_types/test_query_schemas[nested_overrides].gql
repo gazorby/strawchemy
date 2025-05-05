@@ -13,17 +13,17 @@
   
   """Aggregation fields"""
   type FruitAggregate {
-    count: Int
-    sum: FruitSumFields!
-    min: FruitMinMaxFields!
-    max: FruitMinMaxFields!
     avg: FruitNumericFields!
+    count: Int
+    max: FruitMinMaxFields!
+    min: FruitMinMaxFields!
     stddev: FruitNumericFields!
-    stddevSamp: FruitNumericFields!
     stddevPop: FruitNumericFields!
-    variance: FruitNumericFields!
-    varSamp: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    sum: FruitSumFields!
     varPop: FruitNumericFields!
+    varSamp: FruitNumericFields!
+    variance: FruitNumericFields!
   }
   
   type FruitMinMaxFields {
@@ -52,9 +52,9 @@
   """Aggregation fields"""
   type GroupAggregate {
     count: Int
-    sum: GroupSumFields!
-    min: GroupMinMaxFields!
     max: GroupMinMaxFields!
+    min: GroupMinMaxFields!
+    sum: GroupSumFields!
   }
   
   type GroupMinMaxFields {
@@ -102,9 +102,9 @@
   """Aggregation fields"""
   type UserAggregate {
     count: Int
-    sum: UserSumFields!
-    min: UserMinMaxFields!
     max: UserMinMaxFields!
+    min: UserMinMaxFields!
+    sum: UserSumFields!
   }
   
   type UserMinMaxFields {

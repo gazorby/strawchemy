@@ -3,8 +3,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from pydantic import AfterValidator
-from strawchemy import Strawchemy, StrawchemyAsyncRepository
-from strawchemy.config import StrawchemyConfig
+from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemyConfig
 
 from .models import Milestone, Project, Ticket
 

@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING, Any
 from strawchemy.dto import DTOFieldDefinition, ModelFieldT, ModelInspector, ModelT
 
 if TYPE_CHECKING:
+    from strawchemy.config.databases import DatabaseFeatures
+
     from . import GraphQLFilter
     from .dto import GraphQLComparison
 
@@ -13,6 +15,8 @@ __all__ = ("GraphQLInspectorProtocol",)
 
 class GraphQLInspectorProtocol(ModelInspector[ModelT, ModelFieldT]):
     """GraphQL inspector implementation."""
+
+    database_features: DatabaseFeatures
 
     def get_field_comparison(
         self, field_definition: DTOFieldDefinition[ModelT, ModelFieldT]

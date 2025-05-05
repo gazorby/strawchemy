@@ -3,17 +3,17 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from .sqlalchemy import SQLAlchemyGraphQLInspector
-from .strawberry import default_session_getter
-from .strawberry.repository import StrawchemySyncRepository
+from strawchemy.sqlalchemy import SQLAlchemyGraphQLInspector
+from strawchemy.strawberry import default_session_getter
+from strawchemy.strawberry.repository import StrawchemySyncRepository
 
 if TYPE_CHECKING:
     from typing import Any
 
-    from .graphql.inspector import GraphQLInspectorProtocol
-    from .sqlalchemy.typing import FilterMap
-    from .strawberry.typing import AnySessionGetter
-    from .typing import AnyRepository, SupportedDialect
+    from strawchemy.graphql.inspector import GraphQLInspectorProtocol
+    from strawchemy.sqlalchemy.typing import FilterMap
+    from strawchemy.strawberry.typing import AnySessionGetter
+    from strawchemy.typing import AnyRepository, SupportedDialect
 
 
 @dataclass

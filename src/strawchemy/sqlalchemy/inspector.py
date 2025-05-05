@@ -9,6 +9,7 @@ from sqlalchemy import inspect
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import NO_VALUE, DeclarativeBase, QueryableAttribute, registry
 from sqlalchemy.types import ARRAY, JSON
+from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.graphql.exceptions import InspectorError
@@ -67,10 +68,10 @@ class SQLAlchemyGraphQLInspector(
         filter_overrides: FilterMap | None = None,
     ) -> None:
         super().__init__(registries)
-        self.dialect = dialect
+        self.database_features = DatabaseFeatures.new(dialect)
         self.filters_map = _DEFAULT_FILTERS_MAP
         self._dialect_json_types: tuple[type[JSON], ...] | None = None
-        if dialect == "postgresql":
+        if self.database_features.dialect == "postgresql":
             self._dialect_json_types = (postgresql.JSON, postgresql.JSONB)
             self.filters_map |= {(dict,): JSONBSQLAlchemyFilter}
             if GEO_INSTALLED:
