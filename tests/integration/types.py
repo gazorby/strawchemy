@@ -71,7 +71,7 @@ class FruitType: ...
 class FruitTypeHooks:
     instance: ModelInstance[Fruit]
 
-    @strawchemy.field(query_hook=QueryHook(load=[Fruit.name, Fruit.adjectives]))
+    @strawchemy.field(query_hook=QueryHook(load=[Fruit.name, Fruit.color_id]))
     def description(self) -> str:
         return self.instance.description
 
@@ -125,8 +125,12 @@ class FruitUpdateInput: ...
 # Color
 
 
-@strawchemy.type(Color, include="all", override=True)
+@strawchemy.type(Color, include="all", override=True, child_order_by=True)
 class ColorType: ...
+
+
+@strawchemy.order(Color, include="all")
+class ColorOrder: ...
 
 
 @strawchemy.distinct_on(Color, include="all", override=True)
@@ -181,10 +185,6 @@ class ColorCreateValidation:
 class ColorPkUpdateValidation: ...
 
 
-@strawchemy.pydantic.filter_update(Color, include="all")
-class ColorFilterUpdateValidation: ...
-
-
 @strawchemy.pk_update_input(Color, include="all")
 class ColorUpdateInput: ...
 
@@ -204,10 +204,6 @@ class ColorFilter: ...
 class SQLDataTypesFilter: ...
 
 
-@strawchemy.order(SQLDataTypes, include="all", override=True)
-class SQLDataTypesOrderBy: ...
-
-
 @strawchemy.type(SQLDataTypes, include="all", override=True)
 class SQLDataTypesType: ...
 
@@ -225,7 +221,3 @@ class SQLDataTypesContainerType: ...
 
 @strawchemy.filter(SQLDataTypesContainer, include="all")
 class SQLDataTypesContainerFilter: ...
-
-
-@strawchemy.order(SQLDataTypesContainer, include="all", override=True)
-class SQLDataTypesContainerOrderBy: ...

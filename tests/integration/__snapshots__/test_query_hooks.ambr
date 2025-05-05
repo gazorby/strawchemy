@@ -146,7 +146,7 @@
 # name: test_load_columns_hook[session-tracked-fruits-async-asyncpg_engine]
   '''
   SELECT fruit.name,
-         fruit.adjectives,
+         fruit.color_id,
          fruit.id
     FROM fruit AS fruit
   '''
@@ -154,7 +154,7 @@
 # name: test_load_columns_hook[session-tracked-fruits-async-psycopg_async_engine]
   '''
   SELECT fruit.name,
-         fruit.adjectives,
+         fruit.color_id,
          fruit.id
     FROM fruit AS fruit
   '''
@@ -162,7 +162,7 @@
 # name: test_load_columns_hook[session-tracked-fruits-sync-psycopg_engine]
   '''
   SELECT fruit.name,
-         fruit.adjectives,
+         fruit.color_id,
          fruit.id
     FROM fruit AS fruit
   '''
@@ -170,12 +170,12 @@
 # name: test_load_columns_hook[session-tracked-fruitsPaginated-async-asyncpg_engine]
   '''
   SELECT fruit.name,
-         fruit.adjectives,
+         fruit.color_id,
          fruit.id
     FROM (
           SELECT fruit.id AS id,
                  fruit.name AS name,
-                 fruit.adjectives AS adjectives
+                 fruit.color_id AS color_id
             FROM fruit AS fruit
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
@@ -186,12 +186,12 @@
 # name: test_load_columns_hook[session-tracked-fruitsPaginated-async-psycopg_async_engine]
   '''
   SELECT fruit.name,
-         fruit.adjectives,
+         fruit.color_id,
          fruit.id
     FROM (
           SELECT fruit.id AS id,
                  fruit.name AS name,
-                 fruit.adjectives AS adjectives
+                 fruit.color_id AS color_id
             FROM fruit AS fruit
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
@@ -202,12 +202,12 @@
 # name: test_load_columns_hook[session-tracked-fruitsPaginated-sync-psycopg_engine]
   '''
   SELECT fruit.name,
-         fruit.adjectives,
+         fruit.color_id,
          fruit.id
     FROM (
           SELECT fruit.id AS id,
                  fruit.name AS name,
-                 fruit.adjectives AS adjectives
+                 fruit.color_id AS color_id
             FROM fruit AS fruit
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
@@ -225,8 +225,9 @@
   '''
   SELECT fruit.color_id AS fruit_color_id,
          fruit.name AS fruit_name,
-         fruit.adjectives AS fruit_adjectives,
          fruit.derived_product_id AS fruit_derived_product_id,
+         fruit.sweetness AS fruit_sweetness,
+         fruit.water_percent AS fruit_water_percent,
          fruit.id AS fruit_id,
          fruit.created_at AS fruit_created_at,
          fruit.updated_at AS fruit_updated_at,
@@ -248,8 +249,9 @@
   '''
   SELECT fruit.color_id AS fruit_color_id,
          fruit.name AS fruit_name,
-         fruit.adjectives AS fruit_adjectives,
          fruit.derived_product_id AS fruit_derived_product_id,
+         fruit.sweetness AS fruit_sweetness,
+         fruit.water_percent AS fruit_water_percent,
          fruit.id AS fruit_id,
          fruit.created_at AS fruit_created_at,
          fruit.updated_at AS fruit_updated_at,
@@ -271,8 +273,9 @@
   '''
   SELECT fruit.color_id AS fruit_color_id,
          fruit.name AS fruit_name,
-         fruit.adjectives AS fruit_adjectives,
          fruit.derived_product_id AS fruit_derived_product_id,
+         fruit.sweetness AS fruit_sweetness,
+         fruit.water_percent AS fruit_water_percent,
          fruit.id AS fruit_id,
          fruit.created_at AS fruit_created_at,
          fruit.updated_at AS fruit_updated_at,
@@ -300,8 +303,9 @@
   '''
   SELECT fruit.color_id AS fruit_color_id,
          fruit.name AS fruit_name,
-         fruit.adjectives AS fruit_adjectives,
          fruit.derived_product_id AS fruit_derived_product_id,
+         fruit.sweetness AS fruit_sweetness,
+         fruit.water_percent AS fruit_water_percent,
          fruit.id AS fruit_id,
          fruit.created_at AS fruit_created_at,
          fruit.updated_at AS fruit_updated_at,
@@ -329,8 +333,9 @@
   '''
   SELECT fruit.color_id AS fruit_color_id,
          fruit.name AS fruit_name,
-         fruit.adjectives AS fruit_adjectives,
          fruit.derived_product_id AS fruit_derived_product_id,
+         fruit.sweetness AS fruit_sweetness,
+         fruit.water_percent AS fruit_water_percent,
          fruit.id AS fruit_id,
          fruit.created_at AS fruit_created_at,
          fruit.updated_at AS fruit_updated_at,
@@ -358,8 +363,9 @@
   '''
   SELECT fruit.color_id AS fruit_color_id,
          fruit.name AS fruit_name,
-         fruit.adjectives AS fruit_adjectives,
          fruit.derived_product_id AS fruit_derived_product_id,
+         fruit.sweetness AS fruit_sweetness,
+         fruit.water_percent AS fruit_water_percent,
          fruit.id AS fruit_id,
          fruit.created_at AS fruit_created_at,
          fruit.updated_at AS fruit_updated_at,

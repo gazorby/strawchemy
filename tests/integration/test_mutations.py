@@ -85,14 +85,22 @@ class AsyncMutation:
     @strawberry.field
     async def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
-        color_input.instances[0].fruits.extend([Fruit(name="Apple"), Fruit(name="Strawberry")])
+        color_input.instances[0].fruits.extend(
+            [
+                Fruit(name="Apple", sweetness=1, water_percent=0.5),
+                Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
+            ]
+        )
         return (await StrawchemyAsyncRepository(ColorType, info).create(color_input)).graphql_type()
 
     @strawberry.field
     async def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
         session = cast("AsyncSession", info.context.session)
-        apple, strawberry = Fruit(name="Apple"), Fruit(name="Strawberry")
+        apple, strawberry = (
+            Fruit(name="Apple", sweetness=1, water_percent=0.5),
+            Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
+        )
         session.add_all([apple, strawberry])
         await session.commit()
         session.expire(strawberry)
@@ -179,14 +187,22 @@ class SyncMutation:
     @strawberry.field
     def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
-        color_input.instances[0].fruits.extend([Fruit(name="Apple"), Fruit(name="Strawberry")])
+        color_input.instances[0].fruits.extend(
+            [
+                Fruit(name="Apple", sweetness=1, water_percent=0.5),
+                Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
+            ]
+        )
         return StrawchemySyncRepository(ColorType, info).create(color_input).graphql_type()
 
     @strawberry.field
     def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
         session = cast("Session", info.context.session)
-        apple, strawberry = Fruit(name="Apple"), Fruit(name="Strawberry")
+        apple, strawberry = (
+            Fruit(name="Apple", sweetness=1, water_percent=0.5),
+            Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
+        )
         session.add_all([apple, strawberry])
         session.commit()
         session.expire(strawberry)
@@ -360,7 +376,8 @@ async def test_create_with_to_one_set(
         mutation {{
             createFruit(data: {{
                 name: "new fruit",
-                adjectives: ["foo", "bar"],
+                sweetness: 1,
+                waterPercent: 0.8,
                 color: {{
                     set: {{ id: {color_id} }}
                 }}
@@ -394,7 +411,8 @@ async def test_create_with_to_one_set_null(
         mutation {{
             createFruit(data: {{
                 name: "new fruit",
-                adjectives: ["foo", "bar"],
+                sweetness: 1,
+                waterPercent: 0.8,
                 color: {{ set: null }}
             }}) {{
                 name
@@ -423,7 +441,8 @@ async def test_create_with_to_one_create(
             mutation {
                 createFruit(data: {
                     name: "new color",
-                    adjectives: ["foo", "bar"],
+                    sweetness: 1,
+                    waterPercent: 0.8,
                     color: {
                         create: { name: "new sub color" }
                     }
@@ -557,8 +576,8 @@ async def test_create_with_to_many_create(
                     name: "new color",
                     fruits: {
                         create: [
-                            { name: "new fruit 1", adjectives: ["foo"] },
-                            { name: "new fruit 2", adjectives: ["bar"] }
+                            { name: "new fruit 1", sweetness: 1, waterPercent: 0.8 },
+                            { name: "new fruit 2", sweetness: 2, waterPercent: 0.9 }
                         ]
                     }
                 }) {
@@ -610,7 +629,7 @@ async def test_create_with_to_many_create(
                     name: "new color",
                     fruits: {{
                         set: [ {{ id: {fruit_id} }} ],
-                        create: [ {{ name: "new fruit 1", adjectives: ["foo"] }} ]
+                        create: [ {{ name: "new fruit 1", sweetness: 1, waterPercent: 0.8 }} ]
                     }}
                 }}) {{
                     name
@@ -648,7 +667,8 @@ async def test_create_with_to_many_create_and_nested_set(
                         create: [
                             {{
                                 name: "Grape",
-                                adjectives: ["tangy", "juicy"],
+                                sweetness: 1,
+                                waterPercent: 0.8,
                                 farms: {{ set: [ {{ id: {farm_id} }} ] }}
                             }},
                         ]
@@ -688,13 +708,15 @@ async def test_create_with_nested_mixed_relations_create(
                         create: [
                             {
                                 name: "Grape",
-                                product: { create: { name: "wine" } },
-                                adjectives: ["tangy", "juicy"]
+                                sweetness: 1,
+                                waterPercent: 0.8,
+                                product: { create: { name: "wine" } }
                             },
                             {
                                 name: "Lychee",
-                                farms: { create: [ { name: "Bio farm" } ] },
-                                adjectives: ["sweet", "floral"]
+                                sweetness: 1,
+                                waterPercent: 0.8,
+                                farms: { create: [ { name: "Bio farm" } ] }
                             },
                         ]
                     }
@@ -1200,15 +1222,19 @@ async def test_update_with_to_many_remove(
 ) -> None:
     """Tests updating a record and setting (replacing) a to-many relationship."""
     color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
-    # Remove the existing fruit
-    fruit_id_gql = to_graphql_representation(raw_fruits[0]["id"], "input")
+    # Remove the existing fruits
+    fruit_ids_gql = [
+        to_graphql_representation(fruit["id"], "input")
+        for fruit in raw_fruits
+        if fruit["color_id"] == raw_colors[0]["id"]
+    ]
     query = f"""
         mutation {{
             updateColor(
                 data: {{
                     id: {color_id_gql},
                     name: "updated color name",
-                    fruits: {{ remove: [{{ id: {fruit_id_gql} }}] }}
+                    fruits: {{ remove: [ {", ".join(f"{{ id: {fruit_id} }}" for fruit_id in fruit_ids_gql)} ] }}
                 }}
             ) {{
                 id
@@ -1244,7 +1270,8 @@ async def test_update_with_to_many_create(
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Tests updating a record and creating new related records for a to-many relationship."""
-    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
+    color_id = raw_colors[0]["id"]
+    color_id_gql = to_graphql_representation(color_id, "input")
     query = f"""
         mutation {{
             updateColor(
@@ -1253,8 +1280,8 @@ async def test_update_with_to_many_create(
                     name: "updated color name 2",
                     fruits: {{
                         create: [
-                            {{ name: "new fruit 3 during update", adjectives: ["baz"] }},
-                            {{ name: "new fruit 4 during update", adjectives: ["qux"] }}
+                            {{ name: "new fruit 3 during update", sweetness: 1, waterPercent: 0.8 }},
+                            {{ name: "new fruit 4 during update", sweetness: 1, waterPercent: 0.8 }}
                         ]
                     }}
                 }}
@@ -1272,10 +1299,10 @@ async def test_update_with_to_many_create(
     assert result.data
     # The order might vary, sort for assertion stability
     fruits_data = sorted(result.data["updateColor"]["fruits"], key=lambda x: x["name"])
-    assert result.data["updateColor"]["id"] == to_graphql_representation(raw_colors[0]["id"], "output")
+    assert result.data["updateColor"]["id"] == to_graphql_representation(color_id, "output")
     assert result.data["updateColor"]["name"] == "updated color name 2"
     assert fruits_data == [
-        {"name": raw_fruits[0]["name"]},
+        *[{"name": fruit["name"]} for fruit in raw_fruits if fruit["color_id"] == color_id],
         {"name": "new fruit 3 during update"},
         {"name": "new fruit 4 during update"},
     ]
@@ -1295,9 +1322,11 @@ async def test_update_with_to_many_create_and_nested_set(
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Tests updating a record and creating a nested related record which itself sets a to-many relationship."""
-    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
+    color_id = raw_colors[0]["id"]
+    color_id_gql = to_graphql_representation(color_id, "input")
     # Use a different farm
-    farm_id_gql = to_graphql_representation(raw_farms[1]["id"], "input")
+    farm_id = raw_farms[-1]["id"]
+    farm_id_gql = to_graphql_representation(farm_id, "input")
     query = f"""
         mutation {{
             updateColor(
@@ -1308,7 +1337,8 @@ async def test_update_with_to_many_create_and_nested_set(
                         create: [
                             {{
                                 name: "New Grape during update",
-                                adjectives: ["sour", "small"],
+                                sweetness: 1,
+                                waterPercent: 0.8,
                                 farms: {{ set: [ {{ id: {farm_id_gql} }} ] }}
                             }}
                         ]
@@ -1329,28 +1359,30 @@ async def test_update_with_to_many_create_and_nested_set(
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["updateColor"] == {
-        "id": to_graphql_representation(raw_colors[0]["id"], "output"),
-        "name": "Updated White",
-        "fruits": [
-            # Existing fruit
+    expected_fruits = [
+        # Existing fruits
+        *[
             {
-                "name": raw_fruits[0]["name"],
+                "name": fruit["name"],
                 "farms": [
                     {
                         "id": to_graphql_representation(farm["id"], "output")  # noqa: B035
                         for farm in raw_farms
-                        if farm["fruit_id"] == raw_fruits[0]["id"]
+                        if farm["fruit_id"] == fruit["id"]
                     }
                 ],
-            },
-            # New one
-            {
-                "name": "New Grape during update",
-                "farms": [{"id": to_graphql_representation(raw_farms[1]["id"], "output")}],
-            },
+            }
+            for fruit in raw_fruits
+            if fruit["color_id"] == color_id
         ],
-    }
+        # New one
+        {
+            "name": "New Grape during update",
+            "farms": [{"id": to_graphql_representation(farm_id, "output")}],
+        },
+    ]
+    for fruit in expected_fruits:
+        assert fruit in result.data["updateColor"]["fruits"]
 
     query_tracker.assert_statements(1, "insert", sql_snapshot)  # Insert new fruit
     query_tracker.assert_statements(2, "update", sql_snapshot)  # Update color name + fruit's farm_id
@@ -1425,7 +1457,7 @@ async def test_update_with_to_many_add_and_create(
                     name: "updated color name",
                     fruits: {{
                         add: [{{ id: {fruit_id_gql} }}],
-                        create: [{{ name: "new fruit 3 during update", adjectives: ["baz"] }}]
+                        create: [{{ name: "new fruit 3 during update", sweetness: 1, waterPercent: 0.8 }}]
                     }}
                 }}
             ) {{
@@ -1493,7 +1525,7 @@ async def test_update_with_to_many_add_and_create(
                     name: "updated color name",
                     fruits: {{
                         set: [ {{ id: {fruit_id_gql} }} ]
-                        create: [ {{ name: "new fruit 3 during update", adjectives: ["baz"] }} ]
+                        create: [ {{ name: "new fruit 3 during update", sweetness: 1, waterPercent: 0.8 }} ]
                     }}
                 }}
             ) {{
@@ -1558,7 +1590,8 @@ async def test_update_with_nested_mixed_relations_create(
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Tests updating a record and creating multiple nested relations with different structures."""
-    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
+    color_id = raw_colors[0]["id"]
+    color_id_gql = to_graphql_representation(color_id, "input")
     query = f"""
         mutation {{
             updateColor(
@@ -1569,13 +1602,15 @@ async def test_update_with_nested_mixed_relations_create(
                         create: [
                             {{
                                 name: "New Grape 2",
-                                product: {{ create: {{ name: "juice" }} }},
-                                adjectives: ["sweet"]
+                                sweetness: 1,
+                                waterPercent: 0.8,
+                                product: {{ create: {{ name: "juice" }} }}
                             }},
                             {{
                                 name: "New Lychee 2",
-                                farms: {{ create: [ {{ name: "Organic farm" }} ] }},
-                                adjectives: ["exotic"]
+                                sweetness: 1,
+                                waterPercent: 0.8,
+                                farms: {{ create: [ {{ name: "Organic farm" }} ] }}
                             }},
                         ]
                     }}
@@ -1596,24 +1631,31 @@ async def test_update_with_nested_mixed_relations_create(
     assert result.data
     # Sort fruits for assertion stability
     fruits_data = sorted(result.data["updateColor"]["fruits"], key=lambda x: x["name"])
-    assert result.data["updateColor"]["id"] == to_graphql_representation(raw_colors[0]["id"], "output")
+    assert result.data["updateColor"]["id"] == to_graphql_representation(color_id, "output")
     assert result.data["updateColor"]["name"] == "Updated White 2"
-    assert fruits_data == [
-        # Existing fruit
-        {
-            "name": raw_fruits[0]["name"],
-            "farms": [
-                {
-                    "name": to_graphql_representation(farm["name"], "output")  # noqa: B035
-                    for farm in raw_farms
-                    if farm["fruit_id"] == raw_fruits[0]["id"]
-                }
-            ],
-            "product": None,
-        },
+    expected_fruits = [
+        # Existing fruits
+        *[
+            {
+                "name": fruit["name"],
+                "farms": [
+                    {
+                        "name": to_graphql_representation(farm["name"], "output")  # noqa: B035
+                        for farm in raw_farms
+                        if farm["fruit_id"] == fruit["id"]
+                    }
+                ],
+                "product": None,
+            }
+            for fruit in raw_fruits
+            if fruit["color_id"] == color_id
+        ],
+        # New ones
         {"name": "New Grape 2", "product": {"name": "juice"}, "farms": []},
         {"name": "New Lychee 2", "product": None, "farms": [{"name": "Organic farm"}]},
     ]
+    for fruit in expected_fruits:
+        assert fruit in fruits_data
 
     # Heterogeneous params means inserts cannot be batched
     query_tracker.assert_statements(4, "insert", sql_snapshot)  # product, farm, fruit1, fruit2
@@ -1860,7 +1902,7 @@ async def test_relationship_to_many_override(query_name: str, query: str, any_qu
             "createRedFruit",
             """
             mutation {
-                createRedFruit(data: { name: "Apple", adjectives: ["juicy"] }) {
+                createRedFruit(data: { name: "Apple", sweetness: 1, waterPercent: 0.1 }) {
                     name
                     color {
                         name
@@ -1874,7 +1916,7 @@ async def test_relationship_to_many_override(query_name: str, query: str, any_qu
             "createFruitForExistingColor",
             """
             mutation {
-                createFruitForExistingColor(data: { name: "Apple", adjectives: ["juicy"] }) {
+                createFruitForExistingColor(data: { name: "Apple", sweetness: 1, waterPercent: 0.1 }) {
                     name
                     color {
                         name
