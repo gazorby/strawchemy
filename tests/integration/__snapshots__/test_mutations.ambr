@@ -41,13 +41,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createColor-async-asyncpg_engine]
+# name: test_create[session-tracked-async-createColor-asyncpg_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createColor-async-asyncpg_engine].1
+# name: test_create[session-tracked-async-createColor-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -55,13 +55,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createColor-async-psycopg_async_engine]
+# name: test_create[session-tracked-async-createColor-psycopg_async_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createColor-async-psycopg_async_engine].1
+# name: test_create[session-tracked-async-createColor-psycopg_async_engine].1
   '''
   SELECT color.name,
          color.id
@@ -69,27 +69,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createColor-sync-psycopg_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-tracked-createColor-sync-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColor-async-asyncpg_engine]
+# name: test_create[session-tracked-async-createValidatedColor-asyncpg_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColor-async-asyncpg_engine].1
+# name: test_create[session-tracked-async-createValidatedColor-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -97,27 +83,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColor-async-psycopg_async_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColor-async-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColor-manual-async-asyncpg_engine]
+# name: test_create[session-tracked-async-createValidatedColor-manual-asyncpg_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColor-manual-async-asyncpg_engine].1
+# name: test_create[session-tracked-async-createValidatedColor-manual-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -125,13 +97,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColor-manual-async-psycopg_async_engine]
+# name: test_create[session-tracked-async-createValidatedColor-manual-psycopg_async_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColor-manual-async-psycopg_async_engine].1
+# name: test_create[session-tracked-async-createValidatedColor-manual-psycopg_async_engine].1
   '''
   SELECT color.name,
          color.id
@@ -139,13 +111,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColor-manual-sync-psycopg_engine]
+# name: test_create[session-tracked-async-createValidatedColor-psycopg_async_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColor-manual-sync-psycopg_engine].1
+# name: test_create[session-tracked-async-createValidatedColor-psycopg_async_engine].1
   '''
   SELECT color.name,
          color.id
@@ -153,27 +125,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColor-sync-psycopg_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColor-sync-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-async-asyncpg_engine]
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-asyncpg_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-async-asyncpg_engine].1
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -181,27 +139,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-async-psycopg_async_engine]
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-async-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-async-asyncpg_engine]
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-manual-asyncpg_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-async-asyncpg_engine].1
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-manual-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -209,13 +153,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-async-psycopg_async_engine]
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-manual-psycopg_async_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-async-psycopg_async_engine].1
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-manual-psycopg_async_engine].1
   '''
   SELECT color.name,
          color.id
@@ -223,13 +167,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-sync-psycopg_engine]
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-psycopg_async_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-manual-sync-psycopg_engine].1
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-psycopg_async_engine].1
   '''
   SELECT color.name,
          color.id
@@ -237,13 +181,69 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-sync-psycopg_engine]
+# name: test_create[session-tracked-sync-createColor-psycopg_engine]
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create[session-tracked-createValidatedColorAllFragments-sync-psycopg_engine].1
+# name: test_create[session-tracked-sync-createColor-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColor-manual-psycopg_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColor-manual-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColor-psycopg_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColor-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColorAllFragments-manual-psycopg_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColorAllFragments-manual-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColorAllFragments-psycopg_engine]
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColorAllFragments-psycopg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -311,7 +311,7 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-add-async-asyncpg_engine]
+# name: test_create_with_existing_to_many[session-tracked-async-add-asyncpg_engine]
   '''
   SELECT color__fruits.id,
          color.name,
@@ -322,13 +322,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-add-async-asyncpg_engine].1
+# name: test_create_with_existing_to_many[session-tracked-async-add-asyncpg_engine].1
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-add-async-asyncpg_engine].2
+# name: test_create_with_existing_to_many[session-tracked-async-add-asyncpg_engine].2
   '''
   UPDATE fruit
      SET color_id = $1::UUID,
@@ -337,7 +337,7 @@
    WHERE fruit.id = $3::UUID
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-add-async-psycopg_async_engine]
+# name: test_create_with_existing_to_many[session-tracked-async-add-psycopg_async_engine]
   '''
   SELECT color__fruits.id,
          color.name,
@@ -348,13 +348,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-add-async-psycopg_async_engine].1
+# name: test_create_with_existing_to_many[session-tracked-async-add-psycopg_async_engine].1
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-add-async-psycopg_async_engine].2
+# name: test_create_with_existing_to_many[session-tracked-async-add-psycopg_async_engine].2
   '''
   UPDATE fruit
      SET color_id = %(color_id)s::UUID,
@@ -363,7 +363,7 @@
    WHERE fruit.id = %(fruit_id)s::UUID
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-add-sync-psycopg_engine]
+# name: test_create_with_existing_to_many[session-tracked-async-set-asyncpg_engine]
   '''
   SELECT color__fruits.id,
          color.name,
@@ -374,39 +374,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-add-sync-psycopg_engine].1
-  '''
-  INSERT INTO color (name, id, created_at, updated_at)
-  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-tracked-add-sync-psycopg_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = %(color_id)s::UUID,
-         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
-    ZONE
-   WHERE fruit.id = %(fruit_id)s::UUID
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-tracked-set-async-asyncpg_engine]
-  '''
-  SELECT color__fruits.id,
-         color.name,
-         color.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-tracked-set-async-asyncpg_engine].1
+# name: test_create_with_existing_to_many[session-tracked-async-set-asyncpg_engine].1
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES ($1::VARCHAR, $2::UUID, $3::TIMESTAMP WITH TIME ZONE, $4::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-set-async-asyncpg_engine].2
+# name: test_create_with_existing_to_many[session-tracked-async-set-asyncpg_engine].2
   '''
   UPDATE fruit
      SET color_id = $1::UUID,
@@ -415,7 +389,7 @@
    WHERE fruit.id = $3::UUID
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-set-async-psycopg_async_engine]
+# name: test_create_with_existing_to_many[session-tracked-async-set-psycopg_async_engine]
   '''
   SELECT color__fruits.id,
          color.name,
@@ -426,13 +400,13 @@
    WHERE color.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-set-async-psycopg_async_engine].1
+# name: test_create_with_existing_to_many[session-tracked-async-set-psycopg_async_engine].1
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-set-async-psycopg_async_engine].2
+# name: test_create_with_existing_to_many[session-tracked-async-set-psycopg_async_engine].2
   '''
   UPDATE fruit
      SET color_id = %(color_id)s::UUID,
@@ -441,7 +415,7 @@
    WHERE fruit.id = %(fruit_id)s::UUID
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-set-sync-psycopg_engine]
+# name: test_create_with_existing_to_many[session-tracked-sync-add-psycopg_engine]
   '''
   SELECT color__fruits.id,
          color.name,
@@ -452,13 +426,39 @@
    WHERE color.id IN (__[POSTCOMPILE_id_2])
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-set-sync-psycopg_engine].1
+# name: test_create_with_existing_to_many[session-tracked-sync-add-psycopg_engine].1
   '''
   INSERT INTO color (name, id, created_at, updated_at)
   VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
   '''
 # ---
-# name: test_create_with_existing_to_many[session-tracked-set-sync-psycopg_engine].2
+# name: test_create_with_existing_to_many[session-tracked-sync-add-psycopg_engine].2
+  '''
+  UPDATE fruit
+     SET color_id = %(color_id)s::UUID,
+         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
+    ZONE
+   WHERE fruit.id = %(fruit_id)s::UUID
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-sync-set-psycopg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-sync-set-psycopg_engine].1
+  '''
+  INSERT INTO color (name, id, created_at, updated_at)
+  VALUES (%(name)s::VARCHAR, %(id)s::UUID, %(created_at)s::TIMESTAMP WITH TIME ZONE, %(updated_at)s::TIMESTAMP WITH TIME ZONE) RETURNING color.id
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-sync-set-psycopg_engine].2
   '''
   UPDATE fruit
      SET color_id = %(color_id)s::UUID,
@@ -1133,7 +1133,7 @@
    WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id
   '''
 # ---
-# name: test_update[session-tracked-no-validation-async-asyncpg_engine]
+# name: test_update[session-tracked-async-no-validation-asyncpg_engine]
   '''
   UPDATE color
      SET name = $1::VARCHAR,
@@ -1142,7 +1142,7 @@
    WHERE color.id = $3::UUID
   '''
 # ---
-# name: test_update[session-tracked-no-validation-async-asyncpg_engine].1
+# name: test_update[session-tracked-async-no-validation-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -1150,7 +1150,7 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_update[session-tracked-no-validation-async-psycopg_async_engine]
+# name: test_update[session-tracked-async-no-validation-psycopg_async_engine]
   '''
   UPDATE color
      SET name = %(name)s::VARCHAR,
@@ -1159,7 +1159,7 @@
    WHERE color.id = %(color_id)s::UUID
   '''
 # ---
-# name: test_update[session-tracked-no-validation-async-psycopg_async_engine].1
+# name: test_update[session-tracked-async-no-validation-psycopg_async_engine].1
   '''
   SELECT color.name,
          color.id
@@ -1167,24 +1167,7 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_update[session-tracked-no-validation-sync-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
-    ZONE
-   WHERE color.id = %(color_id)s::UUID
-  '''
-# ---
-# name: test_update[session-tracked-no-validation-sync-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_update[session-tracked-validation-fragment-async-asyncpg_engine]
+# name: test_update[session-tracked-async-validation-fragment-asyncpg_engine]
   '''
   UPDATE color
      SET name = $1::VARCHAR,
@@ -1193,7 +1176,7 @@
    WHERE color.id = $3::UUID
   '''
 # ---
-# name: test_update[session-tracked-validation-fragment-async-asyncpg_engine].1
+# name: test_update[session-tracked-async-validation-fragment-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -1201,7 +1184,7 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_update[session-tracked-validation-fragment-async-psycopg_async_engine]
+# name: test_update[session-tracked-async-validation-fragment-psycopg_async_engine]
   '''
   UPDATE color
      SET name = %(name)s::VARCHAR,
@@ -1210,7 +1193,7 @@
    WHERE color.id = %(color_id)s::UUID
   '''
 # ---
-# name: test_update[session-tracked-validation-fragment-async-psycopg_async_engine].1
+# name: test_update[session-tracked-async-validation-fragment-psycopg_async_engine].1
   '''
   SELECT color.name,
          color.id
@@ -1218,24 +1201,7 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_update[session-tracked-validation-fragment-sync-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
-    ZONE
-   WHERE color.id = %(color_id)s::UUID
-  '''
-# ---
-# name: test_update[session-tracked-validation-fragment-sync-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_update[session-tracked-validation-no-fragment-async-asyncpg_engine]
+# name: test_update[session-tracked-async-validation-no-fragment-asyncpg_engine]
   '''
   UPDATE color
      SET name = $1::VARCHAR,
@@ -1244,7 +1210,7 @@
    WHERE color.id = $3::UUID
   '''
 # ---
-# name: test_update[session-tracked-validation-no-fragment-async-asyncpg_engine].1
+# name: test_update[session-tracked-async-validation-no-fragment-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -1252,7 +1218,7 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_update[session-tracked-validation-no-fragment-async-psycopg_async_engine]
+# name: test_update[session-tracked-async-validation-no-fragment-psycopg_async_engine]
   '''
   UPDATE color
      SET name = %(name)s::VARCHAR,
@@ -1261,7 +1227,7 @@
    WHERE color.id = %(color_id)s::UUID
   '''
 # ---
-# name: test_update[session-tracked-validation-no-fragment-async-psycopg_async_engine].1
+# name: test_update[session-tracked-async-validation-no-fragment-psycopg_async_engine].1
   '''
   SELECT color.name,
          color.id
@@ -1269,7 +1235,7 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_update[session-tracked-validation-no-fragment-sync-psycopg_engine]
+# name: test_update[session-tracked-sync-no-validation-psycopg_engine]
   '''
   UPDATE color
      SET name = %(name)s::VARCHAR,
@@ -1278,7 +1244,41 @@
    WHERE color.id = %(color_id)s::UUID
   '''
 # ---
-# name: test_update[session-tracked-validation-no-fragment-sync-psycopg_engine].1
+# name: test_update[session-tracked-sync-no-validation-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_update[session-tracked-sync-validation-fragment-psycopg_engine]
+  '''
+  UPDATE color
+     SET name = %(name)s::VARCHAR,
+         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
+    ZONE
+   WHERE color.id = %(color_id)s::UUID
+  '''
+# ---
+# name: test_update[session-tracked-sync-validation-fragment-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_update[session-tracked-sync-validation-no-fragment-psycopg_engine]
+  '''
+  UPDATE color
+     SET name = %(name)s::VARCHAR,
+         updated_at = %(updated_at)s::TIMESTAMP WITH TIME
+    ZONE
+   WHERE color.id = %(color_id)s::UUID
+  '''
+# ---
+# name: test_update[session-tracked-sync-validation-no-fragment-psycopg_engine].1
   '''
   SELECT color.name,
          color.id

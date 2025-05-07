@@ -3,26 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
-import strawberry
 from graphql import GraphQLError
-from sqlalchemy import select
 from strawberry.types import get_object_definition
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import maybe_async
 
-from .models import Color
-from .types import (
-    ColorType,
-    FruitFilter,
-    FruitOrderBy,
-    FruitTypeWithPaginationAndOrderBy,
-    UserFilter,
-    UserOrderBy,
-    UserType,
-    strawchemy,
-)
+from .types_.postgres import UserType
 from .typing import RawRecordData
 
 if TYPE_CHECKING:
@@ -31,49 +18,6 @@ if TYPE_CHECKING:
     from .fixtures import QueryTracker
 
 pytestmark = [pytest.mark.integration, pytest.mark.postgres]
-
-
-@strawberry.type
-class AsyncQuery:
-    fruits: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
-        filter_input=FruitFilter, order_by=FruitOrderBy, repository_type=StrawchemyAsyncRepository
-    )
-    user: UserType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
-    users: list[UserType] = strawchemy.field(
-        filter_input=UserFilter,
-        order_by=UserOrderBy,
-        pagination=True,
-        repository_type=StrawchemyAsyncRepository,
-    )
-    colors: list[ColorType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
-    colors_filtered: list[ColorType] = strawchemy.field(
-        repository_type=StrawchemyAsyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
-    )
-
-
-@strawberry.type
-class SyncQuery:
-    fruits: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
-        filter_input=FruitFilter, order_by=FruitOrderBy, repository_type=StrawchemySyncRepository
-    )
-    user: UserType = strawchemy.field(repository_type=StrawchemySyncRepository)
-    users: list[UserType] = strawchemy.field(
-        filter_input=UserFilter, order_by=UserOrderBy, pagination=True, repository_type=StrawchemySyncRepository
-    )
-    colors: list[ColorType] = strawchemy.field(repository_type=StrawchemySyncRepository)
-    colors_filtered: list[ColorType] = strawchemy.field(
-        repository_type=StrawchemySyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
-    )
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
 
 
 def test_required_id_single(no_session_query: SyncQueryExecutor) -> None:

@@ -1,39 +1,16 @@
 from __future__ import annotations
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
-import strawberry
 from syrupy.assertion import SnapshotAssertion
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import ColorFilter, ColorType, strawchemy
 from .typing import RawRecordData
 
 pytestmark = [pytest.mark.integration, pytest.mark.postgres]
-
-
-@strawberry.type
-class AsyncQuery:
-    colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter, repository_type=StrawchemyAsyncRepository)
-
-
-@strawberry.type
-class SyncQuery:
-    colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter, repository_type=StrawchemySyncRepository)
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
 
 
 @pytest.mark.parametrize(

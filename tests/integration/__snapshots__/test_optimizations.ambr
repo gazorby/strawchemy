@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_inner_join_rewriting[session-tracked-inner-join-rewrite-async-asyncpg_engine]
+# name: test_inner_join_rewriting[session-tracked-async-inner-join-rewrite-asyncpg_engine]
   '''
   SELECT color__fruits.sweetness,
          color__fruits.id,
@@ -10,7 +10,7 @@
    WHERE color__fruits.sweetness > $1::INTEGER
   '''
 # ---
-# name: test_inner_join_rewriting[session-tracked-inner-join-rewrite-async-psycopg_async_engine]
+# name: test_inner_join_rewriting[session-tracked-async-inner-join-rewrite-psycopg_async_engine]
   '''
   SELECT color__fruits.sweetness,
          color__fruits.id,
@@ -21,18 +21,7 @@
    WHERE color__fruits.sweetness > %(sweetness_1)s::INTEGER
   '''
 # ---
-# name: test_inner_join_rewriting[session-tracked-inner-join-rewrite-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.sweetness,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   WHERE color__fruits.sweetness > %(sweetness_1)s::INTEGER
-  '''
-# ---
-# name: test_inner_join_rewriting[session-tracked-no-inner-join-rewrite-async-asyncpg_engine]
+# name: test_inner_join_rewriting[session-tracked-async-no-inner-join-rewrite-asyncpg_engine]
   '''
   SELECT color__fruits.sweetness,
          color__fruits.id,
@@ -44,7 +33,7 @@
     ZONE
   '''
 # ---
-# name: test_inner_join_rewriting[session-tracked-no-inner-join-rewrite-async-psycopg_async_engine]
+# name: test_inner_join_rewriting[session-tracked-async-no-inner-join-rewrite-psycopg_async_engine]
   '''
   SELECT color__fruits.sweetness,
          color__fruits.id,
@@ -56,7 +45,18 @@
     ZONE
   '''
 # ---
-# name: test_inner_join_rewriting[session-tracked-no-inner-join-rewrite-sync-psycopg_engine]
+# name: test_inner_join_rewriting[session-tracked-sync-inner-join-rewrite-psycopg_engine]
+  '''
+  SELECT color__fruits.sweetness,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color__fruits.sweetness > %(sweetness_1)s::INTEGER
+  '''
+# ---
+# name: test_inner_join_rewriting[session-tracked-sync-no-inner-join-rewrite-psycopg_engine]
   '''
   SELECT color__fruits.sweetness,
          color__fruits.id,

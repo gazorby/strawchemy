@@ -1,33 +1,19 @@
 from __future__ import annotations
 
-import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
+from typing import Any
 
-import strawberry
+import pytest
+
 from sqlalchemy import Insert, MetaData, insert
 from syrupy.assertion import SnapshotAssertion
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import DateTimeModel, date_time_metadata
-from tests.integration.types import DateTimeFilter, DateTimeType, strawchemy
+from tests.integration.types_ import postgres as postgres_types
 from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 pytestmark = [pytest.mark.integration, pytest.mark.postgres]
-
-
-@strawberry.type
-class AsyncQuery:
-    date_times: list[DateTimeType] = strawchemy.field(
-        filter_input=DateTimeFilter, repository_type=StrawchemyAsyncRepository
-    )
-
-
-@strawberry.type
-class SyncQuery:
-    date_times: list[DateTimeType] = strawchemy.field(
-        filter_input=DateTimeFilter, repository_type=StrawchemySyncRepository
-    )
 
 
 @pytest.fixture
@@ -41,13 +27,17 @@ def seed_insert_statements(raw_date_times: RawRecordData) -> list[Insert]:
 
 
 @pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
+def async_query(dialect: str) -> type[Any]:
+    if dialect == "postgresql":
+        return postgres_types.DateTimeAsyncQuery
+    pytest.skip(f"Date/Time tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
+def sync_query(dialect: str) -> type[Any]:
+    if dialect == "postgresql":
+        return postgres_types.DateTimeSyncQuery
+    pytest.skip(f"Date/Time tests can't be run on this dialect: {dialect}")
 
 
 # Tests for date/time component filters

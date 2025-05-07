@@ -3,13 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
-import strawberry
 from sqlalchemy import Insert, MetaData, insert
 from syrupy.assertion import SnapshotAssertion
 from tests.integration.models import JSONModel, json_metadata
-from tests.integration.types import JSONFilter, JSONType, strawchemy
+from tests.integration.types_ import postgres as postgres_types
 from tests.integration.utils import to_graphql_representation
 from tests.utils import maybe_async
 
@@ -19,16 +17,6 @@ if TYPE_CHECKING:
     from tests.typing import AnyQueryExecutor
 
 pytestmark = [pytest.mark.integration, pytest.mark.postgres]
-
-
-@strawberry.type
-class AsyncQuery:
-    json: list[JSONType] = strawchemy.field(filter_input=JSONFilter, repository_type=StrawchemyAsyncRepository)
-
-
-@strawberry.type
-class SyncQuery:
-    json: list[JSONType] = strawchemy.field(filter_input=JSONFilter, repository_type=StrawchemySyncRepository)
 
 
 @pytest.fixture
@@ -42,13 +30,17 @@ def seed_insert_statements(raw_json: RawRecordData) -> list[Insert]:
 
 
 @pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
+def async_query(dialect: str) -> type[Any]:
+    if dialect == "postgresql":
+        return postgres_types.JSONAsyncQuery
+    pytest.skip(f"JSON tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
+def sync_query(dialect: str) -> type[Any]:
+    if dialect == "postgresql":
+        return postgres_types.JSONSyncQuery
+    pytest.skip(f"JSON tests can't be run on this dialect: {dialect}")
 
 
 # Tests for JSON-specific filters

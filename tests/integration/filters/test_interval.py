@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
-import strawberry
 from sqlalchemy import Insert, MetaData, insert
 from syrupy.assertion import SnapshotAssertion
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import IntervalModel, interval_metadata
-from tests.integration.types import IntervalFilter, IntervalType, strawchemy
+from tests.integration.types_ import postgres as postgres_types
 from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
@@ -20,20 +19,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.postgres]
 seconds_in_year = 60 * 60 * 24 * 365.25
 seconds_in_month = seconds_in_year / 12
 seconds_in_day = 60 * 60 * 24
-
-
-@strawberry.type
-class AsyncQuery:
-    intervals: list[IntervalType] = strawchemy.field(
-        filter_input=IntervalFilter, repository_type=StrawchemyAsyncRepository
-    )
-
-
-@strawberry.type
-class SyncQuery:
-    intervals: list[IntervalType] = strawchemy.field(
-        filter_input=IntervalFilter, repository_type=StrawchemySyncRepository
-    )
 
 
 @pytest.fixture
@@ -47,13 +32,17 @@ def seed_insert_statements(raw_intervals: RawRecordData) -> list[Insert]:
 
 
 @pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
+def async_query(dialect: str) -> type[Any]:
+    if dialect == "postgresql":
+        return postgres_types.IntervalAsyncQuery
+    pytest.skip(f"Interval tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
+def sync_query(dialect: str) -> type[Any]:
+    if dialect == "postgresql":
+        return postgres_types.IntervalSyncQuery
+    pytest.skip(f"Interval tests can't be run on this dialect: {dialect}")
 
 
 @pytest.mark.parametrize(

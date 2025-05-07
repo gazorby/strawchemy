@@ -5,12 +5,13 @@ import re
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from statistics import mean, pstdev, pvariance, stdev, variance
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from uuid import UUID
 
 from pydantic import TypeAdapter
 
 from sqlalchemy import inspect
+from tests.integration.types_ import postgres as pg_types
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -22,6 +23,8 @@ __all__ = ("from_graphql_representation", "python_type", "to_graphql_representat
 
 
 _TimeDeltaType = TypeAdapter(timedelta)
+_pg_engines = ("asyncpg_engine", "psycopg_async_engine", "psycopg_engine")
+AnyTypesModule: TypeAlias = pg_types
 
 
 def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> Any:

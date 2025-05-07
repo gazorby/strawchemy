@@ -10,7 +10,7 @@ from uuid import UUID, uuid4
 from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
 from sqlalchemy import ARRAY, JSON, DateTime, ForeignKey, MetaData, Text
-from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects import mysql, postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
 from sqlalchemy.orm import registry as Registry  # noqa: N812
@@ -25,7 +25,7 @@ date_time_metadata = MetaData()
 
 
 TextArrayType = ARRAY(Text).with_variant(postgresql.ARRAY(Text), "postgresql")
-JSONType = JSON().with_variant(postgresql.JSONB, "postgresql")
+JSONType = JSON().with_variant(postgresql.JSONB, "postgresql").with_variant(mysql.JSON, "mysql")
 
 
 # Bases

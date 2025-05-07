@@ -3,16 +3,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 from strawchemy.types import DefaultOffsetPagination
 
-import strawberry
 from tests.integration.models import Fruit
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import ColorType, FruitAggregationType, strawchemy
 from .typing import RawRecordData
 from .utils import compute_aggregation, from_graphql_representation, python_type
 
@@ -20,38 +17,6 @@ if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration, pytest.mark.postgres]
-
-
-@strawberry.type
-class AsyncQuery:
-    color: ColorType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
-    fruit_aggregations: FruitAggregationType = strawchemy.field(
-        root_aggregations=True, repository_type=StrawchemyAsyncRepository
-    )
-    fruit_aggregations_paginated: FruitAggregationType = strawchemy.field(
-        root_aggregations=True, pagination=DefaultOffsetPagination(limit=2), repository_type=StrawchemyAsyncRepository
-    )
-
-
-@strawberry.type
-class SyncQuery:
-    color: ColorType = strawchemy.field(repository_type=StrawchemySyncRepository)
-    fruit_aggregations: FruitAggregationType = strawchemy.field(
-        root_aggregations=True, repository_type=StrawchemySyncRepository
-    )
-    fruit_aggregations_paginated: FruitAggregationType = strawchemy.field(
-        root_aggregations=True, pagination=DefaultOffsetPagination(limit=2), repository_type=StrawchemySyncRepository
-    )
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
 
 
 @pytest.mark.snapshot
@@ -321,7 +286,7 @@ async def test_root_aggregation(
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test statistical aggregation functions for a specific field."""
-    query_name = "fruitAggregations" if pagination is None else "fruitAggregationsPaginated"
+    query_name = "fruitAggregations" if pagination is None else "fruitAggregationsPaginatedLimit2"
     query = f"""
         {{
             {query_name} {{

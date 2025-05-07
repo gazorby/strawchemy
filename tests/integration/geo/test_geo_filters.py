@@ -7,17 +7,14 @@ pytest.importorskip("geoalchemy2", reason="geoalchemy2 is not installed")
 
 from typing import TYPE_CHECKING, Any
 
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
-
-import strawberry
 from sqlalchemy import Executable, Insert, MetaData, insert, text
 from tests.integration.fixtures import QueryTracker
+from tests.integration.geo import types as postgres_types
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .models import GeoModel, geo_metadata
-from .types import GeoFieldsFilter, GeoFieldsType, strawchemy
 
 if TYPE_CHECKING:
     from pytest_databases.docker.postgres import PostgresService
@@ -35,7 +32,7 @@ def metadata() -> MetaData:
 
 
 @pytest.fixture
-def database_service(postgis_service: PostgresService) -> PostgresService:
+def postgres_database_service(postgis_service: PostgresService) -> PostgresService:
     return postgis_service
 
 
@@ -44,28 +41,18 @@ def before_create_all_statements() -> list[Executable]:
     return [text("CREATE EXTENSION IF NOT EXISTS postgis")]
 
 
-@strawberry.type
-class AsyncQuery:
-    geo_field: list[GeoFieldsType] = strawchemy.field(
-        filter_input=GeoFieldsFilter, repository_type=StrawchemyAsyncRepository
-    )
-
-
-@strawberry.type
-class SyncQuery:
-    geo_field: list[GeoFieldsType] = strawchemy.field(
-        filter_input=GeoFieldsFilter, repository_type=StrawchemySyncRepository
-    )
+@pytest.fixture
+def async_query(dialect: str) -> type[Any]:
+    if dialect == "postgresql":
+        return postgres_types.AsyncGeoQuery
+    pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
+def sync_query(dialect: str) -> type[Any]:
+    if dialect == "postgresql":
+        return postgres_types.SyncGeoQuery
+    pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture

@@ -1,53 +1,15 @@
 from __future__ import annotations
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
-from strawchemy.types import DefaultOffsetPagination
 
-import strawberry
 from syrupy.assertion import SnapshotAssertion
 from tests.integration.fixtures import QueryTracker
-from tests.integration.types import (
-    FruitFilter,
-    FruitType,
-    UserFilter,
-    UserType,
-    strawchemy,
-)
 from tests.integration.typing import RawRecordData
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
-
-
-@strawberry.type
-class AsyncQuery:
-    fruits: list[FruitType] = strawchemy.field(filter_input=FruitFilter, repository_type=StrawchemyAsyncRepository)
-    fruits_paginated: list[FruitType] = strawchemy.field(
-        filter_input=FruitFilter, pagination=DefaultOffsetPagination(limit=1), repository_type=StrawchemyAsyncRepository
-    )
-    users: list[UserType] = strawchemy.field(filter_input=UserFilter, repository_type=StrawchemyAsyncRepository)
-
-
-@strawberry.type
-class SyncQuery:
-    fruits: list[FruitType] = strawchemy.field(filter_input=FruitFilter, repository_type=StrawchemySyncRepository)
-    fruits_paginated: list[FruitType] = strawchemy.field(
-        filter_input=FruitFilter, pagination=DefaultOffsetPagination(limit=1), repository_type=StrawchemySyncRepository
-    )
-    users: list[UserType] = strawchemy.field(filter_input=UserFilter, repository_type=StrawchemySyncRepository)
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
+pytestmark = [pytest.mark.integration, pytest.mark.postgres, pytest.mark.mysql]
 
 
 @pytest.mark.snapshot
@@ -500,7 +462,7 @@ async def test_filter_on_paginated_query(
 ) -> None:
     query = """
         {
-            fruitsPaginated(filter: { _not: { sweetness: { gt: 11 } } }) {
+            fruitsPaginatedDefaultLimit1(filter: { _not: { sweetness: { gt: 11 } } }) {
                 id
                 sweetness
             }
@@ -511,8 +473,8 @@ async def test_filter_on_paginated_query(
     assert result.data
 
     expected = [raw_fruits[0]]
-    assert len(result.data["fruitsPaginated"]) == len(expected)
-    assert {result.data["fruitsPaginated"][i]["id"] for i in range(len(expected))} == {
+    assert len(result.data["fruitsPaginatedDefaultLimit1"]) == len(expected)
+    assert {result.data["fruitsPaginatedDefaultLimit1"][i]["id"] for i in range(len(expected))} == {
         fruit["id"] for fruit in expected
     }
 

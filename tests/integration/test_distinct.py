@@ -3,38 +3,15 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
-import strawberry
 from syrupy.assertion import SnapshotAssertion
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import ColorDistinctOn, ColorType, strawchemy
 from .typing import RawRecordData
 
 pytestmark = [pytest.mark.integration, pytest.mark.postgres]
-
-
-@strawberry.type
-class AsyncQuery:
-    colors: list[ColorType] = strawchemy.field(repository_type=StrawchemyAsyncRepository, distinct_on=ColorDistinctOn)
-
-
-@strawberry.type
-class SyncQuery:
-    colors: list[ColorType] = strawchemy.field(repository_type=StrawchemySyncRepository, distinct_on=ColorDistinctOn)
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
 
 
 @pytest.fixture

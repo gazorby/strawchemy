@@ -37,6 +37,8 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, a
 from sqlalchemy.orm import Session, sessionmaker
 from strawberry.scalars import JSON
 from tests.fixtures import DefaultQuery
+from tests.integration.types_ import AnyAsyncQueryType, AnySyncQueryType
+from tests.integration.types_ import postgres as postgres_types
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
@@ -48,6 +50,7 @@ if TYPE_CHECKING:
 
     from pytest import FixtureRequest, MonkeyPatch
     from pytest_databases._service import DockerService  # pyright: ignore[reportPrivateImportUsage]
+    from pytest_databases.docker.mysql import MySQLService
     from pytest_databases.docker.postgres import PostgresService
     from pytest_databases.types import XdistIsolationLevel
     from strawchemy.sqlalchemy.typing import AnySession
@@ -76,6 +79,7 @@ __all__ = (
 
 FilterableStatement: TypeAlias = Literal["insert", "update", "select", "delete"]
 scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval}
+
 
 if find_spec("geoalchemy2") is not None:
     from strawchemy.strawberry.geo import GEO_SCALAR_OVERRIDES
@@ -166,7 +170,7 @@ def postgis_service(
 
 
 @pytest.fixture
-def database_service(postgres_service: PostgresService) -> PostgresService:
+def postgres_database_service(postgres_service: PostgresService) -> PostgresService:
     return postgres_service
 
 
@@ -174,16 +178,16 @@ def database_service(postgres_service: PostgresService) -> PostgresService:
 
 
 @pytest.fixture
-def psycopg_engine(database_service: PostgresService) -> Generator[Engine, None, None]:
+def psycopg_engine(postgres_database_service: PostgresService) -> Generator[Engine, None, None]:
     """Postgresql instance for end-to-end testing."""
     engine = create_engine(
         URL(
             drivername="postgresql+psycopg",
             username="postgres",
-            password=database_service.password,
-            host=database_service.host,
-            port=database_service.port,
-            database=database_service.database,
+            password=postgres_database_service.password,
+            host=postgres_database_service.host,
+            port=postgres_database_service.port,
+            database=postgres_database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
@@ -235,25 +239,15 @@ def session(engine: Engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-async def aiosqlite_engine(tmp_path: Path) -> AsyncGenerator[AsyncEngine, None]:
-    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path}/test.db", poolclass=NullPool)
-    try:
-        yield engine
-    finally:
-        await engine.dispose()
-
-
-@pytest.fixture
-async def asyncpg_engine(database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
-    """Postgresql instance for end-to-end testing."""
+async def asyncmy_engine(mysql_service: MySQLService) -> AsyncGenerator[AsyncEngine, None]:
     engine = create_async_engine(
         URL(
-            drivername="postgresql+asyncpg",
-            username="postgres",
-            password=database_service.password,
-            host=database_service.host,
-            port=database_service.port,
-            database=database_service.database,
+            drivername="mysql+asyncmy",
+            username=mysql_service.user,
+            password=mysql_service.password,
+            host=mysql_service.host,
+            port=mysql_service.port,
+            database=mysql_service.db,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
@@ -265,16 +259,46 @@ async def asyncpg_engine(database_service: PostgresService) -> AsyncGenerator[As
 
 
 @pytest.fixture
-async def psycopg_async_engine(database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
+async def aiosqlite_engine(tmp_path: Path) -> AsyncGenerator[AsyncEngine, None]:
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path}/test.db", poolclass=NullPool)
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture
+async def asyncpg_engine(postgres_database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
+    """Postgresql instance for end-to-end testing."""
+    engine = create_async_engine(
+        URL(
+            drivername="postgresql+asyncpg",
+            username="postgres",
+            password=postgres_database_service.password,
+            host=postgres_database_service.host,
+            port=postgres_database_service.port,
+            database=postgres_database_service.database,
+            query={},  # type:ignore[arg-type]
+        ),
+        poolclass=NullPool,
+    )
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture
+async def psycopg_async_engine(postgres_database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
     """Postgresql instance for end-to-end testing."""
     engine = create_async_engine(
         URL(
             drivername="postgresql+psycopg",
             username="postgres",
-            password=database_service.password,
-            host=database_service.host,
-            port=database_service.port,
-            database=database_service.database,
+            password=postgres_database_service.password,
+            host=postgres_database_service.host,
+            port=postgres_database_service.port,
+            database=postgres_database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
@@ -625,18 +649,36 @@ async def seed_db_async(
 
 
 @pytest.fixture
-def async_query() -> type[DefaultQuery]:
+def dialect(any_session: AnySession) -> str:
+    return any_session.get_bind().dialect.name
+
+
+@pytest.fixture
+def async_query(dialect: str) -> type[AnyAsyncQueryType | DefaultQuery]:
+    if dialect == "postgresql":
+        return postgres_types.AsyncQuery
     return DefaultQuery
 
 
 @pytest.fixture
-def async_mutation() -> type[Any] | None:
-    return None
+def sync_query(dialect: str) -> type[AnySyncQueryType | DefaultQuery]:
+    if dialect == "postgresql":
+        return postgres_types.SyncQuery
+    return DefaultQuery
 
 
 @pytest.fixture
-def sync_mutation() -> type[Any] | None:
-    return None
+def async_mutation(dialect: str) -> type[Any] | None:
+    if dialect == "postgresql":
+        return postgres_types.AsyncMutation
+    return DefaultQuery
+
+
+@pytest.fixture
+def sync_mutation(dialect: str) -> type[Any] | None:
+    if dialect == "postgresql":
+        return postgres_types.SyncMutation
+    return DefaultQuery
 
 
 @pytest.fixture(params=[lf("async_session"), lf("session")], ids=["async", "sync"])

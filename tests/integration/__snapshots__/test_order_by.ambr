@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_nulls[session-tracked-ASC_NULLS_FIRST-async-asyncpg_engine]
+# name: test_nulls[session-tracked-async-ASC_NULLS_FIRST-asyncpg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -7,7 +7,7 @@
    ORDER BY "user".bio ASC NULLS FIRST
   '''
 # ---
-# name: test_nulls[session-tracked-ASC_NULLS_FIRST-async-psycopg_async_engine]
+# name: test_nulls[session-tracked-async-ASC_NULLS_FIRST-psycopg_async_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -15,7 +15,55 @@
    ORDER BY "user".bio ASC NULLS FIRST
   '''
 # ---
-# name: test_nulls[session-tracked-ASC_NULLS_FIRST-sync-psycopg_engine]
+# name: test_nulls[session-tracked-async-ASC_NULLS_LAST-asyncpg_engine]
+  '''
+  SELECT "user".bio,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".bio ASC NULLS LAST
+  '''
+# ---
+# name: test_nulls[session-tracked-async-ASC_NULLS_LAST-psycopg_async_engine]
+  '''
+  SELECT "user".bio,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".bio ASC NULLS LAST
+  '''
+# ---
+# name: test_nulls[session-tracked-async-DESC_NULLS_FIRST-asyncpg_engine]
+  '''
+  SELECT "user".bio,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".bio DESC NULLS FIRST
+  '''
+# ---
+# name: test_nulls[session-tracked-async-DESC_NULLS_FIRST-psycopg_async_engine]
+  '''
+  SELECT "user".bio,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".bio DESC NULLS FIRST
+  '''
+# ---
+# name: test_nulls[session-tracked-async-DESC_NULLS_LAST-asyncpg_engine]
+  '''
+  SELECT "user".bio,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".bio DESC NULLS LAST
+  '''
+# ---
+# name: test_nulls[session-tracked-async-DESC_NULLS_LAST-psycopg_async_engine]
+  '''
+  SELECT "user".bio,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".bio DESC NULLS LAST
+  '''
+# ---
+# name: test_nulls[session-tracked-sync-ASC_NULLS_FIRST-psycopg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -23,7 +71,7 @@
    ORDER BY "user".bio ASC NULLS FIRST
   '''
 # ---
-# name: test_nulls[session-tracked-ASC_NULLS_LAST-async-asyncpg_engine]
+# name: test_nulls[session-tracked-sync-ASC_NULLS_LAST-psycopg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -31,23 +79,7 @@
    ORDER BY "user".bio ASC NULLS LAST
   '''
 # ---
-# name: test_nulls[session-tracked-ASC_NULLS_LAST-async-psycopg_async_engine]
-  '''
-  SELECT "user".bio,
-         "user".id
-    FROM "user" AS "user"
-   ORDER BY "user".bio ASC NULLS LAST
-  '''
-# ---
-# name: test_nulls[session-tracked-ASC_NULLS_LAST-sync-psycopg_engine]
-  '''
-  SELECT "user".bio,
-         "user".id
-    FROM "user" AS "user"
-   ORDER BY "user".bio ASC NULLS LAST
-  '''
-# ---
-# name: test_nulls[session-tracked-DESC_NULLS_FIRST-async-asyncpg_engine]
+# name: test_nulls[session-tracked-sync-DESC_NULLS_FIRST-psycopg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -55,23 +87,7 @@
    ORDER BY "user".bio DESC NULLS FIRST
   '''
 # ---
-# name: test_nulls[session-tracked-DESC_NULLS_FIRST-async-psycopg_async_engine]
-  '''
-  SELECT "user".bio,
-         "user".id
-    FROM "user" AS "user"
-   ORDER BY "user".bio DESC NULLS FIRST
-  '''
-# ---
-# name: test_nulls[session-tracked-DESC_NULLS_FIRST-sync-psycopg_engine]
-  '''
-  SELECT "user".bio,
-         "user".id
-    FROM "user" AS "user"
-   ORDER BY "user".bio DESC NULLS FIRST
-  '''
-# ---
-# name: test_nulls[session-tracked-DESC_NULLS_LAST-async-asyncpg_engine]
+# name: test_nulls[session-tracked-sync-DESC_NULLS_LAST-psycopg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -79,23 +95,7 @@
    ORDER BY "user".bio DESC NULLS LAST
   '''
 # ---
-# name: test_nulls[session-tracked-DESC_NULLS_LAST-async-psycopg_async_engine]
-  '''
-  SELECT "user".bio,
-         "user".id
-    FROM "user" AS "user"
-   ORDER BY "user".bio DESC NULLS LAST
-  '''
-# ---
-# name: test_nulls[session-tracked-DESC_NULLS_LAST-sync-psycopg_engine]
-  '''
-  SELECT "user".bio,
-         "user".id
-    FROM "user" AS "user"
-   ORDER BY "user".bio DESC NULLS LAST
-  '''
-# ---
-# name: test_order_by[session-tracked-ASC-async-asyncpg_engine]
+# name: test_order_by[session-tracked-async-ASC-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -103,7 +103,7 @@
    ORDER BY fruit.name ASC
   '''
 # ---
-# name: test_order_by[session-tracked-ASC-async-psycopg_async_engine]
+# name: test_order_by[session-tracked-async-ASC-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -111,7 +111,23 @@
    ORDER BY fruit.name ASC
   '''
 # ---
-# name: test_order_by[session-tracked-ASC-sync-psycopg_engine]
+# name: test_order_by[session-tracked-async-DESC-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name DESC
+  '''
+# ---
+# name: test_order_by[session-tracked-async-DESC-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name DESC
+  '''
+# ---
+# name: test_order_by[session-tracked-sync-ASC-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -119,7 +135,7 @@
    ORDER BY fruit.name ASC
   '''
 # ---
-# name: test_order_by[session-tracked-DESC-async-asyncpg_engine]
+# name: test_order_by[session-tracked-sync-DESC-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -127,23 +143,7 @@
    ORDER BY fruit.name DESC
   '''
 # ---
-# name: test_order_by[session-tracked-DESC-async-psycopg_async_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.name DESC
-  '''
-# ---
-# name: test_order_by[session-tracked-DESC-sync-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.name DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-avg-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-async-ASC-avg-asyncpg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -160,7 +160,7 @@
    ORDER BY aggregation_0."avg_fruits__avg_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-avg-async-psycopg_async_engine]
+# name: test_order_by_aggregations[session-tracked-async-ASC-avg-psycopg_async_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -177,7 +177,653 @@
    ORDER BY aggregation_0."avg_fruits__avg_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-avg-sync-psycopg_engine]
+# name: test_order_by_aggregations[session-tracked-async-ASC-max-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."max_fruits__max_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-max-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."max_fruits__max_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-min-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."min_fruits__min_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-min-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."min_fruits__min_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-stddev-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_fruits__stddev_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-stddev-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_fruits__stddev_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-stddevPop-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-stddevPop-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-stddevSamp-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-stddevSamp-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-sum-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."sum_fruits__sum_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-sum-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."sum_fruits__sum_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-varPop-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."var_pop_fruits__var_pop_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-varPop-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."var_pop_fruits__var_pop_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-varSamp-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."var_samp_fruits__var_samp_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-varSamp-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."var_samp_fruits__var_samp_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-variance-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."variance_fruits__variance_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-ASC-variance-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."variance_fruits__variance_water_percent" ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-avg-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."avg_fruits__avg_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-avg-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."avg_fruits__avg_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-max-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."max_fruits__max_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-max-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."max_fruits__max_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-min-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."min_fruits__min_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-min-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."min_fruits__min_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-stddev-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_fruits__stddev_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-stddev-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_fruits__stddev_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-stddevPop-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-stddevPop-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-stddevSamp-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-stddevSamp-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-sum-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."sum_fruits__sum_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-sum-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."sum_fruits__sum_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-varPop-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."var_pop_fruits__var_pop_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-varPop-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."var_pop_fruits__var_pop_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-varSamp-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."var_samp_fruits__var_samp_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-varSamp-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."var_samp_fruits__var_samp_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-variance-asyncpg_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."variance_fruits__variance_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-async-DESC-variance-psycopg_async_engine]
+  '''
+  SELECT color__fruits.water_percent,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY aggregation_0."variance_fruits__variance_water_percent" DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-tracked-sync-ASC-avg-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -194,7 +840,7 @@
    ORDER BY aggregation_0."avg_fruits__avg_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-max-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-ASC-max-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -211,41 +857,7 @@
    ORDER BY aggregation_0."max_fruits__max_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-max-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."max_fruits__max_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-max-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."max_fruits__max_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-min-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-ASC-min-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -262,41 +874,7 @@
    ORDER BY aggregation_0."min_fruits__min_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-min-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."min_fruits__min_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-min-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."min_fruits__min_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-stddev-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-ASC-stddev-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -313,41 +891,7 @@
    ORDER BY aggregation_0."stddev_fruits__stddev_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-stddev-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_fruits__stddev_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-stddev-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_fruits__stddev_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-stddevPop-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-ASC-stddevPop-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -364,41 +908,7 @@
    ORDER BY aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-stddevPop-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-stddevPop-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-stddevSamp-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-ASC-stddevSamp-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -415,41 +925,7 @@
    ORDER BY aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-stddevSamp-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-stddevSamp-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-sum-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-ASC-sum-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -466,41 +942,7 @@
    ORDER BY aggregation_0."sum_fruits__sum_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-sum-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."sum_fruits__sum_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-sum-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."sum_fruits__sum_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-varPop-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-ASC-varPop-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -517,41 +959,7 @@
    ORDER BY aggregation_0."var_pop_fruits__var_pop_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-varPop-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."var_pop_fruits__var_pop_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-varPop-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."var_pop_fruits__var_pop_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-varSamp-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-ASC-varSamp-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -568,41 +976,7 @@
    ORDER BY aggregation_0."var_samp_fruits__var_samp_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-varSamp-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."var_samp_fruits__var_samp_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-varSamp-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."var_samp_fruits__var_samp_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-variance-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-ASC-variance-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -619,41 +993,7 @@
    ORDER BY aggregation_0."variance_fruits__variance_water_percent" ASC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-ASC-variance-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."variance_fruits__variance_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-ASC-variance-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."variance_fruits__variance_water_percent" ASC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-avg-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-DESC-avg-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -670,41 +1010,7 @@
    ORDER BY aggregation_0."avg_fruits__avg_water_percent" DESC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-DESC-avg-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."avg_fruits__avg_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-avg-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."avg_fruits__avg_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-max-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-DESC-max-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -721,41 +1027,7 @@
    ORDER BY aggregation_0."max_fruits__max_water_percent" DESC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-DESC-max-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."max_fruits__max_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-max-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."max_fruits__max_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-min-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-DESC-min-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -772,41 +1044,7 @@
    ORDER BY aggregation_0."min_fruits__min_water_percent" DESC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-DESC-min-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."min_fruits__min_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-min-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."min_fruits__min_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-stddev-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-DESC-stddev-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -823,41 +1061,7 @@
    ORDER BY aggregation_0."stddev_fruits__stddev_water_percent" DESC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-DESC-stddev-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_fruits__stddev_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-stddev-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_fruits__stddev_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-stddevPop-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-DESC-stddevPop-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -874,41 +1078,7 @@
    ORDER BY aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" DESC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-DESC-stddevPop-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-stddevPop-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-stddevSamp-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-DESC-stddevSamp-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -925,41 +1095,7 @@
    ORDER BY aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" DESC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-DESC-stddevSamp-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-stddevSamp-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-sum-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-DESC-sum-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -976,41 +1112,7 @@
    ORDER BY aggregation_0."sum_fruits__sum_water_percent" DESC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-DESC-sum-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."sum_fruits__sum_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-sum-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."sum_fruits__sum_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-varPop-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-DESC-varPop-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -1027,41 +1129,7 @@
    ORDER BY aggregation_0."var_pop_fruits__var_pop_water_percent" DESC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-DESC-varPop-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."var_pop_fruits__var_pop_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-varPop-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."var_pop_fruits__var_pop_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-varSamp-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-DESC-varSamp-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -1078,41 +1146,7 @@
    ORDER BY aggregation_0."var_samp_fruits__var_samp_water_percent" DESC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-DESC-varSamp-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."var_samp_fruits__var_samp_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-varSamp-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."var_samp_fruits__var_samp_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-variance-async-asyncpg_engine]
+# name: test_order_by_aggregations[session-tracked-sync-DESC-variance-psycopg_engine]
   '''
   SELECT color__fruits.water_percent,
          color__fruits.id,
@@ -1129,41 +1163,7 @@
    ORDER BY aggregation_0."variance_fruits__variance_water_percent" DESC
   '''
 # ---
-# name: test_order_by_aggregations[session-tracked-DESC-variance-async-psycopg_async_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."variance_fruits__variance_water_percent" DESC
-  '''
-# ---
-# name: test_order_by_aggregations[session-tracked-DESC-variance-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.water_percent,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   ORDER BY aggregation_0."variance_fruits__variance_water_percent" DESC
-  '''
-# ---
-# name: test_relation_order_by[session-tracked-ASC-async-asyncpg_engine]
+# name: test_relation_order_by[session-tracked-async-ASC-asyncpg_engine]
   '''
   SELECT color__fruits.sweetness,
          color__fruits.id,
@@ -1179,7 +1179,7 @@
       ON TRUE
   '''
 # ---
-# name: test_relation_order_by[session-tracked-ASC-async-psycopg_async_engine]
+# name: test_relation_order_by[session-tracked-async-ASC-psycopg_async_engine]
   '''
   SELECT color__fruits.sweetness,
          color__fruits.id,
@@ -1195,23 +1195,7 @@
       ON TRUE
   '''
 # ---
-# name: test_relation_order_by[session-tracked-ASC-sync-psycopg_engine]
-  '''
-  SELECT color__fruits.sweetness,
-         color__fruits.id,
-         color.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.sweetness AS sweetness,
-                 fruit_1.id AS id
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-           ORDER BY fruit_1.sweetness ASC
-         ) AS color__fruits
-      ON TRUE
-  '''
-# ---
-# name: test_relation_order_by[session-tracked-DESC-async-asyncpg_engine]
+# name: test_relation_order_by[session-tracked-async-DESC-asyncpg_engine]
   '''
   SELECT color__fruits.sweetness,
          color__fruits.id,
@@ -1227,7 +1211,7 @@
       ON TRUE
   '''
 # ---
-# name: test_relation_order_by[session-tracked-DESC-async-psycopg_async_engine]
+# name: test_relation_order_by[session-tracked-async-DESC-psycopg_async_engine]
   '''
   SELECT color__fruits.sweetness,
          color__fruits.id,
@@ -1243,7 +1227,23 @@
       ON TRUE
   '''
 # ---
-# name: test_relation_order_by[session-tracked-DESC-sync-psycopg_engine]
+# name: test_relation_order_by[session-tracked-sync-ASC-psycopg_engine]
+  '''
+  SELECT color__fruits.sweetness,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.sweetness AS sweetness,
+                 fruit_1.id AS id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC
+         ) AS color__fruits
+      ON TRUE
+  '''
+# ---
+# name: test_relation_order_by[session-tracked-sync-DESC-psycopg_engine]
   '''
   SELECT color__fruits.sweetness,
          color__fruits.id,

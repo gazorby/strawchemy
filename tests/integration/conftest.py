@@ -10,11 +10,12 @@ from .fixtures import (
     async_session,
     asyncpg_engine,
     before_create_all_statements,
-    database_service,
+    dialect,
     engine,
     fx_metadata,
     no_session_query,
     postgis_service,
+    postgres_database_service,
     psycopg_async_engine,
     psycopg_engine,
     query_tracker,
@@ -35,6 +36,7 @@ from .fixtures import (
     session,
     sqlite_engine,
     sync_mutation,
+    sync_query,
 )
 
 __all__ = (
@@ -47,11 +49,12 @@ __all__ = (
     "async_session",
     "asyncpg_engine",
     "before_create_all_statements",
-    "database_service",
+    "dialect",
     "engine",
     "fx_metadata",
     "no_session_query",
     "postgis_service",
+    "postgres_database_service",
     "psycopg_async_engine",
     "psycopg_engine",
     "query_tracker",
@@ -72,4 +75,5 @@ __all__ = (
     "session",
     "sqlite_engine",
     "sync_mutation",
+    "sync_query",
 )

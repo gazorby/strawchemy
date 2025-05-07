@@ -41,7 +41,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_max_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-async-asyncpg_engine]
+# name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncpg_engine]
   '''
   SELECT color.id,
          aggregation_0."max_fruits__max_best_time_to_pick" AS max_fruits__max_best_time_to_pick
@@ -55,7 +55,7 @@
    WHERE color.id = $1::UUID
   '''
 # ---
-# name: test_max_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-async-psycopg_async_engine]
+# name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-psycopg_async_engine]
   '''
   SELECT color.id,
          aggregation_0."max_fruits__max_best_time_to_pick" AS max_fruits__max_best_time_to_pick
@@ -69,7 +69,147 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_max_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-sync-psycopg_engine]
+# name: test_max_aggregation[session-tracked-async-createdAt-created_at-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_created_at" AS max_fruits__max_created_at
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.created_at) AS max_fruits__max_created_at
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-createdAt-created_at-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_created_at" AS max_fruits__max_created_at
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.created_at) AS max_fruits__max_created_at
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-name-name-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_name" AS max_fruits__max_name
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-name-name-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_name" AS max_fruits__max_name
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-rarity-rarity-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_rarity" AS max_fruits__max_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.rarity) AS max_fruits__max_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-rarity-rarity-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_rarity" AS max_fruits__max_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.rarity) AS max_fruits__max_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-sweetness-sweetness-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_sweetness" AS max_fruits__max_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.sweetness) AS max_fruits__max_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-sweetness-sweetness-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_sweetness" AS max_fruits__max_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.sweetness) AS max_fruits__max_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-waterPercent-water_percent-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_water_percent" AS max_fruits__max_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-waterPercent-water_percent-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."max_fruits__max_water_percent" AS max_fruits__max_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-sync-bestTimeToPick-best_time_to_pick-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."max_fruits__max_best_time_to_pick" AS max_fruits__max_best_time_to_pick
@@ -83,21 +223,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_max_aggregation[session-tracked-createdAt-created_at-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."max_fruits__max_created_at" AS max_fruits__max_created_at
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.created_at) AS max_fruits__max_created_at
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_max_aggregation[session-tracked-createdAt-created_at-async-psycopg_async_engine]
+# name: test_max_aggregation[session-tracked-sync-createdAt-created_at-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."max_fruits__max_created_at" AS max_fruits__max_created_at
@@ -111,35 +237,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_max_aggregation[session-tracked-createdAt-created_at-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."max_fruits__max_created_at" AS max_fruits__max_created_at
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.created_at) AS max_fruits__max_created_at
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_max_aggregation[session-tracked-name-name-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."max_fruits__max_name" AS max_fruits__max_name
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.name) AS max_fruits__max_name
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_max_aggregation[session-tracked-name-name-async-psycopg_async_engine]
+# name: test_max_aggregation[session-tracked-sync-name-name-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."max_fruits__max_name" AS max_fruits__max_name
@@ -153,35 +251,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_max_aggregation[session-tracked-name-name-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."max_fruits__max_name" AS max_fruits__max_name
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.name) AS max_fruits__max_name
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_max_aggregation[session-tracked-rarity-rarity-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."max_fruits__max_rarity" AS max_fruits__max_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.rarity) AS max_fruits__max_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_max_aggregation[session-tracked-rarity-rarity-async-psycopg_async_engine]
+# name: test_max_aggregation[session-tracked-sync-rarity-rarity-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."max_fruits__max_rarity" AS max_fruits__max_rarity
@@ -195,35 +265,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_max_aggregation[session-tracked-rarity-rarity-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."max_fruits__max_rarity" AS max_fruits__max_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.rarity) AS max_fruits__max_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_max_aggregation[session-tracked-sweetness-sweetness-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."max_fruits__max_sweetness" AS max_fruits__max_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.sweetness) AS max_fruits__max_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_max_aggregation[session-tracked-sweetness-sweetness-async-psycopg_async_engine]
+# name: test_max_aggregation[session-tracked-sync-sweetness-sweetness-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."max_fruits__max_sweetness" AS max_fruits__max_sweetness
@@ -237,35 +279,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sweetness-sweetness-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."max_fruits__max_sweetness" AS max_fruits__max_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.sweetness) AS max_fruits__max_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_max_aggregation[session-tracked-waterPercent-water_percent-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."max_fruits__max_water_percent" AS max_fruits__max_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_max_aggregation[session-tracked-waterPercent-water_percent-async-psycopg_async_engine]
+# name: test_max_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."max_fruits__max_water_percent" AS max_fruits__max_water_percent
@@ -279,21 +293,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_max_aggregation[session-tracked-waterPercent-water_percent-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."max_fruits__max_water_percent" AS max_fruits__max_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_min_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-async-asyncpg_engine]
+# name: test_min_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncpg_engine]
   '''
   SELECT color.id,
          aggregation_0."min_fruits__min_best_time_to_pick" AS min_fruits__min_best_time_to_pick
@@ -307,7 +307,7 @@
    WHERE color.id = $1::UUID
   '''
 # ---
-# name: test_min_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-async-psycopg_async_engine]
+# name: test_min_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-psycopg_async_engine]
   '''
   SELECT color.id,
          aggregation_0."min_fruits__min_best_time_to_pick" AS min_fruits__min_best_time_to_pick
@@ -321,7 +321,147 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_min_aggregation[session-tracked-bestTimeToPick-best_time_to_pick-sync-psycopg_engine]
+# name: test_min_aggregation[session-tracked-async-createdAt-created_at-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_created_at" AS min_fruits__min_created_at
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.created_at) AS min_fruits__min_created_at
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-createdAt-created_at-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_created_at" AS min_fruits__min_created_at
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.created_at) AS min_fruits__min_created_at
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-name-name-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_name" AS min_fruits__min_name
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-name-name-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_name" AS min_fruits__min_name
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-rarity-rarity-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_rarity" AS min_fruits__min_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.rarity) AS min_fruits__min_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-rarity-rarity-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_rarity" AS min_fruits__min_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.rarity) AS min_fruits__min_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-sweetness-sweetness-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_sweetness" AS min_fruits__min_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.sweetness) AS min_fruits__min_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-sweetness-sweetness-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_sweetness" AS min_fruits__min_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.sweetness) AS min_fruits__min_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-waterPercent-water_percent-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_water_percent" AS min_fruits__min_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-waterPercent-water_percent-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."min_fruits__min_water_percent" AS min_fruits__min_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-sync-bestTimeToPick-best_time_to_pick-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."min_fruits__min_best_time_to_pick" AS min_fruits__min_best_time_to_pick
@@ -335,21 +475,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_min_aggregation[session-tracked-createdAt-created_at-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."min_fruits__min_created_at" AS min_fruits__min_created_at
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.created_at) AS min_fruits__min_created_at
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_min_aggregation[session-tracked-createdAt-created_at-async-psycopg_async_engine]
+# name: test_min_aggregation[session-tracked-sync-createdAt-created_at-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."min_fruits__min_created_at" AS min_fruits__min_created_at
@@ -363,35 +489,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_min_aggregation[session-tracked-createdAt-created_at-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."min_fruits__min_created_at" AS min_fruits__min_created_at
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.created_at) AS min_fruits__min_created_at
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_min_aggregation[session-tracked-name-name-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."min_fruits__min_name" AS min_fruits__min_name
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.name) AS min_fruits__min_name
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_min_aggregation[session-tracked-name-name-async-psycopg_async_engine]
+# name: test_min_aggregation[session-tracked-sync-name-name-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."min_fruits__min_name" AS min_fruits__min_name
@@ -405,35 +503,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_min_aggregation[session-tracked-name-name-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."min_fruits__min_name" AS min_fruits__min_name
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.name) AS min_fruits__min_name
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_min_aggregation[session-tracked-rarity-rarity-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."min_fruits__min_rarity" AS min_fruits__min_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.rarity) AS min_fruits__min_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_min_aggregation[session-tracked-rarity-rarity-async-psycopg_async_engine]
+# name: test_min_aggregation[session-tracked-sync-rarity-rarity-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."min_fruits__min_rarity" AS min_fruits__min_rarity
@@ -447,35 +517,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_min_aggregation[session-tracked-rarity-rarity-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."min_fruits__min_rarity" AS min_fruits__min_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.rarity) AS min_fruits__min_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_min_aggregation[session-tracked-sweetness-sweetness-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."min_fruits__min_sweetness" AS min_fruits__min_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.sweetness) AS min_fruits__min_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_min_aggregation[session-tracked-sweetness-sweetness-async-psycopg_async_engine]
+# name: test_min_aggregation[session-tracked-sync-sweetness-sweetness-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."min_fruits__min_sweetness" AS min_fruits__min_sweetness
@@ -489,35 +531,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sweetness-sweetness-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."min_fruits__min_sweetness" AS min_fruits__min_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.sweetness) AS min_fruits__min_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_min_aggregation[session-tracked-waterPercent-water_percent-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."min_fruits__min_water_percent" AS min_fruits__min_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_min_aggregation[session-tracked-waterPercent-water_percent-async-psycopg_async_engine]
+# name: test_min_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."min_fruits__min_water_percent" AS min_fruits__min_water_percent
@@ -531,21 +545,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_min_aggregation[session-tracked-waterPercent-water_percent-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."min_fruits__min_water_percent" AS min_fruits__min_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-avg-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-no-pagination-asyncpg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -553,7 +553,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-avg-no-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-no-pagination-psycopg_async_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -561,15 +561,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-avg-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-avg-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-pagination-asyncpg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -585,7 +577,7 @@
    LIMIT $3::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-avg-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-pagination-psycopg_async_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -601,7 +593,975 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-avg-pagination-sync-psycopg_engine]
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddev-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev(fruit.rarity) OVER () AS stddev_fruits__stddev_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddev-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev(fruit.rarity) OVER () AS stddev_fruits__stddev_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddev-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev(fruit.rarity) OVER () AS stddev_fruits__stddev_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddev-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev(fruit.rarity) OVER () AS stddev_fruits__stddev_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevPop-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevPop-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevPop-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevPop-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevSamp-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevSamp-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevSamp-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevSamp-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-varPop-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-varPop-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-varPop-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-varPop-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-varSamp-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-varSamp-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-varSamp-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-varSamp-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-variance-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         variance(fruit.rarity) OVER () AS variance_fruits__variance_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-variance-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         variance(fruit.rarity) OVER () AS variance_fruits__variance_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-variance-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         variance(fruit.rarity) OVER () AS variance_fruits__variance_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-variance-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         variance(fruit.rarity) OVER () AS variance_fruits__variance_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddev-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev(fruit.sweetness) OVER () AS stddev_fruits__stddev_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddev-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev(fruit.sweetness) OVER () AS stddev_fruits__stddev_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddev-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev(fruit.sweetness) OVER () AS stddev_fruits__stddev_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddev-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev(fruit.sweetness) OVER () AS stddev_fruits__stddev_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varPop-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varPop-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varPop-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varPop-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varSamp-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varSamp-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varSamp-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varSamp-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-variance-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         variance(fruit.sweetness) OVER () AS variance_fruits__variance_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-variance-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         variance(fruit.sweetness) OVER () AS variance_fruits__variance_sweetness
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-variance-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         variance(fruit.sweetness) OVER () AS variance_fruits__variance_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-variance-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         variance(fruit.sweetness) OVER () AS variance_fruits__variance_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddev-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev(fruit.water_percent) OVER () AS stddev_fruits__stddev_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddev-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev(fruit.water_percent) OVER () AS stddev_fruits__stddev_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddev-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev(fruit.water_percent) OVER () AS stddev_fruits__stddev_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddev-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev(fruit.water_percent) OVER () AS stddev_fruits__stddev_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varPop-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varPop-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varPop-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varPop-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-variance-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         variance(fruit.water_percent) OVER () AS variance_fruits__variance_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-variance-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         variance(fruit.water_percent) OVER () AS variance_fruits__variance_water_percent
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-variance-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         variance(fruit.water_percent) OVER () AS variance_fruits__variance_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-variance-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         variance(fruit.water_percent) OVER () AS variance_fruits__variance_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-avg-no-pagination-psycopg_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
+    FROM fruit AS fruit
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-avg-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -617,7 +1577,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddev-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-stddev-no-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -625,39 +1585,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddev-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev(fruit.rarity) OVER () AS stddev_fruits__stddev_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddev-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev(fruit.rarity) OVER () AS stddev_fruits__stddev_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddev-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev(fruit.rarity) OVER () AS stddev_fruits__stddev_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddev-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-stddev-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -673,23 +1601,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddev-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev(fruit.rarity) OVER () AS stddev_fruits__stddev_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevPop-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-stddevPop-no-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -697,39 +1609,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevPop-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevPop-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevPop-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevPop-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-stddevPop-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -745,23 +1625,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevPop-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevSamp-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-stddevSamp-no-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -769,39 +1633,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevSamp-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevSamp-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevSamp-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevSamp-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-stddevSamp-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -817,23 +1649,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-stddevSamp-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varPop-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-varPop-no-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -841,39 +1657,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varPop-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varPop-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varPop-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varPop-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-varPop-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -889,23 +1673,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varPop-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varSamp-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-varSamp-no-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -913,39 +1681,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varSamp-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varSamp-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varSamp-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varSamp-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-varSamp-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -961,23 +1697,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-varSamp-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-variance-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-variance-no-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -985,39 +1705,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-variance-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         variance(fruit.rarity) OVER () AS variance_fruits__variance_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-variance-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         variance(fruit.rarity) OVER () AS variance_fruits__variance_rarity
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-variance-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         variance(fruit.rarity) OVER () AS variance_fruits__variance_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-variance-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-variance-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
          fruit.id,
@@ -1033,23 +1721,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-rarity-rarity-variance-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.rarity,
-         fruit.id,
-         variance(fruit.rarity) OVER () AS variance_fruits__variance_rarity
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.rarity AS rarity,
-                 fruit.rarity AS rarity__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-avg-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-avg-no-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1057,39 +1729,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-avg-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-avg-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-avg-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-avg-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-avg-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1105,23 +1745,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-avg-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddev-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-stddev-no-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1129,39 +1753,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddev-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev(fruit.sweetness) OVER () AS stddev_fruits__stddev_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddev-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev(fruit.sweetness) OVER () AS stddev_fruits__stddev_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddev-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev(fruit.sweetness) OVER () AS stddev_fruits__stddev_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddev-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-stddev-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1177,23 +1769,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddev-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev(fruit.sweetness) OVER () AS stddev_fruits__stddev_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevPop-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-stddevPop-no-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1201,39 +1777,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevPop-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevPop-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevPop-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevPop-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-stddevPop-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1249,23 +1793,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevPop-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevSamp-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-stddevSamp-no-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1273,39 +1801,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevSamp-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevSamp-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevSamp-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevSamp-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-stddevSamp-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1321,23 +1817,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-stddevSamp-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varPop-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-varPop-no-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1345,39 +1825,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varPop-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varPop-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varPop-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varPop-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-varPop-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1393,23 +1841,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varPop-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varSamp-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-varSamp-no-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1417,39 +1849,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varSamp-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varSamp-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varSamp-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varSamp-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-varSamp-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1465,23 +1865,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-varSamp-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-variance-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-variance-no-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1489,39 +1873,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-variance-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         variance(fruit.sweetness) OVER () AS variance_fruits__variance_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-variance-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         variance(fruit.sweetness) OVER () AS variance_fruits__variance_sweetness
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-variance-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         variance(fruit.sweetness) OVER () AS variance_fruits__variance_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-variance-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-variance-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id,
@@ -1537,23 +1889,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-sweetness-sweetness-variance-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.sweetness,
-         fruit.id,
-         variance(fruit.sweetness) OVER () AS variance_fruits__variance_sweetness
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-avg-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-avg-no-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1561,39 +1897,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-avg-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-avg-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-avg-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-avg-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-avg-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1609,23 +1913,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-avg-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddev-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-stddev-no-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1633,39 +1921,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddev-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev(fruit.water_percent) OVER () AS stddev_fruits__stddev_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddev-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev(fruit.water_percent) OVER () AS stddev_fruits__stddev_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddev-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev(fruit.water_percent) OVER () AS stddev_fruits__stddev_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddev-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-stddev-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1681,23 +1937,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddev-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev(fruit.water_percent) OVER () AS stddev_fruits__stddev_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevPop-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-stddevPop-no-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1705,39 +1945,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevPop-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevPop-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevPop-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevPop-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-stddevPop-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1753,23 +1961,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevPop-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevSamp-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-stddevSamp-no-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1777,39 +1969,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevSamp-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevSamp-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevSamp-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevSamp-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-stddevSamp-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1825,23 +1985,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-stddevSamp-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varPop-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-varPop-no-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1849,39 +1993,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varPop-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varPop-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varPop-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varPop-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-varPop-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1897,23 +2009,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varPop-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varSamp-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-varSamp-no-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1921,39 +2017,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varSamp-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varSamp-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varSamp-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varSamp-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-varSamp-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1969,23 +2033,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-varSamp-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-variance-no-pagination-async-asyncpg_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-variance-no-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -1993,39 +2041,7 @@
     FROM fruit AS fruit
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-variance-no-pagination-async-psycopg_async_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         variance(fruit.water_percent) OVER () AS variance_fruits__variance_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-variance-no-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         variance(fruit.water_percent) OVER () AS variance_fruits__variance_water_percent
-    FROM fruit AS fruit
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-variance-pagination-async-asyncpg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         variance(fruit.water_percent) OVER () AS variance_fruits__variance_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   LIMIT $3::INTEGER
-  '''
-# ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-variance-pagination-async-psycopg_async_engine]
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-variance-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
          fruit.id,
@@ -2041,23 +2057,7 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
-# name: test_root_aggregation[session-tracked-waterPercent-water_percent-variance-pagination-sync-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id,
-         variance(fruit.water_percent) OVER () AS variance_fruits__variance_water_percent
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
-            FROM fruit AS fruit
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   LIMIT %(param_3)s::INTEGER
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-avg-async-asyncpg_engine]
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-avg-asyncpg_engine]
   '''
   SELECT color.id,
          aggregation_0."avg_fruits__avg_rarity" AS avg_fruits__avg_rarity
@@ -2071,7 +2071,7 @@
    WHERE color.id = $1::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-avg-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-avg-psycopg_async_engine]
   '''
   SELECT color.id,
          aggregation_0."avg_fruits__avg_rarity" AS avg_fruits__avg_rarity
@@ -2085,7 +2085,567 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-avg-sync-psycopg_engine]
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddev-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_fruits__stddev_rarity" AS stddev_fruits__stddev_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev(fruit_1.rarity) AS stddev_fruits__stddev_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddev-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_fruits__stddev_rarity" AS stddev_fruits__stddev_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev(fruit_1.rarity) AS stddev_fruits__stddev_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddevPop-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_pop_fruits__stddev_pop_rarity" AS stddev_pop_fruits__stddev_pop_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_pop(fruit_1.rarity) AS stddev_pop_fruits__stddev_pop_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddevPop-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_pop_fruits__stddev_pop_rarity" AS stddev_pop_fruits__stddev_pop_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_pop(fruit_1.rarity) AS stddev_pop_fruits__stddev_pop_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddevSamp-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_samp_fruits__stddev_samp_rarity" AS stddev_samp_fruits__stddev_samp_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_samp(fruit_1.rarity) AS stddev_samp_fruits__stddev_samp_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddevSamp-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_samp_fruits__stddev_samp_rarity" AS stddev_samp_fruits__stddev_samp_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_samp(fruit_1.rarity) AS stddev_samp_fruits__stddev_samp_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-varPop-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_pop_fruits__var_pop_rarity" AS var_pop_fruits__var_pop_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_pop(fruit_1.rarity) AS var_pop_fruits__var_pop_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-varPop-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_pop_fruits__var_pop_rarity" AS var_pop_fruits__var_pop_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_pop(fruit_1.rarity) AS var_pop_fruits__var_pop_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-varSamp-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_samp_fruits__var_samp_rarity" AS var_samp_fruits__var_samp_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_samp(fruit_1.rarity) AS var_samp_fruits__var_samp_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-varSamp-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_samp_fruits__var_samp_rarity" AS var_samp_fruits__var_samp_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_samp(fruit_1.rarity) AS var_samp_fruits__var_samp_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-variance-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."variance_fruits__variance_rarity" AS variance_fruits__variance_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT variance(fruit_1.rarity) AS variance_fruits__variance_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-variance-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."variance_fruits__variance_rarity" AS variance_fruits__variance_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT variance(fruit_1.rarity) AS variance_fruits__variance_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-avg-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."avg_fruits__avg_sweetness" AS avg_fruits__avg_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-avg-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."avg_fruits__avg_sweetness" AS avg_fruits__avg_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddev-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_fruits__stddev_sweetness" AS stddev_fruits__stddev_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev(fruit_1.sweetness) AS stddev_fruits__stddev_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddev-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_fruits__stddev_sweetness" AS stddev_fruits__stddev_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev(fruit_1.sweetness) AS stddev_fruits__stddev_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_pop_fruits__stddev_pop_sweetness" AS stddev_pop_fruits__stddev_pop_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_pop(fruit_1.sweetness) AS stddev_pop_fruits__stddev_pop_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_pop_fruits__stddev_pop_sweetness" AS stddev_pop_fruits__stddev_pop_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_pop(fruit_1.sweetness) AS stddev_pop_fruits__stddev_pop_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_samp_fruits__stddev_samp_sweetness" AS stddev_samp_fruits__stddev_samp_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_samp(fruit_1.sweetness) AS stddev_samp_fruits__stddev_samp_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_samp_fruits__stddev_samp_sweetness" AS stddev_samp_fruits__stddev_samp_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_samp(fruit_1.sweetness) AS stddev_samp_fruits__stddev_samp_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-varPop-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_pop_fruits__var_pop_sweetness" AS var_pop_fruits__var_pop_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_pop(fruit_1.sweetness) AS var_pop_fruits__var_pop_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-varPop-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_pop_fruits__var_pop_sweetness" AS var_pop_fruits__var_pop_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_pop(fruit_1.sweetness) AS var_pop_fruits__var_pop_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-varSamp-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_samp_fruits__var_samp_sweetness" AS var_samp_fruits__var_samp_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_samp(fruit_1.sweetness) AS var_samp_fruits__var_samp_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-varSamp-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_samp_fruits__var_samp_sweetness" AS var_samp_fruits__var_samp_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_samp(fruit_1.sweetness) AS var_samp_fruits__var_samp_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-variance-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."variance_fruits__variance_sweetness" AS variance_fruits__variance_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT variance(fruit_1.sweetness) AS variance_fruits__variance_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-variance-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."variance_fruits__variance_sweetness" AS variance_fruits__variance_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT variance(fruit_1.sweetness) AS variance_fruits__variance_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-avg-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."avg_fruits__avg_water_percent" AS avg_fruits__avg_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-avg-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."avg_fruits__avg_water_percent" AS avg_fruits__avg_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddev-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_fruits__stddev_water_percent" AS stddev_fruits__stddev_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddev-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_fruits__stddev_water_percent" AS stddev_fruits__stddev_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" AS stddev_pop_fruits__stddev_pop_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" AS stddev_pop_fruits__stddev_pop_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" AS stddev_samp_fruits__stddev_samp_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" AS stddev_samp_fruits__stddev_samp_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-varPop-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_pop_fruits__var_pop_water_percent" AS var_pop_fruits__var_pop_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-varPop-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_pop_fruits__var_pop_water_percent" AS var_pop_fruits__var_pop_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_samp_fruits__var_samp_water_percent" AS var_samp_fruits__var_samp_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."var_samp_fruits__var_samp_water_percent" AS var_samp_fruits__var_samp_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-variance-asyncpg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."variance_fruits__variance_water_percent" AS variance_fruits__variance_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = $1::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-variance-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."variance_fruits__variance_water_percent" AS variance_fruits__variance_water_percent
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-avg-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."avg_fruits__avg_rarity" AS avg_fruits__avg_rarity
@@ -2099,21 +2659,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-stddev-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_fruits__stddev_rarity" AS stddev_fruits__stddev_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev(fruit_1.rarity) AS stddev_fruits__stddev_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-stddev-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-stddev-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."stddev_fruits__stddev_rarity" AS stddev_fruits__stddev_rarity
@@ -2127,35 +2673,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-stddev-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_fruits__stddev_rarity" AS stddev_fruits__stddev_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev(fruit_1.rarity) AS stddev_fruits__stddev_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-stddevPop-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_pop_fruits__stddev_pop_rarity" AS stddev_pop_fruits__stddev_pop_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_pop(fruit_1.rarity) AS stddev_pop_fruits__stddev_pop_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-stddevPop-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-stddevPop-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."stddev_pop_fruits__stddev_pop_rarity" AS stddev_pop_fruits__stddev_pop_rarity
@@ -2169,35 +2687,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-stddevPop-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_pop_fruits__stddev_pop_rarity" AS stddev_pop_fruits__stddev_pop_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_pop(fruit_1.rarity) AS stddev_pop_fruits__stddev_pop_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-stddevSamp-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_samp_fruits__stddev_samp_rarity" AS stddev_samp_fruits__stddev_samp_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_samp(fruit_1.rarity) AS stddev_samp_fruits__stddev_samp_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-stddevSamp-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-stddevSamp-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."stddev_samp_fruits__stddev_samp_rarity" AS stddev_samp_fruits__stddev_samp_rarity
@@ -2211,35 +2701,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-stddevSamp-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_samp_fruits__stddev_samp_rarity" AS stddev_samp_fruits__stddev_samp_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_samp(fruit_1.rarity) AS stddev_samp_fruits__stddev_samp_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-varPop-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_pop_fruits__var_pop_rarity" AS var_pop_fruits__var_pop_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_pop(fruit_1.rarity) AS var_pop_fruits__var_pop_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-varPop-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-varPop-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."var_pop_fruits__var_pop_rarity" AS var_pop_fruits__var_pop_rarity
@@ -2253,35 +2715,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-varPop-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_pop_fruits__var_pop_rarity" AS var_pop_fruits__var_pop_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_pop(fruit_1.rarity) AS var_pop_fruits__var_pop_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-varSamp-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_samp_fruits__var_samp_rarity" AS var_samp_fruits__var_samp_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_samp(fruit_1.rarity) AS var_samp_fruits__var_samp_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-varSamp-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-varSamp-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."var_samp_fruits__var_samp_rarity" AS var_samp_fruits__var_samp_rarity
@@ -2295,35 +2729,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-varSamp-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_samp_fruits__var_samp_rarity" AS var_samp_fruits__var_samp_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_samp(fruit_1.rarity) AS var_samp_fruits__var_samp_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-variance-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."variance_fruits__variance_rarity" AS variance_fruits__variance_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT variance(fruit_1.rarity) AS variance_fruits__variance_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-variance-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-variance-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."variance_fruits__variance_rarity" AS variance_fruits__variance_rarity
@@ -2337,35 +2743,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-rarity-rarity-variance-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."variance_fruits__variance_rarity" AS variance_fruits__variance_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT variance(fruit_1.rarity) AS variance_fruits__variance_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-avg-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."avg_fruits__avg_sweetness" AS avg_fruits__avg_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-avg-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-avg-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."avg_fruits__avg_sweetness" AS avg_fruits__avg_sweetness
@@ -2379,35 +2757,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-avg-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."avg_fruits__avg_sweetness" AS avg_fruits__avg_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-stddev-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_fruits__stddev_sweetness" AS stddev_fruits__stddev_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev(fruit_1.sweetness) AS stddev_fruits__stddev_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-stddev-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-stddev-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."stddev_fruits__stddev_sweetness" AS stddev_fruits__stddev_sweetness
@@ -2421,35 +2771,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-stddev-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_fruits__stddev_sweetness" AS stddev_fruits__stddev_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev(fruit_1.sweetness) AS stddev_fruits__stddev_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-stddevPop-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_pop_fruits__stddev_pop_sweetness" AS stddev_pop_fruits__stddev_pop_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_pop(fruit_1.sweetness) AS stddev_pop_fruits__stddev_pop_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-stddevPop-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-stddevPop-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."stddev_pop_fruits__stddev_pop_sweetness" AS stddev_pop_fruits__stddev_pop_sweetness
@@ -2463,35 +2785,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-stddevPop-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_pop_fruits__stddev_pop_sweetness" AS stddev_pop_fruits__stddev_pop_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_pop(fruit_1.sweetness) AS stddev_pop_fruits__stddev_pop_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-stddevSamp-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_samp_fruits__stddev_samp_sweetness" AS stddev_samp_fruits__stddev_samp_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_samp(fruit_1.sweetness) AS stddev_samp_fruits__stddev_samp_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-stddevSamp-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-stddevSamp-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."stddev_samp_fruits__stddev_samp_sweetness" AS stddev_samp_fruits__stddev_samp_sweetness
@@ -2505,35 +2799,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-stddevSamp-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_samp_fruits__stddev_samp_sweetness" AS stddev_samp_fruits__stddev_samp_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_samp(fruit_1.sweetness) AS stddev_samp_fruits__stddev_samp_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-varPop-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_pop_fruits__var_pop_sweetness" AS var_pop_fruits__var_pop_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_pop(fruit_1.sweetness) AS var_pop_fruits__var_pop_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-varPop-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-varPop-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."var_pop_fruits__var_pop_sweetness" AS var_pop_fruits__var_pop_sweetness
@@ -2547,35 +2813,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-varPop-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_pop_fruits__var_pop_sweetness" AS var_pop_fruits__var_pop_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_pop(fruit_1.sweetness) AS var_pop_fruits__var_pop_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-varSamp-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_samp_fruits__var_samp_sweetness" AS var_samp_fruits__var_samp_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_samp(fruit_1.sweetness) AS var_samp_fruits__var_samp_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-varSamp-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-varSamp-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."var_samp_fruits__var_samp_sweetness" AS var_samp_fruits__var_samp_sweetness
@@ -2589,35 +2827,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-varSamp-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_samp_fruits__var_samp_sweetness" AS var_samp_fruits__var_samp_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_samp(fruit_1.sweetness) AS var_samp_fruits__var_samp_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-variance-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."variance_fruits__variance_sweetness" AS variance_fruits__variance_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT variance(fruit_1.sweetness) AS variance_fruits__variance_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-variance-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-variance-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."variance_fruits__variance_sweetness" AS variance_fruits__variance_sweetness
@@ -2631,35 +2841,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-sweetness-sweetness-variance-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."variance_fruits__variance_sweetness" AS variance_fruits__variance_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT variance(fruit_1.sweetness) AS variance_fruits__variance_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-avg-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."avg_fruits__avg_water_percent" AS avg_fruits__avg_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-avg-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-avg-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."avg_fruits__avg_water_percent" AS avg_fruits__avg_water_percent
@@ -2673,35 +2855,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-avg-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."avg_fruits__avg_water_percent" AS avg_fruits__avg_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-stddev-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_fruits__stddev_water_percent" AS stddev_fruits__stddev_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-stddev-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-stddev-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."stddev_fruits__stddev_water_percent" AS stddev_fruits__stddev_water_percent
@@ -2715,35 +2869,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-stddev-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_fruits__stddev_water_percent" AS stddev_fruits__stddev_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev(fruit_1.water_percent) AS stddev_fruits__stddev_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-stddevPop-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" AS stddev_pop_fruits__stddev_pop_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-stddevPop-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-stddevPop-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" AS stddev_pop_fruits__stddev_pop_water_percent
@@ -2757,35 +2883,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-stddevPop-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_pop_fruits__stddev_pop_water_percent" AS stddev_pop_fruits__stddev_pop_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_pop(fruit_1.water_percent) AS stddev_pop_fruits__stddev_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-stddevSamp-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" AS stddev_samp_fruits__stddev_samp_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-stddevSamp-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-stddevSamp-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" AS stddev_samp_fruits__stddev_samp_water_percent
@@ -2799,35 +2897,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-stddevSamp-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."stddev_samp_fruits__stddev_samp_water_percent" AS stddev_samp_fruits__stddev_samp_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT stddev_samp(fruit_1.water_percent) AS stddev_samp_fruits__stddev_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-varPop-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_pop_fruits__var_pop_water_percent" AS var_pop_fruits__var_pop_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-varPop-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-varPop-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."var_pop_fruits__var_pop_water_percent" AS var_pop_fruits__var_pop_water_percent
@@ -2841,35 +2911,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-varPop-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_pop_fruits__var_pop_water_percent" AS var_pop_fruits__var_pop_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_pop(fruit_1.water_percent) AS var_pop_fruits__var_pop_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-varSamp-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_samp_fruits__var_samp_water_percent" AS var_samp_fruits__var_samp_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-varSamp-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-varSamp-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."var_samp_fruits__var_samp_water_percent" AS var_samp_fruits__var_samp_water_percent
@@ -2883,35 +2925,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-varSamp-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."var_samp_fruits__var_samp_water_percent" AS var_samp_fruits__var_samp_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT var_samp(fruit_1.water_percent) AS var_samp_fruits__var_samp_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-variance-async-asyncpg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."variance_fruits__variance_water_percent" AS variance_fruits__variance_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = $1::UUID
-  '''
-# ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-variance-async-psycopg_async_engine]
+# name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-variance-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."variance_fruits__variance_water_percent" AS variance_fruits__variance_water_percent
@@ -2925,21 +2939,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_statistical_aggregation[session-tracked-waterPercent-water_percent-variance-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."variance_fruits__variance_water_percent" AS variance_fruits__variance_water_percent
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT variance(fruit_1.water_percent) AS variance_fruits__variance_water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_sum_aggregation[session-tracked-rarity-rarity-async-asyncpg_engine]
+# name: test_sum_aggregation[session-tracked-async-rarity-rarity-asyncpg_engine]
   '''
   SELECT color.id,
          aggregation_0."sum_fruits__sum_rarity" AS sum_fruits__sum_rarity
@@ -2953,7 +2953,7 @@
    WHERE color.id = $1::UUID
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-rarity-rarity-async-psycopg_async_engine]
+# name: test_sum_aggregation[session-tracked-async-rarity-rarity-psycopg_async_engine]
   '''
   SELECT color.id,
          aggregation_0."sum_fruits__sum_rarity" AS sum_fruits__sum_rarity
@@ -2967,21 +2967,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-rarity-rarity-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."sum_fruits__sum_rarity" AS sum_fruits__sum_rarity
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_sum_aggregation[session-tracked-sweetness-sweetness-async-asyncpg_engine]
+# name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-asyncpg_engine]
   '''
   SELECT color.id,
          aggregation_0."sum_fruits__sum_sweetness" AS sum_fruits__sum_sweetness
@@ -2995,7 +2981,7 @@
    WHERE color.id = $1::UUID
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-sweetness-sweetness-async-psycopg_async_engine]
+# name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-psycopg_async_engine]
   '''
   SELECT color.id,
          aggregation_0."sum_fruits__sum_sweetness" AS sum_fruits__sum_sweetness
@@ -3009,21 +2995,7 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-sweetness-sweetness-sync-psycopg_engine]
-  '''
-  SELECT color.id,
-         aggregation_0."sum_fruits__sum_sweetness" AS sum_fruits__sum_sweetness
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS aggregation_0
-      ON TRUE
-   WHERE color.id = %(id_1)s::UUID
-  '''
-# ---
-# name: test_sum_aggregation[session-tracked-waterPercent-water_percent-async-asyncpg_engine]
+# name: test_sum_aggregation[session-tracked-async-waterPercent-water_percent-asyncpg_engine]
   '''
   SELECT color.id,
          aggregation_0."sum_fruits__sum_water_percent" AS sum_fruits__sum_water_percent
@@ -3037,7 +3009,7 @@
    WHERE color.id = $1::UUID
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-waterPercent-water_percent-async-psycopg_async_engine]
+# name: test_sum_aggregation[session-tracked-async-waterPercent-water_percent-psycopg_async_engine]
   '''
   SELECT color.id,
          aggregation_0."sum_fruits__sum_water_percent" AS sum_fruits__sum_water_percent
@@ -3051,7 +3023,35 @@
    WHERE color.id = %(id_1)s::UUID
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-waterPercent-water_percent-sync-psycopg_engine]
+# name: test_sum_aggregation[session-tracked-sync-rarity-rarity-psycopg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."sum_fruits__sum_rarity" AS sum_fruits__sum_rarity
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_sum_aggregation[session-tracked-sync-sweetness-sweetness-psycopg_engine]
+  '''
+  SELECT color.id,
+         aggregation_0."sum_fruits__sum_sweetness" AS sum_fruits__sum_sweetness
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS aggregation_0
+      ON TRUE
+   WHERE color.id = %(id_1)s::UUID
+  '''
+# ---
+# name: test_sum_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
   '''
   SELECT color.id,
          aggregation_0."sum_fruits__sum_water_percent" AS sum_fruits__sum_water_percent

@@ -3,23 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
-import strawberry
 from syrupy.assertion import SnapshotAssertion
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import (
-    ColorOrder,
-    ColorType,
-    FruitOrderBy,
-    FruitType,
-    UserOrderBy,
-    UserType,
-    strawchemy,
-)
 from .typing import RawRecordData
 from .utils import compute_aggregation
 
@@ -27,30 +16,6 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
 pytestmark = [pytest.mark.integration, pytest.mark.postgres]
-
-
-@strawberry.type
-class AsyncQuery:
-    users: list[UserType] = strawchemy.field(order_by=UserOrderBy, repository_type=StrawchemyAsyncRepository)
-    fruits: list[FruitType] = strawchemy.field(order_by=FruitOrderBy, repository_type=StrawchemyAsyncRepository)
-    colors: list[ColorType] = strawchemy.field(order_by=ColorOrder, repository_type=StrawchemyAsyncRepository)
-
-
-@strawberry.type
-class SyncQuery:
-    users: list[UserType] = strawchemy.field(order_by=UserOrderBy, repository_type=StrawchemySyncRepository)
-    fruits: list[FruitType] = strawchemy.field(order_by=FruitOrderBy, repository_type=StrawchemySyncRepository)
-    colors: list[ColorType] = strawchemy.field(order_by=ColorOrder, repository_type=StrawchemySyncRepository)
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
 
 
 @pytest.mark.parametrize("order_by", ["ASC", "DESC"])
