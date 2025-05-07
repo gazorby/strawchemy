@@ -6,7 +6,7 @@ import strawberry
 
 from .models import GeoModel
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 @strawchemy.type(GeoModel, include="all")

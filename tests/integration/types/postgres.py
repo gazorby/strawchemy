@@ -33,7 +33,7 @@ from tests.integration.models import (
     User,
 )
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 def _check_lower_case(value: str) -> str:

@@ -30,7 +30,7 @@ def test_patch_query_fixture(query: str, pytester: pytest.Pytester) -> None:
         f"""
         import pytest
         import strawberry
-        from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository
+        from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository, StrawchemyConfig
         from strawchemy.testing import MockContext
         from tests.unit.models import Fruit, SQLDataTypes
         from strawberry.scalars import JSON
@@ -41,7 +41,7 @@ def test_patch_query_fixture(query: str, pytester: pytest.Pytester) -> None:
         SCALAR_OVERRIDES: dict[object, Any] = {{dict[str, Any]: JSON, timedelta: Interval}}
         pytest_plugins = ["strawchemy.testing.pytest_plugin", "pytest_asyncio"]
 
-        strawchemy = Strawchemy()
+        strawchemy = Strawchemy("postgresql")
 
         @strawchemy.type(Fruit, include="all")
         class FruitType:
@@ -104,13 +104,13 @@ def test_computed_values(query: str, expected: str, pytester: pytest.Pytester) -
         f"""
         import pytest
         import strawberry
-        from strawchemy import Strawchemy
+        from strawchemy import Strawchemy, StrawchemyConfig
         from strawchemy.testing import MockContext
         from tests.unit.models import Fruit, Color
 
         pytest_plugins = ["strawchemy.testing.pytest_plugin"]
 
-        strawchemy = Strawchemy()
+        strawchemy = Strawchemy("postgresql")
 
         @strawchemy.aggregate(Fruit, include="all")
         class FruitAggregateType:
@@ -167,13 +167,13 @@ def test_custom_computed_values(query: str, expected: Any, pytester: pytest.Pyte
         from typing import Any
         import pytest
         import strawberry
-        from strawchemy import Strawchemy
+        from strawchemy import Strawchemy, StrawchemyConfig
         from strawchemy.testing import MockContext
         from tests.unit.models import Fruit, Color
 
         pytest_plugins = ["strawchemy.testing.pytest_plugin"]
 
-        strawchemy = Strawchemy()
+        strawchemy = Strawchemy("postgresql")
 
         @strawchemy.aggregate(Fruit, include="all")
         class FruitAggregateType:

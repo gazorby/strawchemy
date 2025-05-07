@@ -13,5 +13,5 @@ class DataclassProtocol(Protocol):
 
 
 AnyRepository: TypeAlias = "type[StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]]"
-SupportedDialect: TypeAlias = Literal["postgresql"]
+SupportedDialect: TypeAlias = Literal["postgresql", "mysql"]
 """Must match SQLAlchemy dialect."""

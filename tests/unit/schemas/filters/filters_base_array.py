@@ -14,7 +14,7 @@ class BaseArray(UUIDBase):
     array_str_col: Mapped[list[str]] = mapped_column(ARRAY(Text), default=list)
 
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 @strawchemy.type(BaseArray, include="all")

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from strawchemy.mapper import Strawchemy
+from strawchemy import Strawchemy
 
 import strawberry
 from tests.unit.models import GeoModel
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 @strawchemy.type(GeoModel, include="all")

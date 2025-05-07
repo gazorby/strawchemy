@@ -5,7 +5,7 @@ from strawchemy import Strawchemy, StrawchemyConfig
 import strawberry
 from tests.unit.models import Fruit
 
-strawchemy = Strawchemy(StrawchemyConfig(pagination=True))
+strawchemy = Strawchemy(StrawchemyConfig("postgresql", pagination=True))
 
 
 @strawchemy.type(Fruit, include="all")

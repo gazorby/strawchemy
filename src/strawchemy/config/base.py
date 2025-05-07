@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class StrawchemyConfig:
+    dialect: SupportedDialect
     session_getter: AnySessionGetter = default_session_getter
     """Function to retrieve SQLAlchemy session from strawberry `Info` object."""
     auto_snake_case: bool = True
@@ -34,7 +35,6 @@ class StrawchemyConfig:
     """Enable/disable pagination on list resolvers."""
     default_id_field_name: str = "id"
     """Name for primary key fields arguments on primary key resolvers."""
-    dialect: SupportedDialect = "postgresql"
 
     inspector: GraphQLInspectorProtocol[Any, Any] = field(init=False)
 
