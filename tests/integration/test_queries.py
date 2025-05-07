@@ -9,7 +9,7 @@ from strawberry.types import get_object_definition
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import maybe_async
 
-from .types_.postgres import UserType
+from .types.postgres import UserType
 from .typing import RawRecordData
 
 if TYPE_CHECKING:

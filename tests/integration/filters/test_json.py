@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import Insert, MetaData, insert
 from syrupy.assertion import SnapshotAssertion
 from tests.integration.models import JSONModel, json_metadata
-from tests.integration.types_ import postgres as postgres_types
+from tests.integration.types import postgres as postgres_types
 from tests.integration.utils import to_graphql_representation
 from tests.utils import maybe_async
 

@@ -37,8 +37,8 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, a
 from sqlalchemy.orm import Session, sessionmaker
 from strawberry.scalars import JSON
 from tests.fixtures import DefaultQuery
-from tests.integration.types_ import AnyAsyncQueryType, AnySyncQueryType
-from tests.integration.types_ import postgres as postgres_types
+from tests.integration.types import AnyAsyncQueryType, AnySyncQueryType
+from tests.integration.types import postgres as postgres_types
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 

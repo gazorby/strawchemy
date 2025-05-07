@@ -8,7 +8,7 @@ from sqlalchemy import Insert, MetaData, insert
 from syrupy.assertion import SnapshotAssertion
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import ArrayModel, array_metadata
-from tests.integration.types_ import postgres as postgres_types
+from tests.integration.types import postgres as postgres_types
 from tests.integration.typing import RawRecordData
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor

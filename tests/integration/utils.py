@@ -11,7 +11,7 @@ from uuid import UUID
 from pydantic import TypeAdapter
 
 from sqlalchemy import inspect
-from tests.integration.types_ import postgres as pg_types
+from tests.integration.types import postgres as pg_types
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

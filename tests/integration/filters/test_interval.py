@@ -9,7 +9,7 @@ from sqlalchemy import Insert, MetaData, insert
 from syrupy.assertion import SnapshotAssertion
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import IntervalModel, interval_metadata
-from tests.integration.types_ import postgres as postgres_types
+from tests.integration.types import postgres as postgres_types
 from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
