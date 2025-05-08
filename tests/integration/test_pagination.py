@@ -5,7 +5,7 @@ import pytest
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
+pytestmark = [pytest.mark.integration]
 
 
 async def test_pagination(any_query: AnyQueryExecutor) -> None:

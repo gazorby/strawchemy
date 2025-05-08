@@ -9,7 +9,7 @@ from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres, pytest.mark.mysql]
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.snapshot

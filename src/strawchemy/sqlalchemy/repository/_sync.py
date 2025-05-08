@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections import defaultdict, namedtuple
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias, TypeVar
 
-from sqlalchemy import Row, and_, delete, insert, inspect, update
+from sqlalchemy import ColumnElement, Row, and_, delete, insert, inspect, select, update
 from sqlalchemy.orm import RelationshipProperty
 from strawchemy.graphql.mutation import RelationType
 from strawchemy.sqlalchemy._executor import QueryResult, SyncQueryExecutor
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+    from sqlalchemy.orm.util import AliasedClass
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.input import Input, LevelInput
     from strawchemy.sqlalchemy.hook import QueryHook
@@ -31,6 +32,21 @@ _InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where"]
 
 
 class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, AnySyncSession]):
+    def _insert_many(self, model_type: type[DeclarativeBase], values: list[dict[str, Any]]) -> Sequence[Row[Any]]:
+        if self._dialect.insert_executemany_returning_sort_by_parameter_order:
+            results = self.session.execute(
+                insert(model_type).returning(*model_type.__mapper__.primary_key, sort_by_parameter_order=True),
+                values,
+            )
+            return results.all()
+        rows: Sequence[Row[Any]] = []
+        conn = self.session.connection()
+        for value in values:
+            cursor = conn.execute(insert(model_type).values(**value))
+            assert cursor.inserted_primary_key is not None
+            rows.append(cursor.inserted_primary_key)
+        return rows
+
     def _insert_nested(
         self, model_type: type[DeclarativeBase], values: list[dict[str, Any]], level: LevelInput
     ) -> None:
@@ -51,11 +67,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                 created and their relationships, used to update instances with
                 generated primary and foreign keys.
         """
-        results = self.session.execute(
-            insert(model_type).returning(*model_type.__mapper__.primary_key, sort_by_parameter_order=True),
-            values,
-        )
-        instance_ids = results.all()
+        instance_ids: Sequence[Row[Any]] = self._insert_many(model_type, values)
+
         pk_names = [pk.name for pk in model_type.__mapper__.primary_key]
 
         pk_index, fk_index = 0, 0
@@ -77,6 +90,52 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                 assert remote.key
                 setattr(relation_input.relation.parent, local.key, instance_ids[fk_index][pk_names.index(remote.key)])
             fk_index += 1
+
+    def _delete_where(
+        self,
+        alias: AliasedClass[Any],
+        where: list[ColumnElement[bool]] | None = None,
+        execution_options: dict[str, Any] | None = None,
+    ) -> Sequence[Row[Any]]:
+        alias_insp = inspect(alias)
+        model_pks = [getattr(alias, pk.key) for pk in alias_insp.mapper.primary_key]
+        if self._dialect.delete_returning:
+            statement = delete(alias_insp).returning(*model_pks)
+            if where:
+                statement = statement.where(*where)
+            result = self.session.execute(statement, execution_options=execution_options or {})
+            return result.all()
+        affected_statement, delete_statement = select(*model_pks), delete(alias_insp)
+        if where:
+            affected_statement, delete_statement = affected_statement.where(*where), delete_statement.where(*where)
+        affected_rows = (self.session.execute(affected_statement)).all()
+        conn = self.session.connection()
+        conn.execute(delete_statement, execution_options=execution_options or {})
+        return affected_rows
+
+    def _update_where(
+        self,
+        alias: AliasedClass[Any],
+        values: dict[str, Any],
+        where: list[ColumnElement[bool]] | None = None,
+        execution_options: dict[str, Any] | None = None,
+    ) -> Sequence[Row[Any]]:
+        alias_insp = inspect(alias)
+        model_pks = [getattr(alias, pk.key) for pk in alias_insp.mapper.primary_key]
+        if self._dialect.update_returning:
+            statement = update(alias_insp).values(**values).returning(*model_pks)
+            if where:
+                statement = statement.where(*where)
+            result = self.session.execute(statement, execution_options=execution_options or {})
+            return result.all()
+
+        affected_statement, update_statement = select(*model_pks), update(alias_insp).values(**values)
+        if where:
+            affected_statement, update_statement = affected_statement.where(*where), update_statement.where(*where)
+        affected_rows = (self.session.execute(affected_statement)).all()
+        conn = self.session.connection()
+        conn.execute(update_statement, execution_options=execution_options or {})
+        return affected_rows
 
     def _create_nested_to_one_relations(self, data: Input[DeclarativeT]) -> None:
         """Creates nested related objects for to-one relationships.
@@ -232,12 +291,9 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         data: Input[DeclarativeT],
         dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None,
     ) -> Sequence[_RowLike]:
-        model_pks = self.model.__mapper__.primary_key
         values = [self._to_dict(instance) for instance in data.instances]
         if mode == "insert":
-            statement = insert(self.model).returning(*model_pks, sort_by_parameter_order=True)
-            result = self.session.execute(statement, values)
-            return result.all()
+            return self._insert_many(self.model, values)
 
         pks = [column.key for column in self.model.__mapper__.primary_key]
         pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
@@ -247,12 +303,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             return [pk_tuple(*[instance[name] for name in pks]) for instance in values]
 
         transpiler = QueryTranspiler(self.model, self._dialect, statement=self.statement)
-        alias = inspect(transpiler.scope.root_alias)
-        statement = update(alias).values(**values[0]).returning(*model_pks)
-        if dto_filter:
-            statement = statement.where(*transpiler.filter_expressions(dto_filter))
-        result = self.session.execute(statement)
-        return result.all()
+        where_expressions = transpiler.filter_expressions(dto_filter) if dto_filter else None
+        return self._update_where(transpiler.scope.root_alias, values[0], where_expressions)
 
     def _mutate(
         self,
@@ -497,11 +549,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     ) -> QueryResult[DeclarativeT]:
         with self.session.begin_nested() as transaction:
             transpiler = QueryTranspiler(self.model, self._dialect, statement=self.statement)
-            alias = inspect(transpiler.scope.root_alias)
-            statement = delete(alias)
-            if dto_filter:
-                statement = statement.where(*transpiler.filter_expressions(dto_filter))
+            where_expressions = transpiler.filter_expressions(dto_filter) if dto_filter else None
             to_be_deleted = self.list(selection, dto_filter=dto_filter)
-            self.session.execute(statement, execution_options=execution_options or {})
+            affected_rows = self._delete_where(transpiler.scope.root_alias, where_expressions, execution_options)
             transaction.commit()
-        return to_be_deleted
+        return to_be_deleted.filter_in(**self._rows_to_filter_dict(affected_rows))

@@ -15,7 +15,7 @@ from .utils import compute_aggregation
 if TYPE_CHECKING:
     from decimal import Decimal
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.parametrize("order_by", ["ASC", "DESC"])
@@ -65,15 +65,13 @@ async def test_nulls(
 
 @pytest.mark.parametrize(
     "aggregation",
-    ["max", "min", "sum", "avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
+    ["max", "min", "sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
 )
 @pytest.mark.parametrize("order_by", ["ASC", "DESC"])
 @pytest.mark.snapshot
 async def test_order_by_aggregations(
     order_by: Literal["ASC", "DESC"],
-    aggregation: Literal[
-        "max", "min", "sum", "avg", "variance", "stddev", "varPop", "stddevPop", "varSamp", "stddevSamp"
-    ],
+    aggregation: Literal["max", "min", "sum", "avg", "varPop", "stddevPop", "varSamp", "stddevSamp"],
     any_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,

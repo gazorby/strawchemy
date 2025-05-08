@@ -66,13 +66,13 @@ if TYPE_CHECKING:
     from strawberry.types.base import StrawberryObjectDefinition, StrawberryType, WithStrawberryObjectDefinition
     from strawberry.types.fields.resolver import StrawberryResolver
     from strawchemy.dto.backend.pydantic import MappedPydanticDTO
-    from strawchemy.dto.base import ModelInspector
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.graphql.typing import AnyMappedDTO, MappedGraphQLDTO
     from strawchemy.sqlalchemy.typing import QueryHookCallable
     from strawchemy.strawberry.repository._base import GraphQLResult
     from strawchemy.typing import AnyRepository
 
+    from .inspector import _StrawberryModelInspector
     from .repository import StrawchemySyncRepository
     from .typing import (
         AnySessionGetter,
@@ -129,7 +129,7 @@ class StrawchemyField(StrawberryField):
     @override
     def __init__(
         self,
-        inspector: ModelInspector[Any, Any],
+        inspector: _StrawberryModelInspector[Any, Any],
         session_getter: AnySessionGetter,
         repository_type: AnyRepository,
         filter_type: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
@@ -331,7 +331,7 @@ class StrawchemyField(StrawberryField):
                         default=None,
                     )
                 )
-            if self.distinct_on:
+            if self.inspector.database_features.supports_distinct_on and self.distinct_on:
                 arguments.append(
                     StrawberryArgument(
                         DISTINCT_ON_KEY,

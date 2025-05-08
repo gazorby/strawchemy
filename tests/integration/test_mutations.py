@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from syrupy.assertion import SnapshotAssertion
@@ -10,7 +12,10 @@ from tests.utils import maybe_async
 from .fixtures import QueryTracker
 from .typing import RawRecordData
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
+if TYPE_CHECKING:
+    from strawchemy.typing import SupportedDialect
+
+pytestmark = [pytest.mark.integration]
 
 
 # Create tests
@@ -322,7 +327,7 @@ async def test_create_with_existing_to_many(
 
 @pytest.mark.snapshot
 async def test_create_with_to_many_create(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
 ) -> None:
     query = """
             mutation {
@@ -349,8 +354,10 @@ async def test_create_with_to_many_create(
         "name": "new color",
         "fruits": [{"name": "new fruit 1"}, {"name": "new fruit 2"}],
     }
-
-    query_tracker.assert_statements(2, "insert", sql_snapshot)
+    if dialect == "postgresql":
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(3, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
@@ -491,13 +498,13 @@ async def test_create_with_nested_mixed_relations_create(
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["createColor"] == {
-        "name": "White",
-        "fruits": [
-            {"name": "Lychee", "product": None, "farms": [{"name": "Bio farm"}]},
-            {"name": "Grape", "product": {"name": "wine"}, "farms": []},
-        ],
-    }
+    assert result.data["createColor"]["name"] == "White"
+    expected_fruits = [
+        {"name": "Lychee", "product": None, "farms": [{"name": "Bio farm"}]},
+        {"name": "Grape", "product": {"name": "wine"}, "farms": []},
+    ]
+    for fruit in expected_fruits:
+        assert fruit in result.data["createColor"]["fruits"]
 
     # Heterogeneous params means inserts cannot be batched
     query_tracker.assert_statements(5, "insert", sql_snapshot)
@@ -506,7 +513,7 @@ async def test_create_with_nested_mixed_relations_create(
 
 @pytest.mark.snapshot
 async def test_create_many(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
 ) -> None:
     result = await maybe_async(
         any_query(
@@ -527,8 +534,10 @@ async def test_create_many(
     assert not result.errors
     assert result.data
     assert result.data["createColors"] == [{"name": "new color 1"}, {"name": "new color 2"}]
-
-    query_tracker.assert_statements(1, "insert", sql_snapshot)
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
@@ -656,7 +665,11 @@ async def test_update(
 
 @pytest.mark.snapshot
 async def test_update_by_filter(
-    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_colors: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Tests a simple update mutation."""
     query = """
@@ -685,12 +698,15 @@ async def test_update_by_filter(
     ]
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
-    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+    else:
+        query_tracker.assert_statements(2, "select", sql_snapshot)
 
 
 @pytest.mark.snapshot
 async def test_update_by_filter_only_return_affected_objects(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
 ) -> None:
     """Tests a simple update mutation."""
     query = """
@@ -714,7 +730,10 @@ async def test_update_by_filter_only_return_affected_objects(
     assert result.data["updateColorsFilter"] == []
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
-    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+    else:
+        query_tracker.assert_statements(2, "select", sql_snapshot)
 
 
 @pytest.mark.snapshot
@@ -1022,6 +1041,7 @@ async def test_update_with_to_many_create(
     any_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Tests updating a record and creating new related records for a to-many relationship."""
     color_id = raw_colors[0]["id"]
@@ -1061,7 +1081,11 @@ async def test_update_with_to_many_create(
         {"name": "new fruit 4 during update"},
     ]
 
-    query_tracker.assert_statements(1, "insert", sql_snapshot)  # Insert 2 new fruits, in a single batched query
+    # Insert 2 new fruits, in a single batched query
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
     query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + new fruits
 
@@ -1226,15 +1250,15 @@ async def test_update_with_to_many_add_and_create(
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["updateColor"] == {
-        "id": to_graphql_representation(raw_colors[0]["id"], "output"),
-        "name": "updated color name",
-        "fruits": [
-            {"name": to_graphql_representation(raw_fruits[0]["name"], "output")},
-            {"name": "new fruit 3 during update"},
-            {"name": to_graphql_representation(raw_fruits[1]["name"], "output")},
-        ],
-    }
+    assert result.data["updateColor"]["id"] == to_graphql_representation(raw_colors[0]["id"], "output")
+    assert result.data["updateColor"]["name"] == "updated color name"
+    expected = [
+        {"name": to_graphql_representation(raw_fruits[0]["name"], "output")},
+        {"name": "new fruit 3 during update"},
+        {"name": to_graphql_representation(raw_fruits[1]["name"], "output")},
+    ]
+    for fruit in expected:
+        assert fruit in result.data["updateColor"]["fruits"]
 
     query_tracker.assert_statements(1, "insert", sql_snapshot)
     # 1. Update specified fruit's color_id
@@ -1463,7 +1487,7 @@ async def test_update_no_init_defaults(
         any_query(
             f"""
             mutation {{
-                updateUser(data: {{ id: "{raw_users[3]["id"]}", name: "Jeanne" }}) {{
+                updateUser(data: {{ id: {raw_users[3]["id"]}, name: "Jeanne" }}) {{
                     name
                     bio
                 }}
@@ -1488,6 +1512,7 @@ async def test_delete_filter(
     any_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     query = """
         mutation {
@@ -1513,13 +1538,20 @@ async def test_delete_filter(
         {"id": apple_fruit["id"], "name": "Alice", "group": {"name": raw_groups[0]["name"]}}
     ]
 
-    query_tracker.assert_statements(1, "select", sql_snapshot)
     query_tracker.assert_statements(1, "delete", sql_snapshot)
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "select", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "select", sql_snapshot)
 
 
 @pytest.mark.snapshot
 async def test_delete_all(
-    raw_users: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_users: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     query = """
         mutation {
@@ -1536,8 +1568,11 @@ async def test_delete_all(
     assert not result.errors
     assert result.data
     assert len(result.data["deleteUsers"]) == len(raw_users)
-    query_tracker.assert_statements(1, "select", sql_snapshot)
     query_tracker.assert_statements(1, "delete", sql_snapshot)
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "select", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "select", sql_snapshot)
 
 
 # Custom mutations

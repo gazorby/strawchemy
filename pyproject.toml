@@ -51,6 +51,7 @@ dev = [
 ]
 doc = ["git-cliff>=2.6.1"]
 lint = ["pyright[nodejs]", "ruff", "vulture"]
+mysql = ["asyncmy", "cryptography"]
 postgres = [
   "asyncpg>=0.29.0",
   "psycopg2-binary>=2.9.10",
@@ -58,13 +59,14 @@ postgres = [
 ]
 test = [
   { include-group = "postgres" },
+  { include-group = "mysql" },
   "nox[uv]",
   "pytest",
   "pytest-cov",
   "pytest-asyncio>=0.24",
   "pytest-pretty",
   "pytest-xdist",
-  "pytest-databases",
+  "pytest-databases[posgres,mysql]",
   "pytest-lazy-fixtures",
   "syrupy",
   "sqlparse",
@@ -281,8 +283,7 @@ markers = [
   "snapshot: snapshot-based tests using syrupy",
   "integration: SQLAlchemy integration tests",
   "geo: Geoalchemy2 integration tests",
-  "postgres: SQLAlchemy Postgres (any driver) Tests",
-  "mysql: MySQL (asyncmy) Tests",
+  "asyncmy: MySQL (asyncmy) Tests",
   "psycopg_async: SQLAlchemy Postgres (psycopg async) Tests",
   "psycopg_sync: SQLAlchemy Postgres (psycopg sync) Tests",
   "asyncpg: SQLAlchemy Postgres (asyncpg) Tests",

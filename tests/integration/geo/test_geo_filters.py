@@ -18,6 +18,7 @@ from .models import GeoModel, geo_metadata
 
 if TYPE_CHECKING:
     from pytest_databases.docker.postgres import PostgresService
+    from strawchemy.typing import SupportedDialect
 
     from syrupy.assertion import SnapshotAssertion
     from tests.integration.typing import RawRecordData
@@ -42,14 +43,14 @@ def before_create_all_statements() -> list[Executable]:
 
 
 @pytest.fixture
-def async_query(dialect: str) -> type[Any]:
+def async_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.AsyncGeoQuery
     pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture
-def sync_query(dialect: str) -> type[Any]:
+def sync_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.SyncGeoQuery
     pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")

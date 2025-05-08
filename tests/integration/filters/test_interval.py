@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -14,7 +14,9 @@ from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
+if TYPE_CHECKING:
+    from strawchemy.typing import SupportedDialect
+
 
 seconds_in_year = 60 * 60 * 24 * 365.25
 seconds_in_month = seconds_in_year / 12
@@ -32,14 +34,14 @@ def seed_insert_statements(raw_intervals: RawRecordData) -> list[Insert]:
 
 
 @pytest.fixture
-def async_query(dialect: str) -> type[Any]:
+def async_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.IntervalAsyncQuery
     pytest.skip(f"Interval tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture
-def sync_query(dialect: str) -> type[Any]:
+def sync_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.IntervalSyncQuery
     pytest.skip(f"Interval tests can't be run on this dialect: {dialect}")

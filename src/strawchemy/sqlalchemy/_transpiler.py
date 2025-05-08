@@ -22,7 +22,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generic, Self, cast, override
 
-from sqlalchemy import Dialect, Label, Select, and_, inspect, not_, null, or_, select, true
+from sqlalchemy import Dialect, Label, Select, and_, func, inspect, not_, null, or_, select, true
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapper,
@@ -78,7 +78,9 @@ class QueryTranspiler(Generic[DeclarativeT]):
         scope: QueryScope[DeclarativeT] | None = None,
         query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[Any]]] | None = None,
     ) -> None:
-        self._inspector = SQLAlchemyGraphQLInspector(cast("SupportedDialect", dialect.name), [model.registry])
+        supported_dialect: SupportedDialect = cast("SupportedDialect", dialect.name)
+        self._supports_lateral = supported_dialect == "postgresql"
+        self._inspector = SQLAlchemyGraphQLInspector(supported_dialect, [model.registry])
         self._sub_query_root_alias = aliased(class_mapper(model), name=model.__tablename__, flat=True)
         self._aggregation_name_prefix: str = "aggregation"
         self._aggregation_joins: dict[SQLAlchemyQueryNode, AggregationJoin] = {}
@@ -256,10 +258,10 @@ class QueryTranspiler(Generic[DeclarativeT]):
                 - The join object if a new join is needed, None otherwise.
                 - A list of boolean expressions for the filter.
         """
-        lateral_name = self.scope.key(self._aggregation_name_prefix)
-        function_node_inspect = self.scope.inspect(aggregation.field_node)
+        aggregation_name = self.scope.key(self._aggregation_name_prefix)
+        aggregation_node_inspect = self.scope.inspect(aggregation.field_node)
         aggregation_node = aggregation.field_node.first_aggregate_parent()
-        aggregated_alias: AliasedClass[Any] = aliased(function_node_inspect.mapper.class_)
+        aggregated_alias: AliasedClass[Any] = aliased(aggregation_node_inspect.mapper.class_)
         aggregated_alias_inspected = inspect(aggregated_alias)
         root_relation = self.scope.aliased_attribute(aggregation_node).of_type(aggregated_alias)
         bool_expressions: list[ColumnElement[bool]] = []
@@ -270,36 +272,44 @@ class QueryTranspiler(Generic[DeclarativeT]):
             return None, bool_expressions
 
         # If an existing lateral join exists, add the aggregation column to it
-        if join_info := self._aggregation_joins.get(aggregation_node):
-            function_node, function = function_node_inspect.filter_function(
-                join_info.subquery_alias, distinct=aggregation.distinct
+        if join := self._aggregation_joins.get(aggregation_node):
+            function_node, function = aggregation_node_inspect.filter_function(
+                join.subquery_alias, distinct=aggregation.distinct
             )
-            _, created = join_info.upsert_column_to_subquery(function)
-            function_column = self.scope.literal_column(join_info.name, self.scope.key(function_node))
+            _, created = join.upsert_column_to_subquery(function)
+            function_column = self.scope.literal_column(join.name, self.scope.key(function_node))
             if created:
                 self.scope.columns[function_node] = function_column
                 self.scope.where_function_nodes.add(function_node)
             bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
             return None, bool_expressions
 
-        function_node, function = function_node_inspect.filter_function(aggregated_alias, distinct=aggregation.distinct)
-        function_column = self.scope.literal_column(lateral_name, self.scope.key(function_node))
+        function_node, function = aggregation_node_inspect.filter_function(
+            aggregated_alias, distinct=aggregation.distinct
+        )
+        function_column = self.scope.literal_column(aggregation_name, self.scope.key(function_node))
         bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
         self.scope.columns[function_node] = function_column
         self.scope.where_function_nodes.add(function_node)
 
-        statement = (
-            select(function)
-            .where(root_relation.expression)
-            .select_from(aggregated_alias_inspected)
-            .lateral(lateral_name)
-        )
-        join_info = AggregationJoin(
-            join=statement, onclause=true(), node=aggregation_node, subquery_alias=aggregated_alias
-        )
-        self._aggregation_joins[aggregation_node] = join_info
+        if self._supports_lateral:
+            statement = select(function).where(root_relation.expression).select_from(aggregated_alias_inspected)
+            join = AggregationJoin(
+                target=statement.lateral(aggregation_name),
+                onclause=true(),
+                node=aggregation_node,
+                subquery_alias=aggregated_alias,
+            )
+        else:
+            join = self._aggregation_cte_join(
+                node=aggregation_node,
+                alias=aggregated_alias,
+                statement=select(function).select_from(aggregated_alias_inspected),
+                cte_name=aggregation_name,
+            )
 
-        return join_info, bool_expressions
+        self._aggregation_joins[aggregation_node] = join
+        return join, bool_expressions
 
     def _upsert_aggregations(
         self, aggregation_node: SQLAlchemyQueryNode, existing_joins: list[Join]
@@ -338,7 +348,15 @@ class QueryTranspiler(Generic[DeclarativeT]):
                     self.scope.columns[node] = function_column
                 function_columns.append(function_column)
         else:
-            new_join = self._aggregation_join(aggregation_node, functions.values(), alias)
+            if self._supports_lateral:
+                new_join = self._aggregation_lateral_join(aggregation_node, functions.values(), alias)
+            else:
+                new_join = self._aggregation_cte_join(
+                    node=aggregation_node,
+                    alias=alias,
+                    statement=select(*functions.values()),
+                    cte_name=self.scope.key(self._aggregation_name_prefix),
+                )
             for node in functions:
                 function_column = self.scope.literal_column(new_join.name, self.scope.key(node))
                 self.scope.columns[node] = function_column
@@ -475,35 +493,72 @@ class QueryTranspiler(Generic[DeclarativeT]):
         Returns:
             A join object containing the join information.
         """
-        node_inspect = self.scope.inspect(node)
         aliased_attribute = self.scope.aliased_attribute(node)
         relation_filter = node.relation_filter
         if not relation_filter.model_fields_set:
             return Join(aliased_attribute, node=node, is_outer=is_outer)
         relationship = node.value.model_field.property
         assert isinstance(relationship, RelationshipProperty)
-        mapper: Mapper[Any] = relationship.mapper.mapper
-        alias = aliased(mapper, flat=True)
-        inspect_alias = inspect(alias)
-        root_relation = aliased_attribute.of_type(inspect_alias)
-        name = self.scope.key(node)
-        base_statement = select(inspect(alias)).with_only_columns(*node_inspect.selection(alias))
-        with self._sub_scope(mapper.class_, alias):
+        target_mapper: Mapper[Any] = relationship.mapper.mapper
+        target_alias = aliased(target_mapper, flat=True)
+        with self._sub_scope(target_mapper.class_, target_alias):
             query = self._build_query(
                 QueryGraph(self.scope, order_by=relation_filter.order_by or []),
                 limit=relation_filter.limit,
                 offset=relation_filter.offset,
             )
+        if self._supports_lateral:
+            return self._lateral_join(node, target_alias, query, is_outer)
+        return self._cte_join(node, target_alias, query, is_outer)
+
+    def _lateral_join(
+        self, node: SQLAlchemyQueryNode, target_alias: AliasedClass[Any], query: Query, is_outer: bool
+    ) -> Join:
+        target_insp = inspect(target_alias)
+        aliased_attribute = self.scope.aliased_attribute(node)
+        node_inspect = self.scope.inspect(node)
+        name = self.scope.key(node)
+        root_relation = aliased_attribute.of_type(target_insp)
+        base_statement = select(target_insp).with_only_columns(*node_inspect.selection(target_alias))
         statement = query.statement(base_statement).where(root_relation).lateral(name)
-        lateral_alias = aliased(relationship.entity.mapper, statement, name=name, flat=True)
+        lateral_alias = aliased(target_insp.mapper, statement, name=name, flat=True)
         self.scope.set_relation_alias(node, "target", lateral_alias)
         return Join(statement, node=node, is_outer=is_outer, onclause=true())
 
-    def _aggregation_join(
-        self,
-        node: SQLAlchemyQueryNode,
-        function_columns: Iterable[ColumnElement[Any]],
-        alias: AliasedClass[Any],
+    def _cte_join(
+        self, node: SQLAlchemyQueryNode, target_alias: AliasedClass[Any], query: Query, is_outer: bool
+    ) -> Join:
+        aliased_attribute = self.scope.aliased_attribute(node)
+        remote_fks = self.scope.inspect(node).foreign_key_columns("target", target_alias)
+        rank_column = (
+            func.dense_rank()
+            .over(partition_by=remote_fks, order_by=query.order_by.expressions if query.order_by else None)
+            .label(name="rank")
+        )
+        name = self.scope.key(node)
+        # Remove limit/offset in CTE as it's applied in the WHERE clause of the main query
+        query_wihtout_limit_offset = dataclasses.replace(query, offset=None, limit=None)
+        node_inspect = self.scope.inspect(node)
+        remote_fks = node_inspect.foreign_key_columns("target", target_alias)
+        selection = node_inspect.selection(target_alias)
+        base_statement = (
+            select(*selection, *remote_fks, rank_column)
+            .group_by(*remote_fks, *selection)
+            .where(and_(*[fk.is_not(null()) for fk in remote_fks]))
+        )
+        statement = query_wihtout_limit_offset.statement(base_statement).cte(name)
+        cte_alias = aliased(target_alias, statement, name=name)
+        self.scope.set_relation_alias(node, "target", cte_alias)
+        rank_column = self.scope.literal_column(name, rank_column.name)
+        limit_offset_condition: list[ColumnElement[bool]] = []
+        if query.offset:
+            limit_offset_condition.append(rank_column > query.offset)
+        if query.limit:
+            limit_offset_condition.append(rank_column <= (query.offset + query.limit if query.offset else query.limit))
+        return Join(statement, node, onclause=and_(aliased_attribute, *limit_offset_condition), is_outer=is_outer)
+
+    def _aggregation_lateral_join(
+        self, node: SQLAlchemyQueryNode, function_columns: Iterable[ColumnElement[Any]], alias: AliasedClass[Any]
     ) -> AggregationJoin:
         """Creates an aggregation join object for a query node.
 
@@ -518,7 +573,25 @@ class QueryTranspiler(Generic[DeclarativeT]):
         lateral_name = self.scope.key(self._aggregation_name_prefix)
         root_relation = self.scope.aliased_attribute(node).of_type(inspect(alias))
         lateral_statement = select(*function_columns).where(root_relation).lateral(lateral_name)
-        return AggregationJoin(join=lateral_statement, onclause=true(), node=node, subquery_alias=alias)
+        return AggregationJoin(target=lateral_statement, onclause=true(), node=node, subquery_alias=alias)
+
+    def _aggregation_cte_join(
+        self, node: SQLAlchemyQueryNode, alias: AliasedClass[Any], statement: Select[Any], cte_name: str
+    ) -> AggregationJoin:
+        remote_fks = self.scope.inspect(node).foreign_key_columns("target", alias)
+        cte_statement = (
+            statement.add_columns(*remote_fks)
+            .group_by(*remote_fks)
+            .where(and_(*[fk.is_not(null()) for fk in remote_fks]))
+            .cte(cte_name)
+        )
+        cte_alias = aliased(alias, cte_statement)
+        return AggregationJoin(
+            target=cte_alias,
+            onclause=self.scope.aliased_attribute(node).of_type(cte_alias),
+            node=node,
+            subquery_alias=alias,
+        )
 
     def _where(self, query_filter: Filter[DeclarativeBase, QueryableAttribute[Any]], allow_null: bool = False) -> Where:
         """Creates WHERE expressions and joins from a filter.
@@ -578,7 +651,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
                     joins.append(new_join)
             else:
                 columns.append((self.scope.aliased_attribute(node), node.order_by))
-        return OrderBy(columns, joins)
+        return OrderBy(self._inspector.database_features.dialect, columns, joins)
 
     def _select(self, selection_tree: SQLAlchemyQueryNode) -> tuple[Select[tuple[DeclarativeT]], list[Join]]:
         aggregation_joins: list[Join] = []
@@ -617,7 +690,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         joins: list[Join] = []
         subquery_join_nodes: set[SQLAlchemyQueryNode] = set()  # Track nodes already joined
         has_root_subquery: bool = False  # Flag for root-level pagination
-        query = Query(limit=limit, offset=offset)
+        query = Query(self.scope.root_alias, limit=limit, offset=offset)
 
         if self.scope.is_root and (limit is not None or offset is not None):
             has_root_subquery = True

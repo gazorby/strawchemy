@@ -10,7 +10,7 @@ from tests.utils import maybe_async
 from .fixtures import QueryTracker
 from .typing import RawRecordData
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.parametrize(

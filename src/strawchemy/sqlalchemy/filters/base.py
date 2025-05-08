@@ -145,14 +145,19 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
         return expressions
 
     def _regexp_expressions(
-        self, model_attribute: QueryableAttribute[str] | ColumnElement[str]
+        self, dialect: Dialect, model_attribute: QueryableAttribute[str] | ColumnElement[str]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
-
-        if "regexp" in self.model_fields_set:
-            expressions.append(model_attribute.regexp_match(self.regexp))
-        if "nregexp" in self.model_fields_set:
-            expressions.append(not_(model_attribute.regexp_match(self.nregexp)))
+        if "regexp" in self.model_fields_set or "nregexp" in self.model_fields_set:
+            regex = self.regexp or self.nregexp
+            if dialect.name == "mysql":
+                comparison = func.regexp_like(model_attribute, regex, "c")
+            else:
+                comparison = model_attribute.regexp_match(regex)
+            if "regexp" in self.model_fields_set:
+                expressions.append(comparison)
+            else:
+                expressions.append(not_(comparison))
         if "iregexp" in self.model_fields_set:
             expressions.append(func.lower(model_attribute).regexp_match(self.iregexp))
         if "inregexp" in self.model_fields_set:
@@ -177,7 +182,7 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
         """
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
         expressions.extend(self._like_expressions(model_attribute))
-        expressions.extend(self._regexp_expressions(model_attribute))
+        expressions.extend(self._regexp_expressions(dialect, model_attribute))
 
         if "startswith" in self.model_fields_set:
             expressions.append(model_attribute.startswith(self.startswith, autoescape=True))

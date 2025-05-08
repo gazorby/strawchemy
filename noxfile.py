@@ -46,11 +46,25 @@ def integration_tests(session: Session) -> None:
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
 
-@nox.session(name="integration", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "docker", "integration", "postgres"])
+@nox.session(
+    name="integration-postgres", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "docker", "integration", "postgres"]
+)
 def integration_postgres_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     session.run_install(
         "uv", "sync", "--all-extras", "--group=test", env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
     )
-    args: list[str] = ["-m=postgres", *session.posargs]
+    args: list[str] = ["-m=asyncpg or psycopg_async or psycopg_sync", *session.posargs]
+    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
+
+
+@nox.session(
+    name="integration-mysql", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "docker", "integration", "mysql"]
+)
+def integration_mysql_tests(session: Session) -> None:
+    (here / ".coverage").unlink(missing_ok=True)
+    session.run_install(
+        "uv", "sync", "--all-extras", "--group=test", env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
+    )
+    args: list[str] = ["-m=asyncmy", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)

@@ -21,9 +21,17 @@ and function application.
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, NamedTuple, override
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeAlias, override
 
-from sqlalchemy import Function, Label, func, inspect, literal_column
+from sqlalchemy import (
+    ColumnElement,
+    Function,
+    Label,
+    func,
+    inspect,
+    literal_column,
+)
 from sqlalchemy import distinct as sqla_distinct
 from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
 from sqlalchemy.orm.util import AliasedClass
@@ -45,8 +53,11 @@ if TYPE_CHECKING:
 
 __all__ = ("NodeInspect", "QueryScope")
 
+_FunctionVisitor: TypeAlias = "Callable[[Function[Any]], ColumnElement[Any]]"
 
-class _FunctionInfo(NamedTuple):
+
+@dataclass
+class AggregationFunctionInfo:
     """Information about a SQL function and its application context.
 
     A helper class that encapsulates information about how a SQL function
@@ -60,8 +71,34 @@ class _FunctionInfo(NamedTuple):
             False for functions like COUNT that can operate independently
     """
 
+    functions_map: ClassVar[dict[str, FunctionGenerator]] = {
+        "count": func.count,
+        "min": func.min,
+        "max": func.max,
+        "sum": func.sum,
+        "avg": func.avg,
+        "stddev_samp": func.stddev_samp,
+        "stddev_pop": func.stddev_pop,
+        "var_samp": func.var_samp,
+        "var_pop": func.var_pop,
+    }
     sqla_function: FunctionGenerator
     apply_on_column: bool
+    visitor: _FunctionVisitor | None = None
+
+    @classmethod
+    def from_name(cls, name: str, visitor: _FunctionVisitor | None = None) -> Self:
+        if name not in cls.functions_map:
+            msg = f"Unknown function {name}"
+            raise TranspilingError(msg)
+        apply_on_column = name != "count"
+        return cls(sqla_function=cls.functions_map[name], apply_on_column=apply_on_column, visitor=visitor)
+
+    def apply(self, *args: QueryableAttribute[Any] | ColumnElement[Any]) -> ColumnElement[Any]:
+        func = self.sqla_function(*args)
+        if self.visitor:
+            func = self.visitor(func)
+        return func
 
 
 class NodeInspect:
@@ -92,35 +129,11 @@ class NodeInspect:
         >>> inspector.columns_or_ids()  # Get columns or IDs for selection
     """
 
-    sqla_functions_map: ClassVar[dict[str, FunctionGenerator]] = {
-        "count": func.count,
-        "min": func.min,
-        "max": func.max,
-        "sum": func.sum,
-        "avg": func.avg,
-        "stddev": func.stddev,
-        "stddev_samp": func.stddev_samp,
-        "stddev_pop": func.stddev_pop,
-        "variance": func.variance,
-        "var_samp": func.var_samp,
-        "var_pop": func.var_pop,
-    }
-
     def __init__(self, node: SQLAlchemyQueryNode, scope: QueryScope[Any]) -> None:
         self.node = node
         self.scope = scope
 
-    @classmethod
-    def _function_info(cls, name: str) -> _FunctionInfo:
-        if name not in cls.sqla_functions_map:
-            msg = f"Unknown function {name}"
-            raise TranspilingError(msg)
-        apply_on_column = True
-        if name == "count":
-            apply_on_column = False
-        return _FunctionInfo(sqla_function=cls.sqla_functions_map[name], apply_on_column=apply_on_column)
-
-    def _foreign_keys(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
+    def _foreign_keys_selection(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
         selected_fks: list[QueryableAttribute[Any]] = []
         alias_insp = inspect(alias or self.scope.alias_from_relation_node(self.node, "parent"))
         for child in self.node.children:
@@ -179,39 +192,37 @@ class NodeInspect:
     def output_functions(
         self,
         alias: AliasedClass[Any],
-        visit_func: Callable[[Function[Any]], Any] = lambda func: func,
+        visit_func: _FunctionVisitor = lambda func: func,
     ) -> dict[SQLAlchemyQueryNode, Label[Any]]:
         functions: dict[SQLAlchemyQueryNode, Label[Any]] = {}
-        function_info = self._function_info(self.value.function(strict=True).function)
-        sql_func = function_info.sqla_function
+        function_info = AggregationFunctionInfo.from_name(self.value.function(strict=True).function, visitor=visit_func)
         if function_info.apply_on_column:
             for arg_child in self.children:
                 arg = self.mapper.attrs[arg_child.value.model_field_name].class_attribute.adapt_to_entity(
                     inspect(alias)
                 )
-                functions[arg_child.node] = visit_func(sql_func(arg)).label(self.scope.key(arg_child.node))
+                functions[arg_child.node] = function_info.apply(arg).label(self.scope.key(arg_child.node))
         else:
-            functions[self.node] = visit_func(sql_func()).label(self.scope.key(self.node))
+            functions[self.node] = visit_func(function_info.sqla_function()).label(self.scope.key(self.node))
         return functions
 
     def filter_function(
         self, alias: AliasedClass[Any], distinct: bool | None = None
     ) -> tuple[SQLAlchemyQueryNode, Label[Any]]:
-        function_info = self._function_info(self.value.function(strict=True).function)
-        sql_func = function_info.sqla_function
-        function_arg = []
+        function_info = AggregationFunctionInfo.from_name(self.value.function(strict=True).function)
+        function_args = []
         argument_attributes = [
             self.mapper.attrs[arg_child.value.model_field_name].class_attribute.adapt_to_entity(inspect(alias))
             for arg_child in self.children
         ]
-        function_arg = (sqla_distinct(*argument_attributes),) if distinct else argument_attributes
+        function_args = (sqla_distinct(*argument_attributes),) if distinct else argument_attributes
         if len(self.children) == 1:
             function_node = self.children[0].node
             label_name = self.scope.key(function_node)
         else:
             function_node = self.node
             label_name = self.scope.key(self.node)
-        return function_node, sql_func(*function_arg).label(label_name)
+        return function_node, function_info.apply(*function_args).label(label_name)
 
     def columns(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
         columns: list[QueryableAttribute[Any]] = []
@@ -227,8 +238,21 @@ class NodeInspect:
         columns.extend(attribute for attribute in id_attributes if attribute.property not in property_set)
         return columns
 
+    def foreign_key_columns(
+        self, side: RelationshipSide, alias: AliasedClass[Any] | None = None
+    ) -> list[QueryableAttribute[Any]]:
+        alias_insp = inspect(alias or self.scope.alias_from_relation_node(self.node, side))
+        relationship = self.node.value.model_field.property
+        assert isinstance(relationship, RelationshipProperty)
+        columns = relationship.local_columns if side == "parent" else relationship.remote_side
+        return [
+            alias_insp.mapper.attrs[column.key].class_attribute.adapt_to_entity(alias_insp)
+            for column in columns
+            if column.key is not None
+        ]
+
     def selection(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
-        return [*self.columns(alias), *self._foreign_keys(alias)]
+        return [*self.columns(alias), *self._foreign_keys_selection(alias)]
 
 
 class QueryScope(Generic[DeclarativeT]):
@@ -425,7 +449,7 @@ class QueryScope(Generic[DeclarativeT]):
         return columns
 
     def literal_column(self, from_name: str, column_name: str) -> Label[Any]:
-        return literal_column(f'{from_name}."{column_name}"').label(self._add_scope_id(column_name))
+        return literal_column(f"{from_name}.{column_name}").label(self._add_scope_id(column_name))
 
     def set_relation_alias(
         self,

@@ -1,4 +1,15 @@
 # serializer version: 1
+# name: test_inner_join_rewriting[session-tracked-async-inner-join-rewrite-asyncmy_engine]
+  '''
+  SELECT color__fruits.sweetness,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color__fruits.sweetness > %s
+  '''
+# ---
 # name: test_inner_join_rewriting[session-tracked-async-inner-join-rewrite-asyncpg_engine]
   '''
   SELECT color__fruits.sweetness,
@@ -21,6 +32,17 @@
    WHERE color__fruits.sweetness > %(sweetness_1)s::INTEGER
   '''
 # ---
+# name: test_inner_join_rewriting[session-tracked-async-no-inner-join-rewrite-asyncmy_engine]
+  '''
+  SELECT color__fruits.sweetness,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.created_at > %s
+  '''
+# ---
 # name: test_inner_join_rewriting[session-tracked-async-no-inner-join-rewrite-asyncpg_engine]
   '''
   SELECT color__fruits.sweetness,
@@ -29,7 +51,7 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   WHERE color.created_at > $1::TIMESTAMP WITH TIME
+   WHERE color.created_at > $1::TIMESTAMP WITHOUT TIME
     ZONE
   '''
 # ---
@@ -41,7 +63,7 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   WHERE color.created_at > %(created_at_1)s::TIMESTAMP WITH TIME
+   WHERE color.created_at > %(created_at_1)s::TIMESTAMP WITHOUT TIME
     ZONE
   '''
 # ---
@@ -64,7 +86,7 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   WHERE color.created_at > %(created_at_1)s::TIMESTAMP WITH TIME
+   WHERE color.created_at > %(created_at_1)s::TIMESTAMP WITHOUT TIME
     ZONE
   '''
 # ---

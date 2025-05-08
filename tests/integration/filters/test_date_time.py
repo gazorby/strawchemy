@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -13,7 +13,10 @@ from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
+if TYPE_CHECKING:
+    from strawchemy.typing import SupportedDialect
+
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.fixture
@@ -27,14 +30,14 @@ def seed_insert_statements(raw_date_times: RawRecordData) -> list[Insert]:
 
 
 @pytest.fixture
-def async_query(dialect: str) -> type[Any]:
+def async_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.DateTimeAsyncQuery
     pytest.skip(f"Date/Time tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture
-def sync_query(dialect: str) -> type[Any]:
+def sync_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.DateTimeSyncQuery
     pytest.skip(f"Date/Time tests can't be run on this dialect: {dialect}")

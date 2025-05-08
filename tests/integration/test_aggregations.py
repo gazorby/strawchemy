@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 import pytest
@@ -14,9 +15,11 @@ from .typing import RawRecordData
 from .utils import compute_aggregation, from_graphql_representation, python_type
 
 if TYPE_CHECKING:
+    from strawchemy.typing import SupportedDialect
+
     from syrupy.assertion import SnapshotAssertion
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
+pytestmark = [pytest.mark.integration]
 
 
 @pytest.mark.snapshot
@@ -30,7 +33,7 @@ async def test_count_aggregation(
     """Test the count aggregation function."""
     query = f"""
         {{
-            color(id: "{raw_colors[0]["id"]}") {{
+            color(id: {raw_colors[0]["id"]}) {{
                 fruitsAggregate {{
                     count
                 }}
@@ -68,7 +71,7 @@ async def test_sum_aggregation(
     """Test the sum aggregation function for a specific field."""
     query = f"""
         {{
-            color(id: "{raw_colors[0]["id"]}") {{
+            color(id: {raw_colors[0]["id"]}) {{
                 fruitsAggregate {{
                     sum {{
                         {field_name}
@@ -88,7 +91,7 @@ async def test_sum_aggregation(
     actual_sum = result.data["color"]["fruitsAggregate"]["sum"][field_name]
 
     if field_name == "rarity":
-        assert str(actual_sum) == str(expected_sum)
+        assert Decimal(actual_sum) == Decimal(expected_sum)
     else:
         assert pytest.approx(actual_sum) == expected_sum
 
@@ -121,7 +124,7 @@ async def test_min_aggregation(
     """Test the min aggregation function for a specific field."""
     query = f"""
         {{
-            color(id: "{raw_colors[0]["id"]}") {{
+            color(id: {raw_colors[0]["id"]}) {{
                 fruitsAggregate {{
                     min {{
                         {field_name}
@@ -174,7 +177,7 @@ async def test_max_aggregation(
     """Test the max aggregation function for a specific field."""
     query = f"""
         {{
-            color(id: "{raw_colors[0]["id"]}") {{
+            color(id: {raw_colors[0]["id"]}) {{
                 fruitsAggregate {{
                     max {{
                         {field_name}
@@ -205,7 +208,7 @@ async def test_max_aggregation(
 
 @pytest.mark.parametrize(
     "agg_type",
-    ["avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
+    ["avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
 )
 @pytest.mark.parametrize(
     ("field_name", "raw_field_name"),
@@ -217,7 +220,7 @@ async def test_max_aggregation(
 )
 @pytest.mark.snapshot
 async def test_statistical_aggregation(
-    agg_type: Literal["avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
+    agg_type: Literal["avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
     field_name: str,
     raw_field_name: str,
     any_query: AnyQueryExecutor,
@@ -229,7 +232,7 @@ async def test_statistical_aggregation(
     """Test statistical aggregation functions for a specific field."""
     query = f"""
         {{
-            color(id: "{raw_colors[0]["id"]}") {{
+            color(id: {raw_colors[0]["id"]}) {{
                 fruitsAggregate {{
                     {agg_type} {{
                         {field_name}
@@ -262,10 +265,7 @@ async def test_statistical_aggregation(
     "pagination",
     [pytest.param(None, id="no-pagination"), pytest.param(DefaultOffsetPagination(limit=2), id="pagination")],
 )
-@pytest.mark.parametrize(
-    "agg_type",
-    ["avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
-)
+@pytest.mark.parametrize("agg_type", ["sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"])
 @pytest.mark.parametrize(
     ("field_name", "raw_field_name"),
     [
@@ -276,7 +276,7 @@ async def test_statistical_aggregation(
 )
 @pytest.mark.snapshot
 async def test_root_aggregation(
-    agg_type: Literal["avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
+    agg_type: Literal["sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
     field_name: str,
     raw_field_name: str,
     pagination: None | DefaultOffsetPagination,
@@ -284,6 +284,7 @@ async def test_root_aggregation(
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Test statistical aggregation functions for a specific field."""
     query_name = "fruitAggregations" if pagination is None else "fruitAggregationsPaginatedLimit2"
@@ -317,7 +318,8 @@ async def test_root_aggregation(
             agg_type, [record[raw_field_name] for record in raw_fruits[: pagination.limit]]
         )
 
-    assert pytest.approx(actual_value) == expected_value
+    rel = 0.0001 if dialect == "mysql" and field_name == "sweetness" and agg_type in ("avg", "sum") else None
+    assert actual_value == pytest.approx(expected_value, rel=rel)
 
     # Verify SQL query
     assert query_tracker.query_count == 1

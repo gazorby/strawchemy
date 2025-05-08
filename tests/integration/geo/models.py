@@ -2,25 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from uuid import UUID, uuid4
-
 from geoalchemy2 import Geometry, WKBElement
 
-from sqlalchemy import DateTime, MetaData
+from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.orm import registry as Registry  # noqa: N812
+from tests.integration.models import BaseColumns
 
 metadata, geo_metadata = MetaData(), MetaData()
-
-
-class BaseColumns:
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
-    """Date/time of instance creation."""
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC)
-    )
 
 
 class GeoUUIDBase(BaseColumns, DeclarativeBase):

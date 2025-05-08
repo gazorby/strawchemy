@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-from uuid import uuid4
-
 import pytest
 
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
+pytestmark = [pytest.mark.integration]
 
 
 async def test_create_update_delete(any_query: AnyQueryExecutor) -> None:
-    color_id = str(uuid4())
+    color_id = 99999
 
     create_query = """
         mutation {{
-            createColor(data: {{ id: "{id}", name: "Blue" }}) {{
+            createColor(data: {{ id: {id}, name: "Blue" }}) {{
                 name
             }}
         }}
@@ -25,7 +23,7 @@ async def test_create_update_delete(any_query: AnyQueryExecutor) -> None:
         mutation {{
             updateColor(
                 data: {{
-                    id: "{id}",
+                    id: {id},
                     name: "Green"
                 }}
             ) {{
@@ -37,7 +35,7 @@ async def test_create_update_delete(any_query: AnyQueryExecutor) -> None:
 
     get_query = """
         query {{
-            color(id: "{id}") {{
+            color(id: {id}) {{
                 name
             }}
         }}
@@ -47,7 +45,7 @@ async def test_create_update_delete(any_query: AnyQueryExecutor) -> None:
         mutation {{
             deleteColor(
                 filter: {{
-                    id: {{ eq: "{id}" }}
+                    id: {{ eq: {id} }}
                 }}
             ) {{
                 id
@@ -58,7 +56,7 @@ async def test_create_update_delete(any_query: AnyQueryExecutor) -> None:
 
     list_query = """
         query {{
-            colors(filter: {{ id: {{ eq: "{id}" }} }}) {{
+            colors(filter: {{ id: {{ eq: {id} }} }}) {{
                 id
                 name
             }}

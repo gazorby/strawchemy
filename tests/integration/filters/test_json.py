@@ -12,11 +12,11 @@ from tests.integration.utils import to_graphql_representation
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from strawchemy.typing import SupportedDialect
+
     from tests.integration.fixtures import QueryTracker
     from tests.integration.typing import RawRecordData
     from tests.typing import AnyQueryExecutor
-
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
 
 
 @pytest.fixture
@@ -30,14 +30,14 @@ def seed_insert_statements(raw_json: RawRecordData) -> list[Insert]:
 
 
 @pytest.fixture
-def async_query(dialect: str) -> type[Any]:
+def async_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.JSONAsyncQuery
     pytest.skip(f"JSON tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture
-def sync_query(dialect: str) -> type[Any]:
+def sync_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.JSONSyncQuery
     pytest.skip(f"JSON tests can't be run on this dialect: {dialect}")

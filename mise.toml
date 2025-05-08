@@ -105,14 +105,28 @@ description = "Run integration tests"
 depends = "_install"
 alias = "ti"
 usage = 'arg "<test>" default=""'
-run = '{{vars.nox_py13}} -t integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+run = '{{vars.nox_py13}} -s integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:integration-postgres"]
+description = "Run integration tests"
+depends = "_install"
+alias = "ti-postgres"
+usage = 'arg "<test>" default=""'
+run = '{{vars.nox_py13}} -t postgres -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:integration-mysql"]
+description = "Run integration tests"
+depends = "_install"
+alias = "ti-mysql"
+usage = 'arg "<test>" default=""'
+run = '{{vars.nox_py13}} -t mysql -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration:coverage"]
 description = "Run integration tests with coverage"
 depends = "_install"
 alias = "tic"
 usage = 'arg "<test>" default=""'
-run = '{{vars.nox_py13}} -t integration -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
+run = '{{vars.nox_py13}} -s integration -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit-all"]
 description = "Run unit tests on all supported python versions"
@@ -126,7 +140,7 @@ description = "Run integration tests on all supported python versions"
 depends = "_install"
 alias = "tia"
 usage = 'arg "<test>" default=""'
-run = 'uv run nox -r -t integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+run = 'uv run nox -r -s integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:update-snapshots"]
 description = "Run snapshot-based tests and update snapshots"

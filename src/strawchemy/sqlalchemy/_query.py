@@ -5,11 +5,22 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Generic, Self, cast
 
-from sqlalchemy import AliasedReturnsRows, BooleanClauseList, Label, Select, Subquery, UnaryExpression, inspect
+from sqlalchemy import (
+    CTE,
+    AliasedReturnsRows,
+    BooleanClauseList,
+    Label,
+    Lateral,
+    Select,
+    Subquery,
+    UnaryExpression,
+    inspect,
+    null,
+)
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute, RelationshipDirection, RelationshipProperty
+from sqlalchemy.orm.util import AliasedClass
 from sqlalchemy.sql import ColumnElement, SQLColumnExpression
 from sqlalchemy.sql.elements import NamedColumn
-from sqlalchemy.sql.visitors import replacement_traverse
 from strawchemy.graph import merge_trees
 from strawchemy.graphql.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.graphql.dto import (
@@ -26,21 +37,31 @@ from strawchemy.sqlalchemy.exceptions import TranspilingError
 from .typing import DeclarativeT
 
 if TYPE_CHECKING:
-    from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql._typing import _OnClauseArgument
     from sqlalchemy.sql.selectable import NamedFromClause
     from strawchemy.sqlalchemy._scope import QueryScope
     from strawchemy.sqlalchemy.typing import SQLAlchemyOrderByNode, SQLAlchemyQueryNode
+    from strawchemy.typing import SupportedDialect
 
 __all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
 
 
 @dataclass
 class Join:
-    join: QueryableAttribute[Any] | NamedFromClause
+    target: QueryableAttribute[Any] | NamedFromClause | AliasedClass[Any]
     node: SQLAlchemyQueryNode
     onclause: _OnClauseArgument | None = None
     is_outer: bool = False
+
+    @property
+    def _selectable(self) -> NamedFromClause:
+        if isinstance(self.target, AliasedClass):
+            return cast("NamedFromClause", inspect(self.target).selectable)
+        return self.target
+
+    @property
+    def _relationship(self) -> RelationshipProperty[Any]:
+        return cast("RelationshipProperty[Any]", self.node.value.model_field.property)
 
     @property
     def order(self) -> int:
@@ -48,15 +69,11 @@ class Join:
 
     @property
     def name(self) -> str:
-        return self.join.name
-
-    @property
-    def relationship(self) -> RelationshipProperty[Any]:
-        return cast("RelationshipProperty[Any]", self.node.value.model_field.property)
+        return self._selectable.name
 
     @property
     def to_many(self) -> bool:
-        return self.relationship.direction in {
+        return self._relationship.direction in {
             RelationshipDirection.MANYTOMANY,
             RelationshipDirection.ONETOMANY,
         }
@@ -81,17 +98,19 @@ class AggregationJoin(Join):
     _column_names: dict[str, int] = dataclasses.field(init=False, default_factory=dict)
 
     def __post_init__(self) -> None:
-        for column in self._lateral_select.selected_columns:
+        for column in self._inner_select.selected_columns:
             if isinstance(column, NamedColumn):
                 self._column_names[column.name] = 1
 
     @property
-    def _lateral_select(self) -> Select[Any]:
-        self_join = cast("AliasedReturnsRows", self.join)
+    def _inner_select(self) -> Select[Any]:
+        if isinstance(self._selectable, CTE):
+            return cast("Select[Any]", self._selectable.element)
+        self_join = cast("AliasedReturnsRows", self._selectable)
         return cast("Select[Any]", cast("Subquery", self_join.element).element)
 
     def _existing_function_column(self, new_column: ColumnElement[Any]) -> ColumnElement[Any] | None:
-        for column in self._lateral_select.selected_columns:
+        for column in self._inner_select.selected_columns:
             base_columns = column.base_columns
             new_base_columns = new_column.base_columns
             if len(base_columns) != len(new_base_columns):
@@ -114,21 +133,17 @@ class AggregationJoin(Join):
         return column.label(name)
 
     def add_column_to_subquery(self, column: ColumnElement[Any]) -> None:
-        self_join = cast("AliasedReturnsRows", self.join)
-        new_sub_select = self._lateral_select.add_columns(self._ensure_unique_name(column))
+        new_sub_select = self._inner_select.add_columns(self._ensure_unique_name(column))
 
-        def _replace(
-            element: Subquery[Any],
-            _join: AliasedReturnsRows = self_join,
-            new: Select[Any] = new_sub_select,
-            **_: Any,
-        ) -> Subquery[Any] | None:
-            if element is _join.element:
-                element.element = new
-                return element
-            return None
+        if isinstance(self._selectable, Lateral):
+            new_sub_select = new_sub_select.lateral(self.name)
+        else:
+            new_sub_select = new_sub_select.cte(self.name)
 
-        replacement_traverse(self.join, {}, _replace)
+        if isinstance(self.target, AliasedClass):
+            inspect(self.target).selectable = new_sub_select
+        else:
+            self.target = new_sub_select
 
     def upsert_column_to_subquery(self, column: ColumnElement[Any]) -> tuple[ColumnElement[Any], bool]:
         if (existing := self._existing_function_column(column)) is not None:
@@ -228,11 +243,11 @@ class Where:
 
 @dataclass
 class OrderBy:
+    dialect: SupportedDialect
     columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = dataclasses.field(default_factory=list)
     joins: list[Join] = dataclasses.field(default_factory=list)
 
-    @classmethod
-    def _order_by(cls, column: SQLColumnExpression[Any], order_by: OrderByEnum) -> UnaryExpression[Any]:
+    def _order_by(self, column: SQLColumnExpression[Any], order_by: OrderByEnum) -> list[UnaryExpression[Any]]:
         """Creates an order by expression for a given node and attribute.
 
         Args:
@@ -242,21 +257,35 @@ class OrderBy:
         Returns:
             A unary expression representing the order by clause.
         """
+        expressions: list[UnaryExpression[Any]] = []
         if order_by is OrderByEnum.ASC:
-            return column.asc()
-        if order_by is OrderByEnum.ASC_NULLS_FIRST:
-            return column.asc().nulls_first()
-        if order_by is OrderByEnum.ASC_NULLS_LAST:
-            return column.asc().nulls_last()
-        if order_by is OrderByEnum.DESC:
-            return column.desc()
-        if order_by is OrderByEnum.DESC_NULLS_FIRST:
-            return column.desc().nulls_first()
-        return column.desc().nulls_last()
+            expressions.append(column.asc())
+        elif order_by is OrderByEnum.DESC:
+            expressions.append(column.desc())
+        elif order_by is OrderByEnum.ASC_NULLS_FIRST and self.dialect == "postgresql":
+            expressions.append(column.asc().nulls_first())
+        elif order_by is OrderByEnum.ASC_NULLS_FIRST:
+            expressions.extend([(column.is_(null())).desc(), column.asc()])
+        elif order_by is OrderByEnum.ASC_NULLS_LAST and self.dialect == "postgresql":
+            expressions.append(column.asc().nulls_last())
+        elif order_by is OrderByEnum.ASC_NULLS_LAST:
+            expressions.extend([(column.is_(null())).asc(), column.asc()])
+        elif order_by is OrderByEnum.DESC_NULLS_FIRST and self.dialect == "postgresql":
+            expressions.append(column.desc().nulls_first())
+        elif order_by is OrderByEnum.DESC_NULLS_FIRST:
+            expressions.extend([(column.is_(null())).desc(), column.desc()])
+        elif order_by is OrderByEnum.DESC_NULLS_LAST and self.dialect == "postgresql":
+            expressions.append(column.desc().nulls_last())
+        elif order_by is OrderByEnum.DESC_NULLS_LAST:
+            expressions.extend([(column.is_(null())).asc(), column.desc()])
+        return expressions
 
     @cached_property
     def expressions(self) -> list[UnaryExpression[Any]]:
-        return [self._order_by(column, order_by) for column, order_by in self.columns]
+        expressions: list[UnaryExpression[Any]] = []
+        for column, order_by in self.columns:
+            expressions.extend(self._order_by(column, order_by))
+        return expressions
 
 
 @dataclass
@@ -310,6 +339,7 @@ class Conjunction:
 
 @dataclass
 class Query:
+    root_alias: AliasedClass[Any]
     joins: list[Join] = dataclasses.field(default_factory=list)
     where: Where | None = None
     order_by: OrderBy | None = None
@@ -327,8 +357,8 @@ class Query:
         distinct_expressions = self.distinct_on.expressions if self.distinct_on else []
         order_by_expressions = self.order_by.expressions if self.order_by else []
 
-        for element in sorted_joins:
-            base_statement = base_statement.join(element.join, onclause=element.onclause, isouter=element.is_outer)
+        for join in sorted_joins:
+            base_statement = base_statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)  # pyright: ignore[reportArgumentType]
         if self.where and self.where.expressions:
             base_statement = base_statement.where(*self.where.expressions)
         if order_by_expressions:

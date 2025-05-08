@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from typing import TypeAlias
 
-from . import postgres
+from . import mysql, postgres
 
-AnyAsyncQueryType: TypeAlias = postgres.AsyncQuery
-AnySyncQueryType: TypeAlias = postgres.SyncQuery
+__all__ = ("AnyAsyncMutationType", "AnyAsyncQueryType", "AnySyncMutationType", "AnySyncQueryType")
+
+AnyAsyncQueryType: TypeAlias = postgres.AsyncQuery | mysql.AsyncQuery
+AnySyncQueryType: TypeAlias = postgres.SyncQuery | mysql.SyncQuery
+AnyAsyncMutationType: TypeAlias = postgres.AsyncMutation | mysql.AsyncMutation
+AnySyncMutationType: TypeAlias = postgres.SyncMutation | mysql.SyncMutation

@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 class DatabaseFeatures(Protocol):
     dialect: SupportedDialect
     supports_lateral: bool = False
+    supports_distinct_on: bool = False
     aggregation_functions: set[AggregationFunction] = field(
         default_factory=lambda: {
             "min",
@@ -21,10 +22,8 @@ class DatabaseFeatures(Protocol):
             "sum",
             "avg",
             "count",
-            "stddev",
             "stddev_samp",
             "stddev_pop",
-            "variance",
             "var_samp",
             "var_pop",
         }
@@ -43,6 +42,7 @@ class DatabaseFeatures(Protocol):
 @dataclass(frozen=True)
 class PostgresFeatures(DatabaseFeatures):
     dialect: SupportedDialect = "postgresql"
+    supports_distinct_on: bool = True
     supports_lateral: bool = True
 
 

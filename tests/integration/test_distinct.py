@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from uuid import uuid4
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -11,24 +11,27 @@ from tests.utils import maybe_async
 from .fixtures import QueryTracker
 from .typing import RawRecordData
 
-pytestmark = [pytest.mark.integration, pytest.mark.postgres]
+if TYPE_CHECKING:
+    from strawchemy.typing import SupportedDialect
 
 
 @pytest.fixture
 def raw_colors() -> RawRecordData:
     return [
-        {"id": str(uuid4()), "name": "Red"},
-        {"id": str(uuid4()), "name": "Red"},
-        {"id": str(uuid4()), "name": "Orange"},
-        {"id": str(uuid4()), "name": "Orange"},
-        {"id": str(uuid4()), "name": "Pink"},
+        {"id": 1, "name": "Red"},
+        {"id": 2, "name": "Red"},
+        {"id": 3, "name": "Orange"},
+        {"id": 4, "name": "Orange"},
+        {"id": 5, "name": "Pink"},
     ]
 
 
 @pytest.mark.snapshot
 async def test_distinct(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
 ) -> None:
+    if dialect != "postgresql":
+        pytest.skip(f"Distinct argument not available on {dialect}")
     result = await maybe_async(any_query("{ colors(distinctOn: [name]) { id name } }"))
     assert not result.errors
     assert result.data

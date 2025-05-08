@@ -185,6 +185,32 @@ Run integration tests on all supported python versions
 
 #### `[test]`
 
+## `test:integration-mysql`
+
+- Depends: _install
+
+- **Usage**: `test:integration-mysql [test]`
+- **Aliases**: `ti-mysql`
+
+Run integration tests
+
+### Arguments
+
+#### `[test]`
+
+## `test:integration-postgres`
+
+- Depends: _install
+
+- **Usage**: `test:integration-postgres [test]`
+- **Aliases**: `ti-postgres`
+
+Run integration tests
+
+### Arguments
+
+#### `[test]`
+
 ## `test:integration:coverage`
 
 - Depends: _install

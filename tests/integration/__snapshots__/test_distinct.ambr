@@ -1,4 +1,11 @@
 # serializer version: 1
+# name: test_distinct[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT DISTINCT color.name,
+         color.id
+    FROM color AS color
+  '''
+# ---
 # name: test_distinct[session-tracked-async-asyncpg_engine]
   '''
   SELECT DISTINCT
