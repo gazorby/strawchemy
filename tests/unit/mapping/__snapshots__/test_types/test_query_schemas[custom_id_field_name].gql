@@ -3,8 +3,8 @@
   '''
   """GraphQL type"""
   type ColorType {
-    id: UUID!
     name: String!
+    id: UUID!
   }
   
   """GraphQL type"""

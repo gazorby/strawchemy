@@ -3,9 +3,9 @@
   '''
   """GraphQL create input type"""
   input ColorFruitInput {
-    id: UUID
     name: String!
     sweetness: Int!
+    id: UUID
   }
   
   """Identifier input"""
@@ -22,19 +22,19 @@
   
   """GraphQL create input type"""
   input ColorInput {
-    id: UUID
     fruits: ColorFruitsIdFieldsInputColorFruitInputToManyCreateInput
     name: String!
+    id: UUID
   }
   
   """GraphQL type"""
   type ColorType {
-    id: UUID!
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
     fruits: [FruitType!]!
     name: String!
+    id: UUID!
   }
   
   """Aggregation fields"""
@@ -43,13 +43,11 @@
     count: Int
     max: FruitMinMaxFields!
     min: FruitMinMaxFields!
-    stddev: FruitNumericFields!
     stddevPop: FruitNumericFields!
     stddevSamp: FruitNumericFields!
     sum: FruitSumFields!
     varPop: FruitNumericFields!
     varSamp: FruitNumericFields!
-    variance: FruitNumericFields!
   }
   
   """Identifier input"""
@@ -65,16 +63,16 @@
   
   """GraphQL create input type"""
   input FruitColorInput {
-    id: UUID
     name: String!
+    id: UUID
   }
   
   """GraphQL create input type"""
   input FruitInput {
-    id: UUID
-    name: String!
     color: FruitColorIdFieldsInputFruitColorInputToOneInput = null
+    name: String!
     sweetness: Int!
+    id: UUID
   }
   
   type FruitMinMaxFields {
@@ -93,11 +91,11 @@
   
   """GraphQL type"""
   type FruitType {
-    id: UUID!
+    color: ColorType!
     name: String!
     colorId: UUID
-    color: ColorType!
     sweetness: Int!
+    id: UUID!
   }
   
   type Mutation {

@@ -3,12 +3,12 @@
   '''
   """GraphQL type"""
   type ColorType {
-    id: UUID!
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
     fruits: [FruitType!]!
     name: Int!
+    id: UUID!
   }
   
   """Aggregation fields"""
@@ -17,13 +17,11 @@
     count: Int
     max: FruitMinMaxFields!
     min: FruitMinMaxFields!
-    stddev: FruitNumericFields!
     stddevPop: FruitNumericFields!
     stddevSamp: FruitNumericFields!
     sum: FruitSumFields!
     varPop: FruitNumericFields!
     varSamp: FruitNumericFields!
-    variance: FruitNumericFields!
   }
   
   type FruitMinMaxFields {
@@ -42,11 +40,11 @@
   
   """GraphQL type"""
   type FruitType {
-    id: UUID!
+    color: ColorType!
     name: Int!
     colorId: UUID
-    color: ColorType!
     sweetness: Int!
+    id: UUID!
   }
   
   """Aggregation fields"""
@@ -68,15 +66,15 @@
   """GraphQL type"""
   type GroupType {
     name: Int!
-    id: UUID!
-    tagId: UUID!
     tag: TagType!
     usersAggregate: UserAggregate!
   
     """Fetch objects from the UserType collection"""
     users: [UserType!]!
-    colorId: UUID!
     color: ColorType!
+    tagId: UUID!
+    colorId: UUID!
+    id: UUID!
   }
   
   type Query {
@@ -90,11 +88,11 @@
   """GraphQL type"""
   type TagType {
     name: Int!
-    id: UUID!
     groupsAggregate: GroupAggregate!
   
     """Fetch objects from the GroupType collection"""
     groups: [GroupType!]!
+    id: UUID!
   }
   
   scalar UUID
@@ -118,11 +116,11 @@
   """GraphQL type"""
   type UserType {
     name: Int!
-    id: UUID!
-    groupId: UUID
     group: GroupType!
-    tagId: UUID
     tag: TagType!
+    groupId: UUID
+    tagId: UUID
+    id: UUID!
   }
   '''
 # ---

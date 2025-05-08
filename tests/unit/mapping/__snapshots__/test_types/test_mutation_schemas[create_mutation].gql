@@ -3,12 +3,12 @@
   '''
   """GraphQL type"""
   type ColorType {
-    id: UUID!
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
     fruits: [FruitType!]!
     name: String!
+    id: UUID!
   }
   
   """Date (isoformat)"""
@@ -26,13 +26,11 @@
     count: Int
     max: FruitMinMaxFields!
     min: FruitMinMaxFields!
-    stddev: FruitNumericFields!
     stddevPop: FruitNumericFields!
     stddevSamp: FruitNumericFields!
     sum: FruitSumFields!
     varPop: FruitNumericFields!
     varSamp: FruitNumericFields!
-    variance: FruitNumericFields!
   }
   
   type FruitMinMaxFields {
@@ -51,11 +49,11 @@
   
   """GraphQL type"""
   type FruitType {
-    id: UUID!
+    color: ColorType!
     name: String!
     colorId: UUID
-    color: ColorType!
     sweetness: Int!
+    id: UUID!
   }
   
   """Aggregation fields"""
@@ -79,16 +77,16 @@
   
   """GraphQL create input type"""
   input GroupColorInput {
-    id: UUID
     fruits: GroupFruitsIdFieldsInputGroupFruitInputToManyCreateInput
     name: String!
+    id: UUID
   }
   
   """GraphQL create input type"""
   input GroupFruitInput {
-    id: UUID
     name: String!
     sweetness: Int!
+    id: UUID
   }
   
   """Identifier input"""
@@ -105,11 +103,11 @@
   
   """GraphQL create input type"""
   input GroupInput {
-    id: UUID
-    name: String!
     tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputToManyCreateInput
     color: GroupColorIdFieldsInputGroupColorInputRequiredToOneInput!
+    name: String!
+    id: UUID
   }
   
   type GroupMinMaxFields {
@@ -139,29 +137,29 @@
   
   """GraphQL create input type"""
   input GroupTagInput {
-    id: UUID
     name: String!
+    id: UUID
   }
   
   """GraphQL type"""
   type GroupType {
-    id: UUID!
-    name: String!
-    tagId: UUID!
     tag: TagType!
     usersAggregate: UserAggregate!
   
     """Fetch objects from the UserType collection"""
     users: [UserType!]!
-    colorId: UUID!
     color: ColorType!
+    name: String!
+    tagId: UUID!
+    colorId: UUID!
+    id: UUID!
   }
   
   """GraphQL create input type"""
   input GroupUserInput {
-    id: UUID
-    name: String!
     tag: GroupTagIdFieldsInputGroupTagInputToOneInput = null
+    name: String!
+    id: UUID
   }
   
   """Identifier input"""
@@ -206,7 +204,6 @@
   
   """GraphQL create input type"""
   input SQLDataTypesCreate {
-    id: UUID
     dateCol: Date!
     timeCol: Time!
     timeDeltaCol: Interval!
@@ -219,11 +216,11 @@
     uuidCol: UUID!
     dictCol: JSON!
     arrayStrCol: [String!]!
+    id: UUID
   }
   
   """GraphQL type"""
   type SQLDataTypesType {
-    id: UUID!
     dateCol: Date!
     timeCol: Time!
     timeDeltaCol: Interval!
@@ -236,16 +233,17 @@
     uuidCol: UUID!
     dictCol: JSON!
     arrayStrCol: [String!]!
+    id: UUID!
   }
   
   """GraphQL type"""
   type TagType {
-    id: UUID!
     groupsAggregate: GroupAggregate!
   
     """Fetch objects from the GroupType collection"""
     groups: [GroupType!]!
     name: String!
+    id: UUID!
   }
   
   """Time (isoformat)"""
@@ -271,12 +269,12 @@
   
   """GraphQL type"""
   type UserType {
-    id: UUID!
+    group: GroupType!
+    tag: TagType!
     name: String!
     groupId: UUID
-    group: GroupType!
     tagId: UUID
-    tag: TagType!
+    id: UUID!
   }
   '''
 # ---

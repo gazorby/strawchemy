@@ -172,7 +172,6 @@
     _and: [SQLDataTypesFilter!]
     _or: [SQLDataTypesFilter!]
     _not: SQLDataTypesFilter
-    id: UUIDComparison
     dateCol: DateComparison
     timeCol: TimeComparison
     timeDeltaCol: IntervalComparison
@@ -185,11 +184,11 @@
     uuidCol: UUIDComparison
     dictCol: JSONComparison
     arrayStrCol: StringArrayComparison
+    id: UUIDComparison
   }
   
   """GraphQL type"""
   type SQLDataTypesType {
-    id: UUID!
     dateCol: Date!
     timeCol: Time!
     timeDeltaCol: Interval!
@@ -202,6 +201,7 @@
     uuidCol: UUID!
     dictCol: JSON!
     arrayStrCol: [String!]!
+    id: UUID!
   }
   
   """
