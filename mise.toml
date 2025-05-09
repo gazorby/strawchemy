@@ -163,7 +163,7 @@ run = "actionlint -shellcheck ''"
 description = "Output test matrix for CI"
 depends = "install:test"
 run = '''
-    nox --json -t tests -l |
+    nox --json -t tests -t ci -l |
     jq 'map(
         {
         session,

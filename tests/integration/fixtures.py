@@ -50,7 +50,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, Iterator
     from pathlib import Path
 
-    from pytest import FixtureRequest, MonkeyPatch
+    from pytest import FixtureRequest
     from pytest_databases._service import DockerService  # pyright: ignore[reportPrivateImportUsage]
     from pytest_databases.docker.mysql import MySQLService
     from pytest_databases.docker.postgres import PostgresService
@@ -377,23 +377,6 @@ def raw_date_times() -> RawRecordData:
 @pytest.fixture
 def raw_geo() -> RawRecordData:
     return GEO_DATA
-
-
-@pytest.fixture(autouse=True)
-def _patch_base(monkeypatch: MonkeyPatch) -> None:  # pyright: ignore[reportUnusedFunction]
-    """Ensure new registry state for every test.
-
-    This prevents errors such as "Table '...' is already defined for
-    this MetaData instance...
-    """
-    from sqlalchemy.orm import DeclarativeBase
-
-    from . import models
-
-    class NewUUIDBase(models.BaseColumns, DeclarativeBase):
-        __abstract__ = True
-
-    monkeypatch.setattr(models, "UUIDBase", NewUUIDBase)
 
 
 @pytest.fixture(autouse=False, scope="session")

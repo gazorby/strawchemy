@@ -18,7 +18,7 @@ nox.options.error_on_external_run = True
 nox.options.default_venv_backend = "uv"
 
 
-@nox.session(name="unit", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "unit"])
+@nox.session(name="unit", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "unit", "ci"])
 def unit_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     session.run_install(
@@ -28,7 +28,7 @@ def unit_tests(session: Session) -> None:
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
 
-@nox.session(name="unit-no-extras", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "unit"])
+@nox.session(name="unit-no-extras", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "unit", "ci"])
 def unit_tests_no_extras(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     session.run_install("uv", "sync", "--group=test", env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location})
@@ -47,7 +47,9 @@ def integration_tests(session: Session) -> None:
 
 
 @nox.session(
-    name="integration-postgres", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "docker", "integration", "postgres"]
+    name="integration-postgres",
+    python=SUPPORED_PYTHON_VERSIONS,
+    tags=["tests", "docker", "integration", "ci", "postgres"],
 )
 def integration_postgres_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
@@ -59,7 +61,7 @@ def integration_postgres_tests(session: Session) -> None:
 
 
 @nox.session(
-    name="integration-mysql", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "docker", "integration", "mysql"]
+    name="integration-mysql", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "docker", "integration", "ci", "mysql"]
 )
 def integration_mysql_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
