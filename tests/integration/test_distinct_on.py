@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import pytest
 
 from syrupy.assertion import SnapshotAssertion
@@ -10,9 +8,6 @@ from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
 from .typing import RawRecordData
-
-if TYPE_CHECKING:
-    from strawchemy.typing import SupportedDialect
 
 
 @pytest.fixture
@@ -27,16 +22,15 @@ def raw_colors() -> RawRecordData:
 
 
 @pytest.mark.snapshot
-async def test_distinct(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+async def test_distinct_on(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
-    if dialect != "postgresql":
-        pytest.skip(f"Distinct argument not available on {dialect}")
     result = await maybe_async(any_query("{ colors(distinctOn: [name]) { id name } }"))
     assert not result.errors
     assert result.data
 
-    assert {color["name"] for color in result.data["colors"]} == {"Red", "Orange", "Pink"}
+    expected = [{"id": 1, "name": "Red"}, {"id": 3, "name": "Orange"}, {"id": 5, "name": "Pink"}]
+    assert all(color in result.data["colors"] for color in expected)
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

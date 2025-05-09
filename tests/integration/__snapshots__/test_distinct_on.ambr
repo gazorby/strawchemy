@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_distinct_on[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.id AS id,
+                 color.name AS name,
+                 row_number() OVER (PARTITION BY color.name) AS __distinct_on_rank_0
+            FROM color AS color
+         ) AS color
+   WHERE color.__distinct_on_rank_0 = %s
+  '''
+# ---
+# name: test_distinct_on[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id
+    FROM color AS color
+  '''
+# ---
+# name: test_distinct_on[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id
+    FROM color AS color
+  '''
+# ---
+# name: test_distinct_on[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id
+    FROM color AS color
+  '''
+# ---

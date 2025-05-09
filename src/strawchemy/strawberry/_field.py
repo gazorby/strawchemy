@@ -331,7 +331,7 @@ class StrawchemyField(StrawberryField):
                         default=None,
                     )
                 )
-            if self.inspector.database_features.supports_distinct_on and self.distinct_on:
+            if self.distinct_on:
                 arguments.append(
                     StrawberryArgument(
                         DISTINCT_ON_KEY,

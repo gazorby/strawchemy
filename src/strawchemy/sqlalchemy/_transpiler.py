@@ -47,7 +47,18 @@ from strawchemy.graphql.dto import (
 from strawchemy.graphql.filters import GraphQLComparison
 
 from ._executor import SyncQueryExecutor
-from ._query import AggregationJoin, Conjunction, DistinctOn, Join, OrderBy, Query, QueryGraph, Where
+from ._query import (
+    AggregationJoin,
+    Conjunction,
+    DistinctOn,
+    HookApplier,
+    Join,
+    OrderBy,
+    Query,
+    QueryGraph,
+    SubqueryBuilder,
+    Where,
+)
 from ._scope import QueryScope
 from .exceptions import TranspilingError
 from .inspector import SQLAlchemyGraphQLInspector
@@ -62,7 +73,7 @@ if TYPE_CHECKING:
     from sqlalchemy.sql.elements import NamedColumn
     from strawchemy.typing import SupportedDialect
 
-    from .hook import ColumnLoadingMode, QueryHook
+    from .hook import QueryHook
 
 __all__ = ("QueryTranspiler",)
 
@@ -79,16 +90,15 @@ class QueryTranspiler(Generic[DeclarativeT]):
         query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[Any]]] | None = None,
     ) -> None:
         supported_dialect: SupportedDialect = cast("SupportedDialect", dialect.name)
-        self._supports_lateral = supported_dialect == "postgresql"
         self._inspector = SQLAlchemyGraphQLInspector(supported_dialect, [model.registry])
-        self._sub_query_root_alias = aliased(class_mapper(model), name=model.__tablename__, flat=True)
         self._aggregation_name_prefix: str = "aggregation"
         self._aggregation_joins: dict[SQLAlchemyQueryNode, AggregationJoin] = {}
-        self._query_hooks = query_hooks or defaultdict(list)
         self._statement = statement
 
         self.dialect = dialect
         self.scope = scope or QueryScope(model, inspector=self._inspector)
+
+        self._hook_applier = HookApplier(self.scope, query_hooks or defaultdict(list))
 
     def _base_statement(self) -> Select[tuple[DeclarativeT]]:
         if self._statement is not None:
@@ -292,7 +302,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         self.scope.columns[function_node] = function_column
         self.scope.where_function_nodes.add(function_node)
 
-        if self._supports_lateral:
+        if self._inspector.database_features.supports_lateral:
             statement = select(function).where(root_relation.expression).select_from(aggregated_alias_inspected)
             join = AggregationJoin(
                 target=statement.lateral(aggregation_name),
@@ -348,7 +358,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
                     self.scope.columns[node] = function_column
                 function_columns.append(function_column)
         else:
-            if self._supports_lateral:
+            if self._inspector.database_features.supports_lateral:
                 new_join = self._aggregation_lateral_join(aggregation_node, functions.values(), alias)
             else:
                 new_join = self._aggregation_cte_join(
@@ -363,72 +373,6 @@ class QueryTranspiler(Generic[DeclarativeT]):
                 function_columns.append(function_column)
 
         return function_columns, new_join
-
-    def _root_alias_as_subquery(
-        self, query_graph: QueryGraph[DeclarativeT], query: Query
-    ) -> AliasedClass[DeclarativeT]:
-        """Creates a subquery from the root alias for pagination.
-
-        This method is used when pagination (limit or offset) is applied at the root level.
-        It constructs a subquery using the root alias and applies necessary selections,
-        column transformations, before returning an aliased class
-        representing the subquery. This allows for correct pagination when dealing
-        with complex queries involving joins and aggregations.
-
-        Args:
-            query_graph: The query graph representing the entire query structure.
-            query: The `Query` object containing query components like joins,
-                where clauses, and order by clauses.
-
-        Returns:
-            An aliased class representing the subquery, which can be used in further
-            query construction.
-        """
-        subquery_name = self.scope.model.__tablename__
-        statement = select(inspect(self._sub_query_root_alias)).options(raiseload("*"))
-        only_columns: list[QueryableAttribute[Any] | NamedColumn[Any]] = [
-            *self.scope.inspect(query_graph.root_join_tree).selection(self._sub_query_root_alias),
-            *[self.scope.aliased_attribute(node) for node in query_graph.order_by_nodes if not node.value.is_computed],
-        ]
-        # Add columns referenced in root aggregations
-        if aggregation_tree := query_graph.root_aggregation_tree():
-            only_columns.extend(
-                self.scope.aliased_attribute(child)
-                for child in aggregation_tree.leaves()
-                if child.value.is_function_arg
-            )
-        for function_node in self.scope.referenced_function_nodes:
-            only_columns.append(self.scope.columns[function_node])
-            self.scope.columns[function_node] = self.scope.literal_column(subquery_name, self.scope.key(function_node))
-
-        statement = statement.with_only_columns(*only_columns)
-        statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
-        statement, _ = self._apply_hooks(
-            statement,
-            node=query_graph.root_join_tree.root,
-            alias=self.scope.root_alias,
-            loading_mode="add",
-            in_subquery=True,
-        )
-
-        return aliased(class_mapper(self.scope.model), statement.subquery(subquery_name), name=subquery_name)
-
-    def _apply_hooks(
-        self,
-        statement: Select[tuple[DeclarativeT]],
-        node: SQLAlchemyQueryNode,
-        alias: AliasedClass[Any],
-        loading_mode: ColumnLoadingMode,
-        in_subquery: bool = False,
-    ) -> tuple[Select[tuple[DeclarativeT]], list[_AbstractLoad]]:
-        options: list[_AbstractLoad] = []
-        for hook in self._query_hooks[node]:
-            statement = hook.apply_hook(statement, alias)
-            statement, column_options = hook.load_columns(statement, alias, loading_mode)
-            options.extend(column_options)
-            if not in_subquery:
-                options.extend(hook.load_relationships(self.scope.alias_from_relation_node(node, "target")))
-        return statement, options
 
     def _select_child(
         self, statement: Select[tuple[DeclarativeT]], node: SQLAlchemyQueryNode
@@ -455,7 +399,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             eager_options = [load_only(*columns)]
 
         node_alias = self.scope.alias_from_relation_node(node, "target")
-        statement, hook_options = self._apply_hooks(statement, node, node_alias, "undefer")
+        statement, hook_options = self._hook_applier.apply(statement, node, node_alias, "undefer")
         eager_options.extend(hook_options)
         load = load.options(*eager_options)
 
@@ -507,7 +451,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
                 limit=relation_filter.limit,
                 offset=relation_filter.offset,
             )
-        if self._supports_lateral:
+        if self._inspector.database_features.supports_lateral:
             return self._lateral_join(node, target_alias, query, is_outer)
         return self._cte_join(node, target_alias, query, is_outer)
 
@@ -668,7 +612,9 @@ class QueryTranspiler(Generic[DeclarativeT]):
         # Only load selected root columns + those of child relations
         root_options = [load_only(*root_columns)] if root_columns else []
 
-        statement, hook_options = self._apply_hooks(statement, selection_tree.root, self.scope.root_alias, "undefer")
+        statement, hook_options = self._hook_applier.apply(
+            statement, selection_tree.root, self.scope.root_alias, "undefer"
+        )
         root_options.extend(hook_options)
 
         for child in selection_tree.children:
@@ -689,12 +635,13 @@ class QueryTranspiler(Generic[DeclarativeT]):
     ) -> Query:
         joins: list[Join] = []
         subquery_join_nodes: set[SQLAlchemyQueryNode] = set()  # Track nodes already joined
-        has_root_subquery: bool = False  # Flag for root-level pagination
-        query = Query(self.scope.root_alias, limit=limit, offset=offset)
+        query = Query(self._inspector.database_features, self.scope.root_alias, limit=limit, offset=offset)
+        has_distinct_on_rank = query_graph.distinct_on and not self._inspector.database_features.supports_distinct_on
+        subquery_needed = self.scope.is_root and (limit is not None or offset is not None or has_distinct_on_rank)
+        subquery_builder = SubqueryBuilder(self.scope, self._hook_applier, self._inspector.database_features)
 
-        if self.scope.is_root and (limit is not None or offset is not None):
-            has_root_subquery = True
-            self.scope.replace(alias=self._sub_query_root_alias)
+        if subquery_needed:
+            self.scope.replace(alias=subquery_builder.alias)
 
         if query_graph.query_filter:
             query.where = self._where(query_graph.query_filter, allow_null)
@@ -714,15 +661,17 @@ class QueryTranspiler(Generic[DeclarativeT]):
                 ]
             )
 
-        if has_root_subquery:
-            subquery_alias = self._root_alias_as_subquery(query_graph, dataclasses.replace(query, joins=joins))
+        if subquery_needed:
+            query.distinct_on = DistinctOn(query_graph)
+            subquery_alias = subquery_builder.build(query_graph, dataclasses.replace(query, joins=joins))
             self.scope.replace(alias=subquery_alias)
             query.offset = None
-            query.distinct_on = DistinctOn(query_graph)
             query.joins = self._gather_joins(query_graph.root_join_tree, is_outer=True)
             query.order_by = self._order_by(query_graph.order_by_nodes, query.joins)
             query.joins.extend(query.order_by.joins)
-            if query.where:
+            if has_distinct_on_rank:
+                query.where = Where.from_expressions(subquery_builder.distinct_on_condition())
+            elif query.where:
                 query.where.clear_expressions()
         else:
             query.distinct_on = DistinctOn(query_graph)
