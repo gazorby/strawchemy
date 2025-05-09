@@ -341,6 +341,9 @@ class DistinctOn:
             for field in self._distinct_on_fields
         ]
 
+    def __bool__(self) -> bool:
+        return bool(self.expressions)
+
 
 @dataclass
 class Conjunction:
