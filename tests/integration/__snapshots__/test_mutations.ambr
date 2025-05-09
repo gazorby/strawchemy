@@ -1437,7 +1437,7 @@
 # name: test_delete_all[session-tracked-sync-psycopg_engine]
   '''
   DELETE
-    FROM "user" AS "user"
+    FROM "user" AS "user" RETURNING "user".id
   '''
 # ---
 # name: test_delete_all[session-tracked-sync-psycopg_engine].1
@@ -1521,7 +1521,8 @@
   '''
   DELETE
     FROM "user" AS "user"
-   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id,
+         "user".id AS id_1
   '''
 # ---
 # name: test_delete_filter[session-tracked-sync-psycopg_engine].1
