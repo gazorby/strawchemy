@@ -482,7 +482,6 @@ async def asyncmy_engine(mysql_service: MySQLService) -> AsyncGenerator[AsyncEng
         ),
         poolclass=NullPool,
         plugins=engine_plugins,
-        echo=True,
     )
     try:
         yield engine

@@ -34,3 +34,20 @@ async def test_distinct_on(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_distinct_and_order_by(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(
+        any_query("{ colors(distinctOn: [name], orderBy: [{name: ASC}, {id: DESC}]) { id name } }")
+    )
+    assert not result.errors
+    assert result.data
+
+    expected = [{"id": 2, "name": "Red"}, {"id": 4, "name": "Orange"}, {"id": 5, "name": "Pink"}]
+    assert all(color in result.data["colors"] for color in expected)
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

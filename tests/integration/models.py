@@ -10,7 +10,6 @@ from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
 from sqlalchemy import (
     ARRAY,
-    DECIMAL,
     JSON,
     Date,
     DateTime,
@@ -18,6 +17,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     MetaData,
+    Numeric,
     Sequence,
     Text,
     Time,
@@ -125,7 +125,7 @@ class Fruit(Base):
     product: Mapped[DerivedProduct | None] = relationship(DerivedProduct)
     sweetness: Mapped[int] = mapped_column(Integer)
     water_percent: Mapped[float] = mapped_column(Double)
-    rarity: Mapped[Decimal] = mapped_column(DECIMAL(10, 6), default=Decimal("0"))
+    rarity: Mapped[Decimal] = mapped_column(Numeric(10, 6), default=Decimal("0"))
     best_time_to_pick: Mapped[time] = mapped_column(Time, default=time(hour=9))
 
     @hybrid_property
