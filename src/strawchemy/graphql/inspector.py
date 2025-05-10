@@ -16,7 +16,7 @@ __all__ = ("GraphQLInspectorProtocol",)
 class GraphQLInspectorProtocol(ModelInspector[ModelT, ModelFieldT]):
     """GraphQL inspector implementation."""
 
-    database_features: DatabaseFeatures
+    db_features: DatabaseFeatures
 
     def get_field_comparison(
         self, field_definition: DTOFieldDefinition[ModelT, ModelFieldT]

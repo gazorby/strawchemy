@@ -259,12 +259,12 @@ class AggregationInspector(Generic[ModelT, ModelFieldT]):
         self._min_max_fields_factory = _MinMaxFieldsDTOFactory(inspector)
 
     def _supports_aggregations(self, *function: AggregationFunction) -> bool:
-        return set(function).issubset(self._inspector.database_features.aggregation_functions)
+        return set(function).issubset(self._inspector.db_features.aggregation_functions)
 
     @cached_property
     def _statistical_aggregations(self) -> list[AggregationFunction]:
         return list(
-            self._inspector.database_features.aggregation_functions
+            self._inspector.db_features.aggregation_functions
             - cast("set[AggregationFunction]", {"min", "max", "sum", "count"})
         )
 

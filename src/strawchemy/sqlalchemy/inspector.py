@@ -6,26 +6,25 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
 from sqlalchemy import inspect
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import NO_VALUE, DeclarativeBase, QueryableAttribute, registry
-from sqlalchemy.types import ARRAY, JSON
+from sqlalchemy.types import ARRAY
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
-from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.graphql.inspector import GraphQLInspectorProtocol
 
 from .filters import (
     DateSQLAlchemyFilter,
     DateTimeSQLAlchemyFilter,
     GenericSQLAlchemyFilter,
+    JSONSQLAlchemyFilter,
     OrderSQLAlchemyFilter,
     SQLAlchemyFilterBase,
     TextSQLAlchemyFilter,
     TimeDeltaSQLAlchemyFilter,
     TimeSQLAlchemyFilter,
 )
-from .filters.postgresql import JSONBSQLAlchemyFilter, PostgresArraySQLAlchemyFilter
+from .filters.postgresql import PostgresArraySQLAlchemyFilter
 
 if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition
@@ -50,6 +49,7 @@ _DEFAULT_FILTERS_MAP: FilterMap = OrderedDict(
         (bool,): GenericSQLAlchemyFilter,
         (int, float, Decimal): OrderSQLAlchemyFilter,
         (str,): TextSQLAlchemyFilter,
+        (dict,): JSONSQLAlchemyFilter,
     }
 )
 
@@ -68,20 +68,21 @@ class SQLAlchemyGraphQLInspector(
         filter_overrides: FilterMap | None = None,
     ) -> None:
         super().__init__(registries)
-        self.database_features = DatabaseFeatures.new(dialect)
-        self.filters_map = _DEFAULT_FILTERS_MAP
-        self._dialect_json_types: tuple[type[JSON], ...] | None = None
-        if self.database_features.dialect == "postgresql":
-            self._dialect_json_types = (postgresql.JSON, postgresql.JSONB)
-            self.filters_map |= {(dict,): JSONBSQLAlchemyFilter}
-            if GEO_INSTALLED:
-                from geoalchemy2 import WKBElement, WKTElement
-                from shapely import Geometry
-
-                from .filters.geo import GeoSQLAlchemyFilter
-
-                self.filters_map |= {(Geometry, WKBElement, WKTElement): GeoSQLAlchemyFilter}
+        self.db_features = DatabaseFeatures.new(dialect)
+        self.filters_map = self._filter_map()
         self.filters_map |= filter_overrides or {}
+
+    def _filter_map(self) -> FilterMap:
+        filters_map = _DEFAULT_FILTERS_MAP
+
+        if GEO_INSTALLED:
+            from geoalchemy2 import WKBElement, WKTElement
+            from shapely import Geometry
+
+            from .filters.geo import GeoSQLAlchemyFilter
+
+            filters_map |= {(Geometry, WKBElement, WKTElement): GeoSQLAlchemyFilter}
+        return filters_map
 
     @classmethod
     def _is_specialized(cls, type_: type[Any]) -> bool:
@@ -98,18 +99,8 @@ class SQLAlchemyGraphQLInspector(
         self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]
     ) -> type[GraphQLComparison[DeclarativeBase, QueryableAttribute[Any]]]:
         field_type = field_definition.model_field.type
-        if isinstance(field_type, postgresql.ARRAY):
+        if isinstance(field_type, ARRAY) and self.db_features.dialect == "postgresql":
             return PostgresArraySQLAlchemyFilter[field_type.item_type.python_type]
-        if isinstance(field_type, ARRAY):
-            msg = "Base SQLAlchemy ARRAY type is not supported. Use backend-specific array type instead."
-            raise InspectorError(msg)
-        if (
-            self._dialect_json_types
-            and isinstance(field_type, JSON)
-            and not isinstance(field_type, self._dialect_json_types)
-        ):
-            msg = "Base SQLAlchemy JSON type is not supported. Use backend-specific json type instead."
-            raise InspectorError(msg)
         return self.get_type_comparison(self.model_field_type(field_definition))
 
     @override

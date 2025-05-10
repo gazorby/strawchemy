@@ -47,6 +47,7 @@ if TYPE_CHECKING:
     from strawberry.types.field import _RESOLVER_TYPE
     from strawchemy.dto.pydantic import MappedPydanticDTO
     from strawchemy.graphql.typing import MappedGraphQLDTO
+    from strawchemy.typing import SupportedDialect
 
     from .sqlalchemy.hook import QueryHook
     from .sqlalchemy.typing import QueryHookCallable
@@ -73,13 +74,13 @@ class _PydanticNamespace:
 
 
 class Strawchemy:
-    def __init__(self, settings: StrawchemyConfig | None = None) -> None:
+    def __init__(self, config: StrawchemyConfig | SupportedDialect) -> None:
         dataclass_backend = DataclassDTOBackend(MappedDataclassGraphQLDTO)
         pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
 
-        self.settings = settings or StrawchemyConfig()
+        self.config = StrawchemyConfig(config) if isinstance(config, str) else config
         self.registry = StrawberryRegistry()
-        self.inspector = _StrawberryModelInspector(self.settings.inspector, self.registry)
+        self.inspector = _StrawberryModelInspector(self.config.inspector, self.registry)
 
         self._aggregate_filter_factory = StrawchemyAggregateFilterInputFactory(self)
         self._filter_factory = StrawchemyFilterInputFactory(
@@ -208,19 +209,19 @@ class Strawchemy:
     ) -> Any:
         namespace = self._registry_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
-        execution_options_ = execution_options if execution_options is not None else self.settings.execution_options
+        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
+        execution_options_ = execution_options if execution_options is not None else self.config.execution_options
         pagination = (
-            DefaultOffsetPagination(limit=self.settings.pagination_default_limit) if pagination is True else pagination
+            DefaultOffsetPagination(limit=self.config.pagination_default_limit) if pagination is True else pagination
         )
         if pagination is None:
-            pagination = self.settings.pagination
-        id_field_name = id_field_name or self.settings.default_id_field_name
+            pagination = self.config.pagination
+        id_field_name = id_field_name or self.config.default_id_field_name
 
         field = StrawchemyField(
             repository_type=repository_type_,
             root_field=root_field,
-            session_getter=self.settings.session_getter,
+            session_getter=self.config.session_getter,
             filter_statement=filter_statement,
             execution_options=execution_options_,
             inspector=self.inspector,
@@ -230,7 +231,7 @@ class Strawchemy:
             id_field_name=id_field_name,
             distinct_on=distinct_on,
             root_aggregations=root_aggregations,
-            auto_snake_case=self.settings.auto_snake_case,
+            auto_snake_case=self.config.auto_snake_case,
             query_hook=query_hook,
             python_name=None,
             graphql_name=name,
@@ -268,14 +269,14 @@ class Strawchemy:
     ) -> Any:
         namespace = self._registry_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
+        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
         field = StrawchemyCreateMutationField(
             input_type,
             repository_type=repository_type_,
-            session_getter=self.settings.session_getter,
+            session_getter=self.config.session_getter,
             inspector=self.inspector,
-            auto_snake_case=self.settings.auto_snake_case,
+            auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
             type_annotation=type_annotation,
@@ -314,15 +315,15 @@ class Strawchemy:
     ) -> Any:
         namespace = self._registry_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
+        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
         field = StrawchemyUpdateMutationField(
             input_type=input_type,
             filter_type=filter_input,
             repository_type=repository_type_,
-            session_getter=self.settings.session_getter,
+            session_getter=self.config.session_getter,
             inspector=self.inspector,
-            auto_snake_case=self.settings.auto_snake_case,
+            auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
             type_annotation=type_annotation,
@@ -360,14 +361,14 @@ class Strawchemy:
     ) -> Any:
         namespace = self._registry_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
+        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
         field = StrawchemyUpdateMutationField(
             input_type=input_type,
             repository_type=repository_type_,
-            session_getter=self.settings.session_getter,
+            session_getter=self.config.session_getter,
             inspector=self.inspector,
-            auto_snake_case=self.settings.auto_snake_case,
+            auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
             type_annotation=type_annotation,
@@ -404,14 +405,14 @@ class Strawchemy:
     ) -> Any:
         namespace = self._registry_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.settings.repository_type
+        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
         field = StrawchemyDeleteMutationField(
             filter_input,
             repository_type=repository_type_,
-            session_getter=self.settings.session_getter,
+            session_getter=self.config.session_getter,
             inspector=self.inspector,
-            auto_snake_case=self.settings.auto_snake_case,
+            auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
             type_annotation=type_annotation,

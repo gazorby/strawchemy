@@ -1,0 +1,167 @@
+# serializer version: 1
+# name: test_json_filters[session-tracked-async-containedIn-asyncmy_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_contains(CAST(%s AS JSON), json_model.dict_col)
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-containedIn-asyncpg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col <@ $1::
+   JSONB
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-containedIn-psycopg_async_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col <@ %(param_1)s::
+   JSONB
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-contains-asyncmy_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_contains(json_model.dict_col, CAST(%s AS JSON))
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-contains-asyncpg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col @> $1::
+   JSONB
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-contains-psycopg_async_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col @> %(param_1)s::
+   JSONB
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-hasKey-asyncmy_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_contains_path(json_model.dict_col, %s, %s)
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-hasKey-asyncpg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col ? $1::VARCHAR
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-hasKey-psycopg_async_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col ? %(param_1)s::VARCHAR
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-hasKeyAll-asyncmy_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_contains_path(json_model.dict_col, %s, %s, %s)
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-hasKeyAll-asyncpg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col ? & CAST($1::TEXT[] AS TEXT[])
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-hasKeyAll-psycopg_async_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-hasKeyAny-asyncmy_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_contains_path(json_model.dict_col, %s, %s, %s)
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-hasKeyAny-asyncpg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col ? | CAST($1::TEXT[] AS TEXT[])
+  '''
+# ---
+# name: test_json_filters[session-tracked-async-hasKeyAny-psycopg_async_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
+  '''
+# ---
+# name: test_json_filters[session-tracked-sync-containedIn-psycopg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col <@ %(param_1)s::
+   JSONB
+  '''
+# ---
+# name: test_json_filters[session-tracked-sync-contains-psycopg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col @> %(param_1)s::
+   JSONB
+  '''
+# ---
+# name: test_json_filters[session-tracked-sync-hasKey-psycopg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col ? %(param_1)s::VARCHAR
+  '''
+# ---
+# name: test_json_filters[session-tracked-sync-hasKeyAll-psycopg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
+  '''
+# ---
+# name: test_json_filters[session-tracked-sync-hasKeyAny-psycopg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   WHERE json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
+  '''
+# ---

@@ -3,12 +3,18 @@ from __future__ import annotations
 from typing import Annotated
 
 from pydantic import AfterValidator
-from strawchemy import Input, InputValidationError, Strawchemy, StrawchemySyncRepository, ValidationErrorType
+from strawchemy import (
+    Input,
+    InputValidationError,
+    Strawchemy,
+    StrawchemySyncRepository,
+    ValidationErrorType,
+)
 
 import strawberry
 from tests.unit.models import Group, User
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 def _check_lower_case(value: str) -> str:

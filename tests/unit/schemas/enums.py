@@ -6,7 +6,7 @@ import strawberry
 from strawberry import auto
 from tests.unit.models import Vegetable
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 @strawchemy.type(Vegetable)

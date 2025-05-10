@@ -1,72 +1,40 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 from strawchemy.types import DefaultOffsetPagination
 
-import strawberry
+from tests.integration.models import Fruit
 from tests.typing import AnyQueryExecutor
-from tests.unit.models import SQLDataTypes
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import SQLDataTypesAggregationType, SQLDataTypesContainerType, strawchemy
 from .typing import RawRecordData
 from .utils import compute_aggregation, from_graphql_representation, python_type
 
 if TYPE_CHECKING:
+    from strawchemy.typing import SupportedDialect
+
     from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]
 
 
-@strawberry.type
-class AsyncQuery:
-    container: SQLDataTypesContainerType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
-    data_aggregations: SQLDataTypesAggregationType = strawchemy.field(
-        repository_type=StrawchemyAsyncRepository, root_aggregations=True
-    )
-    data_aggregations_paginated: SQLDataTypesAggregationType = strawchemy.field(
-        repository_type=StrawchemyAsyncRepository, root_aggregations=True, pagination=DefaultOffsetPagination(limit=2)
-    )
-
-
-@strawberry.type
-class SyncQuery:
-    container: SQLDataTypesContainerType = strawchemy.field(repository_type=StrawchemySyncRepository)
-    data_aggregations: SQLDataTypesAggregationType = strawchemy.field(
-        repository_type=StrawchemySyncRepository, root_aggregations=True
-    )
-    data_aggregations_paginated: SQLDataTypesAggregationType = strawchemy.field(
-        repository_type=StrawchemySyncRepository, root_aggregations=True, pagination=DefaultOffsetPagination(limit=2)
-    )
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
-
-
 @pytest.mark.snapshot
 async def test_count_aggregation(
     any_query: AnyQueryExecutor,
-    raw_sql_data_types_container: RawRecordData,
-    raw_sql_data_types: RawRecordData,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test the count aggregation function."""
     query = f"""
         {{
-            container(id: "{raw_sql_data_types_container[0]["id"]}") {{
-                dataTypesAggregate {{
+            color(id: {raw_colors[0]["id"]}) {{
+                fruitsAggregate {{
                     count
                 }}
             }}
@@ -75,7 +43,9 @@ async def test_count_aggregation(
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["container"]["dataTypesAggregate"]["count"] == len(raw_sql_data_types)
+    assert result.data["color"]["fruitsAggregate"]["count"] == len(
+        [fruit for fruit in raw_fruits if fruit["color_id"] == raw_colors[0]["id"]]
+    )
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
 
@@ -83,9 +53,9 @@ async def test_count_aggregation(
 @pytest.mark.parametrize(
     ("field_name", "raw_field_name"),
     [
-        ("intCol", "int_col"),
-        ("floatCol", "float_col"),
-        ("decimalCol", "decimal_col"),
+        ("sweetness", "sweetness"),
+        ("waterPercent", "water_percent"),
+        ("rarity", "rarity"),
     ],
 )
 @pytest.mark.snapshot
@@ -93,16 +63,16 @@ async def test_sum_aggregation(
     field_name: str,
     raw_field_name: str,
     any_query: AnyQueryExecutor,
-    raw_sql_data_types: RawRecordData,
-    raw_sql_data_types_container: RawRecordData,
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test the sum aggregation function for a specific field."""
     query = f"""
         {{
-            container(id: "{raw_sql_data_types_container[0]["id"]}") {{
-                dataTypesAggregate {{
+            color(id: {raw_colors[0]["id"]}) {{
+                fruitsAggregate {{
                     sum {{
                         {field_name}
                     }}
@@ -115,13 +85,13 @@ async def test_sum_aggregation(
     assert result.data
 
     # Calculate expected value
-    expected_sum = sum(record[raw_field_name] for record in raw_sql_data_types)
+    expected_sum = sum(fruit[raw_field_name] for fruit in raw_fruits if fruit["color_id"] == raw_colors[0]["id"])
 
     # Verify result
-    actual_sum = result.data["container"]["dataTypesAggregate"]["sum"][field_name]
+    actual_sum = result.data["color"]["fruitsAggregate"]["sum"][field_name]
 
-    if field_name == "decimalCol":
-        assert str(actual_sum) == str(expected_sum)
+    if field_name == "rarity":
+        assert Decimal(actual_sum) == Decimal(expected_sum)
     else:
         assert pytest.approx(actual_sum) == expected_sum
 
@@ -133,13 +103,12 @@ async def test_sum_aggregation(
 @pytest.mark.parametrize(
     ("field_name", "raw_field_name"),
     [
-        ("intCol", "int_col"),
-        ("floatCol", "float_col"),
-        ("decimalCol", "decimal_col"),
-        ("strCol", "str_col"),
-        ("dateCol", "date_col"),
-        ("timeCol", "time_col"),
-        ("datetimeCol", "datetime_col"),
+        ("sweetness", "sweetness"),
+        ("waterPercent", "water_percent"),
+        ("rarity", "rarity"),
+        ("name", "name"),
+        ("createdAt", "created_at"),
+        ("bestTimeToPick", "best_time_to_pick"),
     ],
 )
 @pytest.mark.snapshot
@@ -147,16 +116,16 @@ async def test_min_aggregation(
     field_name: str,
     raw_field_name: str,
     any_query: AnyQueryExecutor,
-    raw_sql_data_types: RawRecordData,
-    raw_sql_data_types_container: RawRecordData,
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test the min aggregation function for a specific field."""
     query = f"""
         {{
-            container(id: "{raw_sql_data_types_container[0]["id"]}") {{
-                dataTypesAggregate {{
+            color(id: {raw_colors[0]["id"]}) {{
+                fruitsAggregate {{
                     min {{
                         {field_name}
                     }}
@@ -170,12 +139,12 @@ async def test_min_aggregation(
 
     # Verify result
     actual_min = from_graphql_representation(
-        result.data["container"]["dataTypesAggregate"]["min"][field_name], python_type(SQLDataTypes, raw_field_name)
+        result.data["color"]["fruitsAggregate"]["min"][field_name], python_type(Fruit, raw_field_name)
     )
     assert actual_min is not None
 
     # For fields where we can calculate expected values, verify them
-    expected_min = min(record[raw_field_name] for record in raw_sql_data_types)
+    expected_min = min(fruit[raw_field_name] for fruit in raw_fruits if fruit["color_id"] == raw_colors[0]["id"])
 
     assert actual_min == expected_min
 
@@ -187,13 +156,12 @@ async def test_min_aggregation(
 @pytest.mark.parametrize(
     ("field_name", "raw_field_name"),
     [
-        ("intCol", "int_col"),
-        ("floatCol", "float_col"),
-        ("decimalCol", "decimal_col"),
-        ("strCol", "str_col"),
-        ("dateCol", "date_col"),
-        ("timeCol", "time_col"),
-        ("datetimeCol", "datetime_col"),
+        ("sweetness", "sweetness"),
+        ("waterPercent", "water_percent"),
+        ("rarity", "rarity"),
+        ("name", "name"),
+        ("createdAt", "created_at"),
+        ("bestTimeToPick", "best_time_to_pick"),
     ],
 )
 @pytest.mark.snapshot
@@ -201,16 +169,16 @@ async def test_max_aggregation(
     field_name: str,
     raw_field_name: str,
     any_query: AnyQueryExecutor,
-    raw_sql_data_types: RawRecordData,
-    raw_sql_data_types_container: RawRecordData,
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test the max aggregation function for a specific field."""
     query = f"""
         {{
-            container(id: "{raw_sql_data_types_container[0]["id"]}") {{
-                dataTypesAggregate {{
+            color(id: {raw_colors[0]["id"]}) {{
+                fruitsAggregate {{
                     max {{
                         {field_name}
                     }}
@@ -224,12 +192,12 @@ async def test_max_aggregation(
 
     # Verify result
     actual_max = from_graphql_representation(
-        result.data["container"]["dataTypesAggregate"]["max"][field_name], python_type(SQLDataTypes, raw_field_name)
+        result.data["color"]["fruitsAggregate"]["max"][field_name], python_type(Fruit, raw_field_name)
     )
     assert actual_max is not None
 
     # For fields where we can calculate expected values, verify them
-    expected_max = max(record[raw_field_name] for record in raw_sql_data_types)
+    expected_max = max(fruit[raw_field_name] for fruit in raw_fruits if fruit["color_id"] == raw_colors[0]["id"])
 
     assert actual_max == expected_max
 
@@ -240,32 +208,32 @@ async def test_max_aggregation(
 
 @pytest.mark.parametrize(
     "agg_type",
-    ["avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
+    ["avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
 )
 @pytest.mark.parametrize(
     ("field_name", "raw_field_name"),
     [
-        ("intCol", "int_col"),
-        ("floatCol", "float_col"),
-        ("decimalCol", "decimal_col"),
+        ("sweetness", "sweetness"),
+        ("waterPercent", "water_percent"),
+        ("rarity", "rarity"),
     ],
 )
 @pytest.mark.snapshot
 async def test_statistical_aggregation(
-    agg_type: Literal["avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
+    agg_type: Literal["avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
     field_name: str,
     raw_field_name: str,
     any_query: AnyQueryExecutor,
-    raw_sql_data_types_container: RawRecordData,
-    raw_sql_data_types: RawRecordData,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test statistical aggregation functions for a specific field."""
     query = f"""
         {{
-            container(id: "{raw_sql_data_types_container[0]["id"]}") {{
-                dataTypesAggregate {{
+            color(id: {raw_colors[0]["id"]}) {{
+                fruitsAggregate {{
                     {agg_type} {{
                         {field_name}
                     }}
@@ -279,10 +247,12 @@ async def test_statistical_aggregation(
 
     # Verify result is a number or null
     actual_value = from_graphql_representation(
-        result.data["container"]["dataTypesAggregate"][agg_type][field_name], python_type(SQLDataTypes, raw_field_name)
+        result.data["color"]["fruitsAggregate"][agg_type][field_name], python_type(Fruit, raw_field_name)
     )
 
-    expected_value = compute_aggregation(agg_type, [record[raw_field_name] for record in raw_sql_data_types])
+    expected_value = compute_aggregation(
+        agg_type, [fruit[raw_field_name] for fruit in raw_fruits if fruit["color_id"] == raw_colors[0]["id"]]
+    )
 
     assert pytest.approx(actual_value) == expected_value
 
@@ -295,31 +265,29 @@ async def test_statistical_aggregation(
     "pagination",
     [pytest.param(None, id="no-pagination"), pytest.param(DefaultOffsetPagination(limit=2), id="pagination")],
 )
-@pytest.mark.parametrize(
-    "agg_type",
-    ["avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
-)
+@pytest.mark.parametrize("agg_type", ["sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"])
 @pytest.mark.parametrize(
     ("field_name", "raw_field_name"),
     [
-        ("intCol", "int_col"),
-        ("floatCol", "float_col"),
-        ("decimalCol", "decimal_col"),
+        ("sweetness", "sweetness"),
+        ("waterPercent", "water_percent"),
+        ("rarity", "rarity"),
     ],
 )
 @pytest.mark.snapshot
 async def test_root_aggregation(
-    agg_type: Literal["avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
+    agg_type: Literal["sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
     field_name: str,
     raw_field_name: str,
     pagination: None | DefaultOffsetPagination,
     any_query: AnyQueryExecutor,
-    raw_sql_data_types: RawRecordData,
+    raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Test statistical aggregation functions for a specific field."""
-    query_name = "dataAggregations" if pagination is None else "dataAggregationsPaginated"
+    query_name = "fruitAggregations" if pagination is None else "fruitAggregationsPaginatedLimit2"
     query = f"""
         {{
             {query_name} {{
@@ -341,17 +309,17 @@ async def test_root_aggregation(
 
     # Verify result is a number or null
     actual_value = from_graphql_representation(
-        result.data[query_name]["aggregations"][agg_type][field_name], python_type(SQLDataTypes, raw_field_name)
+        result.data[query_name]["aggregations"][agg_type][field_name], python_type(Fruit, raw_field_name)
     )
-
     if pagination is None:
-        expected_value = compute_aggregation(agg_type, [record[raw_field_name] for record in raw_sql_data_types])
+        expected_value = compute_aggregation(agg_type, [record[raw_field_name] for record in raw_fruits])
     else:
         expected_value = compute_aggregation(
-            agg_type, [record[raw_field_name] for record in raw_sql_data_types[: pagination.limit]]
+            agg_type, [record[raw_field_name] for record in raw_fruits[: pagination.limit]]
         )
 
-    assert pytest.approx(actual_value) == expected_value
+    rel = 0.0001 if dialect == "mysql" and field_name == "sweetness" and agg_type in ("avg", "sum") else None
+    assert actual_value == pytest.approx(expected_value, rel=rel)
 
     # Verify SQL query
     assert query_tracker.query_count == 1

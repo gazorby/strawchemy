@@ -22,7 +22,9 @@ Generates GraphQL types, inputs, queries and resolvers directly from SQLAlchemy 
 
 - ⚡ **Sync/Async**: Works with both sync and async SQLAlchemy sessions
 
-- 🛢 **Database**: Currently, only PostgreSQL is officially supported and tested (using [asyncpg](https://github.com/MagicStack/asyncpg) or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
+- 🛢 **Supported databases**:
+  - PostgreSQL (using [asyncpg](https://github.com/MagicStack/asyncpg) or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
+  - MySQL (using [asyncmy](https://github.com/long2ice/asyncmy))
 
 > [!Warning]
 >
@@ -74,7 +76,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 # Initialize the strawchemy mapper
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 # Define SQLAlchemy models
@@ -191,7 +193,7 @@ from strawchemy import Strawchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 class Base(DeclarativeBase):
@@ -276,7 +278,7 @@ To explicitly tell strawchemy to use your type, you need to define it with `@str
 ```python
 from strawchemy import Strawchemy
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 # Define models
 class Color(Base):
@@ -988,7 +990,7 @@ import strawberry
 from strawchemy import Strawchemy, StrawchemySyncRepository, StrawchemyAsyncRepository
 
 # Initialize the strawchemy mapper
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 # Define input types for mutations
 @strawchemy.input(User, include=["name", "email"])
@@ -1717,12 +1719,13 @@ By default, Strawchemy uses the StrawchemySyncRepository as its repository type.
 
 ## Configuration
 
-Strawchemy can be configured when initializing the mapper.
+Configuration is made by passing a `StrawchemyConfig` to the `Strawchemy` instance.
 
 ### Configuration Options
 
 | Option                     | Type                                                        | Default                    | Description                                                                                                                              |
 | -------------------------- | ----------------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `dialect`                  | `SupportedDialect`                                          |                            | Database dialect to use. Supported dialects are "postgresql", "mysql".                                                                   |
 | `session_getter`           | `Callable[[Info], Session]`                                 | `default_session_getter`   | Function to retrieve SQLAlchemy session from strawberry `Info` object. By default, it retrieves the session from `info.context.session`. |
 | `auto_snake_case`          | `bool`                                                      | `True`                     | Automatically convert snake cased names to camel case in GraphQL schema.                                                                 |
 | `repository_type`          | `type[Repository] \| StrawchemySyncRepository`              | `StrawchemySyncRepository` | Repository class to use for auto resolvers.                                                                                              |
@@ -1731,12 +1734,11 @@ Strawchemy can be configured when initializing the mapper.
 | `pagination_default_limit` | `int`                                                       | `100`                      | Default pagination limit when `pagination=True`.                                                                                         |
 | `pagination`               | `bool`                                                      | `False`                    | Enable/disable pagination on list resolvers by default.                                                                                  |
 | `default_id_field_name`    | `str`                                                       | `"id"`                     | Name for primary key fields arguments on primary key resolvers.                                                                          |
-| `dialect`                  | `Literal["postgresql"]`                                     | `"postgresql"`             | Database dialect to use. Currently, only PostgreSQL is supported.                                                                        |
 
 ### Example
 
 ```python
-from strawchemy import Strawchemy
+from strawchemy import Strawchemy, StrawchemyConfig
 
 # Custom session getter function
 def get_session_from_context(info):
@@ -1744,11 +1746,14 @@ def get_session_from_context(info):
 
 # Initialize with custom configuration
 strawchemy = Strawchemy(
-    session_getter=get_session_from_context,
-    auto_snake_case=True,
-    pagination=True,
-    pagination_default_limit=50,
-    default_id_field_name="pk",
+    StrawchemyConfig(
+      "postgresql",
+      session_getter=get_session_from_context,
+      auto_snake_case=True,
+      pagination=True,
+      pagination_default_limit=50,
+      default_id_field_name="pk",
+    )
 )
 ```
 

@@ -163,14 +163,14 @@ Run tests with coverage
 
 - Depends: _install
 
-- **Usage**: `test:integration [test]`
+- **Usage**: `test:integration <test>…`
 - **Aliases**: `ti`
 
 Run integration tests
 
 ### Arguments
 
-#### `[test]`
+#### `<test>…`
 
 ## `test:integration-all`
 
@@ -184,6 +184,32 @@ Run integration tests on all supported python versions
 ### Arguments
 
 #### `[test]`
+
+## `test:integration-mysql`
+
+- Depends: _install
+
+- **Usage**: `test:integration-mysql <test>…`
+- **Aliases**: `ti-mysql`
+
+Run integration tests
+
+### Arguments
+
+#### `<test>…`
+
+## `test:integration-postgres`
+
+- Depends: _install
+
+- **Usage**: `test:integration-postgres <test>…`
+- **Aliases**: `ti-postgres`
+
+Run integration tests
+
+### Arguments
+
+#### `<test>…`
 
 ## `test:integration:coverage`
 

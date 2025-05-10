@@ -5,7 +5,7 @@ from strawchemy import Strawchemy
 import strawberry
 from tests.unit.models import Color
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 @strawchemy.type(Color, include="all")

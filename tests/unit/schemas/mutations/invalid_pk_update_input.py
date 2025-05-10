@@ -4,7 +4,7 @@ from strawchemy import Strawchemy
 
 from tests.unit.models import Group
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 @strawchemy.pk_update_input(Group, exclude={"id"})

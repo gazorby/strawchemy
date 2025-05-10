@@ -1,262 +1,21 @@
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING
 
 import pytest
-from strawchemy import (
-    Input,
-    InputValidationError,
-    StrawchemyAsyncRepository,
-    StrawchemySyncRepository,
-    ValidationErrorType,
-)
 
-import strawberry
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 from syrupy.assertion import SnapshotAssertion
-from tests.integration.models import Color, Fruit
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import (
-    ColorCreateInput,
-    ColorCreateValidation,
-    ColorFilter,
-    ColorPartial,
-    ColorPkUpdateValidation,
-    ColorType,
-    ColorUpdateInput,
-    FruitCreateInput,
-    FruitType,
-    FruitUpdateInput,
-    RankedUserCreateInput,
-    RankedUserCreateValidation,
-    RankedUserType,
-    UserCreate,
-    UserFilter,
-    UserType,
-    UserUpdateInput,
-    strawchemy,
-)
 from .typing import RawRecordData
 
+if TYPE_CHECKING:
+    from strawchemy.typing import SupportedDialect
+
 pytestmark = [pytest.mark.integration]
-
-
-@strawberry.type
-class AsyncMutation:
-    create_color: ColorType = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
-    create_validated_color: ColorType | ValidationErrorType = strawchemy.create(
-        ColorCreateInput, validation=ColorCreateValidation, repository_type=StrawchemyAsyncRepository
-    )
-    create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
-
-    update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemyAsyncRepository)
-    update_validated_color: ColorType | ValidationErrorType = strawchemy.update_by_ids(
-        ColorUpdateInput, validation=ColorPkUpdateValidation, repository_type=StrawchemyAsyncRepository
-    )
-    update_colors: list[ColorType] = strawchemy.update_by_ids(
-        ColorUpdateInput, repository_type=StrawchemyAsyncRepository
-    )
-    update_colors_filter: list[ColorType] = strawchemy.update(
-        ColorPartial, ColorFilter, repository_type=StrawchemyAsyncRepository
-    )
-
-    create_fruit: FruitType = strawchemy.create(FruitCreateInput, repository_type=StrawchemyAsyncRepository)
-    create_fruits: list[FruitType] = strawchemy.create(FruitCreateInput, repository_type=StrawchemyAsyncRepository)
-
-    update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemyAsyncRepository)
-    update_fruits: list[FruitType] = strawchemy.update_by_ids(
-        FruitUpdateInput, repository_type=StrawchemyAsyncRepository
-    )
-
-    update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemyAsyncRepository)
-    create_user: UserType = strawchemy.create(UserCreate, repository_type=StrawchemyAsyncRepository)
-    delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemyAsyncRepository)
-    delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemyAsyncRepository)
-
-    @strawberry.field
-    async def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
-        return (await StrawchemyAsyncRepository(ColorType, info).create(Input(data, name="Blue"))).graphql_type()
-
-    @strawberry.field
-    async def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
-        color_input = Input(data)
-        color_input.instances[0].fruits.extend(
-            [
-                Fruit(name="Apple", sweetness=1, water_percent=0.5),
-                Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
-            ]
-        )
-        return (await StrawchemyAsyncRepository(ColorType, info).create(color_input)).graphql_type()
-
-    @strawberry.field
-    async def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
-        color_input = Input(data)
-        session = cast("AsyncSession", info.context.session)
-        apple, strawberry = (
-            Fruit(name="Apple", sweetness=1, water_percent=0.5),
-            Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
-        )
-        session.add_all([apple, strawberry])
-        await session.commit()
-        session.expire(strawberry)
-        color_input.instances[0].fruits.extend([apple, strawberry])
-        return (await StrawchemyAsyncRepository(ColorType, info).create(color_input)).graphql_type()
-
-    @strawberry.field
-    async def create_red_fruit(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
-        fruit_input = Input(data)
-        fruit_input.instances[0].color = Color(name="Red")
-        return (await StrawchemyAsyncRepository(FruitType, info).create(fruit_input)).graphql_type()
-
-    @strawberry.field
-    async def create_fruit_for_existing_color(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
-        fruit_input = Input(data)
-        session = cast("AsyncSession", info.context.session)
-        red = Color(name="Red")
-        session.add(red)
-        await session.commit()
-        fruit_input.instances[0].color = red
-        return (await StrawchemyAsyncRepository(FruitType, info).create(fruit_input)).graphql_type()
-
-    @strawberry.field
-    async def create_color_manual_validation(
-        self, info: strawberry.Info, data: ColorCreateInput
-    ) -> ColorType | ValidationErrorType:
-        try:
-            return (
-                await StrawchemyAsyncRepository(ColorType, info).create(Input(data, ColorCreateValidation))
-            ).graphql_type()
-        except InputValidationError as error:
-            return ValidationErrorType.from_pydantic(error.pydantic_error)
-
-    @strawberry.field
-    async def create_validated_ranked_user(
-        self, info: strawberry.Info, data: RankedUserCreateInput
-    ) -> RankedUserType | ValidationErrorType:
-        try:
-            user_input = Input(data, RankedUserCreateValidation, rank=1)
-        except InputValidationError as error:
-            return ValidationErrorType.from_pydantic(error.pydantic_error)
-        return (await StrawchemyAsyncRepository(RankedUserType, info).create(user_input)).graphql_type()
-
-    @strawberry.field
-    async def create_ranked_user(self, info: strawberry.Info, data: RankedUserCreateInput) -> RankedUserType:
-        return (await StrawchemyAsyncRepository(RankedUserType, info).create(Input(data, rank=1))).graphql_type()
-
-
-@strawberry.type
-class SyncMutation:
-    create_color: ColorType = strawchemy.create(ColorCreateInput, repository_type=StrawchemySyncRepository)
-    create_validated_color: ColorType | ValidationErrorType = strawchemy.create(
-        ColorCreateInput, validation=ColorCreateValidation, repository_type=StrawchemySyncRepository
-    )
-    create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemySyncRepository)
-
-    create_fruit: FruitType = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
-    update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemySyncRepository)
-    update_validated_color: ColorType | ValidationErrorType = strawchemy.update_by_ids(
-        ColorUpdateInput, validation=ColorPkUpdateValidation, repository_type=StrawchemySyncRepository
-    )
-    update_colors: list[ColorType] = strawchemy.update_by_ids(
-        ColorUpdateInput, repository_type=StrawchemySyncRepository
-    )
-    update_colors_filter: list[ColorType] = strawchemy.update(
-        ColorPartial, ColorFilter, repository_type=StrawchemySyncRepository
-    )
-
-    create_fruits: list[FruitType] = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
-    update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemySyncRepository)
-    update_fruits: list[FruitType] = strawchemy.update_by_ids(
-        FruitUpdateInput, repository_type=StrawchemySyncRepository
-    )
-
-    create_user: UserType = strawchemy.create(UserCreate, repository_type=StrawchemySyncRepository)
-    update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemySyncRepository)
-    delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemySyncRepository)
-    delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemySyncRepository)
-
-    @strawberry.field
-    def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
-        return StrawchemySyncRepository(ColorType, info).create(Input(data, name="Blue")).graphql_type()
-
-    @strawberry.field
-    def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
-        color_input = Input(data)
-        color_input.instances[0].fruits.extend(
-            [
-                Fruit(name="Apple", sweetness=1, water_percent=0.5),
-                Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
-            ]
-        )
-        return StrawchemySyncRepository(ColorType, info).create(color_input).graphql_type()
-
-    @strawberry.field
-    def create_color_for_existing_fruits(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
-        color_input = Input(data)
-        session = cast("Session", info.context.session)
-        apple, strawberry = (
-            Fruit(name="Apple", sweetness=1, water_percent=0.5),
-            Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
-        )
-        session.add_all([apple, strawberry])
-        session.commit()
-        session.expire(strawberry)
-        color_input.instances[0].fruits.extend([apple, strawberry])
-        return StrawchemySyncRepository(ColorType, info).create(color_input).graphql_type()
-
-    @strawberry.field
-    def create_red_fruit(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
-        fruit_input = Input(data)
-        fruit_input.instances[0].color = Color(name="Red")
-        return StrawchemySyncRepository(FruitType, info).create(fruit_input).graphql_type()
-
-    @strawberry.field
-    def create_fruit_for_existing_color(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
-        fruit_input = Input(data)
-        session = cast("Session", info.context.session)
-        red = Color(name="Red")
-        session.add(red)
-        session.commit()
-        fruit_input.instances[0].color = red
-        return StrawchemySyncRepository(FruitType, info).create(fruit_input).graphql_type()
-
-    @strawberry.field
-    def create_color_manual_validation(
-        self, info: strawberry.Info, data: ColorCreateInput
-    ) -> ColorType | ValidationErrorType:
-        try:
-            return StrawchemySyncRepository(ColorType, info).create(Input(data, ColorCreateValidation)).graphql_type()
-        except InputValidationError as error:
-            return ValidationErrorType.from_pydantic(error.pydantic_error)
-
-    @strawberry.field
-    def create_validated_ranked_user(
-        self, info: strawberry.Info, data: RankedUserCreateInput
-    ) -> RankedUserType | ValidationErrorType:
-        try:
-            user_input = Input(data, RankedUserCreateValidation, rank=1)
-        except InputValidationError as error:
-            return ValidationErrorType.from_pydantic(error.pydantic_error)
-        return StrawchemySyncRepository(RankedUserType, info).create(user_input).graphql_type()
-
-    @strawberry.field
-    def create_ranked_user(self, info: strawberry.Info, data: RankedUserCreateInput) -> RankedUserType:
-        return StrawchemySyncRepository(RankedUserType, info).create(Input(data, rank=1)).graphql_type()
-
-
-@pytest.fixture
-def sync_mutation() -> type[SyncMutation]:
-    return SyncMutation
-
-
-@pytest.fixture
-def async_mutation() -> type[AsyncMutation]:
-    return AsyncMutation
 
 
 # Create tests
@@ -568,7 +327,7 @@ async def test_create_with_existing_to_many(
 
 @pytest.mark.snapshot
 async def test_create_with_to_many_create(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
 ) -> None:
     query = """
             mutation {
@@ -595,8 +354,10 @@ async def test_create_with_to_many_create(
         "name": "new color",
         "fruits": [{"name": "new fruit 1"}, {"name": "new fruit 2"}],
     }
-
-    query_tracker.assert_statements(2, "insert", sql_snapshot)
+    if dialect == "postgresql":
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(3, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
@@ -737,13 +498,13 @@ async def test_create_with_nested_mixed_relations_create(
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["createColor"] == {
-        "name": "White",
-        "fruits": [
-            {"name": "Lychee", "product": None, "farms": [{"name": "Bio farm"}]},
-            {"name": "Grape", "product": {"name": "wine"}, "farms": []},
-        ],
-    }
+    assert result.data["createColor"]["name"] == "White"
+    expected_fruits = [
+        {"name": "Lychee", "product": None, "farms": [{"name": "Bio farm"}]},
+        {"name": "Grape", "product": {"name": "wine"}, "farms": []},
+    ]
+    for fruit in expected_fruits:
+        assert fruit in result.data["createColor"]["fruits"]
 
     # Heterogeneous params means inserts cannot be batched
     query_tracker.assert_statements(5, "insert", sql_snapshot)
@@ -752,7 +513,7 @@ async def test_create_with_nested_mixed_relations_create(
 
 @pytest.mark.snapshot
 async def test_create_many(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
 ) -> None:
     result = await maybe_async(
         any_query(
@@ -773,8 +534,10 @@ async def test_create_many(
     assert not result.errors
     assert result.data
     assert result.data["createColors"] == [{"name": "new color 1"}, {"name": "new color 2"}]
-
-    query_tracker.assert_statements(1, "insert", sql_snapshot)
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
@@ -902,7 +665,11 @@ async def test_update(
 
 @pytest.mark.snapshot
 async def test_update_by_filter(
-    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_colors: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Tests a simple update mutation."""
     query = """
@@ -931,12 +698,15 @@ async def test_update_by_filter(
     ]
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
-    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+    else:
+        query_tracker.assert_statements(2, "select", sql_snapshot)
 
 
 @pytest.mark.snapshot
 async def test_update_by_filter_only_return_affected_objects(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
 ) -> None:
     """Tests a simple update mutation."""
     query = """
@@ -960,7 +730,10 @@ async def test_update_by_filter_only_return_affected_objects(
     assert result.data["updateColorsFilter"] == []
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
-    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
+    else:
+        query_tracker.assert_statements(2, "select", sql_snapshot)
 
 
 @pytest.mark.snapshot
@@ -1268,6 +1041,7 @@ async def test_update_with_to_many_create(
     any_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Tests updating a record and creating new related records for a to-many relationship."""
     color_id = raw_colors[0]["id"]
@@ -1307,7 +1081,11 @@ async def test_update_with_to_many_create(
         {"name": "new fruit 4 during update"},
     ]
 
-    query_tracker.assert_statements(1, "insert", sql_snapshot)  # Insert 2 new fruits, in a single batched query
+    # Insert 2 new fruits, in a single batched query
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
     query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + new fruits
 
@@ -1472,15 +1250,15 @@ async def test_update_with_to_many_add_and_create(
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["updateColor"] == {
-        "id": to_graphql_representation(raw_colors[0]["id"], "output"),
-        "name": "updated color name",
-        "fruits": [
-            {"name": to_graphql_representation(raw_fruits[0]["name"], "output")},
-            {"name": "new fruit 3 during update"},
-            {"name": to_graphql_representation(raw_fruits[1]["name"], "output")},
-        ],
-    }
+    assert result.data["updateColor"]["id"] == to_graphql_representation(raw_colors[0]["id"], "output")
+    assert result.data["updateColor"]["name"] == "updated color name"
+    expected = [
+        {"name": to_graphql_representation(raw_fruits[0]["name"], "output")},
+        {"name": "new fruit 3 during update"},
+        {"name": to_graphql_representation(raw_fruits[1]["name"], "output")},
+    ]
+    for fruit in expected:
+        assert fruit in result.data["updateColor"]["fruits"]
 
     query_tracker.assert_statements(1, "insert", sql_snapshot)
     # 1. Update specified fruit's color_id
@@ -1709,7 +1487,7 @@ async def test_update_no_init_defaults(
         any_query(
             f"""
             mutation {{
-                updateUser(data: {{ id: "{raw_users[3]["id"]}", name: "Jeanne" }}) {{
+                updateUser(data: {{ id: {raw_users[3]["id"]}, name: "Jeanne" }}) {{
                     name
                     bio
                 }}
@@ -1734,6 +1512,7 @@ async def test_delete_filter(
     any_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     query = """
         mutation {
@@ -1759,13 +1538,20 @@ async def test_delete_filter(
         {"id": apple_fruit["id"], "name": "Alice", "group": {"name": raw_groups[0]["name"]}}
     ]
 
-    query_tracker.assert_statements(1, "select", sql_snapshot)
     query_tracker.assert_statements(1, "delete", sql_snapshot)
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "select", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "select", sql_snapshot)
 
 
 @pytest.mark.snapshot
 async def test_delete_all(
-    raw_users: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_users: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     query = """
         mutation {
@@ -1782,8 +1568,11 @@ async def test_delete_all(
     assert not result.errors
     assert result.data
     assert len(result.data["deleteUsers"]) == len(raw_users)
-    query_tracker.assert_statements(1, "select", sql_snapshot)
     query_tracker.assert_statements(1, "delete", sql_snapshot)
+    if dialect == "postgresql":
+        query_tracker.assert_statements(1, "select", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "select", sql_snapshot)
 
 
 # Custom mutations

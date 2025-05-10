@@ -7,7 +7,7 @@ from .fixtures import (
     sync_query,
 )
 
-pytest_plugins = ("pytest_databases.docker.postgres", "pytester")
+pytest_plugins = ("pytest_databases.docker.postgres", "pytest_databases.docker.mysql", "pytester")
 
 __all__ = (
     "fx_sqlalchemy_dataclass_factory",

@@ -1,31 +1,63 @@
-# ruff: noqa: TC003
+# ruff: noqa: TC003, DTZ005
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from typing import Any
-from uuid import UUID, uuid4
 
 from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
-from sqlalchemy import DateTime, ForeignKey, MetaData, Text
-from sqlalchemy.dialects import postgresql
+from sqlalchemy import (
+    ARRAY,
+    JSON,
+    Date,
+    DateTime,
+    Double,
+    ForeignKey,
+    Integer,
+    MetaData,
+    Numeric,
+    Sequence,
+    Text,
+    Time,
+)
+from sqlalchemy.dialects import mysql, postgresql
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
 from sqlalchemy.orm import registry as Registry  # noqa: N812
 
-metadata, geo_metadata, dc_metadata = MetaData(), MetaData(), MetaData()
+metadata = MetaData()
+geo_metadata = MetaData()
+dc_metadata = MetaData()
+json_metadata = MetaData()
+array_metadata = MetaData()
+interval_metadata = MetaData()
+date_time_metadata = MetaData()
+
+TextArrayType = ARRAY(Text).with_variant(postgresql.ARRAY(Text), "postgresql")
+JSONType = JSON().with_variant(postgresql.JSONB, "postgresql").with_variant(mysql.JSON, "mysql")
+FREE_ID_RANGE = range(1, 300)
+
+# Bases
 
 
 class BaseColumns:
-    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), info=READ_ONLY
-    )
+    @declared_attr
+    @classmethod
+    def id(cls) -> Mapped[int]:
+        """BigInt Primary key column."""
+        return mapped_column(
+            Integer,
+            Sequence(f"{cls.__tablename__}_id_seq", start=FREE_ID_RANGE.stop, optional=False),  # type: ignore[attr-defined]
+            primary_key=True,
+        )
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(), info=READ_ONLY)
     """Date/time of instance creation."""
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), info=READ_ONLY
+        DateTime, default=lambda: datetime.now(), onupdate=lambda: datetime.now(), info=READ_ONLY
     )
 
 
@@ -44,32 +76,57 @@ class GeoUUIDBase(BaseColumns, DeclarativeBase):
     registry = Registry(metadata=geo_metadata)
 
 
+class ArrayBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=array_metadata)
+
+
+class JSONBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=json_metadata)
+
+
+class IntervalBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=interval_metadata)
+
+
+class DateTimeBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=date_time_metadata)
+
+
+# Models
+
+
 class FruitFarm(Base):
     __tablename__ = "fruit_farm"
 
-    name: Mapped[str]
-    fruit_id: Mapped[UUID] = mapped_column(ForeignKey("fruit.id"), info=PRIVATE)
+    name: Mapped[str] = mapped_column(Text)
+    fruit_id: Mapped[int] = mapped_column(ForeignKey("fruit.id"), info=PRIVATE)
 
 
 class DerivedProduct(Base):
     __tablename__ = "derived_product"
 
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(Text)
 
 
 class Fruit(Base):
     __tablename__ = "fruit"
 
-    name: Mapped[str]
-    color_id: Mapped[UUID | None] = mapped_column(ForeignKey("color.id"), nullable=True, default=None)
+    name: Mapped[str] = mapped_column(Text)
+    color_id: Mapped[int | None] = mapped_column(ForeignKey("color.id"), nullable=True, default=None)
     color: Mapped[Color | None] = relationship("Color", back_populates="fruits")
     farms: Mapped[list[FruitFarm]] = relationship(FruitFarm)
-    derived_product_id: Mapped[UUID | None] = mapped_column(
+    derived_product_id: Mapped[int | None] = mapped_column(
         ForeignKey("derived_product.id"), nullable=True, default=None
     )
     product: Mapped[DerivedProduct | None] = relationship(DerivedProduct)
-    sweetness: Mapped[int]
-    water_percent: Mapped[float]
+    sweetness: Mapped[int] = mapped_column(Integer)
+    water_percent: Mapped[float] = mapped_column(Double)
+    rarity: Mapped[Decimal] = mapped_column(Numeric(10, 6), default=Decimal("0"))
+    best_time_to_pick: Mapped[time] = mapped_column(Time, default=time(hour=9))
 
     @hybrid_property
     def description(self) -> str:
@@ -80,31 +137,31 @@ class Color(Base):
     __tablename__ = "color"
 
     fruits: Mapped[list[Fruit]] = relationship("Fruit", back_populates="color")
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column(Text)
 
 
 class Group(Base):
     __tablename__ = "group"
 
-    name: Mapped[str] = mapped_column()
+    name: Mapped[str] = mapped_column(Text)
     topics: Mapped[list["Topic"]] = relationship("Topic")
 
 
 class Topic(Base):
     __tablename__ = "topic"
 
-    name: Mapped[str] = mapped_column()
-    group_id: Mapped[UUID] = mapped_column(ForeignKey("group.id"))
+    name: Mapped[str] = mapped_column(Text)
+    group_id: Mapped[int] = mapped_column(ForeignKey("group.id"))
 
 
 class User(Base):
     __tablename__ = "user"
 
-    name: Mapped[str] = mapped_column()
+    name: Mapped[str] = mapped_column(Text)
     greeting: Mapped[str] = column_property("Hello, " + name)
-    group_id: Mapped[UUID | None] = mapped_column(ForeignKey("group.id"))
+    group_id: Mapped[int | None] = mapped_column(ForeignKey("group.id"))
     group: Mapped[Group | None] = relationship(Group)
-    bio: Mapped[str | None] = mapped_column(default=None)
+    bio: Mapped[str | None] = mapped_column(Text, default=None)
 
     def __init__(self, **kw: Any) -> None:
         super().__init__(**kw)
@@ -115,31 +172,40 @@ class User(Base):
 class RankedUser(Base):
     __tablename__ = "ranked_user"
 
-    name: Mapped[str] = mapped_column()
+    name: Mapped[str] = mapped_column(Text)
     rank: Mapped[int] = mapped_column(info=READ_ONLY)
 
 
-class SQLDataTypes(Base):
-    __tablename__ = "sql_data_types"
+# Specific data types models
 
-    date_col: Mapped[date]
-    time_col: Mapped[time]
+
+class ArrayModel(ArrayBase):
+    __tablename__ = "array_model"
+
+    array_str_col: Mapped[list[str]] = mapped_column(TextArrayType, default=list)
+
+
+class IntervalModel(IntervalBase):
+    __tablename__ = "interval_model"
+
+    registry = Registry(metadata=interval_metadata)
+
     time_delta_col: Mapped[timedelta]
+
+
+class JSONModel(JSONBase):
+    __tablename__ = "json_model"
+
+    registry = Registry(metadata=json_metadata)
+
+    dict_col: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+
+
+class DateTimeModel(DateTimeBase):
+    __tablename__ = "date_time_model"
+
+    registry = Registry(metadata=date_time_metadata)
+
+    date_col: Mapped[date] = mapped_column(Date)
+    time_col: Mapped[time] = mapped_column(Time)
     datetime_col: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    str_col: Mapped[str]
-    int_col: Mapped[int]
-    float_col: Mapped[float]
-    decimal_col: Mapped[Decimal]
-    bool_col: Mapped[bool]
-    uuid_col: Mapped[UUID]
-    dict_col: Mapped[dict[str, Any]] = mapped_column(postgresql.JSONB, default=dict)
-    array_str_col: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
-    optional_str_col: Mapped[str | None] = mapped_column(nullable=True, default=None)
-    container_id: Mapped[UUID] = mapped_column(ForeignKey("sql_data_types_container.id"))
-    container: Mapped[SQLDataTypesContainer] = relationship("SQLDataTypesContainer")
-
-
-class SQLDataTypesContainer(Base):
-    __tablename__ = "sql_data_types_container"
-
-    data_types: Mapped[list[SQLDataTypes]] = relationship("SQLDataTypes", back_populates="container")

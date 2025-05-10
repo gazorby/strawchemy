@@ -7,20 +7,19 @@ pytest.importorskip("geoalchemy2", reason="geoalchemy2 is not installed")
 
 from typing import TYPE_CHECKING, Any
 
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
-
-import strawberry
 from sqlalchemy import Executable, Insert, MetaData, insert, text
 from tests.integration.fixtures import QueryTracker
+from tests.integration.geo.types import mysql as mysql_types
+from tests.integration.geo.types import postgres as postgres_types
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .models import GeoModel, geo_metadata
-from .types import GeoFieldsFilter, GeoFieldsType, strawchemy
 
 if TYPE_CHECKING:
     from pytest_databases.docker.postgres import PostgresService
+    from strawchemy.typing import SupportedDialect
 
     from syrupy.assertion import SnapshotAssertion
     from tests.integration.typing import RawRecordData
@@ -35,37 +34,33 @@ def metadata() -> MetaData:
 
 
 @pytest.fixture
-def database_service(postgis_service: PostgresService) -> PostgresService:
+def postgres_database_service(postgis_service: PostgresService) -> PostgresService:
     return postgis_service
 
 
 @pytest.fixture
-def before_create_all_statements() -> list[Executable]:
-    return [text("CREATE EXTENSION IF NOT EXISTS postgis")]
-
-
-@strawberry.type
-class AsyncQuery:
-    geo_field: list[GeoFieldsType] = strawchemy.field(
-        filter_input=GeoFieldsFilter, repository_type=StrawchemyAsyncRepository
-    )
-
-
-@strawberry.type
-class SyncQuery:
-    geo_field: list[GeoFieldsType] = strawchemy.field(
-        filter_input=GeoFieldsFilter, repository_type=StrawchemySyncRepository
-    )
+def before_create_all_statements(dialect: SupportedDialect) -> list[Executable]:
+    if dialect == "postgresql":
+        return [text("CREATE EXTENSION IF NOT EXISTS postgis")]
+    return []
 
 
 @pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
+def async_query(dialect: SupportedDialect) -> type[Any]:
+    if dialect == "postgresql":
+        return postgres_types.AsyncGeoQuery
+    if dialect == "mysql":
+        return mysql_types.AsyncGeoQuery
+    pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
+def sync_query(dialect: SupportedDialect) -> type[Any]:
+    if dialect == "postgresql":
+        return postgres_types.SyncGeoQuery
+    if dialect == "mysql":
+        return mysql_types.SyncGeoQuery
+    pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")
 
 
 @pytest.fixture
@@ -90,9 +85,9 @@ async def test_no_filtering(
 @pytest.mark.parametrize(
     ("field_name", "geometry", "expected_ids"),
     [
-        pytest.param("polygon", {"type": "Point", "coordinates": [0.5, 0.5]}, [0, 3], id="point-within-polygon"),
-        pytest.param("multiPolygon", {"type": "Point", "coordinates": [3, 3]}, [3], id="point-within-multipolygon"),
-        pytest.param("geometry", {"type": "Point", "coordinates": [150, 150]}, [3], id="point-within-geometry-polygon"),
+        pytest.param("polygon", {"type": "Point", "coordinates": [0.5, 0.5]}, [0], id="point-within-polygon"),
+        pytest.param("multiPolygon", {"type": "Point", "coordinates": [2.5, 2.5]}, [0], id="point-within-multipolygon"),
+        pytest.param("geometry", {"type": "Point", "coordinates": [5, 5]}, [0], id="point-equals-geometry-point"),
     ],
 )
 @pytest.mark.snapshot

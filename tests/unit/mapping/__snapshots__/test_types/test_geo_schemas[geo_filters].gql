@@ -49,7 +49,6 @@
     _and: [GeosFieldsFilter!]
     _or: [GeosFieldsFilter!]
     _not: GeosFieldsFilter
-    id: UUIDComparison
     pointRequired: GeometryComparison
     point: GeometryComparison
     lineString: GeometryComparison
@@ -58,11 +57,11 @@
     multiLineString: GeometryComparison
     multiPolygon: GeometryComparison
     geometry: GeometryComparison
+    id: UUIDComparison
   }
   
   """GraphQL type"""
   type GeosFieldsType {
-    id: UUID!
     pointRequired: GeoJSONPoint!
     point: GeoJSONPoint
     lineString: GeoJSONLineString
@@ -71,6 +70,7 @@
     multiLineString: GeoJSONMultiLineString
     multiPolygon: GeoJSONMultiPolygon
     geometry: GeoJSON
+    id: UUID!
   }
   
   type Query {

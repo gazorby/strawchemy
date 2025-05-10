@@ -1,18 +1,19 @@
+# ruff: noqa: DTZ005
+
 from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
-from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, cast
-from uuid import uuid4
 
 import pytest
 import sqlparse
 from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
-from strawchemy.strawberry.scalars import Interval
+from strawchemy.constants import GEO_INSTALLED
+from strawchemy.strawberry.scalars import Interval, Time
 
 from sqlalchemy import (
     URL,
@@ -37,20 +38,25 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, a
 from sqlalchemy.orm import Session, sessionmaker
 from strawberry.scalars import JSON
 from tests.fixtures import DefaultQuery
+from tests.integration.types import AnyAsyncMutationType, AnyAsyncQueryType, AnySyncQueryType
+from tests.integration.types import mysql as mysql_types
+from tests.integration.types import postgres as postgres_types
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
-from .models import Color, Fruit, FruitFarm, Group, SQLDataTypes, SQLDataTypesContainer, Topic, User, metadata
+from .models import Color, Fruit, FruitFarm, Group, Topic, User, metadata
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, Iterator
     from pathlib import Path
 
-    from pytest import FixtureRequest, MonkeyPatch
+    from pytest import FixtureRequest
     from pytest_databases._service import DockerService  # pyright: ignore[reportPrivateImportUsage]
+    from pytest_databases.docker.mysql import MySQLService
     from pytest_databases.docker.postgres import PostgresService
     from pytest_databases.types import XdistIsolationLevel
     from strawchemy.sqlalchemy.typing import AnySession
+    from strawchemy.typing import SupportedDialect
 
     from syrupy.assertion import SnapshotAssertion
 
@@ -68,9 +74,6 @@ __all__ = (
     "psycopg_engine",
     "raw_colors",
     "raw_fruits",
-    "raw_sql_data_types",
-    "raw_sql_data_types_set1",
-    "raw_sql_data_types_set2",
     "raw_users",
     "seed_db_async",
     "seed_db_sync",
@@ -78,18 +81,23 @@ __all__ = (
 )
 
 FilterableStatement: TypeAlias = Literal["insert", "update", "select", "delete"]
-scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval}
+scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval, time: Time}
+engine_plugins: list[str] = []
 
-if find_spec("geoalchemy2") is not None:
+if GEO_INSTALLED:
     from strawchemy.strawberry.geo import GEO_SCALAR_OVERRIDES
 
+    engine_plugins = ["geoalchemy2"]
     scalar_overrides |= GEO_SCALAR_OVERRIDES
+
+
+# Mock data
 
 
 GEO_DATA = [
     # Complete record with all geometry types
     {
-        "id": str(uuid4()),
+        "id": 1,
         "point_required": "POINT(0 0)",  # Origin point
         "point": "POINT(1 1)",  # Simple point
         "line_string": "LINESTRING(0 0, 1 1, 2 2)",  # Simple line with 3 points
@@ -101,7 +109,7 @@ GEO_DATA = [
     },
     # Record with only required fields
     {
-        "id": str(uuid4()),
+        "id": 2,
         "point_required": "POINT(10 20)",  # Required point
         "point": None,
         "line_string": None,
@@ -113,8 +121,8 @@ GEO_DATA = [
     },
     # Record with complex geometries
     {
-        "id": str(uuid4()),
-        "point_required": "POINT(45.5 -122.6)",  # Real-world coordinates (Portland, OR)
+        "id": 3,
+        "point_required": "POINT(-122.6 45.5)",  # Real-world coordinates (Portland, OR)
         "point": "POINT(-74.0060 40.7128)",  # New York City
         "line_string": "LINESTRING(-122.4194 37.7749, -118.2437 34.0522, -74.0060 40.7128)",  # SF to LA to NYC
         "polygon": "POLYGON((-122.4194 37.7749, -122.4194 37.8, -122.4 37.8, -122.4 37.7749, -122.4194 37.7749))",  # Area in SF
@@ -123,39 +131,262 @@ GEO_DATA = [
         "multi_polygon": "MULTIPOLYGON(((-122.42 37.78, -122.42 37.8, -122.4 37.8, -122.4 37.78, -122.42 37.78)), ((-118.25 34.05, -118.25 34.06, -118.24 34.06, -118.24 34.05, -118.25 34.05)))",  # Areas in SF and LA
         "geometry": "LINESTRING(-122.4194 37.7749, -74.0060 40.7128)",  # Direct SF to NYC
     },
-    # Record with different geometry types
-    {
-        "id": str(uuid4()),
-        "point_required": "POINT(100 200)",
-        "point": "POINT(200 300)",
-        "line_string": "LINESTRING(100 100, 200 200, 300 300, 400 400)",  # Longer line
-        "polygon": "POLYGON((0 0, 0 10, 10 10, 10 0, 0 0), (2 2, 2 8, 8 8, 8 2, 2 2))",  # Polygon with hole
-        "multi_point": "MULTIPOINT((10 10), (20 20), (30 30), (40 40), (50 50))",  # 5 points
-        "multi_line_string": "MULTILINESTRING((10 10, 20 20), (30 30, 40 40), (50 50, 60 60))",  # 3 lines
-        "multi_polygon": "MULTIPOLYGON(((0 0, 0 5, 5 5, 5 0, 0 0)), ((10 10, 10 15, 15 15, 15 10, 10 10)), ((20 20, 20 25, 25 25, 25 20, 20 20)))",  # 3 squares
-        "geometry": "POLYGON((100 100, 100 200, 200 200, 200 100, 100 100))",  # Using polygon as geometry
-    },
 ]
 
 
-@pytest.fixture(autouse=True)
-def _patch_base(monkeypatch: MonkeyPatch) -> None:  # pyright: ignore[reportUnusedFunction]
-    """Ensure new registry state for every test.
-
-    This prevents errors such as "Table '...' is already defined for
-    this MetaData instance...
-    """
-    from sqlalchemy.orm import DeclarativeBase
-
-    from . import models
-
-    class NewUUIDBase(models.BaseColumns, DeclarativeBase):
-        __abstract__ = True
-
-    monkeypatch.setattr(models, "UUIDBase", NewUUIDBase)
+@pytest.fixture
+def raw_topics(raw_groups: RawRecordData) -> RawRecordData:
+    return [
+        {"id": 1, "name": "Hello!", "group_id": raw_groups[0]["id"]},
+        {"id": 2, "name": "Problems", "group_id": raw_groups[1]["id"]},
+        {"id": 3, "name": "Solution", "group_id": raw_groups[2]["id"]},
+        {"id": 4, "name": "How bake bread?", "group_id": raw_groups[3]["id"]},
+        {"id": 5, "name": "My new basement!", "group_id": raw_groups[4]["id"]},
+    ]
 
 
-@pytest.fixture(autouse=False, scope="session")
+@pytest.fixture
+def raw_farms(raw_fruits: RawRecordData) -> RawRecordData:
+    return [
+        {"id": i, "name": f"{fruit['name']} farm", "fruit_id": fruit["id"]}
+        for i, fruit in enumerate(raw_fruits, start=1)
+    ]
+
+
+@pytest.fixture
+def raw_groups() -> RawRecordData:
+    return [
+        {"id": 1, "name": "Group 1"},
+        {"id": 2, "name": "Group 2"},
+        {"id": 3, "name": "Group 3"},
+        {"id": 4, "name": "Group 4"},
+        {"id": 5, "name": "Group 5"},
+    ]
+
+
+@pytest.fixture
+def raw_colors() -> RawRecordData:
+    return [
+        {"id": 1, "name": "Red"},
+        {"id": 2, "name": "Yellow"},
+        {"id": 3, "name": "Orange"},
+        {"id": 4, "name": "Green"},
+        {"id": 5, "name": "Pink"},
+    ]
+
+
+@pytest.fixture
+def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
+    return [
+        {
+            "id": 1,
+            "created_at": datetime.now().replace(second=1, microsecond=0),
+            "name": "Apple",
+            "sweetness": 4,
+            "water_percent": 0.84,
+            "rarity": Decimal("0.1"),
+            "best_time_to_pick": time(hour=9),
+            "color_id": raw_colors[0]["id"],
+        },
+        {
+            "id": 2,
+            "created_at": datetime.now().replace(second=2, microsecond=0),
+            "name": "Cherry",
+            "sweetness": 9,
+            "water_percent": 0.81,
+            "rarity": Decimal("0.2"),
+            "best_time_to_pick": time(hour=10, minute=30),
+            "color_id": raw_colors[0]["id"],
+        },
+        {
+            "id": 3,
+            "created_at": datetime.now().replace(second=3, microsecond=0),
+            "name": "Banana",
+            "sweetness": 2,
+            "water_percent": 0.75,
+            "rarity": Decimal("0.3"),
+            "best_time_to_pick": time(hour=17, minute=15),
+            "color_id": raw_colors[1]["id"],
+        },
+        {
+            "id": 4,
+            "created_at": datetime.now().replace(second=4, microsecond=0),
+            "name": "Lemon",
+            "sweetness": 1,
+            "water_percent": 0.88,
+            "rarity": Decimal("0.4"),
+            "best_time_to_pick": time(hour=20),
+            "color_id": raw_colors[1]["id"],
+        },
+        {
+            "id": 5,
+            "created_at": datetime.now().replace(second=5, microsecond=0),
+            "name": "Quince",
+            "sweetness": 3,
+            "water_percent": 0.81,
+            "rarity": Decimal("0.5"),
+            "best_time_to_pick": time(hour=13),
+            "color_id": raw_colors[1]["id"],
+        },
+        {
+            "id": 6,
+            "created_at": datetime.now().replace(second=6, microsecond=0),
+            "name": "Orange",
+            "sweetness": 8,
+            "water_percent": 0.86,
+            "rarity": Decimal("0.6"),
+            "best_time_to_pick": time(hour=12, minute=12),
+            "color_id": raw_colors[2]["id"],
+        },
+        {
+            "id": 7,
+            "created_at": datetime.now().replace(second=7, microsecond=0),
+            "name": "clementine",
+            "sweetness": 9,
+            "water_percent": 0.9,
+            "rarity": Decimal("0.7"),
+            "best_time_to_pick": time(hour=0, minute=0),
+            "color_id": raw_colors[2]["id"],
+        },
+        {
+            "id": 8,
+            "created_at": datetime.now().replace(second=8, microsecond=0),
+            "name": "Strawberry",
+            "sweetness": 5,
+            "water_percent": 0.91,
+            "rarity": Decimal("0.8"),
+            "best_time_to_pick": time(hour=9),
+            "color_id": raw_colors[3]["id"],
+        },
+        {
+            "id": 9,
+            "created_at": datetime.now().replace(second=9, microsecond=0),
+            "name": "Cantaloupe",
+            "sweetness": 0,
+            "water_percent": 0.51,
+            "rarity": Decimal("0.9"),
+            "best_time_to_pick": time(hour=20, minute=45, second=15, microsecond=10),
+            "color_id": raw_colors[3]["id"],
+        },
+        {
+            "id": 10,
+            "created_at": datetime.now().replace(second=10, microsecond=0),
+            "name": "Watermelon",
+            "sweetness": 7,
+            "water_percent": 0.92,
+            "rarity": Decimal("0.55"),
+            "best_time_to_pick": time(hour=19, microsecond=55),
+            "color_id": raw_colors[4]["id"],
+        },
+        {
+            "id": 11,
+            "created_at": datetime.now().replace(second=11, microsecond=0),
+            "name": "Pears",
+            "sweetness": 11,
+            "water_percent": 0.15,
+            "rarity": Decimal("0.26"),
+            "best_time_to_pick": time(hour=2),
+            "color_id": raw_colors[4]["id"],
+        },
+    ]
+
+
+@pytest.fixture
+def raw_users(raw_groups: RawRecordData) -> RawRecordData:
+    return [
+        {"id": 1, "name": "Alice", "group_id": raw_groups[0]["id"], "bio": None},
+        {"id": 2, "name": "Bob", "group_id": None, "bio": None},
+        {"id": 3, "name": "Charlie", "group_id": None, "bio": None},
+        {"id": 4, "name": "Tango", "group_id": None, "bio": "Tango's bio"},
+    ]
+
+
+@pytest.fixture
+def raw_arrays() -> RawRecordData:
+    return [
+        # Standard case with typical values
+        {"id": 1, "array_str_col": ["one", "two", "three"]},
+        # Case with negative numbers and different values
+        {"id": 2, "array_str_col": ["apple", "banana", "cherry", "date"]},
+        # empty array
+        {"id": 3, "array_str_col": []},
+    ]
+
+
+@pytest.fixture
+def raw_intervals() -> RawRecordData:
+    return [
+        # Standard case with typical values
+        {"id": 1, "time_delta_col": timedelta(days=2, hours=23, minutes=59, seconds=59)},
+        # Case with negative numbers and different values
+        {"id": 2, "time_delta_col": timedelta(weeks=1, days=3, hours=12)},
+        # empty array
+        {"id": 3, "time_delta_col": timedelta(microseconds=500000, seconds=1)},
+    ]
+
+
+@pytest.fixture
+def raw_json() -> RawRecordData:
+    return [
+        # Standard case with typical values
+        {"id": 1, "dict_col": {"key1": "value1", "key2": 2, "nested": {"inner": "value"}}},
+        # Case with negative numbers and different values
+        {"id": 2, "dict_col": {"status": "pending", "count": 0}},
+        # empty array
+        {"id": 3, "dict_col": {}},
+    ]
+
+
+@pytest.fixture
+def raw_date_times() -> RawRecordData:
+    return [
+        # Standard case with typical values
+        {
+            "id": 1,
+            "date_col": date(2023, 1, 15),
+            "time_col": time(14, 30, 45),
+            "datetime_col": datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC),
+        },
+        # Case with negative numbers and different values
+        {
+            "id": 2,
+            "date_col": date(2022, 12, 31),
+            "time_col": time(8, 15, 0),
+            "datetime_col": datetime(2022, 12, 31, 23, 59, 59, tzinfo=UTC),
+        },
+        # empty array
+        {
+            "id": 3,
+            "date_col": date(2024, 2, 29),  # leap year
+            "time_col": time(0, 0, 0),
+            "datetime_col": datetime(2024, 2, 29, 0, 0, 0, tzinfo=UTC),
+        },
+    ]
+
+
+@pytest.fixture
+def raw_geo_flipped() -> RawRecordData:
+    from tests.integration.geo.utils import invert_wkt_coordinates
+
+    # Create GEO_DATA_INVERTED by inverting coordinates in GEO_DATA
+    geo_data_flipped = []
+    for item in GEO_DATA:
+        inverted_item = item.copy()
+        for key, value in item.items():
+            if key != "id" and value is not None:
+                inverted_item[key] = invert_wkt_coordinates(str(value))
+        geo_data_flipped.append(inverted_item)
+    return geo_data_flipped
+
+
+@pytest.fixture
+def raw_geo(dialect: SupportedDialect, raw_geo_flipped: RawRecordData) -> RawRecordData:
+    if dialect == "mysql":
+        return raw_geo_flipped
+    return GEO_DATA
+
+
+@pytest.fixture(scope="session")
 def postgis_service(
     docker_service: DockerService, xdist_postgres_isolation_level: XdistIsolationLevel
 ) -> Generator[PostgresService, None, None]:
@@ -169,7 +400,7 @@ def postgis_service(
 
 
 @pytest.fixture
-def database_service(postgres_service: PostgresService) -> PostgresService:
+def postgres_database_service(postgres_service: PostgresService) -> PostgresService:
     return postgres_service
 
 
@@ -177,19 +408,20 @@ def database_service(postgres_service: PostgresService) -> PostgresService:
 
 
 @pytest.fixture
-def psycopg_engine(database_service: PostgresService) -> Generator[Engine, None, None]:
+def psycopg_engine(postgres_database_service: PostgresService) -> Generator[Engine, None, None]:
     """Postgresql instance for end-to-end testing."""
     engine = create_engine(
         URL(
             drivername="postgresql+psycopg",
             username="postgres",
-            password=database_service.password,
-            host=database_service.host,
-            port=database_service.port,
-            database=database_service.database,
+            password=postgres_database_service.password,
+            host=postgres_database_service.host,
+            port=postgres_database_service.port,
+            database=postgres_database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
+        plugins=engine_plugins,
     )
     try:
         yield engine
@@ -237,6 +469,27 @@ def session(engine: Engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture
+async def asyncmy_engine(mysql_service: MySQLService) -> AsyncGenerator[AsyncEngine, None]:
+    engine = create_async_engine(
+        URL(
+            drivername="mysql+asyncmy",
+            username=mysql_service.user,
+            password=mysql_service.password,
+            host=mysql_service.host,
+            port=mysql_service.port,
+            database=mysql_service.db,
+            query={},  # type:ignore[arg-type]
+        ),
+        poolclass=NullPool,
+        plugins=engine_plugins,
+    )
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
+
+
+@pytest.fixture
 async def aiosqlite_engine(tmp_path: Path) -> AsyncGenerator[AsyncEngine, None]:
     engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path}/test.db", poolclass=NullPool)
     try:
@@ -246,19 +499,20 @@ async def aiosqlite_engine(tmp_path: Path) -> AsyncGenerator[AsyncEngine, None]:
 
 
 @pytest.fixture
-async def asyncpg_engine(database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
+async def asyncpg_engine(postgres_database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
     """Postgresql instance for end-to-end testing."""
     engine = create_async_engine(
         URL(
             drivername="postgresql+asyncpg",
             username="postgres",
-            password=database_service.password,
-            host=database_service.host,
-            port=database_service.port,
-            database=database_service.database,
+            password=postgres_database_service.password,
+            host=postgres_database_service.host,
+            port=postgres_database_service.port,
+            database=postgres_database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
+        plugins=engine_plugins,
     )
     try:
         yield engine
@@ -267,19 +521,20 @@ async def asyncpg_engine(database_service: PostgresService) -> AsyncGenerator[As
 
 
 @pytest.fixture
-async def psycopg_async_engine(database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
+async def psycopg_async_engine(postgres_database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
     """Postgresql instance for end-to-end testing."""
     engine = create_async_engine(
         URL(
             drivername="postgresql+psycopg",
             username="postgres",
-            password=database_service.password,
-            host=database_service.host,
-            port=database_service.port,
-            database=database_service.database,
+            password=postgres_database_service.password,
+            host=postgres_database_service.host,
+            port=postgres_database_service.port,
+            database=postgres_database_service.database,
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
+        plugins=engine_plugins,
     )
     try:
         yield engine
@@ -306,6 +561,14 @@ async def psycopg_async_engine(database_service: PostgresService) -> AsyncGenera
                 pytest.mark.xdist_group("postgres"),
             ],
         ),
+        pytest.param(
+            "asyncmy_engine",
+            marks=[
+                pytest.mark.asyncmy,
+                pytest.mark.integration,
+                pytest.mark.xdist_group("mysql"),
+            ],
+        ),
     ],
 )
 def async_engine(request: FixtureRequest) -> AsyncEngine:
@@ -322,258 +585,6 @@ async def async_session(async_engine: AsyncEngine) -> AsyncGenerator[AsyncSessio
         await session.close()
 
 
-# Mock data
-
-
-@pytest.fixture
-def raw_topics(raw_groups: RawRecordData) -> RawRecordData:
-    return [
-        {"id": str(uuid4()), "name": "Hello!", "group_id": raw_groups[0]["id"]},
-        {"id": str(uuid4()), "name": "Problems", "group_id": raw_groups[1]["id"]},
-        {"id": str(uuid4()), "name": "Solution", "group_id": raw_groups[2]["id"]},
-        {"id": str(uuid4()), "name": "How bake bread?", "group_id": raw_groups[3]["id"]},
-        {"id": str(uuid4()), "name": "My new basement!", "group_id": raw_groups[4]["id"]},
-    ]
-
-
-@pytest.fixture
-def raw_farms(raw_fruits: RawRecordData) -> RawRecordData:
-    return [{"id": str(uuid4()), "name": f"{fruit['name']} farm", "fruit_id": fruit["id"]} for fruit in raw_fruits]
-
-
-@pytest.fixture
-def raw_groups() -> RawRecordData:
-    return [
-        {"id": str(uuid4()), "name": "Group 1"},
-        {"id": str(uuid4()), "name": "Group 2"},
-        {"id": str(uuid4()), "name": "Group 3"},
-        {"id": str(uuid4()), "name": "Group 4"},
-        {"id": str(uuid4()), "name": "Group 5"},
-    ]
-
-
-@pytest.fixture
-def raw_colors() -> RawRecordData:
-    return [
-        {"id": str(uuid4()), "name": "Red"},
-        {"id": str(uuid4()), "name": "Yellow"},
-        {"id": str(uuid4()), "name": "Orange"},
-        {"id": str(uuid4()), "name": "Green"},
-        {"id": str(uuid4()), "name": "Pink"},
-    ]
-
-
-@pytest.fixture
-def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
-    return [
-        {"id": str(uuid4()), "name": "Apple", "sweetness": 4, "water_percent": 0.84, "color_id": raw_colors[0]["id"]},
-        {"id": str(uuid4()), "name": "Cherry", "sweetness": 9, "water_percent": 0.81, "color_id": raw_colors[0]["id"]},
-        {"id": str(uuid4()), "name": "Banana", "sweetness": 2, "water_percent": 0.75, "color_id": raw_colors[1]["id"]},
-        {"id": str(uuid4()), "name": "Lemon", "sweetness": 1, "water_percent": 0.88, "color_id": raw_colors[1]["id"]},
-        {"id": str(uuid4()), "name": "Quince", "sweetness": 3, "water_percent": 0.81, "color_id": raw_colors[1]["id"]},
-        {"id": str(uuid4()), "name": "Orange", "sweetness": 8, "water_percent": 0.86, "color_id": raw_colors[2]["id"]},
-        {
-            "id": str(uuid4()),
-            "name": "Clementine",
-            "sweetness": 9,
-            "water_percent": 0.9,
-            "color_id": raw_colors[2]["id"],
-        },
-        {
-            "id": str(uuid4()),
-            "name": "Strawberry",
-            "sweetness": 5,
-            "water_percent": 0.91,
-            "color_id": raw_colors[3]["id"],
-        },
-        {
-            "id": str(uuid4()),
-            "name": "Cantaloupe",
-            "sweetness": 0,
-            "water_percent": 0.51,
-            "color_id": raw_colors[3]["id"],
-        },
-        {
-            "id": str(uuid4()),
-            "name": "Watermelon",
-            "sweetness": 7,
-            "water_percent": 0.92,
-            "color_id": raw_colors[4]["id"],
-        },
-        {
-            "id": str(uuid4()),
-            "name": "Pears",
-            "sweetness": 11,
-            "water_percent": 0.15,
-            "color_id": raw_colors[4]["id"],
-        },
-    ]
-
-
-@pytest.fixture
-def raw_users(raw_groups: RawRecordData) -> RawRecordData:
-    return [
-        {"id": str(uuid4()), "name": "Alice", "group_id": raw_groups[0]["id"], "bio": None},
-        {"id": str(uuid4()), "name": "Bob", "group_id": None, "bio": None},
-        {"id": str(uuid4()), "name": "Charlie", "group_id": None, "bio": None},
-        {"id": str(uuid4()), "name": "Tango", "group_id": None, "bio": "Tango's bio"},
-    ]
-
-
-@pytest.fixture
-def raw_sql_data_types_container() -> RawRecordData:
-    return [{"id": str(uuid4())}]
-
-
-@pytest.fixture
-def raw_sql_data_types(raw_sql_data_types_container: RawRecordData) -> RawRecordData:
-    return [
-        # Standard case with typical values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2023, 1, 15),
-            "time_col": time(14, 30, 45),
-            "time_delta_col": timedelta(days=2, hours=23, minutes=59, seconds=59),
-            "datetime_col": datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC),
-            "str_col": "test string",
-            "int_col": 42,
-            "float_col": 3.14159,
-            "decimal_col": Decimal("123.45"),
-            "bool_col": True,
-            "uuid_col": uuid4(),
-            "dict_col": {"key1": "value1", "key2": 2, "nested": {"inner": "value"}},
-            "array_str_col": ["one", "two", "three"],
-            "optional_str_col": "optional string",
-            "container_id": raw_sql_data_types_container[0]["id"],
-        },
-        # Case with negative numbers and different values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2022, 12, 31),
-            "time_col": time(8, 15, 0),
-            "time_delta_col": timedelta(weeks=1, days=3, hours=12),
-            "datetime_col": datetime(2022, 12, 31, 23, 59, 59, tzinfo=UTC),
-            "str_col": "another STRING",
-            "int_col": -10,
-            "float_col": 2.71828,
-            "decimal_col": Decimal("-99.99"),
-            "bool_col": False,
-            "uuid_col": uuid4(),
-            "dict_col": {"status": "pending", "count": 0},
-            "array_str_col": ["apple", "banana", "cherry", "date"],
-            "optional_str_col": "another optional string",
-            "container_id": raw_sql_data_types_container[0]["id"],
-        },
-        # Edge case with empty values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2024, 2, 29),  # leap year
-            "time_col": time(0, 0, 0),
-            "time_delta_col": timedelta(microseconds=500000, seconds=1),
-            "datetime_col": datetime(2024, 2, 29, 0, 0, 0, tzinfo=UTC),
-            "str_col": "",  # empty string
-            "int_col": 0,
-            "float_col": 0.0,
-            "decimal_col": Decimal("0.00"),
-            "bool_col": False,
-            "uuid_col": uuid4(),
-            "dict_col": {},  # empty dict
-            "array_str_col": [],  # empty array
-            "optional_str_col": None,
-            "container_id": raw_sql_data_types_container[0]["id"],
-        },
-    ]
-
-
-@pytest.fixture
-def raw_sql_data_types_set1(raw_containers: RawRecordData) -> RawRecordData:
-    return [
-        # First set with moderate values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2021, 6, 15),
-            "time_col": time(10, 45, 30),
-            "time_delta_col": timedelta(days=-5, hours=18, minutes=30, seconds=15),
-            "datetime_col": datetime(2021, 6, 15, 10, 45, 30, tzinfo=UTC),
-            "str_col": "data set 1 string",
-            "int_col": 100,
-            "float_col": 5.5,
-            "decimal_col": Decimal("50.75"),
-            "bool_col": True,
-            "uuid_col": uuid4(),
-            "dict_col": {"category": "electronics", "price": 299.99},
-            "array_str_col": ["red", "green", "blue"],
-            "optional_str_col": "set1 optional",
-            "container_id": raw_containers[0]["id"],
-        },
-        # Second entry with different values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2021, 7, 20),
-            "time_col": time(15, 20, 10),
-            "time_delta_col": timedelta(weeks=2, hours=9, minutes=45, seconds=30, microseconds=123456),
-            "datetime_col": datetime(2021, 7, 20, 15, 20, 10, tzinfo=UTC),
-            "str_col": "another set 1 string",
-            "int_col": 75,
-            "float_col": 7.25,
-            "decimal_col": Decimal("75.50"),
-            "bool_col": False,
-            "uuid_col": uuid4(),
-            "dict_col": {"category": "clothing", "price": 49.99, "size": "medium"},
-            "array_str_col": ["circle", "square", "triangle"],
-            "optional_str_col": "set1 optional",
-            "container_id": raw_containers[0]["id"],
-        },
-    ]
-
-
-@pytest.fixture
-def raw_sql_data_types_set2(raw_containers: RawRecordData) -> RawRecordData:
-    return [
-        # First entry with moderate values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2020, 3, 10),
-            "time_col": time(9, 15, 25),
-            "time_delta_col": timedelta(days=30, hours=16, minutes=45),
-            "datetime_col": datetime(2020, 3, 10, 9, 15, 25, tzinfo=UTC),
-            "str_col": "data set 2 string",
-            "int_col": 250,
-            "float_col": 9.8,
-            "decimal_col": Decimal("199.99"),
-            "bool_col": True,
-            "uuid_col": uuid4(),
-            "dict_col": {"category": "furniture", "price": 599.99, "color": "brown"},
-            "array_str_col": ["monday", "wednesday", "friday"],
-            "optional_str_col": "set2 optional",
-            "container_id": raw_containers[1]["id"],
-        },
-        # Second entry with different values
-        {
-            "id": str(uuid4()),
-            "date_col": date(2020, 9, 5),
-            "time_col": time(13, 0, 0),
-            "time_delta_col": timedelta(days=-10, hours=-5, minutes=15, seconds=45, microseconds=999999),
-            "datetime_col": datetime(2020, 9, 5, 13, 0, 0, tzinfo=UTC),
-            "str_col": "another set 2 string",
-            "int_col": 180,
-            "float_col": 12.34,
-            "decimal_col": Decimal("150.25"),
-            "bool_col": False,
-            "uuid_col": uuid4(),
-            "dict_col": {"category": "books", "price": 24.99, "author": "John Doe"},
-            "array_str_col": ["cat", "dog", "bird", "fish"],
-            "optional_str_col": "another set2 optional",
-            "container_id": raw_containers[1]["id"],
-        },
-    ]
-
-
-@pytest.fixture
-def raw_geo() -> RawRecordData:
-    return GEO_DATA
-
-
 # DB Seeding
 
 
@@ -585,8 +596,6 @@ def seed_insert_statements(
     raw_farms: RawRecordData,
     raw_groups: RawRecordData,
     raw_topics: RawRecordData,
-    raw_sql_data_types: RawRecordData,
-    raw_sql_data_types_container: RawRecordData,
 ) -> list[Insert]:
     return [
         insert(Group).values(raw_groups),
@@ -595,8 +604,6 @@ def seed_insert_statements(
         insert(Fruit).values(raw_fruits),
         insert(FruitFarm).values(raw_farms),
         insert(User).values(raw_users),
-        insert(SQLDataTypesContainer).values(raw_sql_data_types_container),
-        insert(SQLDataTypes).values(raw_sql_data_types),
     ]
 
 
@@ -646,17 +653,43 @@ async def seed_db_async(
 
 
 @pytest.fixture
-def async_query() -> type[DefaultQuery]:
+def dialect(any_session: AnySession) -> SupportedDialect:
+    return cast("SupportedDialect", any_session.get_bind().dialect.name)
+
+
+@pytest.fixture
+def async_query(dialect: SupportedDialect) -> type[AnyAsyncQueryType | DefaultQuery]:
+    if dialect == "postgresql":
+        return postgres_types.AsyncQuery
+    if dialect == "mysql":
+        return mysql_types.AsyncQuery
     return DefaultQuery
 
 
 @pytest.fixture
-def async_mutation() -> type[Any] | None:
+def sync_query(dialect: SupportedDialect) -> type[AnySyncQueryType | DefaultQuery]:
+    if dialect == "postgresql":
+        return postgres_types.SyncQuery
+    if dialect == "mysql":
+        return mysql_types.SyncQuery
+    return DefaultQuery
+
+
+@pytest.fixture
+def async_mutation(dialect: SupportedDialect) -> type[AnyAsyncMutationType] | None:
+    if dialect == "postgresql":
+        return postgres_types.AsyncMutation
+    if dialect == "mysql":
+        return mysql_types.AsyncMutation
     return None
 
 
 @pytest.fixture
-def sync_mutation() -> type[Any] | None:
+def sync_mutation(dialect: SupportedDialect) -> type[Any] | None:
+    if dialect == "postgresql":
+        return postgres_types.SyncMutation
+    if dialect == "mysql":
+        return mysql_types.SyncMutation
     return None
 
 

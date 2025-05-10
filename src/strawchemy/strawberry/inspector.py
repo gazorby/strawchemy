@@ -30,7 +30,7 @@ class _StrawberryModelInspector(GraphQLInspectorProtocol[ModelT, ModelFieldT]):
     def __init__(self, inspector: GraphQLInspectorProtocol[ModelT, ModelFieldT], registry: StrawberryRegistry) -> None:
         self._inspector = inspector
         self._registry = registry
-        self.database_features = self._inspector.database_features
+        self.db_features = self._inspector.db_features
 
     def _register_sub_types(self, comparison_type: type[GraphQLFilter[ModelT, ModelFieldT]]) -> None:
         if issubclass(comparison_type, TimeComparison | DateComparison):

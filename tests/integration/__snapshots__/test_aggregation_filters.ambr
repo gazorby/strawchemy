@@ -1,1288 +1,1783 @@
 # serializer version: 1
-# name: test_avg_aggregation_filter[session-tracked-decimal-avg-eq-match-async-asyncpg_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-decimal-avg-eq-match-asyncmy_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.rarity) AS avg_fruits__avg_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_rarity = %s
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-async-decimal-avg-eq-match-asyncpg_engine]
+  '''
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.rarity) AS avg_fruits__avg_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_decimal_col" = $1::FLOAT
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_rarity = $1::FLOAT
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-decimal-avg-eq-match-async-psycopg_async_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-decimal-avg-eq-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.rarity) AS avg_fruits__avg_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_decimal_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_rarity = %(param_1)s
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-async-decimal-avg-gt-match-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.rarity) AS avg_fruits__avg_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_rarity > %s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-decimal-avg-eq-match-sync-psycopg_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-decimal-avg-gt-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.rarity) AS avg_fruits__avg_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_decimal_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_rarity > $1::FLOAT
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-decimal-avg-gt-match-async-asyncpg_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-decimal-avg-gt-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.rarity) AS avg_fruits__avg_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_decimal_col" > $1::FLOAT
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_rarity > %(param_1)s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-decimal-avg-gt-match-async-psycopg_async_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-float-avg-eq-match-asyncmy_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_water_percent = %s
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-async-float-avg-eq-match-asyncpg_engine]
+  '''
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_decimal_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_water_percent = $1::FLOAT
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-decimal-avg-gt-match-sync-psycopg_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-float-avg-eq-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.decimal_col) AS avg_data_types__avg_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_decimal_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_water_percent = %(param_1)s
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-async-float-avg-gt-match-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_water_percent > %s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-float-avg-eq-match-async-asyncpg_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-float-avg-gt-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_float_col" = $1::FLOAT
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_water_percent > $1::FLOAT
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-float-avg-eq-match-async-psycopg_async_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-float-avg-gt-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_float_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_water_percent > %(param_1)s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-float-avg-eq-match-sync-psycopg_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-int-avg-eq-match-asyncmy_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_sweetness = %s
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-async-int-avg-eq-match-asyncpg_engine]
+  '''
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_float_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_sweetness = $1::FLOAT
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-float-avg-gt-match-async-asyncpg_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-int-avg-eq-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_float_col" > $1::FLOAT
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_sweetness = %(param_1)s
+  '''
+# ---
+# name: test_avg_aggregation_filter[session-tracked-async-int-avg-gt-match-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_sweetness > %s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-float-avg-gt-match-async-psycopg_async_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-int-avg-gt-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_float_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_sweetness > $1::FLOAT
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-float-avg-gt-match-sync-psycopg_engine]
+# name: test_avg_aggregation_filter[session-tracked-async-int-avg-gt-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.float_col) AS avg_data_types__avg_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_float_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_sweetness > %(param_1)s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-int-avg-eq-match-async-asyncpg_engine]
+# name: test_avg_aggregation_filter[session-tracked-sync-decimal-avg-eq-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.rarity) AS avg_fruits__avg_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_int_col" = $1::FLOAT
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_rarity = %(param_1)s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-int-avg-eq-match-async-psycopg_async_engine]
+# name: test_avg_aggregation_filter[session-tracked-sync-decimal-avg-gt-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.rarity) AS avg_fruits__avg_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_int_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_rarity > %(param_1)s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-int-avg-eq-match-sync-psycopg_engine]
+# name: test_avg_aggregation_filter[session-tracked-sync-float-avg-eq-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_int_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_water_percent = %(param_1)s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-int-avg-gt-match-async-asyncpg_engine]
+# name: test_avg_aggregation_filter[session-tracked-sync-float-avg-gt-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_int_col" > $1::FLOAT
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_water_percent > %(param_1)s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-int-avg-gt-match-async-psycopg_async_engine]
+# name: test_avg_aggregation_filter[session-tracked-sync-int-avg-eq-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_int_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_sweetness = %(param_1)s
   '''
 # ---
-# name: test_avg_aggregation_filter[session-tracked-int-avg-gt-match-sync-psycopg_engine]
+# name: test_avg_aggregation_filter[session-tracked-sync-int-avg-gt-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT avg(sql_data_types_1.int_col) AS avg_data_types__avg_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."avg_data_types__avg_int_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.avg_fruits__avg_sweetness > %(param_1)s
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-eq-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-eq-match-asyncmy_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(fruit_1.id) AS count_fruits__count_id,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id = %s
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-async-eq-match-asyncpg_engine]
+  '''
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" = $1::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id = $1::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-eq-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter[session-tracked-async-eq-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" = %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-async-gt-match-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(fruit_1.id) AS count_fruits__count_id,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id > %s
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-eq-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-gt-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" = %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id > $1::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-gt-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-gt-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" > $1::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id > %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-gt-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter[session-tracked-async-gte-match-asyncmy_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(fruit_1.id) AS count_fruits__count_id,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id >= %s
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-async-gte-match-asyncpg_engine]
+  '''
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" > %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id >= $1::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-gt-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-gte-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" > %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id >= %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-async-in-match-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(fruit_1.id) AS count_fruits__count_id,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id IN (__[POSTCOMPILE_param_1])
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-gte-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-in-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" >= $1::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id IN (__[POSTCOMPILE_param_1])
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-gte-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter[session-tracked-async-in-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" >= %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id IN (__[POSTCOMPILE_param_1])
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-gte-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-lt-match-asyncmy_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(fruit_1.id) AS count_fruits__count_id,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id < %s
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-async-lt-match-asyncpg_engine]
+  '''
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" >= %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id < $1::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-in-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-lt-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" IN (__[POSTCOMPILE_param_1])
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id < %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-async-lte-match-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(fruit_1.id) AS count_fruits__count_id,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id <= %s
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-in-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter[session-tracked-async-lte-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" IN (__[POSTCOMPILE_param_1])
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id <= $1::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-in-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-lte-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" IN (__[POSTCOMPILE_param_1])
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id <= %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-lt-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-neq-match-asyncmy_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(fruit_1.id) AS count_fruits__count_id,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id != %s
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-async-neq-match-asyncpg_engine]
+  '''
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" < $1::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id != $1::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-lt-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter[session-tracked-async-neq-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" < %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id != %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_count_aggregation_filter[session-tracked-async-nin-match-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(fruit_1.id) AS count_fruits__count_id,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE (__strawchemy_aggregation_0.count_fruits__count_id NOT IN (__[POSTCOMPILE_param_1]))
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-lt-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-nin-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" < %(param_1)s::INTEGER
+   WHERE (__strawchemy_aggregation_0.count_fruits__count_id NOT IN (__[POSTCOMPILE_param_1]))
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-lte-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter[session-tracked-async-nin-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" <= $1::INTEGER
+   WHERE (__strawchemy_aggregation_0.count_fruits__count_id NOT IN (__[POSTCOMPILE_param_1]))
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-lte-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter[session-tracked-sync-eq-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" <= %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id = %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-lte-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter[session-tracked-sync-gt-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" <= %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id > %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-neq-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter[session-tracked-sync-gte-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" != $1::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id >= %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-neq-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter[session-tracked-sync-in-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" != %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id IN (__[POSTCOMPILE_param_1])
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-neq-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter[session-tracked-sync-lt-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_id" != %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id < %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-nin-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter[session-tracked-sync-lte-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."count_data_types__count_id" NOT IN (__[POSTCOMPILE_param_1]))
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id <= %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-nin-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter[session-tracked-sync-neq-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."count_data_types__count_id" NOT IN (__[POSTCOMPILE_param_1]))
+   WHERE __strawchemy_aggregation_0.count_fruits__count_id != %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter[session-tracked-nin-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter[session-tracked-sync-nin-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.id) AS count_data_types__count_id
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.id) AS count_fruits__count_id
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."count_data_types__count_id" NOT IN (__[POSTCOMPILE_param_1]))
+   WHERE (__strawchemy_aggregation_0.count_fruits__count_id NOT IN (__[POSTCOMPILE_param_1]))
   '''
 # ---
-# name: test_count_aggregation_filter_with_distinct[session-tracked-default-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter_with_distinct[session-tracked-async-default-match-asyncmy_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(fruit_1.name) AS count_fruits__count_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = %s
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-async-default-match-asyncpg_engine]
+  '''
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.name) AS count_fruits__count_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_optional_str_col" = $1::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = $1::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter_with_distinct[session-tracked-default-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter_with_distinct[session-tracked-async-default-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.name) AS count_fruits__count_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_optional_str_col" = %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter_with_distinct[session-tracked-default-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter_with_distinct[session-tracked-async-distinct-match-asyncmy_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(DISTINCT fruit_1.name) AS count_fruits__count_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = %s
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-async-distinct-match-asyncpg_engine]
+  '''
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(DISTINCT fruit_1.name) AS count_fruits__count_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_optional_str_col" = %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = $1::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter_with_distinct[session-tracked-distinct-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter_with_distinct[session-tracked-async-distinct-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(DISTINCT sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(DISTINCT fruit_1.name) AS count_fruits__count_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_optional_str_col" = $1::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_count_aggregation_filter_with_distinct[session-tracked-async-non-distinct-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(fruit_1.name) AS count_fruits__count_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = %s
+  '''
 # ---
-# name: test_count_aggregation_filter_with_distinct[session-tracked-distinct-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter_with_distinct[session-tracked-async-non-distinct-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(DISTINCT sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.name) AS count_fruits__count_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_optional_str_col" = %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = $1::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter_with_distinct[session-tracked-distinct-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter_with_distinct[session-tracked-async-non-distinct-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(DISTINCT sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.name) AS count_fruits__count_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_optional_str_col" = %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter_with_distinct[session-tracked-non-distinct-match-async-asyncpg_engine]
+# name: test_count_aggregation_filter_with_distinct[session-tracked-sync-default-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.name) AS count_fruits__count_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_optional_str_col" = $1::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter_with_distinct[session-tracked-non-distinct-match-async-psycopg_async_engine]
+# name: test_count_aggregation_filter_with_distinct[session-tracked-sync-distinct-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(DISTINCT fruit_1.name) AS count_fruits__count_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_optional_str_col" = %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = %(param_1)s::INTEGER
   '''
 # ---
-# name: test_count_aggregation_filter_with_distinct[session-tracked-non-distinct-match-sync-psycopg_engine]
+# name: test_count_aggregation_filter_with_distinct[session-tracked-sync-non-distinct-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT count(sql_data_types_1.optional_str_col) AS count_data_types__count_optional_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT count(fruit_1.name) AS count_fruits__count_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."count_data_types__count_optional_str_col" = %(param_1)s::INTEGER
+   WHERE __strawchemy_aggregation_0.count_fruits__count_name = %(param_1)s::INTEGER
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-async-contains-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.name) AS max_fruits__max_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE (__strawchemy_aggregation_0.max_fruits__max_name LIKE concat('%%', %s, '%%') ESCAPE '/')
+  '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-contains-match-async-asyncpg_engine]
+# name: test_max_string_aggregation_filter[session-tracked-async-contains-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."max_data_types__max_str_col" LIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
+   WHERE (__strawchemy_aggregation_0.max_fruits__max_name LIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
   '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-contains-match-async-psycopg_async_engine]
+# name: test_max_string_aggregation_filter[session-tracked-async-contains-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."max_data_types__max_str_col" LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE (__strawchemy_aggregation_0.max_fruits__max_name LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-async-eq-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.name) AS max_fruits__max_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name = %s
+  '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-contains-match-sync-psycopg_engine]
+# name: test_max_string_aggregation_filter[session-tracked-async-eq-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."max_data_types__max_str_col" LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name = $1::VARCHAR
   '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-eq-match-async-asyncpg_engine]
+# name: test_max_string_aggregation_filter[session-tracked-async-eq-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."max_data_types__max_str_col" = $1::VARCHAR
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name = %(param_1)s::VARCHAR
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-async-ilike-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.name) AS max_fruits__max_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE lower(__strawchemy_aggregation_0.max_fruits__max_name) LIKE lower(%s)
+  '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-eq-match-async-psycopg_async_engine]
+# name: test_max_string_aggregation_filter[session-tracked-async-ilike-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."max_data_types__max_str_col" = %(param_1)s::VARCHAR
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name ILIKE $1::VARCHAR
   '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-eq-match-sync-psycopg_engine]
+# name: test_max_string_aggregation_filter[session-tracked-async-ilike-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."max_data_types__max_str_col" = %(param_1)s::VARCHAR
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name ILIKE %(param_1)s::VARCHAR
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-async-like-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.name) AS max_fruits__max_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name LIKE %s
+  '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-ilike-match-async-asyncpg_engine]
+# name: test_max_string_aggregation_filter[session-tracked-async-like-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."max_data_types__max_str_col" ILIKE $1::VARCHAR
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name LIKE $1::VARCHAR
   '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-ilike-match-async-psycopg_async_engine]
+# name: test_max_string_aggregation_filter[session-tracked-async-like-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."max_data_types__max_str_col" ILIKE %(param_1)s::VARCHAR
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name LIKE %(param_1)s::VARCHAR
+  '''
+# ---
+# name: test_max_string_aggregation_filter[session-tracked-async-startswith-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.name) AS max_fruits__max_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE (__strawchemy_aggregation_0.max_fruits__max_name LIKE concat(%s, '%%') ESCAPE '/')
+  '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-ilike-match-sync-psycopg_engine]
+# name: test_max_string_aggregation_filter[session-tracked-async-startswith-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."max_data_types__max_str_col" ILIKE %(param_1)s::VARCHAR
+   WHERE (__strawchemy_aggregation_0.max_fruits__max_name LIKE $1::VARCHAR || '%' ESCAPE '/')
   '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-like-match-async-asyncpg_engine]
+# name: test_max_string_aggregation_filter[session-tracked-async-startswith-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."max_data_types__max_str_col" LIKE $1::VARCHAR
+   WHERE (__strawchemy_aggregation_0.max_fruits__max_name LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-like-match-async-psycopg_async_engine]
+# name: test_max_string_aggregation_filter[session-tracked-sync-contains-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."max_data_types__max_str_col" LIKE %(param_1)s::VARCHAR
+   WHERE (__strawchemy_aggregation_0.max_fruits__max_name LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-like-match-sync-psycopg_engine]
+# name: test_max_string_aggregation_filter[session-tracked-sync-eq-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."max_data_types__max_str_col" LIKE %(param_1)s::VARCHAR
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name = %(param_1)s::VARCHAR
   '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-startswith-match-async-asyncpg_engine]
+# name: test_max_string_aggregation_filter[session-tracked-sync-ilike-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."max_data_types__max_str_col" LIKE $1::VARCHAR || '%' ESCAPE '/')
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name ILIKE %(param_1)s::VARCHAR
   '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-startswith-match-async-psycopg_async_engine]
+# name: test_max_string_aggregation_filter[session-tracked-sync-like-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."max_data_types__max_str_col" LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE __strawchemy_aggregation_0.max_fruits__max_name LIKE %(param_1)s::VARCHAR
   '''
 # ---
-# name: test_max_string_aggregation_filter[session-tracked-startswith-match-sync-psycopg_engine]
+# name: test_max_string_aggregation_filter[session-tracked-sync-startswith-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT max(sql_data_types_1.str_col) AS max_data_types__max_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT max(fruit_1.name) AS max_fruits__max_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."max_data_types__max_str_col" LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE (__strawchemy_aggregation_0.max_fruits__max_name LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-async-contains-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.name) AS min_fruits__min_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE (__strawchemy_aggregation_0.min_fruits__min_name LIKE concat('%%', %s, '%%') ESCAPE '/')
+  '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-contains-match-async-asyncpg_engine]
+# name: test_min_string_aggregation_filter[session-tracked-async-contains-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."min_data_types__min_str_col" LIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
+   WHERE (__strawchemy_aggregation_0.min_fruits__min_name LIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-contains-match-async-psycopg_async_engine]
+# name: test_min_string_aggregation_filter[session-tracked-async-contains-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."min_data_types__min_str_col" LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE (__strawchemy_aggregation_0.min_fruits__min_name LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-async-eq-match-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.name) AS min_fruits__min_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name = %s
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-contains-match-sync-psycopg_engine]
+# name: test_min_string_aggregation_filter[session-tracked-async-eq-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."min_data_types__min_str_col" LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name = $1::VARCHAR
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-eq-match-async-asyncpg_engine]
+# name: test_min_string_aggregation_filter[session-tracked-async-eq-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."min_data_types__min_str_col" = $1::VARCHAR
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name = %(param_1)s::VARCHAR
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-async-ilike-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.name) AS min_fruits__min_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE lower(__strawchemy_aggregation_0.min_fruits__min_name) LIKE lower(%s)
+  '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-eq-match-async-psycopg_async_engine]
+# name: test_min_string_aggregation_filter[session-tracked-async-ilike-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."min_data_types__min_str_col" = %(param_1)s::VARCHAR
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name ILIKE $1::VARCHAR
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-eq-match-sync-psycopg_engine]
+# name: test_min_string_aggregation_filter[session-tracked-async-ilike-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."min_data_types__min_str_col" = %(param_1)s::VARCHAR
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name ILIKE %(param_1)s::VARCHAR
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-async-like-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.name) AS min_fruits__min_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name LIKE %s
+  '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-ilike-match-async-asyncpg_engine]
+# name: test_min_string_aggregation_filter[session-tracked-async-like-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."min_data_types__min_str_col" ILIKE $1::VARCHAR
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name LIKE $1::VARCHAR
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-ilike-match-async-psycopg_async_engine]
+# name: test_min_string_aggregation_filter[session-tracked-async-like-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."min_data_types__min_str_col" ILIKE %(param_1)s::VARCHAR
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name LIKE %(param_1)s::VARCHAR
+  '''
+# ---
+# name: test_min_string_aggregation_filter[session-tracked-async-startswith-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.name) AS min_fruits__min_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE (__strawchemy_aggregation_0.min_fruits__min_name LIKE concat(%s, '%%') ESCAPE '/')
+  '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-ilike-match-sync-psycopg_engine]
+# name: test_min_string_aggregation_filter[session-tracked-async-startswith-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."min_data_types__min_str_col" ILIKE %(param_1)s::VARCHAR
+   WHERE (__strawchemy_aggregation_0.min_fruits__min_name LIKE $1::VARCHAR || '%' ESCAPE '/')
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-like-match-async-asyncpg_engine]
+# name: test_min_string_aggregation_filter[session-tracked-async-startswith-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."min_data_types__min_str_col" LIKE $1::VARCHAR
+   WHERE (__strawchemy_aggregation_0.min_fruits__min_name LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-like-match-async-psycopg_async_engine]
+# name: test_min_string_aggregation_filter[session-tracked-sync-contains-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."min_data_types__min_str_col" LIKE %(param_1)s::VARCHAR
+   WHERE (__strawchemy_aggregation_0.min_fruits__min_name LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-like-match-sync-psycopg_engine]
+# name: test_min_string_aggregation_filter[session-tracked-sync-eq-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."min_data_types__min_str_col" LIKE %(param_1)s::VARCHAR
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name = %(param_1)s::VARCHAR
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-startswith-match-async-asyncpg_engine]
+# name: test_min_string_aggregation_filter[session-tracked-sync-ilike-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."min_data_types__min_str_col" LIKE $1::VARCHAR || '%' ESCAPE '/')
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name ILIKE %(param_1)s::VARCHAR
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-startswith-match-async-psycopg_async_engine]
+# name: test_min_string_aggregation_filter[session-tracked-sync-like-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."min_data_types__min_str_col" LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE __strawchemy_aggregation_0.min_fruits__min_name LIKE %(param_1)s::VARCHAR
   '''
 # ---
-# name: test_min_string_aggregation_filter[session-tracked-startswith-match-sync-psycopg_engine]
+# name: test_min_string_aggregation_filter[session-tracked-sync-startswith-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT min(sql_data_types_1.str_col) AS min_data_types__min_str_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT min(fruit_1.name) AS min_fruits__min_name
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE (aggregation_0."min_data_types__min_str_col" LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE (__strawchemy_aggregation_0.min_fruits__min_name LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-async-decimal-eq-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_rarity = %s
+  '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-decimal-eq-match-async-asyncpg_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-decimal-eq-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_decimal_col" = $1::FLOAT
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_rarity = $1::FLOAT
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-decimal-eq-match-async-psycopg_async_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-decimal-eq-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_decimal_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_rarity = %(param_1)s
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-async-decimal-gt-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_rarity > %s
+  '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-decimal-eq-match-sync-psycopg_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-decimal-gt-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_decimal_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_rarity > $1::FLOAT
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-decimal-gt-match-async-asyncpg_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-decimal-gt-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_decimal_col" > $1::FLOAT
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_rarity > %(param_1)s
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-async-float-eq-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_water_percent = %s
+  '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-decimal-gt-match-async-psycopg_async_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-float-eq-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_decimal_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_water_percent = $1::FLOAT
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-decimal-gt-match-sync-psycopg_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-float-eq-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.decimal_col) AS sum_data_types__sum_decimal_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_decimal_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_water_percent = %(param_1)s
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-async-float-gt-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_water_percent > %s
+  '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-float-eq-match-async-asyncpg_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-float-gt-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_float_col" = $1::FLOAT
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_water_percent > $1::FLOAT
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-float-eq-match-async-psycopg_async_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-float-gt-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_float_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_water_percent > %(param_1)s
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-async-int-eq-match-asyncmy_engine]
   '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_sweetness = %s
+  '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-float-eq-match-sync-psycopg_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-int-eq-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_float_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_sweetness = $1::FLOAT
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-float-gt-match-async-asyncpg_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-int-eq-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_float_col" > $1::FLOAT
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_sweetness = %(param_1)s
+  '''
+# ---
+# name: test_sum_aggregation_filter[session-tracked-async-int-gt-match-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_sweetness > %s
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-float-gt-match-async-psycopg_async_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-int-gt-match-asyncpg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_float_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_sweetness > $1::FLOAT
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-float-gt-match-sync-psycopg_engine]
+# name: test_sum_aggregation_filter[session-tracked-async-int-gt-match-psycopg_async_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.float_col) AS sum_data_types__sum_float_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_float_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_sweetness > %(param_1)s
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-int-eq-match-async-asyncpg_engine]
+# name: test_sum_aggregation_filter[session-tracked-sync-decimal-eq-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_int_col" = $1::FLOAT
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_rarity = %(param_1)s
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-int-eq-match-async-psycopg_async_engine]
+# name: test_sum_aggregation_filter[session-tracked-sync-decimal-gt-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_int_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_rarity > %(param_1)s
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-int-eq-match-sync-psycopg_engine]
+# name: test_sum_aggregation_filter[session-tracked-sync-float-eq-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_int_col" = %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_water_percent = %(param_1)s
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-int-gt-match-async-asyncpg_engine]
+# name: test_sum_aggregation_filter[session-tracked-sync-float-gt-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_int_col" > $1::FLOAT
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_water_percent > %(param_1)s
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-int-gt-match-async-psycopg_async_engine]
+# name: test_sum_aggregation_filter[session-tracked-sync-int-eq-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_int_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_sweetness = %(param_1)s
   '''
 # ---
-# name: test_sum_aggregation_filter[session-tracked-int-gt-match-sync-psycopg_engine]
+# name: test_sum_aggregation_filter[session-tracked-sync-int-gt-match-psycopg_engine]
   '''
-  SELECT sql_data_types_container.id
-    FROM sql_data_types_container AS sql_data_types_container
+  SELECT color.id
+    FROM color AS color
     JOIN LATERAL (
-          SELECT sum(sql_data_types_1.int_col) AS sum_data_types__sum_int_col
-            FROM sql_data_types AS sql_data_types_1
-           WHERE sql_data_types_container.id = sql_data_types_1.container_id
-         ) AS aggregation_0
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
       ON TRUE
-   WHERE aggregation_0."sum_data_types__sum_int_col" > %(param_1)s
+   WHERE __strawchemy_aggregation_0.sum_fruits__sum_sweetness > %(param_1)s
   '''
 # ---
