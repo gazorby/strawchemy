@@ -44,7 +44,7 @@ def sync_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.DateTimeSyncQuery
     if dialect == "mysql":
-        return mysql_types.DateTimeAsyncQuery
+        return mysql_types.DateTimeSyncQuery
     pytest.skip(f"Date/Time tests can't be run on this dialect: {dialect}")
 
 

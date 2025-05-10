@@ -48,7 +48,7 @@ def sync_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.IntervalSyncQuery
     if dialect == "mysql":
-        return mysql_types.IntervalAsyncQuery
+        return mysql_types.IntervalSyncQuery
     pytest.skip(f"Interval tests can't be run on this dialect: {dialect}")
 
 

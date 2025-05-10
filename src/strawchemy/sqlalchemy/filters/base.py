@@ -4,12 +4,16 @@ import abc
 from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
 
-from sqlalchemy import ColumnElement, Dialect, func, not_, null
+from sqlalchemy import JSON, ColumnElement, Dialect, Text, func, not_, null, type_coerce
+from sqlalchemy import cast as sqla_cast
+from sqlalchemy.dialects import mysql
+from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.graphql.filters import (
     DateComparison,
     GenericComparison,
     GraphQLComparison,
+    JSONComparison,
     OrderComparison,
     TextComparison,
     TimeComparison,
@@ -25,6 +29,7 @@ __all__ = (
     "DateSQLAlchemyFilter",
     "DateTimeSQLAlchemyFilter",
     "GenericSQLAlchemyFilter",
+    "JSONSQLAlchemyFilter",
     "OrderSQLAlchemyFilter",
     "TextSQLAlchemyFilter",
     "TimeDeltaSQLAlchemyFilter",
@@ -401,3 +406,68 @@ class DateTimeSQLAlchemyFilter(BaseDateSQLAlchemyFilter, BaseTimeSQLAlchemyFilte
             The DTO field name.
         """
         return "DateTime"
+
+
+class JSONSQLAlchemyFilter(
+    JSONComparison[DeclarativeBase, QueryableAttribute[Any]], GenericSQLAlchemyFilter[dict[str, Any]]
+):
+    """JSONB SQLAlchemy filter for JSONB comparison operations.
+
+    This class extends GenericSQLAlchemyFilter and adds filtering
+    capabilities for contains, contained_in, has_key, has_key_all,
+    and has_key_any operations.
+    """
+
+    def _postgres(self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+        as_postgres_jsonb = type_coerce(model_attribute, pg.JSONB)
+
+        if "contains" in self.model_fields_set:
+            expressions.append(as_postgres_jsonb.contains(self.contains))
+        if "contained_in" in self.model_fields_set:
+            expressions.append(as_postgres_jsonb.contained_by(self.contained_in))
+        if "has_key" in self.model_fields_set:
+            expressions.append(as_postgres_jsonb.has_key(self.has_key))
+        if "has_key_all" in self.model_fields_set:
+            expressions.append(as_postgres_jsonb.has_all(sqla_cast(self.has_key_all, pg.ARRAY(Text))))
+        if "has_key_any" in self.model_fields_set:
+            expressions.append(as_postgres_jsonb.has_any(sqla_cast(self.has_key_any, pg.ARRAY(Text))))
+        return expressions
+
+    def _mysql(self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+        as_mysql_json = type_coerce(model_attribute, mysql.JSON)
+
+        if "contains" in self.model_fields_set:
+            expressions.append(func.json_contains(as_mysql_json, sqla_cast(self.contains, mysql.JSON)))
+        if "contained_in" in self.model_fields_set:
+            expressions.append(func.json_contains(sqla_cast(self.contained_in, mysql.JSON), as_mysql_json))
+        if "has_key" in self.model_fields_set:
+            expressions.append(func.json_contains_path(as_mysql_json, "all", f"$.{self.has_key}"))
+        if "has_key_all" in self.model_fields_set and self.has_key_all:
+            expressions.append(func.json_contains_path(as_mysql_json, "all", *[f"$.{key}" for key in self.has_key_all]))
+        if "has_key_any" in self.model_fields_set and self.has_key_any:
+            expressions.append(func.json_contains_path(as_mysql_json, "one", *[f"$.{key}" for key in self.has_key_any]))
+        return expressions
+
+    @override
+    def to_expressions(
+        self, dialect: Dialect, model_attribute: QueryableAttribute[JSON] | ColumnElement[JSON]
+    ) -> list[ColumnElement[bool]]:
+        """Convert filter to SQLAlchemy expressions.
+
+        Args:
+            dialect: SQLAlchemy dialect.
+            model_attribute: SQLAlchemy model attribute or column element.
+
+        Returns:
+            A list of SQLAlchemy boolean expressions.
+        """
+        expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
+
+        if dialect.name == "postgresql":
+            expressions.extend(self._postgres(model_attribute))
+        elif dialect.name == "mysql":
+            expressions.extend(self._mysql(model_attribute))
+
+        return expressions

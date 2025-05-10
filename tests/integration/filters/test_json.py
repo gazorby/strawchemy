@@ -7,6 +7,7 @@ import pytest
 from sqlalchemy import Insert, MetaData, insert
 from syrupy.assertion import SnapshotAssertion
 from tests.integration.models import JSONModel, json_metadata
+from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types
 from tests.integration.utils import to_graphql_representation
 from tests.utils import maybe_async
@@ -33,6 +34,8 @@ def seed_insert_statements(raw_json: RawRecordData) -> list[Insert]:
 def async_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.JSONAsyncQuery
+    if dialect == "mysql":
+        return mysql_types.JSONAsyncQuery
     pytest.skip(f"JSON tests can't be run on this dialect: {dialect}")
 
 
@@ -40,6 +43,8 @@ def async_query(dialect: SupportedDialect) -> type[Any]:
 def sync_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.JSONSyncQuery
+    if dialect == "mysql":
+        return mysql_types.JSONSyncQuery
     pytest.skip(f"JSON tests can't be run on this dialect: {dialect}")
 
 

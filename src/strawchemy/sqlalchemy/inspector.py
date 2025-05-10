@@ -6,9 +6,8 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
 from sqlalchemy import inspect
-from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.orm import NO_VALUE, DeclarativeBase, QueryableAttribute, registry
-from sqlalchemy.types import ARRAY, JSON
+from sqlalchemy.types import ARRAY
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
@@ -18,13 +17,14 @@ from .filters import (
     DateSQLAlchemyFilter,
     DateTimeSQLAlchemyFilter,
     GenericSQLAlchemyFilter,
+    JSONSQLAlchemyFilter,
     OrderSQLAlchemyFilter,
     SQLAlchemyFilterBase,
     TextSQLAlchemyFilter,
     TimeDeltaSQLAlchemyFilter,
     TimeSQLAlchemyFilter,
 )
-from .filters.postgresql import JSONBSQLAlchemyFilter, PostgresArraySQLAlchemyFilter
+from .filters.postgresql import PostgresArraySQLAlchemyFilter
 
 if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition
@@ -69,15 +69,13 @@ class SQLAlchemyGraphQLInspector(
         super().__init__(registries)
         self.db_features = DatabaseFeatures.new(dialect)
         self.filters_map = self._filter_map()
-        self._dialect_json_types: tuple[type[JSON], ...] | None = None
         self.filters_map |= filter_overrides or {}
 
     def _filter_map(self) -> FilterMap:
         filters_map = _DEFAULT_FILTERS_MAP
 
-        if self.db_features.dialect == "postgresql":
-            self._dialect_json_types = (pg.JSON, pg.JSONB)
-            filters_map |= {(dict,): JSONBSQLAlchemyFilter}
+        if self.db_features.supports_json:
+            filters_map |= {(dict,): JSONSQLAlchemyFilter}
             if GEO_INSTALLED:
                 from geoalchemy2 import WKBElement, WKTElement
                 from shapely import Geometry

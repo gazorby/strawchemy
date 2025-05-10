@@ -15,6 +15,7 @@ class DatabaseFeatures(Protocol):
     dialect: SupportedDialect
     supports_lateral: bool = False
     supports_distinct_on: bool = False
+    supports_json: bool = True
     aggregation_functions: set[AggregationFunction] = field(
         default_factory=lambda: {
             "min",
