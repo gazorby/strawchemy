@@ -9,7 +9,8 @@ from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Executable, Insert, MetaData, insert, text
 from tests.integration.fixtures import QueryTracker
-from tests.integration.geo import types as postgres_types
+from tests.integration.geo.types import mysql as mysql_types
+from tests.integration.geo.types import postgres as postgres_types
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
@@ -38,14 +39,18 @@ def postgres_database_service(postgis_service: PostgresService) -> PostgresServi
 
 
 @pytest.fixture
-def before_create_all_statements() -> list[Executable]:
-    return [text("CREATE EXTENSION IF NOT EXISTS postgis")]
+def before_create_all_statements(dialect: SupportedDialect) -> list[Executable]:
+    if dialect == "postgresql":
+        return [text("CREATE EXTENSION IF NOT EXISTS postgis")]
+    return []
 
 
 @pytest.fixture
 def async_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.AsyncGeoQuery
+    if dialect == "mysql":
+        return mysql_types.AsyncGeoQuery
     pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")
 
 
@@ -53,6 +58,8 @@ def async_query(dialect: SupportedDialect) -> type[Any]:
 def sync_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.SyncGeoQuery
+    if dialect == "mysql":
+        return mysql_types.SyncGeoQuery
     pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")
 
 
@@ -78,9 +85,9 @@ async def test_no_filtering(
 @pytest.mark.parametrize(
     ("field_name", "geometry", "expected_ids"),
     [
-        pytest.param("polygon", {"type": "Point", "coordinates": [0.5, 0.5]}, [0, 3], id="point-within-polygon"),
-        pytest.param("multiPolygon", {"type": "Point", "coordinates": [3, 3]}, [3], id="point-within-multipolygon"),
-        pytest.param("geometry", {"type": "Point", "coordinates": [150, 150]}, [3], id="point-within-geometry-polygon"),
+        pytest.param("polygon", {"type": "Point", "coordinates": [0.5, 0.5]}, [0], id="point-within-polygon"),
+        pytest.param("multiPolygon", {"type": "Point", "coordinates": [2.5, 2.5]}, [0], id="point-within-multipolygon"),
+        pytest.param("geometry", {"type": "Point", "coordinates": [5, 5]}, [0], id="point-equals-geometry-point"),
     ],
 )
 @pytest.mark.snapshot

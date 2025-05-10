@@ -6,13 +6,13 @@ import dataclasses
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
-from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, cast
 
 import pytest
 import sqlparse
 from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
+from strawchemy.constants import GEO_INSTALLED
 from strawchemy.strawberry.scalars import Interval, Time
 
 from sqlalchemy import (
@@ -82,12 +82,16 @@ __all__ = (
 
 FilterableStatement: TypeAlias = Literal["insert", "update", "select", "delete"]
 scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval, time: Time}
+engine_plugins: list[str] = []
 
-
-if find_spec("geoalchemy2") is not None:
+if GEO_INSTALLED:
     from strawchemy.strawberry.geo import GEO_SCALAR_OVERRIDES
 
+    engine_plugins = ["geoalchemy2"]
     scalar_overrides |= GEO_SCALAR_OVERRIDES
+
+
+# Mock data
 
 
 GEO_DATA = [
@@ -118,7 +122,7 @@ GEO_DATA = [
     # Record with complex geometries
     {
         "id": 3,
-        "point_required": "POINT(45.5 -122.6)",  # Real-world coordinates (Portland, OR)
+        "point_required": "POINT(-122.6 45.5)",  # Real-world coordinates (Portland, OR)
         "point": "POINT(-74.0060 40.7128)",  # New York City
         "line_string": "LINESTRING(-122.4194 37.7749, -118.2437 34.0522, -74.0060 40.7128)",  # SF to LA to NYC
         "polygon": "POLYGON((-122.4194 37.7749, -122.4194 37.8, -122.4 37.8, -122.4 37.7749, -122.4194 37.7749))",  # Area in SF
@@ -127,21 +131,7 @@ GEO_DATA = [
         "multi_polygon": "MULTIPOLYGON(((-122.42 37.78, -122.42 37.8, -122.4 37.8, -122.4 37.78, -122.42 37.78)), ((-118.25 34.05, -118.25 34.06, -118.24 34.06, -118.24 34.05, -118.25 34.05)))",  # Areas in SF and LA
         "geometry": "LINESTRING(-122.4194 37.7749, -74.0060 40.7128)",  # Direct SF to NYC
     },
-    # Record with different geometry types
-    {
-        "id": 4,
-        "point_required": "POINT(100 200)",
-        "point": "POINT(200 300)",
-        "line_string": "LINESTRING(100 100, 200 200, 300 300, 400 400)",  # Longer line
-        "polygon": "POLYGON((0 0, 0 10, 10 10, 10 0, 0 0), (2 2, 2 8, 8 8, 8 2, 2 2))",  # Polygon with hole
-        "multi_point": "MULTIPOINT((10 10), (20 20), (30 30), (40 40), (50 50))",  # 5 points
-        "multi_line_string": "MULTILINESTRING((10 10, 20 20), (30 30, 40 40), (50 50, 60 60))",  # 3 lines
-        "multi_polygon": "MULTIPOLYGON(((0 0, 0 5, 5 5, 5 0, 0 0)), ((10 10, 10 15, 15 15, 15 10, 10 10)), ((20 20, 20 25, 25 25, 25 20, 20 20)))",  # 3 squares
-        "geometry": "POLYGON((100 100, 100 200, 200 200, 200 100, 100 100))",  # Using polygon as geometry
-    },
 ]
-
-# Mock data
 
 
 @pytest.fixture
@@ -375,11 +365,28 @@ def raw_date_times() -> RawRecordData:
 
 
 @pytest.fixture
-def raw_geo() -> RawRecordData:
+def raw_geo_flipped() -> RawRecordData:
+    from tests.integration.geo.utils import invert_wkt_coordinates
+
+    # Create GEO_DATA_INVERTED by inverting coordinates in GEO_DATA
+    geo_data_flipped = []
+    for item in GEO_DATA:
+        inverted_item = item.copy()
+        for key, value in item.items():
+            if key != "id" and value is not None:
+                inverted_item[key] = invert_wkt_coordinates(str(value))
+        geo_data_flipped.append(inverted_item)
+    return geo_data_flipped
+
+
+@pytest.fixture
+def raw_geo(dialect: SupportedDialect, raw_geo_flipped: RawRecordData) -> RawRecordData:
+    if dialect == "mysql":
+        return raw_geo_flipped
     return GEO_DATA
 
 
-@pytest.fixture(autouse=False, scope="session")
+@pytest.fixture(scope="session")
 def postgis_service(
     docker_service: DockerService, xdist_postgres_isolation_level: XdistIsolationLevel
 ) -> Generator[PostgresService, None, None]:
@@ -414,6 +421,7 @@ def psycopg_engine(postgres_database_service: PostgresService) -> Generator[Engi
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
+        plugins=engine_plugins,
     )
     try:
         yield engine
@@ -473,6 +481,8 @@ async def asyncmy_engine(mysql_service: MySQLService) -> AsyncGenerator[AsyncEng
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
+        plugins=engine_plugins,
+        echo=True,
     )
     try:
         yield engine
@@ -503,6 +513,7 @@ async def asyncpg_engine(postgres_database_service: PostgresService) -> AsyncGen
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
+        plugins=engine_plugins,
     )
     try:
         yield engine
@@ -524,6 +535,7 @@ async def psycopg_async_engine(postgres_database_service: PostgresService) -> As
             query={},  # type:ignore[arg-type]
         ),
         poolclass=NullPool,
+        plugins=engine_plugins,
     )
     try:
         yield engine

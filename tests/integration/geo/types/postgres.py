@@ -3,8 +3,7 @@ from __future__ import annotations
 from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository
 
 import strawberry
-
-from .models import GeoModel
+from tests.integration.geo.models import GeoModel
 
 strawchemy = Strawchemy("postgresql")
 

@@ -20,11 +20,25 @@ class GeoUUIDBase(BaseColumns, DeclarativeBase):
 class GeoModel(GeoUUIDBase):
     __tablename__ = "geos_fields"
 
-    point_required: Mapped[WKBElement] = mapped_column(Geometry("POINT", srid=4326))
-    point: Mapped[WKBElement | None] = mapped_column(Geometry("POINT", srid=4326), nullable=True)
-    line_string: Mapped[WKBElement | None] = mapped_column(Geometry("LINESTRING", srid=4326), nullable=True)
-    polygon: Mapped[WKBElement | None] = mapped_column(Geometry("POLYGON", srid=4326), nullable=True)
-    multi_point: Mapped[WKBElement | None] = mapped_column(Geometry("MULTIPOINT", srid=4326), nullable=True)
-    multi_line_string: Mapped[WKBElement | None] = mapped_column(Geometry("MULTILINESTRING", srid=4326), nullable=True)
-    multi_polygon: Mapped[WKBElement | None] = mapped_column(Geometry("MULTIPOLYGON", srid=4326), nullable=True)
-    geometry: Mapped[WKBElement | None] = mapped_column(Geometry("GEOMETRY", srid=4326), nullable=True)
+    point_required: Mapped[WKBElement] = mapped_column(Geometry("POINT", srid=4326, spatial_index=False))
+    point: Mapped[WKBElement | None] = mapped_column(
+        Geometry("POINT", srid=4326, spatial_index=False, nullable=True), nullable=True
+    )
+    line_string: Mapped[WKBElement | None] = mapped_column(
+        Geometry("LINESTRING", srid=4326, spatial_index=False), nullable=True
+    )
+    polygon: Mapped[WKBElement | None] = mapped_column(
+        Geometry("POLYGON", srid=4326, spatial_index=False), nullable=True
+    )
+    multi_point: Mapped[WKBElement | None] = mapped_column(
+        Geometry("MULTIPOINT", srid=4326, spatial_index=False), nullable=True
+    )
+    multi_line_string: Mapped[WKBElement | None] = mapped_column(
+        Geometry("MULTILINESTRING", srid=4326, spatial_index=False), nullable=True
+    )
+    multi_polygon: Mapped[WKBElement | None] = mapped_column(
+        Geometry("MULTIPOLYGON", srid=4326, spatial_index=False), nullable=True
+    )
+    geometry: Mapped[WKBElement | None] = mapped_column(
+        Geometry("GEOMETRY", srid=4326, spatial_index=False), nullable=True
+    )

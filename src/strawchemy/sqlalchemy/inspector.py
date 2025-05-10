@@ -49,6 +49,7 @@ _DEFAULT_FILTERS_MAP: FilterMap = OrderedDict(
         (bool,): GenericSQLAlchemyFilter,
         (int, float, Decimal): OrderSQLAlchemyFilter,
         (str,): TextSQLAlchemyFilter,
+        (dict,): JSONSQLAlchemyFilter,
     }
 )
 
@@ -74,15 +75,13 @@ class SQLAlchemyGraphQLInspector(
     def _filter_map(self) -> FilterMap:
         filters_map = _DEFAULT_FILTERS_MAP
 
-        if self.db_features.supports_json:
-            filters_map |= {(dict,): JSONSQLAlchemyFilter}
-            if GEO_INSTALLED:
-                from geoalchemy2 import WKBElement, WKTElement
-                from shapely import Geometry
+        if GEO_INSTALLED:
+            from geoalchemy2 import WKBElement, WKTElement
+            from shapely import Geometry
 
-                from .filters.geo import GeoSQLAlchemyFilter
+            from .filters.geo import GeoSQLAlchemyFilter
 
-                filters_map |= {(Geometry, WKBElement, WKTElement): GeoSQLAlchemyFilter}
+            filters_map |= {(Geometry, WKBElement, WKTElement): GeoSQLAlchemyFilter}
         return filters_map
 
     @classmethod
