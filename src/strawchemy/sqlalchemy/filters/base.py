@@ -208,6 +208,54 @@ class BaseDateSQLAlchemyFilter(DateComparison[OrderSQLAlchemyFilter[int], Declar
     iso_week_day, and iso_year operations.
     """
 
+    def _postgres(
+        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if "year" in self.model_fields_set and self.year:
+            expressions.extend(self.year.to_expressions(dialect, func.extract("YEAR", model_attribute)))
+        if "month" in self.model_fields_set and self.month:
+            expressions.extend(self.month.to_expressions(dialect, func.extract("MONTH", model_attribute)))
+        if "day" in self.model_fields_set and self.day:
+            expressions.extend(self.day.to_expressions(dialect, func.extract("DAY", model_attribute)))
+        if "week" in self.model_fields_set and self.week:
+            expressions.extend(self.week.to_expressions(dialect, func.extract("WEEK", model_attribute)))
+        if "week_day" in self.model_fields_set and self.week_day:
+            expressions.extend(self.week_day.to_expressions(dialect, func.extract("DOW", model_attribute)))
+        if "quarter" in self.model_fields_set and self.quarter:
+            expressions.extend(self.quarter.to_expressions(dialect, func.extract("QUARTER", model_attribute)))
+        if "iso_week_day" in self.model_fields_set and self.iso_week_day:
+            expressions.extend(self.iso_week_day.to_expressions(dialect, func.extract("ISODOW", model_attribute)))
+        if "iso_year" in self.model_fields_set and self.iso_year:
+            expressions.extend(self.iso_year.to_expressions(dialect, func.extract("ISOYEAR", model_attribute)))
+
+        return expressions
+
+    def _mysql(
+        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if "year" in self.model_fields_set and self.year:
+            expressions.extend(self.year.to_expressions(dialect, func.extract("YEAR", model_attribute)))
+        if "month" in self.model_fields_set and self.month:
+            expressions.extend(self.month.to_expressions(dialect, func.extract("MONTH", model_attribute)))
+        if "day" in self.model_fields_set and self.day:
+            expressions.extend(self.day.to_expressions(dialect, func.extract("DAY", model_attribute)))
+        if "week" in self.model_fields_set and self.week:
+            expressions.extend(self.week.to_expressions(dialect, func.week(model_attribute, 3)))
+        if "week_day" in self.model_fields_set and self.week_day:
+            expressions.extend(self.week_day.to_expressions(dialect, func.date_format(model_attribute, "%w")))
+        if "quarter" in self.model_fields_set and self.quarter:
+            expressions.extend(self.quarter.to_expressions(dialect, func.extract("QUARTER", model_attribute)))
+        if "iso_week_day" in self.model_fields_set and self.iso_week_day:
+            expressions.extend(self.iso_week_day.to_expressions(dialect, func.weekday(model_attribute) + 1))
+        if "iso_year" in self.model_fields_set and self.iso_year:
+            expressions.extend(self.iso_year.to_expressions(dialect, func.date_format(model_attribute, "%x")))
+
+        return expressions
+
     @override
     def to_expressions(
         self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
@@ -223,22 +271,9 @@ class BaseDateSQLAlchemyFilter(DateComparison[OrderSQLAlchemyFilter[int], Declar
         """
         expressions = super().to_expressions(dialect, model_attribute)
         if dialect.name == "postgresql":
-            if "year" in self.model_fields_set and self.year:
-                expressions.extend(self.year.to_expressions(dialect, func.extract("YEAR", model_attribute)))
-            if "month" in self.model_fields_set and self.month:
-                expressions.extend(self.month.to_expressions(dialect, func.extract("MONTH", model_attribute)))
-            if "day" in self.model_fields_set and self.day:
-                expressions.extend(self.day.to_expressions(dialect, func.extract("DAY", model_attribute)))
-            if "week" in self.model_fields_set and self.week:
-                expressions.extend(self.week.to_expressions(dialect, func.extract("WEEK", model_attribute)))
-            if "week_day" in self.model_fields_set and self.week_day:
-                expressions.extend(self.week_day.to_expressions(dialect, func.extract("DOW", model_attribute)))
-            if "quarter" in self.model_fields_set and self.quarter:
-                expressions.extend(self.quarter.to_expressions(dialect, func.extract("QUARTER", model_attribute)))
-            if "iso_week_day" in self.model_fields_set and self.iso_week_day:
-                expressions.extend(self.iso_week_day.to_expressions(dialect, func.extract("ISODOW", model_attribute)))
-            if "iso_year" in self.model_fields_set and self.iso_year:
-                expressions.extend(self.iso_year.to_expressions(dialect, func.extract("ISOYEAR", model_attribute)))
+            expressions.extend(self._postgres(dialect, model_attribute))
+        if dialect.name == "mysql":
+            expressions.extend(self._mysql(dialect, model_attribute))
 
         return expressions
 
@@ -265,13 +300,12 @@ class BaseTimeSQLAlchemyFilter(TimeComparison[OrderSQLAlchemyFilter[int], Declar
         """
         expressions = super().to_expressions(dialect, model_attribute)
 
-        if dialect.name == "postgresql":
-            if "hour" in self.model_fields_set and self.hour:
-                expressions.extend(self.hour.to_expressions(dialect, func.extract("HOUR", model_attribute)))
-            if "minute" in self.model_fields_set and self.minute:
-                expressions.extend(self.minute.to_expressions(dialect, func.extract("MINUTE", model_attribute)))
-            if "second" in self.model_fields_set and self.second:
-                expressions.extend(self.second.to_expressions(dialect, func.extract("SECOND", model_attribute)))
+        if "hour" in self.model_fields_set and self.hour:
+            expressions.extend(self.hour.to_expressions(dialect, func.extract("HOUR", model_attribute)))
+        if "minute" in self.model_fields_set and self.minute:
+            expressions.extend(self.minute.to_expressions(dialect, func.extract("MINUTE", model_attribute)))
+        if "second" in self.model_fields_set and self.second:
+            expressions.extend(self.second.to_expressions(dialect, func.extract("SECOND", model_attribute)))
 
         return expressions
 

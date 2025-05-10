@@ -12,6 +12,7 @@ from sqlalchemy import (
     ARRAY,
     DECIMAL,
     JSON,
+    Date,
     DateTime,
     Double,
     ForeignKey,
@@ -205,6 +206,6 @@ class DateTimeModel(DateTimeBase):
 
     registry = Registry(metadata=date_time_metadata)
 
-    date_col: Mapped[date]
-    time_col: Mapped[time]
+    date_col: Mapped[date] = mapped_column(Date)
+    time_col: Mapped[time] = mapped_column(Time)
     datetime_col: Mapped[datetime] = mapped_column(DateTime(timezone=True))

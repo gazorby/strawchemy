@@ -104,21 +104,18 @@ run = '{{vars.nox_py13}} -t unit -- {{vars.local_pytest_options}} {{vars.pytest_
 description = "Run integration tests"
 depends = "_install"
 alias = "ti"
-usage = 'arg "<test>" default=""'
 run = '{{vars.nox_py13}} -s integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration-postgres"]
 description = "Run integration tests"
 depends = "_install"
 alias = "ti-postgres"
-usage = 'arg "<test>" default=""'
 run = '{{vars.nox_py13}} -t postgres -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration-mysql"]
 description = "Run integration tests"
 depends = "_install"
 alias = "ti-mysql"
-usage = 'arg "<test>" default=""'
 run = '{{vars.nox_py13}} -t mysql -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration:coverage"]

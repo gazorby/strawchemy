@@ -27,7 +27,6 @@ from tests.integration.models import (
     DateTimeModel,
     Fruit,
     FruitFarm,
-    IntervalModel,
     JSONModel,
     RankedUser,
     User,
@@ -239,17 +238,6 @@ class RankedUserCreateValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
 
 
-# Interval type
-
-
-@strawchemy.filter(IntervalModel, include="all")
-class IntervalFilter: ...
-
-
-@strawchemy.type(IntervalModel, include="all")
-class IntervalType: ...
-
-
 # JSON type
 
 
@@ -438,20 +426,6 @@ class SyncQuery:
     def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
         return repo.get_one_or_none().graphql_type_or_none()
-
-
-@strawberry.type
-class IntervalAsyncQuery:
-    intervals: list[IntervalType] = strawchemy.field(
-        filter_input=IntervalFilter, repository_type=StrawchemyAsyncRepository
-    )
-
-
-@strawberry.type
-class IntervalSyncQuery:
-    intervals: list[IntervalType] = strawchemy.field(
-        filter_input=IntervalFilter, repository_type=StrawchemySyncRepository
-    )
 
 
 @strawberry.type
