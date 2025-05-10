@@ -425,7 +425,7 @@ class SubqueryBuilder(Generic[DeclarativeT]):
 
     @cached_property
     def _distinct_on_rank_column(self) -> str:
-        return self.scope.key("__distinct_on_rank")
+        return self.scope.key("distinct_on_rank")
 
     def distinct_on_condition(self) -> ColumnElement[bool]:
         return self.scope.literal_column(self.name, self._distinct_on_rank_column) == 1

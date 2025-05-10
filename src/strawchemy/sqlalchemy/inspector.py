@@ -67,7 +67,7 @@ class SQLAlchemyGraphQLInspector(
         filter_overrides: FilterMap | None = None,
     ) -> None:
         super().__init__(registries)
-        self.database_features = DatabaseFeatures.new(dialect)
+        self.db_features = DatabaseFeatures.new(dialect)
         self.filters_map = self._filter_map()
         self._dialect_json_types: tuple[type[JSON], ...] | None = None
         self.filters_map |= filter_overrides or {}
@@ -75,7 +75,7 @@ class SQLAlchemyGraphQLInspector(
     def _filter_map(self) -> FilterMap:
         filters_map = _DEFAULT_FILTERS_MAP
 
-        if self.database_features.dialect == "postgresql":
+        if self.db_features.dialect == "postgresql":
             self._dialect_json_types = (pg.JSON, pg.JSONB)
             filters_map |= {(dict,): JSONBSQLAlchemyFilter}
             if GEO_INSTALLED:
@@ -102,7 +102,7 @@ class SQLAlchemyGraphQLInspector(
         self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]
     ) -> type[GraphQLComparison[DeclarativeBase, QueryableAttribute[Any]]]:
         field_type = field_definition.model_field.type
-        if isinstance(field_type, ARRAY) and self.database_features.dialect == "postgresql":
+        if isinstance(field_type, ARRAY) and self.db_features.dialect == "postgresql":
             return PostgresArraySQLAlchemyFilter[field_type.item_type.python_type]
         return self.get_type_comparison(self.model_field_type(field_definition))
 

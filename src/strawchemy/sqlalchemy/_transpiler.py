@@ -91,7 +91,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
     ) -> None:
         supported_dialect: SupportedDialect = cast("SupportedDialect", dialect.name)
         self._inspector = SQLAlchemyGraphQLInspector(supported_dialect, [model.registry])
-        self._aggregation_name_prefix: str = "aggregation"
+        self._aggregation_prefix: str = "aggregation"
         self._aggregation_joins: dict[SQLAlchemyQueryNode, AggregationJoin] = {}
         self._statement = statement
 
@@ -268,7 +268,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
                 - The join object if a new join is needed, None otherwise.
                 - A list of boolean expressions for the filter.
         """
-        aggregation_name = self.scope.key(self._aggregation_name_prefix)
+        aggregation_name = self.scope.key(self._aggregation_prefix)
         aggregation_node_inspect = self.scope.inspect(aggregation.field_node)
         aggregation_node = aggregation.field_node.first_aggregate_parent()
         aggregated_alias: AliasedClass[Any] = aliased(aggregation_node_inspect.mapper.class_)
@@ -302,7 +302,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         self.scope.columns[function_node] = function_column
         self.scope.where_function_nodes.add(function_node)
 
-        if self._inspector.database_features.supports_lateral:
+        if self._inspector.db_features.supports_lateral:
             statement = select(function).where(root_relation.expression).select_from(aggregated_alias_inspected)
             join = AggregationJoin(
                 target=statement.lateral(aggregation_name),
@@ -358,14 +358,14 @@ class QueryTranspiler(Generic[DeclarativeT]):
                     self.scope.columns[node] = function_column
                 function_columns.append(function_column)
         else:
-            if self._inspector.database_features.supports_lateral:
+            if self._inspector.db_features.supports_lateral:
                 new_join = self._aggregation_lateral_join(aggregation_node, functions.values(), alias)
             else:
                 new_join = self._aggregation_cte_join(
                     node=aggregation_node,
                     alias=alias,
                     statement=select(*functions.values()),
-                    cte_name=self.scope.key(self._aggregation_name_prefix),
+                    cte_name=self.scope.key(self._aggregation_prefix),
                 )
             for node in functions:
                 function_column = self.scope.literal_column(new_join.name, self.scope.key(node))
@@ -451,7 +451,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
                 limit=relation_filter.limit,
                 offset=relation_filter.offset,
             )
-        if self._inspector.database_features.supports_lateral:
+        if self._inspector.db_features.supports_lateral:
             return self._lateral_join(node, target_alias, query, is_outer)
         return self._cte_join(node, target_alias, query, is_outer)
 
@@ -514,7 +514,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         Returns:
             An aggregation join object containing the join information.
         """
-        lateral_name = self.scope.key(self._aggregation_name_prefix)
+        lateral_name = self.scope.key(self._aggregation_prefix)
         root_relation = self.scope.aliased_attribute(node).of_type(inspect(alias))
         lateral_statement = select(*function_columns).where(root_relation).lateral(lateral_name)
         return AggregationJoin(target=lateral_statement, onclause=true(), node=node, subquery_alias=alias)
@@ -595,7 +595,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
                     joins.append(new_join)
             else:
                 columns.append((self.scope.aliased_attribute(node), node.order_by))
-        return OrderBy(self._inspector.database_features.dialect, columns, joins)
+        return OrderBy(self._inspector.db_features.dialect, columns, joins)
 
     def _select(self, selection_tree: SQLAlchemyQueryNode) -> tuple[Select[tuple[DeclarativeT]], list[Join]]:
         aggregation_joins: list[Join] = []
@@ -635,10 +635,10 @@ class QueryTranspiler(Generic[DeclarativeT]):
     ) -> Query:
         joins: list[Join] = []
         subquery_join_nodes: set[SQLAlchemyQueryNode] = set()  # Track nodes already joined
-        query = Query(self._inspector.database_features, self.scope.root_alias, limit=limit, offset=offset)
-        has_distinct_on_rank = query_graph.distinct_on and not self._inspector.database_features.supports_distinct_on
+        query = Query(self._inspector.db_features, self.scope.root_alias, limit=limit, offset=offset)
+        has_distinct_on_rank = query_graph.distinct_on and not self._inspector.db_features.supports_distinct_on
         subquery_needed = self.scope.is_root and (limit is not None or offset is not None or has_distinct_on_rank)
-        subquery_builder = SubqueryBuilder(self.scope, self._hook_applier, self._inspector.database_features)
+        subquery_builder = SubqueryBuilder(self.scope, self._hook_applier, self._inspector.db_features)
 
         if subquery_needed:
             self.scope.replace(alias=subquery_builder.alias)

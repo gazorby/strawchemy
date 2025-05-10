@@ -6,10 +6,10 @@
     FROM (
           SELECT color.id AS id,
                  color.name AS name,
-                 row_number() OVER (PARTITION BY color.name) AS __distinct_on_rank_0
+                 row_number() OVER (PARTITION BY color.name) AS __strawchemy_distinct_on_rank_0
             FROM color AS color
          ) AS color
-   WHERE color.__distinct_on_rank_0 = %s
+   WHERE color.__strawchemy_distinct_on_rank_0 = %s
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-asyncpg_engine]

@@ -306,6 +306,7 @@ class QueryScope(Generic[DeclarativeT]):
         self._node_keys: dict[SQLAlchemyQueryNode, str] = {}
         self._keys_set: set[str] = set()
         self._literal_name_counts: defaultdict[str, int] = defaultdict(int)
+        self._literal_namespace: str = "__strawchemy"
         self._inspector = inspector or SQLAlchemyInspector([model.registry])
 
         self.model = model
@@ -499,7 +500,7 @@ class QueryScope(Generic[DeclarativeT]):
         if isinstance(element, QueryNode):
             scoped_name = self._node_key(element)
         else:
-            scoped_name = f"{element}_{self._literal_name_counts[element]}"
+            scoped_name = f"{self._literal_namespace}_{element}_{self._literal_name_counts[element]}"
             self._literal_name_counts[element] += 1
         self._keys_set.add(scoped_name)
         return self._add_scope_id(scoped_name)
