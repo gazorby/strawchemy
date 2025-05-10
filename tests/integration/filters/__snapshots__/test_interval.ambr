@@ -1,4 +1,12 @@
 # serializer version: 1
+# name: test_timedelta_components[session-tracked-async-days-asyncmy_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE unix_timestamp(interval_model.time_delta_col) / %s = %s
+  '''
+# ---
 # name: test_timedelta_components[session-tracked-async-days-asyncpg_engine]
   '''
   SELECT interval_model.time_delta_col,
@@ -13,6 +21,14 @@
          interval_model.id
     FROM interval_model AS interval_model
    WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-async-hours-asyncmy_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE unix_timestamp(interval_model.time_delta_col) / %s = %s
   '''
 # ---
 # name: test_timedelta_components[session-tracked-async-hours-asyncpg_engine]
@@ -31,6 +47,14 @@
    WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
   '''
 # ---
+# name: test_timedelta_components[session-tracked-async-minutes-asyncmy_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE unix_timestamp(interval_model.time_delta_col) / %s = %s
+  '''
+# ---
 # name: test_timedelta_components[session-tracked-async-minutes-asyncpg_engine]
   '''
   SELECT interval_model.time_delta_col,
@@ -45,6 +69,14 @@
          interval_model.id
     FROM interval_model AS interval_model
    WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-async-totalSeconds-asyncmy_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE unix_timestamp(interval_model.time_delta_col) = %s
   '''
 # ---
 # name: test_timedelta_components[session-tracked-async-totalSeconds-asyncpg_engine]

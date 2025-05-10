@@ -272,7 +272,7 @@ class BaseDateSQLAlchemyFilter(DateComparison[OrderSQLAlchemyFilter[int], Declar
         expressions = super().to_expressions(dialect, model_attribute)
         if dialect.name == "postgresql":
             expressions.extend(self._postgres(dialect, model_attribute))
-        if dialect.name == "mysql":
+        elif dialect.name == "mysql":
             expressions.extend(self._mysql(dialect, model_attribute))
 
         return expressions
@@ -324,6 +324,42 @@ class TimeDeltaSQLAlchemyFilter(
 ):
     """Time delta SQLAlchemy filter for interval comparison operations."""
 
+    def _postgres(
+        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if "days" in self.model_fields_set and self.days:
+            seconds_in_day = 60 * 60 * 24
+            expressions.extend(
+                self.days.to_expressions(dialect, func.extract("EPOCH", model_attribute) / seconds_in_day)
+            )
+        if "hours" in self.model_fields_set and self.hours:
+            expressions.extend(self.hours.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 3600))
+        if "minutes" in self.model_fields_set and self.minutes:
+            expressions.extend(self.minutes.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 60))
+        if "seconds" in self.model_fields_set and self.seconds:
+            expressions.extend(self.seconds.to_expressions(dialect, func.extract("EPOCH", model_attribute)))
+
+        return expressions
+
+    def _mysql(
+        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if "days" in self.model_fields_set and self.days:
+            seconds_in_day = 60 * 60 * 24
+            expressions.extend(self.days.to_expressions(dialect, func.unix_timestamp(model_attribute) / seconds_in_day))
+        if "hours" in self.model_fields_set and self.hours:
+            expressions.extend(self.hours.to_expressions(dialect, func.unix_timestamp(model_attribute) / 3600))
+        if "minutes" in self.model_fields_set and self.minutes:
+            expressions.extend(self.minutes.to_expressions(dialect, func.unix_timestamp(model_attribute) / 60))
+        if "seconds" in self.model_fields_set and self.seconds:
+            expressions.extend(self.seconds.to_expressions(dialect, func.unix_timestamp(model_attribute)))
+
+        return expressions
+
     @override
     def to_expressions(
         self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
@@ -331,17 +367,9 @@ class TimeDeltaSQLAlchemyFilter(
         expressions = super().to_expressions(dialect, model_attribute)
 
         if dialect.name == "postgresql":
-            if "days" in self.model_fields_set and self.days:
-                seconds_in_day = 60 * 60 * 24
-                expressions.extend(
-                    self.days.to_expressions(dialect, func.extract("EPOCH", model_attribute) / seconds_in_day)
-                )
-            if "hours" in self.model_fields_set and self.hours:
-                expressions.extend(self.hours.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 3600))
-            if "minutes" in self.model_fields_set and self.minutes:
-                expressions.extend(self.minutes.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 60))
-            if "seconds" in self.model_fields_set and self.seconds:
-                expressions.extend(self.seconds.to_expressions(dialect, func.extract("EPOCH", model_attribute)))
+            expressions.extend(self._postgres(dialect, model_attribute))
+        elif dialect.name == "mysql":
+            expressions.extend(self._mysql(dialect, model_attribute))
 
         return expressions
 

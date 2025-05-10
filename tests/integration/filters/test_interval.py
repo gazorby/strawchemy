@@ -9,6 +9,7 @@ from sqlalchemy import Insert, MetaData, insert
 from syrupy.assertion import SnapshotAssertion
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import IntervalModel, interval_metadata
+from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types
 from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
@@ -37,6 +38,8 @@ def seed_insert_statements(raw_intervals: RawRecordData) -> list[Insert]:
 def async_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.IntervalAsyncQuery
+    if dialect == "mysql":
+        return mysql_types.IntervalAsyncQuery
     pytest.skip(f"Interval tests can't be run on this dialect: {dialect}")
 
 
@@ -44,6 +47,8 @@ def async_query(dialect: SupportedDialect) -> type[Any]:
 def sync_query(dialect: SupportedDialect) -> type[Any]:
     if dialect == "postgresql":
         return postgres_types.IntervalSyncQuery
+    if dialect == "mysql":
+        return mysql_types.IntervalAsyncQuery
     pytest.skip(f"Interval tests can't be run on this dialect: {dialect}")
 
 
