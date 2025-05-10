@@ -9,7 +9,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from tests.unit.models import UUIDBase
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 class NewUser(UUIDBase):

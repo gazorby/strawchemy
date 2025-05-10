@@ -1,51 +1,22 @@
 from __future__ import annotations
 
+import re
 import warnings
 from typing import TYPE_CHECKING
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
-import strawberry
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import (
-    ColorFilter,
-    ColorOrder,
-    ColorType,
-    strawchemy,
-)
 
 if TYPE_CHECKING:
+    from strawchemy.typing import SupportedDialect
+
     from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]
-
-
-@strawberry.type
-class AsyncQuery:
-    colors: list[ColorType] = strawchemy.field(
-        order_by=ColorOrder, filter_input=ColorFilter, repository_type=StrawchemyAsyncRepository
-    )
-
-
-@strawberry.type
-class SyncQuery:
-    colors: list[ColorType] = strawchemy.field(
-        order_by=ColorOrder, filter_input=ColorFilter, repository_type=StrawchemySyncRepository
-    )
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
 
 
 @pytest.mark.parametrize(
@@ -157,7 +128,7 @@ def async_query() -> type[AsyncQuery]:
     ],
 )
 async def test_aggregation_computation_is_reused(
-    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker
+    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, dialect: SupportedDialect
 ) -> None:
     """Test that aggregation computation is reused when filtering and ordering by the same aggregation."""
     with warnings.catch_warnings():
@@ -168,7 +139,11 @@ async def test_aggregation_computation_is_reused(
     assert result.data
 
     assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_str.count("JOIN LATERAL (") == 1
+    if dialect == "postgresql":
+        assert query_tracker[0].statement_str.count("JOIN LATERAL (") == 1
+    else:
+        assert query_tracker[0].statement_str.count("aggregation_0 AS ") == 1
+        assert not re.match(r" aggregation_[1-9]\d* AS $", query_tracker[0].statement_str)
 
 
 @pytest.mark.parametrize(
@@ -190,7 +165,7 @@ async def test_aggregation_computation_is_reused(
         pytest.param(
             """
                     {
-                        colors(filter: { createdAt: { gt: "1220-01-01T00:00:00+00:00" } }) {
+                        colors(filter: { createdAt: { gt: "1220-01-01T00:00:00" } }) {
                             fruits {
                                 sweetness
                             }

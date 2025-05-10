@@ -38,7 +38,6 @@
   
   """GraphQL type"""
   type GeosFieldsType {
-    id: UUID!
     pointRequired: GeoJSONPoint!
     point: GeoJSONPoint
     lineString: GeoJSONLineString
@@ -47,6 +46,7 @@
     multiLineString: GeoJSONMultiLineString
     multiPolygon: GeoJSONMultiPolygon
     geometry: GeoJSON
+    id: UUID!
   }
   
   type Query {

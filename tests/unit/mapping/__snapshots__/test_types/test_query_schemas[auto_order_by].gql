@@ -18,20 +18,20 @@
   
   """Ordering options"""
   input ColorOrderBy {
-    id: OrderByEnum
     fruitsAggregate: FruitAggregateOrderBy
     fruits: FruitOrderBy
     name: OrderByEnum
+    id: OrderByEnum
   }
   
   """GraphQL type"""
   type ColorType {
-    id: UUID!
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
     fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
     name: String!
+    id: UUID!
   }
   
   """Aggregation fields"""
@@ -40,13 +40,11 @@
     count: Int
     max: FruitMinMaxFields!
     min: FruitMinMaxFields!
-    stddev: FruitNumericFields!
     stddevPop: FruitNumericFields!
     stddevSamp: FruitNumericFields!
     sum: FruitSumFields!
     varPop: FruitNumericFields!
     varSamp: FruitNumericFields!
-    variance: FruitNumericFields!
   }
   
   input FruitAggregateMinMaxStringFieldsOrderBy {
@@ -64,13 +62,11 @@
     maxString: FruitAggregateMinMaxStringFieldsOrderBy
     min: FruitAggregateNumericFieldsOrderBy
     minString: FruitAggregateMinMaxStringFieldsOrderBy
-    stddev: FruitAggregateNumericFieldsOrderBy
     stddevPop: FruitAggregateNumericFieldsOrderBy
     stddevSamp: FruitAggregateNumericFieldsOrderBy
     sum: FruitAggregateNumericFieldsOrderBy
     varPop: FruitAggregateNumericFieldsOrderBy
     varSamp: FruitAggregateNumericFieldsOrderBy
-    variance: FruitAggregateNumericFieldsOrderBy
   }
   
   type FruitMinMaxFields {
@@ -84,12 +80,12 @@
   
   """Ordering options"""
   input FruitOrderBy {
-    id: OrderByEnum
-    name: OrderByEnum
-    colorId: OrderByEnum
     colorAggregate: ColorAggregateOrderBy
     color: ColorOrderBy
+    name: OrderByEnum
+    colorId: OrderByEnum
     sweetness: OrderByEnum
+    id: OrderByEnum
   }
   
   type FruitSumFields {
@@ -99,11 +95,11 @@
   
   """GraphQL type"""
   type FruitType {
-    id: UUID!
+    color: ColorType!
     name: String!
     colorId: UUID
-    color: ColorType!
     sweetness: Int!
+    id: UUID!
   }
   
   """Aggregation fields"""
@@ -135,16 +131,16 @@
   
   """Ordering options"""
   input GroupOrderBy {
-    id: OrderByEnum
-    name: OrderByEnum
-    tagId: OrderByEnum
     tagAggregate: TagAggregateOrderBy
     tag: TagOrderBy
     usersAggregate: UserAggregateOrderBy
     users: UserOrderBy
-    colorId: OrderByEnum
     colorAggregate: ColorAggregateOrderBy
     color: ColorOrderBy
+    name: OrderByEnum
+    tagId: OrderByEnum
+    colorId: OrderByEnum
+    id: OrderByEnum
   }
   
   type GroupSumFields {
@@ -153,16 +149,16 @@
   
   """GraphQL type"""
   type GroupType {
-    id: UUID!
-    name: String!
-    tagId: UUID!
     tag: TagType!
     usersAggregate: UserAggregate!
   
     """Fetch objects from the UserType collection"""
     users(orderBy: [UserOrderBy!] = null): [UserType!]!
-    colorId: UUID!
     color: ColorType!
+    name: String!
+    tagId: UUID!
+    colorId: UUID!
+    id: UUID!
   }
   
   enum OrderByEnum {
@@ -196,20 +192,20 @@
   
   """Ordering options"""
   input TagOrderBy {
-    id: OrderByEnum
     groupsAggregate: GroupAggregateOrderBy
     groups: GroupOrderBy
     name: OrderByEnum
+    id: OrderByEnum
   }
   
   """GraphQL type"""
   type TagType {
-    id: UUID!
     groupsAggregate: GroupAggregate!
   
     """Fetch objects from the GroupType collection"""
     groups(orderBy: [GroupOrderBy!] = null): [GroupType!]!
     name: String!
+    id: UUID!
   }
   
   scalar UUID
@@ -243,14 +239,14 @@
   
   """Ordering options"""
   input UserOrderBy {
-    id: OrderByEnum
-    name: OrderByEnum
-    groupId: OrderByEnum
     groupAggregate: GroupAggregateOrderBy
     group: GroupOrderBy
-    tagId: OrderByEnum
     tagAggregate: TagAggregateOrderBy
     tag: TagOrderBy
+    name: OrderByEnum
+    groupId: OrderByEnum
+    tagId: OrderByEnum
+    id: OrderByEnum
   }
   
   type UserSumFields {
@@ -259,12 +255,12 @@
   
   """GraphQL type"""
   type UserType {
-    id: UUID!
+    group: GroupType!
+    tag: TagType!
     name: String!
     groupId: UUID
-    group: GroupType!
     tagId: UUID
-    tag: TagType!
+    id: UUID!
   }
   '''
 # ---

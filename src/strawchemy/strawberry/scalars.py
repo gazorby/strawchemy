@@ -1,16 +1,24 @@
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import UTC, datetime, time, timedelta
 from functools import partial
 from typing import NewType
 
 from pydantic import TypeAdapter
 
 from strawberry import scalar
+from strawberry.schema.types.base_scalars import wrap_parser
 
-__all__ = ("Interval",)
+__all__ = ("Interval", "Time")
 
 _IntervalType = TypeAdapter(timedelta)
+
+
+def _serialize_time(value: time | timedelta) -> str:
+    if isinstance(value, timedelta):
+        value = (datetime.min.replace(tzinfo=UTC) + value).time()
+    return value.isoformat()
+
 
 Interval = scalar(
     NewType("Interval", timedelta),
@@ -22,3 +30,5 @@ Interval = scalar(
     serialize=partial(_IntervalType.dump_python, mode="json"),
     specified_by_url="https://en.wikipedia.org/wiki/ISO_8601#Durations",
 )
+
+Time = scalar(NewType("Time", time), serialize=_serialize_time, parse_value=wrap_parser(time.fromisoformat, "Time"))

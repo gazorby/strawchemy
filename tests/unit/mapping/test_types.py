@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any
 import pytest
 from strawchemy.dto.exceptions import EmptyDTOError
 from strawchemy.exceptions import StrawchemyError
-from strawchemy.graphql.exceptions import InspectorError
 from strawchemy.sqlalchemy.exceptions import QueryHookError
 from strawchemy.strawberry.exceptions import StrawchemyFieldError
 from strawchemy.strawberry.scalars import Interval
@@ -119,22 +118,6 @@ def test_aggregation_type_mismatch() -> None:
         ),
     ):
         import_module("tests.unit.schemas.aggregations.type_mismatch")
-
-
-def test_base_array_fail() -> None:
-    with pytest.raises(
-        InspectorError,
-        match=("""Base SQLAlchemy ARRAY type is not supported. Use backend-specific array type instead."""),
-    ):
-        import_module("tests.unit.schemas.filters.filters_base_array")
-
-
-def test_base_json_fail() -> None:
-    with pytest.raises(
-        InspectorError,
-        match=("""Base SQLAlchemy JSON type is not supported. Use backend-specific json type instead."""),
-    ):
-        import_module("tests.unit.schemas.filters.filters_base_json")
 
 
 def test_query_hooks_wrong_relationship_load_spec() -> None:

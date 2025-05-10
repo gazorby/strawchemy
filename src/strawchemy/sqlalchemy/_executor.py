@@ -69,8 +69,17 @@ class QueryResult(Generic[ModelT]):
             self.node_computed_values = [{} for _ in range(len(self.nodes))]
 
     def __iter__(self) -> Generator[NodeResult[ModelT]]:
-        for model, compiled_values in zip(self.nodes, self.node_computed_values, strict=True):
-            yield NodeResult(model, compiled_values, self.node_key)
+        for model, computed_values in zip(self.nodes, self.node_computed_values, strict=True):
+            yield NodeResult(model, computed_values, self.node_key)
+
+    def filter_in(self, **kwargs: Sequence[Any]) -> Self:
+        filtered = [
+            (model, computed_values)
+            for model, computed_values in zip(self.nodes, self.node_computed_values, strict=True)
+            if all(getattr(model, key) in value for key, value in kwargs.items())
+        ]
+        nodes, computed_values = list(map(list, zip(*filtered, strict=True)))
+        return dataclasses.replace(self, nodes=nodes, node_computed_values=computed_values)
 
     def value(self, key: QueryNode[Any, Any]) -> Any:
         return self.query_computed_values[self.node_key(key)]

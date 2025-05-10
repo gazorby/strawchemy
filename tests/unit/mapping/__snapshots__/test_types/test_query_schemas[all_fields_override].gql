@@ -5,9 +5,9 @@
   type ColorType {
     """Fetch objects from the FruitType collection"""
     fruits: [FruitType!]!
-    id: UUID!
     fruitsAggregate: FruitAggregate!
     name: String!
+    id: UUID!
   }
   
   """Aggregation fields"""
@@ -16,13 +16,11 @@
     count: Int
     max: FruitMinMaxFields!
     min: FruitMinMaxFields!
-    stddev: FruitNumericFields!
     stddevPop: FruitNumericFields!
     stddevSamp: FruitNumericFields!
     sum: FruitSumFields!
     varPop: FruitNumericFields!
     varSamp: FruitNumericFields!
-    variance: FruitNumericFields!
   }
   
   type FruitMinMaxFields {
@@ -42,10 +40,10 @@
   """GraphQL type"""
   type FruitType {
     name: Int!
-    id: UUID!
-    colorId: UUID
     color: ColorType!
+    colorId: UUID
     sweetness: Int!
+    id: UUID!
   }
   
   type Query {

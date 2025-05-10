@@ -27,7 +27,7 @@ def _element_to_geojson_io_url(element: WKBElement | WKTElement | str) -> str:
 
 def geo_data_visualization_urls() -> None:
     data = [
-        {key: _element_to_geojson_io_url(value) for key, value in row.items() if key != "id" and value is not None}
+        {key: _element_to_geojson_io_url(str(value)) for key, value in row.items() if key != "id" and value is not None}
         for row in GEO_DATA
     ]
     print(json.dumps(data, indent=2))  # noqa: T201

@@ -18,20 +18,20 @@
   
   """Ordering options"""
   input ColorOrderBy {
-    id: OrderByEnum
     fruitsAggregate: FruitAggregateOrderBy
     fruits: FruitOrderBy
     name: OrderByEnum
+    id: OrderByEnum
   }
   
   """GraphQL type"""
   type ColorType {
-    id: UUID!
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
     fruits(limit: Int = 100, offset: Int! = 0, orderBy: [FruitOrderBy!] = null): [FruitType!]!
     name: Int!
+    id: UUID!
   }
   
   """Aggregation fields"""
@@ -40,13 +40,11 @@
     count: Int
     max: FruitMinMaxFields!
     min: FruitMinMaxFields!
-    stddev: FruitNumericFields!
     stddevPop: FruitNumericFields!
     stddevSamp: FruitNumericFields!
     sum: FruitSumFields!
     varPop: FruitNumericFields!
     varSamp: FruitNumericFields!
-    variance: FruitNumericFields!
   }
   
   input FruitAggregateMinMaxStringFieldsOrderBy {
@@ -64,13 +62,11 @@
     maxString: FruitAggregateMinMaxStringFieldsOrderBy
     min: FruitAggregateNumericFieldsOrderBy
     minString: FruitAggregateMinMaxStringFieldsOrderBy
-    stddev: FruitAggregateNumericFieldsOrderBy
     stddevPop: FruitAggregateNumericFieldsOrderBy
     stddevSamp: FruitAggregateNumericFieldsOrderBy
     sum: FruitAggregateNumericFieldsOrderBy
     varPop: FruitAggregateNumericFieldsOrderBy
     varSamp: FruitAggregateNumericFieldsOrderBy
-    variance: FruitAggregateNumericFieldsOrderBy
   }
   
   type FruitMinMaxFields {
@@ -84,12 +80,12 @@
   
   """Ordering options"""
   input FruitOrderBy {
-    id: OrderByEnum
-    name: OrderByEnum
-    colorId: OrderByEnum
     colorAggregate: ColorAggregateOrderBy
     color: ColorOrderBy
+    name: OrderByEnum
+    colorId: OrderByEnum
     sweetness: OrderByEnum
+    id: OrderByEnum
     override: Boolean
   }
   
@@ -101,10 +97,10 @@
   """GraphQL type"""
   type FruitType {
     name: Int!
-    id: UUID!
-    colorId: UUID
     color: ColorType!
+    colorId: UUID
     sweetness: Int!
+    id: UUID!
   }
   
   enum OrderByEnum {

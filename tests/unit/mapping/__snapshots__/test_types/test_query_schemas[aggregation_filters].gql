@@ -46,15 +46,15 @@
     _and: [ColorBoolExp!]
     _or: [ColorBoolExp!]
     _not: ColorBoolExp
-    id: UUIDComparison
     fruitsAggregate: FruitAggregateBoolExp
     fruits: FruitBoolExp
     name: StringComparison
+    id: UUIDComparison
   }
   
   enum ColorCountFields {
-    id
     name
+    id
   }
   
   enum ColorMinMaxStringFieldsEnum {
@@ -67,12 +67,12 @@
   
   """GraphQL type"""
   type ColorType {
-    id: UUID!
     fruitsAggregate: FruitAggregate!
   
     """Fetch objects from the FruitType collection"""
     fruits: [FruitType!]!
     name: String!
+    id: UUID!
   }
   
   """
@@ -96,13 +96,11 @@
     count: Int
     max: FruitMinMaxFields!
     min: FruitMinMaxFields!
-    stddev: FruitNumericFields!
     stddevPop: FruitNumericFields!
     stddevSamp: FruitNumericFields!
     sum: FruitSumFields!
     varPop: FruitNumericFields!
     varSamp: FruitNumericFields!
-    variance: FruitNumericFields!
   }
   
   """
@@ -115,13 +113,11 @@
     maxString: FruitAggregateBoolExpMaxstring
     min: FruitAggregateBoolExpMin
     minString: FruitAggregateBoolExpMinstring
-    stddev: FruitAggregateBoolExpStddev
     stddevPop: FruitAggregateBoolExpStddevpop
     stddevSamp: FruitAggregateBoolExpStddevsamp
     sum: FruitAggregateBoolExpSum
     varPop: FruitAggregateBoolExpVarpop
     varSamp: FruitAggregateBoolExpVarsamp
-    variance: FruitAggregateBoolExpVariance
   }
   
   """Boolean expression to compare avg aggregation."""
@@ -166,13 +162,6 @@
     distinct: Boolean
   }
   
-  """Boolean expression to compare stddev aggregation."""
-  input FruitAggregateBoolExpStddev {
-    arguments: [FruitNumericFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
-  }
-  
   """Boolean expression to compare stddev_pop aggregation."""
   input FruitAggregateBoolExpStddevpop {
     arguments: [FruitNumericFieldsEnum!]!
@@ -190,13 +179,6 @@
   """Boolean expression to compare sum aggregation."""
   input FruitAggregateBoolExpSum {
     arguments: [FruitSumFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
-  }
-  
-  """Boolean expression to compare variance aggregation."""
-  input FruitAggregateBoolExpVariance {
-    arguments: [FruitNumericFieldsEnum!]!
     predicate: FloatComparison!
     distinct: Boolean
   }
@@ -222,19 +204,19 @@
     _and: [FruitBoolExp!]
     _or: [FruitBoolExp!]
     _not: FruitBoolExp
-    id: UUIDComparison
-    name: StringComparison
-    colorId: UUIDComparison
     colorAggregate: ColorAggregateBoolExp
     color: ColorBoolExp
+    name: StringComparison
+    colorId: UUIDComparison
     sweetness: IntComparison
+    id: UUIDComparison
   }
   
   enum FruitCountFields {
-    id
     name
     colorId
     sweetness
+    id
   }
   
   type FruitMinMaxFields {
@@ -270,11 +252,11 @@
   
   """GraphQL type"""
   type FruitType {
-    id: UUID!
+    color: ColorType!
     name: String!
     colorId: UUID
-    color: ColorType!
     sweetness: Int!
+    id: UUID!
   }
   
   """Aggregation fields"""
@@ -324,10 +306,10 @@
   }
   
   enum GroupCountFields {
-    id
     name
     tagId
     colorId
+    id
   }
   
   """
@@ -337,16 +319,16 @@
     _and: [GroupFilter!]
     _or: [GroupFilter!]
     _not: GroupFilter
-    id: UUIDComparison
-    name: StringComparison
-    tagId: UUIDComparison
     tagAggregate: TagAggregateBoolExp
     tag: TagBoolExp
     usersAggregate: UserAggregateBoolExp
     users: UserBoolExp
-    colorId: UUIDComparison
     colorAggregate: ColorAggregateBoolExp
     color: ColorBoolExp
+    name: StringComparison
+    tagId: UUIDComparison
+    colorId: UUIDComparison
+    id: UUIDComparison
   }
   
   type GroupMinMaxFields {
@@ -367,16 +349,16 @@
   
   """GraphQL type"""
   type GroupType {
-    id: UUID!
-    name: String!
-    tagId: UUID!
     tag: TagType!
     usersAggregate: UserAggregate!
   
     """Fetch objects from the UserType collection"""
     users: [UserType!]!
-    colorId: UUID!
     color: ColorType!
+    name: String!
+    tagId: UUID!
+    colorId: UUID!
+    id: UUID!
   }
   
   """
@@ -473,15 +455,15 @@
     _and: [TagBoolExp!]
     _or: [TagBoolExp!]
     _not: TagBoolExp
-    id: UUIDComparison
     groupsAggregate: GroupAggregateBoolExp
     groups: GroupFilter
     name: StringComparison
+    id: UUIDComparison
   }
   
   enum TagCountFields {
-    id
     name
+    id
   }
   
   enum TagMinMaxStringFieldsEnum {
@@ -494,12 +476,12 @@
   
   """GraphQL type"""
   type TagType {
-    id: UUID!
     groupsAggregate: GroupAggregate!
   
     """Fetch objects from the GroupType collection"""
     groups: [GroupType!]!
     name: String!
+    id: UUID!
   }
   
   scalar UUID
@@ -568,21 +550,21 @@
     _and: [UserBoolExp!]
     _or: [UserBoolExp!]
     _not: UserBoolExp
-    id: UUIDComparison
-    name: StringComparison
-    groupId: UUIDComparison
     groupAggregate: GroupAggregateBoolExp
     group: GroupFilter
-    tagId: UUIDComparison
     tagAggregate: TagAggregateBoolExp
     tag: TagBoolExp
+    name: StringComparison
+    groupId: UUIDComparison
+    tagId: UUIDComparison
+    id: UUIDComparison
   }
   
   enum UserCountFields {
-    id
     name
     groupId
     tagId
+    id
   }
   
   type UserMinMaxFields {
@@ -603,12 +585,12 @@
   
   """GraphQL type"""
   type UserType {
-    id: UUID!
+    group: GroupType!
+    tag: TagType!
     name: String!
     groupId: UUID
-    group: GroupType!
     tagId: UUID
-    tag: TagType!
+    id: UUID!
   }
   '''
 # ---

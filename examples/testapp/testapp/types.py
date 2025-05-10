@@ -7,7 +7,7 @@ from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemyConfig
 
 from .models import Milestone, Project, Ticket
 
-strawchemy = Strawchemy(StrawchemyConfig(repository_type=StrawchemyAsyncRepository))
+strawchemy = Strawchemy(StrawchemyConfig("postgresql", repository_type=StrawchemyAsyncRepository))
 
 # Filter
 

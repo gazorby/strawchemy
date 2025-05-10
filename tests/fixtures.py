@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from strawchemy.mapper import Strawchemy
+from strawchemy import Strawchemy, StrawchemyConfig
 
 import strawberry
 from syrupy.assertion import SnapshotAssertion
@@ -31,7 +31,7 @@ def sql_snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
 
 @pytest.fixture
 def strawchemy() -> Strawchemy:
-    return Strawchemy()
+    return Strawchemy(StrawchemyConfig("postgresql"))
 
 
 @pytest.fixture(name="sqlalchemy_dataclass_factory")

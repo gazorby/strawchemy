@@ -31,13 +31,11 @@
     count: Int
     max: SQLDataTypesMinMaxFields!
     min: SQLDataTypesMinMaxFields!
-    stddev: SQLDataTypesNumericFields!
     stddevPop: SQLDataTypesNumericFields!
     stddevSamp: SQLDataTypesNumericFields!
     sum: SQLDataTypesSumFields!
     varPop: SQLDataTypesNumericFields!
     varSamp: SQLDataTypesNumericFields!
-    variance: SQLDataTypesNumericFields!
   }
   
   """GraphQL type"""
@@ -72,7 +70,6 @@
   
   """GraphQL type"""
   type SQLDataTypesType {
-    id: UUID!
     dateCol: Date!
     timeCol: Time!
     timeDeltaCol: Interval!
@@ -85,6 +82,7 @@
     uuidCol: UUID!
     dictCol: JSON!
     arrayStrCol: [String!]!
+    id: UUID!
   }
   
   """Time (isoformat)"""

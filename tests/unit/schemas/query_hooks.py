@@ -5,7 +5,7 @@ from strawchemy import QueryHook, Strawchemy
 import strawberry
 from tests.unit.models import Fruit
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 @strawchemy.type(Fruit, query_hook=QueryHook(load=[(Fruit.name, (Fruit.id,))]))

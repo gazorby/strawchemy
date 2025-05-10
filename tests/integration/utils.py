@@ -5,12 +5,13 @@ import re
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from statistics import mean, pstdev, pvariance, stdev, variance
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from uuid import UUID
 
 from pydantic import TypeAdapter
 
 from sqlalchemy import inspect
+from tests.integration.types import postgres as pg_types
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -22,6 +23,7 @@ __all__ = ("from_graphql_representation", "python_type", "to_graphql_representat
 
 
 _TimeDeltaType = TypeAdapter(timedelta)
+AnyTypesModule: TypeAlias = pg_types
 
 
 def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> Any:
@@ -93,9 +95,7 @@ def python_type(model: type[DeclarativeBase], col_name: str) -> type[Any]:
 
 
 def compute_aggregation(
-    graphql_aggregation: Literal[
-        "max", "min", "sum", "avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"
-    ],
+    graphql_aggregation: Literal["max", "min", "sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
     iterable: Iterable[int | float],
 ) -> float | Decimal:
     if graphql_aggregation == "max":
@@ -110,8 +110,8 @@ def compute_aggregation(
         value = pstdev(iterable)
     elif graphql_aggregation == "varPop":
         value = pvariance(iterable)
-    elif graphql_aggregation in ("stddev", "stddevSamp"):
+    elif graphql_aggregation == "stddevSamp":
         value = stdev(iterable)
-    elif graphql_aggregation in ("variance", "varSamp"):
+    elif graphql_aggregation == "varSamp":
         value = variance(iterable)
     return value

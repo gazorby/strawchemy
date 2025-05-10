@@ -8,7 +8,7 @@ import pytest
 
 from sqlalchemy import Result
 from strawchemy.sqlalchemy import _executor as executor
-from strawchemy.sqlalchemy._scope import NodeInspect
+from strawchemy.sqlalchemy._scope import AggregationFunctionInfo
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -73,7 +73,7 @@ def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, A
             for name, value in self.computed_values.items():
                 if name in key_str:
                     return value
-        if any(func in key_str for func in NodeInspect.sqla_functions_map):
+        if any(func in key_str for func in AggregationFunctionInfo.functions_map):
             return 0
         return getattr(self.model, key.value.model_field_name)
 
@@ -82,7 +82,7 @@ def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, A
         for name, value in computed_values.items():
             if name in key_str:
                 return value
-        if any(func in key_str for func in NodeInspect.sqla_functions_map):
+        if any(func in key_str for func in AggregationFunctionInfo.functions_map):
             return 0
         return None
 

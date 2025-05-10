@@ -10,23 +10,12 @@ if TYPE_CHECKING:
     from strawchemy.typing import SupportedDialect
 
 
+@dataclass(frozen=True)
 class DatabaseFeatures(Protocol):
     dialect: SupportedDialect
-    aggregation_functions: set[AggregationFunction]
-    supports_lateral: bool
-
-    @classmethod
-    def new(cls, dialect: SupportedDialect) -> DatabaseFeatures:
-        if dialect == "postgresql":
-            return PostgresFeatures()
-        msg = "Unsupported dialect"
-        raise StrawchemyError(msg)
-
-
-@dataclass(frozen=True)
-class PostgresFeatures(DatabaseFeatures):
-    dialect: SupportedDialect = "postgresql"
-    supports_lateral: bool = True
+    supports_lateral: bool = False
+    supports_distinct_on: bool = False
+    supports_json: bool = True
     aggregation_functions: set[AggregationFunction] = field(
         default_factory=lambda: {
             "min",
@@ -34,11 +23,30 @@ class PostgresFeatures(DatabaseFeatures):
             "sum",
             "avg",
             "count",
-            "stddev",
             "stddev_samp",
             "stddev_pop",
-            "variance",
             "var_samp",
             "var_pop",
         }
     )
+
+    @classmethod
+    def new(cls, dialect: SupportedDialect) -> DatabaseFeatures:
+        if dialect == "postgresql":
+            return PostgresFeatures()
+        if dialect == "mysql":
+            return MySQLFeatures()
+        msg = "Unsupported dialect"
+        raise StrawchemyError(msg)
+
+
+@dataclass(frozen=True)
+class PostgresFeatures(DatabaseFeatures):
+    dialect: SupportedDialect = "postgresql"
+    supports_distinct_on: bool = True
+    supports_lateral: bool = True
+
+
+@dataclass(frozen=True)
+class MySQLFeatures(DatabaseFeatures):
+    dialect: SupportedDialect = "mysql"

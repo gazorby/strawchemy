@@ -3,23 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Literal
 
 import pytest
-from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
-import strawberry
 from syrupy.assertion import SnapshotAssertion
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
-from .types import (
-    ColorOrder,
-    ColorType,
-    FruitOrderBy,
-    FruitType,
-    UserOrderBy,
-    UserType,
-    strawchemy,
-)
 from .typing import RawRecordData
 from .utils import compute_aggregation
 
@@ -27,30 +16,6 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
 pytestmark = [pytest.mark.integration]
-
-
-@strawberry.type
-class AsyncQuery:
-    users: list[UserType] = strawchemy.field(order_by=UserOrderBy, repository_type=StrawchemyAsyncRepository)
-    fruits: list[FruitType] = strawchemy.field(order_by=FruitOrderBy, repository_type=StrawchemyAsyncRepository)
-    colors: list[ColorType] = strawchemy.field(order_by=ColorOrder, repository_type=StrawchemyAsyncRepository)
-
-
-@strawberry.type
-class SyncQuery:
-    users: list[UserType] = strawchemy.field(order_by=UserOrderBy, repository_type=StrawchemySyncRepository)
-    fruits: list[FruitType] = strawchemy.field(order_by=FruitOrderBy, repository_type=StrawchemySyncRepository)
-    colors: list[ColorType] = strawchemy.field(order_by=ColorOrder, repository_type=StrawchemySyncRepository)
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
 
 
 @pytest.mark.parametrize("order_by", ["ASC", "DESC"])
@@ -67,7 +32,7 @@ async def test_order_by(
     assert result.data
     # Sort records
     expected_sort = [{"id": row["id"], "name": row["name"]} for row in raw_fruits]
-    expected_sort = sorted(expected_sort, key=lambda x: x["name"], reverse=order_by == "DESC")
+    expected_sort = sorted(expected_sort, key=lambda x: x["name"].lower(), reverse=order_by == "DESC")
     assert [{"id": row["id"], "name": row["name"]} for row in result.data["fruits"]] == expected_sort
     # Verify SQL query
     assert query_tracker.query_count == 1
@@ -100,15 +65,13 @@ async def test_nulls(
 
 @pytest.mark.parametrize(
     "aggregation",
-    ["max", "min", "sum", "avg", "stddev", "stddevSamp", "stddevPop", "variance", "varSamp", "varPop"],
+    ["max", "min", "sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
 )
 @pytest.mark.parametrize("order_by", ["ASC", "DESC"])
 @pytest.mark.snapshot
 async def test_order_by_aggregations(
     order_by: Literal["ASC", "DESC"],
-    aggregation: Literal[
-        "max", "min", "sum", "avg", "variance", "stddev", "varPop", "stddevPop", "varSamp", "stddevSamp"
-    ],
+    aggregation: Literal["max", "min", "sum", "avg", "varPop", "stddevPop", "varSamp", "stddevSamp"],
     any_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,

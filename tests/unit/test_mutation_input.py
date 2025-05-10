@@ -14,7 +14,7 @@ from .models import Color, Fruit
 def test_add_non_input_relationships(
     color_model: type[Color | ColorDataclass], fruit_model: type[Fruit | FruitDataclass]
 ) -> None:
-    strawchemy = Strawchemy()
+    strawchemy = Strawchemy("postgresql")
 
     @strawchemy.create_input(color_model, include="all")
     class ColorInput: ...

@@ -4,12 +4,16 @@ import abc
 from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, override
 
-from sqlalchemy import ColumnElement, Dialect, func, not_, null
+from sqlalchemy import JSON, ColumnElement, Dialect, Text, func, not_, null, type_coerce
+from sqlalchemy import cast as sqla_cast
+from sqlalchemy.dialects import mysql
+from sqlalchemy.dialects import postgresql as pg
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.graphql.filters import (
     DateComparison,
     GenericComparison,
     GraphQLComparison,
+    JSONComparison,
     OrderComparison,
     TextComparison,
     TimeComparison,
@@ -25,6 +29,7 @@ __all__ = (
     "DateSQLAlchemyFilter",
     "DateTimeSQLAlchemyFilter",
     "GenericSQLAlchemyFilter",
+    "JSONSQLAlchemyFilter",
     "OrderSQLAlchemyFilter",
     "TextSQLAlchemyFilter",
     "TimeDeltaSQLAlchemyFilter",
@@ -129,7 +134,7 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
     """
 
     def _like_expressions(
-        self, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
+        self, model_attribute: QueryableAttribute[str] | ColumnElement[str]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -145,14 +150,19 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
         return expressions
 
     def _regexp_expressions(
-        self, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
+        self, dialect: Dialect, model_attribute: QueryableAttribute[str] | ColumnElement[str]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
-
-        if "regexp" in self.model_fields_set:
-            expressions.append(model_attribute.regexp_match(self.regexp))
-        if "nregexp" in self.model_fields_set:
-            expressions.append(not_(model_attribute.regexp_match(self.nregexp)))
+        if "regexp" in self.model_fields_set or "nregexp" in self.model_fields_set:
+            regex = self.regexp or self.nregexp
+            if dialect.name == "mysql":
+                comparison = func.regexp_like(model_attribute, regex, "c")
+            else:
+                comparison = model_attribute.regexp_match(regex)
+            if "regexp" in self.model_fields_set:
+                expressions.append(comparison)
+            else:
+                expressions.append(not_(comparison))
         if "iregexp" in self.model_fields_set:
             expressions.append(func.lower(model_attribute).regexp_match(self.iregexp))
         if "inregexp" in self.model_fields_set:
@@ -164,7 +174,7 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
     def to_expressions(
         self,
         dialect: Dialect,
-        model_attribute: QueryableAttribute[Any] | ColumnElement[Any],
+        model_attribute: QueryableAttribute[str] | ColumnElement[str],
     ) -> list[ColumnElement[bool]]:
         """Convert filter to SQLAlchemy expressions.
 
@@ -177,7 +187,7 @@ class TextSQLAlchemyFilter(TextComparison[DeclarativeBase, QueryableAttribute[An
         """
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
         expressions.extend(self._like_expressions(model_attribute))
-        expressions.extend(self._regexp_expressions(model_attribute))
+        expressions.extend(self._regexp_expressions(dialect, model_attribute))
 
         if "startswith" in self.model_fields_set:
             expressions.append(model_attribute.startswith(self.startswith, autoescape=True))
@@ -203,9 +213,57 @@ class BaseDateSQLAlchemyFilter(DateComparison[OrderSQLAlchemyFilter[int], Declar
     iso_week_day, and iso_year operations.
     """
 
+    def _postgres(
+        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if "year" in self.model_fields_set and self.year:
+            expressions.extend(self.year.to_expressions(dialect, func.extract("YEAR", model_attribute)))
+        if "month" in self.model_fields_set and self.month:
+            expressions.extend(self.month.to_expressions(dialect, func.extract("MONTH", model_attribute)))
+        if "day" in self.model_fields_set and self.day:
+            expressions.extend(self.day.to_expressions(dialect, func.extract("DAY", model_attribute)))
+        if "week" in self.model_fields_set and self.week:
+            expressions.extend(self.week.to_expressions(dialect, func.extract("WEEK", model_attribute)))
+        if "week_day" in self.model_fields_set and self.week_day:
+            expressions.extend(self.week_day.to_expressions(dialect, func.extract("DOW", model_attribute)))
+        if "quarter" in self.model_fields_set and self.quarter:
+            expressions.extend(self.quarter.to_expressions(dialect, func.extract("QUARTER", model_attribute)))
+        if "iso_week_day" in self.model_fields_set and self.iso_week_day:
+            expressions.extend(self.iso_week_day.to_expressions(dialect, func.extract("ISODOW", model_attribute)))
+        if "iso_year" in self.model_fields_set and self.iso_year:
+            expressions.extend(self.iso_year.to_expressions(dialect, func.extract("ISOYEAR", model_attribute)))
+
+        return expressions
+
+    def _mysql(
+        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if "year" in self.model_fields_set and self.year:
+            expressions.extend(self.year.to_expressions(dialect, func.extract("YEAR", model_attribute)))
+        if "month" in self.model_fields_set and self.month:
+            expressions.extend(self.month.to_expressions(dialect, func.extract("MONTH", model_attribute)))
+        if "day" in self.model_fields_set and self.day:
+            expressions.extend(self.day.to_expressions(dialect, func.extract("DAY", model_attribute)))
+        if "week" in self.model_fields_set and self.week:
+            expressions.extend(self.week.to_expressions(dialect, func.week(model_attribute, 3)))
+        if "week_day" in self.model_fields_set and self.week_day:
+            expressions.extend(self.week_day.to_expressions(dialect, func.date_format(model_attribute, "%w")))
+        if "quarter" in self.model_fields_set and self.quarter:
+            expressions.extend(self.quarter.to_expressions(dialect, func.extract("QUARTER", model_attribute)))
+        if "iso_week_day" in self.model_fields_set and self.iso_week_day:
+            expressions.extend(self.iso_week_day.to_expressions(dialect, func.weekday(model_attribute) + 1))
+        if "iso_year" in self.model_fields_set and self.iso_year:
+            expressions.extend(self.iso_year.to_expressions(dialect, func.date_format(model_attribute, "%x")))
+
+        return expressions
+
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
     ) -> list[ColumnElement[bool]]:
         """Convert filter to SQLAlchemy expressions.
 
@@ -218,22 +276,9 @@ class BaseDateSQLAlchemyFilter(DateComparison[OrderSQLAlchemyFilter[int], Declar
         """
         expressions = super().to_expressions(dialect, model_attribute)
         if dialect.name == "postgresql":
-            if "year" in self.model_fields_set and self.year:
-                expressions.extend(self.year.to_expressions(dialect, func.extract("YEAR", model_attribute)))
-            if "month" in self.model_fields_set and self.month:
-                expressions.extend(self.month.to_expressions(dialect, func.extract("MONTH", model_attribute)))
-            if "day" in self.model_fields_set and self.day:
-                expressions.extend(self.day.to_expressions(dialect, func.extract("DAY", model_attribute)))
-            if "week" in self.model_fields_set and self.week:
-                expressions.extend(self.week.to_expressions(dialect, func.extract("WEEK", model_attribute)))
-            if "week_day" in self.model_fields_set and self.week_day:
-                expressions.extend(self.week_day.to_expressions(dialect, func.extract("DOW", model_attribute)))
-            if "quarter" in self.model_fields_set and self.quarter:
-                expressions.extend(self.quarter.to_expressions(dialect, func.extract("QUARTER", model_attribute)))
-            if "iso_week_day" in self.model_fields_set and self.iso_week_day:
-                expressions.extend(self.iso_week_day.to_expressions(dialect, func.extract("ISODOW", model_attribute)))
-            if "iso_year" in self.model_fields_set and self.iso_year:
-                expressions.extend(self.iso_year.to_expressions(dialect, func.extract("ISOYEAR", model_attribute)))
+            expressions.extend(self._postgres(dialect, model_attribute))
+        elif dialect.name == "mysql":
+            expressions.extend(self._mysql(dialect, model_attribute))
 
         return expressions
 
@@ -247,7 +292,7 @@ class BaseTimeSQLAlchemyFilter(TimeComparison[OrderSQLAlchemyFilter[int], Declar
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+        self, dialect: Dialect, model_attribute: ColumnElement[time] | QueryableAttribute[time]
     ) -> list[ColumnElement[bool]]:
         """Convert filter to SQLAlchemy expressions.
 
@@ -260,13 +305,12 @@ class BaseTimeSQLAlchemyFilter(TimeComparison[OrderSQLAlchemyFilter[int], Declar
         """
         expressions = super().to_expressions(dialect, model_attribute)
 
-        if dialect.name == "postgresql":
-            if "hour" in self.model_fields_set and self.hour:
-                expressions.extend(self.hour.to_expressions(dialect, func.extract("HOUR", model_attribute)))
-            if "minute" in self.model_fields_set and self.minute:
-                expressions.extend(self.minute.to_expressions(dialect, func.extract("MINUTE", model_attribute)))
-            if "second" in self.model_fields_set and self.second:
-                expressions.extend(self.second.to_expressions(dialect, func.extract("SECOND", model_attribute)))
+        if "hour" in self.model_fields_set and self.hour:
+            expressions.extend(self.hour.to_expressions(dialect, func.extract("HOUR", model_attribute)))
+        if "minute" in self.model_fields_set and self.minute:
+            expressions.extend(self.minute.to_expressions(dialect, func.extract("MINUTE", model_attribute)))
+        if "second" in self.model_fields_set and self.second:
+            expressions.extend(self.second.to_expressions(dialect, func.extract("SECOND", model_attribute)))
 
         return expressions
 
@@ -285,24 +329,52 @@ class TimeDeltaSQLAlchemyFilter(
 ):
     """Time delta SQLAlchemy filter for interval comparison operations."""
 
+    def _postgres(
+        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if "days" in self.model_fields_set and self.days:
+            seconds_in_day = 60 * 60 * 24
+            expressions.extend(
+                self.days.to_expressions(dialect, func.extract("EPOCH", model_attribute) / seconds_in_day)
+            )
+        if "hours" in self.model_fields_set and self.hours:
+            expressions.extend(self.hours.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 3600))
+        if "minutes" in self.model_fields_set and self.minutes:
+            expressions.extend(self.minutes.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 60))
+        if "seconds" in self.model_fields_set and self.seconds:
+            expressions.extend(self.seconds.to_expressions(dialect, func.extract("EPOCH", model_attribute)))
+
+        return expressions
+
+    def _mysql(
+        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if "days" in self.model_fields_set and self.days:
+            seconds_in_day = 60 * 60 * 24
+            expressions.extend(self.days.to_expressions(dialect, func.unix_timestamp(model_attribute) / seconds_in_day))
+        if "hours" in self.model_fields_set and self.hours:
+            expressions.extend(self.hours.to_expressions(dialect, func.unix_timestamp(model_attribute) / 3600))
+        if "minutes" in self.model_fields_set and self.minutes:
+            expressions.extend(self.minutes.to_expressions(dialect, func.unix_timestamp(model_attribute) / 60))
+        if "seconds" in self.model_fields_set and self.seconds:
+            expressions.extend(self.seconds.to_expressions(dialect, func.unix_timestamp(model_attribute)))
+
+        return expressions
+
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
     ) -> list[ColumnElement[bool]]:
         expressions = super().to_expressions(dialect, model_attribute)
 
         if dialect.name == "postgresql":
-            if "days" in self.model_fields_set and self.days:
-                seconds_in_day = 60 * 60 * 24
-                expressions.extend(
-                    self.days.to_expressions(dialect, func.extract("EPOCH", model_attribute) / seconds_in_day)
-                )
-            if "hours" in self.model_fields_set and self.hours:
-                expressions.extend(self.hours.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 3600))
-            if "minutes" in self.model_fields_set and self.minutes:
-                expressions.extend(self.minutes.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 60))
-            if "seconds" in self.model_fields_set and self.seconds:
-                expressions.extend(self.seconds.to_expressions(dialect, func.extract("EPOCH", model_attribute)))
+            expressions.extend(self._postgres(dialect, model_attribute))
+        elif dialect.name == "mysql":
+            expressions.extend(self._mysql(dialect, model_attribute))
 
         return expressions
 
@@ -334,3 +406,68 @@ class DateTimeSQLAlchemyFilter(BaseDateSQLAlchemyFilter, BaseTimeSQLAlchemyFilte
             The DTO field name.
         """
         return "DateTime"
+
+
+class JSONSQLAlchemyFilter(
+    JSONComparison[DeclarativeBase, QueryableAttribute[Any]], GenericSQLAlchemyFilter[dict[str, Any]]
+):
+    """JSONB SQLAlchemy filter for JSONB comparison operations.
+
+    This class extends GenericSQLAlchemyFilter and adds filtering
+    capabilities for contains, contained_in, has_key, has_key_all,
+    and has_key_any operations.
+    """
+
+    def _postgres(self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+        as_postgres_jsonb = type_coerce(model_attribute, pg.JSONB)
+
+        if "contains" in self.model_fields_set:
+            expressions.append(as_postgres_jsonb.contains(self.contains))
+        if "contained_in" in self.model_fields_set:
+            expressions.append(as_postgres_jsonb.contained_by(self.contained_in))
+        if "has_key" in self.model_fields_set:
+            expressions.append(as_postgres_jsonb.has_key(self.has_key))
+        if "has_key_all" in self.model_fields_set:
+            expressions.append(as_postgres_jsonb.has_all(sqla_cast(self.has_key_all, pg.ARRAY(Text))))
+        if "has_key_any" in self.model_fields_set:
+            expressions.append(as_postgres_jsonb.has_any(sqla_cast(self.has_key_any, pg.ARRAY(Text))))
+        return expressions
+
+    def _mysql(self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+        as_mysql_json = type_coerce(model_attribute, mysql.JSON)
+
+        if "contains" in self.model_fields_set:
+            expressions.append(func.json_contains(as_mysql_json, sqla_cast(self.contains, mysql.JSON)))
+        if "contained_in" in self.model_fields_set:
+            expressions.append(func.json_contains(sqla_cast(self.contained_in, mysql.JSON), as_mysql_json))
+        if "has_key" in self.model_fields_set:
+            expressions.append(func.json_contains_path(as_mysql_json, "all", f"$.{self.has_key}"))
+        if "has_key_all" in self.model_fields_set and self.has_key_all:
+            expressions.append(func.json_contains_path(as_mysql_json, "all", *[f"$.{key}" for key in self.has_key_all]))
+        if "has_key_any" in self.model_fields_set and self.has_key_any:
+            expressions.append(func.json_contains_path(as_mysql_json, "one", *[f"$.{key}" for key in self.has_key_any]))
+        return expressions
+
+    @override
+    def to_expressions(
+        self, dialect: Dialect, model_attribute: QueryableAttribute[JSON] | ColumnElement[JSON]
+    ) -> list[ColumnElement[bool]]:
+        """Convert filter to SQLAlchemy expressions.
+
+        Args:
+            dialect: SQLAlchemy dialect.
+            model_attribute: SQLAlchemy model attribute or column element.
+
+        Returns:
+            A list of SQLAlchemy boolean expressions.
+        """
+        expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
+
+        if dialect.name == "postgresql":
+            expressions.extend(self._postgres(model_attribute))
+        elif dialect.name == "mysql":
+            expressions.extend(self._mysql(model_attribute))
+
+        return expressions

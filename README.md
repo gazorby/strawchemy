@@ -74,7 +74,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 # Initialize the strawchemy mapper
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 # Define SQLAlchemy models
@@ -191,7 +191,7 @@ from strawchemy import Strawchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 class Base(DeclarativeBase):
@@ -276,7 +276,7 @@ To explicitly tell strawchemy to use your type, you need to define it with `@str
 ```python
 from strawchemy import Strawchemy
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 # Define models
 class Color(Base):
@@ -988,7 +988,7 @@ import strawberry
 from strawchemy import Strawchemy, StrawchemySyncRepository, StrawchemyAsyncRepository
 
 # Initialize the strawchemy mapper
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 # Define input types for mutations
 @strawchemy.input(User, include=["name", "email"])

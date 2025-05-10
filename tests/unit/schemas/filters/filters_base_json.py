@@ -16,7 +16,7 @@ class BaseJSON(UUIDBase):
     dict_col: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 @strawchemy.type(BaseJSON, include="all")

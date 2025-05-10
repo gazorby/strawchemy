@@ -5,7 +5,7 @@ from strawchemy import Strawchemy
 import strawberry
 from tests.unit.models import Group
 
-strawchemy = Strawchemy()
+strawchemy = Strawchemy("postgresql")
 
 
 @strawchemy.type(Group, include="all")

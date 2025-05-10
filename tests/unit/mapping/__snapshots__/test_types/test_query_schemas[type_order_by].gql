@@ -36,7 +36,6 @@
   
   """Ordering options"""
   input SQLDataTypesOrderBy {
-    id: OrderByEnum
     dateCol: OrderByEnum
     timeCol: OrderByEnum
     timeDeltaCol: OrderByEnum
@@ -49,11 +48,11 @@
     uuidCol: OrderByEnum
     dictCol: OrderByEnum
     arrayStrCol: OrderByEnum
+    id: OrderByEnum
   }
   
   """GraphQL type"""
   type SQLDataTypesType {
-    id: UUID!
     dateCol: Date!
     timeCol: Time!
     timeDeltaCol: Interval!
@@ -66,6 +65,7 @@
     uuidCol: UUID!
     dictCol: JSON!
     arrayStrCol: [String!]!
+    id: UUID!
   }
   
   """Time (isoformat)"""

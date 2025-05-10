@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast, get_args, get_or
 
 from typing_extensions import TypeIs
 
-from sqlalchemy import Column, SQLColumnExpression, event, inspect, orm, sql
+from sqlalchemy import Column, Sequence, SQLColumnExpression, event, inspect, orm, sql
 from sqlalchemy.orm import (
     ColumnProperty,
     DeclarativeBase,
@@ -26,7 +26,7 @@ from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, ModelInspector, Relation
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.exceptions import ModelInspectorError
-from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, DTOMissingType, Purpose
+from strawchemy.dto.types import DTO_MISSING, DTO_UNSET, DTOConfig, DTOFieldConfig, DTOMissingType, Purpose
 from strawchemy.utils import is_type_hint_optional
 
 if TYPE_CHECKING:
@@ -200,6 +200,8 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                         default_factory = lambda: default.arg({})  # noqa: E731
                     else:
                         default = DTO_MISSING
+                elif isinstance(default, Sequence):
+                    default = DTO_UNSET
                 else:
                     msg = "Unexpected default type"
                     raise ValueError(msg)
@@ -263,7 +265,14 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             relation_model = self.relation_model(prop.class_attribute)
 
         if type_hint is DTO_MISSING:
-            type_hint = self.get_type_hints(mapper.class_).get(model_field.key, DTO_MISSING)
+            if isinstance(prop, RelationshipProperty):
+                type_hint = prop.argument
+            elif isinstance(prop, Column):
+                type_hint = prop.type.python_type
+            elif isinstance(prop, ColumnProperty) and len(prop.columns) == 1:
+                type_hint = prop.columns[0].type.python_type
+            else:
+                type_hint = self.get_type_hints(mapper.class_).get(model_field.key, DTO_MISSING)
 
         type_hint = self._resolve_model_type_hint(type_hint)
 
@@ -299,25 +308,27 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         self, model: type[DeclarativeBase], dto_config: DTOConfig
     ) -> Generator[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
         mapper = inspect(model)
-        columns, relationships = mapper.columns, mapper.relationships
-
-        for key, type_hint in self.get_type_hints(model).items():
-            if key not in columns and key not in relationships:
-                continue
-            mapper_property = mapper.attrs[key]
-            yield key, self.field_definition(mapper_property.class_attribute, dto_config, type_hint=type_hint)
+        type_hints = self.get_type_hints(model)
+        for prop in mapper.attrs:
+            mapper_attr = mapper.attrs[prop.key]
+            type_hint = type_hints.get(prop.key, DTO_MISSING)
+            yield prop.key, self.field_definition(mapper_attr.class_attribute, dto_config, type_hint=type_hint)
 
     @override
     def id_field_definitions(
         self, model: type[DeclarativeBase], dto_config: DTOConfig
     ) -> list[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
         mapper = inspect(model)
-        primary_keys = {column.key for column in mapper.primary_key}
+        type_hints = self.get_type_hints(model)
 
         return [
-            (key, self.field_definition(mapper.attrs[key].class_attribute, dto_config, type_hint=type_hint))
-            for key, type_hint in self.get_type_hints(model).items()
-            if key in primary_keys
+            (
+                pk.key,
+                self.field_definition(
+                    mapper.attrs[pk.key].class_attribute, dto_config, type_hint=type_hints.get(pk.key, DTO_MISSING)
+                ),
+            )
+            for pk in mapper.primary_key
         ]
 
     @override

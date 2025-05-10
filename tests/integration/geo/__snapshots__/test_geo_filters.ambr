@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_contains_geometry[session-tracked-point-within-geometry-polygon-async-asyncpg_engine]
+# name: test_contains_geometry[session-tracked-async-point-within-geometry-polygon-asyncpg_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.geometry) AS geometry,
          geos_fields.id
@@ -7,7 +7,7 @@
    WHERE ST_Contains(geos_fields.geometry, ST_GeomFromGeoJSON($1::VARCHAR))
   '''
 # ---
-# name: test_contains_geometry[session-tracked-point-within-geometry-polygon-async-psycopg_async_engine]
+# name: test_contains_geometry[session-tracked-async-point-within-geometry-polygon-psycopg_async_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.geometry) AS geometry,
          geos_fields.id
@@ -15,15 +15,7 @@
    WHERE ST_Contains(geos_fields.geometry, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
   '''
 # ---
-# name: test_contains_geometry[session-tracked-point-within-geometry-polygon-sync-psycopg_engine]
-  '''
-  SELECT ST_AsEWKB(geos_fields.geometry) AS geometry,
-         geos_fields.id
-    FROM geos_fields AS geos_fields
-   WHERE ST_Contains(geos_fields.geometry, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
-  '''
-# ---
-# name: test_contains_geometry[session-tracked-point-within-multipolygon-async-asyncpg_engine]
+# name: test_contains_geometry[session-tracked-async-point-within-multipolygon-asyncpg_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.multi_polygon) AS multi_polygon,
          geos_fields.id
@@ -31,7 +23,7 @@
    WHERE ST_Contains(geos_fields.multi_polygon, ST_GeomFromGeoJSON($1::VARCHAR))
   '''
 # ---
-# name: test_contains_geometry[session-tracked-point-within-multipolygon-async-psycopg_async_engine]
+# name: test_contains_geometry[session-tracked-async-point-within-multipolygon-psycopg_async_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.multi_polygon) AS multi_polygon,
          geos_fields.id
@@ -39,15 +31,7 @@
    WHERE ST_Contains(geos_fields.multi_polygon, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
   '''
 # ---
-# name: test_contains_geometry[session-tracked-point-within-multipolygon-sync-psycopg_engine]
-  '''
-  SELECT ST_AsEWKB(geos_fields.multi_polygon) AS multi_polygon,
-         geos_fields.id
-    FROM geos_fields AS geos_fields
-   WHERE ST_Contains(geos_fields.multi_polygon, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
-  '''
-# ---
-# name: test_contains_geometry[session-tracked-point-within-polygon-async-asyncpg_engine]
+# name: test_contains_geometry[session-tracked-async-point-within-polygon-asyncpg_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.polygon) AS
   POLYGON,
@@ -56,7 +40,7 @@
    WHERE ST_Contains(geos_fields.polygon, ST_GeomFromGeoJSON($1::VARCHAR))
   '''
 # ---
-# name: test_contains_geometry[session-tracked-point-within-polygon-async-psycopg_async_engine]
+# name: test_contains_geometry[session-tracked-async-point-within-polygon-psycopg_async_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.polygon) AS
   POLYGON,
@@ -65,7 +49,23 @@
    WHERE ST_Contains(geos_fields.polygon, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
   '''
 # ---
-# name: test_contains_geometry[session-tracked-point-within-polygon-sync-psycopg_engine]
+# name: test_contains_geometry[session-tracked-sync-point-within-geometry-polygon-psycopg_engine]
+  '''
+  SELECT ST_AsEWKB(geos_fields.geometry) AS geometry,
+         geos_fields.id
+    FROM geos_fields AS geos_fields
+   WHERE ST_Contains(geos_fields.geometry, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
+  '''
+# ---
+# name: test_contains_geometry[session-tracked-sync-point-within-multipolygon-psycopg_engine]
+  '''
+  SELECT ST_AsEWKB(geos_fields.multi_polygon) AS multi_polygon,
+         geos_fields.id
+    FROM geos_fields AS geos_fields
+   WHERE ST_Contains(geos_fields.multi_polygon, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
+  '''
+# ---
+# name: test_contains_geometry[session-tracked-sync-point-within-polygon-psycopg_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.polygon) AS
   POLYGON,
@@ -116,7 +116,7 @@
     FROM geos_fields AS geos_fields
   '''
 # ---
-# name: test_within_geometry[session-tracked-linestring-within-polygon-async-asyncpg_engine]
+# name: test_within_geometry[session-tracked-async-linestring-within-polygon-asyncpg_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.line_string) AS line_string,
          geos_fields.id
@@ -124,7 +124,7 @@
    WHERE ST_Within(geos_fields.line_string, ST_GeomFromGeoJSON($1::VARCHAR))
   '''
 # ---
-# name: test_within_geometry[session-tracked-linestring-within-polygon-async-psycopg_async_engine]
+# name: test_within_geometry[session-tracked-async-linestring-within-polygon-psycopg_async_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.line_string) AS line_string,
          geos_fields.id
@@ -132,15 +132,7 @@
    WHERE ST_Within(geos_fields.line_string, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
   '''
 # ---
-# name: test_within_geometry[session-tracked-linestring-within-polygon-sync-psycopg_engine]
-  '''
-  SELECT ST_AsEWKB(geos_fields.line_string) AS line_string,
-         geos_fields.id
-    FROM geos_fields AS geos_fields
-   WHERE ST_Within(geos_fields.line_string, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
-  '''
-# ---
-# name: test_within_geometry[session-tracked-multipoint-within-polygon-async-asyncpg_engine]
+# name: test_within_geometry[session-tracked-async-multipoint-within-polygon-asyncpg_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.multi_point) AS multi_point,
          geos_fields.id
@@ -148,7 +140,7 @@
    WHERE ST_Within(geos_fields.multi_point, ST_GeomFromGeoJSON($1::VARCHAR))
   '''
 # ---
-# name: test_within_geometry[session-tracked-multipoint-within-polygon-async-psycopg_async_engine]
+# name: test_within_geometry[session-tracked-async-multipoint-within-polygon-psycopg_async_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.multi_point) AS multi_point,
          geos_fields.id
@@ -156,15 +148,7 @@
    WHERE ST_Within(geos_fields.multi_point, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
   '''
 # ---
-# name: test_within_geometry[session-tracked-multipoint-within-polygon-sync-psycopg_engine]
-  '''
-  SELECT ST_AsEWKB(geos_fields.multi_point) AS multi_point,
-         geos_fields.id
-    FROM geos_fields AS geos_fields
-   WHERE ST_Within(geos_fields.multi_point, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
-  '''
-# ---
-# name: test_within_geometry[session-tracked-point-within-polygon-async-asyncpg_engine]
+# name: test_within_geometry[session-tracked-async-point-within-polygon-asyncpg_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.point) AS POINT,
          geos_fields.id
@@ -172,7 +156,7 @@
    WHERE ST_Within(geos_fields.point, ST_GeomFromGeoJSON($1::VARCHAR))
   '''
 # ---
-# name: test_within_geometry[session-tracked-point-within-polygon-async-psycopg_async_engine]
+# name: test_within_geometry[session-tracked-async-point-within-polygon-psycopg_async_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.point) AS POINT,
          geos_fields.id
@@ -180,7 +164,23 @@
    WHERE ST_Within(geos_fields.point, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
   '''
 # ---
-# name: test_within_geometry[session-tracked-point-within-polygon-sync-psycopg_engine]
+# name: test_within_geometry[session-tracked-sync-linestring-within-polygon-psycopg_engine]
+  '''
+  SELECT ST_AsEWKB(geos_fields.line_string) AS line_string,
+         geos_fields.id
+    FROM geos_fields AS geos_fields
+   WHERE ST_Within(geos_fields.line_string, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
+  '''
+# ---
+# name: test_within_geometry[session-tracked-sync-multipoint-within-polygon-psycopg_engine]
+  '''
+  SELECT ST_AsEWKB(geos_fields.multi_point) AS multi_point,
+         geos_fields.id
+    FROM geos_fields AS geos_fields
+   WHERE ST_Within(geos_fields.multi_point, ST_GeomFromGeoJSON(%(ST_GeomFromGeoJSON_1)s::VARCHAR))
+  '''
+# ---
+# name: test_within_geometry[session-tracked-sync-point-within-polygon-psycopg_engine]
   '''
   SELECT ST_AsEWKB(geos_fields.point) AS POINT,
          geos_fields.id

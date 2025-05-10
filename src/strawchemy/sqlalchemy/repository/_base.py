@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
-from sqlalchemy import inspect
+from sqlalchemy import Row, inspect
 from sqlalchemy.orm import NO_VALUE, RelationshipProperty
 from strawchemy.graphql.mutation import RelationType
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
@@ -10,7 +11,7 @@ from strawchemy.sqlalchemy.inspector import loaded_attributes
 from strawchemy.sqlalchemy.typing import DeclarativeT, QueryExecutorT, SessionT, SQLAlchemyQueryNode
 
 if TYPE_CHECKING:
-    from collections import defaultdict
+    from collections.abc import Sequence
 
     from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -93,3 +94,10 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                 # We take the first input as it's a *ToOne relation
                 value = getattr(relation.set[0], remote.key) if relation.set else None
                 setattr(relation.parent, local.key, value)
+
+    def _rows_to_filter_dict(self, rows: Sequence[Row[Any]]) -> dict[str, list[Any]]:
+        filter_dict = defaultdict(list)
+        for row in rows:
+            for key, value in row._asdict().items():
+                filter_dict[key].append(value)
+        return filter_dict

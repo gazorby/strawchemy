@@ -3,9 +3,9 @@
   '''
   """GraphQL type"""
   type FruitType {
-    id: UUID!
     name: String!
     sweetness: Int!
+    id: UUID!
   }
   
   type Query {
