@@ -1,30 +1,30 @@
 from __future__ import annotations
 
-from .base import (
-    AnyGraphQLComparison,
-    AnyOrderComparison,
+from .inputs import (
+    ArrayComparison,
     DateComparison,
-    GenericComparison,
+    DateTimeComparison,
+    EqualityComparison,
     GraphQLComparison,
+    GraphQLComparisonT,
     GraphQLFilter,
     JSONComparison,
     OrderComparison,
-    PostgresArrayComparison,
     TextComparison,
     TimeComparison,
     TimeDeltaComparison,
 )
 
 __all__ = (
-    "AnyGraphQLComparison",
-    "AnyOrderComparison",
+    "ArrayComparison",
     "DateComparison",
-    "GenericComparison",
+    "DateTimeComparison",
+    "EqualityComparison",
     "GraphQLComparison",
+    "GraphQLComparisonT",
     "GraphQLFilter",
     "JSONComparison",
     "OrderComparison",
-    "PostgresArrayComparison",
     "TextComparison",
     "TimeComparison",
     "TimeDeltaComparison",

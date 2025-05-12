@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 from strawberry.annotation import StrawberryAnnotation
 from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.backend.pydantic import PydanticDTOBackend
+from strawchemy.dto.base import TYPING_NS
 
 from ._factories import (
     StrawberryRegistry,
@@ -35,13 +36,12 @@ from .strawberry import (
     StrawchemyUpdateMutationField,
     types,
 )
-from .strawberry.inspector import _StrawberryModelInspector
 from .types import DefaultOffsetPagination
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
-    from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+    from sqlalchemy.orm import DeclarativeBase
     from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.field import _RESOLVER_TYPE
@@ -51,13 +51,13 @@ if TYPE_CHECKING:
 
     from .sqlalchemy.hook import QueryHook
     from .sqlalchemy.typing import QueryHookCallable
-    from .strawberry.typing import FilterStatementCallable, StrawchemyTypeFromPydantic
+    from .strawberry.typing import FilterStatementCallable
     from .typing import AnyRepository
 
 
 T = TypeVar("T", bound="DeclarativeBase")
 
-_TYPES_NS = vars(types)
+_TYPES_NS = TYPING_NS | vars(types)
 
 __all__ = ("Strawchemy",)
 
@@ -80,14 +80,13 @@ class Strawchemy:
 
         self.config = StrawchemyConfig(config) if isinstance(config, str) else config
         self.registry = StrawberryRegistry()
-        self.inspector = _StrawberryModelInspector(self.config.inspector, self.registry)
 
         self._aggregate_filter_factory = StrawchemyAggregateFilterInputFactory(self)
         self._filter_factory = StrawchemyFilterInputFactory(
             self, aggregate_filter_factory=self._aggregate_filter_factory
         )
         self._order_by_factory = StrawchemyOrderByInputFactory(self)
-        self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.inspector)
+        self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.config.inspector)
         self._type_factory = StrawchemyTypeFactory(self, dataclass_backend, order_by_factory=self._order_by_factory)
         self._input_factory = StrawchemyInputFactory(self, dataclass_backend)
         self._validation_factory = StrawchemyInputValidationFactory(self, pydantic_backend)
@@ -111,7 +110,7 @@ class Strawchemy:
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
 
-    def _registry_namespace(self) -> dict[str, Any]:
+    def _annotation_namespace(self) -> dict[str, Any]:
         return self.registry.namespace("object") | _TYPES_NS
 
     def clear(self) -> None:
@@ -131,8 +130,8 @@ class Strawchemy:
         self,
         resolver: _RESOLVER_TYPE[Any],
         *,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
+        filter_input: type[BooleanFilterDTO] | None = None,
+        order_by: type[OrderByDTO] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
@@ -158,8 +157,8 @@ class Strawchemy:
     def field(
         self,
         *,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
+        filter_input: type[BooleanFilterDTO] | None = None,
+        order_by: type[OrderByDTO] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
@@ -185,8 +184,8 @@ class Strawchemy:
         self,
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
+        filter_input: type[BooleanFilterDTO] | None = None,
+        order_by: type[OrderByDTO] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         id_field_name: str | None = None,
@@ -207,7 +206,7 @@ class Strawchemy:
         extensions: list[FieldExtension] | None = None,
         root_field: bool = True,
     ) -> Any:
-        namespace = self._registry_namespace()
+        namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.config.repository_type
         execution_options_ = execution_options if execution_options is not None else self.config.execution_options
@@ -224,7 +223,7 @@ class Strawchemy:
             session_getter=self.config.session_getter,
             filter_statement=filter_statement,
             execution_options=execution_options_,
-            inspector=self.inspector,
+            inspector=self.config.inspector,
             filter_type=filter_input,
             order_by=order_by,
             pagination=pagination,
@@ -267,7 +266,7 @@ class Strawchemy:
         extensions: list[FieldExtension] | None = None,
         validation: type[MappedPydanticDTO[T]] | None = None,
     ) -> Any:
-        namespace = self._registry_namespace()
+        namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
@@ -275,7 +274,7 @@ class Strawchemy:
             input_type,
             repository_type=repository_type_,
             session_getter=self.config.session_getter,
-            inspector=self.inspector,
+            inspector=self.config.inspector,
             auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
@@ -297,7 +296,7 @@ class Strawchemy:
     def update(
         self,
         input_type: type[MappedGraphQLDTO[T]],
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]],
+        filter_input: type[BooleanFilterDTO],
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
         repository_type: AnyRepository | None = None,
@@ -313,7 +312,7 @@ class Strawchemy:
         extensions: list[FieldExtension] | None = None,
         validation: type[MappedPydanticDTO[T]] | None = None,
     ) -> Any:
-        namespace = self._registry_namespace()
+        namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
@@ -322,7 +321,7 @@ class Strawchemy:
             filter_type=filter_input,
             repository_type=repository_type_,
             session_getter=self.config.session_getter,
-            inspector=self.inspector,
+            inspector=self.config.inspector,
             auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
@@ -359,7 +358,7 @@ class Strawchemy:
         extensions: list[FieldExtension] | None = None,
         validation: type[MappedPydanticDTO[T]] | None = None,
     ) -> Any:
-        namespace = self._registry_namespace()
+        namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
@@ -367,7 +366,7 @@ class Strawchemy:
             input_type=input_type,
             repository_type=repository_type_,
             session_getter=self.config.session_getter,
-            inspector=self.inspector,
+            inspector=self.config.inspector,
             auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
@@ -388,7 +387,7 @@ class Strawchemy:
 
     def delete(
         self,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
+        filter_input: type[BooleanFilterDTO] | None = None,
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
         repository_type: AnyRepository | None = None,
@@ -403,7 +402,7 @@ class Strawchemy:
         graphql_type: Any | None = None,
         extensions: list[FieldExtension] | None = None,
     ) -> Any:
-        namespace = self._registry_namespace()
+        namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
         repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
@@ -411,7 +410,7 @@ class Strawchemy:
             filter_input,
             repository_type=repository_type_,
             session_getter=self.config.session_getter,
-            inspector=self.inspector,
+            inspector=self.config.inspector,
             auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,

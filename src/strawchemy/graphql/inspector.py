@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from strawchemy.dto import DTOFieldDefinition, ModelFieldT, ModelInspector, ModelT
+from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+from strawchemy.dto import DTOFieldDefinition, ModelInspector
 
 if TYPE_CHECKING:
     from strawchemy.config.databases import DatabaseFeatures
@@ -13,13 +14,13 @@ if TYPE_CHECKING:
 __all__ = ("GraphQLInspectorProtocol",)
 
 
-class GraphQLInspectorProtocol(ModelInspector[ModelT, ModelFieldT]):
+class GraphQLInspectorProtocol(ModelInspector[DeclarativeBase, QueryableAttribute[Any]]):
     """GraphQL inspector implementation."""
 
     db_features: DatabaseFeatures
 
     def get_field_comparison(
-        self, field_definition: DTOFieldDefinition[ModelT, ModelFieldT]
-    ) -> type[GraphQLFilter[ModelT, ModelFieldT]]: ...
+        self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]
+    ) -> type[GraphQLFilter]: ...
 
-    def get_type_comparison(self, type_: type[Any]) -> type[GraphQLComparison[ModelT, ModelFieldT]]: ...
+    def get_type_comparison(self, type_: type[Any]) -> type[GraphQLComparison]: ...

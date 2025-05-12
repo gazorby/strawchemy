@@ -14,7 +14,6 @@ from strawberry.types.object_type import _wrap_dataclass
 from strawberry.utils.typing import type_has_annotation
 
 from .dto.backend.dataclass import DataclassDTOBackend
-from .dto.backend.pydantic import PydanticDTOBackend
 from .dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, MappedDTO, Relation
 from .dto.exceptions import EmptyDTOError
 from .dto.types import DTO_AUTO, DTOConfig, DTOMissingType, Purpose
@@ -43,16 +42,9 @@ from .graphql.factories.inputs import (
     OrderByDTOFactory,
 )
 from .graphql.factories.types import RootAggregateTypeDTOFactory, TypeDTOFactory
-from .graphql.typing import (
-    GraphQLDTOT,
-    InputType,
-    MappedGraphQLDTO,
-    PydanticGraphQLDTO,
-    UnmappedGraphQLDTO,
-)
+from .graphql.typing import GraphQLDTOT, InputType, MappedGraphQLDTO, PydanticGraphQLDTO, UnmappedGraphQLDTO
 from .strawberry._instance import MapperModelInstance
 from .strawberry._registry import RegistryTypeInfo, StrawberryRegistry
-from .strawberry._utils import pydantic_from_strawberry_type, strawchemy_type_from_pydantic
 from .strawberry.types import (
     RequiredToManyUpdateInput,
     RequiredToOneInput,
@@ -66,14 +58,14 @@ from .utils import non_optional_type_hint, snake_to_camel
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Hashable, Mapping, Sequence
 
+    from strawchemy.graphql.inspector import GraphQLInspectorProtocol
+
     from . import Strawchemy
     from .dto.types import ExcludeFields, IncludeFields
     from .graph import Node
-    from .graphql.filters import OrderComparison
-    from .graphql.inspector import GraphQLInspectorProtocol
     from .graphql.typing import AggregationType
     from .sqlalchemy.hook import QueryHook
-    from .strawberry.typing import GraphQLType, StrawchemyTypeFromPydantic
+    from .strawberry.typing import GraphQLType
 
 __all__ = (
     "StrawchemyAggregateFactory",
@@ -97,10 +89,10 @@ class _ChildOptions:
     order_by: bool = False
 
 
-class _StrawberryAggregationInspector(AggregationInspector[DeclarativeBase, QueryableAttribute[Any]]):
+class _StrawberryAggregationInspector(AggregationInspector):
     def __init__(
         self,
-        inspector: GraphQLInspectorProtocol[DeclarativeBase, QueryableAttribute[Any]],
+        inspector: GraphQLInspectorProtocol,
         type_registry: StrawberryRegistry | None = None,
     ) -> None:
         super().__init__(inspector)
@@ -142,7 +134,7 @@ class _StrawchemyFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gr
         type_map: dict[Any, Any] | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(mapper.inspector, backend, handle_cycles, type_map, **kwargs)
+        super().__init__(mapper.config.inspector, backend, handle_cycles, type_map, **kwargs)
         self._mapper = mapper
 
     def _type_info(
@@ -288,8 +280,8 @@ class _StrawchemyFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gr
         alias_generator: Callable[[str], str] | None = None,
         child_pagination: bool | DefaultOffsetPagination = False,
         child_order_by: bool = False,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
+        filter_input: type[BooleanFilterDTO] | None = None,
+        order_by: type[OrderByDTO] | None = None,
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
@@ -331,7 +323,7 @@ class _StrawchemyFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gr
         self,
         model: type[T],
         *,
-        mode: InputType,
+        mode: InputType | None = None,
         include: IncludeFields | None = None,
         exclude: ExcludeFields | None = None,
         partial: bool | None = None,
@@ -487,8 +479,8 @@ class StrawchemyMappedFactory(_StrawchemyFactory[MappedGraphQLDTOT]):
         alias_generator: Callable[[str], str] | None = None,
         child_pagination: bool | DefaultOffsetPagination = False,
         child_order_by: bool = False,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
+        filter_input: type[BooleanFilterDTO] | None = None,
+        order_by: type[OrderByDTO] | None = None,
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
@@ -630,8 +622,8 @@ class StrawchemyUnMappedDTOFactory(_StrawchemyFactory[UnmappedGraphQLDTOT]):
         alias_generator: Callable[[str], str] | None = None,
         child_pagination: bool | DefaultOffsetPagination = False,
         child_order_by: bool = False,
-        filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
+        filter_input: type[BooleanFilterDTO] | None = None,
+        order_by: type[OrderByDTO] | None = None,
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
@@ -660,11 +652,11 @@ class StrawchemyUnMappedDTOFactory(_StrawchemyFactory[UnmappedGraphQLDTOT]):
         )
 
 
-class StrawchemyPydanticInputFactory(_StrawchemyFactory[PydanticGraphQLDTOT]):
+class StrawchemyPydanticInputFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLDTOT]):
     def __init__(
         self,
         mapper: Strawchemy,
-        backend: DTOBackend[PydanticGraphQLDTOT],
+        backend: DTOBackend[UnmappedGraphQLDTOT],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
         **kwargs: Any,
@@ -677,61 +669,12 @@ class StrawchemyPydanticInputFactory(_StrawchemyFactory[PydanticGraphQLDTOT]):
     def graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
         return "input"
 
-    def input(
-        self,
-        model: type[T],
-        *,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = True,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        override: bool = False,
-        purpose: Purpose = Purpose.READ,
-        **kwargs: Any,
-    ) -> Callable[[type[Any]], type[StrawchemyTypeFromPydantic[PydanticGraphQLDTOT]]]:
-        def wrapper(
-            class_: type[Any],
-        ) -> type[StrawchemyTypeFromPydantic[PydanticGraphQLDTOT]]:
-            dto_config = config(
-                purpose,
-                include=include,
-                exclude=exclude,
-                partial=partial,
-                type_map=type_map,
-                alias_generator=alias_generator,
-                aliases=aliases,
-            )
-            return strawchemy_type_from_pydantic(
-                self.factory(
-                    model=model,
-                    dto_config=dto_config,
-                    base=class_,
-                    name=name,
-                    description=description,
-                    directives=directives,
-                    override=override,
-                    user_defined=True,
-                    **kwargs,
-                ),
-                strict=True,
-            )
 
-        return wrapper
-
-
-class StrawchemyAggregateFactory(
-    StrawchemyUnMappedDTOFactory[AggregateDTO[DeclarativeBase]],
-    AggregateDTOFactory[DeclarativeBase, QueryableAttribute[Any], AggregateDTO[DeclarativeBase]],
-):
+class StrawchemyAggregateFactory(StrawchemyUnMappedDTOFactory[AggregateDTO], AggregateDTOFactory[AggregateDTO]):
     def __init__(
         self,
         mapper: Strawchemy,
-        backend: DTOBackend[AggregateDTO[DeclarativeBase]] | None = None,
+        backend: DTOBackend[AggregateDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
@@ -740,7 +683,7 @@ class StrawchemyAggregateFactory(
             backend or DataclassDTOBackend(AggregateDTO),
             handle_cycles,
             type_map,
-            aggregation_builder=_StrawberryAggregationInspector(mapper.inspector),
+            aggregation_builder=_StrawberryAggregationInspector(mapper.config.inspector),
         )
 
     @override
@@ -751,13 +694,13 @@ class StrawchemyAggregateFactory(
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, AggregateDTO[DeclarativeBase]], None] | None = None,
+        current_node: Node[Relation[Any, AggregateDTO], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
         *,
         aggregations: bool = True,
         **kwargs: Any,
-    ) -> type[AggregateDTO[DeclarativeBase]]:
+    ) -> type[AggregateDTO]:
         return super().factory(
             model,
             dto_config,
@@ -785,31 +728,28 @@ class StrawchemyAggregateFactory(
             alias_generator: Callable[[str], str] | None = None,
             child_pagination: bool | DefaultOffsetPagination = False,
             child_order_by: bool = False,
-            filter_input: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
-            order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
+            filter_input: type[BooleanFilterDTO] | None = None,
+            order_by: type[OrderByDTO] | None = None,
             name: str | None = None,
             description: str | None = None,
             directives: Sequence[object] | None = (),
             query_hook: QueryHook[T] | Sequence[QueryHook[T]] | None = None,
             override: bool = False,
             purpose: Purpose = Purpose.READ,
-        ) -> Callable[[type[Any]], type[AggregateDTO[T]]]: ...
+        ) -> Callable[[type[Any]], type[AggregateDTO]]: ...
 
 
-class StrawchemyOrderByInputFactory(
-    StrawchemyPydanticInputFactory[OrderByDTO[Any, QueryableAttribute[Any]]],
-    OrderByDTOFactory[DeclarativeBase, QueryableAttribute[Any]],
-):
+class StrawchemyOrderByInputFactory(StrawchemyPydanticInputFactory[OrderByDTO], OrderByDTOFactory):
     def __init__(
         self,
         mapper: Strawchemy,
-        backend: DTOBackend[OrderByDTO[DeclarativeBase, QueryableAttribute[Any]]] | None = None,
+        backend: DTOBackend[OrderByDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
         super().__init__(
             mapper,
-            backend or PydanticDTOBackend(OrderByDTO),
+            backend or DataclassDTOBackend(OrderByDTO),
             handle_cycles,
             type_map,
             aggregation_filter_factory=StrawchemyAggregateFilterInputFactory(
@@ -819,26 +759,15 @@ class StrawchemyOrderByInputFactory(
 
     @override
     def _order_by_aggregation_fields(
-        self,
-        aggregation: FilterFunctionInfo[DeclarativeBase, QueryableAttribute[Any], OrderComparison[Any, Any, Any]],
-        model: type[Any],
-        dto_config: DTOConfig,
-    ) -> type[OrderByDTO[DeclarativeBase, QueryableAttribute[Any]]]:
+        self, aggregation: FilterFunctionInfo, model: type[Any], dto_config: DTOConfig
+    ) -> type[OrderByDTO]:
         dto = super()._order_by_aggregation_fields(aggregation, model, dto_config)
-        strawberry_type = self._mapper.registry.register_pydantic(
-            dto, RegistryTypeInfo(dto.__name__, "input"), partial=True
-        )
-        return pydantic_from_strawberry_type(strawberry_type)
+        return self._mapper.registry.register_dataclass(dto, RegistryTypeInfo(dto.__name__, "input"))
 
     @override
-    def _order_by_aggregation(
-        self, model: type[Any], dto_config: DTOConfig
-    ) -> type[OrderByDTO[DeclarativeBase, QueryableAttribute[Any]]]:
+    def _order_by_aggregation(self, model: type[Any], dto_config: DTOConfig) -> type[OrderByDTO]:
         dto = super()._order_by_aggregation(model, dto_config)
-        strawberry_type = self._mapper.registry.register_pydantic(
-            dto, RegistryTypeInfo(dto.__name__, "input"), partial=True
-        )
-        return pydantic_from_strawberry_type(strawberry_type)
+        return self._mapper.registry.register_dataclass(dto, RegistryTypeInfo(dto.__name__, "input"))
 
     @override
     def factory(
@@ -848,13 +777,13 @@ class StrawchemyOrderByInputFactory(
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, OrderByDTO[Any, QueryableAttribute[Any]]], None] | None = None,
+        current_node: Node[Relation[Any, OrderByDTO], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
         *,
         aggregate_filters: bool = True,
         **kwargs: Any,
-    ) -> type[OrderByDTO[Any, QueryableAttribute[Any]]]:
+    ) -> type[OrderByDTO]:
         """Generate and register a GraphQL input DTO for ordering query results.
 
         Creates a Data Transfer Object (DTO) that enables ordering of query results based on model fields
@@ -934,26 +863,25 @@ class StrawchemyOrderByInputFactory(
             override: bool = False,
             purpose: Purpose = Purpose.READ,
             **kwargs: Any,
-        ) -> Callable[[type[Any]], type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]]]: ...
+        ) -> Callable[[type[Any]], type[OrderByDTO]]: ...
 
 
 class StrawchemyAggregateFilterInputFactory(
-    StrawchemyPydanticInputFactory[AggregateFilterDTO[Any]],
-    AggregateFilterDTOFactory[DeclarativeBase, QueryableAttribute[Any]],
+    StrawchemyPydanticInputFactory[AggregateFilterDTO], AggregateFilterDTOFactory
 ):
     def __init__(
         self,
         mapper: Strawchemy,
-        backend: DTOBackend[AggregateFilterDTO[DeclarativeBase]] | None = None,
+        backend: DTOBackend[AggregateFilterDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
         super().__init__(
             mapper,
-            backend or PydanticDTOBackend(AggregateFilterDTO),
+            backend or DataclassDTOBackend(AggregateFilterDTO),
             handle_cycles,
             type_map,
-            aggregation_builder=_StrawberryAggregationInspector(mapper.inspector),
+            aggregation_builder=_StrawberryAggregationInspector(mapper.config.inspector),
         )
 
     @override
@@ -962,10 +890,10 @@ class StrawchemyAggregateFilterInputFactory(
         model: type[T],
         dto_config: DTOConfig,
         dto_name: str,
-        aggregation: FilterFunctionInfo[T, QueryableAttribute[Any], OrderComparison[Any, Any, Any]],
+        aggregation: FilterFunctionInfo,
         model_field: DTOMissingType | QueryableAttribute[Any],
         parent_field_def: DTOFieldDefinition[DeclarativeBase, Any] | None = None,
-    ) -> type[AggregationFunctionFilterDTO[DeclarativeBase]]:
+    ) -> type[AggregationFunctionFilterDTO]:
         self._mapper.registry.register_enum(aggregation.enum_fields)
 
         dto_type = super()._aggregate_function_type(
@@ -976,16 +904,11 @@ class StrawchemyAggregateFilterInputFactory(
             aggregation=aggregation,
             model_field=model_field,
         )
-        partial_fields = {"distinct"}
-        if aggregation.function == "count":
-            partial_fields.add("arguments")
-        strawberry_type = self._mapper.registry.register_pydantic(
+        return self._mapper.registry.register_dataclass(
             dto_type,
             RegistryTypeInfo(dto_type.__name__, "input"),
-            partial_fields=partial_fields,
             description=f"Boolean expression to compare {aggregation.function} aggregation.",
         )
-        return pydantic_from_strawberry_type(strawberry_type)
 
     if TYPE_CHECKING:
 
@@ -1006,13 +929,10 @@ class StrawchemyAggregateFilterInputFactory(
             override: bool = False,
             purpose: Purpose = Purpose.READ,
             **kwargs: Any,
-        ) -> Callable[[type[Any]], type[StrawchemyTypeFromPydantic[AggregateFilterDTO[T]]]]: ...
+        ) -> Callable[[type[Any]], type[AggregateFilterDTO]]: ...
 
 
-class StrawchemyTypeFactory(
-    StrawchemyMappedFactory[MappedGraphQLDTOT],
-    TypeDTOFactory[DeclarativeBase, QueryableAttribute[Any], MappedGraphQLDTOT],
-):
+class StrawchemyTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT], TypeDTOFactory[MappedGraphQLDTOT]):
     def __init__(
         self,
         mapper: Strawchemy,
@@ -1052,10 +972,7 @@ class StrawchemyTypeFactory(
                 assert field.related_model
                 order_by_input = None
                 if order_by:
-                    order_by_input = strawchemy_type_from_pydantic(
-                        self._order_by_factory.factory(field.related_model, read_all_partial_config),
-                        strict=True,
-                    )
+                    order_by_input = self._order_by_factory.factory(field.related_model, read_all_partial_config)
                 dc_field = self._mapper.field(
                     pagination=pagination, order_by=order_by_input, root_field=False, graphql_type=type_annotation
                 )
@@ -1228,8 +1145,10 @@ class StrawchemyInputFactory(StrawchemyTypeFactory[MappedGraphQLDTOT]):
         node: Node[Relation[Any, MappedGraphQLDTOT], None],
         has_override: bool,
     ) -> bool:
-        return super().should_exclude_field(field, dto_config, node, has_override) or self.inspector.is_foreign_key(
-            field.model_field
+        return (
+            super().should_exclude_field(field, dto_config, node, has_override)
+            or self.inspector.is_foreign_key(field.model_field)
+            or self.inspector.relation_cycle(field, node)
         )
 
     @override
@@ -1383,20 +1302,19 @@ class StrawchemyInputValidationFactory(StrawchemyInputFactory[MappedPydanticGrap
 
 
 class StrawchemyFilterInputFactory(
-    StrawchemyPydanticInputFactory[BooleanFilterDTO[Any, QueryableAttribute[Any]]],
-    FilterDTOFactory[DeclarativeBase, QueryableAttribute[Any], BooleanFilterDTO[Any, QueryableAttribute[Any]]],
+    StrawchemyPydanticInputFactory[BooleanFilterDTO], FilterDTOFactory[BooleanFilterDTO]
 ):
     def __init__(
         self,
         mapper: Strawchemy,
-        backend: DTOBackend[BooleanFilterDTO[Any, QueryableAttribute[Any]]] | None = None,
+        backend: DTOBackend[BooleanFilterDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
         aggregate_filter_factory: StrawchemyAggregateFilterInputFactory | None = None,
     ) -> None:
         super().__init__(
             mapper=mapper,
-            backend=backend or PydanticDTOBackend(BooleanFilterDTO),
+            backend=backend or DataclassDTOBackend(BooleanFilterDTO, *BooleanFilterDTO.strawberry_annotations()),
             handle_cycles=handle_cycles,
             type_map=type_map,
             aggregation_filter_factory=aggregate_filter_factory
@@ -1411,13 +1329,13 @@ class StrawchemyFilterInputFactory(
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, BooleanFilterDTO[Any, QueryableAttribute[Any]]], None] | None = None,
+        current_node: Node[Relation[Any, BooleanFilterDTO], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
         *,
         aggregate_filters: bool = True,
         **kwargs: Any,
-    ) -> type[BooleanFilterDTO[Any, QueryableAttribute[Any]]]:
+    ) -> type[BooleanFilterDTO]:
         return super().factory(
             model,
             dto_config,
@@ -1450,12 +1368,11 @@ class StrawchemyFilterInputFactory(
             override: bool = False,
             purpose: Purpose = Purpose.READ,
             **kwargs: Any,
-        ) -> Callable[[type[Any]], type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]]]: ...
+        ) -> Callable[[type[Any]], type[BooleanFilterDTO]]: ...
 
 
 class StrawchemyRootAggregateTypeFactory(
-    StrawchemyTypeFactory[MappedDataclassGraphQLDTO[Any]],
-    RootAggregateTypeDTOFactory[DeclarativeBase, QueryableAttribute[Any], MappedDataclassGraphQLDTO[Any]],
+    StrawchemyTypeFactory[MappedDataclassGraphQLDTO[Any]], RootAggregateTypeDTOFactory[MappedDataclassGraphQLDTO[Any]]
 ):
     def __init__(
         self,

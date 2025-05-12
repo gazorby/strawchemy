@@ -17,7 +17,7 @@ from ._base import SQLAlchemyGraphQLRepository
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+    from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.orm.util import AliasedClass
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.input import Input, LevelInput
@@ -289,7 +289,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         self,
         mode: _InsertOrUpdate,
         data: Input[DeclarativeT],
-        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None,
+        dto_filter: BooleanFilterDTO | None,
     ) -> Sequence[_RowLike]:
         values = [self._to_dict(instance) for instance in data.instances]
         if mode == "insert":
@@ -310,7 +310,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         self,
         mode: _InsertOrUpdate,
         data: Input[DeclarativeT],
-        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
+        dto_filter: BooleanFilterDTO | None = None,
     ) -> Sequence[_RowLike]:
         self._connect_to_one_relations(data)
         data.add_non_input_relations()
@@ -351,8 +351,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     def list(
         self,
         selection: SQLAlchemyQueryNode | None = None,
-        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        order_by: list[OrderByDTO[DeclarativeBase, QueryableAttribute[Any]]] | None = None,
+        dto_filter: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
@@ -404,8 +404,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     def get_one(
         self,
         selection: SQLAlchemyQueryNode | None = None,
-        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        order_by: list[OrderByDTO[DeclarativeBase, QueryableAttribute[Any]]] | None = None,
+        dto_filter: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
@@ -535,7 +535,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     def update_by_filter(
         self,
         data: Input[DeclarativeT],
-        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]],
+        dto_filter: BooleanFilterDTO,
         selection: SQLAlchemyQueryNode | None = None,
     ) -> QueryResult[DeclarativeT]:
         updated_ids = self._mutate("update_where", data, dto_filter)
@@ -544,7 +544,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     def delete(
         self,
         selection: SQLAlchemyQueryNode | None = None,
-        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
+        dto_filter: BooleanFilterDTO | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> QueryResult[DeclarativeT]:
         with self.session.begin_nested() as transaction:

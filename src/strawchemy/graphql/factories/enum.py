@@ -17,16 +17,15 @@ from __future__ import annotations
 from collections.abc import Iterable
 from inspect import getmodule
 from types import new_class
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast, override
+from typing import TYPE_CHECKING, Any, TypeVar, cast, override
 
+from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.dto.base import (
     DTOBackend,
     DTOBase,
     DTOFactory,
     DTOFieldDefinition,
-    ModelFieldT,
     ModelInspector,
-    ModelT,
     Relation,
 )
 from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
@@ -41,7 +40,7 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
-class EnumDTOBackend(DTOBackend[EnumDTO], Generic[ModelT]):
+class EnumDTOBackend(DTOBackend[EnumDTO]):
     def __init__(self, to_camel: bool = True) -> None:
         self.dto_base = EnumDTO
         self.to_camel = to_camel
@@ -51,7 +50,7 @@ class EnumDTOBackend(DTOBackend[EnumDTO], Generic[ModelT]):
         self,
         name: str,
         model: type[T],
-        field_definitions: Iterable[DTOFieldDefinition[ModelT, ModelFieldT]],
+        field_definitions: Iterable[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]],
         base: type[Any] | None = None,
         **kwargs: Any,
     ) -> type[EnumDTO]:
@@ -60,7 +59,7 @@ class EnumDTOBackend(DTOBackend[EnumDTO], Generic[ModelT]):
         }
 
         def exec_body(namespace: dict[str, Any]) -> Any:
-            def to_field_definition(self: EnumDTO) -> DTOFieldDefinition[ModelT, ModelFieldT]:
+            def to_field_definition(self: EnumDTO) -> DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]:
                 return self.__field_definitions__[self.value]
 
             namespace["field_definition"] = property(to_field_definition)
@@ -83,10 +82,10 @@ class EnumDTOBackend(DTOBackend[EnumDTO], Generic[ModelT]):
         return enum
 
 
-class EnumDTOFactory(DTOFactory[ModelT, ModelFieldT, EnumDTO]):
+class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO]):
     def __init__(
         self,
-        inspector: ModelInspector[Any, ModelFieldT],
+        inspector: ModelInspector[Any, QueryableAttribute[Any]],
         backend: DTOBackend[EnumDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
@@ -102,7 +101,7 @@ class EnumDTOFactory(DTOFactory[ModelT, ModelFieldT, EnumDTO]):
     @override
     def should_exclude_field(
         self,
-        field: DTOFieldDefinition[Any, ModelFieldT],
+        field: DTOFieldDefinition[Any, QueryableAttribute[Any]],
         dto_config: DTOConfig,
         node: Node[Relation[Any, EnumDTO], None],
         has_override: bool,
@@ -115,11 +114,11 @@ class EnumDTOFactory(DTOFactory[ModelT, ModelFieldT, EnumDTO]):
         name: str,
         model: type[T],
         dto_config: DTOConfig,
-        base: type[DTOBase[ModelT]] | None,
-        node: Node[Relation[ModelT, EnumDTO], None],
+        base: type[DTOBase[DeclarativeBase]] | None,
+        node: Node[Relation[DeclarativeBase, EnumDTO], None],
         raise_if_no_fields: bool = False,
         **kwargs: Any,
-    ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT], None, None]:
+    ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], None, None]:
         for field in super().iter_field_definitions(name, model, dto_config, base, node, raise_if_no_fields, **kwargs):
             yield GraphQLFieldDefinition.from_field(field)
 

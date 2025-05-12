@@ -29,7 +29,6 @@ if TYPE_CHECKING:
     from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
     from strawberry.types.arguments import StrawberryArgument
     from strawberry.types.base import WithStrawberryObjectDefinition
-    from strawchemy.graphql.filters import AnyGraphQLComparison
     from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
     from strawchemy.types import DefaultOffsetPagination
 
@@ -63,7 +62,10 @@ class _TypeReference:
     def _set_type(self, strawberry_type: type[WithStrawberryObjectDefinition] | StrawberryContainer) -> None:
         if isinstance(self.ref_holder, StrawberryField):
             self.ref_holder.type = strawberry_type
-        self.ref_holder.type_annotation = StrawberryAnnotation(strawberry_type)
+        self.ref_holder.type_annotation = StrawberryAnnotation(
+            strawberry_type,
+            namespace=self.ref_holder.type_annotation.namespace if self.ref_holder.type_annotation else None,
+        )
 
     def update_type(self, strawberry_type: type[WithStrawberryObjectDefinition]) -> None:
         if isinstance(self.ref_holder.type, StrawberryContainer):
@@ -294,28 +296,6 @@ class StrawberryRegistry:
         strawberry_enum_type = strawberry.enum(cls=enum_type, name=name, description=description, directives=directives)
         self.namespace("enum")[type_name] = strawberry_enum_type
         return strawberry_enum_type
-
-    def register_comparison_type(
-        self, comparison_type: type[AnyGraphQLComparison]
-    ) -> type[StrawberryTypeFromPydantic[AnyGraphQLComparison]]:
-        type_info = RegistryTypeInfo(name=comparison_type.comparison_type_name(), graphql_type="input")
-        if geo_comparison is not None and issubclass(comparison_type, geo_comparison):
-            from .geo import StrawberryGeoComparison
-
-            return self.register_pydantic(
-                comparison_type,
-                type_info,
-                partial=True,
-                all_fields=False,
-                base=StrawberryGeoComparison,
-            )
-
-        return self.register_pydantic(
-            comparison_type,
-            type_info,
-            description=comparison_type.field_description(),
-            partial=True,
-        )
 
     def clear(self) -> None:
         """Clear all registered types in the registry.

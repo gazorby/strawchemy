@@ -2,26 +2,26 @@
 # name: test_query_schemas[argument_override]
   '''
   input ColorAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input ColorAggregateNumericFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input ColorAggregateOrderBy {
-    count: OrderByEnum
-    maxString: ColorAggregateMinMaxStringFieldsOrderBy
-    minString: ColorAggregateMinMaxStringFieldsOrderBy
-    sum: ColorAggregateNumericFieldsOrderBy
+    count: OrderByEnum = null
+    maxString: ColorAggregateMinMaxStringFieldsOrderBy = null
+    minString: ColorAggregateMinMaxStringFieldsOrderBy = null
+    sum: ColorAggregateNumericFieldsOrderBy = null
   }
   
   """Ordering options"""
   input ColorOrderBy {
-    fruitsAggregate: FruitAggregateOrderBy
-    fruits: FruitOrderBy
-    name: OrderByEnum
-    id: OrderByEnum
+    fruitsAggregate: FruitAggregateOrderBy = null
+    fruits: FruitOrderBy = null
+    name: OrderByEnum = null
+    id: OrderByEnum = null
   }
   
   """GraphQL type"""
@@ -48,25 +48,25 @@
   }
   
   input FruitAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input FruitAggregateNumericFieldsOrderBy {
-    sweetness: OrderByEnum
+    sweetness: OrderByEnum = null
   }
   
   input FruitAggregateOrderBy {
-    avg: FruitAggregateNumericFieldsOrderBy
-    count: OrderByEnum
-    max: FruitAggregateNumericFieldsOrderBy
-    maxString: FruitAggregateMinMaxStringFieldsOrderBy
-    min: FruitAggregateNumericFieldsOrderBy
-    minString: FruitAggregateMinMaxStringFieldsOrderBy
-    stddevPop: FruitAggregateNumericFieldsOrderBy
-    stddevSamp: FruitAggregateNumericFieldsOrderBy
-    sum: FruitAggregateNumericFieldsOrderBy
-    varPop: FruitAggregateNumericFieldsOrderBy
-    varSamp: FruitAggregateNumericFieldsOrderBy
+    avg: FruitAggregateNumericFieldsOrderBy = null
+    count: OrderByEnum = null
+    max: FruitAggregateNumericFieldsOrderBy = null
+    maxString: FruitAggregateMinMaxStringFieldsOrderBy = null
+    min: FruitAggregateNumericFieldsOrderBy = null
+    minString: FruitAggregateMinMaxStringFieldsOrderBy = null
+    stddevPop: FruitAggregateNumericFieldsOrderBy = null
+    stddevSamp: FruitAggregateNumericFieldsOrderBy = null
+    sum: FruitAggregateNumericFieldsOrderBy = null
+    varPop: FruitAggregateNumericFieldsOrderBy = null
+    varSamp: FruitAggregateNumericFieldsOrderBy = null
   }
   
   type FruitMinMaxFields {
@@ -80,13 +80,13 @@
   
   """Ordering options"""
   input FruitOrderBy {
-    colorAggregate: ColorAggregateOrderBy
-    color: ColorOrderBy
-    name: OrderByEnum
-    colorId: OrderByEnum
-    sweetness: OrderByEnum
-    id: OrderByEnum
-    override: Boolean
+    override: Boolean! = true
+    colorAggregate: ColorAggregateOrderBy!
+    color: ColorOrderBy = null
+    name: OrderByEnum = null
+    colorId: OrderByEnum = null
+    sweetness: OrderByEnum = null
+    id: OrderByEnum = null
   }
   
   type FruitSumFields {

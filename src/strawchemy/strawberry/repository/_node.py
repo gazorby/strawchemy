@@ -27,7 +27,7 @@ T = TypeVar("T")
 
 
 @dataclass(kw_only=True, eq=False, repr=False)
-class _StrawberryQueryNode(QueryNode[Any, Any], Generic[T]):
+class _StrawberryQueryNode(QueryNode, Generic[T]):
     strawberry_type: type[T]
     children: list[Self] = dataclasses.field(default_factory=list)
     arguments: list[Self] = dataclasses.field(default_factory=list)

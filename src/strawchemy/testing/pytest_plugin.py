@@ -67,7 +67,7 @@ def fx_computed_values() -> dict[str, Any]:
 
 @pytest.fixture(name="patch_query", autouse=True)
 def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, Any], model_instance: Any) -> None:
-    def node_result_value(self: executor.NodeResult[ModelT], key: QueryNode[Any, Any]) -> Any:
+    def node_result_value(self: executor.NodeResult[ModelT], key: QueryNode) -> Any:
         key_str = self.node_key(key)
         if key.value.is_computed:
             for name, value in self.computed_values.items():
@@ -77,7 +77,7 @@ def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, A
             return 0
         return getattr(self.model, key.value.model_field_name)
 
-    def query_result_value(self: executor.QueryResult[ModelT], key: QueryNode[Any, Any]) -> Any:
+    def query_result_value(self: executor.QueryResult[ModelT], key: QueryNode) -> Any:
         key_str = self.node_key(key)
         for name, value in computed_values.items():
             if name in key_str:

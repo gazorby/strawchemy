@@ -8,12 +8,12 @@ if TYPE_CHECKING:
 
     from sqlalchemy import Column, ColumnElement, Function, TextClause
     from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
-    from sqlalchemy.orm import DeclarativeBase, QueryableAttribute, RelationshipProperty, Session, scoped_session
+    from sqlalchemy.orm import DeclarativeBase, RelationshipProperty, Session, scoped_session
     from sqlalchemy.sql.type_api import TypeEngine
     from strawchemy.graphql.dto import OrderByNode, QueryNode
+    from strawchemy.graphql.filters.base import GraphQLComparison
 
     from ._executor import QueryExecutor
-    from .filters import SQLAlchemyFilterBase
     from .hook import QueryHook
 
 
@@ -44,12 +44,12 @@ QueryExecutorT = TypeVar("QueryExecutorT", bound="QueryExecutor[Any]")
 RelationshipSide: TypeAlias = Literal["parent", "target"]
 StatementType = Literal["lambda", "select"]
 LoadMode = Literal["load_options", "statement"]
-SQLAlchemyQueryNode: TypeAlias = "QueryNode[DeclarativeBase, QueryableAttribute[Any]]"
-SQLAlchemyOrderByNode: TypeAlias = "OrderByNode[DeclarativeBase, QueryableAttribute[Any]]"
+SQLAlchemyQueryNode: TypeAlias = "QueryNode"
+SQLAlchemyOrderByNode: TypeAlias = "OrderByNode"
 type ColumnOrRelationship = "Column[Any] | RelationshipProperty[Any]"
 FunctionGenerator: TypeAlias = "Callable[..., Function[Any]]"
 QueryHookCallable: TypeAlias = "QueryHook[QueryHookDeclarativeT]"
-FilterMap: TypeAlias = "OrderedDict[tuple[type[Any], ...], type[SQLAlchemyFilterBase]]"
+FilterMap: TypeAlias = "OrderedDict[tuple[type[Any], ...], type[GraphQLComparison]]"
 AnySyncSession: TypeAlias = "Session | scoped_session[Session]"
 AnyAsyncSession: TypeAlias = "AsyncSession | async_scoped_session[AsyncSession]"
 AnySession: TypeAlias = "AnySyncSession | AnyAsyncSession"

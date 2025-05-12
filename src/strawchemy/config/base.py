@@ -36,7 +36,7 @@ class StrawchemyConfig:
     default_id_field_name: str = "id"
     """Name for primary key fields arguments on primary key resolvers."""
 
-    inspector: GraphQLInspectorProtocol[Any, Any] = field(init=False)
+    inspector: GraphQLInspectorProtocol = field(init=False)
 
     def __post_init__(self) -> None:
         self.inspector = SQLAlchemyGraphQLInspector(self.dialect, filter_overrides=self.filter_overrides)

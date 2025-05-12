@@ -4,14 +4,13 @@ import dataclasses
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
+from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.base import (
     DTOBackend,
     DTOBase,
     DTOFactory,
     DTOFieldDefinition,
-    ModelFieldT,
-    ModelT,
     Relation,
 )
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, Purpose
@@ -36,6 +35,7 @@ if TYPE_CHECKING:
 
     from strawchemy.graph import Node
     from strawchemy.graphql.inspector import GraphQLInspectorProtocol
+    from strawchemy.sqlalchemy.typing import DeclarativeT
 
 
 __all__ = ("AggregateDTOFactory", "DistinctOnFieldsDTOFactory", "RootAggregateTypeDTOFactory", "TypeDTOFactory")
@@ -45,8 +45,8 @@ T = TypeVar("T")
 _TYPING_NS = vars(strawchemy_typing)
 
 
-class GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
-    inspector: GraphQLInspectorProtocol[Any, ModelFieldT]
+class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQLDTOT]):
+    inspector: GraphQLInspectorProtocol
 
     def type_description(self) -> str:
         return "GraphQL type"
@@ -61,13 +61,13 @@ class GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         name: str,
         model: type[T],
         dto_config: DTOConfig,
-        base: type[DTOBase[ModelT]] | None,
-        node: Node[Relation[ModelT, GraphQLDTOT], None],
+        base: type[DTOBase[DeclarativeBase]] | None,
+        node: Node[Relation[DeclarativeBase, GraphQLDTOT], None],
         raise_if_no_fields: bool = False,
         *,
-        field_map: dict[DTOKey, GraphQLFieldDefinition[Any, Any]] | None = None,
+        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
-    ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT], None, None]:
+    ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], None, None]:
         field_map = field_map if field_map is not None else {}
         for field in super().iter_field_definitions(name, model, dto_config, base, node, raise_if_no_fields, **kwargs):
             key = DTOKey.from_dto_node(node)
@@ -82,13 +82,13 @@ class GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, GraphQLDTOT], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> type[GraphQLDTOT]:
-        field_map: dict[DTOKey, GraphQLFieldDefinition[Any, Any]] = {}
+        field_map: dict[DTOKey, GraphQLFieldDefinition] = {}
         dto = super().factory(
             model,
             dto_config,
@@ -107,14 +107,14 @@ class GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         return dto
 
 
-class TypeDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
+class TypeDTOFactory(GraphQLDTOFactory[GraphQLDTOT]):
     def __init__(
         self,
-        inspector: GraphQLInspectorProtocol[Any, ModelFieldT],
+        inspector: GraphQLInspectorProtocol,
         backend: DTOBackend[GraphQLDTOT],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_factory: AggregateDTOFactory[ModelT, ModelFieldT, AggregateDTOT] | None = None,
+        aggregation_factory: AggregateDTOFactory[AggregateDTOT] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(inspector, backend, handle_cycles, type_map, **kwargs)
@@ -123,8 +123,8 @@ class TypeDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         )
 
     def _aggregation_field(
-        self, field_def: DTOFieldDefinition[ModelT, ModelFieldT], dto_config: DTOConfig
-    ) -> GraphQLFieldDefinition[ModelT, ModelFieldT]:
+        self, field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
+    ) -> GraphQLFieldDefinition:
         related_model = self.inspector.relation_model(field_def.model_field)
         aggregate_dto_config = dataclasses.replace(dto_config, annotation_overrides={})
         dto = self._aggregation_factory.factory(
@@ -132,7 +132,7 @@ class TypeDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         )
         return AggregateFieldDefinition(
             dto_config=dto_config,
-            model=dto.__dto_model__,  # pyright: ignore[reportGeneralTypeIssues]
+            model=dto.__dto_model__,
             _model_field=field_def.model_field,
             model_field_name=f"{field_def.name}_aggregate",
             type_hint=dto,
@@ -151,14 +151,14 @@ class TypeDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         name: str,
         model: type[T],
         dto_config: DTOConfig,
-        base: type[DTOBase[ModelT]] | None,
-        node: Node[Relation[ModelT, GraphQLDTOT], None],
+        base: type[DTOBase[DeclarativeBase]] | None,
+        node: Node[Relation[DeclarativeBase, GraphQLDTOT], None],
         raise_if_no_fields: bool = False,
         *,
         aggregations: bool = False,
-        field_map: dict[DTOKey, GraphQLFieldDefinition[Any, Any]] | None = None,
+        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
-    ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT], None, None]:
+    ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], None, None]:
         field_map = field_map if field_map is not None else {}
         for field in super().iter_field_definitions(
             name, model, dto_config, base, node, raise_if_no_fields, field_map=field_map, **kwargs
@@ -177,7 +177,7 @@ class TypeDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, GraphQLDTOT], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
@@ -199,15 +199,15 @@ class TypeDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         )
 
 
-class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
+class RootAggregateTypeDTOFactory(TypeDTOFactory[GraphQLDTOT]):
     def __init__(
         self,
-        inspector: GraphQLInspectorProtocol[Any, ModelFieldT],
+        inspector: GraphQLInspectorProtocol,
         backend: DTOBackend[GraphQLDTOT],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        type_factory: TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTOT] | None = None,
-        aggregation_factory: AggregateDTOFactory[ModelT, ModelFieldT, AggregateDTOT] | None = None,
+        type_factory: TypeDTOFactory[GraphQLDTOT] | None = None,
+        aggregation_factory: AggregateDTOFactory[AggregateDTOT] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(inspector, backend, handle_cycles, type_map, **kwargs)
@@ -226,15 +226,15 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
     def iter_field_definitions(
         self,
         name: str,
-        model: type[T],
+        model: type[DeclarativeT],
         dto_config: DTOConfig,
-        base: type[DTOBase[ModelT]] | None,
-        node: Node[Relation[ModelT, GraphQLDTOT], None],
+        base: type[DTOBase[DeclarativeBase]] | None,
+        node: Node[Relation[DeclarativeBase, GraphQLDTOT], None],
         raise_if_no_fields: bool = False,
         aggregations: bool = False,
-        field_map: dict[DTOKey, GraphQLFieldDefinition[Any, Any]] | None = None,
+        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
-    ) -> Generator[DTOFieldDefinition[Any, ModelFieldT], None, None]:
+    ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], None, None]:
         if not node.is_root:
             yield from ()
         key = DTOKey.from_dto_node(node)
@@ -266,7 +266,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, GraphQLDTOT], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
@@ -290,14 +290,14 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[ModelT, ModelFieldT, GraphQLDTO
         return dto
 
 
-class AggregateDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, AggregateDTOT]):
+class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
     def __init__(
         self,
-        inspector: GraphQLInspectorProtocol[Any, ModelFieldT],
+        inspector: GraphQLInspectorProtocol,
         backend: DTOBackend[AggregateDTOT],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_builder: AggregationInspector[ModelT, ModelFieldT] | None = None,
+        aggregation_builder: AggregationInspector | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(inspector, backend, handle_cycles, type_map, **kwargs)
@@ -317,21 +317,21 @@ class AggregateDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, AggregateDTOT])
     def _factory(
         self,
         name: str,
-        model: type[T],
+        model: type[DeclarativeT],
         dto_config: DTOConfig,
         node: Node[Relation[Any, AggregateDTOT], None],
         base: type[Any] | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
-        field_map: dict[DTOKey, GraphQLFieldDefinition[Any, Any]] | None = None,
+        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
     ) -> type[AggregateDTOT]:
         field_map = field_map if field_map is not None else {}
         model_field = parent_field_def.model_field if parent_field_def else None
         as_partial_config = dataclasses.replace(dto_config, partial=True)
-        field_definitions: list[FunctionFieldDefinition[T, ModelFieldT]] = [
-            FunctionFieldDefinition[T, ModelFieldT](
+        field_definitions: list[FunctionFieldDefinition] = [
+            FunctionFieldDefinition(
                 dto_config=dto_config,
                 model=model,
                 _model_field=model_field if model_field is not None else DTO_MISSING,
@@ -348,7 +348,7 @@ class AggregateDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, AggregateDTOT])
         return self.backend.build(name, model, field_definitions, **(backend_kwargs or {}))
 
 
-class DistinctOnFieldsDTOFactory(EnumDTOFactory[ModelT, ModelFieldT]):
+class DistinctOnFieldsDTOFactory(EnumDTOFactory):
     @override
     def dto_name(
         self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None

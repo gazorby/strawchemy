@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from sqlalchemy import Select
-    from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+    from sqlalchemy.orm import DeclarativeBase
     from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.input import Input
     from strawchemy.sqlalchemy.hook import QueryHook
@@ -45,8 +45,8 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         self,
         executor_type: type[QueryExecutorT],
         selection: SQLAlchemyQueryNode | None = None,
-        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        order_by: list[OrderByDTO[DeclarativeBase, QueryableAttribute[Any]]] | None = None,
+        dto_filter: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,

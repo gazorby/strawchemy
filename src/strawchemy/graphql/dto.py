@@ -32,7 +32,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import (
     TYPE_CHECKING,
-    Annotated,
     Any,
     ClassVar,
     Generic,
@@ -44,32 +43,27 @@ from typing import (
     override,
 )
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
+from msgspec import Struct, field
 
-from strawchemy.dto.backend.dataclass import DataclassDTO, MappedDataclassDTO
+import strawberry
+from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+from strawchemy.dto.backend.dataclass import DataclassDTO, DataclassFieldInfo, FullFieldInfo, MappedDataclassDTO
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, Purpose
 from strawchemy.graph import GraphError, MatchOn, Node, UndefinedType, undefined
+from strawchemy.sqlalchemy.hook import QueryHook  # noqa: TC001
 from strawchemy.utils import camel_to_snake
 
-from .constants import LIMIT_KEY, OFFSET_KEY, ORDER_BY_KEY
-from .filters import AnyOrderComparison
 from .typing import InputType, OrderByDTOT
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
 
-    from strawchemy.sqlalchemy.hook import QueryHook
-
-    from .filters import GenericComparison, GraphQLComparison, OrderComparison
+    from .filters import EqualityComparison, GraphQLComparison
     from .typing import AggregationFunction, AggregationType, FunctionInfo
 
 T = TypeVar("T")
-
-
-def _ensure_list(value: Any) -> Any:
-    return value if isinstance(value, list) else [value]
 
 
 class _HasValue(Protocol, Generic[ModelT, ModelFieldT]):
@@ -86,12 +80,12 @@ class QueryMetadata:
 class StrawchemyDTOAttributes:
     __strawchemy_description__: ClassVar[str] = "GraphQL type"
     __strawchemy_is_root_aggregation_type__: ClassVar[bool] = False
-    __strawchemy_field_map__: ClassVar[dict[DTOKey, GraphQLFieldDefinition[Any, Any]]] = {}
-    __strawchemy_query_hook__: QueryHook[Any] | Sequence[QueryHook[Any]] | None = None
-    __strawchemy_filter__: type[Any] | None = None
-    __strawchemy_order_by__: type[Any] | None = None
-    __strawchemy_validation_cls__: type[MappedPydanticDTO[Any]] | None = None
-    __strawchemy_input_type__: ClassVar[InputType] | None = None
+    __strawchemy_field_map__: ClassVar[dict[DTOKey, GraphQLFieldDefinition]] = {}
+    __strawchemy_query_hook__: ClassVar[QueryHook[Any] | Sequence[QueryHook[Any]] | None] = None
+    __strawchemy_filter__: ClassVar[type[Any] | None] = None
+    __strawchemy_order_by__: ClassVar[type[Any] | None] = None
+    __strawchemy_validation_cls__: ClassVar[type[MappedPydanticDTO[Any]] | None] = None
+    __strawchemy_input_type__: ClassVar[InputType | None] = None
 
 
 class _Key(Generic[T]):
@@ -167,7 +161,7 @@ class DTOKey(_Key[type[Any]]):
         return cls([node.value.model])
 
     @classmethod
-    def from_query_node(cls, node: QueryNode[ModelT, ModelFieldT]) -> Self:
+    def from_query_node(cls, node: QueryNode) -> Self:
         if node.is_root:
             return cls([node.value.model])
         if node.value.related_model:
@@ -175,16 +169,20 @@ class DTOKey(_Key[type[Any]]):
         return cls([node.value.model])
 
 
-class RelationFilterDTO(BaseModel, Generic[OrderByDTOT]):
-    limit: int | None = Field(default=None, alias=LIMIT_KEY)
-    offset: int | None = Field(default=None, alias=OFFSET_KEY)
-    order_by: Annotated[list[OrderByDTOT], BeforeValidator(_ensure_list)] | None = Field(
-        default=None, alias=ORDER_BY_KEY
-    )
+class RelationFilterDTO(Struct, frozen=True):
+    limit: int | None = None
+    offset: int | None = None
+
+    def __bool__(self) -> bool:
+        return bool(self.limit or self.offset)
+
+
+class OrderByRelationFilterDTO(RelationFilterDTO, Generic[OrderByDTOT], frozen=True):
+    order_by: list[OrderByDTOT] = field(default_factory=list)
 
     @override
-    def __hash__(self) -> int:
-        return hash(self.model_dump_json())
+    def __bool__(self) -> bool:
+        return bool(self.limit or self.offset or self.order_by)
 
 
 @dataclass
@@ -196,11 +194,11 @@ class OutputFunctionInfo:
 
 
 @dataclass
-class FilterFunctionInfo(Generic[ModelT, ModelFieldT, AnyOrderComparison]):
+class FilterFunctionInfo:
     function: AggregationFunction
     enum_fields: type[EnumDTO]
     aggregation_type: AggregationType
-    comparison_type: type[GraphQLComparison[ModelT, ModelFieldT]]
+    comparison_type: type[GraphQLComparison]
     require_arguments: bool = True
 
     field_name_: str | None = None
@@ -213,13 +211,13 @@ class FilterFunctionInfo(Generic[ModelT, ModelFieldT, AnyOrderComparison]):
 
 
 @dataclass(kw_only=True, eq=False, repr=False)
-class GraphQLFieldDefinition(DTOFieldDefinition[ModelT, ModelFieldT], Generic[ModelT, ModelFieldT]):
+class GraphQLFieldDefinition(DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]):
     config: DTOFieldConfig = dataclasses.field(default_factory=DTOFieldConfig)
     is_aggregate: bool = False
     is_function: bool = False
     is_function_arg: bool = False
 
-    _function: FunctionInfo[ModelT, ModelFieldT] | None = None
+    _function: FunctionInfo | None = None
 
     def _hash_identity(self) -> Hashable:
         return (
@@ -249,15 +247,15 @@ class GraphQLFieldDefinition(DTOFieldDefinition[ModelT, ModelFieldT], Generic[Mo
         return self.is_function or self.is_function_arg or self.is_aggregate
 
     @overload
-    def function(self, strict: Literal[False]) -> FunctionInfo[ModelT, ModelFieldT] | None: ...
+    def function(self, strict: Literal[False]) -> FunctionInfo | None: ...
 
     @overload
-    def function(self, strict: Literal[True]) -> FunctionInfo[ModelT, ModelFieldT]: ...
+    def function(self, strict: Literal[True]) -> FunctionInfo: ...
 
     @overload
-    def function(self, strict: bool = False) -> FunctionInfo[ModelT, ModelFieldT] | None: ...
+    def function(self, strict: bool = False) -> FunctionInfo | None: ...
 
-    def function(self, strict: bool = False) -> FunctionInfo[ModelT, ModelFieldT] | None:
+    def function(self, strict: bool = False) -> FunctionInfo | None:
         if not strict:
             return self._function
         if self._function is None:
@@ -279,13 +277,13 @@ class GraphQLFieldDefinition(DTOFieldDefinition[ModelT, ModelFieldT], Generic[Mo
 
 
 @dataclass(kw_only=True, eq=False, repr=False)
-class AggregateFieldDefinition(GraphQLFieldDefinition[ModelT, ModelFieldT]):
+class AggregateFieldDefinition(GraphQLFieldDefinition):
     is_relation: bool = True
     is_aggregate: bool = True
 
 
 @dataclass(kw_only=True, eq=False, repr=False)
-class FunctionFieldDefinition(GraphQLFieldDefinition[ModelT, ModelFieldT]):
+class FunctionFieldDefinition(GraphQLFieldDefinition):
     is_relation: bool = False
 
     def __post_init__(self) -> None:
@@ -298,7 +296,7 @@ class FunctionFieldDefinition(GraphQLFieldDefinition[ModelT, ModelFieldT]):
         cls,
         field_def: DTOFieldDefinition[ModelT, ModelFieldT],
         *,
-        function: FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]] | OutputFunctionInfo,
+        function: FilterFunctionInfo | OutputFunctionInfo,
         **kwargs: Any,
     ) -> Self:
         return super().from_field(field_def, _function=function, **kwargs)
@@ -313,16 +311,16 @@ class FunctionFieldDefinition(GraphQLFieldDefinition[ModelT, ModelFieldT]):
 
 
 @dataclass(kw_only=True, eq=False, repr=False)
-class FunctionArgFieldDefinition(FunctionFieldDefinition[ModelT, ModelFieldT]):
+class FunctionArgFieldDefinition(FunctionFieldDefinition):
     def __post_init__(self) -> None:
         super().__post_init__()
         self.is_function_arg = True
 
 
 @dataclass(eq=False)
-class QueryNode(Node[GraphQLFieldDefinition[ModelT, ModelFieldT], None], Generic[ModelT, ModelFieldT]):
+class QueryNode(Node[GraphQLFieldDefinition, None]):
     children: list[Self] = dataclasses.field(default_factory=list)
-    relation_filter: RelationFilterDTO[Any] = dataclasses.field(default_factory=RelationFilterDTO)
+    relation_filter: RelationFilterDTO = dataclasses.field(default_factory=RelationFilterDTO)
     query_metadata: QueryMetadata = dataclasses.field(default_factory=QueryMetadata)
 
     @classmethod
@@ -348,7 +346,7 @@ class QueryNode(Node[GraphQLFieldDefinition[ModelT, ModelFieldT], None], Generic
     @override
     def _new(
         self,
-        value: GraphQLFieldDefinition[ModelT, ModelFieldT],
+        value: GraphQLFieldDefinition,
         metadata: None | UndefinedType = undefined,
         parent: Self | None = None,
     ) -> Self:
@@ -361,9 +359,7 @@ class QueryNode(Node[GraphQLFieldDefinition[ModelT, ModelFieldT], None], Generic
         return self._update_new_child(super().insert_node(child))
 
     @override
-    def insert_child(
-        self, value: GraphQLFieldDefinition[ModelT, ModelFieldT], metadata: None | UndefinedType = undefined
-    ) -> Self:
+    def insert_child(self, value: GraphQLFieldDefinition, metadata: None | UndefinedType = undefined) -> Self:
         return self._update_new_child(super().insert_child(value, metadata))
 
     @override
@@ -379,7 +375,7 @@ class QueryNode(Node[GraphQLFieldDefinition[ModelT, ModelFieldT], None], Generic
         return super(cls, cls).match_nodes(left, right, match_on)
 
     @classmethod
-    def root_node(cls, model: type[ModelT], root_aggregations: bool = False, **kwargs: Any) -> Self:
+    def root_node(cls, model: type[DeclarativeBase], root_aggregations: bool = False, **kwargs: Any) -> Self:
         root_name = camel_to_snake(model.__name__)
         field_def = GraphQLFieldDefinition(
             config=DTOFieldConfig(),
@@ -429,7 +425,7 @@ class QueryNode(Node[GraphQLFieldDefinition[ModelT, ModelFieldT], None], Generic
 
 
 @dataclass(eq=False, repr=False)
-class OrderByNode(QueryNode[ModelT, ModelFieldT]):
+class OrderByNode(QueryNode):
     order_by: OrderByEnum | None = None
 
     def __gt__(self, other: Self) -> bool:
@@ -446,18 +442,16 @@ class OrderByNode(QueryNode[ModelT, ModelFieldT]):
 
 
 @dataclass
-class AggregationFilter(Generic[ModelT, ModelFieldT]):
-    function_info: FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]]
-    predicate: GenericComparison[Any, ModelT, ModelFieldT]
-    field_node: QueryNode[ModelT, ModelFieldT]
+class AggregationFilter:
+    function_info: FilterFunctionInfo
+    predicate: EqualityComparison[Any]
+    field_node: QueryNode
     distinct: bool | None = None
 
 
 @dataclass
-class Filter(Generic[ModelT, ModelFieldT]):
-    and_: list[Self | GraphQLComparison[ModelT, ModelFieldT] | AggregationFilter[ModelT, ModelFieldT]] = (
-        dataclasses.field(default_factory=list)
-    )
+class Filter:
+    and_: list[Self | GraphQLComparison | AggregationFilter] = dataclasses.field(default_factory=list)
     or_: list[Self] = dataclasses.field(default_factory=list)
     not_: Self | None = None
 
@@ -475,10 +469,10 @@ class OrderByEnum(Enum):
 
 
 class EnumDTO(DTOBase[Any], Enum):
-    __field_definitions__: dict[str, GraphQLFieldDefinition[Any, Any]]
+    __field_definitions__: dict[str, GraphQLFieldDefinition]
 
     @property
-    def field_definition(self) -> GraphQLFieldDefinition[Any, Any]: ...
+    def field_definition(self) -> GraphQLFieldDefinition: ...
 
 
 class MappedDataclassGraphQLDTO(StrawchemyDTOAttributes, MappedDataclassDTO[ModelT]): ...
@@ -494,31 +488,34 @@ class UnmappedPydanticGraphQLDTO(StrawchemyDTOAttributes, PydanticDTO[ModelT]):
 
 
 class MappedPydanticGraphQLDTO(StrawchemyDTOAttributes, MappedPydanticDTO[ModelT]):
-    __strawchemy_filter__: type[Any] | None = None
-    __strawchemy_order_by__: type[Any] | None = None
+    __strawchemy_filter__: ClassVar[type[Any] | None] = None
+    __strawchemy_order_by__: ClassVar[type[Any] | None] = None
 
 
-class GraphQLFilterDTO(UnmappedPydanticGraphQLDTO[ModelT]): ...
+class GraphQLFilterDTO(UnmappedDataclassGraphQLDTO[DeclarativeBase]):
+    @property
+    def dto_set_fields(self) -> set[str]:
+        return {name for name in self.__dto_field_definitions__ if getattr(self, name)}
 
 
-class AggregateDTO(UnmappedDataclassGraphQLDTO[ModelT]): ...
+class AggregateDTO(UnmappedDataclassGraphQLDTO[DeclarativeBase]): ...
 
 
-class AggregationFunctionFilterDTO(UnmappedPydanticGraphQLDTO[ModelT]):
-    __dto_function_info__: ClassVar[FilterFunctionInfo[Any, Any, OrderComparison[Any, Any, Any]]]
+class AggregationFunctionFilterDTO(UnmappedDataclassGraphQLDTO[DeclarativeBase]):
+    __dto_function_info__: ClassVar[FilterFunctionInfo]
 
-    arguments: list[_HasValue[ModelT, Any]]
-    predicate: GenericComparison[Any, ModelT, Any]
+    arguments: list[_HasValue[DeclarativeBase, Any]]
+    predicate: EqualityComparison[Any]
     distinct: bool | None = None
 
 
-class OrderByDTO(GraphQLFilterDTO[ModelT], Generic[ModelT, ModelFieldT]):
-    def tree(self, _node: OrderByNode[Any, ModelFieldT] | None = None) -> OrderByNode[Any, ModelFieldT]:
+class OrderByDTO(GraphQLFilterDTO):
+    def tree(self, _node: OrderByNode | None = None) -> OrderByNode:
         node = _node or OrderByNode.root_node(self.__dto_model__)
         key = DTOKey.from_query_node(node)
 
         for name in self.dto_set_fields:
-            value: OrderByDTO[ModelT, ModelFieldT] | OrderByEnum = getattr(self, name)
+            value: OrderByDTO | OrderByEnum = getattr(self, name)
             field = self.__strawchemy_field_map__[key + name]
             if isinstance(field, FunctionFieldDefinition) and not field.has_model_field:
                 field.model_field = node.value.model_field
@@ -531,16 +528,27 @@ class OrderByDTO(GraphQLFilterDTO[ModelT], Generic[ModelT, ModelFieldT]):
         return node
 
 
-class BooleanFilterDTO(GraphQLFilterDTO[ModelT], Generic[ModelT, ModelFieldT]):
-    model_config = ConfigDict(populate_by_name=True)
+class BooleanFilterDTO(GraphQLFilterDTO):
+    if TYPE_CHECKING:
+        and_: list[Self]
+        or_: list[Self]
+        not_: Self | None
 
-    and_: list[Self] = Field(default_factory=list, alias="_and")
-    or_: list[Self] = Field(default_factory=list, alias="_or")
-    not_: Self | None = Field(default=None, alias="_not")
+    @classmethod
+    def strawberry_annotations(cls) -> list[DataclassFieldInfo]:
+        return [
+            FullFieldInfo(
+                "and_", list[Self], dataclasses.field(default=strawberry.field(default_factory=list, name="_and"))
+            ),
+            FullFieldInfo(
+                "or_", list[Self], dataclasses.field(default=strawberry.field(default_factory=list, name="_or"))
+            ),
+            FullFieldInfo(
+                "not_", Self | None, dataclasses.field(default=strawberry.field(default=strawberry.UNSET, name="_not"))
+            ),
+        ]
 
-    def filters_tree(
-        self, _node: QueryNode[Any, ModelFieldT] | None = None
-    ) -> tuple[QueryNode[ModelT, ModelFieldT], Filter[ModelT, ModelFieldT]]:
+    def filters_tree(self, _node: QueryNode | None = None) -> tuple[QueryNode, Filter]:
         node = _node or QueryNode.root_node(self.__dto_model__)
         key = DTOKey.from_query_node(node)
         query = Filter(
@@ -548,14 +556,8 @@ class BooleanFilterDTO(GraphQLFilterDTO[ModelT], Generic[ModelT, ModelFieldT]):
             or_=[or_val.filters_tree(node)[1] for or_val in self.or_],
             not_=self.not_.filters_tree(node)[1] if self.not_ else None,
         )
-
-        for name in self.dto_set_fields - {"and_", "or_", "not_"}:
-            value: (
-                GenericComparison[Any, ModelT, ModelFieldT]
-                | BooleanFilterDTO[ModelT, ModelFieldT]
-                | AggregateFilterDTO[ModelT]
-            )
-            value = getattr(self, name)
+        fields_set = [(name, value) for name in ("and_", "or_", "not_") if (value := getattr(self, name))]
+        for name, value in fields_set:
             field = self.__strawchemy_field_map__[key + name]
             if isinstance(value, BooleanFilterDTO):
                 child, _ = node.upsert_child(field, match_on="value_equality")
@@ -571,11 +573,11 @@ class BooleanFilterDTO(GraphQLFilterDTO[ModelT], Generic[ModelT, ModelFieldT]):
         return node, query
 
 
-class AggregateFilterDTO(GraphQLFilterDTO[ModelT]):
-    def flatten(self, aggregation_node: QueryNode[ModelT, ModelFieldT]) -> list[AggregationFilter[ModelT, Any]]:
+class AggregateFilterDTO(GraphQLFilterDTO):
+    def flatten(self, aggregation_node: QueryNode) -> list[AggregationFilter]:
         aggregations = []
         for name in self.dto_set_fields:
-            function_filter: AggregationFunctionFilterDTO[ModelT] = getattr(self, name)
+            function_filter: AggregationFunctionFilterDTO = getattr(self, name)
             function_filter.predicate.field_node = aggregation_node
             aggregation_function = function_filter.__dto_function_info__
             function_node = aggregation_node.insert_child(

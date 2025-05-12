@@ -5,51 +5,51 @@
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input ColorAggregateBoolExp {
-    count: ColorAggregateBoolExpCount
-    maxString: ColorAggregateBoolExpMaxstring
-    minString: ColorAggregateBoolExpMinstring
-    sum: ColorAggregateBoolExpSum
+    count: ColorAggregateBoolExpCount = null
+    maxString: ColorAggregateBoolExpMaxstring = null
+    minString: ColorAggregateBoolExpMinstring = null
+    sum: ColorAggregateBoolExpSum = null
   }
   
   """Boolean expression to compare count aggregation."""
   input ColorAggregateBoolExpCount {
     arguments: [ColorCountFields!]
-    predicate: IntComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: IntOrderComparison!
   }
   
   """Boolean expression to compare max aggregation."""
   input ColorAggregateBoolExpMaxstring {
     arguments: [ColorMinMaxStringFieldsEnum!]!
-    predicate: StringComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: TextComparison!
   }
   
   """Boolean expression to compare min aggregation."""
   input ColorAggregateBoolExpMinstring {
     arguments: [ColorMinMaxStringFieldsEnum!]!
-    predicate: StringComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: TextComparison!
   }
   
   """Boolean expression to compare sum aggregation."""
   input ColorAggregateBoolExpSum {
     arguments: [ColorSumFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """
   Boolean expression to compare fields. All fields are combined with logical 'AND'.
   """
   input ColorBoolExp {
-    _and: [ColorBoolExp!]
-    _or: [ColorBoolExp!]
+    _and: [ColorBoolExp!]! = []
+    _or: [ColorBoolExp!]! = []
     _not: ColorBoolExp
-    fruitsAggregate: FruitAggregateBoolExp
-    fruits: FruitBoolExp
-    name: StringComparison
-    id: UUIDComparison
+    fruitsAggregate: FruitAggregateBoolExp = null
+    fruits: FruitBoolExp = null
+    name: TextComparison = null
+    id: UUIDGenericComparison = null
   }
   
   enum ColorCountFields {
@@ -76,9 +76,9 @@
   }
   
   """
-  Boolean expression to compare fields of type Float. All fields are combined with logical 'AND'
+  Boolean expression to compare fields supporting order comparisons. All fields are combined with logical 'AND'
   """
-  input FloatComparison {
+  input FloatOrderComparison {
     eq: Float
     neq: Float
     isNull: Boolean
@@ -107,109 +107,109 @@
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input FruitAggregateBoolExp {
-    avg: FruitAggregateBoolExpAvg
-    count: FruitAggregateBoolExpCount
-    max: FruitAggregateBoolExpMax
-    maxString: FruitAggregateBoolExpMaxstring
-    min: FruitAggregateBoolExpMin
-    minString: FruitAggregateBoolExpMinstring
-    stddevPop: FruitAggregateBoolExpStddevpop
-    stddevSamp: FruitAggregateBoolExpStddevsamp
-    sum: FruitAggregateBoolExpSum
-    varPop: FruitAggregateBoolExpVarpop
-    varSamp: FruitAggregateBoolExpVarsamp
+    avg: FruitAggregateBoolExpAvg = null
+    count: FruitAggregateBoolExpCount = null
+    max: FruitAggregateBoolExpMax = null
+    maxString: FruitAggregateBoolExpMaxstring = null
+    min: FruitAggregateBoolExpMin = null
+    minString: FruitAggregateBoolExpMinstring = null
+    stddevPop: FruitAggregateBoolExpStddevpop = null
+    stddevSamp: FruitAggregateBoolExpStddevsamp = null
+    sum: FruitAggregateBoolExpSum = null
+    varPop: FruitAggregateBoolExpVarpop = null
+    varSamp: FruitAggregateBoolExpVarsamp = null
   }
   
   """Boolean expression to compare avg aggregation."""
   input FruitAggregateBoolExpAvg {
     arguments: [FruitNumericFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """Boolean expression to compare count aggregation."""
   input FruitAggregateBoolExpCount {
     arguments: [FruitCountFields!]
-    predicate: IntComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: IntOrderComparison!
   }
   
   """Boolean expression to compare max aggregation."""
   input FruitAggregateBoolExpMax {
     arguments: [FruitMinMaxNumericFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """Boolean expression to compare max aggregation."""
   input FruitAggregateBoolExpMaxstring {
     arguments: [FruitMinMaxStringFieldsEnum!]!
-    predicate: StringComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: TextComparison!
   }
   
   """Boolean expression to compare min aggregation."""
   input FruitAggregateBoolExpMin {
     arguments: [FruitMinMaxNumericFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """Boolean expression to compare min aggregation."""
   input FruitAggregateBoolExpMinstring {
     arguments: [FruitMinMaxStringFieldsEnum!]!
-    predicate: StringComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: TextComparison!
   }
   
   """Boolean expression to compare stddev_pop aggregation."""
   input FruitAggregateBoolExpStddevpop {
     arguments: [FruitNumericFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """Boolean expression to compare stddev_samp aggregation."""
   input FruitAggregateBoolExpStddevsamp {
     arguments: [FruitNumericFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """Boolean expression to compare sum aggregation."""
   input FruitAggregateBoolExpSum {
     arguments: [FruitSumFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """Boolean expression to compare var_pop aggregation."""
   input FruitAggregateBoolExpVarpop {
     arguments: [FruitNumericFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """Boolean expression to compare var_samp aggregation."""
   input FruitAggregateBoolExpVarsamp {
     arguments: [FruitNumericFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """
   Boolean expression to compare fields. All fields are combined with logical 'AND'.
   """
   input FruitBoolExp {
-    _and: [FruitBoolExp!]
-    _or: [FruitBoolExp!]
+    _and: [FruitBoolExp!]! = []
+    _or: [FruitBoolExp!]! = []
     _not: FruitBoolExp
-    colorAggregate: ColorAggregateBoolExp
-    color: ColorBoolExp
-    name: StringComparison
-    colorId: UUIDComparison
-    sweetness: IntComparison
-    id: UUIDComparison
+    colorAggregate: ColorAggregateBoolExp = null
+    color: ColorBoolExp = null
+    name: TextComparison = null
+    colorId: UUIDGenericComparison = null
+    sweetness: IntOrderComparison = null
+    id: UUIDGenericComparison = null
   }
   
   enum FruitCountFields {
@@ -271,38 +271,38 @@
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input GroupAggregateBoolExp {
-    count: GroupAggregateBoolExpCount
-    maxString: GroupAggregateBoolExpMaxstring
-    minString: GroupAggregateBoolExpMinstring
-    sum: GroupAggregateBoolExpSum
+    count: GroupAggregateBoolExpCount = null
+    maxString: GroupAggregateBoolExpMaxstring = null
+    minString: GroupAggregateBoolExpMinstring = null
+    sum: GroupAggregateBoolExpSum = null
   }
   
   """Boolean expression to compare count aggregation."""
   input GroupAggregateBoolExpCount {
     arguments: [GroupCountFields!]
-    predicate: IntComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: IntOrderComparison!
   }
   
   """Boolean expression to compare max aggregation."""
   input GroupAggregateBoolExpMaxstring {
     arguments: [GroupMinMaxStringFieldsEnum!]!
-    predicate: StringComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: TextComparison!
   }
   
   """Boolean expression to compare min aggregation."""
   input GroupAggregateBoolExpMinstring {
     arguments: [GroupMinMaxStringFieldsEnum!]!
-    predicate: StringComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: TextComparison!
   }
   
   """Boolean expression to compare sum aggregation."""
   input GroupAggregateBoolExpSum {
     arguments: [GroupSumFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   enum GroupCountFields {
@@ -316,19 +316,19 @@
   Boolean expression to compare fields. All fields are combined with logical 'AND'.
   """
   input GroupFilter {
-    _and: [GroupFilter!]
-    _or: [GroupFilter!]
+    _and: [GroupFilter!]! = []
+    _or: [GroupFilter!]! = []
     _not: GroupFilter
-    tagAggregate: TagAggregateBoolExp
-    tag: TagBoolExp
-    usersAggregate: UserAggregateBoolExp
-    users: UserBoolExp
-    colorAggregate: ColorAggregateBoolExp
-    color: ColorBoolExp
-    name: StringComparison
-    tagId: UUIDComparison
-    colorId: UUIDComparison
-    id: UUIDComparison
+    tagAggregate: TagAggregateBoolExp = null
+    tag: TagBoolExp = null
+    usersAggregate: UserAggregateBoolExp = null
+    users: UserBoolExp = null
+    colorAggregate: ColorAggregateBoolExp = null
+    color: ColorBoolExp = null
+    name: TextComparison = null
+    tagId: UUIDGenericComparison = null
+    colorId: UUIDGenericComparison = null
+    id: UUIDGenericComparison = null
   }
   
   type GroupMinMaxFields {
@@ -362,9 +362,9 @@
   }
   
   """
-  Boolean expression to compare fields of type Int. All fields are combined with logical 'AND'
+  Boolean expression to compare fields supporting order comparisons. All fields are combined with logical 'AND'
   """
-  input IntComparison {
+  input IntOrderComparison {
     eq: Int
     neq: Int
     isNull: Boolean
@@ -382,83 +382,54 @@
   }
   
   """
-  Boolean expression to compare fields of type String. All fields are combined with logical 'AND'
-  """
-  input StringComparison {
-    eq: String
-    neq: String
-    isNull: Boolean
-    in: [String!]
-    nin: [String!]
-    gt: String
-    gte: String
-    lt: String
-    lte: String
-    like: String
-    nlike: String
-    ilike: String
-    nilike: String
-    regexp: String
-    iregexp: String
-    nregexp: String
-    inregexp: String
-    startswith: String
-    endswith: String
-    contains: String
-    istartswith: String
-    iendswith: String
-    icontains: String
-  }
-  
-  """
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input TagAggregateBoolExp {
-    count: TagAggregateBoolExpCount
-    maxString: TagAggregateBoolExpMaxstring
-    minString: TagAggregateBoolExpMinstring
-    sum: TagAggregateBoolExpSum
+    count: TagAggregateBoolExpCount = null
+    maxString: TagAggregateBoolExpMaxstring = null
+    minString: TagAggregateBoolExpMinstring = null
+    sum: TagAggregateBoolExpSum = null
   }
   
   """Boolean expression to compare count aggregation."""
   input TagAggregateBoolExpCount {
     arguments: [TagCountFields!]
-    predicate: IntComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: IntOrderComparison!
   }
   
   """Boolean expression to compare max aggregation."""
   input TagAggregateBoolExpMaxstring {
     arguments: [TagMinMaxStringFieldsEnum!]!
-    predicate: StringComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: TextComparison!
   }
   
   """Boolean expression to compare min aggregation."""
   input TagAggregateBoolExpMinstring {
     arguments: [TagMinMaxStringFieldsEnum!]!
-    predicate: StringComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: TextComparison!
   }
   
   """Boolean expression to compare sum aggregation."""
   input TagAggregateBoolExpSum {
     arguments: [TagSumFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """
   Boolean expression to compare fields. All fields are combined with logical 'AND'.
   """
   input TagBoolExp {
-    _and: [TagBoolExp!]
-    _or: [TagBoolExp!]
+    _and: [TagBoolExp!]! = []
+    _or: [TagBoolExp!]! = []
     _not: TagBoolExp
-    groupsAggregate: GroupAggregateBoolExp
-    groups: GroupFilter
-    name: StringComparison
-    id: UUIDComparison
+    groupsAggregate: GroupAggregateBoolExp = null
+    groups: GroupFilter = null
+    name: TextComparison = null
+    id: UUIDGenericComparison = null
   }
   
   enum TagCountFields {
@@ -484,12 +455,41 @@
     id: UUID!
   }
   
+  """
+  Boolean expression to compare String fields. All fields are combined with logical 'AND'
+  """
+  input TextComparison {
+    eq: String
+    neq: String
+    isNull: Boolean
+    in: [String!]
+    nin: [String!]
+    gt: String
+    gte: String
+    lt: String
+    lte: String
+    like: String
+    nlike: String
+    ilike: String
+    nilike: String
+    regexp: String
+    iregexp: String
+    nregexp: String
+    inregexp: String
+    startswith: String
+    endswith: String
+    contains: String
+    istartswith: String
+    iendswith: String
+    icontains: String
+  }
+  
   scalar UUID
   
   """
-  Boolean expression to compare fields of type UUID. All fields are combined with logical 'AND'
+  Boolean expression to compare fields supporting equality comparisons. All fields are combined with logical 'AND'
   """
-  input UUIDComparison {
+  input UUIDGenericComparison {
     eq: UUID
     neq: UUID
     isNull: Boolean
@@ -509,55 +509,55 @@
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input UserAggregateBoolExp {
-    count: UserAggregateBoolExpCount
-    maxString: UserAggregateBoolExpMaxstring
-    minString: UserAggregateBoolExpMinstring
-    sum: UserAggregateBoolExpSum
+    count: UserAggregateBoolExpCount = null
+    maxString: UserAggregateBoolExpMaxstring = null
+    minString: UserAggregateBoolExpMinstring = null
+    sum: UserAggregateBoolExpSum = null
   }
   
   """Boolean expression to compare count aggregation."""
   input UserAggregateBoolExpCount {
     arguments: [UserCountFields!]
-    predicate: IntComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: IntOrderComparison!
   }
   
   """Boolean expression to compare max aggregation."""
   input UserAggregateBoolExpMaxstring {
     arguments: [UserMinMaxStringFieldsEnum!]!
-    predicate: StringComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: TextComparison!
   }
   
   """Boolean expression to compare min aggregation."""
   input UserAggregateBoolExpMinstring {
     arguments: [UserMinMaxStringFieldsEnum!]!
-    predicate: StringComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: TextComparison!
   }
   
   """Boolean expression to compare sum aggregation."""
   input UserAggregateBoolExpSum {
     arguments: [UserSumFieldsEnum!]!
-    predicate: FloatComparison!
-    distinct: Boolean
+    distinct: Boolean = false
+    predicate: FloatOrderComparison!
   }
   
   """
   Boolean expression to compare fields. All fields are combined with logical 'AND'.
   """
   input UserBoolExp {
-    _and: [UserBoolExp!]
-    _or: [UserBoolExp!]
+    _and: [UserBoolExp!]! = []
+    _or: [UserBoolExp!]! = []
     _not: UserBoolExp
-    groupAggregate: GroupAggregateBoolExp
-    group: GroupFilter
-    tagAggregate: TagAggregateBoolExp
-    tag: TagBoolExp
-    name: StringComparison
-    groupId: UUIDComparison
-    tagId: UUIDComparison
-    id: UUIDComparison
+    groupAggregate: GroupAggregateBoolExp = null
+    group: GroupFilter = null
+    tagAggregate: TagAggregateBoolExp = null
+    tag: TagBoolExp = null
+    name: TextComparison = null
+    groupId: UUIDGenericComparison = null
+    tagId: UUIDGenericComparison = null
+    id: UUIDGenericComparison = null
   }
   
   enum UserCountFields {

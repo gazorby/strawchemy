@@ -6,6 +6,7 @@ from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
 
+from msgspec import convert
 from typing_extensions import TypeIs
 
 from strawberry.types import get_object_definition, has_object_definition
@@ -14,7 +15,13 @@ from strawberry.types.nodes import FragmentSpread, InlineFragment, SelectedField
 from strawchemy.dto.base import ModelT
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graphql.constants import ORDER_BY_KEY
-from strawchemy.graphql.dto import DTOKey, QueryNode, RelationFilterDTO, StrawchemyDTOAttributes
+from strawchemy.graphql.dto import (
+    DTOKey,
+    OrderByRelationFilterDTO,
+    QueryNode,
+    RelationFilterDTO,
+    StrawchemyDTOAttributes,
+)
 from strawchemy.strawberry._utils import (
     dto_model_from_type,
     pydantic_from_strawberry_type,
@@ -88,7 +95,7 @@ class StrawchemyRepository(Generic[T]):
     root_aggregations: bool = False
     auto_snake_case: bool = True
 
-    _query_hooks: defaultdict[QueryNode[Any, Any], list[QueryHook[Any]]] = dataclasses.field(
+    _query_hooks: defaultdict[QueryNode, list[QueryHook[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(list), init=False
     )
     _tree: _StrawberryQueryNode[T] = dataclasses.field(init=False)
@@ -112,13 +119,15 @@ class StrawchemyRepository(Generic[T]):
     @classmethod
     def _relation_filter(
         cls, selection: SelectedField, strawberry_field: StrawberryField, auto_snake_case: bool = True
-    ) -> RelationFilterDTO[Any]:
+    ) -> RelationFilterDTO:
         argument_types = {arg.python_name: arg.type for arg in strawberry_field.arguments}
         selection_arguments = snake_keys(selection.arguments) if auto_snake_case else selection.arguments
         if order_by_type := argument_types.get(ORDER_BY_KEY):
-            order_by_model = pydantic_from_strawberry_type(strawberry_contained_user_type(order_by_type))
-            return RelationFilterDTO[order_by_model].model_validate(selection_arguments)
-        return RelationFilterDTO.model_validate(selection_arguments)
+            if not isinstance(selection_arguments[ORDER_BY_KEY], list):
+                selection_arguments[ORDER_BY_KEY] = [selection_arguments[ORDER_BY_KEY]]
+            order_by_model = strawberry_contained_user_type(order_by_type)
+            return convert(selection_arguments, type=OrderByRelationFilterDTO[order_by_model])
+        return convert(selection_arguments, type=RelationFilterDTO)
 
     @classmethod
     def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]] | None:

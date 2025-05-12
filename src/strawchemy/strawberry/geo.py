@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from functools import partial
 from typing import Any, NewType
 
@@ -35,6 +36,12 @@ __all__ = (
     "StrawberryGeoComparison",
 )
 
+
+@dataclass
+class _GeometryHolder:
+    geo: PydanticGeometry
+
+
 _PydanticGeometryType = TypeAdapter(PydanticGeometry)
 
 _PYDANTIC_GEO_ADAPTER_MAP = {
@@ -54,16 +61,14 @@ def _serialize_geojson(val: Geometry | WKTElement | WKBElement) -> dict[str, Any
     return json.loads(to_geojson(val))
 
 
-def _parse_geojson(val: dict[str, Any], geometry: type[PydanticGeometry] | None = None) -> dict[str, Any]:
+def _parse_geojson(val: dict[str, Any], geometry: type[PydanticGeometry] | None = None) -> _GeometryHolder:
     if geometry is None:
-        _PydanticGeometryType.validate_python(val)
-    else:
-        _PYDANTIC_GEO_ADAPTER_MAP[geometry].validate_python(val)
-    return val
+        return _GeometryHolder(_PydanticGeometryType.validate_python(val))
+    return _GeometryHolder(_PYDANTIC_GEO_ADAPTER_MAP[geometry].validate_python(val))
 
 
 GeoJSON = strawberry.scalar(
-    NewType("GeoJSON", object),
+    NewType("GeoJSON", _GeometryHolder),
     description=(
         "The `GeoJSON` type represents GeoJSON values as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"

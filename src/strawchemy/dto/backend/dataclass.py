@@ -47,8 +47,9 @@ class MappedDataclassDTO(MappedDTO[ModelT]): ...
 
 
 class DataclassDTOBackend(DTOBackend[DataclassDTOT]):
-    def __init__(self, dto_base: type[DataclassDTOT]) -> None:
+    def __init__(self, dto_base: type[DataclassDTOT], *field_infos: DataclassFieldInfo) -> None:
         self.dto_base = dto_base
+        self.field_infos = field_infos
 
     def _construct_field_info(self, field_def: DTOFieldDefinition[ModelT, ModelFieldT]) -> DataclassFieldInfo:
         if not isinstance(field_def.default_factory, DTOMissingType):
@@ -78,7 +79,7 @@ class DataclassDTOBackend(DTOBackend[DataclassDTOT]):
         **kwargs: Any,
     ) -> type[DataclassDTOT]:
         namespace: dict[str, Any] = {}
-        fields: list[DataclassFieldInfo] = []
+        fields: list[DataclassFieldInfo] = [*self.field_infos]
         post_init_validator: list[Callable[[DataclassDTOT], None]] = []
 
         for field in field_definitions:

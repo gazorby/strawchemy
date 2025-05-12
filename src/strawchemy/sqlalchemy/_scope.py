@@ -156,7 +156,7 @@ class NodeInspect:
         return [NodeInspect(child, self.scope) for child in self.node.children]
 
     @property
-    def value(self) -> GraphQLFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]:
+    def value(self) -> GraphQLFieldDefinition:
         return self.node.value
 
     @property
@@ -460,9 +460,7 @@ class QueryScope(Generic[DeclarativeT]):
     ) -> None:
         self._node_alias_map[(node, side)] = alias
 
-    def id_field_definitions(
-        self, model: type[DeclarativeBase]
-    ) -> list[GraphQLFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
+    def id_field_definitions(self, model: type[DeclarativeBase]) -> list[GraphQLFieldDefinition]:
         root = QueryNode.root_node(model)
         return [
             GraphQLFieldDefinition.from_field(self._inspector.field_definition(pk, DTOConfig(Purpose.READ)))

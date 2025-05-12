@@ -18,7 +18,8 @@ from collections.abc import Generator
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
-from strawchemy.dto.base import DTOBase, DTOFactory, DTOFieldDefinition, ModelFieldT, ModelT, Relation
+from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+from strawchemy.dto.base import DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.graph import Node
 from strawchemy.graphql import typing as strawchemy_typing
 from strawchemy.graphql.dto import DTOKey, GraphQLFieldDefinition
@@ -37,8 +38,8 @@ __all__ = ("GraphQLDTOFactory",)
 T = TypeVar("T")
 
 
-class GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
-    inspector: GraphQLInspectorProtocol[Any, ModelFieldT]
+class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQLDTOT]):
+    inspector: GraphQLInspectorProtocol
 
     def type_description(self) -> str:
         return "GraphQL type"
@@ -59,13 +60,13 @@ class GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         name: str,
         model: type[T],
         dto_config: DTOConfig,
-        base: type[DTOBase[ModelT]] | None,
-        node: Node[Relation[ModelT, GraphQLDTOT], None],
+        base: type[DTOBase[DeclarativeBase]] | None,
+        node: Node[Relation[DeclarativeBase, GraphQLDTOT], None],
         raise_if_no_fields: bool = False,
         *,
-        field_map: dict[DTOKey, GraphQLFieldDefinition[Any, Any]] | None = None,
+        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
-    ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT], None, None]:
+    ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], None, None]:
         field_map = field_map if field_map is not None else {}
         for field in super().iter_field_definitions(name, model, dto_config, base, node, raise_if_no_fields, **kwargs):
             key = DTOKey.from_dto_node(node)
@@ -80,13 +81,13 @@ class GraphQLDTOFactory(DTOFactory[ModelT, ModelFieldT, GraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, GraphQLDTOT], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> type[GraphQLDTOT]:
-        field_map: dict[DTOKey, GraphQLFieldDefinition[Any, Any]] = {}
+        field_map: dict[DTOKey, GraphQLFieldDefinition] = {}
         dto = super().factory(
             model,
             dto_config,
