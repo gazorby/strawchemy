@@ -9,12 +9,11 @@ from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, ca
 
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
-from strawberry.experimental import pydantic as strawberry_pydantic
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
 
-from ._utils import strawberry_contained_types, strawchemy_type_from_pydantic
+from ._utils import strawberry_contained_types
 
 try:
     from strawchemy.graphql.filters.geo import GeoComparison
@@ -241,41 +240,6 @@ class StrawberryRegistry:
             description=description,
             directives=directives,
         )
-        self._register_type(type_info, strawberry_type)
-        return strawberry_type
-
-    def register_pydantic(
-        self,
-        pydantic_type: type[PydanticModel],
-        type_info: RegistryTypeInfo,
-        all_fields: bool = True,
-        fields: list[str] | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        use_pydantic_alias: bool = True,
-        base: type[Any] | None = None,
-    ) -> type[StrawberryTypeFromPydantic[PydanticModel]]:
-        self._check_conflicts(type_info)
-        strawberry_attr = "_strawberry_input_type" if type_info.graphql_type == "input" else "_strawberry_type"
-        if existing := strawchemy_type_from_pydantic(pydantic_type):
-            return existing
-        if existing := self._get(type_info):
-            setattr(pydantic_type, strawberry_attr, existing)
-            return existing
-
-        base = base if base is not None else type(type_info.name, (), {})
-
-        strawberry_type = strawberry_pydantic.type(
-            pydantic_type,
-            is_input=type_info.graphql_type == "input",
-            is_interface=type_info.graphql_type == "interface",
-            all_fields=all_fields,
-            fields=fields,
-            name=type_info.name,
-            description=description,
-            directives=directives,
-            use_pydantic_alias=use_pydantic_alias,
-        )(base)
         self._register_type(type_info, strawberry_type)
         return strawberry_type
 

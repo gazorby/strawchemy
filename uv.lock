@@ -2365,7 +2365,6 @@ version = "0.15.6"
 source = { editable = "." }
 dependencies = [
     { name = "msgspec" },
-    { name = "pydantic" },
     { name = "sqlalchemy" },
     { name = "strawberry-graphql" },
 ]
@@ -2376,6 +2375,9 @@ geo = [
     { name = "geojson-pydantic" },
     { name = "shapely", version = "2.0.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "shapely", version = "2.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+pydantic = [
+    { name = "pydantic" },
 ]
 
 [package.dev-dependencies]
@@ -2451,12 +2453,12 @@ requires-dist = [
     { name = "geoalchemy2", marker = "extra == 'geo'" },
     { name = "geojson-pydantic", marker = "extra == 'geo'" },
     { name = "msgspec" },
-    { name = "pydantic" },
+    { name = "pydantic", marker = "extra == 'pydantic'" },
     { name = "shapely", marker = "extra == 'geo'" },
     { name = "sqlalchemy", specifier = ">=2.0.10" },
     { name = "strawberry-graphql" },
 ]
-provides-extras = ["geo"]
+provides-extras = ["geo", "pydantic"]
 
 [package.metadata.requires-dev]
 build = [

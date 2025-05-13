@@ -4,11 +4,9 @@ import dataclasses
 import inspect
 from dataclasses import dataclass
 from enum import Enum, auto
+from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload, override
 
-from pydantic import BaseModel
-from strawchemy.dto.backend.dataclass import DataclassDTOBackend, MappedDataclassDTO
-from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
 from strawchemy.dto.base import DTOFactory
 from strawchemy.sqlalchemy.inspector import SQLAlchemyInspector
 from typing_extensions import TypeIs
@@ -16,11 +14,12 @@ from typing_extensions import TypeIs
 import strawberry
 from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.types.execution import ExecutionResult
-from tests.typing import AnyFactory, MappedDataclassFactory, MappedPydanticFactory
+from tests.typing import AnyFactory, MappedPydanticFactory
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Generator
+    from collections.abc import Awaitable, Callable, Generator
 
+    from pydantic import BaseModel
     from strawchemy.sqlalchemy.typing import AnySession
     from strawchemy.typing import DataclassProtocol
 
@@ -28,22 +27,23 @@ if TYPE_CHECKING:
 
     from .typing import AnyQueryExecutor, AsyncQueryExecutor, SyncQueryExecutor
 
-__all__ = ("DTOInspect", "generate_query", "sqlalchemy_dataclass_factory", "sqlalchemy_pydantic_factory")
+__all__ = ("DTOInspect", "generate_query", "sqlalchemy_pydantic_factory")
 
 
 T = TypeVar("T")
 
 
-def sqlalchemy_dataclass_factory() -> MappedDataclassFactory:
-    return DTOFactory(SQLAlchemyInspector(), DataclassDTOBackend(MappedDataclassDTO))
-
-
 def sqlalchemy_pydantic_factory() -> MappedPydanticFactory:
+    from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
+
     return DTOFactory(SQLAlchemyInspector(), PydanticDTOBackend(MappedPydanticDTO))
 
 
 def factory_iterator() -> Generator[AnyFactory]:
-    for factory in (sqlalchemy_dataclass_factory, sqlalchemy_pydantic_factory):
+    factories: list[Callable[..., AnyFactory]] = []
+    if find_spec("pydantic"):
+        factories.append(sqlalchemy_pydantic_factory)
+    for factory in factories:
         yield factory()
 
 
@@ -182,33 +182,40 @@ class DataclassInspect(DTOInspectProtocol):
         return self.dto.__annotations__
 
 
-class PydanticInspect(DTOInspectProtocol):
-    dto: type[BaseModel]
+_default_inspectors: list[type[DTOInspectProtocol]] = [DataclassInspect]
 
-    @classmethod
-    @override
-    def is_class(cls, dto: type[Any]) -> TypeIs[type[BaseModel]]:
-        return issubclass(dto, BaseModel)
+try:
+    from pydantic import BaseModel
 
-    @override
-    def has_init_field(self, name: str) -> bool:
-        return bool((field := self.dto.model_fields.get(name)) and field.is_required())
+    class PydanticInspect(DTOInspectProtocol):
+        dto: type[BaseModel]
 
-    @override
-    def field_type(self, name: str) -> Any:
-        return self.dto.model_fields[name].annotation
+        @classmethod
+        @override
+        def is_class(cls, dto: type[Any]) -> TypeIs[type[BaseModel]]:
+            return issubclass(dto, BaseModel)
 
-    @override
-    def annotations(self) -> dict[str, Any]:
-        return {name: field.annotation for name, field in self.dto.model_fields.items()}
+        @override
+        def has_init_field(self, name: str) -> bool:
+            return bool((field := self.dto.model_fields.get(name)) and field.is_required())
+
+        @override
+        def field_type(self, name: str) -> Any:
+            return self.dto.model_fields[name].annotation
+
+        @override
+        def annotations(self) -> dict[str, Any]:
+            return {name: field.annotation for name, field in self.dto.model_fields.items()}
+
+    _default_inspectors.append(PydanticInspect)
+except ModuleNotFoundError:
+    pass
 
 
 @dataclass
 class DTOInspect(DTOInspectProtocol):
     dto: type[Any]
-    inspectors: list[type[DTOInspectProtocol]] = dataclasses.field(
-        default_factory=lambda: [DataclassInspect, PydanticInspect]
-    )
+    inspectors: list[type[DTOInspectProtocol]] = dataclasses.field(default_factory=lambda: _default_inspectors)
     inspect: DTOInspectProtocol = dataclasses.field(init=False)
 
     def __post_init__(self) -> None:

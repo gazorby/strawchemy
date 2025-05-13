@@ -1,33 +1,24 @@
 from __future__ import annotations
 
 import dataclasses
-from functools import partial
+from functools import cached_property, partial
 from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
-from strawchemy.dto.backend.pydantic import PydanticDTOBackend
-from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
-from strawchemy.dto.base import TYPING_NS
 
 from ._factories import (
     StrawberryRegistry,
     StrawchemyAggregateFilterInputFactory,
     StrawchemyFilterInputFactory,
     StrawchemyInputFactory,
-    StrawchemyInputValidationFactory,
     StrawchemyOrderByInputFactory,
     StrawchemyRootAggregateTypeFactory,
     StrawchemyTypeFactory,
 )
 from .config.base import StrawchemyConfig
-from .graphql.dto import (
-    BooleanFilterDTO,
-    EnumDTO,
-    MappedDataclassGraphQLDTO,
-    MappedPydanticGraphQLDTO,
-    OrderByDTO,
-    OrderByEnum,
-)
+from .dto.backend.strawberry import StrawberrryDTOBackend
+from .dto.base import TYPING_NS
+from .graphql.dto import BooleanFilterDTO, EnumDTO, MappedDataclassGraphQLDTO, OrderByDTO, OrderByEnum
 from .graphql.factories.types import DistinctOnFieldsDTOFactory
 from .strawberry import (
     StrawchemyCreateMutationField,
@@ -45,14 +36,14 @@ if TYPE_CHECKING:
     from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.field import _RESOLVER_TYPE
-    from strawchemy.dto.pydantic import MappedPydanticDTO
-    from strawchemy.graphql.typing import MappedGraphQLDTO
-    from strawchemy.typing import SupportedDialect
+    from strawchemy.validation.pydantic import PydanticMapper
 
+    from .graphql.typing import MappedGraphQLDTO
     from .sqlalchemy.hook import QueryHook
     from .sqlalchemy.typing import QueryHookCallable
     from .strawberry.typing import FilterStatementCallable
-    from .typing import AnyRepository
+    from .typing import AnyRepository, SupportedDialect
+    from .validation.base import ValidationProtocol
 
 
 T = TypeVar("T", bound="DeclarativeBase")
@@ -62,21 +53,9 @@ _TYPES_NS = TYPING_NS | vars(types)
 __all__ = ("Strawchemy",)
 
 
-class _PydanticNamespace:
-    def __init__(self, strawchemy: Strawchemy) -> None:
-        pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
-        self._strawchemy = strawchemy
-        self._validation_factory = StrawchemyInputValidationFactory(self._strawchemy, pydantic_backend)
-
-        self.create = partial(self._validation_factory.input, mode="create")
-        self.pk_update = partial(self._validation_factory.input, mode="update_by_pk")
-        self.filter_update = partial(self._validation_factory.input, mode="update_by_filter")
-
-
 class Strawchemy:
     def __init__(self, config: StrawchemyConfig | SupportedDialect) -> None:
         dataclass_backend = StrawberrryDTOBackend(MappedDataclassGraphQLDTO)
-        pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
 
         self.config = StrawchemyConfig(config) if isinstance(config, str) else config
         self.registry = StrawberryRegistry()
@@ -89,7 +68,6 @@ class Strawchemy:
         self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.config.inspector)
         self._type_factory = StrawchemyTypeFactory(self, dataclass_backend, order_by_factory=self._order_by_factory)
         self._input_factory = StrawchemyInputFactory(self, dataclass_backend)
-        self._validation_factory = StrawchemyInputValidationFactory(self, pydantic_backend)
         self._aggregation_factory = StrawchemyRootAggregateTypeFactory(
             self, dataclass_backend, type_factory=self._type_factory
         )
@@ -104,8 +82,6 @@ class Strawchemy:
         self.order = self._order_by_factory.input
         self.type = self._type_factory.type
         self.aggregate = self._aggregation_factory.type
-
-        self.pydantic = _PydanticNamespace(self)
 
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
@@ -124,6 +100,12 @@ class Strawchemy:
             self._aggregation_factory,
         ):
             factory.clear()
+
+    @cached_property
+    def pydantic(self) -> PydanticMapper:
+        from .validation.pydantic import PydanticMapper
+
+        return PydanticMapper(self)
 
     @overload
     def field(
@@ -264,7 +246,7 @@ class Strawchemy:
         directives: Sequence[object] = (),
         graphql_type: Any | None = None,
         extensions: list[FieldExtension] | None = None,
-        validation: type[MappedPydanticDTO[T]] | None = None,
+        validation: ValidationProtocol[T] | None = None,
     ) -> Any:
         namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
@@ -310,7 +292,7 @@ class Strawchemy:
         directives: Sequence[object] = (),
         graphql_type: Any | None = None,
         extensions: list[FieldExtension] | None = None,
-        validation: type[MappedPydanticDTO[T]] | None = None,
+        validation: ValidationProtocol[T] | None = None,
     ) -> Any:
         namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
@@ -356,7 +338,7 @@ class Strawchemy:
         directives: Sequence[object] = (),
         graphql_type: Any | None = None,
         extensions: list[FieldExtension] | None = None,
-        validation: type[MappedPydanticDTO[T]] | None = None,
+        validation: ValidationProtocol[T] | None = None,
     ) -> Any:
         namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None

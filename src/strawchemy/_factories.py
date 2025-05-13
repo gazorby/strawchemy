@@ -25,7 +25,6 @@ from .graphql.dto import (
     BooleanFilterDTO,
     EnumDTO,
     MappedDataclassGraphQLDTO,
-    MappedPydanticGraphQLDTO,
     OrderByDTO,
     StrawchemyDTOAttributes,
     UnmappedDataclassGraphQLDTO,
@@ -63,6 +62,7 @@ if TYPE_CHECKING:
     from .graphql.typing import AggregationType
     from .sqlalchemy.hook import QueryHook
     from .strawberry.typing import GraphQLType
+    from .validation.pydantic import MappedPydanticGraphQLDTO
 
 __all__ = (
     "StrawchemyAggregateFactory",
@@ -159,39 +159,7 @@ class _StrawchemyFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gr
             )
         return type_info
 
-    def _register_pydantic(
-        self,
-        dto: type[PydanticGraphQLDTOT],
-        dto_config: DTOConfig,
-        current_node: Node[Relation[Any, GraphQLDTOT], None] | None,
-        all_fields: bool = True,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        base: type[Any] | None = None,
-        override: bool = False,
-        user_defined: bool = False,
-        child_options: _ChildOptions | None = None,
-    ) -> type[PydanticGraphQLDTOT]:
-        type_info = self._type_info(
-            dto,
-            dto_config,
-            override=override,
-            user_defined=user_defined,
-            child_options=child_options,
-            current_node=current_node,
-        )
-        self._raise_if_type_conflicts(type_info)
-        self._mapper.registry.register_pydantic(
-            dto,
-            type_info,
-            all_fields=all_fields,
-            description=description or dto.__strawchemy_description__,
-            directives=directives,
-            base=base,
-        )
-        return dto
-
-    def _register_dataclass(
+    def _register_type(
         self,
         dto: type[StrawchemyDTOT],
         dto_config: DTOConfig,
@@ -398,7 +366,7 @@ class _StrawchemyFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gr
             **kwargs,
         )
         if register_type:
-            return self._register_dataclass(
+            return self._register_type(
                 dto,
                 dto_config,
                 current_node=current_node,
@@ -1061,7 +1029,7 @@ class StrawchemyTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT], TypeDTOF
                 dto, base, pagination=child_options.pagination, order_by=child_options.order_by
             )
         if register_type:
-            return self._register_dataclass(
+            return self._register_type(
                 dto,
                 dto_config=dto_config,
                 description=description,
@@ -1110,7 +1078,7 @@ class StrawchemyInputFactory(StrawchemyTypeFactory[MappedGraphQLDTOT]):
                 )
                 raise EmptyDTOError(msg) from error
 
-        return self._register_dataclass(base, dto_config, node, description="Identifier input")
+        return self._register_type(base, dto_config, node, description="Identifier input")
 
     @override
     def _cache_key(
@@ -1233,75 +1201,6 @@ class StrawchemyInputFactory(StrawchemyTypeFactory[MappedGraphQLDTOT]):
             backend_kwargs=backend_kwargs,
             description=description or f"GraphQL {mode} input type",
             mode=mode,
-            **kwargs,
-        )
-
-
-class StrawchemyInputValidationFactory(StrawchemyInputFactory[MappedPydanticGraphQLDTO[Any]]):
-    @override
-    def _resolve_type(
-        self,
-        field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
-        dto_config: DTOConfig,
-        node: Node[Relation[DeclarativeBase, MappedPydanticGraphQLDTO[Any]], None],
-        *,
-        mode: InputType,
-        **factory_kwargs: Any,
-    ) -> Any:
-        if not field.is_relation:
-            return self._resolve_basic_type(field, dto_config)
-        return self._resolve_relation_type(field, dto_config, node, mode=mode, **factory_kwargs)
-
-    if TYPE_CHECKING:
-
-        @override
-        def input(
-            self,
-            model: type[T],
-            *,
-            mode: InputType,
-            include: IncludeFields | None = None,
-            exclude: ExcludeFields | None = None,
-            partial: bool | None = None,
-            type_map: Mapping[Any, Any] | None = None,
-            aliases: Mapping[str, str] | None = None,
-            alias_generator: Callable[[str], str] | None = None,
-            name: str | None = None,
-            description: str | None = None,
-            directives: Sequence[object] | None = (),
-            override: bool = False,
-            purpose: Purpose = Purpose.WRITE,
-            **kwargs: Any,
-        ) -> Callable[[type[Any]], type[MappedPydanticGraphQLDTO[T]]]: ...
-
-    @override
-    def factory(
-        self,
-        model: type[T],
-        dto_config: DTOConfig = read_partial,
-        base: type[Any] | None = None,
-        name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, MappedPydanticGraphQLDTO[T]], None] | None = None,
-        raise_if_no_fields: bool = False,
-        backend_kwargs: dict[str, Any] | None = None,
-        *,
-        description: str | None = None,
-        mode: InputType,
-        **kwargs: Any,
-    ) -> type[MappedPydanticGraphQLDTO[T]]:
-        return super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            raise_if_no_fields,
-            backend_kwargs=backend_kwargs,
-            description=description or f"{mode.capitalize()} validation type",
-            mode=mode,
-            register_type=False,
             **kwargs,
         )
 

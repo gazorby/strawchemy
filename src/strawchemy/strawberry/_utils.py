@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Literal, overload
 
-from strawberry.experimental.pydantic import UnregisteredTypeException
-from strawberry.experimental.pydantic.utils import get_strawberry_type_from_model
 from strawberry.types.base import StrawberryContainer, StrawberryType
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.union import StrawberryUnion
@@ -53,6 +51,9 @@ def strawchemy_type_from_pydantic(
 def strawchemy_type_from_pydantic(
     type_: type[PydanticModel], strict: bool = False
 ) -> type[StrawchemyTypeFromPydantic[PydanticModel]] | None:
+    from strawberry.experimental.pydantic import UnregisteredTypeException
+    from strawberry.experimental.pydantic.utils import get_strawberry_type_from_model
+
     try:
         return get_strawberry_type_from_model(type_)
     except UnregisteredTypeException as error:

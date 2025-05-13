@@ -92,7 +92,7 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
             fields[f_name] = (field_type, field_info)
 
         module = __name__
-        if model_module := getmodule(model):
+        if model_module := getmodule(self.dto_base):
             module = model_module.__name__
 
         dto = create_model(

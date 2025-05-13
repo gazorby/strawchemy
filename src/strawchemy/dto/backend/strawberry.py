@@ -1,10 +1,3 @@
-"""Data Transfer Object (DTO) classes for dataclasses.
-
-This module defines base classes and utilities for working with DTOs that
-are based on Python dataclasses. It provides a way to map data between
-dataclasses and other data models, such as SQLAlchemy models.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -110,12 +103,15 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         base_attributes = {
             name: getattr(self.dto_base, name) for name in self._base_annotations if hasattr(self.dto_base, name)
         }
+        doc = f"DTO generated to be decorated by strawberry for {model.__name__} model"
         if base:
             annotations |= base.__annotations__
             attributes |= {name: value for name, value in base.__dict__.items() if isinstance(value, StrawberryField)}
+            doc = base.__doc__ or doc
 
         def _exec_body(namespace: dict[str, Any]) -> dict[str, Any]:
             namespace["__module__"] = module
+            namespace["__doc__"] = doc
             namespace["__annotations__"] = annotations
             namespace["__dto_field_definitions__"] = dto_field_definitions
             namespace["__dto_model__"] = model

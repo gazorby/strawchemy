@@ -5,14 +5,11 @@ from collections.abc import Hashable, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, cast, override
 
-from pydantic import ValidationError
-
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
 from strawchemy.sqlalchemy.inspector import loaded_attributes
 
 from .dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
-from .exceptions import InputValidationError
 from .graphql.mutation import (
     RelationType,
     RequiredToManyUpdateInputMixin,
@@ -26,8 +23,8 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+    from strawchemy.validation.base import ValidationProtocol
 
-    from .dto.backend.pydantic import MappedPydanticDTO
     from .graphql.typing import MappedGraphQLDTO
 
 
@@ -190,11 +187,8 @@ class _InputVisitor(VisitorProtocol, Generic[InputModel]):
         override: dict[str, Any],
         level: int,
     ) -> Any:
-        if level == 1 and self.input_data.pydantic_model is not None:
-            try:
-                model = self.input_data.pydantic_model.model_validate(params).to_mapped(override=override)
-            except ValidationError as error:
-                raise InputValidationError(error) from error
+        if level == 1 and self.input_data.validation is not None:
+            model = self.input_data.validation.validate(**params).to_mapped(override=override)
         else:
             model = model_cls(**params)
 
@@ -208,9 +202,7 @@ class _InputVisitor(VisitorProtocol, Generic[InputModel]):
             self.input_data.add_relation(RelationInput.from_unbound(relation, model))
         self.current_relations.clear()
         # Return dict because .model_validate will be called at root level
-        if level != 1 and self.input_data.pydantic_model is not None:
-            return params
-        return model
+        return model if level == 1 or self.input_data.validation is None else params
 
 
 @dataclass
@@ -228,14 +220,14 @@ class Input(Generic[InputModel]):
     def __init__(
         self,
         dtos: MappedGraphQLDTO[InputModel] | Sequence[MappedGraphQLDTO[InputModel]],
-        _pydantic_model_: type[MappedPydanticDTO[InputModel]] | None = None,
+        _validation_: ValidationProtocol[InputModel] | None = None,
         **override: Any,
     ) -> None:
         self.max_level = 0
         self.relations: list[RelationInput] = []
         self.instances: list[InputModel] = []
         self.dtos: list[MappedDTO[InputModel]] = []
-        self.pydantic_model = _pydantic_model_
+        self.validation = _validation_
         self.list_input = isinstance(dtos, Sequence)
 
         dtos = dtos if isinstance(dtos, Sequence) else [dtos]

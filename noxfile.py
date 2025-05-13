@@ -24,7 +24,7 @@ def unit_tests(session: Session) -> None:
     session.run_install(
         "uv", "sync", "--all-extras", "--group=test", env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
     )
-    args: list[str] = ["-m=not integration", *session.posargs]
+    args: list[str] = ["-m=not integration", "tests/unit", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
 
@@ -32,7 +32,7 @@ def unit_tests(session: Session) -> None:
 def unit_tests_no_extras(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     session.run_install("uv", "sync", "--group=test", env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location})
-    args: list[str] = ["-m=not integration", *session.posargs]
+    args: list[str] = ["-m=not integration", "tests/unit", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
 

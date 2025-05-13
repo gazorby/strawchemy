@@ -5,12 +5,13 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypeVar
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from strawchemy.validation.pydantic import MappedPydanticGraphQLDTO
+
     from .dto import (
         AggregateDTO,
         FilterFunctionInfo,
         GraphQLFilterDTO,
         MappedDataclassGraphQLDTO,
-        MappedPydanticGraphQLDTO,
         OrderByDTO,
         OutputFunctionInfo,
         UnmappedDataclassGraphQLDTO,

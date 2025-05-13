@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from .config.base import StrawchemyConfig
-from .exceptions import InputValidationError
 from .input import Input
 from .mapper import Strawchemy
 from .sqlalchemy.hook import QueryHook
@@ -18,6 +17,7 @@ from .strawberry.types import (
     ToOneInput,
     ValidationErrorType,
 )
+from .validation.base import InputValidationError
 
 __all__ = (
     "ErrorType",

@@ -3,13 +3,8 @@ from __future__ import annotations
 from typing import Annotated
 
 from pydantic import AfterValidator
-from strawchemy import (
-    Input,
-    InputValidationError,
-    Strawchemy,
-    StrawchemySyncRepository,
-    ValidationErrorType,
-)
+from strawchemy import Input, InputValidationError, Strawchemy, StrawchemySyncRepository, ValidationErrorType
+from strawchemy.validation.pydantic import PydanticValidation
 
 import strawberry
 from tests.unit.models import Group, User
@@ -70,21 +65,29 @@ class UserFilterValidation:
 
 @strawberry.type
 class Mutation:
-    create_user: UserType | ValidationErrorType = strawchemy.create(UserCreate, validation=UserCreateValidation)
-    missing_validation_in_type: UserType = strawchemy.create(UserCreate, validation=UserCreateValidation)
+    create_user: UserType | ValidationErrorType = strawchemy.create(
+        UserCreate, validation=PydanticValidation(UserCreateValidation)
+    )
+    missing_validation_in_type: UserType = strawchemy.create(
+        UserCreate, validation=PydanticValidation(UserCreateValidation)
+    )
     update_users: list[UserType | ValidationErrorType] = strawchemy.update(
-        UserUpdate, filter_input=UserFilter, validation=UserFilterValidation
+        UserUpdate, filter_input=UserFilter, validation=PydanticValidation(UserFilterValidation)
     )
     update_user_by_id: UserType | ValidationErrorType = strawchemy.update_by_ids(
-        UserPkUpdate, validation=UserPkUpdateValidation
+        UserPkUpdate, validation=PydanticValidation(UserPkUpdateValidation)
     )
     update_user_by_ids: list[UserType | ValidationErrorType] = strawchemy.update_by_ids(
-        UserPkUpdate, validation=UserPkUpdateValidation
+        UserPkUpdate, validation=PydanticValidation(UserPkUpdateValidation)
     )
 
     @strawberry.field
     def create_user_custom(self, info: strawberry.Info, data: UserCreate) -> UserType | ValidationErrorType:
         try:
-            return StrawchemySyncRepository(UserType, info).create(Input(data, UserCreateValidation)).graphql_type()
+            return (
+                StrawchemySyncRepository(UserType, info)
+                .create(Input(data, PydanticValidation(UserCreateValidation)))
+                .graphql_type()
+            )
         except InputValidationError as error:
-            return ValidationErrorType.from_pydantic(error.pydantic_error)
+            return error.graphql_type()

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ClassVar, TypeVar
+from typing import Any, ClassVar, TypeVar
 
 import strawberry
 from strawberry import UNSET
@@ -14,12 +14,6 @@ from strawchemy.graphql.mutation import (
     ToManyUpdateInputMixin,
     ToOneInputMixin,
 )
-from strawchemy.utils import snake_to_lower_camel_case
-
-if TYPE_CHECKING:
-    from pydantic import ValidationError
-    from pydantic_core import ErrorDetails
-
 
 T = TypeVar("T", bound=MappedDTO[Any])
 RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
@@ -102,15 +96,3 @@ class ValidationErrorType(ErrorType):
 
     id = ErrorId.VALIDATION_ERROR.value
     errors: list[LocalizedErrorType]
-
-    @classmethod
-    def _to_localized_error(cls, errors: ErrorDetails, to_camel: bool) -> LocalizedErrorType:
-        return LocalizedErrorType(
-            loc=[snake_to_lower_camel_case(str(loc)) if to_camel else str(loc) for loc in errors["loc"]],
-            message=errors["msg"],
-            type=errors["type"],
-        )
-
-    @classmethod
-    def from_pydantic(cls, exc: ValidationError, to_camel: bool = True) -> ValidationErrorType:
-        return ValidationErrorType(errors=[cls._to_localized_error(err, to_camel) for err in exc.errors()])

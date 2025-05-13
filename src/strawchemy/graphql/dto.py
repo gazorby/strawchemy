@@ -47,7 +47,6 @@ from msgspec import Struct, field, json
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from strawchemy.dto.backend.pydantic import MappedPydanticDTO
 from strawchemy.dto.backend.strawberry import MappedStrawberryDTO, StrawberryDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, Purpose
@@ -84,7 +83,6 @@ class StrawchemyDTOAttributes:
     __strawchemy_query_hook__: ClassVar[QueryHook[Any] | list[QueryHook[Any]] | None] = None
     __strawchemy_filter__: ClassVar[type[Any] | None] = None
     __strawchemy_order_by__: ClassVar[type[Any] | None] = None
-    __strawchemy_validation_cls__: ClassVar[type[MappedPydanticDTO[Any]] | None] = None
     __strawchemy_input_type__: ClassVar[InputType | None] = None
 
 
@@ -487,11 +485,6 @@ class MappedDataclassGraphQLDTO(StrawchemyDTOAttributes, MappedStrawberryDTO[Mod
 
 
 class UnmappedDataclassGraphQLDTO(StrawchemyDTOAttributes, StrawberryDTO[ModelT]): ...
-
-
-class MappedPydanticGraphQLDTO(StrawchemyDTOAttributes, MappedPydanticDTO[ModelT]):
-    __strawchemy_filter__: ClassVar[type[Any] | None] = None
-    __strawchemy_order_by__: ClassVar[type[Any] | None] = None
 
 
 class GraphQLFilterDTO(UnmappedDataclassGraphQLDTO[DeclarativeBase]):

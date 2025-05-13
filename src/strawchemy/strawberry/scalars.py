@@ -4,14 +4,12 @@ from datetime import UTC, datetime, time, timedelta
 from functools import partial
 from typing import NewType
 
-from pydantic import TypeAdapter
+from msgspec import json
 
 from strawberry import scalar
 from strawberry.schema.types.base_scalars import wrap_parser
 
 __all__ = ("Interval", "Time")
-
-_IntervalType = TypeAdapter(timedelta)
 
 
 def _serialize_time(value: time | timedelta) -> str:
@@ -26,8 +24,8 @@ Interval = scalar(
         "The `Interval` scalar type represents a duration of time as specified by "
         "[ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations)."
     ),
-    parse_value=_IntervalType.validate_python,
-    serialize=partial(_IntervalType.dump_python, mode="json"),
+    parse_value=partial(json.decode, type=timedelta),
+    serialize=json.encode,
     specified_by_url="https://en.wikipedia.org/wiki/ISO_8601#Durations",
 )
 
