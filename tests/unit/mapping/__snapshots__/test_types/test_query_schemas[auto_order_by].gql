@@ -19,9 +19,9 @@
   """Ordering options"""
   input ColorOrderBy {
     fruitsAggregate: FruitAggregateOrderBy = null
-    fruits: FruitOrderBy = null
-    name: OrderByEnum = null
-    id: OrderByEnum = null
+    fruits: FruitOrderBy
+    name: OrderByEnum
+    id: OrderByEnum
   }
   
   """GraphQL type"""
@@ -81,11 +81,11 @@
   """Ordering options"""
   input FruitOrderBy {
     colorAggregate: ColorAggregateOrderBy = null
-    color: ColorOrderBy = null
-    name: OrderByEnum = null
-    colorId: OrderByEnum = null
-    sweetness: OrderByEnum = null
-    id: OrderByEnum = null
+    color: ColorOrderBy
+    name: OrderByEnum
+    colorId: OrderByEnum
+    sweetness: OrderByEnum
+    id: OrderByEnum
   }
   
   type FruitSumFields {
@@ -132,15 +132,15 @@
   """Ordering options"""
   input GroupOrderBy {
     tagAggregate: TagAggregateOrderBy = null
-    tag: TagOrderBy = null
+    tag: TagOrderBy
     usersAggregate: UserAggregateOrderBy = null
-    users: UserOrderBy = null
+    users: UserOrderBy
     colorAggregate: ColorAggregateOrderBy = null
-    color: ColorOrderBy = null
-    name: OrderByEnum = null
-    tagId: OrderByEnum = null
-    colorId: OrderByEnum = null
-    id: OrderByEnum = null
+    color: ColorOrderBy
+    name: OrderByEnum
+    tagId: OrderByEnum
+    colorId: OrderByEnum
+    id: OrderByEnum
   }
   
   type GroupSumFields {
@@ -193,9 +193,9 @@
   """Ordering options"""
   input TagOrderBy {
     groupsAggregate: GroupAggregateOrderBy = null
-    groups: GroupOrderBy = null
-    name: OrderByEnum = null
-    id: OrderByEnum = null
+    groups: GroupOrderBy
+    name: OrderByEnum
+    id: OrderByEnum
   }
   
   """GraphQL type"""
@@ -240,13 +240,13 @@
   """Ordering options"""
   input UserOrderBy {
     groupAggregate: GroupAggregateOrderBy = null
-    group: GroupOrderBy = null
+    group: GroupOrderBy
     tagAggregate: TagAggregateOrderBy = null
-    tag: TagOrderBy = null
-    name: OrderByEnum = null
-    groupId: OrderByEnum = null
-    tagId: OrderByEnum = null
-    id: OrderByEnum = null
+    tag: TagOrderBy
+    name: OrderByEnum
+    groupId: OrderByEnum
+    tagId: OrderByEnum
+    id: OrderByEnum
   }
   
   type UserSumFields {

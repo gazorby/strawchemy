@@ -5,8 +5,8 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
-from strawchemy.dto.backend.dataclass import DataclassDTOBackend
 from strawchemy.dto.backend.pydantic import PydanticDTOBackend
+from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import TYPING_NS
 
 from ._factories import (
@@ -75,7 +75,7 @@ class _PydanticNamespace:
 
 class Strawchemy:
     def __init__(self, config: StrawchemyConfig | SupportedDialect) -> None:
-        dataclass_backend = DataclassDTOBackend(MappedDataclassGraphQLDTO)
+        dataclass_backend = StrawberrryDTOBackend(MappedDataclassGraphQLDTO)
         pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
 
         self.config = StrawchemyConfig(config) if isinstance(config, str) else config

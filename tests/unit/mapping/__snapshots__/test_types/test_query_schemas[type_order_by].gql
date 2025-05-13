@@ -36,19 +36,19 @@
   
   """Ordering options"""
   input SQLDataTypesOrderBy {
-    dateCol: OrderByEnum = null
-    timeCol: OrderByEnum = null
-    timeDeltaCol: OrderByEnum = null
-    datetimeCol: OrderByEnum = null
-    strCol: OrderByEnum = null
-    intCol: OrderByEnum = null
-    floatCol: OrderByEnum = null
-    decimalCol: OrderByEnum = null
-    boolCol: OrderByEnum = null
-    uuidCol: OrderByEnum = null
-    dictCol: OrderByEnum = null
-    arrayStrCol: OrderByEnum = null
-    id: OrderByEnum = null
+    dateCol: OrderByEnum
+    timeCol: OrderByEnum
+    timeDeltaCol: OrderByEnum
+    datetimeCol: OrderByEnum
+    strCol: OrderByEnum
+    intCol: OrderByEnum
+    floatCol: OrderByEnum
+    decimalCol: OrderByEnum
+    boolCol: OrderByEnum
+    uuidCol: OrderByEnum
+    dictCol: OrderByEnum
+    arrayStrCol: OrderByEnum
+    id: OrderByEnum
   }
   
   """GraphQL type"""

@@ -195,8 +195,7 @@ class DTOBackend(Protocol, Generic[DTOBaseT]):
         with contextlib.suppress(NameError):
             dto.__annotations__ = get_type_hints(dto, localns={**TYPING_NS, **namespace}, include_extras=True)
 
-    @classmethod
-    def copy(cls, dto: type[DTOBaseT], name: str) -> type[DTOBaseT]:
+    def copy(self, dto: type[DTOBaseT], name: str) -> type[DTOBaseT]:
         return new_class(name, (dto,))
 
 

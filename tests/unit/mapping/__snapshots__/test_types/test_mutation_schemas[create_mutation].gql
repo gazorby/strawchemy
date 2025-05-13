@@ -215,7 +215,7 @@
     boolCol: Boolean!
     uuidCol: UUID!
     dictCol: JSON!
-    arrayStrCol: [String!]!
+    arrayStrCol: [String!]! = []
     id: UUID
   }
   

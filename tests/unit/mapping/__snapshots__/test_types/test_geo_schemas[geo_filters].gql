@@ -49,15 +49,15 @@
     _and: [GeosFieldsFilter!]! = []
     _or: [GeosFieldsFilter!]! = []
     _not: GeosFieldsFilter
-    pointRequired: GeoComparison = null
-    point: GeoComparison = null
-    lineString: GeoComparison = null
-    polygon: GeoComparison = null
-    multiPoint: GeoComparison = null
-    multiLineString: GeoComparison = null
-    multiPolygon: GeoComparison = null
-    geometry: GeoComparison = null
-    id: UUIDGenericComparison = null
+    pointRequired: GeoComparison
+    point: GeoComparison
+    lineString: GeoComparison
+    polygon: GeoComparison
+    multiPoint: GeoComparison
+    multiLineString: GeoComparison
+    multiPolygon: GeoComparison
+    geometry: GeoComparison
+    id: UUIDGenericComparison
   }
   
   """GraphQL type"""

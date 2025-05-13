@@ -19,9 +19,9 @@
   """Ordering options"""
   input ColorOrderBy {
     fruitsAggregate: FruitAggregateOrderBy = null
-    fruits: FruitOrderBy = null
-    name: OrderByEnum = null
-    id: OrderByEnum = null
+    fruits: FruitOrderBy
+    name: OrderByEnum
+    id: OrderByEnum
   }
   
   """GraphQL type"""
@@ -81,12 +81,12 @@
   """Ordering options"""
   input FruitOrderBy {
     override: Boolean! = true
-    colorAggregate: ColorAggregateOrderBy!
-    color: ColorOrderBy = null
-    name: OrderByEnum = null
-    colorId: OrderByEnum = null
-    sweetness: OrderByEnum = null
-    id: OrderByEnum = null
+    colorAggregate: ColorAggregateOrderBy
+    color: ColorOrderBy
+    name: OrderByEnum
+    colorId: OrderByEnum
+    sweetness: OrderByEnum
+    id: OrderByEnum
   }
   
   type FruitSumFields {

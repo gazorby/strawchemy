@@ -279,10 +279,10 @@ class TimeComparison(OrderComparison[time]):
 class TimeDeltaComparison(OrderComparison[timedelta]):
     __strawchemy_filter__ = TimeDeltaFilter
 
-    days: OrderComparison[int] | None = UNSET
-    hours: OrderComparison[int] | None = UNSET
-    minutes: OrderComparison[int] | None = UNSET
-    seconds: OrderComparison[int] | None = UNSET
+    days: OrderComparison[float] | None = UNSET
+    hours: OrderComparison[float] | None = UNSET
+    minutes: OrderComparison[float] | None = UNSET
+    seconds: OrderComparison[float] | None = UNSET
 
 
 @strawberry.input(name="DateTimeComparison", description=_DESCRIPTION.format(field="DateTime fields"))

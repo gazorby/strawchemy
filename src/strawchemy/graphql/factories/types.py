@@ -5,7 +5,7 @@ from collections.abc import Generator
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from strawchemy.dto.backend.dataclass import DataclassDTOBackend
+from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import (
     DTOBackend,
     DTOBase,
@@ -119,7 +119,7 @@ class TypeDTOFactory(GraphQLDTOFactory[GraphQLDTOT]):
     ) -> None:
         super().__init__(inspector, backend, handle_cycles, type_map, **kwargs)
         self._aggregation_factory = aggregation_factory or AggregateDTOFactory(
-            inspector, DataclassDTOBackend(AggregateDTO)
+            inspector, StrawberrryDTOBackend(AggregateDTO)
         )
 
     def _aggregation_field(
@@ -213,7 +213,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[GraphQLDTOT]):
         super().__init__(inspector, backend, handle_cycles, type_map, **kwargs)
         self._type_factory = type_factory or TypeDTOFactory(inspector, backend)
         self._aggregation_factory = aggregation_factory or AggregateDTOFactory(
-            inspector, DataclassDTOBackend(AggregateDTO)
+            inspector, StrawberrryDTOBackend(AggregateDTO)
         )
 
     @override

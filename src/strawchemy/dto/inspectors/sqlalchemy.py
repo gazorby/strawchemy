@@ -198,8 +198,6 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                         or "context" not in signature(default_callable).parameters
                     ):
                         default_factory = lambda: default.arg({})  # noqa: E731
-                    else:
-                        default = DTO_MISSING
                 elif isinstance(default, Sequence):
                     default = DTO_UNSET
                 else:
@@ -211,6 +209,9 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             default_factory = list
         elif default is DTO_MISSING:
             default = None
+
+        if default_factory is not DTO_MISSING:
+            return DTO_MISSING, default_factory
         return default, default_factory
 
     def _field_config(self, elem: MapperProperty[Any]) -> DTOFieldConfig:

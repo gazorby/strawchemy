@@ -429,7 +429,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         assert isinstance(relationship, RelationshipProperty)
         target_mapper: Mapper[Any] = relationship.mapper.mapper
         target_alias = aliased(target_mapper, flat=True)
-        order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else []
+        order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else ()
         with self._sub_scope(target_mapper.class_, target_alias):
             query = self._build_query(
                 QueryGraph(self.scope, order_by=order_by),

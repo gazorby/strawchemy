@@ -9,10 +9,10 @@ from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, ca
 
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
+from strawberry.experimental import pydantic as strawberry_pydantic
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
-from strawchemy.strawberry import pydantic as strawberry_pydantic
 
 from ._utils import strawberry_contained_types, strawchemy_type_from_pydantic
 
@@ -220,7 +220,7 @@ class StrawberryRegistry:
     def namespace(self, graphql_type: GraphQLType) -> dict[str, type[Any]]:
         return self._namespaces[graphql_type]
 
-    def register_dataclass(
+    def register_type(
         self,
         type_: type[Any],
         type_info: RegistryTypeInfo,
@@ -250,8 +250,6 @@ class StrawberryRegistry:
         type_info: RegistryTypeInfo,
         all_fields: bool = True,
         fields: list[str] | None = None,
-        partial: bool = False,
-        partial_fields: set[str] | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
         use_pydantic_alias: bool = True,
@@ -273,12 +271,10 @@ class StrawberryRegistry:
             is_interface=type_info.graphql_type == "interface",
             all_fields=all_fields,
             fields=fields,
-            partial=partial,
             name=type_info.name,
             description=description,
             directives=directives,
             use_pydantic_alias=use_pydantic_alias,
-            partial_fields=partial_fields,
         )(base)
         self._register_type(type_info, strawberry_type)
         return strawberry_type

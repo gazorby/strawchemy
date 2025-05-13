@@ -118,7 +118,7 @@ class TextFilter(OrderFilter):
                 regex_comp = func.regexp_like(model_attribute, regex, "c")
             else:
                 regex_comp = model_attribute.regexp_match(regex)
-            if regex_comp.regexp is not UNSET:
+            if self.comparison.regexp is not UNSET:
                 expressions.append(regex_comp)
             else:
                 expressions.append(not_(regex_comp))

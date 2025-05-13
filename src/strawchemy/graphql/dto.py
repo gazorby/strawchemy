@@ -30,25 +30,25 @@ import dataclasses
 import sys
 from dataclasses import dataclass
 from enum import Enum
+from functools import cached_property
 from typing import (
     TYPE_CHECKING,
     Any,
     ClassVar,
     Generic,
     Literal,
-    Protocol,
     Self,
     TypeVar,
     overload,
     override,
 )
 
-from msgspec import Struct, field
+from msgspec import Struct, field, json
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from strawchemy.dto.backend.dataclass import DataclassDTO, DataclassFieldInfo, FullFieldInfo, MappedDataclassDTO
-from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTO
+from strawchemy.dto.backend.pydantic import MappedPydanticDTO
+from strawchemy.dto.backend.strawberry import MappedStrawberryDTO, StrawberryDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, Purpose
 from strawchemy.graph import GraphError, MatchOn, Node, UndefinedType, undefined
@@ -66,8 +66,8 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
-class _HasValue(Protocol, Generic[ModelT, ModelFieldT]):
-    __field_definitions__: dict[str, DTOFieldDefinition[ModelT, ModelFieldT]]
+class _ArgumentValue:
+    __field_definitions__: ClassVar[dict[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]
 
     value: str
 
@@ -81,7 +81,7 @@ class StrawchemyDTOAttributes:
     __strawchemy_description__: ClassVar[str] = "GraphQL type"
     __strawchemy_is_root_aggregation_type__: ClassVar[bool] = False
     __strawchemy_field_map__: ClassVar[dict[DTOKey, GraphQLFieldDefinition]] = {}
-    __strawchemy_query_hook__: ClassVar[QueryHook[Any] | Sequence[QueryHook[Any]] | None] = None
+    __strawchemy_query_hook__: ClassVar[QueryHook[Any] | list[QueryHook[Any]] | None] = None
     __strawchemy_filter__: ClassVar[type[Any] | None] = None
     __strawchemy_order_by__: ClassVar[type[Any] | None] = None
     __strawchemy_validation_cls__: ClassVar[type[MappedPydanticDTO[Any]] | None] = None
@@ -169,16 +169,24 @@ class DTOKey(_Key[type[Any]]):
         return cls([node.value.model])
 
 
-class RelationFilterDTO(Struct, frozen=True):
+class RelationFilterDTO(Struct, frozen=True, dict=True):
     limit: int | None = None
     offset: int | None = None
+
+    @cached_property
+    def _json(self) -> bytes:
+        return json.encode(self)
 
     def __bool__(self) -> bool:
         return bool(self.limit or self.offset)
 
+    @override
+    def __hash__(self) -> int:
+        return hash(self._json)
+
 
 class OrderByRelationFilterDTO(RelationFilterDTO, Generic[OrderByDTOT], frozen=True):
-    order_by: list[OrderByDTOT] = field(default_factory=list)
+    order_by: tuple[OrderByDTOT] = field(default_factory=tuple)
 
     @override
     def __bool__(self) -> bool:
@@ -475,16 +483,10 @@ class EnumDTO(DTOBase[Any], Enum):
     def field_definition(self) -> GraphQLFieldDefinition: ...
 
 
-class MappedDataclassGraphQLDTO(StrawchemyDTOAttributes, MappedDataclassDTO[ModelT]): ...
+class MappedDataclassGraphQLDTO(StrawchemyDTOAttributes, MappedStrawberryDTO[ModelT]): ...
 
 
-class UnmappedDataclassGraphQLDTO(StrawchemyDTOAttributes, DataclassDTO[ModelT]): ...
-
-
-class UnmappedPydanticGraphQLDTO(StrawchemyDTOAttributes, PydanticDTO[ModelT]):
-    @property
-    def dto_set_fields(self) -> set[str]:
-        return {name for name in self.model_fields_set if getattr(self, name) is not None}
+class UnmappedDataclassGraphQLDTO(StrawchemyDTOAttributes, StrawberryDTO[ModelT]): ...
 
 
 class MappedPydanticGraphQLDTO(StrawchemyDTOAttributes, MappedPydanticDTO[ModelT]):
@@ -504,7 +506,7 @@ class AggregateDTO(UnmappedDataclassGraphQLDTO[DeclarativeBase]): ...
 class AggregationFunctionFilterDTO(UnmappedDataclassGraphQLDTO[DeclarativeBase]):
     __dto_function_info__: ClassVar[FilterFunctionInfo]
 
-    arguments: list[_HasValue[DeclarativeBase, Any]]
+    arguments: list[_ArgumentValue]
     predicate: EqualityComparison[Any]
     distinct: bool | None = None
 
@@ -529,24 +531,9 @@ class OrderByDTO(GraphQLFilterDTO):
 
 
 class BooleanFilterDTO(GraphQLFilterDTO):
-    if TYPE_CHECKING:
-        and_: list[Self]
-        or_: list[Self]
-        not_: Self | None
-
-    @classmethod
-    def strawberry_annotations(cls) -> list[DataclassFieldInfo]:
-        return [
-            FullFieldInfo(
-                "and_", list[Self], dataclasses.field(default=strawberry.field(default_factory=list, name="_and"))
-            ),
-            FullFieldInfo(
-                "or_", list[Self], dataclasses.field(default=strawberry.field(default_factory=list, name="_or"))
-            ),
-            FullFieldInfo(
-                "not_", Self | None, dataclasses.field(default=strawberry.field(default=strawberry.UNSET, name="_not"))
-            ),
-        ]
+    and_: list[Self] = strawberry.field(default_factory=list, name="_and")
+    or_: list[Self] = strawberry.field(default_factory=list, name="_or")
+    not_: Self | None = strawberry.field(default=strawberry.UNSET, name="_not")
 
     def filters_tree(self, _node: QueryNode | None = None) -> tuple[QueryNode, Filter]:
         node = _node or QueryNode.root_node(self.__dto_model__)
@@ -556,8 +543,8 @@ class BooleanFilterDTO(GraphQLFilterDTO):
             or_=[or_val.filters_tree(node)[1] for or_val in self.or_],
             not_=self.not_.filters_tree(node)[1] if self.not_ else None,
         )
-        fields_set = [(name, value) for name in ("and_", "or_", "not_") if (value := getattr(self, name))]
-        for name, value in fields_set:
+        for name in self.dto_set_fields:
+            value: EqualityComparison[Any] | BooleanFilterDTO | AggregateFilterDTO = getattr(self, name)
             field = self.__strawchemy_field_map__[key + name]
             if isinstance(value, BooleanFilterDTO):
                 child, _ = node.upsert_child(field, match_on="value_equality")

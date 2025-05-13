@@ -5,38 +5,38 @@
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input ColorAggregateBoolExp {
-    count: ColorAggregateBoolExpCount = null
-    maxString: ColorAggregateBoolExpMaxstring = null
-    minString: ColorAggregateBoolExpMinstring = null
-    sum: ColorAggregateBoolExpSum = null
+    count: ColorAggregateBoolExpCount
+    maxString: ColorAggregateBoolExpMaxstring
+    minString: ColorAggregateBoolExpMinstring
+    sum: ColorAggregateBoolExpSum
   }
   
   """Boolean expression to compare count aggregation."""
   input ColorAggregateBoolExpCount {
-    arguments: [ColorCountFields!]
-    distinct: Boolean = false
+    arguments: [ColorCountFields!] = []
     predicate: IntOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare max aggregation."""
   input ColorAggregateBoolExpMaxstring {
     arguments: [ColorMinMaxStringFieldsEnum!]!
-    distinct: Boolean = false
     predicate: TextComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare min aggregation."""
   input ColorAggregateBoolExpMinstring {
     arguments: [ColorMinMaxStringFieldsEnum!]!
-    distinct: Boolean = false
     predicate: TextComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare sum aggregation."""
   input ColorAggregateBoolExpSum {
     arguments: [ColorSumFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """
@@ -46,10 +46,10 @@
     _and: [ColorBoolExp!]! = []
     _or: [ColorBoolExp!]! = []
     _not: ColorBoolExp
-    fruitsAggregate: FruitAggregateBoolExp = null
-    fruits: FruitBoolExp = null
-    name: TextComparison = null
-    id: UUIDGenericComparison = null
+    fruitsAggregate: FruitAggregateBoolExp
+    fruits: FruitBoolExp
+    name: TextComparison
+    id: UUIDGenericComparison
   }
   
   enum ColorCountFields {
@@ -116,94 +116,94 @@
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input FruitAggregateBoolExp {
-    avg: FruitAggregateBoolExpAvg = null
-    count: FruitAggregateBoolExpCount = null
-    max: FruitAggregateBoolExpMax = null
-    maxString: FruitAggregateBoolExpMaxstring = null
-    min: FruitAggregateBoolExpMin = null
-    minString: FruitAggregateBoolExpMinstring = null
-    stddevPop: FruitAggregateBoolExpStddevpop = null
-    stddevSamp: FruitAggregateBoolExpStddevsamp = null
-    sum: FruitAggregateBoolExpSum = null
-    varPop: FruitAggregateBoolExpVarpop = null
-    varSamp: FruitAggregateBoolExpVarsamp = null
+    avg: FruitAggregateBoolExpAvg
+    count: FruitAggregateBoolExpCount
+    max: FruitAggregateBoolExpMax
+    maxString: FruitAggregateBoolExpMaxstring
+    min: FruitAggregateBoolExpMin
+    minString: FruitAggregateBoolExpMinstring
+    stddevPop: FruitAggregateBoolExpStddevpop
+    stddevSamp: FruitAggregateBoolExpStddevsamp
+    sum: FruitAggregateBoolExpSum
+    varPop: FruitAggregateBoolExpVarpop
+    varSamp: FruitAggregateBoolExpVarsamp
   }
   
   """Boolean expression to compare avg aggregation."""
   input FruitAggregateBoolExpAvg {
     arguments: [FruitNumericFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare count aggregation."""
   input FruitAggregateBoolExpCount {
-    arguments: [FruitCountFields!]
-    distinct: Boolean = false
+    arguments: [FruitCountFields!] = []
     predicate: IntOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare max aggregation."""
   input FruitAggregateBoolExpMax {
     arguments: [FruitMinMaxNumericFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare max aggregation."""
   input FruitAggregateBoolExpMaxstring {
     arguments: [FruitMinMaxStringFieldsEnum!]!
-    distinct: Boolean = false
     predicate: TextComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare min aggregation."""
   input FruitAggregateBoolExpMin {
     arguments: [FruitMinMaxNumericFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare min aggregation."""
   input FruitAggregateBoolExpMinstring {
     arguments: [FruitMinMaxStringFieldsEnum!]!
-    distinct: Boolean = false
     predicate: TextComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare stddev_pop aggregation."""
   input FruitAggregateBoolExpStddevpop {
     arguments: [FruitNumericFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare stddev_samp aggregation."""
   input FruitAggregateBoolExpStddevsamp {
     arguments: [FruitNumericFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare sum aggregation."""
   input FruitAggregateBoolExpSum {
     arguments: [FruitSumFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare var_pop aggregation."""
   input FruitAggregateBoolExpVarpop {
     arguments: [FruitNumericFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare var_samp aggregation."""
   input FruitAggregateBoolExpVarsamp {
     arguments: [FruitNumericFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """
@@ -213,12 +213,12 @@
     _and: [FruitBoolExp!]! = []
     _or: [FruitBoolExp!]! = []
     _not: FruitBoolExp
-    colorAggregate: ColorAggregateBoolExp = null
-    color: ColorBoolExp = null
-    name: TextComparison = null
-    colorId: UUIDGenericComparison = null
-    sweetness: IntOrderComparison = null
-    id: UUIDGenericComparison = null
+    colorAggregate: ColorAggregateBoolExp
+    color: ColorBoolExp
+    name: TextComparison
+    colorId: UUIDGenericComparison
+    sweetness: IntOrderComparison
+    id: UUIDGenericComparison
   }
   
   enum FruitCountFields {
@@ -280,38 +280,38 @@
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input GroupAggregateBoolExp {
-    count: GroupAggregateBoolExpCount = null
-    maxString: GroupAggregateBoolExpMaxstring = null
-    minString: GroupAggregateBoolExpMinstring = null
-    sum: GroupAggregateBoolExpSum = null
+    count: GroupAggregateBoolExpCount
+    maxString: GroupAggregateBoolExpMaxstring
+    minString: GroupAggregateBoolExpMinstring
+    sum: GroupAggregateBoolExpSum
   }
   
   """Boolean expression to compare count aggregation."""
   input GroupAggregateBoolExpCount {
-    arguments: [GroupCountFields!]
-    distinct: Boolean = false
+    arguments: [GroupCountFields!] = []
     predicate: IntOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare max aggregation."""
   input GroupAggregateBoolExpMaxstring {
     arguments: [GroupMinMaxStringFieldsEnum!]!
-    distinct: Boolean = false
     predicate: TextComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare min aggregation."""
   input GroupAggregateBoolExpMinstring {
     arguments: [GroupMinMaxStringFieldsEnum!]!
-    distinct: Boolean = false
     predicate: TextComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare sum aggregation."""
   input GroupAggregateBoolExpSum {
     arguments: [GroupSumFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """Identifier input"""
@@ -323,12 +323,6 @@
   input GroupColorIdFieldsInputGroupColorInputRequiredToOneInput {
     set: GroupColorIdFieldsInput
     create: GroupColorInput
-  }
-  
-  """Add a new or existing object"""
-  input GroupColorIdFieldsInputTagColorInputRequiredToOneInput {
-    set: GroupColorIdFieldsInput
-    create: TagColorInput
   }
   
   """GraphQL update_by_pk input type"""
@@ -352,16 +346,16 @@
     _and: [GroupFilter!]! = []
     _or: [GroupFilter!]! = []
     _not: GroupFilter
-    tagAggregate: TagAggregateBoolExp = null
-    tag: TagBoolExp = null
-    usersAggregate: UserAggregateBoolExp = null
-    users: UserBoolExp = null
-    colorAggregate: ColorAggregateBoolExp = null
-    color: ColorBoolExp = null
-    name: TextComparison = null
-    tagId: UUIDGenericComparison = null
-    colorId: UUIDGenericComparison = null
-    id: UUIDGenericComparison = null
+    tagAggregate: TagAggregateBoolExp
+    tag: TagBoolExp
+    usersAggregate: UserAggregateBoolExp
+    users: UserBoolExp
+    colorAggregate: ColorAggregateBoolExp
+    color: ColorBoolExp
+    name: TextComparison
+    tagId: UUIDGenericComparison
+    colorId: UUIDGenericComparison
+    id: UUIDGenericComparison
   }
   
   """GraphQL update_by_pk input type"""
@@ -382,14 +376,6 @@
     add: [GroupFruitsIdFieldsInput!]
     remove: [GroupFruitsIdFieldsInput!]
     create: [GroupFruitInput!]
-  }
-  
-  """Add new objects or update existing ones"""
-  input GroupFruitsIdFieldsInputTagFruitInputToManyUpdateInput {
-    set: [GroupFruitsIdFieldsInput!]
-    add: [GroupFruitsIdFieldsInput!]
-    remove: [GroupFruitsIdFieldsInput!]
-    create: [TagFruitInput!]
   }
   
   type GroupMinMaxFields {
@@ -432,12 +418,6 @@
   input GroupTagIdFieldsInputGroupTagInputToOneInput {
     set: GroupTagIdFieldsInput
     create: GroupTagInput
-  }
-  
-  """Add a new or existing object"""
-  input GroupTagIdFieldsInputTagUpdateToOneInput {
-    set: GroupTagIdFieldsInput
-    create: TagUpdate
   }
   
   """GraphQL update_by_pk input type"""
@@ -487,14 +467,6 @@
     add: [GroupUsersIdFieldsInput!]
     remove: [GroupUsersIdFieldsInput!]
     create: [GroupUserInput!]
-  }
-  
-  """Add new objects or update existing ones"""
-  input GroupUsersIdFieldsInputTagUserInputToManyUpdateInput {
-    set: [GroupUsersIdFieldsInput!]
-    add: [GroupUsersIdFieldsInput!]
-    remove: [GroupUsersIdFieldsInput!]
-    create: [TagUserInput!]
   }
   
   """
@@ -584,38 +556,38 @@
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input TagAggregateBoolExp {
-    count: TagAggregateBoolExpCount = null
-    maxString: TagAggregateBoolExpMaxstring = null
-    minString: TagAggregateBoolExpMinstring = null
-    sum: TagAggregateBoolExpSum = null
+    count: TagAggregateBoolExpCount
+    maxString: TagAggregateBoolExpMaxstring
+    minString: TagAggregateBoolExpMinstring
+    sum: TagAggregateBoolExpSum
   }
   
   """Boolean expression to compare count aggregation."""
   input TagAggregateBoolExpCount {
-    arguments: [TagCountFields!]
-    distinct: Boolean = false
+    arguments: [TagCountFields!] = []
     predicate: IntOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare max aggregation."""
   input TagAggregateBoolExpMaxstring {
     arguments: [TagMinMaxStringFieldsEnum!]!
-    distinct: Boolean = false
     predicate: TextComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare min aggregation."""
   input TagAggregateBoolExpMinstring {
     arguments: [TagMinMaxStringFieldsEnum!]!
-    distinct: Boolean = false
     predicate: TextComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare sum aggregation."""
   input TagAggregateBoolExpSum {
     arguments: [TagSumFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """
@@ -625,15 +597,26 @@
     _and: [TagBoolExp!]! = []
     _or: [TagBoolExp!]! = []
     _not: TagBoolExp
-    groupsAggregate: GroupAggregateBoolExp = null
-    groups: GroupFilter = null
-    name: TextComparison = null
-    id: UUIDGenericComparison = null
+    groupsAggregate: GroupAggregateBoolExp
+    groups: GroupFilter
+    name: TextComparison
+    id: UUIDGenericComparison
+  }
+  
+  """Identifier input"""
+  input TagColorIdFieldsInput {
+    id: UUID!
+  }
+  
+  """Add a new or existing object"""
+  input TagColorIdFieldsInputTagColorInputRequiredToOneInput {
+    set: TagColorIdFieldsInput
+    create: TagColorInput
   }
   
   """GraphQL update_by_pk input type"""
   input TagColorInput {
-    fruits: GroupFruitsIdFieldsInputTagFruitInputToManyUpdateInput
+    fruits: TagFruitsIdFieldsInputTagFruitInputToManyUpdateInput
     name: String
     id: UUID!
   }
@@ -650,10 +633,23 @@
     id: UUID!
   }
   
+  """Identifier input"""
+  input TagFruitsIdFieldsInput {
+    id: UUID!
+  }
+  
+  """Add new objects or update existing ones"""
+  input TagFruitsIdFieldsInputTagFruitInputToManyUpdateInput {
+    set: [TagFruitsIdFieldsInput!]
+    add: [TagFruitsIdFieldsInput!]
+    remove: [TagFruitsIdFieldsInput!]
+    create: [TagFruitInput!]
+  }
+  
   """GraphQL update_by_pk input type"""
   input TagGroupInput {
-    users: GroupUsersIdFieldsInputTagUserInputToManyUpdateInput
-    color: GroupColorIdFieldsInputTagColorInputRequiredToOneInput
+    users: TagUsersIdFieldsInputTagUserInputToManyUpdateInput
+    color: TagColorIdFieldsInputTagColorInputRequiredToOneInput
     name: String
     id: UUID!
   }
@@ -678,6 +674,17 @@
     name
   }
   
+  """Identifier input"""
+  input TagTagIdFieldsInput {
+    id: UUID!
+  }
+  
+  """Add a new or existing object"""
+  input TagTagIdFieldsInputTagUpdateToOneInput {
+    set: TagTagIdFieldsInput
+    create: TagUpdate
+  }
+  
   """GraphQL type"""
   type TagType {
     groupsAggregate: GroupAggregate!
@@ -697,9 +704,22 @@
   
   """GraphQL update_by_pk input type"""
   input TagUserInput {
-    tag: GroupTagIdFieldsInputTagUpdateToOneInput
+    tag: TagTagIdFieldsInputTagUpdateToOneInput
     name: String
     id: UUID!
+  }
+  
+  """Identifier input"""
+  input TagUsersIdFieldsInput {
+    id: UUID!
+  }
+  
+  """Add new objects or update existing ones"""
+  input TagUsersIdFieldsInputTagUserInputToManyUpdateInput {
+    set: [TagUsersIdFieldsInput!]
+    add: [TagUsersIdFieldsInput!]
+    remove: [TagUsersIdFieldsInput!]
+    create: [TagUserInput!]
   }
   
   """
@@ -759,38 +779,38 @@
   Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
   """
   input UserAggregateBoolExp {
-    count: UserAggregateBoolExpCount = null
-    maxString: UserAggregateBoolExpMaxstring = null
-    minString: UserAggregateBoolExpMinstring = null
-    sum: UserAggregateBoolExpSum = null
+    count: UserAggregateBoolExpCount
+    maxString: UserAggregateBoolExpMaxstring
+    minString: UserAggregateBoolExpMinstring
+    sum: UserAggregateBoolExpSum
   }
   
   """Boolean expression to compare count aggregation."""
   input UserAggregateBoolExpCount {
-    arguments: [UserCountFields!]
-    distinct: Boolean = false
+    arguments: [UserCountFields!] = []
     predicate: IntOrderComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare max aggregation."""
   input UserAggregateBoolExpMaxstring {
     arguments: [UserMinMaxStringFieldsEnum!]!
-    distinct: Boolean = false
     predicate: TextComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare min aggregation."""
   input UserAggregateBoolExpMinstring {
     arguments: [UserMinMaxStringFieldsEnum!]!
-    distinct: Boolean = false
     predicate: TextComparison!
+    distinct: Boolean = false
   }
   
   """Boolean expression to compare sum aggregation."""
   input UserAggregateBoolExpSum {
     arguments: [UserSumFieldsEnum!]!
-    distinct: Boolean = false
     predicate: FloatOrderComparison!
+    distinct: Boolean = false
   }
   
   """
@@ -800,14 +820,14 @@
     _and: [UserBoolExp!]! = []
     _or: [UserBoolExp!]! = []
     _not: UserBoolExp
-    groupAggregate: GroupAggregateBoolExp = null
-    group: GroupFilter = null
-    tagAggregate: TagAggregateBoolExp = null
-    tag: TagBoolExp = null
-    name: TextComparison = null
-    groupId: UUIDGenericComparison = null
-    tagId: UUIDGenericComparison = null
-    id: UUIDGenericComparison = null
+    groupAggregate: GroupAggregateBoolExp
+    group: GroupFilter
+    tagAggregate: TagAggregateBoolExp
+    tag: TagBoolExp
+    name: TextComparison
+    groupId: UUIDGenericComparison
+    tagId: UUIDGenericComparison
+    id: UUIDGenericComparison
   }
   
   enum UserCountFields {

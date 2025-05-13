@@ -47,15 +47,17 @@ from .exceptions import TranspilingError
 from .typing import DeclarativeT
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.sql._typing import _OnClauseArgument
     from sqlalchemy.sql.selectable import NamedFromClause
     from strawchemy.config.databases import DatabaseFeatures
-    from strawchemy.sqlalchemy._scope import QueryScope
-    from strawchemy.sqlalchemy.typing import SQLAlchemyOrderByNode, SQLAlchemyQueryNode
     from strawchemy.typing import SupportedDialect
 
+    from ._scope import QueryScope
     from .hook import ColumnLoadingMode, QueryHook
+    from .typing import SQLAlchemyOrderByNode, SQLAlchemyQueryNode
 
 __all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
 
@@ -170,7 +172,7 @@ class AggregationJoin(Join):
 class QueryGraph(Generic[DeclarativeT]):
     scope: QueryScope[DeclarativeT]
     selection_tree: SQLAlchemyQueryNode | None = None
-    order_by: list[OrderByDTO] = dataclasses.field(default_factory=list)
+    order_by: Sequence[OrderByDTO] = dataclasses.field(default_factory=list)
     distinct_on: list[EnumDTO] = dataclasses.field(default_factory=list)
     dto_filter: BooleanFilterDTO | None = None
 

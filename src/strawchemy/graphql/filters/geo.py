@@ -63,6 +63,8 @@ class GeoComparison(GraphQLComparison):
         within_geometry: Filters for geometries that are within this geometry.
     """
 
+    __strawchemy_filter__ = GeoFilter
+
     contains_geometry: GeoJSON | None = UNSET
     within_geometry: GeoJSON | None = UNSET
     is_null: bool | None = UNSET

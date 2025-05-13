@@ -7,7 +7,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast, override
 
 from sqlalchemy.orm import DeclarativeBase
-from strawchemy.dto.backend.dataclass import DataclassDTOBackend
+from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.exceptions import DTOError
 from strawchemy.graphql.dto import (
     DTOKey,
@@ -54,7 +54,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedDataclassGraphQLDTO[Decla
         type_map: dict[Any, Any] | None = None,
     ) -> None:
         super().__init__(
-            inspector, backend or DataclassDTOBackend(UnmappedDataclassGraphQLDTO), handle_cycles, type_map
+            inspector, backend or StrawberrryDTOBackend(UnmappedDataclassGraphQLDTO), handle_cycles, type_map
         )
         self._enum_backend = EnumDTOBackend()
 

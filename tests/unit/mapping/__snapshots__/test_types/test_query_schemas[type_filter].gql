@@ -133,10 +133,10 @@
     gte: Interval
     lt: Interval
     lte: Interval
-    days: IntOrderComparison
-    hours: IntOrderComparison
-    minutes: IntOrderComparison
-    seconds: IntOrderComparison
+    days: FloatOrderComparison
+    hours: FloatOrderComparison
+    minutes: FloatOrderComparison
+    seconds: FloatOrderComparison
   }
   
   """
@@ -172,19 +172,19 @@
     _and: [SQLDataTypesFilter!]! = []
     _or: [SQLDataTypesFilter!]! = []
     _not: SQLDataTypesFilter
-    dateCol: DateComparison = null
-    timeCol: TimeComparison = null
-    timeDeltaCol: IntervalComparison = null
-    datetimeCol: DateTimeComparison = null
-    strCol: TextComparison = null
-    intCol: IntOrderComparison = null
-    floatCol: FloatOrderComparison = null
-    decimalCol: DecimalOrderComparison = null
-    boolCol: BoolGenericComparison = null
-    uuidCol: UUIDGenericComparison = null
-    dictCol: JSONComparison = null
-    arrayStrCol: StrArrayComparison = null
-    id: UUIDGenericComparison = null
+    dateCol: DateComparison
+    timeCol: TimeComparison
+    timeDeltaCol: IntervalComparison
+    datetimeCol: DateTimeComparison
+    strCol: TextComparison
+    intCol: IntOrderComparison
+    floatCol: FloatOrderComparison
+    decimalCol: DecimalOrderComparison
+    boolCol: BoolGenericComparison
+    uuidCol: UUIDGenericComparison
+    dictCol: JSONComparison
+    arrayStrCol: StrArrayComparison
+    id: UUIDGenericComparison
   }
   
   """GraphQL type"""

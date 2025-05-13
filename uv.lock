@@ -1951,6 +1951,9 @@ wheels = [
 mysql = [
     { name = "mysql-connector-python" },
 ]
+postgres = [
+    { name = "psycopg" },
+]
 
 [[package]]
 name = "pytest-lazy-fixtures"
@@ -2361,6 +2364,7 @@ name = "strawchemy"
 version = "0.15.6"
 source = { editable = "." }
 dependencies = [
+    { name = "msgspec" },
     { name = "pydantic" },
     { name = "sqlalchemy" },
     { name = "strawberry-graphql" },
@@ -2395,7 +2399,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
-    { name = "pytest-databases", extra = ["mysql"] },
+    { name = "pytest-databases", extra = ["mysql", "postgres"] },
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
@@ -2434,7 +2438,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
-    { name = "pytest-databases", extra = ["mysql"] },
+    { name = "pytest-databases", extra = ["mysql", "postgres"] },
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
@@ -2446,6 +2450,7 @@ test = [
 requires-dist = [
     { name = "geoalchemy2", marker = "extra == 'geo'" },
     { name = "geojson-pydantic", marker = "extra == 'geo'" },
+    { name = "msgspec" },
     { name = "pydantic" },
     { name = "shapely", marker = "extra == 'geo'" },
     { name = "sqlalchemy", specifier = ">=2.0.10" },
@@ -2475,7 +2480,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pytest-cov" },
-    { name = "pytest-databases", extras = ["posgres", "mysql"] },
+    { name = "pytest-databases", extras = ["postgres", "mysql"] },
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
@@ -2512,7 +2517,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pytest-cov" },
-    { name = "pytest-databases", extras = ["posgres", "mysql"] },
+    { name = "pytest-databases", extras = ["postgres", "mysql"] },
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },

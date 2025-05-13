@@ -4,7 +4,8 @@ import dataclasses
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
-from strawchemy.dto.backend.dataclass import DataclassDTOBackend
+from strawberry import UNSET
+from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOMissingType, Purpose
 from strawchemy.graph import Node
 from strawchemy.graphql.dto import (
@@ -56,9 +57,7 @@ class FilterDTOFactory(GraphQLDTOFactory[GraphQLFilterDTOT]):
         return self.inspector.get_field_comparison(field)
 
     def _aggregation_field(
-        self,
-        field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
-        dto_config: DTOConfig,
+        self, field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
     ) -> GraphQLFieldDefinition:
         related_model = self.inspector.relation_model(field_def.model_field)
         type_hint = self._aggregation_filter_factory.factory(
@@ -70,7 +69,7 @@ class FilterDTOFactory(GraphQLDTOFactory[GraphQLFilterDTOT]):
             _model_field=field_def.model_field,
             model_field_name=f"{field_def.name}_aggregate",
             type_hint=type_hint | None,
-            default=None,
+            default=UNSET,
         )
 
     @override
@@ -108,7 +107,7 @@ class FilterDTOFactory(GraphQLDTOFactory[GraphQLFilterDTOT]):
                 comparison_type = self._filter_type(field)
                 field.type_ = comparison_type | None
 
-            field.default = None
+            field.default = UNSET
             field.default_factory = DTO_MISSING
             yield field
 
@@ -214,9 +213,9 @@ class AggregateFilterDTOFactory(GraphQLDTOFactory[AggregateFilterDTO]):
         type_map: dict[Any, Any] | None = None,
         aggregation_builder: AggregationInspector | None = None,
     ) -> None:
-        super().__init__(inspector, backend or DataclassDTOBackend(AggregateFilterDTO), handle_cycles, type_map)
+        super().__init__(inspector, backend or StrawberrryDTOBackend(AggregateFilterDTO), handle_cycles, type_map)
         self.aggregation_builder = aggregation_builder or AggregationInspector(inspector)
-        self._filter_function_builder = DataclassDTOBackend(AggregationFunctionFilterDTO)
+        self._filter_function_builder = StrawberrryDTOBackend(AggregationFunctionFilterDTO)
 
     @override
     def type_description(self) -> str:
@@ -317,7 +316,7 @@ class AggregateFilterDTOFactory(GraphQLDTOFactory[AggregateFilterDTO]):
                     model=model,
                     model_field_name=aggregation.field_name,
                     type_hint=type_hint | None,
-                    default=None,
+                    default=UNSET,
                     _model_field=model_field,
                     _function=aggregation,
                 ),
@@ -342,7 +341,7 @@ class OrderByDTOFactory(FilterDTOFactory[OrderByDTO]):
     ) -> None:
         super().__init__(
             inspector,
-            backend or DataclassDTOBackend(OrderByDTO),
+            backend or StrawberrryDTOBackend(OrderByDTO),
             handle_cycles,
             type_map,
             aggregation_filter_factory,
@@ -394,7 +393,7 @@ class OrderByDTOFactory(FilterDTOFactory[OrderByDTO]):
                     model=model,
                     model_field_name=aggregation.field_name,
                     type_hint=type_hint | None,
-                    default=None,
+                    default=UNSET,
                     _function=aggregation,
                 )
             )
@@ -413,7 +412,8 @@ class OrderByDTOFactory(FilterDTOFactory[OrderByDTO]):
             model=related_model,
             _model_field=field_def.model_field,
             model_field_name=f"{field_def.name}_aggregate",
-            type_hint=self._order_by_aggregation(related_model, dto_config),
+            type_hint=self._order_by_aggregation(related_model, dto_config) | None,
+            default=UNSET,
         )
 
     @override

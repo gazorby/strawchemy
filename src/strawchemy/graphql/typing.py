@@ -14,7 +14,6 @@ if TYPE_CHECKING:
         OrderByDTO,
         OutputFunctionInfo,
         UnmappedDataclassGraphQLDTO,
-        UnmappedPydanticGraphQLDTO,
     )
 
 
@@ -32,11 +31,10 @@ AggregationType = Literal[
 
 QueryHookCallable: TypeAlias = "Callable[..., Any]"
 InputType = Literal["create", "update_by_pk", "update_by_filter"]
-
-PydanticGraphQLDTO: TypeAlias = "UnmappedPydanticGraphQLDTO[T] | MappedPydanticGraphQLDTO[T]"
-DataclassGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[T] | UnmappedDataclassGraphQLDTO[T]"
-AnyMappedDTO: TypeAlias = "MappedDataclassGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
-GraphQLDTO: TypeAlias = "PydanticGraphQLDTO[T] | DataclassGraphQLDTO[T]"
 FunctionInfo: TypeAlias = "FilterFunctionInfo | OutputFunctionInfo"
+
+DataclassGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[T] | UnmappedDataclassGraphQLDTO[T]"
+GraphQLDTO: TypeAlias = "DataclassGraphQLDTO[T] | MappedPydanticGraphQLDTO[T]"
 MappedGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[T] | MappedPydanticGraphQLDTO[T]"
-UnmappedGraphQLDTO: TypeAlias = "UnmappedDataclassGraphQLDTO[T] | UnmappedPydanticGraphQLDTO[T]"
+UnmappedGraphQLDTO: TypeAlias = "UnmappedDataclassGraphQLDTO[T]"
+AnyMappedDTO: TypeAlias = "MappedDataclassGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
