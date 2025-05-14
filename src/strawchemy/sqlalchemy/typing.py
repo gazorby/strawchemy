@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypedDict, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypeVar
 
 if TYPE_CHECKING:
     from collections import OrderedDict
     from collections.abc import Callable
 
-    from sqlalchemy import Column, ColumnElement, Function, TextClause
+    from sqlalchemy import Function
     from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
-    from sqlalchemy.orm import DeclarativeBase, RelationshipProperty, Session, scoped_session
-    from sqlalchemy.sql.type_api import TypeEngine
+    from sqlalchemy.orm import DeclarativeBase, Session, scoped_session
     from strawchemy.strawberry.dto import OrderByNode, QueryNode
     from strawchemy.strawberry.filters.base import GraphQLComparison
 
@@ -21,8 +20,6 @@ __all__ = (
     "AnyAsyncSession",
     "AnySession",
     "AnySyncSession",
-    "ColumnDescription",
-    "ColumnOrRelationship",
     "DeclarativeSubT",
     "DeclarativeT",
     "FunctionGenerator",
@@ -46,16 +43,9 @@ StatementType = Literal["lambda", "select"]
 LoadMode = Literal["load_options", "statement"]
 SQLAlchemyQueryNode: TypeAlias = "QueryNode"
 SQLAlchemyOrderByNode: TypeAlias = "OrderByNode"
-type ColumnOrRelationship = "Column[Any] | RelationshipProperty[Any]"
 FunctionGenerator: TypeAlias = "Callable[..., Function[Any]]"
 QueryHookCallable: TypeAlias = "QueryHook[QueryHookDeclarativeT]"
 FilterMap: TypeAlias = "OrderedDict[tuple[type[Any], ...], type[GraphQLComparison]]"
 AnySyncSession: TypeAlias = "Session | scoped_session[Session]"
 AnyAsyncSession: TypeAlias = "AsyncSession | async_scoped_session[AsyncSession]"
 AnySession: TypeAlias = "AnySyncSession | AnyAsyncSession"
-
-
-class ColumnDescription(TypedDict):
-    name: str | None
-    type: TypeEngine[Any]
-    expr: ColumnElement[Any] | TextClause

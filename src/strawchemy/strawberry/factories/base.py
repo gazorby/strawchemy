@@ -35,10 +35,10 @@ from strawchemy.strawberry.dto import (
     BooleanFilterDTO,
     DTOKey,
     GraphQLFieldDefinition,
-    MappedDataclassGraphQLDTO,
+    MappedStrawberryGraphQLDTO,
     OrderByDTO,
     StrawchemyDTOAttributes,
-    UnmappedDataclassGraphQLDTO,
+    UnmappedStrawberryGraphQLDTO,
 )
 from strawchemy.strawberry.typing import GraphQLDTOT, InputType, MappedGraphQLDTO
 from strawchemy.types import DefaultOffsetPagination
@@ -59,7 +59,7 @@ __all__ = ("GraphQLDTOFactory",)
 T = TypeVar("T", bound="DeclarativeBase")
 PydanticGraphQLDTOT = TypeVar("PydanticGraphQLDTOT", bound="MappedPydanticGraphQLDTO[Any]")
 MappedGraphQLDTOT = TypeVar("MappedGraphQLDTOT", bound="MappedGraphQLDTO[Any]")
-UnmappedGraphQLDTOT = TypeVar("UnmappedGraphQLDTOT", bound="UnmappedDataclassGraphQLDTO[Any]")
+UnmappedGraphQLDTOT = TypeVar("UnmappedGraphQLDTOT", bound="UnmappedStrawberryGraphQLDTO[Any]")
 StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyDTOAttributes")
 
 
@@ -225,7 +225,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 child_options=_ChildOptions(pagination=child_pagination, order_by=child_order_by),
             )
             dto.__strawchemy_query_hook__ = query_hook
-            if issubclass(dto, MappedDataclassGraphQLDTO):
+            if issubclass(dto, MappedStrawberryGraphQLDTO):
                 dto.__strawchemy_filter__ = filter_input
                 dto.__strawchemy_order_by__ = order_by
             return dto
@@ -523,7 +523,7 @@ class StrawchemyUnMappedDTOFactory(GraphQLDTOFactory[UnmappedGraphQLDTOT]):
         override: bool = False,
         purpose: Purpose = Purpose.WRITE,
         **kwargs: Any,
-    ) -> Callable[[type[Any]], type[UnmappedDataclassGraphQLDTO[T]]]:
+    ) -> Callable[[type[Any]], type[UnmappedStrawberryGraphQLDTO[T]]]:
         return self._input_wrapper(
             model=model,
             include=include,
@@ -560,7 +560,7 @@ class StrawchemyUnMappedDTOFactory(GraphQLDTOFactory[UnmappedGraphQLDTOT]):
         query_hook: QueryHook[T] | list[QueryHook[T]] | None = None,
         override: bool = False,
         purpose: Purpose = Purpose.READ,
-    ) -> Callable[[type[Any]], type[UnmappedDataclassGraphQLDTO[T]]]:
+    ) -> Callable[[type[Any]], type[UnmappedStrawberryGraphQLDTO[T]]]:
         return self._type_wrapper(
             model=model,
             include=include,

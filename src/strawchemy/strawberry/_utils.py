@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, overload
+from typing import TYPE_CHECKING, Any
 
 from strawberry.types.base import StrawberryContainer, StrawberryType
 from strawberry.types.lazy_type import LazyType
@@ -10,66 +10,17 @@ from .mutation.types import ErrorType
 
 if TYPE_CHECKING:
     from strawberry import Info
-    from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
-    from strawchemy.strawberry.typing import StrawchemyTypeFromPydantic
 
 
-__all__ = (
-    "default_session_getter",
-    "dto_model_from_type",
-    "pydantic_from_strawberry_type",
-    "strawchemy_type_from_pydantic",
-)
+__all__ = ("default_session_getter", "dto_model_from_type")
 
 
 def default_session_getter(info: Info[Any, Any]) -> Any:
     return info.context.session
 
 
-def pydantic_from_strawberry_type(type_: type[StrawberryTypeFromPydantic[PydanticModel]]) -> type[PydanticModel]:
-    return type_._pydantic_type  # pyright: ignore[reportAttributeAccessIssue]  # noqa: SLF001
-
-
-@overload
-def strawchemy_type_from_pydantic(
-    type_: type[PydanticModel], strict: Literal[False]
-) -> type[StrawchemyTypeFromPydantic[PydanticModel]] | None: ...
-
-
-@overload
-def strawchemy_type_from_pydantic(
-    type_: type[PydanticModel], strict: Literal[True]
-) -> type[StrawchemyTypeFromPydantic[PydanticModel]]: ...
-
-
-@overload
-def strawchemy_type_from_pydantic(
-    type_: type[PydanticModel], strict: bool = False
-) -> type[StrawchemyTypeFromPydantic[PydanticModel]] | None: ...
-
-
-def strawchemy_type_from_pydantic(
-    type_: type[PydanticModel], strict: bool = False
-) -> type[StrawchemyTypeFromPydantic[PydanticModel]] | None:
-    from strawberry.experimental.pydantic import UnregisteredTypeException
-    from strawberry.experimental.pydantic.utils import get_strawberry_type_from_model
-
-    try:
-        return get_strawberry_type_from_model(type_)
-    except UnregisteredTypeException as error:
-        if hasattr(type_, "_strawberry_input_type"):
-            return type_._strawberry_input_type  # pyright: ignore[reportAttributeAccessIssue] # noqa: SLF001
-        if strict:
-            raise UnregisteredTypeException(type_) from error
-        return None
-
-
 def dto_model_from_type(type_: Any) -> Any:
-    try:
-        strawberry_type = pydantic_from_strawberry_type(type_)
-    except AttributeError:
-        strawberry_type = type_
-    return strawberry_type.__dto_model__
+    return type_.__dto_model__
 
 
 def strawberry_contained_types(type_: StrawberryType | Any) -> tuple[Any, ...]:

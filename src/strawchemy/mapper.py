@@ -16,7 +16,7 @@ from .strawberry._field import (
     StrawchemyUpdateMutationField,
 )
 from .strawberry._registry import StrawberryRegistry
-from .strawberry.dto import BooleanFilterDTO, EnumDTO, MappedDataclassGraphQLDTO, OrderByDTO, OrderByEnum
+from .strawberry.dto import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
 from .strawberry.factories.inputs import AggregateFilterDTOFactory, BooleanFilterDTOFactory
 from .strawberry.factories.types import (
     DistinctOnFieldsDTOFactory,
@@ -53,7 +53,7 @@ __all__ = ("Strawchemy",)
 
 class Strawchemy:
     def __init__(self, config: StrawchemyConfig | SupportedDialect) -> None:
-        dataclass_backend = StrawberrryDTOBackend(MappedDataclassGraphQLDTO)
+        dataclass_backend = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO)
 
         self.config = StrawchemyConfig(config) if isinstance(config, str) else config
         self.registry = StrawberryRegistry()
@@ -84,18 +84,6 @@ class Strawchemy:
 
     def _annotation_namespace(self) -> dict[str, Any]:
         return self.registry.namespace("object") | _TYPES_NS
-
-    def clear(self) -> None:
-        self.registry.clear()
-        for factory in (
-            self._filter_factory,
-            self._aggregate_filter_factory,
-            self._order_by_factory,
-            self._distinct_on_enum_factory,
-            self._type_factory,
-            self._aggregation_factory,
-        ):
-            factory.clear()
 
     @cached_property
     def pydantic(self) -> PydanticMapper:

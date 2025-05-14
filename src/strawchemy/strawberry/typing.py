@@ -17,10 +17,10 @@ if TYPE_CHECKING:
         AggregateDTO,
         FilterFunctionInfo,
         GraphQLFilterDTO,
-        MappedDataclassGraphQLDTO,
+        MappedStrawberryGraphQLDTO,
         OrderByDTO,
         OutputFunctionInfo,
-        UnmappedDataclassGraphQLDTO,
+        UnmappedStrawberryGraphQLDTO,
     )
 
 __all__ = (
@@ -32,15 +32,9 @@ __all__ = (
     "SyncSessionGetter",
 )
 
-GraphQLType = Literal["input", "object", "interface", "enum"]
-AsyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnyAsyncSession]"
-SyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnySyncSession]"
-AnySessionGetter: TypeAlias = "AsyncSessionGetter | SyncSessionGetter"
-FilterStatementCallable: TypeAlias = "Callable[[Info[Any, Any]], Select[tuple[Any]]]"
 
-
-T = TypeVar("T")
-QueryObject = TypeVar("QueryObject", bound=Any)
+_T = TypeVar("_T")
+QueryObject = TypeVar("QueryObject", bound="Any")
 GraphQLFilterDTOT = TypeVar("GraphQLFilterDTOT", bound="GraphQLFilterDTO")
 AggregateDTOT = TypeVar("AggregateDTOT", bound="AggregateDTO")
 GraphQLDTOT = TypeVar("GraphQLDTOT", bound="GraphQLDTO[Any]")
@@ -51,15 +45,18 @@ AggregationType = Literal[
     "sum", "numeric", "min_max_datetime", "min_max_date", "min_max_time", "min_max_string", "min_max_numeric"
 ]
 
-QueryHookCallable: TypeAlias = "Callable[..., Any]"
+GraphQLType = Literal["input", "object", "interface", "enum"]
+AsyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnyAsyncSession]"
+SyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnySyncSession]"
+AnySessionGetter: TypeAlias = "AsyncSessionGetter | SyncSessionGetter"
+FilterStatementCallable: TypeAlias = "Callable[[Info[Any, Any]], Select[tuple[Any]]]"
 InputType = Literal["create", "update_by_pk", "update_by_filter"]
 FunctionInfo: TypeAlias = "FilterFunctionInfo | OutputFunctionInfo"
-
-DataclassGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[T] | UnmappedDataclassGraphQLDTO[T]"
-GraphQLDTO: TypeAlias = "DataclassGraphQLDTO[T] | MappedPydanticGraphQLDTO[T]"
-MappedGraphQLDTO: TypeAlias = "MappedDataclassGraphQLDTO[T] | MappedPydanticGraphQLDTO[T]"
-UnmappedGraphQLDTO: TypeAlias = "UnmappedDataclassGraphQLDTO[T]"
-AnyMappedDTO: TypeAlias = "MappedDataclassGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
+StrawberryGraphQLDTO: TypeAlias = "MappedStrawberryGraphQLDTO[_T] | UnmappedStrawberryGraphQLDTO[_T]"
+GraphQLDTO: TypeAlias = "StrawberryGraphQLDTO[_T] | MappedPydanticGraphQLDTO[_T]"
+MappedGraphQLDTO: TypeAlias = "MappedStrawberryGraphQLDTO[_T] | MappedPydanticGraphQLDTO[_T]"
+UnmappedGraphQLDTO: TypeAlias = "UnmappedStrawberryGraphQLDTO[_T]"
+AnyMappedDTO: TypeAlias = "MappedStrawberryGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
 
 
 if TYPE_CHECKING:

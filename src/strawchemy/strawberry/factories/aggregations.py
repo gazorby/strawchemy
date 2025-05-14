@@ -16,7 +16,7 @@ from strawchemy.strawberry.dto import (
     FunctionArgFieldDefinition,
     GraphQLFieldDefinition,
     OutputFunctionInfo,
-    UnmappedDataclassGraphQLDTO,
+    UnmappedStrawberryGraphQLDTO,
 )
 
 from .base import GraphQLDTOFactory
@@ -44,17 +44,19 @@ class _CountFieldsDTOFactory(EnumDTOFactory):
         return f"{base_name}CountFields"
 
 
-class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedDataclassGraphQLDTO[DeclarativeBase]]):
+class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[DeclarativeBase]]):
     types: ClassVar[set[type[Any]]] = set()
 
     def __init__(
         self,
         mapper: Strawchemy,
-        backend: DTOBackend[UnmappedDataclassGraphQLDTO[DeclarativeBase]] | None = None,
+        backend: DTOBackend[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
-        super().__init__(mapper, backend or StrawberrryDTOBackend(UnmappedDataclassGraphQLDTO), handle_cycles, type_map)
+        super().__init__(
+            mapper, backend or StrawberrryDTOBackend(UnmappedStrawberryGraphQLDTO), handle_cycles, type_map
+        )
         self._enum_backend = EnumDTOBackend()
 
     @override
@@ -62,7 +64,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedDataclassGraphQLDTO[Decla
         self,
         field: DTOFieldDefinition[Any, QueryableAttribute[Any]],
         dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[DeclarativeBase]], None],
+        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None],
         has_override: bool = False,
     ) -> bool:
         return (
@@ -78,7 +80,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedDataclassGraphQLDTO[Decla
         model: type[DeclarativeT],
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
-        node: Node[Relation[DeclarativeBase, UnmappedDataclassGraphQLDTO[DeclarativeBase]], None],
+        node: Node[Relation[DeclarativeBase, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None],
         raise_if_no_fields: bool = False,
         *,
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
@@ -98,13 +100,13 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedDataclassGraphQLDTO[Decla
         base: type[Any] | None = None,
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[DeclarativeBase]], None] | None = None,
+        current_node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
         *,
         function: FunctionInfo | None = None,
         **kwargs: Any,
-    ) -> type[UnmappedDataclassGraphQLDTO[DeclarativeBase]]:
+    ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]]:
         return super().factory(
             model,
             dto_config,
@@ -149,7 +151,7 @@ class _NumericFieldsDTOFactory(_FunctionArgDTOFactory):
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
     ) -> str:
         return f"{base_name}NumericFields"
 
@@ -162,7 +164,7 @@ class _MinMaxFieldsDTOFactory(_FunctionArgDTOFactory):
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
     ) -> str:
         return f"{base_name}MinMaxFields"
 
@@ -175,7 +177,7 @@ class _MinMaxDateFieldsDTOFactory(_FunctionArgDTOFactory):
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
     ) -> str:
         return f"{base_name}MinMaxDateFields"
 
@@ -188,7 +190,7 @@ class _MinMaxDateTimeFieldsDTOFactory(_FunctionArgDTOFactory):
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
     ) -> str:
         return f"{base_name}MinMaxDateTimeFields"
 
@@ -201,7 +203,7 @@ class _MinMaxNumericFieldsDTOFactory(_FunctionArgDTOFactory):
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
     ) -> str:
         return f"{base_name}MinMaxNumericFields"
 
@@ -214,7 +216,7 @@ class _MinMaxStringFieldsDTOFactory(_FunctionArgDTOFactory):
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
     ) -> str:
         return f"{base_name}MinMaxStringFields"
 
@@ -227,7 +229,7 @@ class _MinMaxTimeFieldsDTOFactory(_FunctionArgDTOFactory):
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
     ) -> str:
         return f"{base_name}MinMaxTimeFields"
 
@@ -240,7 +242,7 @@ class _SumFieldsDTOFactory(_FunctionArgDTOFactory):
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedDataclassGraphQLDTO[ModelT]], None] | None = None,
+        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
     ) -> str:
         return f"{base_name}SumFields"
 
@@ -390,7 +392,7 @@ class AggregationInspector:
 
     def numeric_field_type(
         self, model: type[DeclarativeBase], dto_config: DTOConfig
-    ) -> type[UnmappedDataclassGraphQLDTO[DeclarativeBase]] | None:
+    ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
             dto = self._numeric_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
         except DTOError:
@@ -399,7 +401,7 @@ class AggregationInspector:
 
     def min_max_field_type(
         self, model: type[DeclarativeBase], dto_config: DTOConfig
-    ) -> type[UnmappedDataclassGraphQLDTO[DeclarativeBase]] | None:
+    ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
             dto = self._min_max_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
         except DTOError:
@@ -408,7 +410,7 @@ class AggregationInspector:
 
     def sum_field_type(
         self, model: type[DeclarativeBase], dto_config: DTOConfig
-    ) -> type[UnmappedDataclassGraphQLDTO[DeclarativeBase]] | None:
+    ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
             dto = self._sum_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
         except DTOError:

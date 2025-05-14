@@ -557,10 +557,6 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             field_def.related_dto = dto
         return dto
 
-    def clear(self) -> None:
-        self.dtos.clear()
-        self._dto_cache.clear()
-
     def type_hint_namespace(self) -> dict[str, Any]:
         return TYPING_NS | self.dtos
 

@@ -33,7 +33,7 @@ from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.strawberry.dto import (
     BooleanFilterDTO,
     EnumDTO,
-    MappedDataclassGraphQLDTO,
+    MappedStrawberryGraphQLDTO,
     OrderByDTO,
     StrawchemyDTOAttributes,
 )
@@ -261,9 +261,9 @@ class StrawchemyField(StrawberryField):
     @classmethod
     def _is_strawchemy_type(
         cls, type_: Any
-    ) -> TypeIs[MappedDataclassGraphQLDTO[Any] | type[MappedDataclassGraphQLDTO[Any]]]:
-        return isinstance(type_, MappedDataclassGraphQLDTO) or (
-            isclass(type_) and issubclass(type_, MappedDataclassGraphQLDTO)
+    ) -> TypeIs[MappedStrawberryGraphQLDTO[Any] | type[MappedStrawberryGraphQLDTO[Any]]]:
+        return isinstance(type_, MappedStrawberryGraphQLDTO) or (
+            isclass(type_) and issubclass(type_, MappedStrawberryGraphQLDTO)
         )
 
     @cached_property

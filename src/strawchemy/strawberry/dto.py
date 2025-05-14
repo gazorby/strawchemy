@@ -481,22 +481,22 @@ class EnumDTO(DTOBase[Any], Enum):
     def field_definition(self) -> GraphQLFieldDefinition: ...
 
 
-class MappedDataclassGraphQLDTO(StrawchemyDTOAttributes, MappedStrawberryDTO[ModelT]): ...
+class MappedStrawberryGraphQLDTO(StrawchemyDTOAttributes, MappedStrawberryDTO[ModelT]): ...
 
 
-class UnmappedDataclassGraphQLDTO(StrawchemyDTOAttributes, StrawberryDTO[ModelT]): ...
+class UnmappedStrawberryGraphQLDTO(StrawchemyDTOAttributes, StrawberryDTO[ModelT]): ...
 
 
-class GraphQLFilterDTO(UnmappedDataclassGraphQLDTO[DeclarativeBase]):
+class GraphQLFilterDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]):
     @property
     def dto_set_fields(self) -> set[str]:
         return {name for name in self.__dto_field_definitions__ if getattr(self, name)}
 
 
-class AggregateDTO(UnmappedDataclassGraphQLDTO[DeclarativeBase]): ...
+class AggregateDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]): ...
 
 
-class AggregationFunctionFilterDTO(UnmappedDataclassGraphQLDTO[DeclarativeBase]):
+class AggregationFunctionFilterDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]):
     __dto_function_info__: ClassVar[FilterFunctionInfo]
 
     arguments: list[_ArgumentValue]

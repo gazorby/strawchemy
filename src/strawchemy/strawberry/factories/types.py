@@ -19,7 +19,7 @@ from strawchemy.strawberry.dto import (
     EnumDTO,
     FunctionFieldDefinition,
     GraphQLFieldDefinition,
-    MappedDataclassGraphQLDTO,
+    MappedStrawberryGraphQLDTO,
 )
 from strawchemy.strawberry.mutation.types import (
     RequiredToManyUpdateInput,
@@ -387,7 +387,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
-        self._identifier_input_dto_builder = StrawberrryDTOBackend(MappedDataclassGraphQLDTO[DeclarativeBase])
+        self._identifier_input_dto_builder = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO[DeclarativeBase])
         self._identifier_input_dto_factory = DTOFactory(self.inspector, self.backend)
 
     def _identifier_input(

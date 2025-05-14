@@ -256,19 +256,3 @@ class StrawberryRegistry:
         strawberry_enum_type = strawberry.enum(cls=enum_type, name=name, description=description, directives=directives)
         self.namespace("enum")[type_name] = strawberry_enum_type
         return strawberry_enum_type
-
-    def clear(self) -> None:
-        """Clear all registered types in the registry.
-
-        This method removes all registered types, including:
-        - Strawberry object types
-        - Input types
-        - Interface types
-        - Enum types
-
-        Note: This is useful when you need to reset the registry to its initial empty state.
-        """
-        self._namespaces.clear()
-        self._type_map.clear()
-        self._type_references.clear()
-        self._names_map.clear()
