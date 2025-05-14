@@ -6,30 +6,29 @@ from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
 
-from typing_extensions import TypeIs
+from msgspec import convert
 
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.nodes import FragmentSpread, InlineFragment, SelectedField, Selection
+from strawchemy.constants import ORDER_BY_KEY
 from strawchemy.dto.base import ModelT
 from strawchemy.exceptions import StrawchemyError
-from strawchemy.graphql.constants import ORDER_BY_KEY
-from strawchemy.graphql.dto import DTOKey, QueryNode, RelationFilterDTO, StrawchemyDTOAttributes
-from strawchemy.strawberry._utils import (
-    dto_model_from_type,
-    pydantic_from_strawberry_type,
-    strawberry_contained_user_type,
+from strawchemy.strawberry._utils import dto_model_from_type, strawberry_contained_user_type
+from strawchemy.strawberry.dto import (
+    DTOKey,
+    OrderByRelationFilterDTO,
+    QueryNode,
+    RelationFilterDTO,
+    StrawchemyDTOAttributes,
 )
-from strawchemy.strawberry.types import error_type_names
+from strawchemy.strawberry.mutation.types import error_type_names
 from strawchemy.utils import camel_to_snake, snake_keys
 
 from ._node import _StrawberryQueryNode
 
 if TYPE_CHECKING:
-    from pydantic import BaseModel
-
     from strawberry import Info
-    from strawberry.experimental.pydantic.conversion_types import StrawberryTypeFromPydantic
     from strawberry.types.field import StrawberryField
     from strawchemy.sqlalchemy._executor import QueryResult
     from strawchemy.sqlalchemy.hook import QueryHook
@@ -38,10 +37,6 @@ if TYPE_CHECKING:
 __all__ = ("GraphQLResult", "StrawchemyRepository")
 
 T = TypeVar("T")
-
-
-def _has_pydantic_type(type_: Any) -> TypeIs[type[StrawberryTypeFromPydantic[BaseModel]]]:
-    return hasattr(type_, "_pydantic_type")
 
 
 @dataclass
@@ -88,7 +83,7 @@ class StrawchemyRepository(Generic[T]):
     root_aggregations: bool = False
     auto_snake_case: bool = True
 
-    _query_hooks: defaultdict[QueryNode[Any, Any], list[QueryHook[Any]]] = dataclasses.field(
+    _query_hooks: defaultdict[QueryNode, list[QueryHook[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(list), init=False
     )
     _tree: _StrawberryQueryNode[T] = dataclasses.field(init=False)
@@ -112,17 +107,19 @@ class StrawchemyRepository(Generic[T]):
     @classmethod
     def _relation_filter(
         cls, selection: SelectedField, strawberry_field: StrawberryField, auto_snake_case: bool = True
-    ) -> RelationFilterDTO[Any]:
+    ) -> RelationFilterDTO:
         argument_types = {arg.python_name: arg.type for arg in strawberry_field.arguments}
         selection_arguments = snake_keys(selection.arguments) if auto_snake_case else selection.arguments
-        if order_by_type := argument_types.get(ORDER_BY_KEY):
-            order_by_model = pydantic_from_strawberry_type(strawberry_contained_user_type(order_by_type))
-            return RelationFilterDTO[order_by_model].model_validate(selection_arguments)
-        return RelationFilterDTO.model_validate(selection_arguments)
+        if order_by_args := selection_arguments.get(ORDER_BY_KEY):
+            if not isinstance(order_by_args, list):
+                selection_arguments[ORDER_BY_KEY] = [selection_arguments[ORDER_BY_KEY]]
+            order_by_model = strawberry_contained_user_type(argument_types[ORDER_BY_KEY])
+            return convert(selection_arguments, type=OrderByRelationFilterDTO[order_by_model], strict=False)
+        return convert(selection_arguments, type=RelationFilterDTO, strict=False)
 
     @classmethod
     def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]] | None:
-        from strawchemy.strawberry import StrawchemyField
+        from strawchemy.strawberry._field import StrawchemyField
 
         return field.query_hook if isinstance(field, StrawchemyField) else None
 
@@ -165,9 +162,7 @@ class StrawchemyRepository(Generic[T]):
             if (hooks := self._get_field_hooks(strawberry_field)) is not None:
                 self._add_query_hooks(hooks, node)
 
-            if _has_pydantic_type(selection_type):
-                dto = pydantic_from_strawberry_type(selection_type)
-            elif has_object_definition(selection_type):
+            if has_object_definition(selection_type):
                 dto = selection_type
             else:
                 msg = f"Unsupported type: {selection_type}"

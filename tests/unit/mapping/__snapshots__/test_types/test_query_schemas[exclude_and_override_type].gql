@@ -24,14 +24,17 @@
     varSamp: FruitNumericFields!
   }
   
+  """GraphQL type"""
   type FruitMinMaxFields {
     sweetness: Int
   }
   
+  """GraphQL type"""
   type FruitNumericFields {
     sweetness: Float
   }
   
+  """GraphQL type"""
   type FruitSumFields {
     sweetness: Int
   }

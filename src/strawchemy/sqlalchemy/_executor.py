@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
 
     from sqlalchemy import Label, Result, Select, StatementLambdaElement
-    from strawchemy.graphql.dto import QueryNode
+    from strawchemy.strawberry.dto import QueryNode
 
     from ._scope import QueryScope
 
@@ -33,9 +33,9 @@ __all__ = ("AsyncQueryExecutor", "NodeResult", "QueryExecutor", "SyncQueryExecut
 class NodeResult(Generic[ModelT]):
     model: ModelT
     computed_values: dict[str, Any]
-    node_key: Callable[[QueryNode[Any, Any]], str]
+    node_key: Callable[[QueryNode], str]
 
-    def value(self, key: QueryNode[Any, Any]) -> Any:
+    def value(self, key: QueryNode) -> Any:
         if key.value.is_computed:
             return self.computed_values[self.node_key(key)]
         return getattr(self.model, key.value.model_field_name)
@@ -59,7 +59,7 @@ class QueryResult(Generic[ModelT]):
             the query.
     """
 
-    node_key: Callable[[QueryNode[Any, Any]], str] = lambda key: str(key)
+    node_key: Callable[[QueryNode], str] = lambda key: str(key)
     nodes: Sequence[ModelT] = dataclasses.field(default_factory=list)
     node_computed_values: Sequence[dict[str, Any]] = dataclasses.field(default_factory=list)
     query_computed_values: defaultdict[str, Any] = dataclasses.field(default_factory=lambda: defaultdict(lambda: None))
@@ -81,7 +81,7 @@ class QueryResult(Generic[ModelT]):
         nodes, computed_values = list(map(list, zip(*filtered, strict=True)))
         return dataclasses.replace(self, nodes=nodes, node_computed_values=computed_values)
 
-    def value(self, key: QueryNode[Any, Any]) -> Any:
+    def value(self, key: QueryNode) -> Any:
         return self.query_computed_values[self.node_key(key)]
 
     def one(self) -> NodeResult[ModelT]:

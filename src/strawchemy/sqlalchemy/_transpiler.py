@@ -23,28 +23,20 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generic, Self, cast, override
 
 from sqlalchemy import Dialect, Label, Select, and_, func, inspect, not_, null, or_, select, true
-from sqlalchemy.orm import (
-    DeclarativeBase,
-    Mapper,
-    QueryableAttribute,
-    RelationshipProperty,
-    aliased,
-    class_mapper,
-    contains_eager,
-    load_only,
-    raiseload,
-)
-from strawchemy.graphql.constants import AGGREGATIONS_KEY
-from strawchemy.graphql.dto import (
+from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
+from sqlalchemy.sql.elements import ColumnElement
+from strawchemy.constants import AGGREGATIONS_KEY
+from strawchemy.strawberry.dto import (
     AggregationFilter,
     BooleanFilterDTO,
     EnumDTO,
     Filter,
     OrderByDTO,
     OrderByEnum,
+    OrderByRelationFilterDTO,
     QueryNode,
 )
-from strawchemy.graphql.filters import GraphQLComparison
+from strawchemy.strawberry.filters import GraphQLComparison
 
 from ._executor import SyncQueryExecutor
 from ._query import (
@@ -134,7 +126,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
 
     def _filter_to_expressions(
         self,
-        dto_filter: GraphQLComparison[DeclarativeBase, QueryableAttribute[Any]],
+        dto_filter: GraphQLComparison,
         override: ColumnElement[Any] | None = None,
         not_null_check: bool = False,
     ) -> list[ColumnElement[bool]]:
@@ -174,11 +166,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
 
     def _gather_conjonctions(
         self,
-        query: Sequence[
-            Filter[DeclarativeBase, QueryableAttribute[Any]]
-            | AggregationFilter[DeclarativeBase, QueryableAttribute[Any]]
-            | GraphQLComparison[DeclarativeBase, QueryableAttribute[Any]]
-        ],
+        query: Sequence[Filter | AggregationFilter | GraphQLComparison],
         not_null_check: bool = False,
     ) -> Conjunction:
         """Gathers all conjunctions from a sequence of filters.
@@ -218,9 +206,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
                 common_join_path = QueryNode.common_path(node_path, common_join_path)
         return Conjunction(bool_expressions, joins, common_join_path)
 
-    def _conjonctions(
-        self, query: Filter[DeclarativeBase, QueryableAttribute[Any]], allow_null: bool = False
-    ) -> Conjunction:
+    def _conjonctions(self, query: Filter, allow_null: bool = False) -> Conjunction:
         """Processes a filter's AND, OR, and NOT conditions into a conjunction.
 
         Args:
@@ -255,9 +241,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             bool_expressions.append(or_expression)
         return Conjunction(bool_expressions, joins, common_path)
 
-    def _aggregation_filter(
-        self, aggregation: AggregationFilter[DeclarativeBase, QueryableAttribute[Any]]
-    ) -> tuple[Join | None, list[ColumnElement[bool]]]:
+    def _aggregation_filter(self, aggregation: AggregationFilter) -> tuple[Join | None, list[ColumnElement[bool]]]:
         """Creates a join and filter expressions for an aggregation filter.
 
         Args:
@@ -439,15 +423,16 @@ class QueryTranspiler(Generic[DeclarativeT]):
         """
         aliased_attribute = self.scope.aliased_attribute(node)
         relation_filter = node.relation_filter
-        if not relation_filter.model_fields_set:
+        if not relation_filter:
             return Join(aliased_attribute, node=node, is_outer=is_outer)
         relationship = node.value.model_field.property
         assert isinstance(relationship, RelationshipProperty)
         target_mapper: Mapper[Any] = relationship.mapper.mapper
         target_alias = aliased(target_mapper, flat=True)
+        order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else ()
         with self._sub_scope(target_mapper.class_, target_alias):
             query = self._build_query(
-                QueryGraph(self.scope, order_by=relation_filter.order_by or []),
+                QueryGraph(self.scope, order_by=order_by),
                 limit=relation_filter.limit,
                 offset=relation_filter.offset,
             )
@@ -537,7 +522,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             subquery_alias=alias,
         )
 
-    def _where(self, query_filter: Filter[DeclarativeBase, QueryableAttribute[Any]], allow_null: bool = False) -> Where:
+    def _where(self, query_filter: Filter, allow_null: bool = False) -> Where:
         """Creates WHERE expressions and joins from a filter.
 
         Args:
@@ -690,8 +675,8 @@ class QueryTranspiler(Generic[DeclarativeT]):
     def select_executor(
         self,
         selection_tree: SQLAlchemyQueryNode | None = None,
-        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        order_by: list[OrderByDTO[DeclarativeBase, QueryableAttribute[Any]]] | None = None,
+        dto_filter: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
@@ -756,9 +741,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             execution_options=execution_options,
         )
 
-    def filter_expressions(
-        self, dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]]
-    ) -> list[ColumnElement[bool]]:
+    def filter_expressions(self, dto_filter: BooleanFilterDTO) -> list[ColumnElement[bool]]:
         query_graph = QueryGraph(self.scope, dto_filter=dto_filter)
         query = self._build_query(query_graph)
         return query.where.expressions if query.where else []

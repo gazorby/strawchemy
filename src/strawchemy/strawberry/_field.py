@@ -27,30 +27,20 @@ from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.base import StrawberryList, StrawberryOptional, StrawberryType, WithStrawberryObjectDefinition
 from strawberry.types.field import UNRESOLVED, StrawberryField
+from strawchemy.constants import DATA_KEY, DISTINCT_ON_KEY, FILTER_KEY, LIMIT_KEY, NODES_KEY, OFFSET_KEY, ORDER_BY_KEY
+from strawchemy.dto.base import MappedDTO
 from strawchemy.dto.types import DTOConfig, Purpose
-from strawchemy.exceptions import InputValidationError
-from strawchemy.graphql.constants import (
-    DATA_KEY,
-    DISTINCT_ON_KEY,
-    FILTER_KEY,
-    LIMIT_KEY,
-    NODES_KEY,
-    OFFSET_KEY,
-    ORDER_BY_KEY,
-)
-from strawchemy.graphql.dto import (
+from strawchemy.strawberry.dto import (
     BooleanFilterDTO,
     EnumDTO,
-    MappedDataclassGraphQLDTO,
-    MappedPydanticGraphQLDTO,
+    MappedStrawberryGraphQLDTO,
     OrderByDTO,
     StrawchemyDTOAttributes,
 )
-from strawchemy.input import Input
-from strawchemy.strawberry.types import ValidationErrorType
-from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
+from strawchemy.strawberry.mutation.input import Input
 from strawchemy.types import DefaultOffsetPagination
 from strawchemy.utils import is_type_hint_optional
+from strawchemy.validation.base import InputValidationError
 
 from ._utils import dto_model_from_type, strawberry_contained_types, strawberry_contained_user_type
 from .exceptions import StrawchemyFieldError
@@ -60,24 +50,25 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Coroutine, Mapping
 
     from sqlalchemy import Select
-    from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+    from sqlalchemy.orm import DeclarativeBase
     from strawberry import BasePermission, Info
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.base import StrawberryObjectDefinition, StrawberryType, WithStrawberryObjectDefinition
     from strawberry.types.fields.resolver import StrawberryResolver
-    from strawchemy.dto.backend.pydantic import MappedPydanticDTO
-    from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.graphql.typing import AnyMappedDTO, MappedGraphQLDTO
+    from strawchemy.sqlalchemy.inspector import SQLAlchemyGraphQLInspector
     from strawchemy.sqlalchemy.typing import QueryHookCallable
-    from strawchemy.strawberry.repository._base import GraphQLResult
+    from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.typing import AnyRepository
+    from strawchemy.validation.base import ValidationProtocol
 
-    from .inspector import _StrawberryModelInspector
+    from .mutation.types import ValidationErrorType
     from .repository import StrawchemySyncRepository
+    from .repository._base import GraphQLResult
     from .typing import (
+        AnyMappedDTO,
         AnySessionGetter,
         FilterStatementCallable,
-        StrawchemyTypeFromPydantic,
+        MappedGraphQLDTO,
         StrawchemyTypeWithStrawberryObjectDefinition,
     )
 
@@ -129,11 +120,11 @@ class StrawchemyField(StrawberryField):
     @override
     def __init__(
         self,
-        inspector: _StrawberryModelInspector[Any, Any],
+        inspector: SQLAlchemyGraphQLInspector,
         session_getter: AnySessionGetter,
         repository_type: AnyRepository,
-        filter_type: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
-        order_by: type[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
+        filter_type: type[BooleanFilterDTO] | None = None,
+        order_by: type[OrderByDTO] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination = False,
         root_aggregations: bool = False,
@@ -246,8 +237,8 @@ class StrawchemyField(StrawberryField):
     def _list_resolver(
         self,
         info: Info,
-        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]] | None = None,
-        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[T, QueryableAttribute[Any]]]] | None = None,
+        filter_input: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
@@ -270,22 +261,20 @@ class StrawchemyField(StrawberryField):
     @classmethod
     def _is_strawchemy_type(
         cls, type_: Any
-    ) -> TypeIs[MappedDataclassGraphQLDTO[Any] | type[MappedDataclassGraphQLDTO[Any]]]:
-        return isinstance(type_, MappedDataclassGraphQLDTO) or (
-            isclass(type_) and issubclass(type_, MappedDataclassGraphQLDTO)
+    ) -> TypeIs[MappedStrawberryGraphQLDTO[Any] | type[MappedStrawberryGraphQLDTO[Any]]]:
+        return isinstance(type_, MappedStrawberryGraphQLDTO) or (
+            isclass(type_) and issubclass(type_, MappedStrawberryGraphQLDTO)
         )
 
     @cached_property
-    def filter(
-        self,
-    ) -> type[StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, QueryableAttribute[Any]]]] | None:
+    def filter(self) -> type[BooleanFilterDTO] | None:
         inner_type = strawberry_contained_user_type(self.type)
         if self._filter is None and self._is_strawchemy_type(inner_type):
             return inner_type.__strawchemy_filter__
         return self._filter
 
     @cached_property
-    def order_by(self) -> type[StrawchemyTypeFromPydantic[OrderByDTO[Any, QueryableAttribute[Any]]]] | None:
+    def order_by(self) -> type[OrderByDTO] | None:
         inner_type = strawberry_contained_user_type(self.type)
         if self._order_by is None and self._is_strawchemy_type(inner_type):
             return inner_type.__strawchemy_order_by__
@@ -340,7 +329,7 @@ class StrawchemyField(StrawberryField):
                         default=None,
                     )
                 )
-        elif issubclass(inner_type, MappedDataclassGraphQLDTO | MappedPydanticGraphQLDTO):
+        elif issubclass(inner_type, MappedDTO):
             model = dto_model_from_type(inner_type)
             id_fields = list(self.inspector.id_field_definitions(model, DTOConfig(Purpose.READ)))
             if len(id_fields) == 1:
@@ -500,13 +489,13 @@ class _StrawchemyInputMutationField(StrawchemyField):
         self,
         input_type: type[MappedGraphQLDTO[T]],
         *args: Any,
-        validation: type[MappedPydanticDTO[T]] | None = None,
+        validation: ValidationProtocol[T] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.is_root_field = True
         self._input_type = input_type
-        self._validation_type = validation
+        self._validation = validation
 
 
 class _StrawchemyMutationField:
@@ -528,9 +517,9 @@ class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
-            input_data = Input(data, self._validation_type)
+            input_data = Input(data, self._validation)
         except InputValidationError as error:
-            return ValidationErrorType.from_pydantic(error.pydantic_error)
+            return error.graphql_type()
         if isinstance(repository, StrawchemyAsyncRepository):
             return self._input_result_async(repository.create(input_data), input_data)
         return self._input_result_sync(repository.create(input_data), input_data)
@@ -560,25 +549,23 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
-            input_data = Input(data, self._validation_type)
+            input_data = Input(data, self._validation)
         except InputValidationError as error:
-            error = ValidationErrorType.from_pydantic(error.pydantic_error)
-            return [error] if isinstance(data, Sequence) else error
+            error_result = error.graphql_type()
+            return [error_result] if isinstance(data, Sequence) else error_result
+
         if isinstance(repository, StrawchemyAsyncRepository):
             return self._input_result_async(repository.update_by_id(input_data), input_data)
         return self._input_result_sync(repository.update_by_id(input_data), input_data)
 
     def _update_by_filter_resolver(
-        self,
-        info: Info,
-        data: AnyMappedDTO,
-        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]],
+        self, info: Info, data: AnyMappedDTO, filter_input: BooleanFilterDTO
     ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
-            input_data = Input(data, self._validation_type)
+            input_data = Input(data, self._validation)
         except InputValidationError as error:
-            return [ValidationErrorType.from_pydantic(error.pydantic_error)]
+            return [error.graphql_type()]
         if isinstance(repository, StrawchemyAsyncRepository):
             return self._list_result_async(repository.update_by_filter(input_data, filter_input))
         return self._list_result_sync(repository.update_by_filter(input_data, filter_input))
@@ -611,7 +598,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
 class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
     def __init__(
         self,
-        input_type: type[StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]]] | None = None,
+        input_type: type[BooleanFilterDTO] | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -622,7 +609,7 @@ class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
     def _delete_resolver(
         self,
         info: Info,
-        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[T, QueryableAttribute[Any]]] | None = None,
+        filter_input: BooleanFilterDTO | None = None,
     ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         if isinstance(repository, StrawchemyAsyncRepository):

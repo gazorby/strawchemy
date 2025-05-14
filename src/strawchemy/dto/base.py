@@ -89,9 +89,10 @@ class ToMappedProtocol(Protocol):
 class DTOBase(Generic[ModelT]):
     """Base class to define DTO mapping classes."""
 
-    __dto_model__: type[ModelT]
-    __dto_config__: ClassVar[DTOConfig]
-    __dto_field_definitions__: ClassVar[dict[str, DTOFieldDefinition[Any, Any]]]
+    if TYPE_CHECKING:
+        __dto_model__: type[ModelT]
+        __dto_config__: ClassVar[DTOConfig]
+        __dto_field_definitions__: ClassVar[dict[str, DTOFieldDefinition[Any, Any]]]
 
 
 class MappedDTO(DTOBase[ModelT]):
@@ -194,8 +195,7 @@ class DTOBackend(Protocol, Generic[DTOBaseT]):
         with contextlib.suppress(NameError):
             dto.__annotations__ = get_type_hints(dto, localns={**TYPING_NS, **namespace}, include_extras=True)
 
-    @classmethod
-    def copy(cls, dto: type[DTOBaseT], name: str) -> type[DTOBaseT]:
+    def copy(self, dto: type[DTOBaseT], name: str) -> type[DTOBaseT]:
         return new_class(name, (dto,))
 
 
@@ -411,11 +411,6 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         has_override: bool,
     ) -> bool:
         """Whether the model field should be excluded from the dto or not."""
-        input_cycle = False
-
-        if dto_config.purpose is Purpose.WRITE:
-            input_cycle = self.inspector.relation_cycle(field, node)
-
         explictly_excluded = node.is_root and field.model_field_name in dto_config.exclude
         explicitly_included = node.is_root and field.model_field_name in dto_config.include
 
@@ -425,7 +420,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             explicitly_included = True
 
         excluded = (explictly_excluded or not explicitly_included) or dto_config.purpose not in field.allowed_purposes
-        return (not has_override and excluded) or input_cycle
+        return not has_override and excluded
 
     def _resolve_basic_type(self, field: DTOFieldDefinition[ModelT, ModelFieldT], dto_config: DTOConfig) -> Any:
         type_hint = self.type_map.get(field.type_hint, field.type_)
@@ -562,10 +557,6 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             field_def.related_dto = dto
         return dto
 
-    def clear(self) -> None:
-        self.dtos.clear()
-        self._dto_cache.clear()
-
     def type_hint_namespace(self) -> dict[str, Any]:
         return TYPING_NS | self.dtos
 
@@ -662,6 +653,8 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         if self.handle_cycles and node.value.dto:
             for incomplete_dto in self._unresolved_refs.pop(name, []):
                 self.backend.update_forward_refs(incomplete_dto, self.type_hint_namespace())
+
+        self.backend.update_forward_refs(dto, self.type_hint_namespace())
 
         for ref in node.value.forward_refs:
             self._unresolved_refs[ref.name].append(dto)

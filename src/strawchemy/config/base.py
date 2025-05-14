@@ -3,14 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
-from strawchemy.sqlalchemy import SQLAlchemyGraphQLInspector
+from strawchemy.sqlalchemy.inspector import SQLAlchemyGraphQLInspector
 from strawchemy.strawberry import default_session_getter
 from strawchemy.strawberry.repository import StrawchemySyncRepository
 
 if TYPE_CHECKING:
     from typing import Any
 
-    from strawchemy.graphql.inspector import GraphQLInspectorProtocol
     from strawchemy.sqlalchemy.typing import FilterMap
     from strawchemy.strawberry.typing import AnySessionGetter
     from strawchemy.typing import AnyRepository, SupportedDialect
@@ -36,7 +35,7 @@ class StrawchemyConfig:
     default_id_field_name: str = "id"
     """Name for primary key fields arguments on primary key resolvers."""
 
-    inspector: GraphQLInspectorProtocol[Any, Any] = field(init=False)
+    inspector: SQLAlchemyGraphQLInspector = field(init=False)
 
     def __post_init__(self) -> None:
         self.inspector = SQLAlchemyGraphQLInspector(self.dialect, filter_overrides=self.filter_overrides)

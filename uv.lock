@@ -1951,6 +1951,9 @@ wheels = [
 mysql = [
     { name = "mysql-connector-python" },
 ]
+postgres = [
+    { name = "psycopg" },
+]
 
 [[package]]
 name = "pytest-lazy-fixtures"
@@ -2361,7 +2364,7 @@ name = "strawchemy"
 version = "0.15.6"
 source = { editable = "." }
 dependencies = [
-    { name = "pydantic" },
+    { name = "msgspec" },
     { name = "sqlalchemy" },
     { name = "strawberry-graphql" },
 ]
@@ -2372,6 +2375,9 @@ geo = [
     { name = "geojson-pydantic" },
     { name = "shapely", version = "2.0.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "shapely", version = "2.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+pydantic = [
+    { name = "pydantic" },
 ]
 
 [package.dev-dependencies]
@@ -2395,7 +2401,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
-    { name = "pytest-databases", extra = ["mysql"] },
+    { name = "pytest-databases", extra = ["mysql", "postgres"] },
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
@@ -2434,7 +2440,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
-    { name = "pytest-databases", extra = ["mysql"] },
+    { name = "pytest-databases", extra = ["mysql", "postgres"] },
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
@@ -2446,12 +2452,13 @@ test = [
 requires-dist = [
     { name = "geoalchemy2", marker = "extra == 'geo'" },
     { name = "geojson-pydantic", marker = "extra == 'geo'" },
-    { name = "pydantic" },
+    { name = "msgspec" },
+    { name = "pydantic", marker = "extra == 'pydantic'" },
     { name = "shapely", marker = "extra == 'geo'" },
     { name = "sqlalchemy", specifier = ">=2.0.10" },
     { name = "strawberry-graphql" },
 ]
-provides-extras = ["geo"]
+provides-extras = ["geo", "pydantic"]
 
 [package.metadata.requires-dev]
 build = [
@@ -2475,7 +2482,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pytest-cov" },
-    { name = "pytest-databases", extras = ["posgres", "mysql"] },
+    { name = "pytest-databases", extras = ["postgres", "mysql"] },
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
@@ -2512,7 +2519,7 @@ test = [
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pytest-cov" },
-    { name = "pytest-databases", extras = ["posgres", "mysql"] },
+    { name = "pytest-databases", extras = ["postgres", "mysql"] },
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },

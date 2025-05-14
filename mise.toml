@@ -84,21 +84,21 @@ description = "Run unit tests"
 depends = "_install"
 alias = "tu"
 usage = 'arg "<test>" default=""'
-run = '{{vars.nox_py13}} -t unit -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+run = '{{vars.nox_py13}} -t unit -- tests/unit {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit:no-extras"]
 description = "Run unit tests without extras dependencies"
 depends = "_install"
 alias = "tug"
 usage = 'arg "<test>" default=""'
-run = '{{vars.nox_py13}} -s unit-no-extras -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+run = '{{vars.nox_py13}} -s unit-no-extras -- tests/unit {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit:coverage"]
 description = "Run unit tests with coverage"
 depends = "_install"
 alias = "tuc"
 usage = 'arg "<test>" default=""'
-run = '{{vars.nox_py13}} -t unit -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
+run = '{{vars.nox_py13}} -t unit -- tests/unit {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration"]
 description = "Run integration tests"

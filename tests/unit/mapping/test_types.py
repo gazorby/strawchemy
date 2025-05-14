@@ -426,6 +426,7 @@ def test_field_order_by_equals_type_order_by() -> None:
         ),
     ],
 )
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
 def test_pydantic_validation(query: str, name: str, is_list: bool) -> None:
     from tests.unit.schemas.pydantic.validation import Mutation
 
@@ -447,6 +448,7 @@ def test_pydantic_validation(query: str, name: str, is_list: bool) -> None:
     ]
 
 
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
 def test_pydantic_validation_nested() -> None:
     from tests.unit.schemas.pydantic.validation import Mutation
 

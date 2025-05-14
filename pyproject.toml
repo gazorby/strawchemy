@@ -26,7 +26,7 @@ classifiers = [
   "Topic :: Software Development",
   "Typing :: Typed",
 ]
-dependencies = ["pydantic", "sqlalchemy>=2.0.10", "strawberry-graphql"]
+dependencies = ["msgspec", "sqlalchemy>=2.0.10", "strawberry-graphql"]
 
 [project.urls]
 Changelog = "https://github.com/gazorby/strawchemy/blob/main/CHANGELOG.md"
@@ -37,6 +37,7 @@ Repository = "https://github.com/gazorby/strawchemy"
 
 [project.optional-dependencies]
 geo = ["GeoAlchemy2", "geojson-pydantic", "shapely"]
+pydantic = ["pydantic"]
 
 [dependency-groups]
 build = ["bump-my-version", "git-cliff", "unasyncd"]
@@ -66,7 +67,7 @@ test = [
   "pytest-asyncio>=0.24",
   "pytest-pretty",
   "pytest-xdist",
-  "pytest-databases[posgres,mysql]",
+  "pytest-databases[postgres,mysql]",
   "pytest-lazy-fixtures",
   "syrupy",
   "sqlparse",

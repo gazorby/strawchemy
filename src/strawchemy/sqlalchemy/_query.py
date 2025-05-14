@@ -21,7 +21,6 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.orm import (
-    DeclarativeBase,
     QueryableAttribute,
     RelationshipDirection,
     RelationshipProperty,
@@ -32,9 +31,9 @@ from sqlalchemy.orm import (
 from sqlalchemy.orm.util import AliasedClass
 from sqlalchemy.sql import ColumnElement, SQLColumnExpression
 from sqlalchemy.sql.elements import NamedColumn
+from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.graph import merge_trees
-from strawchemy.graphql.constants import AGGREGATIONS_KEY, NODES_KEY
-from strawchemy.graphql.dto import (
+from strawchemy.strawberry.dto import (
     BooleanFilterDTO,
     EnumDTO,
     Filter,
@@ -48,15 +47,17 @@ from .exceptions import TranspilingError
 from .typing import DeclarativeT
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.sql._typing import _OnClauseArgument
     from sqlalchemy.sql.selectable import NamedFromClause
     from strawchemy.config.databases import DatabaseFeatures
-    from strawchemy.sqlalchemy._scope import QueryScope
-    from strawchemy.sqlalchemy.typing import SQLAlchemyOrderByNode, SQLAlchemyQueryNode
     from strawchemy.typing import SupportedDialect
 
+    from ._scope import QueryScope
     from .hook import ColumnLoadingMode, QueryHook
+    from .typing import SQLAlchemyOrderByNode, SQLAlchemyQueryNode
 
 __all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
 
@@ -171,11 +172,11 @@ class AggregationJoin(Join):
 class QueryGraph(Generic[DeclarativeT]):
     scope: QueryScope[DeclarativeT]
     selection_tree: SQLAlchemyQueryNode | None = None
-    order_by: list[OrderByDTO[DeclarativeBase, QueryableAttribute[Any]]] = dataclasses.field(default_factory=list)
+    order_by: Sequence[OrderByDTO] = dataclasses.field(default_factory=list)
     distinct_on: list[EnumDTO] = dataclasses.field(default_factory=list)
-    dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None
+    dto_filter: BooleanFilterDTO | None = None
 
-    query_filter: Filter[DeclarativeBase, QueryableAttribute[Any]] | None = dataclasses.field(init=False, default=None)
+    query_filter: Filter | None = dataclasses.field(init=False, default=None)
     where_join_tree: SQLAlchemyQueryNode | None = dataclasses.field(init=False, default=None)
     subquery_join_tree: SQLAlchemyQueryNode | None = dataclasses.field(init=False, default=None)
     root_join_tree: SQLAlchemyQueryNode = dataclasses.field(init=False)
@@ -312,7 +313,7 @@ class DistinctOn:
     query_graph: QueryGraph[Any]
 
     @property
-    def _distinct_on_fields(self) -> list[GraphQLFieldDefinition[Any, Any]]:
+    def _distinct_on_fields(self) -> list[GraphQLFieldDefinition]:
         return [enum.field_definition for enum in self.query_graph.distinct_on]
 
     @property

@@ -6,13 +6,12 @@ from typing import TYPE_CHECKING, ClassVar, override
 from syrupy.exceptions import TaintedSnapshotError
 from syrupy.extensions.amber.serializer import AmberDataSerializer
 from syrupy.extensions.single_file import SingleFileSnapshotExtension, WriteMode
-from tests.utils import sqlalchemy_dataclass_factory, sqlalchemy_pydantic_factory
 
 if TYPE_CHECKING:
     from syrupy.data import SnapshotCollection
     from syrupy.types import PropertyFilter, PropertyMatcher, SerializableData, SerializedData
 
-__all__ = ("sqlalchemy_dataclass_factory", "sqlalchemy_pydantic_factory")
+__all__ = ("GraphQLFileExtension", "SQLFileExtension", "SingleAmberFileExtension")
 
 
 class SingleAmberFileExtension(SingleFileSnapshotExtension):

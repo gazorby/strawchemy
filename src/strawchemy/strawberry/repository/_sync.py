@@ -13,11 +13,10 @@ from ._base import GraphQLResult, StrawchemyRepository
 if TYPE_CHECKING:
     from sqlalchemy import Select
     from strawberry import Info
-    from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.input import Input, InputModel
     from strawchemy.sqlalchemy.typing import AnySyncSession
-    from strawchemy.strawberry.typing import StrawchemyTypeFromPydantic, SyncSessionGetter
-
+    from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.strawberry.mutation.input import Input, InputModel
+    from strawchemy.strawberry.typing import SyncSessionGetter
 
 __all__ = ()
 
@@ -45,16 +44,16 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
 
     def get_one_or_none(
         self,
-        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
-        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
+        filter_input: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> GraphQLResult[Any, T]:
         query_results = self.graphql_repository().get_one(
             selection=self._tree,
-            dto_filter=filter_input.to_pydantic() if filter_input else None,
-            order_by=[value.to_pydantic() for value in order_by or []],
+            dto_filter=filter_input or None,
+            order_by=list(order_by or []),
             distinct_on=distinct_on,
             limit=limit,
             offset=offset,
@@ -64,16 +63,16 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
 
     def get_one(
         self,
-        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
-        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
+        filter_input: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> GraphQLResult[Any, T]:
         query_results = self.graphql_repository().get_one(
             selection=self._tree,
-            dto_filter=filter_input.to_pydantic() if filter_input else None,
-            order_by=[value.to_pydantic() for value in order_by or []],
+            dto_filter=filter_input or None,
+            order_by=list(order_by or []),
             distinct_on=distinct_on,
             limit=limit,
             offset=offset,
@@ -89,16 +88,16 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
 
     def list(
         self,
-        filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None,
-        order_by: list[StrawchemyTypeFromPydantic[OrderByDTO[Any, Any]]] | None = None,
+        filter_input: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
         distinct_on: list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> GraphQLResult[Any, T]:
         query_results = self.graphql_repository().list(
             selection=self._tree,
-            dto_filter=filter_input.to_pydantic() if filter_input else None,
-            order_by=[value.to_pydantic() for value in order_by or []],
+            dto_filter=filter_input or None,
+            order_by=list(order_by or []),
             distinct_on=distinct_on,
             limit=limit,
             offset=offset,
@@ -114,16 +113,10 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
         query_results = self.graphql_repository().update_by_ids(data, self._tree)
         return GraphQLResult(query_results, self._tree)
 
-    def update_by_filter(
-        self, data: Input[InputModel], filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]]
-    ) -> GraphQLResult[InputModel, T]:
-        query_results = self.graphql_repository().update_by_filter(data, filter_input.to_pydantic(), self._tree)
+    def update_by_filter(self, data: Input[InputModel], filter_input: BooleanFilterDTO) -> GraphQLResult[InputModel, T]:
+        query_results = self.graphql_repository().update_by_filter(data, filter_input, self._tree)
         return GraphQLResult(query_results, self._tree)
 
-    def delete(
-        self, filter_input: StrawchemyTypeFromPydantic[BooleanFilterDTO[Any, Any]] | None = None
-    ) -> GraphQLResult[Any, T]:
-        query_results = self.graphql_repository().delete(
-            self._tree, filter_input.to_pydantic() if filter_input else None
-        )
+    def delete(self, filter_input: BooleanFilterDTO | None) -> GraphQLResult[Any, T]:
+        query_results = self.graphql_repository().delete(self._tree, filter_input or None)
         return GraphQLResult(query_results, self._tree)

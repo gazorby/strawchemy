@@ -2,23 +2,25 @@
 # name: test_query_schemas[auto_order_by]
   '''
   input ColorAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input ColorAggregateNumericFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input ColorAggregateOrderBy {
-    count: OrderByEnum
-    maxString: ColorAggregateMinMaxStringFieldsOrderBy
-    minString: ColorAggregateMinMaxStringFieldsOrderBy
-    sum: ColorAggregateNumericFieldsOrderBy
+    count: OrderByEnum = null
+    maxString: ColorAggregateMinMaxStringFieldsOrderBy = null
+    minString: ColorAggregateMinMaxStringFieldsOrderBy = null
+    sum: ColorAggregateNumericFieldsOrderBy = null
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input ColorOrderBy {
-    fruitsAggregate: FruitAggregateOrderBy
+    fruitsAggregate: FruitAggregateOrderBy = null
     fruits: FruitOrderBy
     name: OrderByEnum
     id: OrderByEnum
@@ -48,39 +50,43 @@
   }
   
   input FruitAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input FruitAggregateNumericFieldsOrderBy {
-    sweetness: OrderByEnum
+    sweetness: OrderByEnum = null
   }
   
   input FruitAggregateOrderBy {
-    avg: FruitAggregateNumericFieldsOrderBy
-    count: OrderByEnum
-    max: FruitAggregateNumericFieldsOrderBy
-    maxString: FruitAggregateMinMaxStringFieldsOrderBy
-    min: FruitAggregateNumericFieldsOrderBy
-    minString: FruitAggregateMinMaxStringFieldsOrderBy
-    stddevPop: FruitAggregateNumericFieldsOrderBy
-    stddevSamp: FruitAggregateNumericFieldsOrderBy
-    sum: FruitAggregateNumericFieldsOrderBy
-    varPop: FruitAggregateNumericFieldsOrderBy
-    varSamp: FruitAggregateNumericFieldsOrderBy
+    avg: FruitAggregateNumericFieldsOrderBy = null
+    count: OrderByEnum = null
+    max: FruitAggregateNumericFieldsOrderBy = null
+    maxString: FruitAggregateMinMaxStringFieldsOrderBy = null
+    min: FruitAggregateNumericFieldsOrderBy = null
+    minString: FruitAggregateMinMaxStringFieldsOrderBy = null
+    stddevPop: FruitAggregateNumericFieldsOrderBy = null
+    stddevSamp: FruitAggregateNumericFieldsOrderBy = null
+    sum: FruitAggregateNumericFieldsOrderBy = null
+    varPop: FruitAggregateNumericFieldsOrderBy = null
+    varSamp: FruitAggregateNumericFieldsOrderBy = null
   }
   
+  """GraphQL type"""
   type FruitMinMaxFields {
     name: String
     sweetness: Int
   }
   
+  """GraphQL type"""
   type FruitNumericFields {
     sweetness: Float
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input FruitOrderBy {
-    colorAggregate: ColorAggregateOrderBy
+    colorAggregate: ColorAggregateOrderBy = null
     color: ColorOrderBy
     name: OrderByEnum
     colorId: OrderByEnum
@@ -88,6 +94,7 @@
     id: OrderByEnum
   }
   
+  """GraphQL type"""
   type FruitSumFields {
     name: String
     sweetness: Int
@@ -111,31 +118,34 @@
   }
   
   input GroupAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input GroupAggregateNumericFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input GroupAggregateOrderBy {
-    count: OrderByEnum
-    maxString: GroupAggregateMinMaxStringFieldsOrderBy
-    minString: GroupAggregateMinMaxStringFieldsOrderBy
-    sum: GroupAggregateNumericFieldsOrderBy
+    count: OrderByEnum = null
+    maxString: GroupAggregateMinMaxStringFieldsOrderBy = null
+    minString: GroupAggregateMinMaxStringFieldsOrderBy = null
+    sum: GroupAggregateNumericFieldsOrderBy = null
   }
   
+  """GraphQL type"""
   type GroupMinMaxFields {
     name: String
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input GroupOrderBy {
-    tagAggregate: TagAggregateOrderBy
+    tagAggregate: TagAggregateOrderBy = null
     tag: TagOrderBy
-    usersAggregate: UserAggregateOrderBy
+    usersAggregate: UserAggregateOrderBy = null
     users: UserOrderBy
-    colorAggregate: ColorAggregateOrderBy
+    colorAggregate: ColorAggregateOrderBy = null
     color: ColorOrderBy
     name: OrderByEnum
     tagId: OrderByEnum
@@ -143,6 +153,7 @@
     id: OrderByEnum
   }
   
+  """GraphQL type"""
   type GroupSumFields {
     name: String
   }
@@ -176,23 +187,25 @@
   }
   
   input TagAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input TagAggregateNumericFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input TagAggregateOrderBy {
-    count: OrderByEnum
-    maxString: TagAggregateMinMaxStringFieldsOrderBy
-    minString: TagAggregateMinMaxStringFieldsOrderBy
-    sum: TagAggregateNumericFieldsOrderBy
+    count: OrderByEnum = null
+    maxString: TagAggregateMinMaxStringFieldsOrderBy = null
+    minString: TagAggregateMinMaxStringFieldsOrderBy = null
+    sum: TagAggregateNumericFieldsOrderBy = null
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input TagOrderBy {
-    groupsAggregate: GroupAggregateOrderBy
+    groupsAggregate: GroupAggregateOrderBy = null
     groups: GroupOrderBy
     name: OrderByEnum
     id: OrderByEnum
@@ -219,29 +232,32 @@
   }
   
   input UserAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input UserAggregateNumericFieldsOrderBy {
-    name: OrderByEnum
+    name: OrderByEnum = null
   }
   
   input UserAggregateOrderBy {
-    count: OrderByEnum
-    maxString: UserAggregateMinMaxStringFieldsOrderBy
-    minString: UserAggregateMinMaxStringFieldsOrderBy
-    sum: UserAggregateNumericFieldsOrderBy
+    count: OrderByEnum = null
+    maxString: UserAggregateMinMaxStringFieldsOrderBy = null
+    minString: UserAggregateMinMaxStringFieldsOrderBy = null
+    sum: UserAggregateNumericFieldsOrderBy = null
   }
   
+  """GraphQL type"""
   type UserMinMaxFields {
     name: String
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input UserOrderBy {
-    groupAggregate: GroupAggregateOrderBy
+    groupAggregate: GroupAggregateOrderBy = null
     group: GroupOrderBy
-    tagAggregate: TagAggregateOrderBy
+    tagAggregate: TagAggregateOrderBy = null
     tag: TagOrderBy
     name: OrderByEnum
     groupId: OrderByEnum
@@ -249,6 +265,7 @@
     id: OrderByEnum
   }
   
+  """GraphQL type"""
   type UserSumFields {
     name: String
   }

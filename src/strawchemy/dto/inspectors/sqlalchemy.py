@@ -11,6 +11,7 @@ from typing_extensions import TypeIs
 
 from sqlalchemy import Column, Sequence, SQLColumnExpression, event, inspect, orm, sql
 from sqlalchemy.orm import (
+    NO_VALUE,
     ColumnProperty,
     DeclarativeBase,
     Mapped,
@@ -198,8 +199,6 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                         or "context" not in signature(default_callable).parameters
                     ):
                         default_factory = lambda: default.arg({})  # noqa: E731
-                    else:
-                        default = DTO_MISSING
                 elif isinstance(default, Sequence):
                     default = DTO_UNSET
                 else:
@@ -211,6 +210,9 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             default_factory = list
         elif default is DTO_MISSING:
             default = None
+
+        if default_factory is not DTO_MISSING:
+            return DTO_MISSING, default_factory
         return default, default_factory
 
     def _field_config(self, elem: MapperProperty[Any]) -> DTOFieldConfig:
@@ -234,6 +236,10 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     @classmethod
     def pk_attributes(cls, mapper: Mapper[Any]) -> list[QueryableAttribute[Any]]:
         return [mapper.attrs[column.key].class_attribute for column in mapper.primary_key]
+
+    @classmethod
+    def loaded_attributes(cls, model: DeclarativeBase) -> set[str]:
+        return {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
 
     @override
     def get_type_hints(self, type_: Any, include_extras: bool = True) -> dict[str, Any]:

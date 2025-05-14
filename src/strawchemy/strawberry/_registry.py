@@ -12,12 +12,11 @@ from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
-from strawchemy.strawberry import pydantic as strawberry_pydantic
 
-from ._utils import strawberry_contained_types, strawchemy_type_from_pydantic
+from ._utils import strawberry_contained_types
 
 try:
-    from strawchemy.graphql.filters.geo import GeoComparison
+    from strawchemy.strawberry.filters.geo import GeoComparison
 
     geo_comparison = GeoComparison
 except ModuleNotFoundError:  # pragma: no cover
@@ -29,7 +28,6 @@ if TYPE_CHECKING:
     from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
     from strawberry.types.arguments import StrawberryArgument
     from strawberry.types.base import WithStrawberryObjectDefinition
-    from strawchemy.graphql.filters import AnyGraphQLComparison
     from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
     from strawchemy.types import DefaultOffsetPagination
 
@@ -63,7 +61,10 @@ class _TypeReference:
     def _set_type(self, strawberry_type: type[WithStrawberryObjectDefinition] | StrawberryContainer) -> None:
         if isinstance(self.ref_holder, StrawberryField):
             self.ref_holder.type = strawberry_type
-        self.ref_holder.type_annotation = StrawberryAnnotation(strawberry_type)
+        self.ref_holder.type_annotation = StrawberryAnnotation(
+            strawberry_type,
+            namespace=self.ref_holder.type_annotation.namespace if self.ref_holder.type_annotation else None,
+        )
 
     def update_type(self, strawberry_type: type[WithStrawberryObjectDefinition]) -> None:
         if isinstance(self.ref_holder.type, StrawberryContainer):
@@ -218,7 +219,7 @@ class StrawberryRegistry:
     def namespace(self, graphql_type: GraphQLType) -> dict[str, type[Any]]:
         return self._namespaces[graphql_type]
 
-    def register_dataclass(
+    def register_type(
         self,
         type_: type[Any],
         type_info: RegistryTypeInfo,
@@ -242,45 +243,6 @@ class StrawberryRegistry:
         self._register_type(type_info, strawberry_type)
         return strawberry_type
 
-    def register_pydantic(
-        self,
-        pydantic_type: type[PydanticModel],
-        type_info: RegistryTypeInfo,
-        all_fields: bool = True,
-        fields: list[str] | None = None,
-        partial: bool = False,
-        partial_fields: set[str] | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        use_pydantic_alias: bool = True,
-        base: type[Any] | None = None,
-    ) -> type[StrawberryTypeFromPydantic[PydanticModel]]:
-        self._check_conflicts(type_info)
-        strawberry_attr = "_strawberry_input_type" if type_info.graphql_type == "input" else "_strawberry_type"
-        if existing := strawchemy_type_from_pydantic(pydantic_type):
-            return existing
-        if existing := self._get(type_info):
-            setattr(pydantic_type, strawberry_attr, existing)
-            return existing
-
-        base = base if base is not None else type(type_info.name, (), {})
-
-        strawberry_type = strawberry_pydantic.type(
-            pydantic_type,
-            is_input=type_info.graphql_type == "input",
-            is_interface=type_info.graphql_type == "interface",
-            all_fields=all_fields,
-            fields=fields,
-            partial=partial,
-            name=type_info.name,
-            description=description,
-            directives=directives,
-            use_pydantic_alias=use_pydantic_alias,
-            partial_fields=partial_fields,
-        )(base)
-        self._register_type(type_info, strawberry_type)
-        return strawberry_type
-
     def register_enum(
         self,
         enum_type: type[EnumT],
@@ -294,41 +256,3 @@ class StrawberryRegistry:
         strawberry_enum_type = strawberry.enum(cls=enum_type, name=name, description=description, directives=directives)
         self.namespace("enum")[type_name] = strawberry_enum_type
         return strawberry_enum_type
-
-    def register_comparison_type(
-        self, comparison_type: type[AnyGraphQLComparison]
-    ) -> type[StrawberryTypeFromPydantic[AnyGraphQLComparison]]:
-        type_info = RegistryTypeInfo(name=comparison_type.comparison_type_name(), graphql_type="input")
-        if geo_comparison is not None and issubclass(comparison_type, geo_comparison):
-            from .geo import StrawberryGeoComparison
-
-            return self.register_pydantic(
-                comparison_type,
-                type_info,
-                partial=True,
-                all_fields=False,
-                base=StrawberryGeoComparison,
-            )
-
-        return self.register_pydantic(
-            comparison_type,
-            type_info,
-            description=comparison_type.field_description(),
-            partial=True,
-        )
-
-    def clear(self) -> None:
-        """Clear all registered types in the registry.
-
-        This method removes all registered types, including:
-        - Strawberry object types
-        - Input types
-        - Interface types
-        - Enum types
-
-        Note: This is useful when you need to reset the registry to its initial empty state.
-        """
-        self._namespaces.clear()
-        self._type_map.clear()
-        self._type_references.clear()
-        self._names_map.clear()

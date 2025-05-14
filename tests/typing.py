@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Protocol, TypeAlias
 
 if TYPE_CHECKING:
-    from strawchemy.dto.backend.dataclass import MappedDataclassDTO
     from strawchemy.dto.backend.pydantic import MappedPydanticDTO
     from strawchemy.dto.base import DTOFactory
 
@@ -11,9 +10,8 @@ if TYPE_CHECKING:
     from strawberry.types.execution import ExecutionResult
 
 
-MappedDataclassFactory: TypeAlias = "DTOFactory[DeclarativeBase, QueryableAttribute[Any], MappedDataclassDTO[Any]]"
 MappedPydanticFactory: TypeAlias = "DTOFactory[DeclarativeBase, QueryableAttribute[Any], MappedPydanticDTO[Any]]"
-AnyFactory: TypeAlias = "MappedDataclassFactory | MappedPydanticFactory"
+AnyFactory: TypeAlias = "MappedPydanticFactory"
 AnyQueryExecutor: TypeAlias = "SyncQueryExecutor | AsyncQueryExecutor"
 
 

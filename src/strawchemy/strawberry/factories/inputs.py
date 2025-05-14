@@ -1,17 +1,20 @@
 from __future__ import annotations
 
-import dataclasses
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
-from strawchemy.dto.backend.pydantic import PydanticDTOBackend
-from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, ModelT, Relation
+from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+from strawberry import UNSET
+from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
+from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, Relation
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOMissingType, Purpose
 from strawchemy.graph import Node
-from strawchemy.graphql.dto import (
+from strawchemy.strawberry._registry import RegistryTypeInfo
+from strawchemy.strawberry.dto import (
     AggregateFieldDefinition,
     AggregateFilterDTO,
     AggregationFunctionFilterDTO,
+    BooleanFilterDTO,
     DTOKey,
     FilterFunctionInfo,
     FunctionArgFieldDefinition,
@@ -20,54 +23,99 @@ from strawchemy.graphql.dto import (
     OrderByDTO,
     OrderByEnum,
 )
-from strawchemy.graphql.inspector import GraphQLInspectorProtocol
-from strawchemy.graphql.typing import AggregateDTOT, AggregationFunction, GraphQLFilterDTOT
+from strawchemy.strawberry.typing import AggregationFunction, GraphQLFilterDTOT
 from strawchemy.utils import snake_to_camel
 
 from .aggregations import AggregationInspector
-from .base import GraphQLDTOFactory
+from .base import StrawchemyUnMappedDTOFactory, UnmappedGraphQLDTOT
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Callable, Generator, Mapping, Sequence
 
+    from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+    from strawchemy import Strawchemy
+    from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, Relation
+    from strawchemy.dto.types import ExcludeFields, IncludeFields
     from strawchemy.graph import Node
-    from strawchemy.graphql.filters import GraphQLFilter, OrderComparison
-    from strawchemy.graphql.inspector import GraphQLInspectorProtocol
+    from strawchemy.sqlalchemy.typing import DeclarativeT
+    from strawchemy.strawberry.filters import GraphQLFilter
+    from strawchemy.strawberry.typing import GraphQLType
 
 
 T = TypeVar("T")
 
 
-class FilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT]):
+class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLDTOT]):
+    @classmethod
+    @override
+    def graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
+        return "input"
+
+    @override
+    def input(
+        self,
+        model: type[DeclarativeT],
+        *,
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool | None = None,
+        type_map: Mapping[Any, Any] | None = None,
+        aliases: Mapping[str, str] | None = None,
+        alias_generator: Callable[[str], str] | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        directives: Sequence[object] | None = (),
+        override: bool = False,
+        purpose: Purpose = Purpose.READ,
+        **kwargs: Any,
+    ) -> Callable[[type[Any]], type[UnmappedGraphQLDTOT]]:
+        return self._input_wrapper(
+            model=model,
+            include=include,
+            exclude=exclude,
+            partial=partial,
+            type_map=type_map,
+            aliases=aliases,
+            alias_generator=alias_generator,
+            name=name,
+            description=description,
+            directives=directives,
+            override=override,
+            purpose=purpose,
+            **kwargs,
+        )
+
+
+class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
     def __init__(
         self,
-        inspector: GraphQLInspectorProtocol[Any, ModelFieldT],
+        mapper: Strawchemy,
         backend: DTOBackend[GraphQLFilterDTOT],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_filter_factory: AggregateFilterDTOFactory[ModelT, ModelFieldT] | None = None,
+        aggregation_filter_factory: AggregateFilterDTOFactory | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(inspector, backend, handle_cycles, type_map, **kwargs)
-        self._aggregation_filter_factory = aggregation_filter_factory or AggregateFilterDTOFactory(inspector)
+        super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
+        self._aggregation_filter_factory = aggregation_filter_factory or AggregateFilterDTOFactory(mapper)
 
-    def _filter_type(self, field: DTOFieldDefinition[ModelT, ModelFieldT]) -> type[GraphQLFilter[ModelT, ModelFieldT]]:
+    def _filter_type(self, field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]) -> type[GraphQLFilter]:
         return self.inspector.get_field_comparison(field)
 
     def _aggregation_field(
-        self,
-        field_def: DTOFieldDefinition[ModelT, ModelFieldT],
-        dto_config: DTOConfig,
-    ) -> GraphQLFieldDefinition[ModelT, ModelFieldT]:
+        self, field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
+    ) -> GraphQLFieldDefinition:
         related_model = self.inspector.relation_model(field_def.model_field)
+        type_hint = self._aggregation_filter_factory.factory(
+            model=related_model, dto_config=dto_config, parent_field_def=field_def
+        )
         return AggregateFieldDefinition(
             dto_config=dto_config,
             model=related_model,
             _model_field=field_def.model_field,
             model_field_name=f"{field_def.name}_aggregate",
-            type_hint=self._aggregation_filter_factory.factory(
-                model=related_model, dto_config=dto_config, parent_field_def=field_def
-            ),
+            type_hint=type_hint | None,
+            default=UNSET,
         )
 
     @override
@@ -78,16 +126,16 @@ class FilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT]
     def iter_field_definitions(
         self,
         name: str,
-        model: type[T],
+        model: type[DeclarativeT],
         dto_config: DTOConfig,
-        base: type[DTOBase[ModelT]] | None,
-        node: Node[Relation[ModelT, GraphQLFilterDTOT], None],
+        base: type[DTOBase[DeclarativeBase]] | None,
+        node: Node[Relation[DeclarativeBase, GraphQLFilterDTOT], None],
         raise_if_no_fields: bool = False,
         *,
         aggregate_filters: bool = False,
-        field_map: dict[DTOKey, GraphQLFieldDefinition[Any, Any]] | None = None,
+        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
-    ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT], None, None]:
+    ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], None, None]:
         field_map = field_map if field_map is not None else {}
         for field in super().iter_field_definitions(
             name, model, dto_config, base, node, raise_if_no_fields, field_map=field_map, **kwargs
@@ -105,7 +153,7 @@ class FilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT]
                 comparison_type = self._filter_type(field)
                 field.type_ = comparison_type | None
 
-            field.default = None
+            field.default = UNSET
             field.default_factory = DTO_MISSING
             yield field
 
@@ -118,11 +166,11 @@ class FilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT]
     @override
     def factory(
         self,
-        model: type[T],
+        model: type[DeclarativeT],
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, GraphQLFilterDTOT], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
@@ -144,76 +192,38 @@ class FilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, GraphQLFilterDTOT]
         )
 
 
-class AggregateDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, AggregateDTOT]):
+class BooleanFilterDTOFactory(_FilterDTOFactory[BooleanFilterDTO]):
     def __init__(
         self,
-        inspector: GraphQLInspectorProtocol[Any, ModelFieldT],
-        backend: DTOBackend[AggregateDTOT],
+        mapper: Strawchemy,
+        backend: DTOBackend[BooleanFilterDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_builder: AggregationInspector[ModelT, ModelFieldT] | None = None,
+        aggregate_filter_factory: AggregateFilterDTOFactory | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(inspector, backend, handle_cycles, type_map, **kwargs)
-        self._aggregation_builder = aggregation_builder or AggregationInspector(inspector)
-
-    @override
-    def type_description(self) -> str:
-        return "Aggregation fields"
-
-    @override
-    def dto_name(
-        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, AggregateDTOT], None] | None = None
-    ) -> str:
-        return f"{base_name}Aggregate"
-
-    @override
-    def _factory(
-        self,
-        name: str,
-        model: type[T],
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, AggregateDTOT], None],
-        base: type[Any] | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
-        raise_if_no_fields: bool = False,
-        backend_kwargs: dict[str, Any] | None = None,
-        field_map: dict[DTOKey, GraphQLFieldDefinition[Any, Any]] | None = None,
-        **kwargs: Any,
-    ) -> type[AggregateDTOT]:
-        field_map = field_map if field_map is not None else {}
-        model_field = parent_field_def.model_field if parent_field_def else None
-        as_partial_config = dataclasses.replace(dto_config, partial=True)
-        field_definitions: list[FunctionFieldDefinition[T, ModelFieldT]] = [
-            FunctionFieldDefinition[T, ModelFieldT](
-                dto_config=dto_config,
-                model=model,
-                _model_field=model_field if model_field is not None else DTO_MISSING,
-                model_field_name=aggregation.function,
-                type_hint=aggregation.output_type,
-                _function=aggregation,
-                default=aggregation.default,
-            )
-            for aggregation in self._aggregation_builder.output_functions(model, as_partial_config)
-        ]
-
-        root_key = DTOKey.from_dto_node(node)
-        field_map.update({root_key + field.model_field_name: field for field in field_definitions})
-        return self.backend.build(name, model, field_definitions, **(backend_kwargs or {}))
+        super().__init__(
+            mapper,
+            backend or StrawberrryDTOBackend(BooleanFilterDTO),
+            handle_cycles,
+            type_map,
+            aggregation_filter_factory=aggregate_filter_factory,
+            **kwargs,
+        )
 
 
-class AggregateFilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, AggregateFilterDTO[ModelT]]):
+class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]):
     def __init__(
         self,
-        inspector: GraphQLInspectorProtocol[Any, ModelFieldT],
-        backend: DTOBackend[AggregateFilterDTO[ModelT]] | None = None,
+        mapper: Strawchemy,
+        backend: DTOBackend[AggregateFilterDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_builder: AggregationInspector[Any, ModelFieldT] | None = None,
+        aggregation_builder: AggregationInspector | None = None,
     ) -> None:
-        super().__init__(inspector, backend or PydanticDTOBackend(AggregateFilterDTO), handle_cycles, type_map)
-        self.aggregation_builder = aggregation_builder or AggregationInspector(inspector)
-        self._filter_function_builder = PydanticDTOBackend(AggregationFunctionFilterDTO)
+        super().__init__(mapper, backend or StrawberrryDTOBackend(AggregateFilterDTO), handle_cycles, type_map)
+        self.aggregation_builder = aggregation_builder or AggregationInspector(mapper)
+        self._filter_function_builder = StrawberrryDTOBackend(AggregationFunctionFilterDTO)
 
     @override
     def type_description(self) -> str:
@@ -224,19 +234,19 @@ class AggregateFilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, Aggregate
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, AggregateFilterDTO[ModelT]], None] | None = None,
+        node: Node[Relation[Any, AggregateFilterDTO], None] | None = None,
     ) -> str:
         return f"{base_name}AggregateBoolExp"
 
     def _aggregate_function_type(
         self,
-        model: type[T],
+        model: type[DeclarativeT],
         dto_config: DTOConfig,
         dto_name: str,
-        aggregation: FilterFunctionInfo[T, ModelFieldT, OrderComparison[Any, Any, Any]],
-        model_field: DTOMissingType | ModelFieldT,
-        parent_field_def: DTOFieldDefinition[ModelT, Any] | None,
-    ) -> type[AggregationFunctionFilterDTO[ModelT]]:
+        aggregation: FilterFunctionInfo,
+        model_field: DTOMissingType | QueryableAttribute[Any],
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None,
+    ) -> type[AggregationFunctionFilterDTO]:
         dto_config = DTOConfig(Purpose.WRITE)
         dto = self._filter_function_builder.build(
             name=f"{dto_name}{snake_to_camel(aggregation.field_name).capitalize()}",
@@ -279,40 +289,46 @@ class AggregateFilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, Aggregate
         }
         dto.__strawchemy_description__ = "Field filtering information"
         dto.__dto_function_info__ = aggregation
-        return dto
+        return self._mapper.registry.register_type(
+            dto,
+            RegistryTypeInfo(dto.__name__, "input"),
+            description=f"Boolean expression to compare {aggregation.function} aggregation.",
+        )
 
     @override
     def _factory(
         self,
         name: str,
-        model: type[T],
+        model: type[DeclarativeT],
         dto_config: DTOConfig,
-        node: Node[Relation[Any, AggregateFilterDTO[ModelT]], None],
+        node: Node[Relation[Any, AggregateFilterDTO], None],
         base: type[Any] | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
-    ) -> type[AggregateFilterDTO[ModelT]]:
+    ) -> type[AggregateFilterDTO]:
         function_aliases: dict[str, AggregationFunction] = {}
-        field_defs: list[GraphQLFieldDefinition[T, ModelFieldT]] = []
+        field_defs: list[GraphQLFieldDefinition] = []
         model_field = DTO_MISSING if parent_field_def is None else parent_field_def.model_field
         for aggregation in self.aggregation_builder.filter_functions(model, dto_config):
             if aggregation.function != aggregation.field_name:
                 function_aliases[aggregation.field_name] = aggregation.function
+            type_hint = self._aggregate_function_type(
+                model=model,
+                dto_config=dto_config,
+                dto_name=name,
+                parent_field_def=parent_field_def,
+                model_field=model_field,
+                aggregation=aggregation,
+            )
             field_defs.append(
                 FunctionFieldDefinition(
                     dto_config=dto_config,
                     model=model,
                     model_field_name=aggregation.field_name,
-                    type_hint=self._aggregate_function_type(
-                        model=model,
-                        dto_config=dto_config,
-                        dto_name=name,
-                        parent_field_def=parent_field_def,
-                        model_field=model_field,
-                        aggregation=aggregation,
-                    ),
+                    type_hint=type_hint | None,
+                    default=UNSET,
                     _model_field=model_field,
                     _function=aggregation,
                 ),
@@ -326,18 +342,18 @@ class AggregateFilterDTOFactory(GraphQLDTOFactory[ModelT, ModelFieldT, Aggregate
         return dto
 
 
-class OrderByDTOFactory(FilterDTOFactory[ModelT, ModelFieldT, OrderByDTO[ModelT, ModelFieldT]]):
+class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
     def __init__(
         self,
-        inspector: GraphQLInspectorProtocol[Any, ModelFieldT],
-        backend: DTOBackend[OrderByDTO[ModelT, ModelFieldT]] | None = None,
+        mapper: Strawchemy,
+        backend: DTOBackend[OrderByDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_filter_factory: AggregateFilterDTOFactory[ModelT, ModelFieldT] | None = None,
+        aggregation_filter_factory: AggregateFilterDTOFactory | None = None,
     ) -> None:
         super().__init__(
-            inspector,
-            backend or PydanticDTOBackend(OrderByDTO),
+            mapper,
+            backend or StrawberrryDTOBackend(OrderByDTO),
             handle_cycles,
             type_map,
             aggregation_filter_factory,
@@ -349,10 +365,10 @@ class OrderByDTOFactory(FilterDTOFactory[ModelT, ModelFieldT, OrderByDTO[ModelT,
 
     def _order_by_aggregation_fields(
         self,
-        aggregation: FilterFunctionInfo[ModelT, ModelFieldT, OrderComparison[Any, Any, Any]],
+        aggregation: FilterFunctionInfo,
         model: type[Any],
         dto_config: DTOConfig,
-    ) -> type[OrderByDTO[ModelT, ModelFieldT]]:
+    ) -> type[OrderByDTO]:
         field_defs = [
             FunctionArgFieldDefinition(
                 dto_config=dto_config,
@@ -371,10 +387,10 @@ class OrderByDTOFactory(FilterDTOFactory[ModelT, ModelFieldT, OrderByDTO[ModelT,
             key + name: FunctionArgFieldDefinition.from_field(field, function=aggregation)
             for name, field in self.inspector.field_definitions(model, dto_config)
         }
-        return dto
+        return self._mapper.registry.register_type(dto, RegistryTypeInfo(dto.__name__, "input"))
 
-    def _order_by_aggregation(self, model: type[Any], dto_config: DTOConfig) -> type[OrderByDTO[ModelT, ModelFieldT]]:
-        field_definitions: list[GraphQLFieldDefinition[ModelT, ModelFieldT]] = []
+    def _order_by_aggregation(self, model: type[Any], dto_config: DTOConfig) -> type[OrderByDTO]:
+        field_definitions: list[GraphQLFieldDefinition] = []
         for aggregation in self._aggregation_filter_factory.aggregation_builder.filter_functions(model, dto_config):
             if aggregation.require_arguments:
                 type_hint = self._order_by_aggregation_fields(aggregation, model, dto_config)
@@ -388,26 +404,28 @@ class OrderByDTOFactory(FilterDTOFactory[ModelT, ModelFieldT, OrderByDTO[ModelT,
                     dto_config=dto_config,
                     model=model,
                     model_field_name=aggregation.field_name,
-                    type_hint=type_hint,
+                    type_hint=type_hint | None,
+                    default=UNSET,
                     _function=aggregation,
                 )
             )
 
         dto = self.backend.build(f"{model.__name__}AggregateOrderBy", model, field_definitions)
         dto.__strawchemy_field_map__ = {DTOKey([model, field.name]): field for field in field_definitions}
-        return dto
+        return self._mapper.registry.register_type(dto, RegistryTypeInfo(dto.__name__, "input"))
 
     @override
     def _aggregation_field(
-        self, field_def: DTOFieldDefinition[ModelT, ModelFieldT], dto_config: DTOConfig
-    ) -> GraphQLFieldDefinition[ModelT, ModelFieldT]:
+        self, field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
+    ) -> GraphQLFieldDefinition:
         related_model = self.inspector.relation_model(field_def.model_field)
         return AggregateFieldDefinition(
             dto_config=dto_config,
             model=related_model,
             _model_field=field_def.model_field,
             model_field_name=f"{field_def.name}_aggregate",
-            type_hint=self._order_by_aggregation(related_model, dto_config),
+            type_hint=self._order_by_aggregation(related_model, dto_config) | None,
+            default=UNSET,
         )
 
     @override
@@ -415,25 +433,25 @@ class OrderByDTOFactory(FilterDTOFactory[ModelT, ModelFieldT, OrderByDTO[ModelT,
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, OrderByDTO[ModelT, ModelFieldT]], None] | None = None,
+        node: Node[Relation[Any, OrderByDTO], None] | None = None,
     ) -> str:
         return f"{base_name}OrderBy"
 
     @override
     def factory(
         self,
-        model: type[T],
+        model: type[DeclarativeT],
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
-        current_node: Node[Relation[Any, OrderByDTO[ModelT, ModelFieldT]], None] | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
+        current_node: Node[Relation[Any, OrderByDTO], None] | None = None,
         raise_if_no_fields: bool = False,
         backend_kwargs: dict[str, Any] | None = None,
         *,
         aggregate_filters: bool = True,
         **kwargs: Any,
-    ) -> type[OrderByDTO[ModelT, ModelFieldT]]:
+    ) -> type[OrderByDTO]:
         dto = super().factory(
             model,
             dto_config,

@@ -35,9 +35,9 @@ from sqlalchemy import (
 from sqlalchemy import distinct as sqla_distinct
 from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
 from sqlalchemy.orm.util import AliasedClass
+from strawchemy.constants import NODES_KEY
 from strawchemy.dto.types import DTOConfig, Purpose
-from strawchemy.graphql.constants import NODES_KEY
-from strawchemy.graphql.dto import GraphQLFieldDefinition, QueryNode
+from strawchemy.strawberry.dto import GraphQLFieldDefinition, QueryNode
 
 from .exceptions import TranspilingError
 from .inspector import SQLAlchemyInspector
@@ -156,7 +156,7 @@ class NodeInspect:
         return [NodeInspect(child, self.scope) for child in self.node.children]
 
     @property
-    def value(self) -> GraphQLFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]:
+    def value(self) -> GraphQLFieldDefinition:
         return self.node.value
 
     @property
@@ -460,9 +460,7 @@ class QueryScope(Generic[DeclarativeT]):
     ) -> None:
         self._node_alias_map[(node, side)] = alias
 
-    def id_field_definitions(
-        self, model: type[DeclarativeBase]
-    ) -> list[GraphQLFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
+    def id_field_definitions(self, model: type[DeclarativeBase]) -> list[GraphQLFieldDefinition]:
         root = QueryNode.root_node(model)
         return [
             GraphQLFieldDefinition.from_field(self._inspector.field_definition(pk, DTOConfig(Purpose.READ)))

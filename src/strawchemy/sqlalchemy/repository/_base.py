@@ -5,19 +5,19 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 from sqlalchemy import Row, inspect
 from sqlalchemy.orm import NO_VALUE, RelationshipProperty
-from strawchemy.graphql.mutation import RelationType
+from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
-from strawchemy.sqlalchemy.inspector import loaded_attributes
 from strawchemy.sqlalchemy.typing import DeclarativeT, QueryExecutorT, SessionT, SQLAlchemyQueryNode
+from strawchemy.strawberry.mutation.types import RelationType
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from sqlalchemy import Select
-    from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-    from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.input import Input
+    from sqlalchemy.orm import DeclarativeBase
     from strawchemy.sqlalchemy.hook import QueryHook
+    from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.strawberry.mutation.input import Input
 
 
 __all__ = ("SQLAlchemyGraphQLRepository",)
@@ -45,8 +45,8 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         self,
         executor_type: type[QueryExecutorT],
         selection: SQLAlchemyQueryNode | None = None,
-        dto_filter: BooleanFilterDTO[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        order_by: list[OrderByDTO[DeclarativeBase, QueryableAttribute[Any]]] | None = None,
+        dto_filter: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
@@ -75,7 +75,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         return {
             field: getattr(model, field)
             for field in model.__mapper__.columns.keys()  # noqa: SIM118
-            if field in loaded_attributes(model)
+            if field in SQLAlchemyInspector.loaded_attributes(model)
         }
 
     def _connect_to_one_relations(self, data: Input[DeclarativeT]) -> None:

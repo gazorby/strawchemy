@@ -6,13 +6,11 @@ from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar, cast
 
 from strawberry.types import get_object_definition
 from strawberry.utils.typing import type_has_annotation
+from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.dto.types import DTO_MISSING
-from strawchemy.graphql.constants import AGGREGATIONS_KEY, NODES_KEY
-from strawchemy.graphql.dto import (
-    QueryNode,
-)
 from strawchemy.sqlalchemy import SQLAlchemyGraphQLRepository
 from strawchemy.strawberry._instance import MapperModelInstance
+from strawchemy.strawberry.dto import QueryNode
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -27,7 +25,7 @@ T = TypeVar("T")
 
 
 @dataclass(kw_only=True, eq=False, repr=False)
-class _StrawberryQueryNode(QueryNode[Any, Any], Generic[T]):
+class _StrawberryQueryNode(QueryNode, Generic[T]):
     strawberry_type: type[T]
     children: list[Self] = dataclasses.field(default_factory=list)
     arguments: list[Self] = dataclasses.field(default_factory=list)

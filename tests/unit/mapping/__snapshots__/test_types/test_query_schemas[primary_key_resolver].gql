@@ -9,8 +9,8 @@
   
   """GraphQL type"""
   type FruitType {
-    color: ColorType!
     name: String!
+    color: ColorType!
   }
   
   type Query {

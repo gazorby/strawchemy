@@ -1585,6 +1585,7 @@ from models import User, Group
 from typing import Annotated
 from pydantic import AfterValidator
 from strawchemy import InputValidationError, ValidationErrorType
+from strawchemy.validation.pydantic import PydanticValidation
 
 def _check_lower_case(value: str) -> str:
     if not value.islower():
@@ -1605,7 +1606,7 @@ class UserCreateValidation:
 
 @strawberry.type
 class Mutation:
-    create_user: UserType | ValidationErrorType = strawchemy.create(UserCreate, validation=UserCreateValidation)
+    create_user: UserType | ValidationErrorType = strawchemy.create(UserCreate, validation=PydanticValidation(UserCreateValidation))
 ```
 
 > To get the validation errors exposed in the schema, you need to add `ValidationErrorType` in the field union type
