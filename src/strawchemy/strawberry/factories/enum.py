@@ -29,7 +29,7 @@ from strawchemy.dto.base import (
     Relation,
 )
 from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
-from strawchemy.graphql.dto import EnumDTO, GraphQLFieldDefinition
+from strawchemy.strawberry.dto import EnumDTO, GraphQLFieldDefinition
 from strawchemy.utils import snake_to_lower_camel_case
 
 if TYPE_CHECKING:

@@ -16,7 +16,9 @@
     sum: ColorAggregateNumericFieldsOrderBy = null
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input ColorOrderBy {
     fruitsAggregate: FruitAggregateOrderBy = null
     fruits: FruitOrderBy
@@ -69,16 +71,20 @@
     varSamp: FruitAggregateNumericFieldsOrderBy = null
   }
   
+  """GraphQL type"""
   type FruitMinMaxFields {
     name: String
     sweetness: Int
   }
   
+  """GraphQL type"""
   type FruitNumericFields {
     sweetness: Float
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input FruitOrderBy {
     colorAggregate: ColorAggregateOrderBy = null
     color: ColorOrderBy
@@ -88,6 +94,7 @@
     id: OrderByEnum
   }
   
+  """GraphQL type"""
   type FruitSumFields {
     name: String
     sweetness: Int
@@ -125,11 +132,14 @@
     sum: GroupAggregateNumericFieldsOrderBy = null
   }
   
+  """GraphQL type"""
   type GroupMinMaxFields {
     name: String
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input GroupOrderBy {
     tagAggregate: TagAggregateOrderBy = null
     tag: TagOrderBy
@@ -143,6 +153,7 @@
     id: OrderByEnum
   }
   
+  """GraphQL type"""
   type GroupSumFields {
     name: String
   }
@@ -190,7 +201,9 @@
     sum: TagAggregateNumericFieldsOrderBy = null
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input TagOrderBy {
     groupsAggregate: GroupAggregateOrderBy = null
     groups: GroupOrderBy
@@ -233,11 +246,14 @@
     sum: UserAggregateNumericFieldsOrderBy = null
   }
   
+  """GraphQL type"""
   type UserMinMaxFields {
     name: String
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input UserOrderBy {
     groupAggregate: GroupAggregateOrderBy = null
     group: GroupOrderBy
@@ -249,6 +265,7 @@
     id: OrderByEnum
   }
   
+  """GraphQL type"""
   type UserSumFields {
     name: String
   }

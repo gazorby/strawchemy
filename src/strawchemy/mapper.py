@@ -6,27 +6,26 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
 
-from ._factories import (
-    StrawberryRegistry,
-    StrawchemyAggregateFilterInputFactory,
-    StrawchemyFilterInputFactory,
-    StrawchemyInputFactory,
-    StrawchemyOrderByInputFactory,
-    StrawchemyRootAggregateTypeFactory,
-    StrawchemyTypeFactory,
-)
 from .config.base import StrawchemyConfig
 from .dto.backend.strawberry import StrawberrryDTOBackend
 from .dto.base import TYPING_NS
-from .graphql.dto import BooleanFilterDTO, EnumDTO, MappedDataclassGraphQLDTO, OrderByDTO, OrderByEnum
-from .graphql.factories.types import DistinctOnFieldsDTOFactory
-from .strawberry import (
+from .strawberry._field import (
     StrawchemyCreateMutationField,
     StrawchemyDeleteMutationField,
     StrawchemyField,
     StrawchemyUpdateMutationField,
-    types,
 )
+from .strawberry._registry import StrawberryRegistry
+from .strawberry.dto import BooleanFilterDTO, EnumDTO, MappedDataclassGraphQLDTO, OrderByDTO, OrderByEnum
+from .strawberry.factories.inputs import AggregateFilterDTOFactory, BooleanFilterDTOFactory
+from .strawberry.factories.types import (
+    DistinctOnFieldsDTOFactory,
+    InputFactory,
+    OrderByDTOFactory,
+    RootAggregateTypeDTOFactory,
+    TypeDTOFactory,
+)
+from .strawberry.mutation import types
 from .types import DefaultOffsetPagination
 
 if TYPE_CHECKING:
@@ -38,10 +37,9 @@ if TYPE_CHECKING:
     from strawberry.types.field import _RESOLVER_TYPE
     from strawchemy.validation.pydantic import PydanticMapper
 
-    from .graphql.typing import MappedGraphQLDTO
     from .sqlalchemy.hook import QueryHook
     from .sqlalchemy.typing import QueryHookCallable
-    from .strawberry.typing import FilterStatementCallable
+    from .strawberry.typing import FilterStatementCallable, MappedGraphQLDTO
     from .typing import AnyRepository, SupportedDialect
     from .validation.base import ValidationProtocol
 
@@ -60,15 +58,13 @@ class Strawchemy:
         self.config = StrawchemyConfig(config) if isinstance(config, str) else config
         self.registry = StrawberryRegistry()
 
-        self._aggregate_filter_factory = StrawchemyAggregateFilterInputFactory(self)
-        self._filter_factory = StrawchemyFilterInputFactory(
-            self, aggregate_filter_factory=self._aggregate_filter_factory
-        )
-        self._order_by_factory = StrawchemyOrderByInputFactory(self)
+        self._aggregate_filter_factory = AggregateFilterDTOFactory(self)
+        self._filter_factory = BooleanFilterDTOFactory(self, aggregate_filter_factory=self._aggregate_filter_factory)
+        self._order_by_factory = OrderByDTOFactory(self)
         self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.config.inspector)
-        self._type_factory = StrawchemyTypeFactory(self, dataclass_backend, order_by_factory=self._order_by_factory)
-        self._input_factory = StrawchemyInputFactory(self, dataclass_backend)
-        self._aggregation_factory = StrawchemyRootAggregateTypeFactory(
+        self._type_factory = TypeDTOFactory(self, dataclass_backend, order_by_factory=self._order_by_factory)
+        self._input_factory = InputFactory(self, dataclass_backend)
+        self._aggregation_factory = RootAggregateTypeDTOFactory(
             self, dataclass_backend, type_factory=self._type_factory
         )
 

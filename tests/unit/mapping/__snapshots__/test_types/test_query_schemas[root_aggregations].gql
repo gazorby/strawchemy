@@ -44,6 +44,7 @@
     aggregations: SQLDataTypesAggregate!
   }
   
+  """GraphQL type"""
   type SQLDataTypesMinMaxFields {
     dateCol: Date
     timeCol: Time
@@ -54,12 +55,14 @@
     decimalCol: Decimal
   }
   
+  """GraphQL type"""
   type SQLDataTypesNumericFields {
     intCol: Float
     floatCol: Float
     decimalCol: Decimal
   }
   
+  """GraphQL type"""
   type SQLDataTypesSumFields {
     timeDeltaCol: Interval
     strCol: String

@@ -11,6 +11,7 @@ from typing_extensions import TypeIs
 
 from sqlalchemy import Column, Sequence, SQLColumnExpression, event, inspect, orm, sql
 from sqlalchemy.orm import (
+    NO_VALUE,
     ColumnProperty,
     DeclarativeBase,
     Mapped,
@@ -235,6 +236,10 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     @classmethod
     def pk_attributes(cls, mapper: Mapper[Any]) -> list[QueryableAttribute[Any]]:
         return [mapper.attrs[column.key].class_attribute for column in mapper.primary_key]
+
+    @classmethod
+    def loaded_attributes(cls, model: DeclarativeBase) -> set[str]:
+        return {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
 
     @override
     def get_type_hints(self, type_: Any, include_extras: bool = True) -> dict[str, Any]:

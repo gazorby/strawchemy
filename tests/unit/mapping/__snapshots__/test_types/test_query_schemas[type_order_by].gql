@@ -34,7 +34,9 @@
     sqlDataTypes(orderBy: [SQLDataTypesOrderBy!] = null): [SQLDataTypesType!]!
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input SQLDataTypesOrderBy {
     dateCol: OrderByEnum
     timeCol: OrderByEnum

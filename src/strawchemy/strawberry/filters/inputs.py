@@ -33,7 +33,7 @@ from .base import (
 if TYPE_CHECKING:
     from sqlalchemy import ColumnElement
     from sqlalchemy.orm import QueryableAttribute
-    from strawchemy.graphql.dto import OrderByEnum, QueryNode
+    from strawchemy.strawberry.dto import OrderByEnum, QueryNode
 
 __all__ = (
     "ArrayComparison",

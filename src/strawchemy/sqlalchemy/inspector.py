@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, TypeVar, override
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from sqlalchemy import inspect
 from sqlalchemy.orm import NO_VALUE, DeclarativeBase, QueryableAttribute, registry
@@ -11,7 +11,7 @@ from sqlalchemy.types import ARRAY
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
-from strawchemy.graphql.filters import (
+from strawchemy.strawberry.filters import (
     ArrayComparison,
     DateComparison,
     DateTimeComparison,
@@ -23,7 +23,6 @@ from strawchemy.graphql.filters import (
     TimeComparison,
     TimeDeltaComparison,
 )
-from strawchemy.graphql.inspector import GraphQLInspectorProtocol
 
 if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition
@@ -56,7 +55,7 @@ def loaded_attributes(model: DeclarativeBase) -> set[str]:
     return {name for name, attr in inspect(model).attrs.items() if attr.loaded_value is not NO_VALUE}
 
 
-class SQLAlchemyGraphQLInspector(SQLAlchemyInspector, GraphQLInspectorProtocol):
+class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
     def __init__(
         self,
         dialect: SupportedDialect,
@@ -75,7 +74,7 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector, GraphQLInspectorProtocol):
             from geoalchemy2 import WKBElement, WKTElement
             from shapely import Geometry
 
-            from strawchemy.graphql.filters.geo import GeoComparison
+            from strawchemy.strawberry.filters.geo import GeoComparison
 
             filters_map |= {(Geometry, WKBElement, WKTElement): GeoComparison}
         return filters_map
@@ -90,7 +89,6 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector, GraphQLInspectorProtocol):
     def _filter_type(cls, type_: type[Any], sqlalchemy_filter: type[GraphQLComparison]) -> type[GraphQLComparison]:
         return sqlalchemy_filter if cls._is_specialized(sqlalchemy_filter) else sqlalchemy_filter[type_]  # pyright: ignore[reportInvalidTypeArguments]
 
-    @override
     def get_field_comparison(
         self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]
     ) -> type[GraphQLComparison]:
@@ -99,7 +97,6 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector, GraphQLInspectorProtocol):
             return ArrayComparison[field_type.item_type.python_type]
         return self.get_type_comparison(self.model_field_type(field_definition))
 
-    @override
     def get_type_comparison(self, type_: type[Any]) -> type[GraphQLComparison]:
         for types, sqlalchemy_filter in self.filters_map.items():
             if issubclass(type_, types):

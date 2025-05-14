@@ -16,7 +16,7 @@ from strawberry.types.field import StrawberryField
 from ._utils import strawberry_contained_types
 
 try:
-    from strawchemy.graphql.filters.geo import GeoComparison
+    from strawchemy.strawberry.filters.geo import GeoComparison
 
     geo_comparison = GeoComparison
 except ModuleNotFoundError:  # pragma: no cover

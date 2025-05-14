@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias, TypeVar
 
 from sqlalchemy import ColumnElement, Row, and_, delete, insert, inspect, select, update
 from sqlalchemy.orm import RelationshipProperty
-from strawchemy.graphql.mutation import RelationType
 from strawchemy.sqlalchemy._executor import AsyncQueryExecutor, QueryResult
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
 from strawchemy.sqlalchemy.typing import AnyAsyncSession, DeclarativeT, SQLAlchemyQueryNode
+from strawchemy.strawberry.mutation.types import RelationType
 
 from ._base import SQLAlchemyGraphQLRepository
 
@@ -17,9 +17,9 @@ if TYPE_CHECKING:
 
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.orm.util import AliasedClass
-    from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.input import Input, LevelInput
     from strawchemy.sqlalchemy.hook import QueryHook
+    from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.strawberry.mutation.input import Input, LevelInput
 
 __all__ = ("SQLAlchemyGraphQLAsyncRepository",)
 

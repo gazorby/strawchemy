@@ -27,25 +27,17 @@ from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.base import StrawberryList, StrawberryOptional, StrawberryType, WithStrawberryObjectDefinition
 from strawberry.types.field import UNRESOLVED, StrawberryField
+from strawchemy.constants import DATA_KEY, DISTINCT_ON_KEY, FILTER_KEY, LIMIT_KEY, NODES_KEY, OFFSET_KEY, ORDER_BY_KEY
 from strawchemy.dto.base import MappedDTO
 from strawchemy.dto.types import DTOConfig, Purpose
-from strawchemy.graphql.constants import (
-    DATA_KEY,
-    DISTINCT_ON_KEY,
-    FILTER_KEY,
-    LIMIT_KEY,
-    NODES_KEY,
-    OFFSET_KEY,
-    ORDER_BY_KEY,
-)
-from strawchemy.graphql.dto import (
+from strawchemy.strawberry.dto import (
     BooleanFilterDTO,
     EnumDTO,
     MappedDataclassGraphQLDTO,
     OrderByDTO,
     StrawchemyDTOAttributes,
 )
-from strawchemy.input import Input
+from strawchemy.strawberry.mutation.input import Input
 from strawchemy.types import DefaultOffsetPagination
 from strawchemy.utils import is_type_hint_optional
 from strawchemy.validation.base import InputValidationError
@@ -63,17 +55,22 @@ if TYPE_CHECKING:
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.base import StrawberryObjectDefinition, StrawberryType, WithStrawberryObjectDefinition
     from strawberry.types.fields.resolver import StrawberryResolver
-    from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.graphql.inspector import GraphQLInspectorProtocol
-    from strawchemy.graphql.typing import AnyMappedDTO, MappedGraphQLDTO
+    from strawchemy.sqlalchemy.inspector import SQLAlchemyGraphQLInspector
     from strawchemy.sqlalchemy.typing import QueryHookCallable
+    from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.typing import AnyRepository
     from strawchemy.validation.base import ValidationProtocol
 
+    from .mutation.types import ValidationErrorType
     from .repository import StrawchemySyncRepository
     from .repository._base import GraphQLResult
-    from .types import ValidationErrorType
-    from .typing import AnySessionGetter, FilterStatementCallable, StrawchemyTypeWithStrawberryObjectDefinition
+    from .typing import (
+        AnyMappedDTO,
+        AnySessionGetter,
+        FilterStatementCallable,
+        MappedGraphQLDTO,
+        StrawchemyTypeWithStrawberryObjectDefinition,
+    )
 
 
 __all__ = ("StrawchemyCreateMutationField", "StrawchemyDeleteMutationField", "StrawchemyField")
@@ -123,7 +120,7 @@ class StrawchemyField(StrawberryField):
     @override
     def __init__(
         self,
-        inspector: GraphQLInspectorProtocol,
+        inspector: SQLAlchemyGraphQLInspector,
         session_getter: AnySessionGetter,
         repository_type: AnyRepository,
         filter_type: type[BooleanFilterDTO] | None = None,

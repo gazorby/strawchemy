@@ -16,7 +16,9 @@
     sum: ColorAggregateNumericFieldsOrderBy = null
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input ColorOrderBy {
     fruitsAggregate: FruitAggregateOrderBy = null
     fruits: FruitOrderBy
@@ -69,16 +71,20 @@
     varSamp: FruitAggregateNumericFieldsOrderBy = null
   }
   
+  """GraphQL type"""
   type FruitMinMaxFields {
     name: String
     sweetness: Int
   }
   
+  """GraphQL type"""
   type FruitNumericFields {
     sweetness: Float
   }
   
-  """Ordering options"""
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
   input FruitOrderBy {
     override: Boolean! = true
     colorAggregate: ColorAggregateOrderBy
@@ -89,6 +95,7 @@
     id: OrderByEnum
   }
   
+  """GraphQL type"""
   type FruitSumFields {
     name: String
     sweetness: Int

@@ -31,9 +31,9 @@ from sqlalchemy.orm import (
 from sqlalchemy.orm.util import AliasedClass
 from sqlalchemy.sql import ColumnElement, SQLColumnExpression
 from sqlalchemy.sql.elements import NamedColumn
+from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.graph import merge_trees
-from strawchemy.graphql.constants import AGGREGATIONS_KEY, NODES_KEY
-from strawchemy.graphql.dto import (
+from strawchemy.strawberry.dto import (
     BooleanFilterDTO,
     EnumDTO,
     Filter,

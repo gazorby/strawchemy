@@ -7,37 +7,20 @@ from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVa
 
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
-from strawchemy.sqlalchemy.inspector import loaded_attributes
+from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
+from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 
-from .dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
-from .graphql.mutation import (
-    RelationType,
-    RequiredToManyUpdateInputMixin,
-    RequiredToOneInputMixin,
-    ToManyCreateInputMixin,
-    ToManyUpdateInputMixin,
-    ToOneInputMixin,
-)
+from .types import RelationType, ToManyCreateInput, ToManyUpdateInput, ToOneInput
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+    from strawchemy.strawberry.typing import MappedGraphQLDTO
     from strawchemy.validation.base import ValidationProtocol
 
-    from .graphql.typing import MappedGraphQLDTO
 
-
-__all__ = (
-    "Input",
-    "LevelInput",
-    "RelationType",
-    "RequiredToManyUpdateInputMixin",
-    "RequiredToOneInputMixin",
-    "ToManyCreateInputMixin",
-    "ToManyUpdateInputMixin",
-    "ToOneInputMixin",
-)
+__all__ = ("Input", "LevelInput", "RelationType")
 
 T = TypeVar("T", bound=MappedDTO[Any])
 DeclarativeBaseT = TypeVar("DeclarativeBaseT", bound="DeclarativeBase")
@@ -144,23 +127,20 @@ class _InputVisitor(VisitorProtocol, Generic[InputModel]):
         add, remove, create = [], [], []
         set_: list[Any] | None = []
         relation_type = RelationType.TO_MANY
-        if isinstance(field_value, ToOneInputMixin):
+        if isinstance(field_value, ToOneInput):
             relation_type = RelationType.TO_ONE
             if field_value.set is None:
                 set_ = None
             elif field_value.set:
                 set_ = [field_value.set.to_mapped()]
-        elif isinstance(field_value, ToManyUpdateInputMixin | ToManyCreateInputMixin):
+        elif isinstance(field_value, ToManyUpdateInput | ToManyCreateInput):
             if field_value.set:
                 set_ = [dto.to_mapped() for dto in field_value.set]
             if field_value.add:
                 add = [dto.to_mapped() for dto in field_value.add]
-        if isinstance(field_value, ToManyUpdateInputMixin) and field_value.remove:
+        if isinstance(field_value, ToManyUpdateInput) and field_value.remove:
             remove = [dto.to_mapped() for dto in field_value.remove]
-        if (
-            isinstance(field_value, ToOneInputMixin | ToManyUpdateInputMixin | ToManyCreateInputMixin)
-            and field_value.create
-        ):
+        if isinstance(field_value, ToOneInput | ToManyUpdateInput | ToManyCreateInput) and field_value.create:
             create = value if isinstance(value, list) else [value]
         if set_ is None or set_ or add or remove or create:
             assert field.related_model
@@ -194,7 +174,7 @@ class _InputVisitor(VisitorProtocol, Generic[InputModel]):
 
         # In update mode, we ensure only input params are set in the instance
         if self.is_update:
-            for attribute in loaded_attributes(model):
+            for attribute in SQLAlchemyInspector.loaded_attributes(model):
                 if attribute not in params:
                     delattr(model, attribute)
 
@@ -257,7 +237,10 @@ class Input(Generic[InputModel]):
         mapper = object_mapper(model)
         seen.add(self._model_identity(model))
         for relationship in mapper.relationships:
-            if relationship.key not in loaded_attributes(model) or relationship.key in level_relations:
+            if (
+                relationship.key not in SQLAlchemyInspector.loaded_attributes(model)
+                or relationship.key in level_relations
+            ):
                 continue
             relationship_value = getattr(model, relationship.key)
             # We do not merge this check with the one above to avoid MissingGreenlet error

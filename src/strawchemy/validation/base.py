@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar
 
 if TYPE_CHECKING:
     from strawchemy.dto.base import MappedDTO
-    from strawchemy.strawberry.types import ValidationErrorType
+    from strawchemy.strawberry.mutation.types import ValidationErrorType
 
 T = TypeVar("T")
 

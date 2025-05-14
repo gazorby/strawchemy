@@ -24,15 +24,18 @@
     varSamp: FruitNumericFields!
   }
   
+  """GraphQL type"""
   type FruitMinMaxFields {
     name: String
     sweetness: Int
   }
   
+  """GraphQL type"""
   type FruitNumericFields {
     sweetness: Float
   }
   
+  """GraphQL type"""
   type FruitSumFields {
     name: String
     sweetness: Int
@@ -55,10 +58,12 @@
     sum: GroupSumFields!
   }
   
+  """GraphQL type"""
   type GroupMinMaxFields {
     name: String
   }
   
+  """GraphQL type"""
   type GroupSumFields {
     name: String
   }
@@ -105,10 +110,12 @@
     sum: UserSumFields!
   }
   
+  """GraphQL type"""
   type UserMinMaxFields {
     name: String
   }
   
+  """GraphQL type"""
   type UserSumFields {
     name: String
   }

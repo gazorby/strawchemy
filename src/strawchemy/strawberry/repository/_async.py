@@ -11,9 +11,9 @@ from ._base import GraphQLResult, StrawchemyRepository
 if TYPE_CHECKING:
     from sqlalchemy import Select
     from strawberry import Info
-    from strawchemy.graphql.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.input import Input, InputModel
     from strawchemy.sqlalchemy.typing import AnyAsyncSession
+    from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
+    from strawchemy.strawberry.mutation.input import Input, InputModel
     from strawchemy.strawberry.typing import AsyncSessionGetter
 
 __all__ = ("StrawchemyAsyncRepository",)

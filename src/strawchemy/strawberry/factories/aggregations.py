@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast, override
 from sqlalchemy.orm import DeclarativeBase
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.exceptions import DTOError
-from strawchemy.graphql.dto import (
+from strawchemy.strawberry.dto import (
     DTOKey,
     EnumDTO,
     FilterFunctionInfo,
@@ -26,11 +26,12 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
     from sqlalchemy.orm import QueryableAttribute
-    from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelInspector, ModelT, Relation
+    from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelT, Relation
     from strawchemy.dto.types import DTOConfig
     from strawchemy.graph import Node
-    from strawchemy.graphql.inspector import GraphQLInspectorProtocol
-    from strawchemy.graphql.typing import AggregationFunction, AggregationType, FunctionInfo
+    from strawchemy.mapper import Strawchemy
+    from strawchemy.sqlalchemy.typing import DeclarativeT
+    from strawchemy.strawberry.typing import AggregationFunction, AggregationType, FunctionInfo
 
 T = TypeVar("T")
 
@@ -48,14 +49,12 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedDataclassGraphQLDTO[Decla
 
     def __init__(
         self,
-        inspector: ModelInspector[Any, QueryableAttribute[Any]],
+        mapper: Strawchemy,
         backend: DTOBackend[UnmappedDataclassGraphQLDTO[DeclarativeBase]] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
-        super().__init__(
-            inspector, backend or StrawberrryDTOBackend(UnmappedDataclassGraphQLDTO), handle_cycles, type_map
-        )
+        super().__init__(mapper, backend or StrawberrryDTOBackend(UnmappedDataclassGraphQLDTO), handle_cycles, type_map)
         self._enum_backend = EnumDTOBackend()
 
     @override
@@ -76,7 +75,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedDataclassGraphQLDTO[Decla
     def iter_field_definitions(
         self,
         name: str,
-        model: type[T],
+        model: type[DeclarativeT],
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, UnmappedDataclassGraphQLDTO[DeclarativeBase]], None],
@@ -94,7 +93,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedDataclassGraphQLDTO[Decla
     @override
     def factory(
         self,
-        model: type[T],
+        model: type[DeclarativeT],
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
@@ -121,7 +120,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedDataclassGraphQLDTO[Decla
 
     def enum_factory(
         self,
-        model: type[T],
+        model: type[DeclarativeT],
         dto_config: DTOConfig,
         name: str | None = None,
         base: type[Any] | None = None,
@@ -247,17 +246,17 @@ class _SumFieldsDTOFactory(_FunctionArgDTOFactory):
 
 
 class AggregationInspector:
-    def __init__(self, inspector: GraphQLInspectorProtocol) -> None:
-        self._inspector = inspector
-        self._count_fields_factory = _CountFieldsDTOFactory(inspector)
-        self._numeric_fields_factory = _NumericFieldsDTOFactory(inspector)
-        self._sum_fields_factory = _SumFieldsDTOFactory(inspector)
-        self._min_max_numeric_fields_factory = _MinMaxNumericFieldsDTOFactory(inspector)
-        self._min_max_datetime_fields_factory = _MinMaxDateTimeFieldsDTOFactory(inspector)
-        self._min_max_date_fields_factory = _MinMaxDateFieldsDTOFactory(inspector)
-        self._min_max_string_fields_factory = _MinMaxStringFieldsDTOFactory(inspector)
-        self._min_max_time_fields_factory = _MinMaxTimeFieldsDTOFactory(inspector)
-        self._min_max_fields_factory = _MinMaxFieldsDTOFactory(inspector)
+    def __init__(self, mapper: Strawchemy) -> None:
+        self._inspector = mapper.config.inspector
+        self._count_fields_factory = _CountFieldsDTOFactory(self._inspector)
+        self._numeric_fields_factory = _NumericFieldsDTOFactory(mapper)
+        self._sum_fields_factory = _SumFieldsDTOFactory(mapper)
+        self._min_max_numeric_fields_factory = _MinMaxNumericFieldsDTOFactory(mapper)
+        self._min_max_datetime_fields_factory = _MinMaxDateTimeFieldsDTOFactory(mapper)
+        self._min_max_date_fields_factory = _MinMaxDateFieldsDTOFactory(mapper)
+        self._min_max_string_fields_factory = _MinMaxStringFieldsDTOFactory(mapper)
+        self._min_max_time_fields_factory = _MinMaxTimeFieldsDTOFactory(mapper)
+        self._min_max_fields_factory = _MinMaxFieldsDTOFactory(mapper)
 
     def _supports_aggregations(self, *function: AggregationFunction) -> bool:
         return set(function).issubset(self._inspector.db_features.aggregation_functions)
@@ -368,7 +367,7 @@ class AggregationInspector:
         return aggregations
 
     def arguments_type(
-        self, model: type[T], dto_config: DTOConfig, aggregation: AggregationType
+        self, model: type[DeclarativeBase], dto_config: DTOConfig, aggregation: AggregationType
     ) -> type[EnumDTO] | None:
         try:
             if aggregation == "numeric":

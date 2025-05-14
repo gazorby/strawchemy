@@ -25,8 +25,8 @@ from typing import TYPE_CHECKING, Any, Generic, Self, cast, override
 from sqlalchemy import Dialect, Label, Select, and_, func, inspect, not_, null, or_, select, true
 from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
 from sqlalchemy.sql.elements import ColumnElement
-from strawchemy.graphql.constants import AGGREGATIONS_KEY
-from strawchemy.graphql.dto import (
+from strawchemy.constants import AGGREGATIONS_KEY
+from strawchemy.strawberry.dto import (
     AggregationFilter,
     BooleanFilterDTO,
     EnumDTO,
@@ -36,7 +36,7 @@ from strawchemy.graphql.dto import (
     OrderByRelationFilterDTO,
     QueryNode,
 )
-from strawchemy.graphql.filters import GraphQLComparison
+from strawchemy.strawberry.filters import GraphQLComparison
 
 from ._executor import SyncQueryExecutor
 from ._query import (

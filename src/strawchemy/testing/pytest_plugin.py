@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from strawchemy.dto import ModelT
-    from strawchemy.graphql.dto import QueryNode
     from strawchemy.sqlalchemy.typing import AnySession, DeclarativeT
+    from strawchemy.strawberry.dto import QueryNode
     from strawchemy.typing import SupportedDialect
 
 

@@ -10,8 +10,8 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
     from sqlalchemy.orm import DeclarativeBase, RelationshipProperty, Session, scoped_session
     from sqlalchemy.sql.type_api import TypeEngine
-    from strawchemy.graphql.dto import OrderByNode, QueryNode
-    from strawchemy.graphql.filters.base import GraphQLComparison
+    from strawchemy.strawberry.dto import OrderByNode, QueryNode
+    from strawchemy.strawberry.filters.base import GraphQLComparison
 
     from ._executor import QueryExecutor
     from .hook import QueryHook

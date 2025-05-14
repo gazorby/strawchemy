@@ -35,9 +35,9 @@ from sqlalchemy import (
 from sqlalchemy import distinct as sqla_distinct
 from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
 from sqlalchemy.orm.util import AliasedClass
+from strawchemy.constants import NODES_KEY
 from strawchemy.dto.types import DTOConfig, Purpose
-from strawchemy.graphql.constants import NODES_KEY
-from strawchemy.graphql.dto import GraphQLFieldDefinition, QueryNode
+from strawchemy.strawberry.dto import GraphQLFieldDefinition, QueryNode
 
 from .exceptions import TranspilingError
 from .inspector import SQLAlchemyInspector

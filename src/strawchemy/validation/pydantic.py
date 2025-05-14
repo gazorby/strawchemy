@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, Any, ClassVar, override
 from pydantic import ValidationError
 
 from sqlalchemy.orm import DeclarativeBase
-from strawchemy._factories import StrawchemyInputFactory
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
 from strawchemy.dto.base import ModelT
 from strawchemy.dto.utils import read_partial
-from strawchemy.graphql.dto import StrawchemyDTOAttributes
-from strawchemy.strawberry.types import LocalizedErrorType, ValidationErrorType
+from strawchemy.strawberry.dto import StrawchemyDTOAttributes
+from strawchemy.strawberry.factories.types import InputFactory
+from strawchemy.strawberry.mutation.types import LocalizedErrorType, ValidationErrorType
 from strawchemy.utils import snake_to_lower_camel_case
 
 from .base import InputValidationError, T, ValidationProtocol
@@ -27,8 +27,8 @@ if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, Relation
     from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
     from strawchemy.graph import Node
-    from strawchemy.graphql.typing import InputType
     from strawchemy.sqlalchemy.typing import DeclarativeT
+    from strawchemy.strawberry.typing import InputType
 
 
 @dataclass
@@ -61,7 +61,7 @@ class MappedPydanticGraphQLDTO(StrawchemyDTOAttributes, MappedPydanticDTO[ModelT
     __strawchemy_order_by__: ClassVar[type[Any] | None] = None
 
 
-class StrawchemyInputValidationFactory(StrawchemyInputFactory[MappedPydanticGraphQLDTO[Any]]):
+class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any]]):
     @override
     def _resolve_type(
         self,

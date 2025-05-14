@@ -11,21 +11,18 @@ from msgspec import convert
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.nodes import FragmentSpread, InlineFragment, SelectedField, Selection
+from strawchemy.constants import ORDER_BY_KEY
 from strawchemy.dto.base import ModelT
 from strawchemy.exceptions import StrawchemyError
-from strawchemy.graphql.constants import ORDER_BY_KEY
-from strawchemy.graphql.dto import (
+from strawchemy.strawberry._utils import dto_model_from_type, strawberry_contained_user_type
+from strawchemy.strawberry.dto import (
     DTOKey,
     OrderByRelationFilterDTO,
     QueryNode,
     RelationFilterDTO,
     StrawchemyDTOAttributes,
 )
-from strawchemy.strawberry._utils import (
-    dto_model_from_type,
-    strawberry_contained_user_type,
-)
-from strawchemy.strawberry.types import error_type_names
+from strawchemy.strawberry.mutation.types import error_type_names
 from strawchemy.utils import camel_to_snake, snake_keys
 
 from ._node import _StrawberryQueryNode
@@ -122,7 +119,7 @@ class StrawchemyRepository(Generic[T]):
 
     @classmethod
     def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]] | None:
-        from strawchemy.strawberry import StrawchemyField
+        from strawchemy.strawberry._field import StrawchemyField
 
         return field.query_hook if isinstance(field, StrawchemyField) else None
 

@@ -219,6 +219,7 @@
     id
   }
   
+  """GraphQL type"""
   type FruitMinMaxFields {
     name: String
     sweetness: Int
@@ -232,6 +233,7 @@
     name
   }
   
+  """GraphQL type"""
   type FruitNumericFields {
     sweetness: Float
   }
@@ -240,6 +242,7 @@
     sweetness
   }
   
+  """GraphQL type"""
   type FruitSumFields {
     name: String
     sweetness: Int
@@ -331,6 +334,7 @@
     id: UUIDGenericComparison
   }
   
+  """GraphQL type"""
   type GroupMinMaxFields {
     name: String
   }
@@ -339,6 +343,7 @@
     name
   }
   
+  """GraphQL type"""
   type GroupSumFields {
     name: String
   }
@@ -574,6 +579,7 @@
     id
   }
   
+  """GraphQL type"""
   type UserMinMaxFields {
     name: String
   }
@@ -582,6 +588,7 @@
     name
   }
   
+  """GraphQL type"""
   type UserSumFields {
     name: String
   }

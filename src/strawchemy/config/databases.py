@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Protocol
 from strawchemy.exceptions import StrawchemyError
 
 if TYPE_CHECKING:
-    from strawchemy.graphql.typing import AggregationFunction
+    from strawchemy.strawberry.typing import AggregationFunction
     from strawchemy.typing import SupportedDialect
 
 

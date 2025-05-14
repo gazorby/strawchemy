@@ -21,7 +21,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
 
     from sqlalchemy import Label, Result, Select, StatementLambdaElement
-    from strawchemy.graphql.dto import QueryNode
+    from strawchemy.strawberry.dto import QueryNode
 
     from ._scope import QueryScope
 

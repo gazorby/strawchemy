@@ -6,7 +6,7 @@ from strawberry.types.base import StrawberryContainer, StrawberryType
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.union import StrawberryUnion
 
-from .types import ErrorType
+from .mutation.types import ErrorType
 
 if TYPE_CHECKING:
     from strawberry import Info
