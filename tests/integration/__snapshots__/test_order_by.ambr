@@ -1,4 +1,48 @@
 # serializer version: 1
+# name: test_deterministic_ordering[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_deterministic_ordering[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_deterministic_ordering[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_deterministic_ordering[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
 # name: test_nulls[session-tracked-async-ASC_NULLS_FIRST-asyncmy_engine]
   '''
   SELECT user.bio,
@@ -1610,6 +1654,7 @@
     FROM color AS color
     LEFT OUTER JOIN color__fruits
       ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-ASC-asyncpg_engine]
@@ -1626,6 +1671,7 @@
            ORDER BY fruit_1.sweetness ASC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-ASC-psycopg_async_engine]
@@ -1642,6 +1688,7 @@
            ORDER BY fruit_1.sweetness ASC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-DESC-asyncmy_engine]
@@ -1663,6 +1710,7 @@
     FROM color AS color
     LEFT OUTER JOIN color__fruits
       ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-DESC-asyncpg_engine]
@@ -1679,6 +1727,7 @@
            ORDER BY fruit_1.sweetness DESC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-DESC-psycopg_async_engine]
@@ -1695,6 +1744,7 @@
            ORDER BY fruit_1.sweetness DESC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-sync-ASC-psycopg_engine]
@@ -1711,6 +1761,7 @@
            ORDER BY fruit_1.sweetness ASC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-sync-DESC-psycopg_engine]
@@ -1727,5 +1778,6 @@
            ORDER BY fruit_1.sweetness DESC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC
   '''
 # ---

@@ -8,6 +8,8 @@
    INNER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color__fruits.sweetness > %s
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-async-inner-join-rewrite-asyncpg_engine]
@@ -19,6 +21,8 @@
     JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color__fruits.sweetness > $1::INTEGER
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-async-inner-join-rewrite-psycopg_async_engine]
@@ -30,6 +34,8 @@
     JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color__fruits.sweetness > %(sweetness_1)s::INTEGER
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-async-no-inner-join-rewrite-asyncmy_engine]
@@ -41,6 +47,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.created_at > %s
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-async-no-inner-join-rewrite-asyncpg_engine]
@@ -53,6 +61,8 @@
       ON color.id = color__fruits.color_id
    WHERE color.created_at > $1::TIMESTAMP WITHOUT TIME
     ZONE
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-async-no-inner-join-rewrite-psycopg_async_engine]
@@ -65,6 +75,8 @@
       ON color.id = color__fruits.color_id
    WHERE color.created_at > %(created_at_1)s::TIMESTAMP WITHOUT TIME
     ZONE
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-sync-inner-join-rewrite-psycopg_engine]
@@ -76,6 +88,8 @@
     JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color__fruits.sweetness > %(sweetness_1)s::INTEGER
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_inner_join_rewriting[session-tracked-sync-no-inner-join-rewrite-psycopg_engine]
@@ -88,5 +102,7 @@
       ON color.id = color__fruits.color_id
    WHERE color.created_at > %(created_at_1)s::TIMESTAMP WITHOUT TIME
     ZONE
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---

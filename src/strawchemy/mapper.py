@@ -53,7 +53,7 @@ __all__ = ("Strawchemy",)
 
 class Strawchemy:
     def __init__(self, config: StrawchemyConfig | SupportedDialect) -> None:
-        dataclass_backend = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO)
+        dto_backend = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO)
 
         self.config = StrawchemyConfig(config) if isinstance(config, str) else config
         self.registry = StrawberryRegistry()
@@ -62,11 +62,9 @@ class Strawchemy:
         self._filter_factory = BooleanFilterDTOFactory(self, aggregate_filter_factory=self._aggregate_filter_factory)
         self._order_by_factory = OrderByDTOFactory(self)
         self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.config.inspector)
-        self._type_factory = TypeDTOFactory(self, dataclass_backend, order_by_factory=self._order_by_factory)
-        self._input_factory = InputFactory(self, dataclass_backend)
-        self._aggregation_factory = RootAggregateTypeDTOFactory(
-            self, dataclass_backend, type_factory=self._type_factory
-        )
+        self._type_factory = TypeDTOFactory(self, dto_backend, order_by_factory=self._order_by_factory)
+        self._input_factory = InputFactory(self, dto_backend)
+        self._aggregation_factory = RootAggregateTypeDTOFactory(self, dto_backend, type_factory=self._type_factory)
 
         self.filter = self._filter_factory.input
         self.aggregate_filter = self._aggregate_filter_factory.input
@@ -184,19 +182,17 @@ class Strawchemy:
         id_field_name = id_field_name or self.config.default_id_field_name
 
         field = StrawchemyField(
+            config=self.config,
             repository_type=repository_type_,
             root_field=root_field,
-            session_getter=self.config.session_getter,
             filter_statement=filter_statement,
             execution_options=execution_options_,
-            inspector=self.config.inspector,
             filter_type=filter_input,
             order_by=order_by,
             pagination=pagination,
             id_field_name=id_field_name,
             distinct_on=distinct_on,
             root_aggregations=root_aggregations,
-            auto_snake_case=self.config.auto_snake_case,
             query_hook=query_hook,
             python_name=None,
             graphql_name=name,
@@ -238,10 +234,8 @@ class Strawchemy:
 
         field = StrawchemyCreateMutationField(
             input_type,
+            config=self.config,
             repository_type=repository_type_,
-            session_getter=self.config.session_getter,
-            inspector=self.config.inspector,
-            auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
             type_annotation=type_annotation,
@@ -283,12 +277,10 @@ class Strawchemy:
         repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
         field = StrawchemyUpdateMutationField(
+            config=self.config,
             input_type=input_type,
             filter_type=filter_input,
             repository_type=repository_type_,
-            session_getter=self.config.session_getter,
-            inspector=self.config.inspector,
-            auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
             type_annotation=type_annotation,
@@ -329,11 +321,9 @@ class Strawchemy:
         repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
         field = StrawchemyUpdateMutationField(
+            config=self.config,
             input_type=input_type,
             repository_type=repository_type_,
-            session_getter=self.config.session_getter,
-            inspector=self.config.inspector,
-            auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
             type_annotation=type_annotation,
@@ -374,10 +364,8 @@ class Strawchemy:
 
         field = StrawchemyDeleteMutationField(
             filter_input,
+            config=self.config,
             repository_type=repository_type_,
-            session_getter=self.config.session_getter,
-            inspector=self.config.inspector,
-            auto_snake_case=self.config.auto_snake_case,
             python_name=None,
             graphql_name=name,
             type_annotation=type_annotation,

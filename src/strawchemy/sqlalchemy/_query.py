@@ -53,7 +53,6 @@ if TYPE_CHECKING:
     from sqlalchemy.sql._typing import _OnClauseArgument
     from sqlalchemy.sql.selectable import NamedFromClause
     from strawchemy.config.databases import DatabaseFeatures
-    from strawchemy.typing import SupportedDialect
 
     from ._scope import QueryScope
     from .hook import ColumnLoadingMode, QueryHook
@@ -68,6 +67,7 @@ class Join:
     node: SQLAlchemyQueryNode
     onclause: _OnClauseArgument | None = None
     is_outer: bool = False
+    ordered: bool = False
 
     @property
     def _selectable(self) -> NamedFromClause:
@@ -245,8 +245,22 @@ class QueryGraph(Generic[DeclarativeT]):
 
 
 @dataclass
+class Conjunction:
+    expressions: list[ColumnElement[bool]] = dataclasses.field(default_factory=list)
+    joins: list[Join] = dataclasses.field(default_factory=list)
+    common_join_path: list[SQLAlchemyQueryNode] = dataclasses.field(default_factory=list)
+
+    def has_many_predicates(self) -> bool:
+        if not self.expressions:
+            return False
+        return len(self.expressions) > 1 or (
+            isinstance(self.expressions[0], BooleanClauseList) and len(self.expressions[0]) > 1
+        )
+
+
+@dataclass
 class Where:
-    conjunction: Conjunction
+    conjunction: Conjunction = dataclasses.field(default_factory=Conjunction)
     joins: list[Join] = dataclasses.field(default_factory=list)
 
     @property
@@ -263,7 +277,7 @@ class Where:
 
 @dataclass
 class OrderBy:
-    dialect: SupportedDialect
+    db_features: DatabaseFeatures
     columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = dataclasses.field(default_factory=list)
     joins: list[Join] = dataclasses.field(default_factory=list)
 
@@ -282,19 +296,19 @@ class OrderBy:
             expressions.append(column.asc())
         elif order_by is OrderByEnum.DESC:
             expressions.append(column.desc())
-        elif order_by is OrderByEnum.ASC_NULLS_FIRST and self.dialect == "postgresql":
+        elif order_by is OrderByEnum.ASC_NULLS_FIRST and self.db_features.supports_null_ordering:
             expressions.append(column.asc().nulls_first())
         elif order_by is OrderByEnum.ASC_NULLS_FIRST:
             expressions.extend([(column.is_(null())).desc(), column.asc()])
-        elif order_by is OrderByEnum.ASC_NULLS_LAST and self.dialect == "postgresql":
+        elif order_by is OrderByEnum.ASC_NULLS_LAST and self.db_features.supports_null_ordering:
             expressions.append(column.asc().nulls_last())
         elif order_by is OrderByEnum.ASC_NULLS_LAST:
             expressions.extend([(column.is_(null())).asc(), column.asc()])
-        elif order_by is OrderByEnum.DESC_NULLS_FIRST and self.dialect == "postgresql":
+        elif order_by is OrderByEnum.DESC_NULLS_FIRST and self.db_features.supports_null_ordering:
             expressions.append(column.desc().nulls_first())
         elif order_by is OrderByEnum.DESC_NULLS_FIRST:
             expressions.extend([(column.is_(null())).desc(), column.desc()])
-        elif order_by is OrderByEnum.DESC_NULLS_LAST and self.dialect == "postgresql":
+        elif order_by is OrderByEnum.DESC_NULLS_LAST and self.db_features.supports_null_ordering:
             expressions.append(column.desc().nulls_last())
         elif order_by is OrderByEnum.DESC_NULLS_LAST:
             expressions.extend([(column.is_(null())).asc(), column.desc()])
@@ -347,23 +361,8 @@ class DistinctOn:
 
 
 @dataclass
-class Conjunction:
-    expressions: list[ColumnElement[bool]]
-    joins: list[Join] = dataclasses.field(default_factory=list)
-    common_join_path: list[SQLAlchemyQueryNode] = dataclasses.field(default_factory=list)
-
-    def has_many_predicates(self) -> bool:
-        if not self.expressions:
-            return False
-        return len(self.expressions) > 1 or (
-            isinstance(self.expressions[0], BooleanClauseList) and len(self.expressions[0]) > 1
-        )
-
-
-@dataclass
 class Query:
     db_features: DatabaseFeatures
-    root_alias: AliasedClass[Any]
     joins: list[Join] = dataclasses.field(default_factory=list)
     where: Where | None = None
     order_by: OrderBy | None = None
@@ -371,11 +370,12 @@ class Query:
     root_aggregation_functions: list[Label[Any]] = dataclasses.field(default_factory=list)
     limit: int | None = None
     offset: int | None = None
+    use_distinct_on: bool = False
 
     def _distinct_on(self, statement: Select[Any], order_by_expressions: list[UnaryExpression[Any]]) -> Select[Any]:
         distinct_expressions = self.distinct_on.expressions if self.distinct_on else []
 
-        if self.db_features.supports_distinct_on:
+        if self.use_distinct_on:
             # Add ORDER BY columns not present in the SELECT clause
             statement = statement.add_columns(
                 *[
@@ -393,7 +393,7 @@ class Query:
         return next((True for join in self.joins if join.to_many), False)
 
     def statement(self, base_statement: Select[tuple[DeclarativeT]]) -> Select[tuple[DeclarativeT]]:
-        sorted_joins = sorted(self.joins or [])
+        sorted_joins = sorted(self.joins)
         distinct_expressions = self.distinct_on.expressions if self.distinct_on else []
         order_by_expressions = self.order_by.expressions if self.order_by else []
 
@@ -469,7 +469,7 @@ class SubqueryBuilder(Generic[DeclarativeT]):
             only_columns.append(self.scope.columns[function_node])
             self.scope.columns[function_node] = self.scope.literal_column(self.name, self.scope.key(function_node))
 
-        if query.distinct_on and not self.db_features.supports_distinct_on:
+        if query.distinct_on and not query.use_distinct_on:
             order_by_expressions = query.order_by.expressions if query.order_by else []
             rank = (
                 func.row_number()

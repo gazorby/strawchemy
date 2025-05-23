@@ -5,6 +5,7 @@
          array_model.id
     FROM array_model AS array_model
    WHERE array_model.array_str_col <@ $1::TEXT[]
+   ORDER BY array_model.id ASC
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-async-containedIn-psycopg_async_engine]
@@ -13,6 +14,7 @@
          array_model.id
     FROM array_model AS array_model
    WHERE array_model.array_str_col <@ %(param_1)s::TEXT[]
+   ORDER BY array_model.id ASC
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-async-contains-asyncpg_engine]
@@ -21,6 +23,7 @@
          array_model.id
     FROM array_model AS array_model
    WHERE array_model.array_str_col @> $1::TEXT[]
+   ORDER BY array_model.id ASC
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-async-contains-psycopg_async_engine]
@@ -29,6 +32,7 @@
          array_model.id
     FROM array_model AS array_model
    WHERE array_model.array_str_col @> %(param_1)s::TEXT[]
+   ORDER BY array_model.id ASC
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-async-overlap-asyncpg_engine]
@@ -37,6 +41,7 @@
          array_model.id
     FROM array_model AS array_model
    WHERE array_model.array_str_col && $1::TEXT[]
+   ORDER BY array_model.id ASC
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-async-overlap-psycopg_async_engine]
@@ -45,6 +50,7 @@
          array_model.id
     FROM array_model AS array_model
    WHERE array_model.array_str_col && %(param_1)s::TEXT[]
+   ORDER BY array_model.id ASC
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-sync-containedIn-psycopg_engine]
@@ -53,6 +59,7 @@
          array_model.id
     FROM array_model AS array_model
    WHERE array_model.array_str_col <@ %(param_1)s::TEXT[]
+   ORDER BY array_model.id ASC
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-sync-contains-psycopg_engine]
@@ -61,6 +68,7 @@
          array_model.id
     FROM array_model AS array_model
    WHERE array_model.array_str_col @> %(param_1)s::TEXT[]
+   ORDER BY array_model.id ASC
   '''
 # ---
 # name: test_postgres_array_filters[session-tracked-sync-overlap-psycopg_engine]
@@ -69,5 +77,6 @@
          array_model.id
     FROM array_model AS array_model
    WHERE array_model.array_str_col && %(param_1)s::TEXT[]
+   ORDER BY array_model.id ASC
   '''
 # ---

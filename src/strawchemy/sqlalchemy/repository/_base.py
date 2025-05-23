@@ -33,11 +33,13 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         session: SessionT,
         statement: Select[tuple[DeclarativeT]] | None = None,
         execution_options: dict[str, Any] | None = None,
+        deterministic_ordering: bool = False,
     ) -> None:
         self.model = model
         self.session = session
         self.statement = statement
         self.execution_options = execution_options
+        self.deterministic_ordering = deterministic_ordering
 
         self._dialect = session.get_bind().dialect
 
@@ -54,7 +56,13 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
-        transpiler = QueryTranspiler(self.model, self._dialect, query_hooks=query_hooks, statement=self.statement)
+        transpiler = QueryTranspiler(
+            self.model,
+            self._dialect,
+            query_hooks=query_hooks,
+            statement=self.statement,
+            deterministic_ordering=self.deterministic_ordering,
+        )
         return transpiler.select_executor(
             selection_tree=selection,
             dto_filter=dto_filter,

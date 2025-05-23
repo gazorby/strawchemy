@@ -34,6 +34,8 @@ class StrawchemyConfig:
     """Enable/disable pagination on list resolvers."""
     default_id_field_name: str = "id"
     """Name for primary key fields arguments on primary key resolvers."""
+    deterministic_ordering: bool = True
+    """Force deterministic ordering for list resolvers."""
 
     inspector: SQLAlchemyGraphQLInspector = field(init=False)
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from copy import copy
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
@@ -55,6 +56,7 @@ if TYPE_CHECKING:
     from pytest_databases.docker.mysql import MySQLService
     from pytest_databases.docker.postgres import PostgresService
     from pytest_databases.types import XdistIsolationLevel
+    from strawchemy import Strawchemy, StrawchemyConfig
     from strawchemy.sqlalchemy.typing import AnySession
     from strawchemy.typing import SupportedDialect
 
@@ -655,6 +657,24 @@ async def seed_db_async(
 @pytest.fixture
 def dialect(any_session: AnySession) -> SupportedDialect:
     return cast("SupportedDialect", any_session.get_bind().dialect.name)
+
+
+@pytest.fixture
+def mapper(dialect: SupportedDialect) -> Strawchemy:
+    if dialect == "postgresql":
+        return postgres_types.strawchemy
+    if dialect == "mysql":
+        return mysql_types.strawchemy
+    msg = f"Unknown dialect: {dialect}"
+    raise ValueError(msg)
+
+
+@pytest.fixture
+def config(mapper: Strawchemy) -> Generator[StrawchemyConfig]:
+    original_config = copy(mapper.config)
+    yield mapper.config
+    for field in dataclasses.fields(original_config):
+        setattr(mapper.config, field.name, getattr(original_config, field.name))
 
 
 @pytest.fixture

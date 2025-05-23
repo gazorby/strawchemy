@@ -33,6 +33,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
     session: AnySyncSession | None = None
     filter_statement: Select[tuple[Any]] | None = None
     execution_options: dict[str, Any] | None = None
+    deterministic_ordering: bool = False
 
     def graphql_repository(self) -> SQLAlchemyGraphQLSyncRepository[Any]:
         return SQLAlchemyGraphQLSyncRepository(
@@ -40,6 +41,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
             session=self.session or self.session_getter(self.info),
             statement=self.filter_statement,
             execution_options=self.execution_options,
+            deterministic_ordering=self.deterministic_ordering,
         )
 
     def get_one_or_none(

@@ -67,6 +67,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-async-createColor-asyncpg_engine]
@@ -81,6 +82,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-async-createColor-psycopg_async_engine]
@@ -95,6 +97,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-async-createValidatedColor-asyncmy_engine]
@@ -109,6 +112,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-async-createValidatedColor-asyncpg_engine]
@@ -123,6 +127,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-async-createValidatedColor-manual-asyncmy_engine]
@@ -179,6 +184,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-async-createValidatedColorAllFragments-asyncmy_engine]
@@ -193,6 +199,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-async-createValidatedColorAllFragments-asyncpg_engine]
@@ -207,6 +214,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-async-createValidatedColorAllFragments-manual-asyncmy_engine]
@@ -263,6 +271,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-sync-createColor-psycopg_engine]
@@ -277,6 +286,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-sync-createValidatedColor-manual-psycopg_engine]
@@ -305,6 +315,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create[session-tracked-sync-createValidatedColorAllFragments-manual-psycopg_engine]
@@ -333,6 +344,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create_init_defaults[session-tracked-async-asyncmy_engine]
@@ -377,6 +389,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create_many[session-tracked-async-asyncpg_engine]
@@ -391,6 +404,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create_many[session-tracked-async-psycopg_async_engine]
@@ -405,6 +419,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create_many[session-tracked-sync-psycopg_engine]
@@ -419,6 +434,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-async-add-asyncmy_engine]
@@ -430,6 +446,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-async-add-asyncmy_engine].1
@@ -455,6 +473,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-async-add-asyncpg_engine].1
@@ -481,6 +501,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-async-add-psycopg_async_engine].1
@@ -507,6 +529,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-async-set-asyncmy_engine].1
@@ -532,6 +556,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-async-set-asyncpg_engine].1
@@ -558,6 +584,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-async-set-psycopg_async_engine].1
@@ -584,6 +612,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-sync-add-psycopg_engine].1
@@ -610,6 +640,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-sync-set-psycopg_engine].1
@@ -675,6 +707,10 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine]
@@ -725,6 +761,10 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine]
@@ -775,6 +815,10 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine]
@@ -825,6 +869,10 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-asyncmy_engine]
@@ -855,6 +903,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-asyncpg_engine]
@@ -879,6 +929,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-psycopg_async_engine]
@@ -903,6 +955,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-sync-psycopg_engine]
@@ -927,6 +981,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-asyncmy_engine]
@@ -942,6 +998,9 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-asyncmy_engine].1
@@ -969,6 +1028,9 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-asyncpg_engine].1
@@ -996,6 +1058,9 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-psycopg_async_engine].1
@@ -1023,6 +1088,9 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-sync-psycopg_engine].1
@@ -1047,6 +1115,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-asyncmy_engine].1
@@ -1071,6 +1141,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-asyncpg_engine].1
@@ -1095,6 +1167,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-psycopg_async_engine].1
@@ -1119,6 +1193,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-sync-psycopg_engine].1
@@ -1146,6 +1222,9 @@
     LEFT OUTER JOIN topic AS group__topics
       ON user__group.id = group__topics.group_id
    WHERE user.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY user.id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
   '''
 # ---
 # name: test_create_with_to_one_create_and_nested_set[session-tracked-async-asyncmy_engine].1
@@ -1173,6 +1252,9 @@
     LEFT OUTER JOIN topic AS group__topics
       ON user__group.id = group__topics.group_id
    WHERE "user".id IN (__[POSTCOMPILE_id_3])
+   ORDER BY "user".id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
   '''
 # ---
 # name: test_create_with_to_one_create_and_nested_set[session-tracked-async-asyncpg_engine].1
@@ -1200,6 +1282,9 @@
     LEFT OUTER JOIN topic AS group__topics
       ON user__group.id = group__topics.group_id
    WHERE "user".id IN (__[POSTCOMPILE_id_3])
+   ORDER BY "user".id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
   '''
 # ---
 # name: test_create_with_to_one_create_and_nested_set[session-tracked-async-psycopg_async_engine].1
@@ -1227,6 +1312,9 @@
     LEFT OUTER JOIN topic AS group__topics
       ON user__group.id = group__topics.group_id
    WHERE "user".id IN (__[POSTCOMPILE_id_3])
+   ORDER BY "user".id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
   '''
 # ---
 # name: test_create_with_to_one_create_and_nested_set[session-tracked-sync-psycopg_engine].1
@@ -1250,6 +1338,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-asyncmy_engine].1
@@ -1267,6 +1357,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-asyncpg_engine].1
@@ -1284,6 +1376,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-psycopg_async_engine].1
@@ -1301,6 +1395,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_set[session-tracked-sync-psycopg_engine].1
@@ -1318,6 +1414,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-asyncmy_engine].1
@@ -1335,6 +1433,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-asyncpg_engine].1
@@ -1352,6 +1452,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-psycopg_async_engine].1
@@ -1369,6 +1471,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-sync-psycopg_engine].1
@@ -1392,6 +1496,8 @@
     FROM USER AS USER
     LEFT OUTER JOIN `group` AS user__group
       ON user__group.id = user.group_id
+   ORDER BY user.id ASC,
+            user__group.id ASC
   '''
 # ---
 # name: test_delete_all[session-tracked-async-asyncmy_engine].2
@@ -1415,6 +1521,8 @@
     FROM "user" AS "user"
     LEFT OUTER JOIN "group" AS user__group
       ON user__group.id = "user".group_id
+   ORDER BY "user".id ASC,
+            user__group.id ASC
   '''
 # ---
 # name: test_delete_all[session-tracked-async-psycopg_async_engine]
@@ -1432,6 +1540,8 @@
     FROM "user" AS "user"
     LEFT OUTER JOIN "group" AS user__group
       ON user__group.id = "user".group_id
+   ORDER BY "user".id ASC,
+            user__group.id ASC
   '''
 # ---
 # name: test_delete_all[session-tracked-sync-psycopg_engine]
@@ -1449,6 +1559,8 @@
     FROM "user" AS "user"
     LEFT OUTER JOIN "group" AS user__group
       ON user__group.id = "user".group_id
+   ORDER BY "user".id ASC,
+            user__group.id ASC
   '''
 # ---
 # name: test_delete_filter[session-tracked-async-asyncmy_engine]
@@ -1468,6 +1580,8 @@
     LEFT OUTER JOIN `group` AS user__group
       ON user__group.id = user.group_id
    WHERE user.name = %s
+   ORDER BY user.id ASC,
+            user__group.id ASC
   '''
 # ---
 # name: test_delete_filter[session-tracked-async-asyncmy_engine].2
@@ -1495,6 +1609,8 @@
     LEFT OUTER JOIN "group" AS user__group
       ON user__group.id = "user".group_id
    WHERE "user".name = $1::VARCHAR
+   ORDER BY "user".id ASC,
+            user__group.id ASC
   '''
 # ---
 # name: test_delete_filter[session-tracked-async-psycopg_async_engine]
@@ -1515,6 +1631,8 @@
     LEFT OUTER JOIN "group" AS user__group
       ON user__group.id = "user".group_id
    WHERE "user".name = %(name_2)s::VARCHAR
+   ORDER BY "user".id ASC,
+            user__group.id ASC
   '''
 # ---
 # name: test_delete_filter[session-tracked-sync-psycopg_engine]
@@ -1535,6 +1653,8 @@
     LEFT OUTER JOIN "group" AS user__group
       ON user__group.id = "user".group_id
    WHERE "user".name = %(name_2)s::VARCHAR
+   ORDER BY "user".id ASC,
+            user__group.id ASC
   '''
 # ---
 # name: test_update[session-tracked-async-no-validation-asyncmy_engine]
@@ -1551,6 +1671,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-async-no-validation-asyncpg_engine]
@@ -1568,6 +1689,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-async-no-validation-psycopg_async_engine]
@@ -1585,6 +1707,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-async-validation-fragment-asyncmy_engine]
@@ -1601,6 +1724,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-async-validation-fragment-asyncpg_engine]
@@ -1618,6 +1742,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-async-validation-fragment-psycopg_async_engine]
@@ -1635,6 +1760,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-async-validation-no-fragment-asyncmy_engine]
@@ -1651,6 +1777,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-async-validation-no-fragment-asyncpg_engine]
@@ -1668,6 +1795,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-async-validation-no-fragment-psycopg_async_engine]
@@ -1685,6 +1813,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-sync-no-validation-psycopg_engine]
@@ -1702,6 +1831,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-sync-validation-fragment-psycopg_engine]
@@ -1719,6 +1849,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update[session-tracked-sync-validation-no-fragment-psycopg_engine]
@@ -1736,6 +1867,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_by_filter[session-tracked-async-asyncmy_engine]
@@ -1758,6 +1890,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_by_filter[session-tracked-async-asyncpg_engine]
@@ -1773,6 +1906,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_by_filter[session-tracked-async-psycopg_async_engine]
@@ -1788,6 +1922,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_by_filter[session-tracked-sync-psycopg_engine]
@@ -1803,6 +1938,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_by_filter_only_return_affected_objects[session-tracked-async-asyncmy_engine]
@@ -1825,6 +1961,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_by_filter_only_return_affected_objects[session-tracked-async-asyncpg_engine]
@@ -1840,6 +1977,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_by_filter_only_return_affected_objects[session-tracked-async-psycopg_async_engine]
@@ -1855,6 +1993,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_by_filter_only_return_affected_objects[session-tracked-sync-psycopg_engine]
@@ -1870,6 +2009,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_many[session-tracked-async-asyncmy_engine]
@@ -1886,6 +2026,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_many[session-tracked-async-asyncpg_engine]
@@ -1903,6 +2044,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_many[session-tracked-async-psycopg_async_engine]
@@ -1920,6 +2062,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_many[session-tracked-sync-psycopg_engine]
@@ -1937,6 +2080,7 @@
          color.id
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_update_no_init_defaults[session-tracked-async-asyncmy_engine]
@@ -2024,6 +2168,10 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine]
@@ -2077,6 +2225,10 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine]
@@ -2130,6 +2282,10 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine]
@@ -2183,6 +2339,10 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_update_with_to_many_add[session-tracked-async-asyncmy_engine]
@@ -2210,6 +2370,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_add[session-tracked-async-asyncpg_engine]
@@ -2239,6 +2401,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_add[session-tracked-async-psycopg_async_engine]
@@ -2268,6 +2432,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_add[session-tracked-sync-psycopg_engine]
@@ -2297,6 +2463,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-asyncmy_engine]
@@ -2331,6 +2499,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-asyncpg_engine]
@@ -2367,6 +2537,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-psycopg_async_engine]
@@ -2403,6 +2575,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-sync-psycopg_engine]
@@ -2439,6 +2613,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-asyncmy_engine]
@@ -2471,6 +2647,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-asyncpg_engine]
@@ -2498,6 +2676,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-psycopg_async_engine]
@@ -2525,6 +2705,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-sync-psycopg_engine]
@@ -2552,6 +2734,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-asyncmy_engine]
@@ -2589,6 +2773,9 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-asyncpg_engine]
@@ -2628,6 +2815,9 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-psycopg_async_engine]
@@ -2667,6 +2857,9 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-sync-psycopg_engine]
@@ -2706,6 +2899,9 @@
     LEFT OUTER JOIN fruit_farm AS fruits__farms
       ON color__fruits.id = fruits__farms.fruit_id
    WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
   '''
 # ---
 # name: test_update_with_to_many_remove[session-tracked-async-asyncmy_engine]
@@ -2733,6 +2929,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_remove[session-tracked-async-asyncpg_engine]
@@ -2762,6 +2960,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_remove[session-tracked-async-psycopg_async_engine]
@@ -2791,6 +2991,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_remove[session-tracked-sync-psycopg_engine]
@@ -2820,6 +3022,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_set[session-tracked-async-asyncmy_engine]
@@ -2855,6 +3059,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_set[session-tracked-async-asyncpg_engine]
@@ -2893,6 +3099,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_set[session-tracked-async-psycopg_async_engine]
@@ -2931,6 +3139,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_set[session-tracked-sync-psycopg_engine]
@@ -2969,6 +3179,8 @@
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_one_create[session-tracked-async-asyncmy_engine]
@@ -2996,6 +3208,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_create[session-tracked-async-asyncpg_engine]
@@ -3024,6 +3238,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_create[session-tracked-async-psycopg_async_engine]
@@ -3052,6 +3268,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_create[session-tracked-sync-psycopg_engine]
@@ -3080,6 +3298,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_create_and_nested_set[session-tracked-async-asyncmy_engine]
@@ -3118,6 +3338,9 @@
     LEFT OUTER JOIN topic AS group__topics
       ON user__group.id = group__topics.group_id
    WHERE user.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY user.id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
   '''
 # ---
 # name: test_update_with_to_one_create_and_nested_set[session-tracked-async-asyncpg_engine]
@@ -3158,6 +3381,9 @@
     LEFT OUTER JOIN topic AS group__topics
       ON user__group.id = group__topics.group_id
    WHERE "user".id IN (__[POSTCOMPILE_id_3])
+   ORDER BY "user".id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
   '''
 # ---
 # name: test_update_with_to_one_create_and_nested_set[session-tracked-async-psycopg_async_engine]
@@ -3198,6 +3424,9 @@
     LEFT OUTER JOIN topic AS group__topics
       ON user__group.id = group__topics.group_id
    WHERE "user".id IN (__[POSTCOMPILE_id_3])
+   ORDER BY "user".id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
   '''
 # ---
 # name: test_update_with_to_one_create_and_nested_set[session-tracked-sync-psycopg_engine]
@@ -3238,6 +3467,9 @@
     LEFT OUTER JOIN topic AS group__topics
       ON user__group.id = group__topics.group_id
    WHERE "user".id IN (__[POSTCOMPILE_id_3])
+   ORDER BY "user".id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
   '''
 # ---
 # name: test_update_with_to_one_set[session-tracked-async-asyncmy_engine]
@@ -3258,6 +3490,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_set[session-tracked-async-asyncpg_engine]
@@ -3279,6 +3513,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_set[session-tracked-async-psycopg_async_engine]
@@ -3300,6 +3536,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_set[session-tracked-sync-psycopg_engine]
@@ -3321,6 +3559,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_set_null[session-tracked-async-asyncmy_engine]
@@ -3341,6 +3581,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_set_null[session-tracked-async-asyncpg_engine]
@@ -3362,6 +3604,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_set_null[session-tracked-async-psycopg_async_engine]
@@ -3383,6 +3627,8 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---
 # name: test_update_with_to_one_set_null[session-tracked-sync-psycopg_engine]
@@ -3404,5 +3650,7 @@
     LEFT OUTER JOIN color AS fruit__color
       ON fruit__color.id = fruit.color_id
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
   '''
 # ---

@@ -16,6 +16,7 @@ class DatabaseFeatures(Protocol):
     supports_lateral: bool = False
     supports_distinct_on: bool = False
     supports_json: bool = True
+    supports_null_ordering: bool = False
     aggregation_functions: set[AggregationFunction] = field(
         default_factory=lambda: {
             "min",
@@ -45,6 +46,7 @@ class PostgresFeatures(DatabaseFeatures):
     dialect: SupportedDialect = "postgresql"
     supports_distinct_on: bool = True
     supports_lateral: bool = True
+    supports_null_ordering: bool = True
 
 
 @dataclass(frozen=True)
