@@ -9,4 +9,4 @@ __all__ = ("AnyAsyncMutationType", "AnyAsyncQueryType", "AnySyncMutationType", "
 AnyAsyncQueryType: TypeAlias = postgres.AsyncQuery | mysql.AsyncQuery | sqlite.AsyncQuery
 AnySyncQueryType: TypeAlias = postgres.SyncQuery | mysql.SyncQuery | sqlite.SyncQuery
 AnyAsyncMutationType: TypeAlias = postgres.AsyncMutation | mysql.AsyncMutation | sqlite.AsyncMutation
-AnySyncMutationType: TypeAlias = postgres.SyncMutation | mysql.SyncMutation | sqlite.AsyncMutation
+AnySyncMutationType: TypeAlias = postgres.SyncMutation | mysql.SyncMutation | sqlite.SyncMutation
