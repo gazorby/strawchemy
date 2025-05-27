@@ -22,18 +22,18 @@ if TYPE_CHECKING:
 
 
 ColumnLoadingMode: TypeAlias = Literal["undefer", "add"]
-RelationshipLoadSpec: TypeAlias = "tuple[InstrumentedAttribute[Any], Sequence[_LoadType]]"
+RelationshipLoadSpec: TypeAlias = "tuple[InstrumentedAttribute[Any], Sequence[LoadType]]"
 
-_LoadType: TypeAlias = "InstrumentedAttribute[Any] | RelationshipLoadSpec"
+LoadType: TypeAlias = "InstrumentedAttribute[Any] | RelationshipLoadSpec"
 
 
 @dataclass
 class QueryHook(Generic[DeclarativeT]):
     info_var: ClassVar[ContextVar[Info[Any, Any] | None]] = ContextVar("info", default=None)
-    load: Sequence[_LoadType] = field(default_factory=list)
+    load: Sequence[LoadType] = field(default_factory=list)
 
     _columns: list[InstrumentedAttribute[Any]] = field(init=False, default_factory=list)
-    _relationships: list[tuple[InstrumentedAttribute[Any], Sequence[_LoadType]]] = field(
+    _relationships: list[tuple[InstrumentedAttribute[Any], Sequence[LoadType]]] = field(
         init=False, default_factory=list
     )
 
@@ -50,7 +50,7 @@ class QueryHook(Generic[DeclarativeT]):
         self._check_relationship_load_spec(self._relationships)
 
     def _check_relationship_load_spec(
-        self, load_spec: list[tuple[InstrumentedAttribute[Any], Sequence[_LoadType]]]
+        self, load_spec: list[tuple[InstrumentedAttribute[Any], Sequence[LoadType]]]
     ) -> None:
         for key, attributes in load_spec:
             for attribute in attributes:

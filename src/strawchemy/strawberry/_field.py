@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.base import StrawberryObjectDefinition, StrawberryType, WithStrawberryObjectDefinition
     from strawberry.types.fields.resolver import StrawberryResolver
-    from strawchemy.sqlalchemy.inspector import SQLAlchemyGraphQLInspector
+    from strawchemy import StrawchemyConfig
     from strawchemy.sqlalchemy.typing import QueryHookCallable
     from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.typing import AnyRepository
@@ -66,7 +66,6 @@ if TYPE_CHECKING:
     from .repository._base import GraphQLResult
     from .typing import (
         AnyMappedDTO,
-        AnySessionGetter,
         FilterStatementCallable,
         MappedGraphQLDTO,
         StrawchemyTypeWithStrawberryObjectDefinition,
@@ -120,15 +119,13 @@ class StrawchemyField(StrawberryField):
     @override
     def __init__(
         self,
-        inspector: SQLAlchemyGraphQLInspector,
-        session_getter: AnySessionGetter,
+        config: StrawchemyConfig,
         repository_type: AnyRepository,
         filter_type: type[BooleanFilterDTO] | None = None,
         order_by: type[OrderByDTO] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination = False,
         root_aggregations: bool = False,
-        auto_snake_case: bool = True,
         registry_namespace: dict[str, Any] | None = None,
         filter_statement: FilterStatementCallable | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
@@ -154,8 +151,6 @@ class StrawchemyField(StrawberryField):
         self.type_annotation = type_annotation
         self.registry_namespace = registry_namespace
         self.is_root_field = root_field
-        self.inspector = inspector
-        self.auto_snake_case = auto_snake_case
         self.root_aggregations = root_aggregations
         self.distinct_on = distinct_on
         self.query_hook = query_hook
@@ -167,10 +162,9 @@ class StrawchemyField(StrawberryField):
         self._filter = filter_type
         self._order_by = order_by
         self._description = description
-        self._session_getter = session_getter
         self._filter_statement = filter_statement
         self._execution_options = execution_options
-
+        self._config = config
         self._repository_type = repository_type
 
         super().__init__(
@@ -203,12 +197,13 @@ class StrawchemyField(StrawberryField):
     def _get_repository(self, info: Info[Any, Any]) -> StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]:
         return self._repository_type(
             self._strawchemy_type,
-            session=self._session_getter(info),  # pyright: ignore[reportArgumentType]
+            session=self._config.session_getter(info),  # pyright: ignore[reportArgumentType]
             info=info,
-            auto_snake_case=self.auto_snake_case,
+            auto_snake_case=self._config.auto_snake_case,
             root_aggregations=self.root_aggregations,
             filter_statement=self.filter_statement(info),
             execution_options=self._execution_options,
+            deterministic_ordering=self._config.deterministic_ordering,
         )
 
     async def _list_result_async(self, repository_call: Awaitable[GraphQLResult[Any, Any]]) -> _ListResolverResult:
@@ -331,7 +326,7 @@ class StrawchemyField(StrawberryField):
                 )
         elif issubclass(inner_type, MappedDTO):
             model = dto_model_from_type(inner_type)
-            id_fields = list(self.inspector.id_field_definitions(model, DTOConfig(Purpose.READ)))
+            id_fields = list(self._config.inspector.id_field_definitions(model, DTOConfig(Purpose.READ)))
             if len(id_fields) == 1:
                 field = id_fields[0][1]
                 arguments.append(
@@ -341,7 +336,7 @@ class StrawchemyField(StrawberryField):
                 arguments.extend(
                     [
                         StrawberryArgument(name, None, type_annotation=StrawberryAnnotation(field.type_))
-                        for name, field in self.inspector.id_field_definitions(model, DTOConfig(Purpose.READ))
+                        for name, field in self._config.inspector.id_field_definitions(model, DTOConfig(Purpose.READ))
                     ]
                 )
         return arguments
@@ -385,13 +380,10 @@ class StrawchemyField(StrawberryField):
             deprecation_reason=self.deprecation_reason,
             directives=self.directives[:] if self.directives is not None else [],  # pyright: ignore[reportUnnecessaryComparison]
             extensions=self.extensions[:] if self.extensions is not None else [],  # pyright: ignore[reportUnnecessaryComparison]
-            session_getter=self._session_getter,
             filter_statement=self._filter_statement,
             query_hook=self.query_hook,
             id_field_name=self.id_field_name,
             repository_type=self._repository_type,
-            inspector=self.inspector,
-            auto_snake_case=self.auto_snake_case,
             root_aggregations=self.root_aggregations,
             filter_type=self._filter,
             order_by=self._order_by,
@@ -399,6 +391,7 @@ class StrawchemyField(StrawberryField):
             pagination=self.pagination,
             registry_namespace=self.registry_namespace,
             execution_options=self._execution_options,
+            config=self._config,
         )
         new_field._arguments = self._arguments[:] if self._arguments is not None else None  # noqa: SLF001
         return new_field

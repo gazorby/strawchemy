@@ -9,7 +9,7 @@ from sqlalchemy import ColumnElement, Row, and_, delete, insert, inspect, select
 from sqlalchemy.orm import RelationshipProperty
 from strawchemy.sqlalchemy._executor import QueryResult, SyncQueryExecutor
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
-from strawchemy.sqlalchemy.typing import AnySyncSession, DeclarativeT, SQLAlchemyQueryNode
+from strawchemy.sqlalchemy.typing import AnySyncSession, DeclarativeT
 from strawchemy.strawberry.mutation.types import RelationType
 
 from ._base import SQLAlchemyGraphQLRepository
@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.strawberry.mutation.input import Input, LevelInput
+    from strawchemy.strawberry.typing import QueryNodeType
 
 __all__ = ()
 
@@ -324,7 +325,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         return instance_ids
 
     def _list_by_ids(
-        self, id_rows: Sequence[_RowLike], selection: SQLAlchemyQueryNode | None = None
+        self, id_rows: Sequence[_RowLike], selection: QueryNodeType | None = None
     ) -> QueryResult[DeclarativeT]:
         """Retrieves multiple records by their primary keys with optional selection.
 
@@ -334,7 +335,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         Args:
             id_rows: A sequence of RowLike objects, each containing the primary
                 key values for one record to retrieve.
-            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+            selection: An optional QueryNodeType representing the GraphQL
                 selection set to apply to the query.
 
         Returns:
@@ -350,14 +351,14 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
     def list(
         self,
-        selection: SQLAlchemyQueryNode | None = None,
+        selection: QueryNodeType | None = None,
         dto_filter: BooleanFilterDTO | None = None,
         order_by: list[OrderByDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
+        query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
@@ -369,7 +370,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         for customization.
 
         Args:
-            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+            selection: An optional QueryNodeType representing the GraphQL
                 selection set.
             dto_filter: An optional filter object derived from GraphQL input.
             order_by: An optional list of ordering criteria.
@@ -403,14 +404,14 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
     def get_one(
         self,
-        selection: SQLAlchemyQueryNode | None = None,
+        selection: QueryNodeType | None = None,
         dto_filter: BooleanFilterDTO | None = None,
         order_by: list[OrderByDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
+        query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
@@ -421,7 +422,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         None if no record matches. Supports GraphQL selection sets and query hooks.
 
         Args:
-            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+            selection: An optional QueryNodeType representing the GraphQL
                 selection set.
             dto_filter: An optional filter object derived from GraphQL input.
             order_by: An optional list of ordering criteria.
@@ -456,8 +457,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
     def get_by_id(
         self,
-        selection: SQLAlchemyQueryNode | None = None,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
+        selection: QueryNodeType | None = None,
+        query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
@@ -468,7 +469,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         selection sets and query hooks.
 
         Args:
-            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+            selection: An optional QueryNodeType representing the GraphQL
                 selection set.
             query_hooks: Optional hooks to modify the query.
             execution_options: Optional dictionary of execution options.
@@ -490,9 +491,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         )
         return executor.get_one_or_none(self.session)
 
-    def create(
-        self, data: Input[DeclarativeT], selection: SQLAlchemyQueryNode | None = None
-    ) -> QueryResult[DeclarativeT]:
+    def create(self, data: Input[DeclarativeT], selection: QueryNodeType | None = None) -> QueryResult[DeclarativeT]:
         """Creates one or more records with nested relationships and returns them.
 
         Takes processed input data, performs the creation using `_create_many`,
@@ -501,7 +500,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
         Args:
             data: The processed input data for creation.
-            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+            selection: An optional QueryNodeType representing the GraphQL
                 selection set for the returned data.
 
         Returns:
@@ -512,7 +511,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         return self._list_by_ids(created_ids, selection)
 
     def update_by_ids(
-        self, data: Input[DeclarativeT], selection: SQLAlchemyQueryNode | None = None
+        self, data: Input[DeclarativeT], selection: QueryNodeType | None = None
     ) -> QueryResult[DeclarativeT]:
         """Updates one or more records with nested relationships and returns them.
 
@@ -522,7 +521,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
         Args:
             data: The processed input data for update. Must include primary keys.
-            selection: An optional SQLAlchemyQueryNode representing the GraphQL
+            selection: An optional QueryNodeType representing the GraphQL
                 selection set for the returned data.
 
         Returns:
@@ -536,14 +535,14 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         self,
         data: Input[DeclarativeT],
         dto_filter: BooleanFilterDTO,
-        selection: SQLAlchemyQueryNode | None = None,
+        selection: QueryNodeType | None = None,
     ) -> QueryResult[DeclarativeT]:
         updated_ids = self._mutate("update_where", data, dto_filter)
         return self._list_by_ids(updated_ids, selection)
 
     def delete(
         self,
-        selection: SQLAlchemyQueryNode | None = None,
+        selection: QueryNodeType | None = None,
         dto_filter: BooleanFilterDTO | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> QueryResult[DeclarativeT]:

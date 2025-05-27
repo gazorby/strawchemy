@@ -109,7 +109,7 @@ class RelationInput(_UnboundRelationInput):
 
 
 @dataclass
-class _InputVisitor(VisitorProtocol, Generic[InputModel]):
+class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT, InputModel]):
     input_data: Input[InputModel]
     is_update: bool = False
 
@@ -118,7 +118,7 @@ class _InputVisitor(VisitorProtocol, Generic[InputModel]):
     @override
     def field_value(
         self,
-        parent: ToMappedProtocol,
+        parent: ToMappedProtocol[DeclarativeBaseT],
         field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
         value: Any,
         level: int,
@@ -161,8 +161,8 @@ class _InputVisitor(VisitorProtocol, Generic[InputModel]):
     @override
     def model(
         self,
-        parent: ToMappedProtocol,
-        model_cls: type[DeclarativeBase],
+        parent: ToMappedProtocol[DeclarativeBaseT],
+        model_cls: type[DeclarativeBaseT],
         params: dict[str, Any],
         override: dict[str, Any],
         level: int,

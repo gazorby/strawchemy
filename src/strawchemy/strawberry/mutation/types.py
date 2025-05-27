@@ -35,13 +35,16 @@ class RelationType(Enum):
 
 
 @strawberry.input(description=_TO_ONE_DESCRIPTION)
-class ToOneInput(ToMappedProtocol, Generic[T, RelationInputT]):
+class ToOneInput(ToMappedProtocol[Any], Generic[T, RelationInputT]):
     set: T | None = UNSET
     create: RelationInputT | None = UNSET
 
     @override
     def to_mapped(
-        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+        self,
+        visitor: VisitorProtocol[Any] | None = None,
+        override: dict[str, Any] | None = None,
+        level: int = 0,
     ) -> Any | DTOUnsetType:
         if self.create and self.set:
             msg = "You cannot use both `set` and `create` in a -to-one relation input"
@@ -56,7 +59,10 @@ class RequiredToOneInput(ToOneInput[T, RelationInputT]):
 
     @override
     def to_mapped(
-        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+        self,
+        visitor: VisitorProtocol[Any] | None = None,
+        override: dict[str, Any] | None = None,
+        level: int = 0,
     ) -> Any | DTOUnsetType:
         if not self.create and not self.set:
             msg = "Relation is required, you must set either `set` or `create`."
@@ -65,14 +71,17 @@ class RequiredToOneInput(ToOneInput[T, RelationInputT]):
 
 
 @strawberry.input(description=_TO_MANY_DESCRIPTION)
-class ToManyCreateInput(ToMappedProtocol, Generic[T, RelationInputT]):
+class ToManyCreateInput(ToMappedProtocol[Any], Generic[T, RelationInputT]):
     set: list[T] | None = UNSET
     add: list[T] | None = UNSET
     create: list[RelationInputT] | None = UNSET
 
     @override
     def to_mapped(
-        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+        self,
+        visitor: VisitorProtocol[Any] | None = None,
+        override: dict[str, Any] | None = None,
+        level: int = 0,
     ) -> list[Any] | DTOUnsetType:
         if self.set and (self.create or self.add):
             msg = "You cannot use `set` with `create` or `add` in -to-many relation input"
@@ -85,14 +94,17 @@ class ToManyCreateInput(ToMappedProtocol, Generic[T, RelationInputT]):
 
 
 @strawberry.input(description=_TO_MANY_UPDATE_DESCRIPTION)
-class RequiredToManyUpdateInput(ToMappedProtocol, Generic[T, RelationInputT]):
+class RequiredToManyUpdateInput(ToMappedProtocol[Any], Generic[T, RelationInputT]):
     set: list[T] | None = UNSET
     add: list[T] | None = UNSET
     create: list[RelationInputT] | None = UNSET
 
     @override
     def to_mapped(
-        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+        self,
+        visitor: VisitorProtocol[Any] | None = None,
+        override: dict[str, Any] | None = None,
+        level: int = 0,
     ) -> list[Any] | DTOUnsetType:
         return (
             [dto.to_mapped(visitor, level=level, override=override) for dto in self.create]
@@ -110,7 +122,10 @@ class ToManyUpdateInput(RequiredToManyUpdateInput[T, RelationInputT]):
 
     @override
     def to_mapped(
-        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+        self,
+        visitor: VisitorProtocol[Any] | None = None,
+        override: dict[str, Any] | None = None,
+        level: int = 0,
     ) -> list[Any] | DTOUnsetType:
         if self.set and (self.create or self.add or self.remove):
             msg = "You cannot use `set` with `create`, `add` or `remove` in a -to-many relation input"

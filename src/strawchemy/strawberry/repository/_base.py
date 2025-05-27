@@ -14,25 +14,27 @@ from strawberry.types.nodes import FragmentSpread, InlineFragment, SelectedField
 from strawchemy.constants import ORDER_BY_KEY
 from strawchemy.dto.base import ModelT
 from strawchemy.exceptions import StrawchemyError
+from strawchemy.graph import NodeMetadata
 from strawchemy.strawberry._utils import dto_model_from_type, strawberry_contained_user_type
 from strawchemy.strawberry.dto import (
     DTOKey,
     OrderByRelationFilterDTO,
     QueryNode,
+    QueryNodeMetadata,
     RelationFilterDTO,
     StrawchemyDTOAttributes,
 )
 from strawchemy.strawberry.mutation.types import error_type_names
 from strawchemy.utils import camel_to_snake, snake_keys
 
-from ._node import _StrawberryQueryNode
+from ._node import StrawberryQueryNode
 
 if TYPE_CHECKING:
     from strawberry import Info
     from strawberry.types.field import StrawberryField
     from strawchemy.sqlalchemy._executor import QueryResult
     from strawchemy.sqlalchemy.hook import QueryHook
-    from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
+    from strawchemy.strawberry.typing import QueryNodeType, StrawchemyTypeWithStrawberryObjectDefinition
 
 __all__ = ("GraphQLResult", "StrawchemyRepository")
 
@@ -42,7 +44,7 @@ T = TypeVar("T")
 @dataclass
 class GraphQLResult(Generic[ModelT, T]):
     query_result: QueryResult[ModelT]
-    tree: _StrawberryQueryNode[T]
+    tree: StrawberryQueryNode[T]
 
     def graphql_type(self) -> T:
         return self.tree.node_result_to_strawberry_type(self.query_result.one())
@@ -83,10 +85,10 @@ class StrawchemyRepository(Generic[T]):
     root_aggregations: bool = False
     auto_snake_case: bool = True
 
-    _query_hooks: defaultdict[QueryNode, list[QueryHook[Any]]] = dataclasses.field(
+    _query_hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(list), init=False
     )
-    _tree: _StrawberryQueryNode[T] = dataclasses.field(init=False)
+    _tree: StrawberryQueryNode[T] = dataclasses.field(init=False)
 
     def __post_init__(self) -> None:
         inner_root_type = strawberry_contained_user_type(self.type)
@@ -95,7 +97,7 @@ class StrawchemyRepository(Generic[T]):
             for selection in self.info.selected_fields
             if isinstance(selection, SelectedField) and selection.name == self.info.field_name
         )
-        node = _StrawberryQueryNode.root_node(
+        node = StrawberryQueryNode.root_node(
             dto_model_from_type(inner_root_type),
             strawberry_type=inner_root_type,
             root_aggregations=self.root_aggregations,
@@ -123,9 +125,7 @@ class StrawchemyRepository(Generic[T]):
 
         return field.query_hook if isinstance(field, StrawchemyField) else None
 
-    def _add_query_hooks(
-        self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: _StrawberryQueryNode[Any]
-    ) -> None:
+    def _add_query_hooks(self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: QueryNodeType) -> None:
         hooks = query_hooks if isinstance(query_hooks, Collection) else [query_hooks]
         for hook in hooks:
             hook.info_var.set(self.info)
@@ -135,7 +135,7 @@ class StrawchemyRepository(Generic[T]):
         self,
         strawberry_type: type[StrawchemyTypeWithStrawberryObjectDefinition],
         selected_fields: list[Selection],
-        node: _StrawberryQueryNode[Any],
+        node: QueryNodeType,
     ) -> None:
         selection_type = strawberry_contained_user_type(strawberry_type)
         if isinstance(selection_type, LazyType):
@@ -176,10 +176,14 @@ class StrawchemyRepository(Generic[T]):
             except KeyError:
                 continue
 
-            child_node = _StrawberryQueryNode(
+            child_node = StrawberryQueryNode(
                 value=field_definition,
-                strawberry_type=strawberry_field_type,
-                relation_filter=self._relation_filter(selection, strawberry_field),
+                node_metadata=NodeMetadata(
+                    QueryNodeMetadata(
+                        relation_filter=self._relation_filter(selection, strawberry_field),
+                        strawberry_type=strawberry_field_type,
+                    )
+                ),
             )
             child = node.insert_node(child_node)
             if selection.selections:

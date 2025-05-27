@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated, Any, cast, override
+from typing import TYPE_CHECKING, Annotated, Any, cast, override
 
 from pydantic import AfterValidator
 from strawchemy import (
@@ -33,6 +33,11 @@ from tests.integration.models import (
     RankedUser,
     User,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from strawchemy.sqlalchemy.hook import LoadType
 
 strawchemy = Strawchemy(StrawchemyConfig("mysql"))
 
@@ -72,6 +77,8 @@ class FruitFilterHook(QueryHook[Fruit]):
 
 
 class FruitOrderingHook(QueryHook[Fruit]):
+    load: Sequence[LoadType] = [Fruit.name]
+
     @override
     def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
         return statement.order_by(alias.name.asc())

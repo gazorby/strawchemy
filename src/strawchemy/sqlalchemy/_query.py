@@ -44,7 +44,7 @@ from strawchemy.strawberry.dto import (
 )
 
 from .exceptions import TranspilingError
-from .typing import DeclarativeT
+from .typing import DeclarativeT, OrderBySpec
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -53,11 +53,10 @@ if TYPE_CHECKING:
     from sqlalchemy.sql._typing import _OnClauseArgument
     from sqlalchemy.sql.selectable import NamedFromClause
     from strawchemy.config.databases import DatabaseFeatures
-    from strawchemy.typing import SupportedDialect
+    from strawchemy.strawberry.typing import QueryNodeType
 
     from ._scope import QueryScope
     from .hook import ColumnLoadingMode, QueryHook
-    from .typing import SQLAlchemyOrderByNode, SQLAlchemyQueryNode
 
 __all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
 
@@ -65,9 +64,10 @@ __all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "Q
 @dataclass
 class Join:
     target: QueryableAttribute[Any] | NamedFromClause | AliasedClass[Any]
-    node: SQLAlchemyQueryNode
+    node: QueryNodeType
     onclause: _OnClauseArgument | None = None
     is_outer: bool = False
+    order_nodes: list[QueryNodeType] = dataclasses.field(default_factory=list)
 
     @property
     def _selectable(self) -> NamedFromClause:
@@ -171,16 +171,16 @@ class AggregationJoin(Join):
 @dataclass
 class QueryGraph(Generic[DeclarativeT]):
     scope: QueryScope[DeclarativeT]
-    selection_tree: SQLAlchemyQueryNode | None = None
+    selection_tree: QueryNodeType | None = None
     order_by: Sequence[OrderByDTO] = dataclasses.field(default_factory=list)
     distinct_on: list[EnumDTO] = dataclasses.field(default_factory=list)
     dto_filter: BooleanFilterDTO | None = None
 
     query_filter: Filter | None = dataclasses.field(init=False, default=None)
-    where_join_tree: SQLAlchemyQueryNode | None = dataclasses.field(init=False, default=None)
-    subquery_join_tree: SQLAlchemyQueryNode | None = dataclasses.field(init=False, default=None)
-    root_join_tree: SQLAlchemyQueryNode = dataclasses.field(init=False)
-    order_by_nodes: list[SQLAlchemyOrderByNode] = dataclasses.field(init=False, default_factory=list)
+    where_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
+    subquery_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
+    root_join_tree: QueryNodeType = dataclasses.field(init=False)
+    order_by_nodes: list[QueryNodeType] = dataclasses.field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
         self.root_join_tree = self.resolved_selection_tree()
@@ -201,9 +201,9 @@ class QueryGraph(Generic[DeclarativeT]):
             )
             self.order_by_nodes = sorted(self.order_by_tree.leaves())
 
-    def resolved_selection_tree(self) -> SQLAlchemyQueryNode:
+    def resolved_selection_tree(self) -> QueryNodeType:
         tree = self.selection_tree
-        if tree and tree.query_metadata.root_aggregations:
+        if tree and tree.graph_metadata.metadata.root_aggregations:
             tree = tree.find_child(lambda child: child.value.name == NODES_KEY) if tree else None
         if tree is None:
             tree = QueryNode.root_node(self.scope.model)
@@ -217,7 +217,7 @@ class QueryGraph(Generic[DeclarativeT]):
         return tree
 
     @cached_property
-    def order_by_tree(self) -> SQLAlchemyOrderByNode | None:
+    def order_by_tree(self) -> QueryNodeType | None:
         """Creates a query node tree from a list of order by DTOs.
 
         Args:
@@ -226,7 +226,7 @@ class QueryGraph(Generic[DeclarativeT]):
         Returns:
             A query node tree representing the order by clauses, or None if no DTOs provided.
         """
-        merged_tree: SQLAlchemyOrderByNode | None = None
+        merged_tree: QueryNodeType | None = None
         max_order: int = 0
         for order_by_dto in self.order_by:
             tree = order_by_dto.tree()
@@ -238,15 +238,29 @@ class QueryGraph(Generic[DeclarativeT]):
             max_order = max(orders) + 1
         return merged_tree
 
-    def root_aggregation_tree(self) -> SQLAlchemyQueryNode | None:
+    def root_aggregation_tree(self) -> QueryNodeType | None:
         if self.selection_tree:
             return self.selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
         return None
 
 
 @dataclass
+class Conjunction:
+    expressions: list[ColumnElement[bool]] = dataclasses.field(default_factory=list)
+    joins: list[Join] = dataclasses.field(default_factory=list)
+    common_join_path: list[QueryNodeType] = dataclasses.field(default_factory=list)
+
+    def has_many_predicates(self) -> bool:
+        if not self.expressions:
+            return False
+        return len(self.expressions) > 1 or (
+            isinstance(self.expressions[0], BooleanClauseList) and len(self.expressions[0]) > 1
+        )
+
+
+@dataclass
 class Where:
-    conjunction: Conjunction
+    conjunction: Conjunction = dataclasses.field(default_factory=Conjunction)
     joins: list[Join] = dataclasses.field(default_factory=list)
 
     @property
@@ -263,8 +277,8 @@ class Where:
 
 @dataclass
 class OrderBy:
-    dialect: SupportedDialect
-    columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = dataclasses.field(default_factory=list)
+    db_features: DatabaseFeatures
+    columns: list[OrderBySpec] = dataclasses.field(default_factory=list)
     joins: list[Join] = dataclasses.field(default_factory=list)
 
     def _order_by(self, column: SQLColumnExpression[Any], order_by: OrderByEnum) -> list[UnaryExpression[Any]]:
@@ -282,25 +296,25 @@ class OrderBy:
             expressions.append(column.asc())
         elif order_by is OrderByEnum.DESC:
             expressions.append(column.desc())
-        elif order_by is OrderByEnum.ASC_NULLS_FIRST and self.dialect == "postgresql":
+        elif order_by is OrderByEnum.ASC_NULLS_FIRST and self.db_features.supports_null_ordering:
             expressions.append(column.asc().nulls_first())
         elif order_by is OrderByEnum.ASC_NULLS_FIRST:
             expressions.extend([(column.is_(null())).desc(), column.asc()])
-        elif order_by is OrderByEnum.ASC_NULLS_LAST and self.dialect == "postgresql":
+        elif order_by is OrderByEnum.ASC_NULLS_LAST and self.db_features.supports_null_ordering:
             expressions.append(column.asc().nulls_last())
         elif order_by is OrderByEnum.ASC_NULLS_LAST:
             expressions.extend([(column.is_(null())).asc(), column.asc()])
-        elif order_by is OrderByEnum.DESC_NULLS_FIRST and self.dialect == "postgresql":
+        elif order_by is OrderByEnum.DESC_NULLS_FIRST and self.db_features.supports_null_ordering:
             expressions.append(column.desc().nulls_first())
         elif order_by is OrderByEnum.DESC_NULLS_FIRST:
             expressions.extend([(column.is_(null())).desc(), column.desc()])
-        elif order_by is OrderByEnum.DESC_NULLS_LAST and self.dialect == "postgresql":
+        elif order_by is OrderByEnum.DESC_NULLS_LAST and self.db_features.supports_null_ordering:
             expressions.append(column.desc().nulls_last())
         elif order_by is OrderByEnum.DESC_NULLS_LAST:
             expressions.extend([(column.is_(null())).asc(), column.desc()])
         return expressions
 
-    @cached_property
+    @property
     def expressions(self) -> list[UnaryExpression[Any]]:
         expressions: list[UnaryExpression[Any]] = []
         for column, order_by in self.columns:
@@ -347,35 +361,21 @@ class DistinctOn:
 
 
 @dataclass
-class Conjunction:
-    expressions: list[ColumnElement[bool]]
-    joins: list[Join] = dataclasses.field(default_factory=list)
-    common_join_path: list[SQLAlchemyQueryNode] = dataclasses.field(default_factory=list)
-
-    def has_many_predicates(self) -> bool:
-        if not self.expressions:
-            return False
-        return len(self.expressions) > 1 or (
-            isinstance(self.expressions[0], BooleanClauseList) and len(self.expressions[0]) > 1
-        )
-
-
-@dataclass
 class Query:
     db_features: DatabaseFeatures
-    root_alias: AliasedClass[Any]
+    distinct_on: DistinctOn
     joins: list[Join] = dataclasses.field(default_factory=list)
     where: Where | None = None
     order_by: OrderBy | None = None
-    distinct_on: DistinctOn | None = None
     root_aggregation_functions: list[Label[Any]] = dataclasses.field(default_factory=list)
     limit: int | None = None
     offset: int | None = None
+    use_distinct_on: bool = False
 
     def _distinct_on(self, statement: Select[Any], order_by_expressions: list[UnaryExpression[Any]]) -> Select[Any]:
         distinct_expressions = self.distinct_on.expressions if self.distinct_on else []
 
-        if self.db_features.supports_distinct_on:
+        if self.use_distinct_on:
             # Add ORDER BY columns not present in the SELECT clause
             statement = statement.add_columns(
                 *[
@@ -393,7 +393,7 @@ class Query:
         return next((True for join in self.joins if join.to_many), False)
 
     def statement(self, base_statement: Select[tuple[DeclarativeT]]) -> Select[tuple[DeclarativeT]]:
-        sorted_joins = sorted(self.joins or [])
+        sorted_joins = sorted(self.joins)
         distinct_expressions = self.distinct_on.expressions if self.distinct_on else []
         order_by_expressions = self.order_by.expressions if self.order_by else []
 
@@ -469,7 +469,7 @@ class SubqueryBuilder(Generic[DeclarativeT]):
             only_columns.append(self.scope.columns[function_node])
             self.scope.columns[function_node] = self.scope.literal_column(self.name, self.scope.key(function_node))
 
-        if query.distinct_on and not self.db_features.supports_distinct_on:
+        if query.distinct_on and not query.use_distinct_on:
             order_by_expressions = query.order_by.expressions if query.order_by else []
             rank = (
                 func.row_number()
@@ -494,14 +494,14 @@ class SubqueryBuilder(Generic[DeclarativeT]):
 @dataclass
 class HookApplier:
     scope: QueryScope[Any]
-    hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[Any]]] = dataclasses.field(
+    hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(list)
     )
 
     def apply(
         self,
         statement: Select[tuple[DeclarativeT]],
-        node: SQLAlchemyQueryNode,
+        node: QueryNodeType,
         alias: AliasedClass[Any],
         loading_mode: ColumnLoadingMode,
         in_subquery: bool = False,

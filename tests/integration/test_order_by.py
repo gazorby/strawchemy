@@ -15,6 +15,8 @@ from .utils import compute_aggregation
 if TYPE_CHECKING:
     from decimal import Decimal
 
+    from strawchemy.config.databases import DatabaseFeatures
+
 pytestmark = [pytest.mark.integration]
 
 
@@ -27,13 +29,13 @@ async def test_order_by(
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ fruits(orderBy: {{ name: {order_by} }}) {{ id name }} }}"))
+    result = await maybe_async(any_query(f"{{ fruits(orderBy: {{ sweetness: {order_by} }}) {{ id sweetness }} }}"))
     assert not result.errors
     assert result.data
     # Sort records
-    expected_sort = [{"id": row["id"], "name": row["name"]} for row in raw_fruits]
-    expected_sort = sorted(expected_sort, key=lambda x: x["name"].lower(), reverse=order_by == "DESC")
-    assert [{"id": row["id"], "name": row["name"]} for row in result.data["fruits"]] == expected_sort
+    expected_sort = [{"id": row["id"], "sweetness": row["sweetness"]} for row in raw_fruits]
+    expected_sort = sorted(expected_sort, key=lambda x: x["sweetness"], reverse=order_by == "DESC")
+    assert [{"id": row["id"], "sweetness": row["sweetness"]} for row in result.data["fruits"]] == expected_sort
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
@@ -77,7 +79,11 @@ async def test_order_by_aggregations(
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
+    db_features: DatabaseFeatures,
 ) -> None:
+    if aggregation not in db_features.aggregation_functions:
+        pytest.skip(f"{db_features.dialect} does not support {aggregation} aggregation function")
+
     result = await maybe_async(
         any_query(
             f"""{{
@@ -137,6 +143,74 @@ async def test_relation_order_by(
         )
         assert [row["sweetness"] for row in color["fruits"]] == expected_order
 
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_deterministic_ordering(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that list resolvers return ordered results even if no order by is specified."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colors {
+                    id
+                    fruits {
+                        id
+                    }
+                }
+            }
+        """
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    assert result.data["colors"] == [
+        {"id": 1, "fruits": [{"id": 1}, {"id": 2}]},
+        {"id": 2, "fruits": [{"id": 3}, {"id": 4}, {"id": 5}]},
+        {"id": 3, "fruits": [{"id": 6}, {"id": 7}]},
+        {"id": 4, "fruits": [{"id": 8}, {"id": 9}]},
+        {"id": 5, "fruits": [{"id": 10}, {"id": 11}]},
+    ]
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_deterministic_ordering_mixed_with_user_ordering(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that list resolvers return ordered results even if no order by is specified."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colors(orderBy: { name: ASC }) {
+                    id
+                    fruits {
+                        id
+                    }
+                }
+            }
+        """
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    assert result.data["colors"] == [
+        {"id": 4, "fruits": [{"id": 8}, {"id": 9}]},
+        {"id": 3, "fruits": [{"id": 6}, {"id": 7}]},
+        {"id": 5, "fruits": [{"id": 10}, {"id": 11}]},
+        {"id": 1, "fruits": [{"id": 1}, {"id": 2}]},
+        {"id": 2, "fruits": [{"id": 3}, {"id": 4}, {"id": 5}]},
+    ]
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

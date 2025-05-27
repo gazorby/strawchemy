@@ -9,8 +9,9 @@ if TYPE_CHECKING:
     from strawberry import Info
     from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
     from strawberry.types.base import WithStrawberryObjectDefinition
+    from strawchemy.graph import Node
     from strawchemy.sqlalchemy.typing import AnyAsyncSession, AnySyncSession
-    from strawchemy.strawberry.dto import StrawchemyDTOAttributes
+    from strawchemy.strawberry.dto import GraphQLFieldDefinition, QueryNodeMetadata, StrawchemyDTOAttributes
     from strawchemy.validation.pydantic import MappedPydanticGraphQLDTO
 
     from .dto import (
@@ -57,7 +58,7 @@ GraphQLDTO: TypeAlias = "StrawberryGraphQLDTO[_T] | MappedPydanticGraphQLDTO[_T]
 MappedGraphQLDTO: TypeAlias = "MappedStrawberryGraphQLDTO[_T] | MappedPydanticGraphQLDTO[_T]"
 UnmappedGraphQLDTO: TypeAlias = "UnmappedStrawberryGraphQLDTO[_T]"
 AnyMappedDTO: TypeAlias = "MappedStrawberryGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
-
+QueryNodeType: TypeAlias = "Node[GraphQLFieldDefinition, QueryNodeMetadata]"
 
 if TYPE_CHECKING:
 

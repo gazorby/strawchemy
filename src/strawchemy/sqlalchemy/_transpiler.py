@@ -54,7 +54,7 @@ from ._query import (
 from ._scope import QueryScope
 from .exceptions import TranspilingError
 from .inspector import SQLAlchemyGraphQLInspector
-from .typing import DeclarativeT, QueryExecutorT, SQLAlchemyOrderByNode, SQLAlchemyQueryNode
+from .typing import DeclarativeT, OrderBySpec, QueryExecutorT
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
@@ -63,6 +63,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
     from sqlalchemy.sql.elements import NamedColumn
+    from strawchemy.strawberry.typing import QueryNodeType
     from strawchemy.typing import SupportedDialect
 
     from .hook import QueryHook
@@ -79,14 +80,14 @@ class QueryTranspiler(Generic[DeclarativeT]):
         dialect: Dialect,
         statement: Select[tuple[DeclarativeT]] | None = None,
         scope: QueryScope[DeclarativeT] | None = None,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[Any]]] | None = None,
+        query_hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] | None = None,
+        deterministic_ordering: bool = False,
     ) -> None:
-        supported_dialect: SupportedDialect = cast("SupportedDialect", dialect.name)
-        self._inspector = SQLAlchemyGraphQLInspector(supported_dialect, [model.registry])
+        self._inspector = SQLAlchemyGraphQLInspector(cast("SupportedDialect", dialect.name), [model.registry])
         self._aggregation_prefix: str = "aggregation"
-        self._aggregation_joins: dict[SQLAlchemyQueryNode, AggregationJoin] = {}
+        self._aggregation_joins: dict[QueryNodeType, AggregationJoin] = {}
         self._statement = statement
-
+        self._deterministic_ordering = deterministic_ordering
         self.dialect = dialect
         self.scope = scope or QueryScope(model, inspector=self._inspector)
 
@@ -147,7 +148,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             expressions.append(attribute.is_not(null()))
         return expressions
 
-    def _gather_joins(self, tree: SQLAlchemyQueryNode, is_outer: bool = False) -> list[Join]:
+    def _gather_joins(self, tree: QueryNodeType, is_outer: bool = False) -> list[Join]:
         """Gathers all joins needed for a query tree.
 
         Args:
@@ -180,8 +181,8 @@ class QueryTranspiler(Generic[DeclarativeT]):
         """
         bool_expressions: list[ColumnElement[bool]] = []
         joins: list[Join] = []
-        common_join_path: list[SQLAlchemyQueryNode] = []
-        node_path: list[SQLAlchemyQueryNode] = []
+        common_join_path: list[QueryNodeType] = []
+        node_path: list[QueryNodeType] = []
 
         for value in query:
             if isinstance(value, AggregationFilter):
@@ -254,7 +255,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         """
         aggregation_name = self.scope.key(self._aggregation_prefix)
         aggregation_node_inspect = self.scope.inspect(aggregation.field_node)
-        aggregation_node = aggregation.field_node.first_aggregate_parent()
+        aggregation_node = aggregation.field_node.find_parent(lambda node: node.value.is_aggregate, strict=True)
         aggregated_alias: AliasedClass[Any] = aliased(aggregation_node_inspect.mapper.class_)
         aggregated_alias_inspected = inspect(aggregated_alias)
         root_relation = self.scope.aliased_attribute(aggregation_node).of_type(aggregated_alias)
@@ -306,19 +307,19 @@ class QueryTranspiler(Generic[DeclarativeT]):
         return join, bool_expressions
 
     def _upsert_aggregations(
-        self, aggregation_node: SQLAlchemyQueryNode, existing_joins: list[Join]
+        self, aggregation_node: QueryNodeType, existing_joins: list[Join]
     ) -> tuple[list[NamedColumn[Any]], Join | None]:
         """Upserts aggregations.
 
         Args:
-            aggregation_node: SQLAlchemyQueryNode
+            aggregation_node: QueryNodeType
             existing_joins: list[_Join]
 
         Returns:
             tuple[list[NamedColumn[Any]], _Join | None]:
         """
         node_inspect = self.scope.inspect(aggregation_node)
-        functions: dict[SQLAlchemyQueryNode, ColumnElement[Any]] = {}
+        functions: dict[QueryNodeType, ColumnElement[Any]] = {}
         function_columns: list[NamedColumn[Any]] = []
         new_join: Join | None = None
         existing_join = next(
@@ -359,7 +360,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         return function_columns, new_join
 
     def _select_child(
-        self, statement: Select[tuple[DeclarativeT]], node: SQLAlchemyQueryNode
+        self, statement: Select[tuple[DeclarativeT]], node: QueryNodeType
     ) -> tuple[Select[tuple[DeclarativeT]], _AbstractLoad]:
         """Applies the load options to the statement for the given node.
 
@@ -395,8 +396,8 @@ class QueryTranspiler(Generic[DeclarativeT]):
                 load = load.options(column_options)
         return statement, load
 
-    def _root_aggregation_functions(self, selection_tree: SQLAlchemyQueryNode) -> list[Label[Any]]:
-        """Build a list of root aggregations, given an SQLAlchemyQueryNode representing the selection tree.
+    def _root_aggregation_functions(self, selection_tree: QueryNodeType) -> list[Label[Any]]:
+        """Build a list of root aggregations, given an QueryNodeType representing the selection tree.
 
         :param selection_tree: The selection tree to build root aggregations from
         :return: A list of Labels representing the root aggregations
@@ -411,7 +412,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             ]
         return []
 
-    def _join(self, node: SQLAlchemyQueryNode, is_outer: bool = False) -> Join:
+    def _join(self, node: QueryNodeType, is_outer: bool = False) -> Join:
         """Creates a join object for a query node.
 
         Args:
@@ -422,7 +423,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             A join object containing the join information.
         """
         aliased_attribute = self.scope.aliased_attribute(node)
-        relation_filter = node.relation_filter
+        relation_filter = node.metadata.data.relation_filter
         if not relation_filter:
             return Join(aliased_attribute, node=node, is_outer=is_outer)
         relationship = node.value.model_field.property
@@ -431,18 +432,16 @@ class QueryTranspiler(Generic[DeclarativeT]):
         target_alias = aliased(target_mapper, flat=True)
         order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else ()
         with self._sub_scope(target_mapper.class_, target_alias):
-            query = self._build_query(
-                QueryGraph(self.scope, order_by=order_by),
-                limit=relation_filter.limit,
-                offset=relation_filter.offset,
-            )
+            query_graph = QueryGraph(self.scope, order_by=order_by)
+            query = self._build_query(query_graph, limit=relation_filter.limit, offset=relation_filter.offset)
         if self._inspector.db_features.supports_lateral:
-            return self._lateral_join(node, target_alias, query, is_outer)
-        return self._cte_join(node, target_alias, query, is_outer)
+            join = self._lateral_join(node, target_alias, query, is_outer)
+        else:
+            join = self._cte_join(node, target_alias, query, is_outer)
+        join.order_nodes = query_graph.order_by_nodes
+        return join
 
-    def _lateral_join(
-        self, node: SQLAlchemyQueryNode, target_alias: AliasedClass[Any], query: Query, is_outer: bool
-    ) -> Join:
+    def _lateral_join(self, node: QueryNodeType, target_alias: AliasedClass[Any], query: Query, is_outer: bool) -> Join:
         target_insp = inspect(target_alias)
         aliased_attribute = self.scope.aliased_attribute(node)
         node_inspect = self.scope.inspect(node)
@@ -454,16 +453,16 @@ class QueryTranspiler(Generic[DeclarativeT]):
         self.scope.set_relation_alias(node, "target", lateral_alias)
         return Join(statement, node=node, is_outer=is_outer, onclause=true())
 
-    def _cte_join(
-        self, node: SQLAlchemyQueryNode, target_alias: AliasedClass[Any], query: Query, is_outer: bool
-    ) -> Join:
+    def _cte_join(self, node: QueryNodeType, target_alias: AliasedClass[Any], query: Query, is_outer: bool) -> Join:
         aliased_attribute = self.scope.aliased_attribute(node)
         remote_fks = self.scope.inspect(node).foreign_key_columns("target", target_alias)
-        rank_column = (
-            func.dense_rank()
-            .over(partition_by=remote_fks, order_by=query.order_by.expressions if query.order_by else None)
-            .label(name="rank")
-        )
+        rank_column: Label[int] | None = None
+        if query.order_by or query.limit is not None or query.offset is not None:
+            rank_column = (
+                func.dense_rank()
+                .over(partition_by=remote_fks, order_by=query.order_by.expressions if query.order_by else None)
+                .label(name="rank")
+            )
         name = self.scope.key(node)
         # Remove limit/offset in CTE as it's applied in the WHERE clause of the main query
         query_wihtout_limit_offset = dataclasses.replace(query, offset=None, limit=None)
@@ -471,23 +470,28 @@ class QueryTranspiler(Generic[DeclarativeT]):
         remote_fks = node_inspect.foreign_key_columns("target", target_alias)
         selection = node_inspect.selection(target_alias)
         base_statement = (
-            select(*selection, *remote_fks, rank_column)
+            select(*selection, *remote_fks)
             .group_by(*remote_fks, *selection)
             .where(and_(*[fk.is_not(null()) for fk in remote_fks]))
         )
+        if rank_column is not None:
+            base_statement = base_statement.add_columns(rank_column)
         statement = query_wihtout_limit_offset.statement(base_statement).cte(name)
         cte_alias = aliased(target_alias, statement, name=name)
         self.scope.set_relation_alias(node, "target", cte_alias)
-        rank_column = self.scope.literal_column(name, rank_column.name)
         limit_offset_condition: list[ColumnElement[bool]] = []
-        if query.offset:
-            limit_offset_condition.append(rank_column > query.offset)
-        if query.limit:
-            limit_offset_condition.append(rank_column <= (query.offset + query.limit if query.offset else query.limit))
+        if rank_column is not None:
+            rank_column = self.scope.literal_column(name, rank_column.name)
+            if query.offset is not None:
+                limit_offset_condition.append(rank_column > query.offset)
+            if query.limit is not None:
+                limit_offset_condition.append(
+                    rank_column <= (query.offset + query.limit if query.offset else query.limit)
+                )
         return Join(statement, node, onclause=and_(aliased_attribute, *limit_offset_condition), is_outer=is_outer)
 
     def _aggregation_lateral_join(
-        self, node: SQLAlchemyQueryNode, function_columns: Iterable[ColumnElement[Any]], alias: AliasedClass[Any]
+        self, node: QueryNodeType, function_columns: Iterable[ColumnElement[Any]], alias: AliasedClass[Any]
     ) -> AggregationJoin:
         """Creates an aggregation join object for a query node.
 
@@ -505,7 +509,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         return AggregationJoin(target=lateral_statement, onclause=true(), node=node, subquery_alias=alias)
 
     def _aggregation_cte_join(
-        self, node: SQLAlchemyQueryNode, alias: AliasedClass[Any], statement: Select[Any], cte_name: str
+        self, node: QueryNodeType, alias: AliasedClass[Any], statement: Select[Any], cte_name: str
     ) -> AggregationJoin:
         remote_fks = self.scope.inspect(node).foreign_key_columns("target", alias)
         cte_statement = (
@@ -547,7 +551,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             ],
         )
 
-    def _order_by(self, order_by_nodes: list[SQLAlchemyOrderByNode], existing_joins: list[Join]) -> OrderBy:
+    def _order_by(self, order_by_nodes: list[QueryNodeType], existing_joins: list[Join]) -> OrderBy:
         """Creates ORDER BY expressions and joins from a list of nodes.
 
         Args:
@@ -561,28 +565,37 @@ class QueryTranspiler(Generic[DeclarativeT]):
         """
         columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = []
         joins: list[Join] = []
-        seen_aggregation_nodes: set[SQLAlchemyOrderByNode] = set()
+        seen_aggregation_nodes: set[QueryNodeType] = set()
 
         for node in order_by_nodes:
-            if node.value.is_function_arg and node.first_aggregate_parent() in seen_aggregation_nodes:
+            if (
+                node.value.is_function_arg
+                and node.find_parent(lambda node: node.value.is_aggregate, strict=True) in seen_aggregation_nodes
+            ):
                 continue
             if node.value.is_function:
                 self.scope.order_by_function_nodes.add(node)
-            if node.order_by is None:
+            if node.metadata.data.order_by is None:
                 msg = "Missing order by value"
                 raise TranspilingError(msg)
             if node.value.is_function_arg or node.value.is_function:
-                aggregation_node = node.first_aggregate_parent()
-                function_columns, new_join = self._upsert_aggregations(aggregation_node, existing_joins)
-                columns.extend([(function_column, node.order_by) for function_column in function_columns])
-                seen_aggregation_nodes.add(aggregation_node)
+                first_aggregate_parent = node.find_parent(lambda node: node.value.is_aggregate, strict=True)
+                function_columns, new_join = self._upsert_aggregations(first_aggregate_parent, existing_joins)
+                columns.extend([(function_column, node.metadata.data.order_by) for function_column in function_columns])
+                seen_aggregation_nodes.add(first_aggregate_parent)
                 if new_join:
                     joins.append(new_join)
             else:
-                columns.append((self.scope.aliased_attribute(node), node.order_by))
-        return OrderBy(self._inspector.db_features.dialect, columns, joins)
+                columns.append((self.scope.aliased_attribute(node), node.metadata.data.order_by))
+        if not columns and self._deterministic_ordering:
+            pk_aliases = [
+                pk_attribute.adapt_to_entity(inspect(self.scope.root_alias))
+                for pk_attribute in self._inspector.pk_attributes(self.scope.model.__mapper__)
+            ]
+            columns.extend([(id_col, OrderByEnum.ASC) for id_col in pk_aliases])
+        return OrderBy(self._inspector.db_features, columns, joins)
 
-    def _select(self, selection_tree: SQLAlchemyQueryNode) -> tuple[Select[tuple[DeclarativeT]], list[Join]]:
+    def _select(self, selection_tree: QueryNodeType) -> tuple[Select[tuple[DeclarativeT]], list[Join]]:
         aggregation_joins: list[Join] = []
         statement = self._base_statement()
         root_columns = self.scope.inspect(selection_tree).columns()
@@ -611,6 +624,40 @@ class QueryTranspiler(Generic[DeclarativeT]):
         statement = statement.options(raiseload("*"), *root_options)
         return statement, aggregation_joins
 
+    def _use_distinct_rank(self, query_graph: QueryGraph[DeclarativeT]) -> bool:
+        if self._inspector.db_features.supports_distinct_on:
+            return bool(query_graph.distinct_on and (query_graph.order_by_tree or self._deterministic_ordering))
+        return bool(query_graph.distinct_on)
+
+    def _filter_order_by_relation_node(self, join: Join, node: QueryNodeType) -> bool:
+        return join.node.value.model_field is node.value.model_field
+
+    def _relation_order_by(self, query_graph: QueryGraph[DeclarativeT], query: Query) -> list[OrderBySpec]:
+        selected_tree = query_graph.resolved_selection_tree()
+        order_by_spec: list[OrderBySpec] = []
+        for join in sorted(query.joins):
+            if (
+                isinstance(join, AggregationJoin)
+                or join.node in query_graph.order_by_nodes
+                or not selected_tree.find_child(
+                    lambda node, _join=join: node.value.model_field is _join.node.value.model_field
+                )
+            ):
+                continue
+            if not join.order_nodes and self._deterministic_ordering:
+                order_by_spec.extend(
+                    [(attribute, OrderByEnum.ASC) for attribute in self.scope.aliased_id_attributes(join.node)]
+                )
+            elif join.order_nodes:
+                order_by_spec.extend(
+                    [
+                        (self.scope.literal_column(join.name, node.value.model_field_name), node.metadata.data.order_by)
+                        for node in join.order_nodes
+                        if node.metadata.data.order_by
+                    ]
+                )
+        return order_by_spec
+
     def _build_query(
         self,
         query_graph: QueryGraph[DeclarativeT],
@@ -619,10 +666,16 @@ class QueryTranspiler(Generic[DeclarativeT]):
         allow_null: bool = False,
     ) -> Query:
         joins: list[Join] = []
-        subquery_join_nodes: set[SQLAlchemyQueryNode] = set()  # Track nodes already joined
-        query = Query(self._inspector.db_features, self.scope.root_alias, limit=limit, offset=offset)
-        has_distinct_on_rank = query_graph.distinct_on and not self._inspector.db_features.supports_distinct_on
-        subquery_needed = self.scope.is_root and (limit is not None or offset is not None or has_distinct_on_rank)
+        subquery_join_nodes: set[QueryNodeType] = set()
+        distinct_on_rank = self._use_distinct_rank(query_graph)
+        query = Query(
+            self._inspector.db_features,
+            limit=limit,
+            offset=offset,
+            distinct_on=DistinctOn(query_graph),
+            use_distinct_on=not distinct_on_rank,
+        )
+        subquery_needed = self.scope.is_root and (limit is not None or offset is not None or distinct_on_rank)
         subquery_builder = SubqueryBuilder(self.scope, self._hook_applier, self._inspector.db_features)
 
         if subquery_needed:
@@ -633,7 +686,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             joins.extend(query.where.joins)
             subquery_join_nodes = {join.node for join in query.where.joins}
 
-        if query_graph.order_by_tree:
+        if query_graph.order_by_tree or self._deterministic_ordering:
             query.order_by = self._order_by(query_graph.order_by_nodes, joins)
             joins.extend(query.order_by.joins)
 
@@ -647,34 +700,36 @@ class QueryTranspiler(Generic[DeclarativeT]):
             )
 
         if subquery_needed:
-            query.distinct_on = DistinctOn(query_graph)
             subquery_alias = subquery_builder.build(query_graph, dataclasses.replace(query, joins=joins))
             self.scope.replace(alias=subquery_alias)
             query.offset = None
             query.joins = self._gather_joins(query_graph.root_join_tree, is_outer=True)
             query.order_by = self._order_by(query_graph.order_by_nodes, query.joins)
             query.joins.extend(query.order_by.joins)
-            if has_distinct_on_rank:
+            if distinct_on_rank:
                 query.where = Where.from_expressions(subquery_builder.distinct_on_condition())
             elif query.where:
                 query.where.clear_expressions()
         else:
-            query.distinct_on = DistinctOn(query_graph)
             query.joins = joins + [
                 join
                 for join in self._gather_joins(query_graph.root_join_tree, is_outer=True)
                 if join.node not in subquery_join_nodes
             ]
 
+        # Add relation ORDER BY columns
+        if query.order_by:
+            query.order_by.columns.extend(self._relation_order_by(query_graph, query))
+
         # Process root-level aggregations using window functions if requested
-        if query_graph.selection_tree and query_graph.selection_tree.query_metadata.root_aggregations:
+        if query_graph.selection_tree and query_graph.selection_tree.graph_metadata.metadata.root_aggregations:
             query.root_aggregation_functions = self._root_aggregation_functions(query_graph.selection_tree)
 
         return query
 
     def select_executor(
         self,
-        selection_tree: SQLAlchemyQueryNode | None = None,
+        selection_tree: QueryNodeType | None = None,
         dto_filter: BooleanFilterDTO | None = None,
         order_by: list[OrderByDTO] | None = None,
         limit: int | None = None,

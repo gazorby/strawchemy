@@ -5,6 +5,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_contains(CAST(%s AS JSON), json_model.dict_col)
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-containedIn-asyncpg_engine]
@@ -14,6 +15,7 @@
     FROM json_model AS json_model
    WHERE json_model.dict_col <@ $1::
    JSONB
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-containedIn-psycopg_async_engine]
@@ -23,6 +25,7 @@
     FROM json_model AS json_model
    WHERE json_model.dict_col <@ %(param_1)s::
    JSONB
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-contains-asyncmy_engine]
@@ -31,6 +34,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_contains(json_model.dict_col, CAST(%s AS JSON))
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-contains-asyncpg_engine]
@@ -40,6 +44,7 @@
     FROM json_model AS json_model
    WHERE json_model.dict_col @> $1::
    JSONB
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-contains-psycopg_async_engine]
@@ -49,6 +54,7 @@
     FROM json_model AS json_model
    WHERE json_model.dict_col @> %(param_1)s::
    JSONB
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-hasKey-asyncmy_engine]
@@ -57,6 +63,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_contains_path(json_model.dict_col, %s, %s)
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-hasKey-asyncpg_engine]
@@ -65,6 +72,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_model.dict_col ? $1::VARCHAR
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-hasKey-psycopg_async_engine]
@@ -73,6 +81,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_model.dict_col ? %(param_1)s::VARCHAR
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-hasKeyAll-asyncmy_engine]
@@ -81,6 +90,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_contains_path(json_model.dict_col, %s, %s, %s)
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-hasKeyAll-asyncpg_engine]
@@ -89,6 +99,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_model.dict_col ? & CAST($1::TEXT[] AS TEXT[])
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-hasKeyAll-psycopg_async_engine]
@@ -97,6 +108,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-hasKeyAny-asyncmy_engine]
@@ -105,6 +117,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_contains_path(json_model.dict_col, %s, %s, %s)
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-hasKeyAny-asyncpg_engine]
@@ -113,6 +126,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_model.dict_col ? | CAST($1::TEXT[] AS TEXT[])
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-async-hasKeyAny-psycopg_async_engine]
@@ -121,6 +135,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-sync-containedIn-psycopg_engine]
@@ -130,6 +145,7 @@
     FROM json_model AS json_model
    WHERE json_model.dict_col <@ %(param_1)s::
    JSONB
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-sync-contains-psycopg_engine]
@@ -139,6 +155,7 @@
     FROM json_model AS json_model
    WHERE json_model.dict_col @> %(param_1)s::
    JSONB
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-sync-hasKey-psycopg_engine]
@@ -147,6 +164,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_model.dict_col ? %(param_1)s::VARCHAR
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-sync-hasKeyAll-psycopg_engine]
@@ -155,6 +173,7 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
+   ORDER BY json_model.id ASC
   '''
 # ---
 # name: test_json_filters[session-tracked-sync-hasKeyAny-psycopg_engine]
@@ -163,5 +182,6 @@
          json_model.id
     FROM json_model AS json_model
    WHERE json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
+   ORDER BY json_model.id ASC
   '''
 # ---

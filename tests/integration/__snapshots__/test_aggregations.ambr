@@ -13,6 +13,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_count_aggregation[session-tracked-async-asyncpg_engine]
@@ -27,6 +28,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_count_aggregation[session-tracked-async-psycopg_async_engine]
@@ -41,6 +43,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_count_aggregation[session-tracked-sync-psycopg_engine]
@@ -55,6 +58,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncmy_engine]
@@ -71,6 +75,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncpg_engine]
@@ -85,6 +90,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-psycopg_async_engine]
@@ -99,6 +105,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-createdAt-created_at-asyncmy_engine]
@@ -115,6 +122,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-createdAt-created_at-asyncpg_engine]
@@ -129,6 +137,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-createdAt-created_at-psycopg_async_engine]
@@ -143,6 +152,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-name-name-asyncmy_engine]
@@ -159,6 +169,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-name-name-asyncpg_engine]
@@ -173,6 +184,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-name-name-psycopg_async_engine]
@@ -187,6 +199,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-rarity-rarity-asyncmy_engine]
@@ -203,6 +216,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-rarity-rarity-asyncpg_engine]
@@ -217,6 +231,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-rarity-rarity-psycopg_async_engine]
@@ -231,6 +246,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-sweetness-sweetness-asyncmy_engine]
@@ -247,6 +263,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-sweetness-sweetness-asyncpg_engine]
@@ -261,6 +278,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-sweetness-sweetness-psycopg_async_engine]
@@ -275,6 +293,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-waterPercent-water_percent-asyncmy_engine]
@@ -291,6 +310,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-waterPercent-water_percent-asyncpg_engine]
@@ -305,6 +325,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-async-waterPercent-water_percent-psycopg_async_engine]
@@ -319,6 +340,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-sync-bestTimeToPick-best_time_to_pick-psycopg_engine]
@@ -333,6 +355,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-sync-createdAt-created_at-psycopg_engine]
@@ -347,6 +370,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-sync-name-name-psycopg_engine]
@@ -361,6 +385,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-sync-rarity-rarity-psycopg_engine]
@@ -375,6 +400,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-sync-sweetness-sweetness-psycopg_engine]
@@ -389,6 +415,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_max_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
@@ -403,6 +430,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncmy_engine]
@@ -419,6 +447,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncpg_engine]
@@ -433,6 +462,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-psycopg_async_engine]
@@ -447,6 +477,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-createdAt-created_at-asyncmy_engine]
@@ -463,6 +494,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-createdAt-created_at-asyncpg_engine]
@@ -477,6 +509,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-createdAt-created_at-psycopg_async_engine]
@@ -491,6 +524,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-name-name-asyncmy_engine]
@@ -507,6 +541,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-name-name-asyncpg_engine]
@@ -521,6 +556,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-name-name-psycopg_async_engine]
@@ -535,6 +571,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-rarity-rarity-asyncmy_engine]
@@ -551,6 +588,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-rarity-rarity-asyncpg_engine]
@@ -565,6 +603,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-rarity-rarity-psycopg_async_engine]
@@ -579,6 +618,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-sweetness-sweetness-asyncmy_engine]
@@ -595,6 +635,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-sweetness-sweetness-asyncpg_engine]
@@ -609,6 +650,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-sweetness-sweetness-psycopg_async_engine]
@@ -623,6 +665,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-waterPercent-water_percent-asyncmy_engine]
@@ -639,6 +682,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-waterPercent-water_percent-asyncpg_engine]
@@ -653,6 +697,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-async-waterPercent-water_percent-psycopg_async_engine]
@@ -667,6 +712,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-sync-bestTimeToPick-best_time_to_pick-psycopg_engine]
@@ -681,6 +727,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-sync-createdAt-created_at-psycopg_engine]
@@ -695,6 +742,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-sync-name-name-psycopg_engine]
@@ -709,6 +757,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-sync-rarity-rarity-psycopg_engine]
@@ -723,6 +772,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-sync-sweetness-sweetness-psycopg_engine]
@@ -737,6 +787,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_min_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
@@ -751,6 +802,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-no-pagination-asyncmy_engine]
@@ -759,6 +811,7 @@
          fruit.id,
          avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-no-pagination-asyncpg_engine]
@@ -767,6 +820,7 @@
          fruit.id,
          avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-no-pagination-psycopg_async_engine]
@@ -775,6 +829,7 @@
          fruit.id,
          avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-pagination-asyncmy_engine]
@@ -787,9 +842,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -803,9 +860,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -819,9 +878,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -879,6 +940,7 @@
          fruit.id,
          stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevPop-no-pagination-asyncpg_engine]
@@ -887,6 +949,7 @@
          fruit.id,
          stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevPop-no-pagination-psycopg_async_engine]
@@ -895,6 +958,7 @@
          fruit.id,
          stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevPop-pagination-asyncmy_engine]
@@ -907,9 +971,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -923,9 +989,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -939,9 +1007,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -951,6 +1021,7 @@
          fruit.id,
          stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevSamp-no-pagination-asyncpg_engine]
@@ -959,6 +1030,7 @@
          fruit.id,
          stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevSamp-no-pagination-psycopg_async_engine]
@@ -967,6 +1039,7 @@
          fruit.id,
          stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-stddevSamp-pagination-asyncmy_engine]
@@ -979,9 +1052,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -995,9 +1070,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1011,9 +1088,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1023,6 +1102,7 @@
          fruit.id,
          sum(fruit.rarity) OVER () AS sum_fruits__sum_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-sum-no-pagination-asyncpg_engine]
@@ -1031,6 +1111,7 @@
          fruit.id,
          sum(fruit.rarity) OVER () AS sum_fruits__sum_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-sum-no-pagination-psycopg_async_engine]
@@ -1039,6 +1120,7 @@
          fruit.id,
          sum(fruit.rarity) OVER () AS sum_fruits__sum_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-sum-pagination-asyncmy_engine]
@@ -1051,9 +1133,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1067,9 +1151,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1083,9 +1169,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1095,6 +1183,7 @@
          fruit.id,
          var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-varPop-no-pagination-asyncpg_engine]
@@ -1103,6 +1192,7 @@
          fruit.id,
          var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-varPop-no-pagination-psycopg_async_engine]
@@ -1111,6 +1201,7 @@
          fruit.id,
          var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-varPop-pagination-asyncmy_engine]
@@ -1123,9 +1214,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1139,9 +1232,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1155,9 +1250,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1167,6 +1264,7 @@
          fruit.id,
          var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-varSamp-no-pagination-asyncpg_engine]
@@ -1175,6 +1273,7 @@
          fruit.id,
          var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-varSamp-no-pagination-psycopg_async_engine]
@@ -1183,6 +1282,7 @@
          fruit.id,
          var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-varSamp-pagination-asyncmy_engine]
@@ -1195,9 +1295,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1211,9 +1313,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1227,9 +1331,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1303,6 +1409,7 @@
          fruit.id,
          avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-no-pagination-asyncpg_engine]
@@ -1311,6 +1418,7 @@
          fruit.id,
          avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-no-pagination-psycopg_async_engine]
@@ -1319,6 +1427,7 @@
          fruit.id,
          avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-pagination-asyncmy_engine]
@@ -1331,9 +1440,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1347,9 +1458,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1363,9 +1476,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1423,6 +1538,7 @@
          fruit.id,
          stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-no-pagination-asyncpg_engine]
@@ -1431,6 +1547,7 @@
          fruit.id,
          stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-no-pagination-psycopg_async_engine]
@@ -1439,6 +1556,7 @@
          fruit.id,
          stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-pagination-asyncmy_engine]
@@ -1451,9 +1569,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1467,9 +1587,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1483,9 +1605,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1495,6 +1619,7 @@
          fruit.id,
          stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-no-pagination-asyncpg_engine]
@@ -1503,6 +1628,7 @@
          fruit.id,
          stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-no-pagination-psycopg_async_engine]
@@ -1511,6 +1637,7 @@
          fruit.id,
          stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-pagination-asyncmy_engine]
@@ -1523,9 +1650,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1539,9 +1668,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1555,9 +1686,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1567,6 +1700,7 @@
          fruit.id,
          sum(fruit.sweetness) OVER () AS sum_fruits__sum_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-sum-no-pagination-asyncpg_engine]
@@ -1575,6 +1709,7 @@
          fruit.id,
          sum(fruit.sweetness) OVER () AS sum_fruits__sum_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-sum-no-pagination-psycopg_async_engine]
@@ -1583,6 +1718,7 @@
          fruit.id,
          sum(fruit.sweetness) OVER () AS sum_fruits__sum_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-sum-pagination-asyncmy_engine]
@@ -1595,9 +1731,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1611,9 +1749,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1627,9 +1767,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1639,6 +1781,7 @@
          fruit.id,
          var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varPop-no-pagination-asyncpg_engine]
@@ -1647,6 +1790,7 @@
          fruit.id,
          var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varPop-no-pagination-psycopg_async_engine]
@@ -1655,6 +1799,7 @@
          fruit.id,
          var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varPop-pagination-asyncmy_engine]
@@ -1667,9 +1812,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1683,9 +1830,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1699,9 +1848,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1711,6 +1862,7 @@
          fruit.id,
          var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varSamp-no-pagination-asyncpg_engine]
@@ -1719,6 +1871,7 @@
          fruit.id,
          var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varSamp-no-pagination-psycopg_async_engine]
@@ -1727,6 +1880,7 @@
          fruit.id,
          var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-varSamp-pagination-asyncmy_engine]
@@ -1739,9 +1893,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1755,9 +1911,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1771,9 +1929,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1814,6 +1974,7 @@
          fruit.id,
          avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-no-pagination-asyncpg_engine]
@@ -1822,6 +1983,7 @@
          fruit.id,
          avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-no-pagination-psycopg_async_engine]
@@ -1830,6 +1992,7 @@
          fruit.id,
          avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-pagination-asyncmy_engine]
@@ -1842,9 +2005,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1858,9 +2023,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1874,9 +2041,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1934,6 +2103,7 @@
          fruit.id,
          stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-no-pagination-asyncpg_engine]
@@ -1942,6 +2112,7 @@
          fruit.id,
          stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-no-pagination-psycopg_async_engine]
@@ -1950,6 +2121,7 @@
          fruit.id,
          stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-pagination-asyncmy_engine]
@@ -1962,9 +2134,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -1978,9 +2152,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1994,9 +2170,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2006,6 +2184,7 @@
          fruit.id,
          stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-no-pagination-asyncpg_engine]
@@ -2014,6 +2193,7 @@
          fruit.id,
          stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-no-pagination-psycopg_async_engine]
@@ -2022,6 +2202,7 @@
          fruit.id,
          stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-pagination-asyncmy_engine]
@@ -2034,9 +2215,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -2050,9 +2233,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -2066,9 +2251,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2078,6 +2265,7 @@
          fruit.id,
          sum(fruit.water_percent) OVER () AS sum_fruits__sum_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-sum-no-pagination-asyncpg_engine]
@@ -2086,6 +2274,7 @@
          fruit.id,
          sum(fruit.water_percent) OVER () AS sum_fruits__sum_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-sum-no-pagination-psycopg_async_engine]
@@ -2094,6 +2283,7 @@
          fruit.id,
          sum(fruit.water_percent) OVER () AS sum_fruits__sum_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-sum-pagination-asyncmy_engine]
@@ -2106,9 +2296,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -2122,9 +2314,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -2138,9 +2332,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2150,6 +2346,7 @@
          fruit.id,
          var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varPop-no-pagination-asyncpg_engine]
@@ -2158,6 +2355,7 @@
          fruit.id,
          var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varPop-no-pagination-psycopg_async_engine]
@@ -2166,6 +2364,7 @@
          fruit.id,
          var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varPop-pagination-asyncmy_engine]
@@ -2178,9 +2377,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -2194,9 +2395,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -2210,9 +2413,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2222,6 +2427,7 @@
          fruit.id,
          var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-no-pagination-asyncpg_engine]
@@ -2230,6 +2436,7 @@
          fruit.id,
          var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-no-pagination-psycopg_async_engine]
@@ -2238,6 +2445,7 @@
          fruit.id,
          var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-pagination-asyncmy_engine]
@@ -2250,9 +2458,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %s
   '''
 # ---
@@ -2266,9 +2476,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -2282,9 +2494,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2342,6 +2556,7 @@
          fruit.id,
          avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-rarity-rarity-avg-pagination-psycopg_engine]
@@ -2354,9 +2569,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2390,6 +2607,7 @@
          fruit.id,
          stddev_pop(fruit.rarity) OVER () AS stddev_pop_fruits__stddev_pop_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-rarity-rarity-stddevPop-pagination-psycopg_engine]
@@ -2402,9 +2620,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2414,6 +2634,7 @@
          fruit.id,
          stddev_samp(fruit.rarity) OVER () AS stddev_samp_fruits__stddev_samp_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-rarity-rarity-stddevSamp-pagination-psycopg_engine]
@@ -2426,9 +2647,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2438,6 +2661,7 @@
          fruit.id,
          sum(fruit.rarity) OVER () AS sum_fruits__sum_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-rarity-rarity-sum-pagination-psycopg_engine]
@@ -2450,9 +2674,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2462,6 +2688,7 @@
          fruit.id,
          var_pop(fruit.rarity) OVER () AS var_pop_fruits__var_pop_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-rarity-rarity-varPop-pagination-psycopg_engine]
@@ -2474,9 +2701,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2486,6 +2715,7 @@
          fruit.id,
          var_samp(fruit.rarity) OVER () AS var_samp_fruits__var_samp_rarity
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-rarity-rarity-varSamp-pagination-psycopg_engine]
@@ -2498,9 +2728,11 @@
                  fruit.rarity AS rarity,
                  fruit.rarity AS rarity__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2534,6 +2766,7 @@
          fruit.id,
          avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-avg-pagination-psycopg_engine]
@@ -2546,9 +2779,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2582,6 +2817,7 @@
          fruit.id,
          stddev_pop(fruit.sweetness) OVER () AS stddev_pop_fruits__stddev_pop_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-stddevPop-pagination-psycopg_engine]
@@ -2594,9 +2830,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2606,6 +2844,7 @@
          fruit.id,
          stddev_samp(fruit.sweetness) OVER () AS stddev_samp_fruits__stddev_samp_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-stddevSamp-pagination-psycopg_engine]
@@ -2618,9 +2857,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2630,6 +2871,7 @@
          fruit.id,
          sum(fruit.sweetness) OVER () AS sum_fruits__sum_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-sum-pagination-psycopg_engine]
@@ -2642,9 +2884,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2654,6 +2898,7 @@
          fruit.id,
          var_pop(fruit.sweetness) OVER () AS var_pop_fruits__var_pop_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-varPop-pagination-psycopg_engine]
@@ -2666,9 +2911,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2678,6 +2925,7 @@
          fruit.id,
          var_samp(fruit.sweetness) OVER () AS var_samp_fruits__var_samp_sweetness
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-varSamp-pagination-psycopg_engine]
@@ -2690,9 +2938,11 @@
                  fruit.sweetness AS sweetness,
                  fruit.sweetness AS sweetness__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2726,6 +2976,7 @@
          fruit.id,
          avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-avg-pagination-psycopg_engine]
@@ -2738,9 +2989,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2774,6 +3027,7 @@
          fruit.id,
          stddev_pop(fruit.water_percent) OVER () AS stddev_pop_fruits__stddev_pop_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-stddevPop-pagination-psycopg_engine]
@@ -2786,9 +3040,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2798,6 +3054,7 @@
          fruit.id,
          stddev_samp(fruit.water_percent) OVER () AS stddev_samp_fruits__stddev_samp_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-stddevSamp-pagination-psycopg_engine]
@@ -2810,9 +3067,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2822,6 +3081,7 @@
          fruit.id,
          sum(fruit.water_percent) OVER () AS sum_fruits__sum_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-sum-pagination-psycopg_engine]
@@ -2834,9 +3094,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2846,6 +3108,7 @@
          fruit.id,
          var_pop(fruit.water_percent) OVER () AS var_pop_fruits__var_pop_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-varPop-pagination-psycopg_engine]
@@ -2858,9 +3121,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2870,6 +3135,7 @@
          fruit.id,
          var_samp(fruit.water_percent) OVER () AS var_samp_fruits__var_samp_water_percent
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-varSamp-pagination-psycopg_engine]
@@ -2882,9 +3148,11 @@
                  fruit.water_percent AS water_percent,
                  fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
+           ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
+   ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -2942,6 +3210,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-avg-asyncpg_engine]
@@ -2956,6 +3225,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-avg-psycopg_async_engine]
@@ -2970,6 +3240,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddev-asyncpg_engine]
@@ -3014,6 +3285,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddevPop-asyncpg_engine]
@@ -3028,6 +3300,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddevPop-psycopg_async_engine]
@@ -3042,6 +3315,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddevSamp-asyncmy_engine]
@@ -3058,6 +3332,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddevSamp-asyncpg_engine]
@@ -3072,6 +3347,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-stddevSamp-psycopg_async_engine]
@@ -3086,6 +3362,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-varPop-asyncmy_engine]
@@ -3102,6 +3379,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-varPop-asyncpg_engine]
@@ -3116,6 +3394,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-varPop-psycopg_async_engine]
@@ -3130,6 +3409,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-varSamp-asyncmy_engine]
@@ -3146,6 +3426,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-varSamp-asyncpg_engine]
@@ -3160,6 +3441,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-varSamp-psycopg_async_engine]
@@ -3174,6 +3456,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-variance-asyncpg_engine]
@@ -3218,6 +3501,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-avg-asyncpg_engine]
@@ -3232,6 +3516,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-avg-psycopg_async_engine]
@@ -3246,6 +3531,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddev-asyncpg_engine]
@@ -3290,6 +3576,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-asyncpg_engine]
@@ -3304,6 +3591,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddevPop-psycopg_async_engine]
@@ -3318,6 +3606,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-asyncmy_engine]
@@ -3334,6 +3623,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-asyncpg_engine]
@@ -3348,6 +3638,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-stddevSamp-psycopg_async_engine]
@@ -3362,6 +3653,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-varPop-asyncmy_engine]
@@ -3378,6 +3670,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-varPop-asyncpg_engine]
@@ -3392,6 +3685,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-varPop-psycopg_async_engine]
@@ -3406,6 +3700,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-varSamp-asyncmy_engine]
@@ -3422,6 +3717,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-varSamp-asyncpg_engine]
@@ -3436,6 +3732,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-varSamp-psycopg_async_engine]
@@ -3450,6 +3747,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-variance-asyncpg_engine]
@@ -3494,6 +3792,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-avg-asyncpg_engine]
@@ -3508,6 +3807,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-avg-psycopg_async_engine]
@@ -3522,6 +3822,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddev-asyncpg_engine]
@@ -3566,6 +3867,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-asyncpg_engine]
@@ -3580,6 +3882,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddevPop-psycopg_async_engine]
@@ -3594,6 +3897,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-asyncmy_engine]
@@ -3610,6 +3914,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-asyncpg_engine]
@@ -3624,6 +3929,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-stddevSamp-psycopg_async_engine]
@@ -3638,6 +3944,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-varPop-asyncmy_engine]
@@ -3654,6 +3961,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-varPop-asyncpg_engine]
@@ -3668,6 +3976,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-varPop-psycopg_async_engine]
@@ -3682,6 +3991,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-asyncmy_engine]
@@ -3698,6 +4008,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-asyncpg_engine]
@@ -3712,6 +4023,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-varSamp-psycopg_async_engine]
@@ -3726,6 +4038,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-variance-asyncpg_engine]
@@ -3768,6 +4081,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-stddev-psycopg_engine]
@@ -3796,6 +4110,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-stddevSamp-psycopg_engine]
@@ -3810,6 +4125,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-varPop-psycopg_engine]
@@ -3824,6 +4140,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-varSamp-psycopg_engine]
@@ -3838,6 +4155,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-variance-psycopg_engine]
@@ -3866,6 +4184,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-stddev-psycopg_engine]
@@ -3894,6 +4213,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-stddevSamp-psycopg_engine]
@@ -3908,6 +4228,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-varPop-psycopg_engine]
@@ -3922,6 +4243,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-varSamp-psycopg_engine]
@@ -3936,6 +4258,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-variance-psycopg_engine]
@@ -3964,6 +4287,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-stddev-psycopg_engine]
@@ -3992,6 +4316,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-stddevSamp-psycopg_engine]
@@ -4006,6 +4331,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-varPop-psycopg_engine]
@@ -4020,6 +4346,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-varSamp-psycopg_engine]
@@ -4034,6 +4361,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-variance-psycopg_engine]
@@ -4064,6 +4392,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-async-rarity-rarity-asyncpg_engine]
@@ -4078,6 +4407,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-async-rarity-rarity-psycopg_async_engine]
@@ -4092,6 +4422,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-asyncmy_engine]
@@ -4108,6 +4439,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-asyncpg_engine]
@@ -4122,6 +4454,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-psycopg_async_engine]
@@ -4136,6 +4469,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-async-waterPercent-water_percent-asyncmy_engine]
@@ -4152,6 +4486,7 @@
    INNER JOIN __strawchemy_aggregation_0
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE color.id = %s
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-async-waterPercent-water_percent-asyncpg_engine]
@@ -4166,6 +4501,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-async-waterPercent-water_percent-psycopg_async_engine]
@@ -4180,6 +4516,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-sync-rarity-rarity-psycopg_engine]
@@ -4194,6 +4531,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-sync-sweetness-sweetness-psycopg_engine]
@@ -4208,6 +4546,7 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_sum_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
@@ -4222,5 +4561,6 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
   '''
 # ---

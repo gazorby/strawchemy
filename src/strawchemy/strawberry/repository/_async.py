@@ -31,6 +31,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
     session: AnyAsyncSession | None = None
     filter_statement: Select[tuple[Any]] | None = None
     execution_options: dict[str, Any] | None = None
+    deterministic_ordering: bool = False
 
     def graphql_repository(self) -> SQLAlchemyGraphQLAsyncRepository[Any]:
         return SQLAlchemyGraphQLAsyncRepository(
@@ -38,6 +39,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
             session=self.session or self.session_getter(self.info),
             statement=self.filter_statement,
             execution_options=self.execution_options,
+            deterministic_ordering=self.deterministic_ordering,
         )
 
     async def get_one_or_none(

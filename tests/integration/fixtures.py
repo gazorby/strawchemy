@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+from copy import copy
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
@@ -12,6 +13,7 @@ import pytest
 import sqlparse
 from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
+from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.strawberry.scalars import Interval, Time
 
@@ -51,10 +53,11 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from pytest import FixtureRequest
-    from pytest_databases._service import DockerService  # pyright: ignore[reportPrivateImportUsage]
+    from pytest_databases._service import DockerService
     from pytest_databases.docker.mysql import MySQLService
     from pytest_databases.docker.postgres import PostgresService
     from pytest_databases.types import XdistIsolationLevel
+    from strawchemy import Strawchemy, StrawchemyConfig
     from strawchemy.sqlalchemy.typing import AnySession
     from strawchemy.typing import SupportedDialect
 
@@ -242,7 +245,7 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "id": 7,
             "created_at": datetime.now().replace(second=7, microsecond=0),
             "name": "clementine",
-            "sweetness": 9,
+            "sweetness": 14,
             "water_percent": 0.9,
             "rarity": Decimal("0.7"),
             "best_time_to_pick": time(hour=0, minute=0),
@@ -655,6 +658,29 @@ async def seed_db_async(
 @pytest.fixture
 def dialect(any_session: AnySession) -> SupportedDialect:
     return cast("SupportedDialect", any_session.get_bind().dialect.name)
+
+
+@pytest.fixture
+def db_features(dialect: SupportedDialect) -> DatabaseFeatures:
+    return DatabaseFeatures.new(dialect)
+
+
+@pytest.fixture
+def mapper(dialect: SupportedDialect) -> Strawchemy:
+    if dialect == "postgresql":
+        return postgres_types.strawchemy
+    if dialect == "mysql":
+        return mysql_types.strawchemy
+    msg = f"Unknown dialect: {dialect}"
+    raise ValueError(msg)
+
+
+@pytest.fixture
+def config(mapper: Strawchemy) -> Generator[StrawchemyConfig]:
+    original_config = copy(mapper.config)
+    yield mapper.config
+    for field in dataclasses.fields(original_config):
+        setattr(mapper.config, field.name, getattr(original_config, field.name))
 
 
 @pytest.fixture

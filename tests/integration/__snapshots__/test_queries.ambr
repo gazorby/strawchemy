@@ -13,6 +13,7 @@
            WHERE color.name = %s
          ) AS anon_1
       ON color.id = anon_1.id
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_filtered_statement[session-tracked-async-asyncpg_engine]
@@ -29,6 +30,7 @@
            WHERE color.name = $1::VARCHAR
          ) AS anon_1
       ON color.id = anon_1.id
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_filtered_statement[session-tracked-async-psycopg_async_engine]
@@ -45,6 +47,7 @@
            WHERE color.name = %(name_1)s::VARCHAR
          ) AS anon_1
       ON color.id = anon_1.id
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_filtered_statement[session-tracked-sync-psycopg_engine]
@@ -61,6 +64,7 @@
            WHERE color.name = %(name_1)s::VARCHAR
          ) AS anon_1
       ON color.id = anon_1.id
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_only_queried_columns_included_in_select[session-tracked-async-asyncmy_engine]
@@ -72,6 +76,8 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_only_queried_columns_included_in_select[session-tracked-async-asyncpg_engine]
@@ -83,6 +89,8 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_only_queried_columns_included_in_select[session-tracked-async-psycopg_async_engine]
@@ -94,6 +102,8 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_only_queried_columns_included_in_select[session-tracked-sync-psycopg_engine]
@@ -105,5 +115,7 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---

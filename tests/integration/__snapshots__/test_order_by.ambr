@@ -1,4 +1,92 @@
 # serializer version: 1
+# name: test_deterministic_ordering[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_deterministic_ordering[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_deterministic_ordering[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_deterministic_ordering[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_deterministic_ordering_mixed_with_user_ordering[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.name ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_deterministic_ordering_mixed_with_user_ordering[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.name ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_deterministic_ordering_mixed_with_user_ordering[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.name ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_deterministic_ordering_mixed_with_user_ordering[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.name ASC,
+            color__fruits.id ASC
+  '''
+# ---
 # name: test_nulls[session-tracked-async-ASC_NULLS_FIRST-asyncmy_engine]
   '''
   SELECT user.bio,
@@ -129,66 +217,66 @@
 # ---
 # name: test_order_by[session-tracked-async-ASC-asyncmy_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name ASC
+   ORDER BY fruit.sweetness ASC
   '''
 # ---
 # name: test_order_by[session-tracked-async-ASC-asyncpg_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name ASC
+   ORDER BY fruit.sweetness ASC
   '''
 # ---
 # name: test_order_by[session-tracked-async-ASC-psycopg_async_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name ASC
+   ORDER BY fruit.sweetness ASC
   '''
 # ---
 # name: test_order_by[session-tracked-async-DESC-asyncmy_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name DESC
+   ORDER BY fruit.sweetness DESC
   '''
 # ---
 # name: test_order_by[session-tracked-async-DESC-asyncpg_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name DESC
+   ORDER BY fruit.sweetness DESC
   '''
 # ---
 # name: test_order_by[session-tracked-async-DESC-psycopg_async_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name DESC
+   ORDER BY fruit.sweetness DESC
   '''
 # ---
 # name: test_order_by[session-tracked-sync-ASC-psycopg_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name ASC
+   ORDER BY fruit.sweetness ASC
   '''
 # ---
 # name: test_order_by[session-tracked-sync-DESC-psycopg_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name DESC
+   ORDER BY fruit.sweetness DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-avg-asyncmy_engine]
@@ -207,7 +295,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-avg-asyncpg_engine]
@@ -224,7 +313,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-avg-psycopg_async_engine]
@@ -241,7 +331,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-max-asyncmy_engine]
@@ -260,7 +351,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-max-asyncpg_engine]
@@ -277,7 +369,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-max-psycopg_async_engine]
@@ -294,7 +387,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-min-asyncmy_engine]
@@ -313,7 +407,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-min-asyncpg_engine]
@@ -330,7 +425,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-min-psycopg_async_engine]
@@ -347,7 +443,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-stddev-asyncmy_engine]
@@ -419,7 +516,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-stddevPop-asyncpg_engine]
@@ -436,7 +534,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-stddevPop-psycopg_async_engine]
@@ -453,7 +552,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-stddevSamp-asyncmy_engine]
@@ -472,7 +572,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-stddevSamp-asyncpg_engine]
@@ -489,7 +590,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-stddevSamp-psycopg_async_engine]
@@ -506,7 +608,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-sum-asyncmy_engine]
@@ -525,7 +628,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-sum-asyncpg_engine]
@@ -542,7 +646,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-sum-psycopg_async_engine]
@@ -559,7 +664,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-varPop-asyncmy_engine]
@@ -578,7 +684,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-varPop-asyncpg_engine]
@@ -595,7 +702,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-varPop-psycopg_async_engine]
@@ -612,7 +720,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-varSamp-asyncmy_engine]
@@ -631,7 +740,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-varSamp-asyncpg_engine]
@@ -648,7 +758,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-varSamp-psycopg_async_engine]
@@ -665,7 +776,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-variance-asyncmy_engine]
@@ -737,7 +849,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-avg-asyncpg_engine]
@@ -754,7 +867,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-avg-psycopg_async_engine]
@@ -771,7 +885,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-max-asyncmy_engine]
@@ -790,7 +905,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-max-asyncpg_engine]
@@ -807,7 +923,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-max-psycopg_async_engine]
@@ -824,7 +941,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-min-asyncmy_engine]
@@ -843,7 +961,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-min-asyncpg_engine]
@@ -860,7 +979,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-min-psycopg_async_engine]
@@ -877,7 +997,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-stddev-asyncmy_engine]
@@ -949,7 +1070,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-stddevPop-asyncpg_engine]
@@ -966,7 +1088,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-stddevPop-psycopg_async_engine]
@@ -983,7 +1106,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-stddevSamp-asyncmy_engine]
@@ -1002,7 +1126,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-stddevSamp-asyncpg_engine]
@@ -1019,7 +1144,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-stddevSamp-psycopg_async_engine]
@@ -1036,7 +1162,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-sum-asyncmy_engine]
@@ -1055,7 +1182,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-sum-asyncpg_engine]
@@ -1072,7 +1200,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-sum-psycopg_async_engine]
@@ -1089,7 +1218,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-varPop-asyncmy_engine]
@@ -1108,7 +1238,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-varPop-asyncpg_engine]
@@ -1125,7 +1256,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-varPop-psycopg_async_engine]
@@ -1142,7 +1274,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-varSamp-asyncmy_engine]
@@ -1161,7 +1294,8 @@
       ON color.id = __strawchemy_aggregation_0.color_id
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-varSamp-asyncpg_engine]
@@ -1178,7 +1312,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-varSamp-psycopg_async_engine]
@@ -1195,7 +1330,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-DESC-variance-asyncmy_engine]
@@ -1265,7 +1401,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-ASC-max-psycopg_engine]
@@ -1282,7 +1419,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-ASC-min-psycopg_engine]
@@ -1299,7 +1437,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-ASC-stddev-psycopg_engine]
@@ -1333,7 +1472,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-ASC-stddevSamp-psycopg_engine]
@@ -1350,7 +1490,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-ASC-sum-psycopg_engine]
@@ -1367,7 +1508,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-ASC-varPop-psycopg_engine]
@@ -1384,7 +1526,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-ASC-varSamp-psycopg_engine]
@@ -1401,7 +1544,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent ASC
+   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-ASC-variance-psycopg_engine]
@@ -1435,7 +1579,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.avg_fruits__avg_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-DESC-max-psycopg_engine]
@@ -1452,7 +1597,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.max_fruits__max_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-DESC-min-psycopg_engine]
@@ -1469,7 +1615,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.min_fruits__min_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-DESC-stddev-psycopg_engine]
@@ -1503,7 +1650,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.stddev_pop_fruits__stddev_pop_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-DESC-stddevSamp-psycopg_engine]
@@ -1520,7 +1668,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.stddev_samp_fruits__stddev_samp_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-DESC-sum-psycopg_engine]
@@ -1537,7 +1686,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.sum_fruits__sum_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-DESC-varPop-psycopg_engine]
@@ -1554,7 +1704,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.var_pop_fruits__var_pop_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-DESC-varSamp-psycopg_engine]
@@ -1571,7 +1722,8 @@
       ON TRUE
     LEFT OUTER JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent DESC
+   ORDER BY __strawchemy_aggregation_0.var_samp_fruits__var_samp_water_percent DESC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-sync-DESC-variance-psycopg_engine]
@@ -1610,6 +1762,8 @@
     FROM color AS color
     LEFT OUTER JOIN color__fruits
       ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.sweetness ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-ASC-asyncpg_engine]
@@ -1626,6 +1780,8 @@
            ORDER BY fruit_1.sweetness ASC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC,
+            color__fruits.sweetness ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-ASC-psycopg_async_engine]
@@ -1642,6 +1798,8 @@
            ORDER BY fruit_1.sweetness ASC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC,
+            color__fruits.sweetness ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-DESC-asyncmy_engine]
@@ -1663,6 +1821,8 @@
     FROM color AS color
     LEFT OUTER JOIN color__fruits
       ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.sweetness DESC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-DESC-asyncpg_engine]
@@ -1679,6 +1839,8 @@
            ORDER BY fruit_1.sweetness DESC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC,
+            color__fruits.sweetness DESC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-DESC-psycopg_async_engine]
@@ -1695,6 +1857,8 @@
            ORDER BY fruit_1.sweetness DESC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC,
+            color__fruits.sweetness DESC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-sync-ASC-psycopg_engine]
@@ -1711,6 +1875,8 @@
            ORDER BY fruit_1.sweetness ASC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC,
+            color__fruits.sweetness ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-sync-DESC-psycopg_engine]
@@ -1727,5 +1893,7 @@
            ORDER BY fruit_1.sweetness DESC
          ) AS color__fruits
       ON TRUE
+   ORDER BY color.id ASC,
+            color__fruits.sweetness DESC
   '''
 # ---
