@@ -217,66 +217,66 @@
 # ---
 # name: test_order_by[session-tracked-async-ASC-asyncmy_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name ASC
+   ORDER BY fruit.sweetness ASC
   '''
 # ---
 # name: test_order_by[session-tracked-async-ASC-asyncpg_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name ASC
+   ORDER BY fruit.sweetness ASC
   '''
 # ---
 # name: test_order_by[session-tracked-async-ASC-psycopg_async_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name ASC
+   ORDER BY fruit.sweetness ASC
   '''
 # ---
 # name: test_order_by[session-tracked-async-DESC-asyncmy_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name DESC
+   ORDER BY fruit.sweetness DESC
   '''
 # ---
 # name: test_order_by[session-tracked-async-DESC-asyncpg_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name DESC
+   ORDER BY fruit.sweetness DESC
   '''
 # ---
 # name: test_order_by[session-tracked-async-DESC-psycopg_async_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name DESC
+   ORDER BY fruit.sweetness DESC
   '''
 # ---
 # name: test_order_by[session-tracked-sync-ASC-psycopg_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name ASC
+   ORDER BY fruit.sweetness ASC
   '''
 # ---
 # name: test_order_by[session-tracked-sync-DESC-psycopg_engine]
   '''
-  SELECT fruit.name,
+  SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   ORDER BY fruit.name DESC
+   ORDER BY fruit.sweetness DESC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-avg-asyncmy_engine]
@@ -1762,7 +1762,8 @@
     FROM color AS color
     LEFT OUTER JOIN color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY color.id ASC
+   ORDER BY color.id ASC,
+            color__fruits.sweetness ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-ASC-asyncpg_engine]
@@ -1779,7 +1780,8 @@
            ORDER BY fruit_1.sweetness ASC
          ) AS color__fruits
       ON TRUE
-   ORDER BY color.id ASC
+   ORDER BY color.id ASC,
+            color__fruits.sweetness ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-ASC-psycopg_async_engine]
@@ -1796,7 +1798,8 @@
            ORDER BY fruit_1.sweetness ASC
          ) AS color__fruits
       ON TRUE
-   ORDER BY color.id ASC
+   ORDER BY color.id ASC,
+            color__fruits.sweetness ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-DESC-asyncmy_engine]
@@ -1818,7 +1821,8 @@
     FROM color AS color
     LEFT OUTER JOIN color__fruits
       ON color.id = color__fruits.color_id
-   ORDER BY color.id ASC
+   ORDER BY color.id ASC,
+            color__fruits.sweetness DESC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-DESC-asyncpg_engine]
@@ -1835,7 +1839,8 @@
            ORDER BY fruit_1.sweetness DESC
          ) AS color__fruits
       ON TRUE
-   ORDER BY color.id ASC
+   ORDER BY color.id ASC,
+            color__fruits.sweetness DESC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-async-DESC-psycopg_async_engine]
@@ -1852,7 +1857,8 @@
            ORDER BY fruit_1.sweetness DESC
          ) AS color__fruits
       ON TRUE
-   ORDER BY color.id ASC
+   ORDER BY color.id ASC,
+            color__fruits.sweetness DESC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-sync-ASC-psycopg_engine]
@@ -1869,7 +1875,8 @@
            ORDER BY fruit_1.sweetness ASC
          ) AS color__fruits
       ON TRUE
-   ORDER BY color.id ASC
+   ORDER BY color.id ASC,
+            color__fruits.sweetness ASC
   '''
 # ---
 # name: test_relation_order_by[session-tracked-sync-DESC-psycopg_engine]
@@ -1886,6 +1893,7 @@
            ORDER BY fruit_1.sweetness DESC
          ) AS color__fruits
       ON TRUE
-   ORDER BY color.id ASC
+   ORDER BY color.id ASC,
+            color__fruits.sweetness DESC
   '''
 # ---

@@ -44,7 +44,7 @@ from strawchemy.strawberry.dto import (
 )
 
 from .exceptions import TranspilingError
-from .typing import DeclarativeT
+from .typing import DeclarativeT, OrderBySpec
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -67,7 +67,7 @@ class Join:
     node: QueryNodeType
     onclause: _OnClauseArgument | None = None
     is_outer: bool = False
-    ordered: bool = False
+    order_nodes: list[QueryNodeType] = dataclasses.field(default_factory=list)
 
     @property
     def _selectable(self) -> NamedFromClause:
@@ -278,7 +278,7 @@ class Where:
 @dataclass
 class OrderBy:
     db_features: DatabaseFeatures
-    columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = dataclasses.field(default_factory=list)
+    columns: list[OrderBySpec] = dataclasses.field(default_factory=list)
     joins: list[Join] = dataclasses.field(default_factory=list)
 
     def _order_by(self, column: SQLColumnExpression[Any], order_by: OrderByEnum) -> list[UnaryExpression[Any]]:
@@ -314,7 +314,7 @@ class OrderBy:
             expressions.extend([(column.is_(null())).asc(), column.desc()])
         return expressions
 
-    @cached_property
+    @property
     def expressions(self) -> list[UnaryExpression[Any]]:
         expressions: list[UnaryExpression[Any]] = []
         for column, order_by in self.columns:
@@ -363,10 +363,10 @@ class DistinctOn:
 @dataclass
 class Query:
     db_features: DatabaseFeatures
+    distinct_on: DistinctOn
     joins: list[Join] = dataclasses.field(default_factory=list)
     where: Where | None = None
     order_by: OrderBy | None = None
-    distinct_on: DistinctOn | None = None
     root_aggregation_functions: list[Label[Any]] = dataclasses.field(default_factory=list)
     limit: int | None = None
     offset: int | None = None

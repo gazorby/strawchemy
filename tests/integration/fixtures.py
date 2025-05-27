@@ -13,6 +13,7 @@ import pytest
 import sqlparse
 from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
+from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.strawberry.scalars import Interval, Time
 
@@ -244,7 +245,7 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "id": 7,
             "created_at": datetime.now().replace(second=7, microsecond=0),
             "name": "clementine",
-            "sweetness": 9,
+            "sweetness": 14,
             "water_percent": 0.9,
             "rarity": Decimal("0.7"),
             "best_time_to_pick": time(hour=0, minute=0),
@@ -657,6 +658,11 @@ async def seed_db_async(
 @pytest.fixture
 def dialect(any_session: AnySession) -> SupportedDialect:
     return cast("SupportedDialect", any_session.get_bind().dialect.name)
+
+
+@pytest.fixture
+def db_features(dialect: SupportedDialect) -> DatabaseFeatures:
+    return DatabaseFeatures.new(dialect)
 
 
 @pytest.fixture

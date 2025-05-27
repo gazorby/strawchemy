@@ -54,7 +54,7 @@ from ._query import (
 from ._scope import QueryScope
 from .exceptions import TranspilingError
 from .inspector import SQLAlchemyGraphQLInspector
-from .typing import DeclarativeT, QueryExecutorT
+from .typing import DeclarativeT, OrderBySpec, QueryExecutorT
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
@@ -432,14 +432,13 @@ class QueryTranspiler(Generic[DeclarativeT]):
         target_alias = aliased(target_mapper, flat=True)
         order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else ()
         with self._sub_scope(target_mapper.class_, target_alias):
-            query = self._build_query(
-                QueryGraph(self.scope, order_by=order_by), limit=relation_filter.limit, offset=relation_filter.offset
-            )
+            query_graph = QueryGraph(self.scope, order_by=order_by)
+            query = self._build_query(query_graph, limit=relation_filter.limit, offset=relation_filter.offset)
         if self._inspector.db_features.supports_lateral:
             join = self._lateral_join(node, target_alias, query, is_outer)
         else:
             join = self._cte_join(node, target_alias, query, is_outer)
-        join.ordered = bool(order_by)
+        join.order_nodes = query_graph.order_by_nodes
         return join
 
     def _lateral_join(self, node: QueryNodeType, target_alias: AliasedClass[Any], query: Query, is_outer: bool) -> Join:
@@ -457,11 +456,13 @@ class QueryTranspiler(Generic[DeclarativeT]):
     def _cte_join(self, node: QueryNodeType, target_alias: AliasedClass[Any], query: Query, is_outer: bool) -> Join:
         aliased_attribute = self.scope.aliased_attribute(node)
         remote_fks = self.scope.inspect(node).foreign_key_columns("target", target_alias)
-        rank_column = (
-            func.dense_rank()
-            .over(partition_by=remote_fks, order_by=query.order_by.expressions if query.order_by else None)
-            .label(name="rank")
-        )
+        rank_column: Label[int] | None = None
+        if query.order_by or query.limit is not None or query.offset is not None:
+            rank_column = (
+                func.dense_rank()
+                .over(partition_by=remote_fks, order_by=query.order_by.expressions if query.order_by else None)
+                .label(name="rank")
+            )
         name = self.scope.key(node)
         # Remove limit/offset in CTE as it's applied in the WHERE clause of the main query
         query_wihtout_limit_offset = dataclasses.replace(query, offset=None, limit=None)
@@ -469,19 +470,24 @@ class QueryTranspiler(Generic[DeclarativeT]):
         remote_fks = node_inspect.foreign_key_columns("target", target_alias)
         selection = node_inspect.selection(target_alias)
         base_statement = (
-            select(*selection, *remote_fks, rank_column)
+            select(*selection, *remote_fks)
             .group_by(*remote_fks, *selection)
             .where(and_(*[fk.is_not(null()) for fk in remote_fks]))
         )
+        if rank_column is not None:
+            base_statement = base_statement.add_columns(rank_column)
         statement = query_wihtout_limit_offset.statement(base_statement).cte(name)
         cte_alias = aliased(target_alias, statement, name=name)
         self.scope.set_relation_alias(node, "target", cte_alias)
-        rank_column = self.scope.literal_column(name, rank_column.name)
         limit_offset_condition: list[ColumnElement[bool]] = []
-        if query.offset:
-            limit_offset_condition.append(rank_column > query.offset)
-        if query.limit:
-            limit_offset_condition.append(rank_column <= (query.offset + query.limit if query.offset else query.limit))
+        if rank_column is not None:
+            rank_column = self.scope.literal_column(name, rank_column.name)
+            if query.offset is not None:
+                limit_offset_condition.append(rank_column > query.offset)
+            if query.limit is not None:
+                limit_offset_condition.append(
+                    rank_column <= (query.offset + query.limit if query.offset else query.limit)
+                )
         return Join(statement, node, onclause=and_(aliased_attribute, *limit_offset_condition), is_outer=is_outer)
 
     def _aggregation_lateral_join(
@@ -626,6 +632,32 @@ class QueryTranspiler(Generic[DeclarativeT]):
     def _filter_order_by_relation_node(self, join: Join, node: QueryNodeType) -> bool:
         return join.node.value.model_field is node.value.model_field
 
+    def _relation_order_by(self, query_graph: QueryGraph[DeclarativeT], query: Query) -> list[OrderBySpec]:
+        selected_tree = query_graph.resolved_selection_tree()
+        order_by_spec: list[OrderBySpec] = []
+        for join in sorted(query.joins):
+            if (
+                isinstance(join, AggregationJoin)
+                or join.node in query_graph.order_by_nodes
+                or not selected_tree.find_child(
+                    lambda node, _join=join: node.value.model_field is _join.node.value.model_field
+                )
+            ):
+                continue
+            if not join.order_nodes and self._deterministic_ordering:
+                order_by_spec.extend(
+                    [(attribute, OrderByEnum.ASC) for attribute in self.scope.aliased_id_attributes(join.node)]
+                )
+            elif join.order_nodes:
+                order_by_spec.extend(
+                    [
+                        (self.scope.literal_column(join.name, node.value.model_field_name), node.metadata.data.order_by)
+                        for node in join.order_nodes
+                        if node.metadata.data.order_by
+                    ]
+                )
+        return order_by_spec
+
     def _build_query(
         self,
         query_graph: QueryGraph[DeclarativeT],
@@ -686,20 +718,8 @@ class QueryTranspiler(Generic[DeclarativeT]):
             ]
 
         # Add relation ORDER BY columns
-        if query.order_by and self._deterministic_ordering:
-            selected_tree = query_graph.resolved_selection_tree()
-            for join in sorted(query.joins):
-                if (
-                    join.ordered
-                    or isinstance(join, AggregationJoin)
-                    or join.node in query_graph.order_by_nodes
-                    or not selected_tree.find_child(
-                        lambda node, _join=join: node.value.model_field is _join.node.value.model_field
-                    )
-                ):
-                    continue
-                columns = self.scope.aliased_id_attributes(join.node)
-                query.order_by.columns.extend([(column, OrderByEnum.ASC) for column in columns])
+        if query.order_by:
+            query.order_by.columns.extend(self._relation_order_by(query_graph, query))
 
         # Process root-level aggregations using window functions if requested
         if query_graph.selection_tree and query_graph.selection_tree.graph_metadata.metadata.root_aggregations:

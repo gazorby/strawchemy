@@ -190,8 +190,8 @@ async def test_max_string_aggregation_filter(
 @pytest.mark.parametrize(
     ("field", "predicate", "value", "expected_color_indices"),
     [
-        pytest.param("sweetness", "eq", 13, [0], id="int-eq-match"),
-        pytest.param("sweetness", "gt", 13, [2, 4], id="int-gt-match"),
+        pytest.param("sweetness", "eq", 6, [1], id="int-eq-match"),
+        pytest.param("sweetness", "gt", 8, [0, 2, 4], id="int-gt-match"),
         pytest.param("waterPercent", "eq", 1.65, [0], id="float-eq-match"),
         pytest.param("waterPercent", "gt", 1.7, [1, 2], id="float-gt-match"),
         pytest.param("rarity", "eq", 0.3, [0], id="decimal-eq-match"),
