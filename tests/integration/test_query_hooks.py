@@ -165,13 +165,13 @@ async def test_custom_query_hook_order_by(
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
+    result = await maybe_async(any_query(f"{{ {query} {{ waterPercent }} }}"))
 
     assert not result.errors
     assert result.data
     assert len(result.data[query]) == len(raw_fruits)
     assert result.data[query] == sorted(
-        [{"name": fruit["name"]} for fruit in raw_fruits], key=lambda fruit: fruit["name"].lower()
+        [{"waterPercent": fruit["water_percent"]} for fruit in raw_fruits], key=lambda fruit: fruit["waterPercent"]
     )
 
     assert query_tracker.query_count == 1

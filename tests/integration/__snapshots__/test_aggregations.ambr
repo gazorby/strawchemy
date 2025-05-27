@@ -1,4 +1,21 @@
 # serializer version: 1
+# name: test_count_aggregation[session-tracked-async-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(*) AS fruits__count_fruits,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.fruits__count_fruits AS fruits__count_fruits
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_count_aggregation[session-tracked-async-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -61,6 +78,40 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_count_aggregation[session-tracked-sync-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(*) AS fruits__count_fruits,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.fruits__count_fruits AS fruits__count_fruits
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.best_time_to_pick) AS max_fruits__max_best_time_to_pick,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_best_time_to_pick AS max_fruits__max_best_time_to_pick
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -105,6 +156,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-createdAt-created_at-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.created_at) AS max_fruits__max_created_at,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_created_at AS max_fruits__max_created_at
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -155,6 +223,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_max_aggregation[session-tracked-async-name-name-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.name) AS max_fruits__max_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_name AS max_fruits__max_name
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_max_aggregation[session-tracked-async-name-name-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -199,6 +284,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-rarity-rarity-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.rarity) AS max_fruits__max_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_rarity AS max_fruits__max_rarity
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -249,6 +351,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_max_aggregation[session-tracked-async-sweetness-sweetness-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.sweetness) AS max_fruits__max_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_sweetness AS max_fruits__max_sweetness
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_max_aggregation[session-tracked-async-sweetness-sweetness-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -293,6 +412,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-async-waterPercent-water_percent-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_water_percent AS max_fruits__max_water_percent
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -358,6 +494,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_max_aggregation[session-tracked-sync-bestTimeToPick-best_time_to_pick-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.best_time_to_pick) AS max_fruits__max_best_time_to_pick,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_best_time_to_pick AS max_fruits__max_best_time_to_pick
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_max_aggregation[session-tracked-sync-createdAt-created_at-psycopg_engine]
   '''
   SELECT color.id,
@@ -370,6 +523,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-sync-createdAt-created_at-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.created_at) AS max_fruits__max_created_at,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_created_at AS max_fruits__max_created_at
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -388,6 +558,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_max_aggregation[session-tracked-sync-name-name-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.name) AS max_fruits__max_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_name AS max_fruits__max_name
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_max_aggregation[session-tracked-sync-rarity-rarity-psycopg_engine]
   '''
   SELECT color.id,
@@ -400,6 +587,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-sync-rarity-rarity-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.rarity) AS max_fruits__max_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_rarity AS max_fruits__max_rarity
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -418,6 +622,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_max_aggregation[session-tracked-sync-sweetness-sweetness-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.sweetness) AS max_fruits__max_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_sweetness AS max_fruits__max_sweetness
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_max_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
   '''
   SELECT color.id,
@@ -430,6 +651,40 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_max_aggregation[session-tracked-sync-waterPercent-water_percent-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT max(fruit_1.water_percent) AS max_fruits__max_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.max_fruits__max_water_percent AS max_fruits__max_water_percent
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.best_time_to_pick) AS min_fruits__min_best_time_to_pick,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_best_time_to_pick AS min_fruits__min_best_time_to_pick
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -480,6 +735,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_min_aggregation[session-tracked-async-createdAt-created_at-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.created_at) AS min_fruits__min_created_at,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_created_at AS min_fruits__min_created_at
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_min_aggregation[session-tracked-async-createdAt-created_at-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -524,6 +796,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-name-name-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.name) AS min_fruits__min_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_name AS min_fruits__min_name
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -574,6 +863,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_min_aggregation[session-tracked-async-rarity-rarity-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.rarity) AS min_fruits__min_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_rarity AS min_fruits__min_rarity
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_min_aggregation[session-tracked-async-rarity-rarity-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -621,6 +927,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_min_aggregation[session-tracked-async-sweetness-sweetness-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.sweetness) AS min_fruits__min_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_sweetness AS min_fruits__min_sweetness
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_min_aggregation[session-tracked-async-sweetness-sweetness-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -665,6 +988,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-async-waterPercent-water_percent-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_water_percent AS min_fruits__min_water_percent
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -730,6 +1070,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_min_aggregation[session-tracked-sync-bestTimeToPick-best_time_to_pick-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.best_time_to_pick) AS min_fruits__min_best_time_to_pick,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_best_time_to_pick AS min_fruits__min_best_time_to_pick
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_min_aggregation[session-tracked-sync-createdAt-created_at-psycopg_engine]
   '''
   SELECT color.id,
@@ -742,6 +1099,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-sync-createdAt-created_at-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.created_at) AS min_fruits__min_created_at,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_created_at AS min_fruits__min_created_at
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -760,6 +1134,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_min_aggregation[session-tracked-sync-name-name-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.name) AS min_fruits__min_name,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_name AS min_fruits__min_name
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_min_aggregation[session-tracked-sync-rarity-rarity-psycopg_engine]
   '''
   SELECT color.id,
@@ -772,6 +1163,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-sync-rarity-rarity-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.rarity) AS min_fruits__min_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_rarity AS min_fruits__min_rarity
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -790,6 +1198,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_min_aggregation[session-tracked-sync-sweetness-sweetness-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.sweetness) AS min_fruits__min_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_sweetness AS min_fruits__min_sweetness
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_min_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
   '''
   SELECT color.id,
@@ -803,6 +1228,32 @@
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
    ORDER BY color.id ASC
+  '''
+# ---
+# name: test_min_aggregation[session-tracked-sync-waterPercent-water_percent-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT min(fruit_1.water_percent) AS min_fruits__min_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.min_fruits__min_water_percent AS min_fruits__min_water_percent
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-no-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-no-pagination-asyncmy_engine]
@@ -830,6 +1281,25 @@
          avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
     FROM fruit AS fruit
    ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-pagination-asyncmy_engine]
@@ -1096,6 +1566,15 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-sum-no-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         sum(fruit.rarity) OVER () AS sum_fruits__sum_rarity
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-sum-no-pagination-asyncmy_engine]
   '''
   SELECT fruit.rarity,
@@ -1121,6 +1600,25 @@
          sum(fruit.rarity) OVER () AS sum_fruits__sum_rarity
     FROM fruit AS fruit
    ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-rarity-rarity-sum-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         sum(fruit.rarity) OVER () AS sum_fruits__sum_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-sum-pagination-asyncmy_engine]
@@ -1403,6 +1901,15 @@
     FROM fruit AS fruit
   '''
 # ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-no-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-no-pagination-asyncmy_engine]
   '''
   SELECT fruit.sweetness,
@@ -1428,6 +1935,25 @@
          avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
     FROM fruit AS fruit
    ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-avg-pagination-asyncmy_engine]
@@ -1694,6 +2220,15 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-sum-no-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS sum_fruits__sum_sweetness
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-sum-no-pagination-asyncmy_engine]
   '''
   SELECT fruit.sweetness,
@@ -1719,6 +2254,25 @@
          sum(fruit.sweetness) OVER () AS sum_fruits__sum_sweetness
     FROM fruit AS fruit
    ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-sweetness-sweetness-sum-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS sum_fruits__sum_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-sweetness-sweetness-sum-pagination-asyncmy_engine]
@@ -1968,6 +2522,15 @@
          ) AS fruit
    L  '''
 # ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-no-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-no-pagination-asyncmy_engine]
   '''
   SELECT fruit.water_percent,
@@ -1993,6 +2556,25 @@
          avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
     FROM fruit AS fruit
    ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-avg-pagination-asyncmy_engine]
@@ -2259,6 +2841,15 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-sum-no-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS sum_fruits__sum_water_percent
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-sum-no-pagination-asyncmy_engine]
   '''
   SELECT fruit.water_percent,
@@ -2284,6 +2875,25 @@
          sum(fruit.water_percent) OVER () AS sum_fruits__sum_water_percent
     FROM fruit AS fruit
    ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-sum-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS sum_fruits__sum_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-waterPercent-water_percent-sum-pagination-asyncmy_engine]
@@ -2559,6 +3169,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-avg-no-pagination-sqlite_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-sync-rarity-rarity-avg-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
@@ -2575,6 +3194,25 @@
          ) AS fruit
    ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-avg-pagination-sqlite_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         avg(fruit.rarity) OVER () AS avg_fruits__avg_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-rarity-rarity-stddev-no-pagination-psycopg_engine]
@@ -2664,6 +3302,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-sum-no-pagination-sqlite_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         sum(fruit.rarity) OVER () AS sum_fruits__sum_rarity
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-sync-rarity-rarity-sum-pagination-psycopg_engine]
   '''
   SELECT fruit.rarity,
@@ -2680,6 +3327,25 @@
          ) AS fruit
    ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-sync-rarity-rarity-sum-pagination-sqlite_engine]
+  '''
+  SELECT fruit.rarity,
+         fruit.id,
+         sum(fruit.rarity) OVER () AS sum_fruits__sum_rarity
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.rarity AS rarity,
+                 fruit.rarity AS rarity__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-rarity-rarity-varPop-no-pagination-psycopg_engine]
@@ -2769,6 +3435,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-avg-no-pagination-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-avg-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
@@ -2785,6 +3460,25 @@
          ) AS fruit
    ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-avg-pagination-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS avg_fruits__avg_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-stddev-no-pagination-psycopg_engine]
@@ -2874,6 +3568,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-sum-no-pagination-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS sum_fruits__sum_sweetness
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-sum-pagination-psycopg_engine]
   '''
   SELECT fruit.sweetness,
@@ -2890,6 +3593,25 @@
          ) AS fruit
    ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-sum-pagination-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS sum_fruits__sum_sweetness
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness,
+                 fruit.sweetness AS sweetness__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-sweetness-sweetness-varPop-no-pagination-psycopg_engine]
@@ -2979,6 +3701,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-avg-no-pagination-sqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-avg-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
@@ -2995,6 +3726,25 @@
          ) AS fruit
    ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-avg-pagination-sqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS avg_fruits__avg_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-stddev-no-pagination-psycopg_engine]
@@ -3084,6 +3834,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-sum-no-pagination-sqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS sum_fruits__sum_water_percent
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-sum-pagination-psycopg_engine]
   '''
   SELECT fruit.water_percent,
@@ -3100,6 +3859,25 @@
          ) AS fruit
    ORDER BY fruit.id ASC
    LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-sum-pagination-sqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS sum_fruits__sum_water_percent
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent,
+                 fruit.water_percent AS water_percent__1
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_root_aggregation[session-tracked-sync-waterPercent-water_percent-varPop-no-pagination-psycopg_engine]
@@ -3194,6 +3972,23 @@
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
    LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-rarity-rarity-avg-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.rarity) AS avg_fruits__avg_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.avg_fruits__avg_rarity AS avg_fruits__avg_rarity
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-avg-asyncmy_engine]
@@ -3487,6 +4282,23 @@
    WHERE color.id = %(id_1)s::INTEGER
   '''
 # ---
+# name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-avg-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.avg_fruits__avg_sweetness AS avg_fruits__avg_sweetness
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_statistical_aggregation[session-tracked-async-sweetness-sweetness-avg-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -3776,6 +4588,23 @@
          ) AS aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-avg-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.avg_fruits__avg_water_percent AS avg_fruits__avg_water_percent
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_statistical_aggregation[session-tracked-async-waterPercent-water_percent-avg-asyncmy_engine]
@@ -4084,6 +4913,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-avg-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.rarity) AS avg_fruits__avg_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.avg_fruits__avg_rarity AS avg_fruits__avg_rarity
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_statistical_aggregation[session-tracked-sync-rarity-rarity-stddev-psycopg_engine]
   '''
   SELECT color.id,
@@ -4184,6 +5030,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-tracked-sync-sweetness-sweetness-avg-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.sweetness) AS avg_fruits__avg_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.avg_fruits__avg_sweetness AS avg_fruits__avg_sweetness
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -4290,6 +5153,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-avg-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT avg(fruit_1.water_percent) AS avg_fruits__avg_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.avg_fruits__avg_water_percent AS avg_fruits__avg_water_percent
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_statistical_aggregation[session-tracked-sync-waterPercent-water_percent-stddev-psycopg_engine]
   '''
   SELECT color.id,
@@ -4378,6 +5258,23 @@
    WHERE color.id = %(id_1)s::INTEGER
   '''
 # ---
+# name: test_sum_aggregation[session-tracked-async-rarity-rarity-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.sum_fruits__sum_rarity AS sum_fruits__sum_rarity
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_sum_aggregation[session-tracked-async-rarity-rarity-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -4425,6 +5322,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.sum_fruits__sum_sweetness AS sum_fruits__sum_sweetness
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -4469,6 +5383,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_sum_aggregation[session-tracked-async-waterPercent-water_percent-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.sum_fruits__sum_water_percent AS sum_fruits__sum_water_percent
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -4534,6 +5465,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_sum_aggregation[session-tracked-sync-rarity-rarity-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.rarity) AS sum_fruits__sum_rarity,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.sum_fruits__sum_rarity AS sum_fruits__sum_rarity
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_sum_aggregation[session-tracked-sync-sweetness-sweetness-psycopg_engine]
   '''
   SELECT color.id,
@@ -4549,6 +5497,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_sum_aggregation[session-tracked-sync-sweetness-sweetness-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.sum_fruits__sum_sweetness AS sum_fruits__sum_sweetness
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_sum_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
   '''
   SELECT color.id,
@@ -4561,6 +5526,23 @@
          ) AS __strawchemy_aggregation_0
       ON TRUE
    WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_sum_aggregation[session-tracked-sync-waterPercent-water_percent-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT sum(fruit_1.water_percent) AS sum_fruits__sum_water_percent,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         __strawchemy_aggregation_0.sum_fruits__sum_water_percent AS sum_fruits__sum_water_percent
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+   WHERE color.id = ?
    ORDER BY color.id ASC
   '''
 # ---

@@ -1,4 +1,21 @@
 # serializer version: 1
+# name: test_filtered_statement[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+    JOIN (
+          SELECT color.name AS name,
+                 color.created_at AS created_at,
+                 color.updated_at AS updated_at,
+                 color.id AS id
+            FROM color
+           WHERE color.name = ?
+         ) AS anon_1
+      ON color.id = anon_1.id
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_filtered_statement[session-tracked-async-asyncmy_engine]
   '''
   SELECT color.name,
@@ -67,6 +84,36 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_filtered_statement[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+    JOIN (
+          SELECT color.name AS name,
+                 color.created_at AS created_at,
+                 color.updated_at AS updated_at,
+                 color.id AS id
+            FROM color
+           WHERE color.name = ?
+         ) AS anon_1
+      ON color.id = anon_1.id
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_only_queried_columns_included_in_select[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
 # name: test_only_queried_columns_included_in_select[session-tracked-async-asyncmy_engine]
   '''
   SELECT color__fruits.name,
@@ -107,6 +154,19 @@
   '''
 # ---
 # name: test_only_queried_columns_included_in_select[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_only_queried_columns_included_in_select[session-tracked-sync-sqlite_engine]
   '''
   SELECT color__fruits.name,
          color__fruits.id,

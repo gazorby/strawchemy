@@ -211,6 +211,19 @@ Run integration tests
 
 #### `<test>…`
 
+## `test:integration-sqlite`
+
+- Depends: _install
+
+- **Usage**: `test:integration-sqlite <test>…`
+- **Aliases**: `ti-sqlite`
+
+Run integration tests
+
+### Arguments
+
+#### `<test>…`
+
 ## `test:integration:coverage`
 
 - Depends: _install

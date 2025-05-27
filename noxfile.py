@@ -70,3 +70,15 @@ def integration_mysql_tests(session: Session) -> None:
     )
     args: list[str] = ["-m=asyncmy", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
+
+
+@nox.session(
+    name="integration-sqlite", python=SUPPORED_PYTHON_VERSIONS, tags=["tests", "docker", "integration", "ci", "sqlite"]
+)
+def integration_sqlite_tests(session: Session) -> None:
+    (here / ".coverage").unlink(missing_ok=True)
+    session.run_install(
+        "uv", "sync", "--all-extras", "--group=test", env={"UV_PROJECT_ENVIRONMENT": session.virtualenv.location}
+    )
+    args: list[str] = ["-m=aiosqlite or sqlite", *session.posargs]
+    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)

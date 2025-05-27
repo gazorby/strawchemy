@@ -40,6 +40,7 @@ geo = ["GeoAlchemy2", "geojson-pydantic", "shapely"]
 pydantic = ["pydantic"]
 
 [dependency-groups]
+aiosqlite = ["aiosqlite"]
 build = ["bump-my-version", "git-cliff", "unasyncd"]
 dev = [
   { include-group = "build" },
@@ -47,6 +48,8 @@ dev = [
   { include-group = "lint" },
   { include-group = "doc" },
   { include-group = "postgres" },
+  { include-group = "mysql" },
+  { include-group = "aiosqlite" },
   "testapp",
   "debugpy",
 ]
@@ -61,6 +64,7 @@ postgres = [
 test = [
   { include-group = "postgres" },
   { include-group = "mysql" },
+  { include-group = "aiosqlite" },
   "nox[uv]",
   "pytest",
   "pytest-cov",
@@ -284,6 +288,8 @@ markers = [
   "snapshot: snapshot-based tests using syrupy",
   "integration: SQLAlchemy integration tests",
   "geo: Geoalchemy2 integration tests",
+  "aiosqlite: SQLite (aiosqlite) Tests",
+  "sqlite: SQLite Tests",
   "asyncmy: MySQL (asyncmy) Tests",
   "psycopg_async: SQLAlchemy Postgres (psycopg async) Tests",
   "psycopg_sync: SQLAlchemy Postgres (psycopg sync) Tests",
