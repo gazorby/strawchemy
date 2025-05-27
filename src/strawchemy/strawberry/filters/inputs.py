@@ -205,6 +205,29 @@ class JSONComparison(EqualityComparison[dict[str, Any]]):
     has_key_any: list[str] | None = UNSET
 
 
+@strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))
+class SQLITEJSONComparison(EqualityComparison[dict[str, Any]]):
+    """JSON comparison class for GraphQL filters.
+
+    This class provides a set of JSON comparison operators that can be
+    used to filter data based on containment, key existence, and other
+    JSON-specific properties.
+
+    Attributes:
+        contains: Filters for JSON values that contain this JSON object.
+        contained_in: Filters for JSON values that are contained in this JSON object.
+        has_key: Filters for JSON values that have this key.
+        has_key_all: Filters for JSON values that have all of these keys.
+        has_key_any: Filters for JSON values that have any of these keys.
+    """
+
+    __strawchemy_filter__ = JSONFilter
+
+    has_key: str | None = UNSET
+    has_key_all: list[str] | None = UNSET
+    has_key_any: list[str] | None = UNSET
+
+
 @strawberry.input(name="ArrayComparison", description=_DESCRIPTION.format(field="List fields"))
 class ArrayComparison(EqualityComparison[T], Generic[T]):
     """Postgres array comparison class for GraphQL filters.
