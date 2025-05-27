@@ -9,10 +9,12 @@ from syrupy.assertion import SnapshotAssertion
 from tests.integration.models import JSONModel, json_metadata
 from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types
+from tests.integration.types import sqlite as sqlite_types
 from tests.integration.utils import to_graphql_representation
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from strawchemy.config.databases import DatabaseFeatures
     from strawchemy.typing import SupportedDialect
 
     from tests.integration.fixtures import QueryTracker
@@ -36,6 +38,8 @@ def async_query(dialect: SupportedDialect) -> type[Any]:
         return postgres_types.JSONAsyncQuery
     if dialect == "mysql":
         return mysql_types.JSONAsyncQuery
+    if dialect == "sqlite":
+        return sqlite_types.JSONAsyncQuery
     pytest.skip(f"JSON tests can't be run on this dialect: {dialect}")
 
 
@@ -45,6 +49,8 @@ def sync_query(dialect: SupportedDialect) -> type[Any]:
         return postgres_types.JSONSyncQuery
     if dialect == "mysql":
         return mysql_types.JSONSyncQuery
+    if dialect == "sqlite":
+        return sqlite_types.JSONSyncQuery
     pytest.skip(f"JSON tests can't be run on this dialect: {dialect}")
 
 
@@ -73,7 +79,10 @@ async def test_json_filters(
     raw_json: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
+    db_features: DatabaseFeatures,
 ) -> None:
+    if db_features.dialect == "sqlite" and filter_name in {"contains", "containedIn"}:
+        pytest.skip(f"contains/containedIn not supported on {db_features.dialect}")
     if isinstance(value, list):
         value_str = ", ".join(to_graphql_representation(v, "input") for v in value)
         value_repr = f"[{value_str}]"

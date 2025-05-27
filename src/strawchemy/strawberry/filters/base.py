@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Protocol, cast, override
 
-from sqlalchemy import ARRAY, JSON, ColumnElement, Dialect, Text, func, not_, null, type_coerce
+from sqlalchemy import ARRAY, JSON, ColumnElement, Dialect, Integer, Text, and_, func, not_, null, or_, type_coerce
 from sqlalchemy import cast as sqla_cast
 from sqlalchemy.dialects import mysql
 from sqlalchemy.dialects import postgresql as pg
@@ -159,7 +159,9 @@ class TextFilter(OrderFilter):
 class JSONFilter(EqualityFilter):
     comparison: JSONComparison
 
-    def _postgres(self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]) -> list[ColumnElement[bool]]:
+    def _postgres_json(
+        self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]
+    ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
         as_postgres_jsonb = type_coerce(model_attribute, pg.JSONB)
 
@@ -175,7 +177,7 @@ class JSONFilter(EqualityFilter):
             expressions.append(as_postgres_jsonb.has_any(sqla_cast(self.comparison.has_key_any, pg.ARRAY(Text))))
         return expressions
 
-    def _mysql(self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]) -> list[ColumnElement[bool]]:
+    def _mysql_json(self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
         as_mysql_json = type_coerce(model_attribute, mysql.JSON)
 
@@ -195,6 +197,33 @@ class JSONFilter(EqualityFilter):
             )
         return expressions
 
+    def _sqlite_json(
+        self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if self.comparison.has_key is not UNSET:
+            expressions.append(func.json_extract(model_attribute, f"$.{self.comparison.has_key}").is_not(null()))
+        if self.comparison.has_key_all is not UNSET and self.comparison.has_key_all:
+            expressions.append(
+                and_(
+                    *[
+                        func.json_extract(model_attribute, f"$.{key}").is_not(null())
+                        for key in self.comparison.has_key_all
+                    ]
+                )
+            )
+        if self.comparison.has_key_any is not UNSET and self.comparison.has_key_any:
+            expressions.append(
+                or_(
+                    *[
+                        func.json_extract(model_attribute, f"$.{key}").is_not(null())
+                        for key in self.comparison.has_key_any
+                    ]
+                )
+            )
+        return expressions
+
     @override
     def to_expressions(
         self, dialect: Dialect, model_attribute: QueryableAttribute[JSON] | ColumnElement[JSON]
@@ -202,9 +231,11 @@ class JSONFilter(EqualityFilter):
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
 
         if dialect.name == "postgresql":
-            expressions.extend(self._postgres(model_attribute))
+            expressions.extend(self._postgres_json(model_attribute))
         elif dialect.name == "mysql":
-            expressions.extend(self._mysql(model_attribute))
+            expressions.extend(self._mysql_json(model_attribute))
+        elif dialect.name == "sqlite":
+            expressions.extend(self._sqlite_json(model_attribute))
 
         return expressions
 
@@ -233,7 +264,56 @@ class ArrayFilter(EqualityFilter):
 class BaseDateFilter(FilterProtocol):
     comparison: DateComparison | DateTimeComparison
 
-    def _postgres(
+    def _sqlite_date(
+        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if self.comparison.year is not UNSET and self.comparison.year:
+            expressions.extend(
+                self.comparison.year.to_expressions(dialect, sqla_cast(func.strftime("%Y", model_attribute), Integer))
+            )
+        if self.comparison.month is not UNSET and self.comparison.month:
+            expressions.extend(
+                self.comparison.month.to_expressions(dialect, sqla_cast(func.strftime("%m", model_attribute), Integer))
+            )
+        if self.comparison.day is not UNSET and self.comparison.day:
+            expressions.extend(
+                self.comparison.day.to_expressions(dialect, sqla_cast(func.strftime("%e", model_attribute), Integer))
+            )
+        if self.comparison.week is not UNSET and self.comparison.week:
+            expressions.extend(
+                self.comparison.week.to_expressions(dialect, sqla_cast(func.strftime("%V", model_attribute), Integer))
+            )
+        if self.comparison.week_day is not UNSET and self.comparison.week_day:
+            expressions.extend(
+                self.comparison.week_day.to_expressions(
+                    dialect, sqla_cast(func.strftime("%w", model_attribute), Integer)
+                )
+            )
+        if self.comparison.quarter is not UNSET and self.comparison.quarter:
+            expressions.extend(
+                self.comparison.quarter.to_expressions(
+                    dialect,
+                    sqla_cast((sqla_cast(func.strftime("%m", model_attribute), Integer) + 2) / 3, Integer),
+                )
+            )
+        if self.comparison.iso_week_day is not UNSET and self.comparison.iso_week_day:
+            expressions.extend(
+                self.comparison.iso_week_day.to_expressions(
+                    dialect, sqla_cast(func.strftime("%u", model_attribute), Integer)
+                )
+            )
+        if self.comparison.iso_year is not UNSET and self.comparison.iso_year:
+            expressions.extend(
+                self.comparison.iso_year.to_expressions(
+                    dialect, sqla_cast(func.strftime("%G", model_attribute), Integer)
+                )
+            )
+
+        return expressions
+
+    def _postgres_date(
         self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
@@ -263,7 +343,7 @@ class BaseDateFilter(FilterProtocol):
 
         return expressions
 
-    def _mysql(
+    def _mysql_date(
         self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
@@ -299,9 +379,11 @@ class BaseDateFilter(FilterProtocol):
     ) -> list[ColumnElement[bool]]:
         expressions = super().to_expressions(dialect, model_attribute)
         if dialect.name == "postgresql":
-            expressions.extend(self._postgres(dialect, model_attribute))
+            expressions.extend(self._postgres_date(dialect, model_attribute))
         elif dialect.name == "mysql":
-            expressions.extend(self._mysql(dialect, model_attribute))
+            expressions.extend(self._mysql_date(dialect, model_attribute))
+        elif dialect.name == "sqlite":
+            expressions.extend(self._sqlite_date(dialect, model_attribute))
 
         return expressions
 
@@ -310,11 +392,30 @@ class BaseDateFilter(FilterProtocol):
 class BaseTimeFilter(FilterProtocol):
     comparison: TimeComparison | DateTimeComparison
 
-    @override
-    def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+    def _sqlite_time(
+        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
     ) -> list[ColumnElement[bool]]:
-        expressions = super().to_expressions(dialect, model_attribute)
+        expressions: list[ColumnElement[bool]] = []
+
+        if self.comparison.hour:
+            expressions.extend(
+                self.comparison.hour.to_expressions(dialect, sqla_cast(func.strftime("%H", model_attribute), Integer))
+            )
+        if self.comparison.minute:
+            expressions.extend(
+                self.comparison.minute.to_expressions(dialect, sqla_cast(func.strftime("%M", model_attribute), Integer))
+            )
+        if self.comparison.second:
+            expressions.extend(
+                self.comparison.second.to_expressions(dialect, sqla_cast(func.strftime("%S", model_attribute), Integer))
+            )
+
+        return expressions
+
+    def _extract_time(
+        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
 
         if self.comparison.hour:
             expressions.extend(self.comparison.hour.to_expressions(dialect, func.extract("HOUR", model_attribute)))
@@ -325,12 +426,25 @@ class BaseTimeFilter(FilterProtocol):
 
         return expressions
 
+    @override
+    def to_expressions(
+        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+    ) -> list[ColumnElement[bool]]:
+        expressions = super().to_expressions(dialect, model_attribute)
+
+        if dialect.name == "sqlite":
+            expressions.extend(self._sqlite_time(dialect, model_attribute))
+        else:
+            expressions.extend(self._extract_time(dialect, model_attribute))
+
+        return expressions
+
 
 @dataclass(frozen=True)
 class TimeDeltaFilter(OrderFilter):
     comparison: TimeDeltaComparison
 
-    def _postgres(
+    def _postgres_interval(
         self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
@@ -353,7 +467,7 @@ class TimeDeltaFilter(OrderFilter):
 
         return expressions
 
-    def _mysql(
+    def _mysql_interval(
         self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
@@ -383,9 +497,9 @@ class TimeDeltaFilter(OrderFilter):
         expressions = super().to_expressions(dialect, model_attribute)
 
         if dialect.name == "postgresql":
-            expressions.extend(self._postgres(dialect, model_attribute))
+            expressions.extend(self._postgres_interval(dialect, model_attribute))
         elif dialect.name == "mysql":
-            expressions.extend(self._mysql(dialect, model_attribute))
+            expressions.extend(self._mysql_interval(dialect, model_attribute))
 
         return expressions
 
