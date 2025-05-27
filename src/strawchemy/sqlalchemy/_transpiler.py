@@ -686,12 +686,13 @@ class QueryTranspiler(Generic[DeclarativeT]):
             ]
 
         # Add relation ORDER BY columns
-        if not query_graph.order_by_tree and query.order_by and self._deterministic_ordering:
+        if query.order_by and self._deterministic_ordering:
             selected_tree = query_graph.resolved_selection_tree()
             for join in sorted(query.joins):
                 if (
                     join.ordered
                     or isinstance(join, AggregationJoin)
+                    or join.node in query_graph.order_by_nodes
                     or not selected_tree.find_child(
                         lambda node, _join=join: node.value.model_field is _join.node.value.model_field
                     )

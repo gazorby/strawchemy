@@ -174,3 +174,37 @@ async def test_deterministic_ordering(
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_deterministic_ordering_mixed_with_user_ordering(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that list resolvers return ordered results even if no order by is specified."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colors(orderBy: { name: ASC }) {
+                    id
+                    fruits {
+                        id
+                    }
+                }
+            }
+        """
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    assert result.data["colors"] == [
+        {"id": 4, "fruits": [{"id": 8}, {"id": 9}]},
+        {"id": 3, "fruits": [{"id": 6}, {"id": 7}]},
+        {"id": 5, "fruits": [{"id": 10}, {"id": 11}]},
+        {"id": 1, "fruits": [{"id": 1}, {"id": 2}]},
+        {"id": 2, "fruits": [{"id": 3}, {"id": 4}, {"id": 5}]},
+    ]
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
