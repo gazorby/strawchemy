@@ -37,19 +37,21 @@ from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAtt
 from sqlalchemy.orm.util import AliasedClass
 from strawchemy.constants import NODES_KEY
 from strawchemy.dto.types import DTOConfig, Purpose
+from strawchemy.graph import Node
 from strawchemy.strawberry.dto import GraphQLFieldDefinition, QueryNode
 
 from .exceptions import TranspilingError
 from .inspector import SQLAlchemyInspector
-from .typing import DeclarativeT, SQLAlchemyQueryNode
+from .typing import DeclarativeT
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql.elements import NamedColumn
+    from strawchemy.strawberry.typing import QueryNodeType
 
-    from .typing import DeclarativeSubT, FunctionGenerator, RelationshipSide, SQLAlchemyOrderByNode, SQLAlchemyQueryNode
+    from .typing import DeclarativeSubT, FunctionGenerator, RelationshipSide
 
 __all__ = ("NodeInspect", "QueryScope")
 
@@ -108,7 +110,7 @@ class NodeInspect:
     Handles function mapping, foreign key resolution, and property access for query nodes.
 
     Attributes:
-        node (SQLAlchemyQueryNode): The query node being inspected
+        node (QueryNodeType): The query node being inspected
         scope (QueryScope): The query scope providing context for inspection
 
     Key Responsibilities:
@@ -122,14 +124,14 @@ class NodeInspect:
     and is primarily used by the Transpiler class to build SQL queries from GraphQL queries.
 
     Example:
-        >>> node = SQLAlchemyQueryNode(...)
+        >>> node = QueryNodeType(...)
         >>> scope = QueryScope(...)
         >>> inspector = NodeInspect(node, scope)
         >>> inspector.functions(alias)  # Get SQL function expressions
         >>> inspector.columns_or_ids()  # Get columns or IDs for selection
     """
 
-    def __init__(self, node: SQLAlchemyQueryNode, scope: QueryScope[Any]) -> None:
+    def __init__(self, node: QueryNodeType, scope: QueryScope[Any]) -> None:
         self.node = node
         self.scope = scope
 
@@ -183,7 +185,7 @@ class NodeInspect:
     @property
     def is_data_root(self) -> bool:
         return (
-            self.node.query_metadata.root_aggregations
+            self.node.graph_metadata.metadata.root_aggregations
             and self.value.name == NODES_KEY
             and self.node.parent
             and self.node.parent.is_root
@@ -193,8 +195,8 @@ class NodeInspect:
         self,
         alias: AliasedClass[Any],
         visit_func: _FunctionVisitor = lambda func: func,
-    ) -> dict[SQLAlchemyQueryNode, Label[Any]]:
-        functions: dict[SQLAlchemyQueryNode, Label[Any]] = {}
+    ) -> dict[QueryNodeType, Label[Any]]:
+        functions: dict[QueryNodeType, Label[Any]] = {}
         function_info = AggregationFunctionInfo.from_name(self.value.function(strict=True).function, visitor=visit_func)
         if function_info.apply_on_column:
             for arg_child in self.children:
@@ -208,7 +210,7 @@ class NodeInspect:
 
     def filter_function(
         self, alias: AliasedClass[Any], distinct: bool | None = None
-    ) -> tuple[SQLAlchemyQueryNode, Label[Any]]:
+    ) -> tuple[QueryNodeType, Label[Any]]:
         function_info = AggregationFunctionInfo.from_name(self.value.function(strict=True).function)
         function_args = []
         argument_attributes = [
@@ -295,15 +297,15 @@ class QueryScope(Generic[DeclarativeT]):
         model: type[DeclarativeT],
         root_alias: AliasedClass[DeclarativeBase] | None = None,
         parent: QueryScope[Any] | None = None,
-        alias_map: dict[tuple[SQLAlchemyQueryNode, RelationshipSide], AliasedClass[Any]] | None = None,
+        alias_map: dict[tuple[QueryNodeType, RelationshipSide], AliasedClass[Any]] | None = None,
         inspector: SQLAlchemyInspector | None = None,
     ) -> None:
         self._parent: QueryScope[Any] | None = parent
         self._root_alias = (
             root_alias if root_alias is not None else aliased(model.__mapper__, name=model.__tablename__, flat=True)
         )
-        self._node_alias_map: dict[tuple[SQLAlchemyQueryNode, RelationshipSide], AliasedClass[Any]] = alias_map or {}
-        self._node_keys: dict[SQLAlchemyQueryNode, str] = {}
+        self._node_alias_map: dict[tuple[QueryNodeType, RelationshipSide], AliasedClass[Any]] = alias_map or {}
+        self._node_keys: dict[QueryNodeType, str] = {}
         self._keys_set: set[str] = set()
         self._literal_name_counts: defaultdict[str, int] = defaultdict(int)
         self._literal_namespace: str = "__strawchemy"
@@ -311,16 +313,16 @@ class QueryScope(Generic[DeclarativeT]):
 
         self.model = model
         self.level: int = self._parent.level + 1 if self._parent else 0
-        self.columns: dict[SQLAlchemyQueryNode, NamedColumn[Any]] = {}
+        self.columns: dict[QueryNodeType, NamedColumn[Any]] = {}
         self.selected_columns: list[NamedColumn[Any] | QueryableAttribute[Any]] = []
-        self.selection_function_nodes: set[SQLAlchemyQueryNode] = set()
-        self.order_by_function_nodes: set[SQLAlchemyOrderByNode] = set()
-        self.where_function_nodes: set[SQLAlchemyQueryNode] = set()
+        self.selection_function_nodes: set[QueryNodeType] = set()
+        self.order_by_function_nodes: set[QueryNodeType] = set()
+        self.where_function_nodes: set[QueryNodeType] = set()
 
     def _add_scope_id(self, name: str) -> str:
         return name if self.is_root else f"{name}_{self.level}"
 
-    def _node_key(self, node: SQLAlchemyQueryNode) -> str:
+    def _node_key(self, node: QueryNodeType) -> str:
         if name := self._node_keys.get(node):
             return name
         node_inspect = self.inspect(node)
@@ -338,7 +340,7 @@ class QueryScope(Generic[DeclarativeT]):
         return scoped_name
 
     @property
-    def referenced_function_nodes(self) -> set[SQLAlchemyQueryNode]:
+    def referenced_function_nodes(self) -> set[QueryNodeType]:
         return (self.where_function_nodes & self.selection_function_nodes) | self.order_by_function_nodes
 
     @property
@@ -349,10 +351,10 @@ class QueryScope(Generic[DeclarativeT]):
     def root_alias(self) -> AliasedClass[Any]:
         return self._root_alias
 
-    def inspect(self, node: SQLAlchemyQueryNode) -> NodeInspect:
+    def inspect(self, node: QueryNodeType) -> NodeInspect:
         return NodeInspect(node, self)
 
-    def alias_from_relation_node(self, node: SQLAlchemyQueryNode, side: RelationshipSide) -> AliasedClass[Any]:
+    def alias_from_relation_node(self, node: QueryNodeType, side: RelationshipSide) -> AliasedClass[Any]:
         node_inspect = self.inspect(node)
         if (side == "parent" and node.parent and self.inspect(node.parent).is_data_root) or node_inspect.is_data_root:
             return self._root_alias
@@ -367,9 +369,7 @@ class QueryScope(Generic[DeclarativeT]):
         self.set_relation_alias(node, side, alias)
         return alias
 
-    def aliased_attribute(
-        self, node: SQLAlchemyQueryNode, alias: AliasedClass[Any] | None = None
-    ) -> QueryableAttribute[Any]:
+    def aliased_attribute(self, node: QueryNodeType, alias: AliasedClass[Any] | None = None) -> QueryableAttribute[Any]:
         """Adapts a model field to an aliased entity for query building.
 
         This method is a core component of the GraphQL to SQL transpilation process,
@@ -399,7 +399,7 @@ class QueryScope(Generic[DeclarativeT]):
             TranspilingError: If there are issues with the node's relationship structure.
 
         Example:
-            >>> node = SQLAlchemyQueryNode(...)  # Node with model field reference
+            >>> node = QueryNodeType(...)  # Node with model field reference
             >>> scope = QueryScope(User)  # Query scope for User model
             >>> # Get attribute with explicit alias
             >>> attr = scope.aliased_attribute(node, aliased(User))
@@ -409,7 +409,7 @@ class QueryScope(Generic[DeclarativeT]):
         model_field: QueryableAttribute[RelationshipProperty[Any]] = node.value.model_field
         if alias is not None:
             return model_field.adapt_to_entity(inspect(alias))
-        parent = node.non_computed_parent(strict=True)
+        parent = node.find_parent(lambda node: not node.value.is_computed, strict=True)
         if model_field.parent.is_aliased_class:
             return model_field
         if not node.value.is_relation:
@@ -423,7 +423,7 @@ class QueryScope(Generic[DeclarativeT]):
         return model_field.of_type(child_alias)
 
     def aliased_id_attributes(
-        self, node: SQLAlchemyQueryNode, alias: AliasedClass[Any] | None = None
+        self, node: QueryNodeType, alias: AliasedClass[Any] | None = None
     ) -> list[QueryableAttribute[Any]]:
         # Get the appropriate mapper based on whether the node is root or not
         # For root nodes, use the root alias mapper, otherwise inspect the node to get its mapper
@@ -454,7 +454,7 @@ class QueryScope(Generic[DeclarativeT]):
 
     def set_relation_alias(
         self,
-        node: SQLAlchemyQueryNode,
+        node: QueryNodeType,
         side: RelationshipSide,
         alias: AliasedClass[Any],
     ) -> None:
@@ -467,21 +467,21 @@ class QueryScope(Generic[DeclarativeT]):
             for pk in self.aliased_id_attributes(root)
         ]
 
-    def key(self, element: str | SQLAlchemyQueryNode) -> str:
+    def key(self, element: str | QueryNodeType) -> str:
         """Generates a unique key for a query element or node.
 
         The key is used to uniquely identify elements within the query scope, ensuring
         proper referencing and preventing naming conflicts. The key generation strategy
         differs based on the input type:
 
-        - For SQLAlchemyQueryNode: Generates a scoped name based on the node's position
+        - For QueryNodeType: Generates a scoped name based on the node's position
           in the query structure, incorporating parent relationships and function prefixes
         - For string elements: Creates a unique name by appending a counter to prevent
           collisions with identical names
 
         Args:
             element: The element to generate a key for. Can be either:
-                - A SQLAlchemyQueryNode: A node in the query structure
+                - A QueryNodeType: A node in the query structure
                 - A string: A literal element name
 
         Returns:
@@ -491,11 +491,11 @@ class QueryScope(Generic[DeclarativeT]):
 
         Example:
             >>> scope = QueryScope(User)
-            >>> node = SQLAlchemyQueryNode(...)
+            >>> node = QueryNodeType(...)
             >>> scope.key(node)  # Returns a unique key for the node
             >>> scope.key("column_name")  # Returns a unique key for the literal
         """
-        if isinstance(element, QueryNode):
+        if isinstance(element, Node):
             scoped_name = self._node_key(element)
         else:
             scoped_name = f"{self._literal_namespace}_{element}_{self._literal_name_counts[element]}"

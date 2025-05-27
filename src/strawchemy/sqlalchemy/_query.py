@@ -53,10 +53,10 @@ if TYPE_CHECKING:
     from sqlalchemy.sql._typing import _OnClauseArgument
     from sqlalchemy.sql.selectable import NamedFromClause
     from strawchemy.config.databases import DatabaseFeatures
+    from strawchemy.strawberry.typing import QueryNodeType
 
     from ._scope import QueryScope
     from .hook import ColumnLoadingMode, QueryHook
-    from .typing import SQLAlchemyOrderByNode, SQLAlchemyQueryNode
 
 __all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
 
@@ -64,7 +64,7 @@ __all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "Q
 @dataclass
 class Join:
     target: QueryableAttribute[Any] | NamedFromClause | AliasedClass[Any]
-    node: SQLAlchemyQueryNode
+    node: QueryNodeType
     onclause: _OnClauseArgument | None = None
     is_outer: bool = False
     ordered: bool = False
@@ -171,16 +171,16 @@ class AggregationJoin(Join):
 @dataclass
 class QueryGraph(Generic[DeclarativeT]):
     scope: QueryScope[DeclarativeT]
-    selection_tree: SQLAlchemyQueryNode | None = None
+    selection_tree: QueryNodeType | None = None
     order_by: Sequence[OrderByDTO] = dataclasses.field(default_factory=list)
     distinct_on: list[EnumDTO] = dataclasses.field(default_factory=list)
     dto_filter: BooleanFilterDTO | None = None
 
     query_filter: Filter | None = dataclasses.field(init=False, default=None)
-    where_join_tree: SQLAlchemyQueryNode | None = dataclasses.field(init=False, default=None)
-    subquery_join_tree: SQLAlchemyQueryNode | None = dataclasses.field(init=False, default=None)
-    root_join_tree: SQLAlchemyQueryNode = dataclasses.field(init=False)
-    order_by_nodes: list[SQLAlchemyOrderByNode] = dataclasses.field(init=False, default_factory=list)
+    where_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
+    subquery_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
+    root_join_tree: QueryNodeType = dataclasses.field(init=False)
+    order_by_nodes: list[QueryNodeType] = dataclasses.field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
         self.root_join_tree = self.resolved_selection_tree()
@@ -201,9 +201,9 @@ class QueryGraph(Generic[DeclarativeT]):
             )
             self.order_by_nodes = sorted(self.order_by_tree.leaves())
 
-    def resolved_selection_tree(self) -> SQLAlchemyQueryNode:
+    def resolved_selection_tree(self) -> QueryNodeType:
         tree = self.selection_tree
-        if tree and tree.query_metadata.root_aggregations:
+        if tree and tree.graph_metadata.metadata.root_aggregations:
             tree = tree.find_child(lambda child: child.value.name == NODES_KEY) if tree else None
         if tree is None:
             tree = QueryNode.root_node(self.scope.model)
@@ -217,7 +217,7 @@ class QueryGraph(Generic[DeclarativeT]):
         return tree
 
     @cached_property
-    def order_by_tree(self) -> SQLAlchemyOrderByNode | None:
+    def order_by_tree(self) -> QueryNodeType | None:
         """Creates a query node tree from a list of order by DTOs.
 
         Args:
@@ -226,7 +226,7 @@ class QueryGraph(Generic[DeclarativeT]):
         Returns:
             A query node tree representing the order by clauses, or None if no DTOs provided.
         """
-        merged_tree: SQLAlchemyOrderByNode | None = None
+        merged_tree: QueryNodeType | None = None
         max_order: int = 0
         for order_by_dto in self.order_by:
             tree = order_by_dto.tree()
@@ -238,7 +238,7 @@ class QueryGraph(Generic[DeclarativeT]):
             max_order = max(orders) + 1
         return merged_tree
 
-    def root_aggregation_tree(self) -> SQLAlchemyQueryNode | None:
+    def root_aggregation_tree(self) -> QueryNodeType | None:
         if self.selection_tree:
             return self.selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
         return None
@@ -248,7 +248,7 @@ class QueryGraph(Generic[DeclarativeT]):
 class Conjunction:
     expressions: list[ColumnElement[bool]] = dataclasses.field(default_factory=list)
     joins: list[Join] = dataclasses.field(default_factory=list)
-    common_join_path: list[SQLAlchemyQueryNode] = dataclasses.field(default_factory=list)
+    common_join_path: list[QueryNodeType] = dataclasses.field(default_factory=list)
 
     def has_many_predicates(self) -> bool:
         if not self.expressions:
@@ -494,14 +494,14 @@ class SubqueryBuilder(Generic[DeclarativeT]):
 @dataclass
 class HookApplier:
     scope: QueryScope[Any]
-    hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[Any]]] = dataclasses.field(
+    hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(list)
     )
 
     def apply(
         self,
         statement: Select[tuple[DeclarativeT]],
-        node: SQLAlchemyQueryNode,
+        node: QueryNodeType,
         alias: AliasedClass[Any],
         loading_mode: ColumnLoadingMode,
         in_subquery: bool = False,

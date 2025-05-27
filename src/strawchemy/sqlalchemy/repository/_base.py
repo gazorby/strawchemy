@@ -7,7 +7,7 @@ from sqlalchemy import Row, inspect
 from sqlalchemy.orm import NO_VALUE, RelationshipProperty
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
-from strawchemy.sqlalchemy.typing import DeclarativeT, QueryExecutorT, SessionT, SQLAlchemyQueryNode
+from strawchemy.sqlalchemy.typing import DeclarativeT, QueryExecutorT, SessionT
 from strawchemy.strawberry.mutation.types import RelationType
 
 if TYPE_CHECKING:
@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.strawberry.mutation.input import Input
+    from strawchemy.strawberry.typing import QueryNodeType
 
 
 __all__ = ("SQLAlchemyGraphQLRepository",)
@@ -46,14 +47,14 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
     def _get_query_executor(
         self,
         executor_type: type[QueryExecutorT],
-        selection: SQLAlchemyQueryNode | None = None,
+        selection: QueryNodeType | None = None,
         dto_filter: BooleanFilterDTO | None = None,
         order_by: list[OrderByDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[SQLAlchemyQueryNode, list[QueryHook[DeclarativeBase]]] | None = None,
+        query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
         transpiler = QueryTranspiler(

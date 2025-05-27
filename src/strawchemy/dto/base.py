@@ -57,21 +57,21 @@ __all__ = ("DTOFactory", "DTOFieldDefinition", "MappedDTO", "ModelInspector")
 T = TypeVar("T")
 DTOBaseT = TypeVar("DTOBaseT", bound="DTOBase[Any]")
 ModelT = TypeVar("ModelT")
-ToMappedProtocolT = TypeVar("ToMappedProtocolT", bound="ToMappedProtocol")
+ToMappedProtocolT = TypeVar("ToMappedProtocolT", bound="ToMappedProtocol[Any]")
 ModelFieldT = TypeVar("ModelFieldT")
-FieldVisitor: TypeAlias = "Callable[[ToMappedProtocol, DTOFieldDefinition[Any, Any], Any], Any]"
+FieldVisitor: TypeAlias = "Callable[[ToMappedProtocol[Any], DTOFieldDefinition[Any, Any], Any], Any]"
 
 TYPING_NS = vars(typing) | vars(types)
 
 
-class VisitorProtocol(Protocol):
+class VisitorProtocol(Protocol, Generic[ModelT]):
     def field_value(
-        self, parent: ToMappedProtocol, field: DTOFieldDefinition[Any, Any], value: Any, level: int
+        self, parent: ToMappedProtocol[ModelT], field: DTOFieldDefinition[Any, Any], value: Any, level: int
     ) -> Any: ...
 
     def model(
         self,
-        parent: ToMappedProtocol,
+        parent: ToMappedProtocol[ModelT],
         model_cls: type[ModelT],
         params: dict[str, Any],
         override: dict[str, Any],
@@ -80,9 +80,9 @@ class VisitorProtocol(Protocol):
 
 
 @runtime_checkable
-class ToMappedProtocol(Protocol):
+class ToMappedProtocol(Protocol, Generic[ModelT]):
     def to_mapped(
-        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+        self, visitor: VisitorProtocol[ModelT] | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> Any: ...
 
 
@@ -99,7 +99,7 @@ class MappedDTO(DTOBase[ModelT]):
     """Base class to define DTO mapping classes."""
 
     def to_mapped(
-        self, visitor: VisitorProtocol | None = None, override: dict[str, Any] | None = None, level: int = 0
+        self, visitor: VisitorProtocol[ModelT] | None = None, override: dict[str, Any] | None = None, level: int = 0
     ) -> ModelT:
         """Create an instance of `self.__d_model__`.
 
@@ -119,7 +119,7 @@ class MappedDTO(DTOBase[ModelT]):
                 continue
 
             if TYPE_CHECKING:
-                value: ModelT | ToMappedProtocol | list[ModelT] | list[ToMappedProtocol] | DTOMissingType
+                value: ModelT | ToMappedProtocol[Any] | list[ModelT] | list[ToMappedProtocol[Any]] | DTOMissingType
 
             value = getattr(self, name)
 
@@ -160,7 +160,7 @@ class DTOBackend(Protocol, Generic[DTOBaseT]):
         self,
         name: str,
         model: type[Any],
-        field_definitions: Iterable[DTOFieldDefinition[Any, ModelFieldT]],
+        field_definitions: Iterable[DTOFieldDefinition[Any, Any]],
         base: type[Any] | None = None,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
@@ -517,7 +517,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     def _factory(
         self,
         name: str,
-        model: type[T],
+        model: type[ModelT],
         dto_config: DTOConfig,
         node: Node[Relation[Any, DTOBaseT], None],
         base: type[Any] | None = None,
@@ -568,7 +568,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     def iter_field_definitions(
         self,
         name: str,
-        model: type[T],
+        model: type[ModelT],
         dto_config: DTOConfig,
         base: type[DTOBase[ModelT]] | None,
         node: Node[Relation[ModelT, DTOBaseT], None],
@@ -610,7 +610,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
     def factory(
         self,
-        model: type[T],
+        model: type[ModelT],
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
@@ -665,7 +665,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
     def decorator(
         self,
-        model: type[T],
+        model: type[ModelT],
         purpose: Purpose,
         include: IncludeFields | None = None,
         exclude: ExcludeFields | None = None,

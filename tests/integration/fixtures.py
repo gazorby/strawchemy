@@ -52,7 +52,7 @@ if TYPE_CHECKING:
     from pathlib import Path
 
     from pytest import FixtureRequest
-    from pytest_databases._service import DockerService  # pyright: ignore[reportPrivateImportUsage]
+    from pytest_databases._service import DockerService
     from pytest_databases.docker.mysql import MySQLService
     from pytest_databases.docker.postgres import PostgresService
     from pytest_databases.types import XdistIsolationLevel

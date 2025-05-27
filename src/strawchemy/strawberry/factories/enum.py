@@ -112,7 +112,7 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
     def iter_field_definitions(
         self,
         name: str,
-        model: type[T],
+        model: type[DeclarativeBase],
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, EnumDTO], None],
@@ -125,7 +125,7 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
     @override
     def decorator(
         self,
-        model: type[T],
+        model: type[DeclarativeBase],
         purpose: Purpose = Purpose.READ,
         include: IncludeFields | None = None,
         exclude: ExcludeFields | None = None,

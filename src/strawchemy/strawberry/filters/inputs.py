@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar
 import strawberry
 from sqlalchemy import Dialect
 from strawberry import UNSET, Private
+from strawchemy.strawberry.typing import QueryNodeType
 
 from .base import (
     ArrayFilter,
@@ -33,7 +34,7 @@ from .base import (
 if TYPE_CHECKING:
     from sqlalchemy import ColumnElement
     from sqlalchemy.orm import QueryableAttribute
-    from strawchemy.strawberry.dto import OrderByEnum, QueryNode
+    from strawchemy.strawberry.dto import OrderByEnum
 
 __all__ = (
     "ArrayComparison",
@@ -71,7 +72,7 @@ class GraphQLComparison:
         _field_node: A private attribute that stores the DTO field node.
     """
 
-    __strawchemy_field_node__: Private[QueryNode | None] = None
+    __strawchemy_field_node__: Private[QueryNodeType | None] = None
     __strawchemy_filter__: Private[type[FilterProtocol]]
 
     def to_expressions(
@@ -80,13 +81,13 @@ class GraphQLComparison:
         return self.__strawchemy_filter__(self).to_expressions(dialect, model_attribute)
 
     @property
-    def field_node(self) -> QueryNode:
+    def field_node(self) -> QueryNodeType:
         if self.__strawchemy_field_node__ is None:
             raise ValueError
         return self.__strawchemy_field_node__
 
     @field_node.setter
-    def field_node(self, value: QueryNode) -> None:
+    def field_node(self, value: QueryNodeType) -> None:
         self.__strawchemy_field_node__ = value
 
 

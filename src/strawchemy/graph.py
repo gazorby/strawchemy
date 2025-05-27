@@ -1,43 +1,45 @@
 from __future__ import annotations
 
 import dataclasses
+import sys
 from collections import deque
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, overload, override
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
+    from collections.abc import Callable, Generator, Hashable
 
-__all__ = ("IterationMode", "MatchOn", "Node", "NodeGraphMetadata", "NodeMetadataT", "NodeValueT")
+__all__ = ("GraphMetadata", "IterationMode", "MatchOn", "Node", "NodeMetadataT", "NodeValueT")
 
 T = TypeVar("T")
-NodeValueT = TypeVar("NodeValueT", bound=Any)
-NodeMetadataT = TypeVar("NodeMetadataT", bound=Any)
-AnyNode = TypeVar("AnyNode", bound="Node[Any, Any]")
+NodeValueT = TypeVar("NodeValueT", bound="Any")
+NodeMetadataT = TypeVar("NodeMetadataT", bound="Any")
+NodeT = TypeVar("NodeT", bound="Node[Any, Any]")
 MatchOn: TypeAlias = Literal["value_identity", "value_equality", "node_identity"]
 IterationMode: TypeAlias = Literal["breadth_first", "depth_first"]
+AnyNode: TypeAlias = "Node[Any, Any]"
 
 
 class GraphError(Exception): ...
 
 
-class UndefinedType: ...
-
-
 @dataclass
-class NodeGraphMetadata:
+class GraphMetadata(Generic[T]):
+    metadata: T
     count: int = 0
 
 
-undefined = UndefinedType()
+@dataclass
+class NodeMetadata(Generic[T]):
+    data: T
 
 
 def merge_trees(
-    first: AnyNode,
+    first: NodeT,
     other: AnyNode,
     match_on: MatchOn | Callable[[AnyNode, AnyNode], bool],
-    _merged: AnyNode | None = None,
-) -> AnyNode:
+    _merged: NodeT | None = None,
+) -> NodeT:
     """Merge other into first.
 
     First tree if copied, then each node in other not present
@@ -54,7 +56,7 @@ def merge_trees(
     """
     if not first.match_nodes(first, first, match_on):
         return first
-    node = _merged if _merged else first.copy()
+    node = _merged or first.copy()
     # merge matching children between first and other
     for i, first_child in enumerate(first.children):
         for other_child in other.children:
@@ -73,12 +75,13 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
     """Very minimalist implementation of a direct graph."""
 
     value: NodeValueT
-    metadata: NodeMetadataT | UndefinedType = undefined
-    parent: Self | None = None
+    node_metadata: NodeMetadata[NodeMetadataT] | None = None
+    parent: Node[NodeValueT, NodeMetadataT] | None = None
     insert_order: int = field(default_factory=int)
-    children: list[Self] = field(default_factory=list)
-    graph_metadata: NodeGraphMetadata = field(default_factory=NodeGraphMetadata)
-    _root: Self = field(init=False)
+    children: list[Node[NodeValueT, NodeMetadataT]] = field(default_factory=list)
+    graph_metadata: GraphMetadata[Any] = field(default_factory=lambda: GraphMetadata(metadata={}))
+
+    _root: Node[NodeValueT, NodeMetadataT] = field(init=False)
     _level: int = field(init=False, default=0)
 
     def __post_init__(self) -> None:
@@ -94,7 +97,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         else:
             self._root = self
 
-    def _iter(self, search_mode: IterationMode) -> Generator[Self, None, None]:
+    def _iter(self, search_mode: IterationMode) -> Generator[Node[NodeValueT, NodeMetadataT], None, None]:
         """Internal iterator that yields nodes based on the specified search mode.
 
         Args:
@@ -106,8 +109,52 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         generator = self.iter_depth_first if search_mode == "depth_first" else self.iter_breadth_first
         yield from generator()
 
+    def _new(
+        self,
+        value: NodeValueT,
+        metadata: NodeMetadata[Any] | None = None,
+        parent: Node[NodeValueT, NodeMetadataT] | None = None,
+    ) -> Self:
+        """Create a new node instance with the same graph metadata.
+
+        Args:
+            value: The value for the new node
+            metadata: Optional metadata for the new node
+            parent: Optional parent node reference
+
+        Returns:
+            A new node instance with incremented insert order
+        """
+        node = self.__class__(
+            value,
+            parent=parent,
+            graph_metadata=self.graph_metadata,
+            insert_order=self.graph_metadata.count + 1,
+        )
+        if metadata is not None:
+            node.node_metadata = metadata
+        return node
+
+    @classmethod
+    def _node_hash_identity(cls, node: Node[NodeValueT, NodeMetadataT]) -> Hashable:
+        return tuple(parent.value for parent in node.path_from_root())
+
+    def _hash_identity(self) -> Hashable:
+        return (self._node_hash_identity(self.root), self._node_hash_identity(self))
+
+    def _hash(self) -> int:
+        # Ensure positive
+        return hash(self._hash_identity()) % 2**sys.hash_info.width
+
     @property
-    def root(self) -> Self:
+    def metadata(self) -> NodeMetadata[NodeMetadataT]:
+        if self.node_metadata is None:
+            msg = "Node has no metadata"
+            raise GraphError(msg)
+        return self.node_metadata
+
+    @property
+    def root(self) -> Node[NodeValueT, NodeMetadataT]:
         """Get the root node of the graph.
 
         Returns:
@@ -131,29 +178,13 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         """
         return self._level
 
-    def _new(
-        self, value: NodeValueT, metadata: NodeMetadataT | UndefinedType = undefined, parent: Self | None = None
-    ) -> Self:
-        """Create a new node instance with the same graph metadata.
-
-        Args:
-            value: The value for the new node
-            metadata: Optional metadata for the new node
-            parent: Optional parent node reference
-
-        Returns:
-            A new node instance with incremented insert order
-        """
-        return self.__class__(
-            value,
-            parent=parent,
-            metadata=metadata,
-            graph_metadata=self.graph_metadata,
-            insert_order=self.graph_metadata.count + 1,
-        )
-
     @classmethod
-    def match_nodes(cls, left: Self, right: Self, match_on: MatchOn | Callable[[Self, Self], bool]) -> bool:
+    def match_nodes(
+        cls,
+        left: Node[NodeValueT, NodeMetadataT],
+        right: Node[NodeValueT, NodeMetadataT],
+        match_on: MatchOn | Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool],
+    ) -> bool:
         """Compare two nodes based on a matching condition.
 
         Args:
@@ -176,7 +207,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
             return left.value == right.value
         return left.value is right.value
 
-    def insert_child(self, value: NodeValueT, metadata: NodeMetadataT | UndefinedType = undefined) -> Self:
+    def insert_child(self, value: NodeValueT, metadata: NodeMetadata[Any] | None = None) -> Self:
         """Add a new child with the given value to this node.
 
         Args:
@@ -188,11 +219,9 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
             The newly created child
         """
         node = self._new(value=value, metadata=metadata, parent=self)
-        self.children.append(node)
-        self.graph_metadata.count += 1
-        return node
+        return self._update_new_child(node)
 
-    def insert_node(self, child: Self) -> Self:
+    def insert_node(self, child: NodeT) -> NodeT:
         """Insert an existing node as a child of this node.
 
         Creates a copy of the given node with updated graph metadata, parent reference,
@@ -207,16 +236,20 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         copy = dataclasses.replace(
             child, graph_metadata=self.graph_metadata, parent=self, insert_order=self.graph_metadata.count + 1
         )
-        self.children.append(copy)
+        return self._update_new_child(copy)
+
+    def _update_new_child(self, child: NodeT) -> NodeT:
+        self.children.append(child)
         self.graph_metadata.count += 1
-        return copy
+        return child
 
     def upsert_child(
         self,
         value: NodeValueT,
-        metadata: NodeMetadataT | UndefinedType = undefined,
-        match_on: MatchOn | Callable[[Self, Self], bool] = "node_identity",
-    ) -> tuple[Self, bool]:
+        metadata: NodeMetadata[Any] | None = None,
+        match_on: MatchOn
+        | Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool] = "node_identity",
+    ) -> tuple[Node[NodeValueT, NodeMetadataT], bool]:
         """Insert a new child node if no matching child exists, otherwise return the existing one.
 
         Args:
@@ -237,7 +270,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
             return child, False
         return self.insert_child(value, metadata), True
 
-    def iter_parents(self) -> Generator[Self, None, None]:
+    def iter_parents(self) -> Generator[Node[NodeValueT, NodeMetadataT], None, None]:
         """Iterate over node parents until reaching root node.
 
         Yields:
@@ -247,7 +280,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
             yield self.parent
             yield from self.parent.iter_parents()
 
-    def iter_depth_first(self) -> Generator[Self, None, None]:
+    def iter_depth_first(self) -> Generator[Node[NodeValueT, NodeMetadataT], None, None]:
         """Iterate over children all in this subtree.
 
         Yields:
@@ -257,7 +290,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
             yield child
             yield from child.iter_depth_first()
 
-    def iter_breadth_first(self) -> Generator[Self, None, None]:
+    def iter_breadth_first(self) -> Generator[Node[NodeValueT, NodeMetadataT], None, None]:
         """Iterate over all nodes in this subtree using breadth-first traversal.
 
         In breadth-first traversal, all nodes at the current level are visited
@@ -266,13 +299,15 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         Yields:
             Nodes in breadth-first order
         """
-        queue: deque[Self] = deque(self.children)
+        queue: deque[Node[NodeValueT, NodeMetadataT]] = deque(self.children)
         while queue:
             child = queue.popleft()
             yield child
             queue.extend(child.children)
 
-    def leaves(self, iteration_mode: IterationMode = "depth_first") -> Generator[Self, None, None]:
+    def leaves(
+        self, iteration_mode: IterationMode = "depth_first"
+    ) -> Generator[Node[NodeValueT, NodeMetadataT], None, None]:
         """Iterate over all leaf nodes in the subtree.
 
         A leaf node is a node that has no children.
@@ -287,7 +322,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
             if not child.children:
                 yield child
 
-    def path_from_root(self) -> list[Self]:
+    def path_from_root(self) -> list[Node[NodeValueT, NodeMetadataT]]:
         """Get the path from the root node to this node.
 
         Returns:
@@ -298,8 +333,12 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
 
     @classmethod
     def common_path(
-        cls, left: list[Self], right: list[Self], match_on: MatchOn | Callable[[Self, Self], bool] = "node_identity"
-    ) -> list[Self]:
+        cls,
+        left: list[Node[NodeValueT, NodeMetadataT]],
+        right: list[Node[NodeValueT, NodeMetadataT]],
+        match_on: MatchOn
+        | Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool] = "node_identity",
+    ) -> list[Node[NodeValueT, NodeMetadataT]]:
         """Find the common path between two lists of nodes.
 
         Compares nodes at the same positions in both lists using the specified matching condition.
@@ -316,7 +355,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         Returns:
             A list of nodes that form the common path between the two input lists
         """
-        common: list[Self] = []
+        common: list[Node[NodeValueT, NodeMetadataT]] = []
         longest, shortest = (left, right) if len(left) > len(right) else (right, left)
         if len(shortest) == 0:
             return longest
@@ -342,15 +381,23 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         return node
 
     @overload
-    def find_parent(self, func: Callable[[Self], bool], strict: Literal[True]) -> Self: ...
+    def find_parent(
+        self, func: Callable[[Node[NodeValueT, NodeMetadataT]], bool], strict: Literal[True]
+    ) -> Node[NodeValueT, NodeMetadataT]: ...
 
     @overload
-    def find_parent(self, func: Callable[[Self], bool], strict: Literal[False]) -> Self | None: ...
+    def find_parent(
+        self, func: Callable[[Node[NodeValueT, NodeMetadataT]], bool], strict: Literal[False]
+    ) -> Node[NodeValueT, NodeMetadataT] | None: ...
 
     @overload
-    def find_parent(self, func: Callable[[Self], bool], strict: bool = False) -> Self | None: ...
+    def find_parent(
+        self, func: Callable[[Node[NodeValueT, NodeMetadataT]], bool], strict: bool = False
+    ) -> Node[NodeValueT, NodeMetadataT] | None: ...
 
-    def find_parent(self, func: Callable[[Self], bool], strict: bool = False) -> Self | None:
+    def find_parent(
+        self, func: Callable[[Node[NodeValueT, NodeMetadataT]], bool], strict: bool = False
+    ) -> Node[NodeValueT, NodeMetadataT] | None:
         """Find the first parent node that satisfies a given condition.
 
         Args:
@@ -374,22 +421,34 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
 
     @overload
     def find_child(
-        self, func: Callable[[Self], bool], strict: Literal[True], iteration_mode: IterationMode = "depth_first"
-    ) -> Self: ...
+        self,
+        func: Callable[[Node[NodeValueT, NodeMetadataT]], bool],
+        strict: Literal[True],
+        iteration_mode: IterationMode = "depth_first",
+    ) -> Node[NodeValueT, NodeMetadataT]: ...
 
     @overload
     def find_child(
-        self, func: Callable[[Self], bool], strict: Literal[False], iteration_mode: IterationMode = "depth_first"
-    ) -> Self | None: ...
+        self,
+        func: Callable[[Node[NodeValueT, NodeMetadataT]], bool],
+        strict: Literal[False],
+        iteration_mode: IterationMode = "depth_first",
+    ) -> Node[NodeValueT, NodeMetadataT] | None: ...
 
     @overload
     def find_child(
-        self, func: Callable[[Self], bool], strict: bool = False, iteration_mode: IterationMode = "depth_first"
-    ) -> Self | None: ...
+        self,
+        func: Callable[[Node[NodeValueT, NodeMetadataT]], bool],
+        strict: bool = False,
+        iteration_mode: IterationMode = "depth_first",
+    ) -> Node[NodeValueT, NodeMetadataT] | None: ...
 
     def find_child(
-        self, func: Callable[[Self], bool], strict: bool = False, iteration_mode: IterationMode = "depth_first"
-    ) -> Self | None:
+        self,
+        func: Callable[[Node[NodeValueT, NodeMetadataT]], bool],
+        strict: bool = False,
+        iteration_mode: IterationMode = "depth_first",
+    ) -> Node[NodeValueT, NodeMetadataT] | None:
         """Find the first child node that satisfies a given condition.
 
         Args:
@@ -412,7 +471,9 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
             raise GraphError(msg)
         return None
 
-    def merge_same_children(self, match_on: MatchOn | Callable[[Self, Self], bool]) -> Self:
+    def merge_same_children(
+        self, match_on: MatchOn | Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool]
+    ) -> Self:
         """Create a new node by merging children that match according to the given condition.
 
         This method creates a copy of the current node and merges its children that match
@@ -436,3 +497,27 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
                 child_copy = merge_trees(existing_child, child_copy, match_on)
             node.insert_node(child_copy)
         return node
+
+    def __gt__(self, other: Node[NodeValueT, NodeMetadataT]) -> bool:
+        return self.insert_order > other.insert_order
+
+    def __lt__(self, other: Node[NodeValueT, NodeMetadataT]) -> bool:
+        return self.insert_order < other.insert_order
+
+    def __le__(self, other: Node[NodeValueT, NodeMetadataT]) -> bool:
+        return self.insert_order <= other.insert_order
+
+    def __ge__(self, other: Node[NodeValueT, NodeMetadataT]) -> bool:
+        return self.insert_order >= other.insert_order
+
+    @override
+    def __hash__(self) -> int:
+        return self._hash()
+
+    @override
+    def __eq__(self, other: object) -> bool:
+        return hash(self) == hash(other)
+
+    @override
+    def __ne__(self, other: object) -> bool:
+        return hash(self) != hash(other)

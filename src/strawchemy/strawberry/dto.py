@@ -27,7 +27,6 @@ adapted to different GraphQL schemas.
 from __future__ import annotations
 
 import dataclasses
-import sys
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
@@ -50,11 +49,11 @@ from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.dto.backend.strawberry import MappedStrawberryDTO, StrawberryDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, Purpose
-from strawchemy.graph import GraphError, MatchOn, Node, UndefinedType, undefined
+from strawchemy.graph import AnyNode, GraphMetadata, MatchOn, Node, NodeMetadata, NodeT
 from strawchemy.sqlalchemy.hook import QueryHook  # noqa: TC001
 from strawchemy.utils import camel_to_snake
 
-from .typing import InputType, OrderByDTOT
+from .typing import InputType, OrderByDTOT, QueryNodeType
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
@@ -71,9 +70,32 @@ class _ArgumentValue:
     value: str
 
 
+class RelationFilterDTO(Struct, frozen=True, dict=True):
+    limit: int | None = None
+    offset: int | None = None
+
+    @cached_property
+    def _json(self) -> bytes:
+        return json.encode(self)
+
+    def __bool__(self) -> bool:
+        return bool(self.limit or self.offset)
+
+    @override
+    def __hash__(self) -> int:
+        return hash(self._json)
+
+
 @dataclass
-class QueryMetadata:
+class QueryGraphMetadata:
     root_aggregations: bool = False
+
+
+@dataclass
+class QueryNodeMetadata:
+    relation_filter: RelationFilterDTO = dataclasses.field(default_factory=RelationFilterDTO)
+    order_by: OrderByEnum | None = None
+    strawberry_type: type[Any] | None = None
 
 
 class StrawchemyDTOAttributes:
@@ -155,32 +177,16 @@ class DTOKey(_Key[type[Any]]):
         return obj.__name__
 
     @classmethod
-    def from_dto_node(cls, node: Node[Any, None]) -> Self:
+    def from_dto_node(cls, node: Node[Any, Any]) -> Self:
         return cls([node.value.model])
 
     @classmethod
-    def from_query_node(cls, node: QueryNode) -> Self:
+    def from_query_node(cls, node: QueryNodeType) -> Self:
         if node.is_root:
             return cls([node.value.model])
         if node.value.related_model:
             return cls([node.value.related_model])
         return cls([node.value.model])
-
-
-class RelationFilterDTO(Struct, frozen=True, dict=True):
-    limit: int | None = None
-    offset: int | None = None
-
-    @cached_property
-    def _json(self) -> bytes:
-        return json.encode(self)
-
-    def __bool__(self) -> bool:
-        return bool(self.limit or self.offset)
-
-    @override
-    def __hash__(self) -> int:
-        return hash(self._json)
 
 
 class OrderByRelationFilterDTO(RelationFilterDTO, Generic[OrderByDTOT], frozen=True):
@@ -324,64 +330,45 @@ class FunctionArgFieldDefinition(FunctionFieldDefinition):
 
 
 @dataclass(eq=False)
-class QueryNode(Node[GraphQLFieldDefinition, None]):
-    children: list[Self] = dataclasses.field(default_factory=list)
-    relation_filter: RelationFilterDTO = dataclasses.field(default_factory=RelationFilterDTO)
-    query_metadata: QueryMetadata = dataclasses.field(default_factory=QueryMetadata)
+class QueryNode(Node[GraphQLFieldDefinition, QueryNodeMetadata]):
+    node_metadata: NodeMetadata[QueryNodeMetadata] | None = dataclasses.field(
+        default_factory=lambda: NodeMetadata(QueryNodeMetadata())
+    )
+    graph_metadata: GraphMetadata[QueryGraphMetadata] = dataclasses.field(
+        default_factory=lambda: GraphMetadata(QueryGraphMetadata())
+    )
 
     @classmethod
-    def _node_hash_identity(cls, node: Self) -> Hashable:
-        return (*[parent.value for parent in node.path_from_root()], node.relation_filter)
+    @override
+    def _node_hash_identity(cls, node: Node[GraphQLFieldDefinition, QueryNodeMetadata]) -> Hashable:
+        return (super()._node_hash_identity(node), node.metadata.data.relation_filter)
 
-    def _hash_identity(self) -> Hashable:
-        return (self._node_hash_identity(self.root), self._node_hash_identity(self))
-
-    def _hash(self) -> int:
-        # Ensure positive
-        return hash(self._hash_identity()) % 2**sys.hash_info.width
-
-    def _update_new_child(self, child: Self) -> Self:
+    @override
+    def _update_new_child(self, child: NodeT) -> NodeT:
+        super()._update_new_child(child)
         if self.value.is_function:
             child.value = FunctionArgFieldDefinition.from_field(child.value, function=self.value.function(strict=True))
-        child.query_metadata = self.query_metadata
         return child
-
-    def first_aggregate_parent(self) -> Self:
-        return next(parent for parent in self.iter_parents() if parent.value.is_aggregate)
-
-    @override
-    def _new(
-        self,
-        value: GraphQLFieldDefinition,
-        metadata: None | UndefinedType = undefined,
-        parent: Self | None = None,
-    ) -> Self:
-        new = super()._new(value, metadata, parent)
-        new.query_metadata = self.query_metadata
-        return new
-
-    @override
-    def insert_node(self, child: Self) -> Self:
-        return self._update_new_child(super().insert_node(child))
-
-    @override
-    def insert_child(self, value: GraphQLFieldDefinition, metadata: None | UndefinedType = undefined) -> Self:
-        return self._update_new_child(super().insert_child(value, metadata))
 
     @override
     @classmethod
     def match_nodes(
         cls,
-        left: Self,
-        right: Self,
-        match_on: Callable[[Self, Self], bool] | MatchOn,
+        left: AnyNode,
+        right: AnyNode,
+        match_on: Callable[[AnyNode, AnyNode], bool] | MatchOn,
     ) -> bool:
         if match_on == "value_equality":
             return left.value.model is right.value.model and left.value.model_field_name == right.value.model_field_name
         return super(cls, cls).match_nodes(left, right, match_on)
 
     @classmethod
-    def root_node(cls, model: type[DeclarativeBase], root_aggregations: bool = False, **kwargs: Any) -> Self:
+    def root_node(
+        cls,
+        model: type[DeclarativeBase],
+        root_aggregations: bool = False,
+        strawberry_type: type[Any] | None = None,
+    ) -> Self:
         root_name = camel_to_snake(model.__name__)
         field_def = GraphQLFieldDefinition(
             config=DTOFieldConfig(),
@@ -391,67 +378,22 @@ class QueryNode(Node[GraphQLFieldDefinition, None]):
             is_relation=False,
             type_hint=model,
         )
-        return cls(value=field_def, query_metadata=QueryMetadata(root_aggregations=root_aggregations), **kwargs)
-
-    @overload
-    def non_computed_parent(self, strict: Literal[True]) -> Self: ...
-
-    @overload
-    def non_computed_parent(self, strict: Literal[False]) -> Self | None: ...
-
-    @overload
-    def non_computed_parent(self, strict: bool) -> Self | None: ...
-
-    def non_computed_parent(self, strict: bool = False) -> Self | None:
-        parent = self.parent
-        if not parent:
-            if strict:
-                msg = "No non computed parent found"
-                raise GraphError(msg)
-            return None
-        if parent.value.is_computed:
-            return parent.non_computed_parent(strict)
-        return parent
+        return cls(
+            value=field_def,
+            graph_metadata=GraphMetadata(QueryGraphMetadata(root_aggregations=root_aggregations)),
+            node_metadata=NodeMetadata(QueryNodeMetadata(strawberry_type=strawberry_type)),
+        )
 
     @override
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {self.value.model_field_name}>"
-
-    @override
-    def __hash__(self) -> int:
-        return self._hash()
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return hash(self) == hash(other)
-
-    @override
-    def __ne__(self, other: object) -> bool:
-        return hash(self) != hash(other)
-
-
-@dataclass(eq=False, repr=False)
-class OrderByNode(QueryNode):
-    order_by: OrderByEnum | None = None
-
-    def __gt__(self, other: Self) -> bool:
-        return self.insert_order > other.insert_order
-
-    def __lt__(self, other: Self) -> bool:
-        return self.insert_order < other.insert_order
-
-    def __le__(self, other: Self) -> bool:
-        return self.insert_order <= other.insert_order
-
-    def __ge__(self, other: Self) -> bool:
-        return self.insert_order >= other.insert_order
 
 
 @dataclass
 class AggregationFilter:
     function_info: FilterFunctionInfo
     predicate: EqualityComparison[Any]
-    field_node: QueryNode
+    field_node: QueryNodeType
     distinct: bool | None = None
 
 
@@ -505,8 +447,8 @@ class AggregationFunctionFilterDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]
 
 
 class OrderByDTO(GraphQLFilterDTO):
-    def tree(self, _node: OrderByNode | None = None) -> OrderByNode:
-        node = _node or OrderByNode.root_node(self.__dto_model__)
+    def tree(self, _node: QueryNodeType | None = None) -> QueryNodeType:
+        node = _node or QueryNode.root_node(self.__dto_model__)
         key = DTOKey.from_query_node(node)
 
         for name in self.dto_set_fields:
@@ -519,7 +461,7 @@ class OrderByDTO(GraphQLFilterDTO):
                 value.tree(child)
             else:
                 child = node.insert_child(field)
-                child.order_by = value
+                child.metadata.data.order_by = value
         return node
 
 
@@ -528,7 +470,7 @@ class BooleanFilterDTO(GraphQLFilterDTO):
     or_: list[Self] = strawberry.field(default_factory=list, name="_or")
     not_: Self | None = strawberry.field(default=strawberry.UNSET, name="_not")
 
-    def filters_tree(self, _node: QueryNode | None = None) -> tuple[QueryNode, Filter]:
+    def filters_tree(self, _node: QueryNodeType | None = None) -> tuple[QueryNodeType, Filter]:
         node = _node or QueryNode.root_node(self.__dto_model__)
         key = DTOKey.from_query_node(node)
         query = Filter(
@@ -554,7 +496,7 @@ class BooleanFilterDTO(GraphQLFilterDTO):
 
 
 class AggregateFilterDTO(GraphQLFilterDTO):
-    def flatten(self, aggregation_node: QueryNode) -> list[AggregationFilter]:
+    def flatten(self, aggregation_node: QueryNodeType) -> list[AggregationFilter]:
         aggregations = []
         for name in self.dto_set_fields:
             function_filter: AggregationFunctionFilterDTO = getattr(self, name)
