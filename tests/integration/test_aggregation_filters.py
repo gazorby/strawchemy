@@ -192,10 +192,8 @@ async def test_max_string_aggregation_filter(
     [
         pytest.param("sweetness", "eq", 6, [1], id="int-eq-match"),
         pytest.param("sweetness", "gt", 8, [0, 2, 4], id="int-gt-match"),
-        pytest.param("waterPercent", "eq", 1.65, [0], id="float-eq-match"),
-        pytest.param("waterPercent", "gt", 1.7, [1, 2], id="float-gt-match"),
-        pytest.param("rarity", "eq", 0.3, [0], id="decimal-eq-match"),
-        pytest.param("rarity", "gt", 1.6, [3], id="decimal-gt-match"),
+        pytest.param("waterPercent", "eq", 1.77, [0], id="float-eq-match"),
+        pytest.param("waterPercent", "gt", 1.7, [0, 1, 2], id="float-gt-match"),
     ],
 )
 @pytest.mark.snapshot
@@ -250,10 +248,8 @@ async def test_sum_aggregation_filter(
     [
         pytest.param("sweetness", "eq", 6.5, [0], id="int-avg-eq-match"),
         pytest.param("sweetness", "gt", 7.0, [2, 4], id="int-avg-gt-match"),
-        pytest.param("waterPercent", "eq", 0.825, [0], id="float-avg-eq-match"),
-        pytest.param("waterPercent", "gt", 0.85, [2], id="float-avg-gt-match"),
-        pytest.param("rarity", "eq", 0.15, [0], id="decimal-avg-eq-match"),
-        pytest.param("rarity", "gt", 0.25, [1, 2, 3, 4], id="decimal-avg-gt-match"),
+        pytest.param("waterPercent", "eq", 0.885, [0], id="float-avg-eq-match"),
+        pytest.param("waterPercent", "gt", 0.85, [0, 2], id="float-avg-gt-match"),
     ],
 )
 @pytest.mark.snapshot

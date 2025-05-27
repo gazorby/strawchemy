@@ -37,6 +37,8 @@ class DatabaseFeatures(Protocol):
             return PostgresFeatures()
         if dialect == "mysql":
             return MySQLFeatures()
+        if dialect == "sqlite":
+            return SQLiteFeatures()
         msg = "Unsupported dialect"
         raise StrawchemyError(msg)
 
@@ -52,3 +54,11 @@ class PostgresFeatures(DatabaseFeatures):
 @dataclass(frozen=True)
 class MySQLFeatures(DatabaseFeatures):
     dialect: SupportedDialect = "mysql"
+
+
+@dataclass(frozen=True)
+class SQLiteFeatures(DatabaseFeatures):
+    dialect: SupportedDialect = "sqlite"
+    aggregation_functions: set[AggregationFunction] = field(
+        default_factory=lambda: {"min", "max", "sum", "avg", "count"}
+    )

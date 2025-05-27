@@ -77,11 +77,11 @@ class FruitFilterHook(QueryHook[Fruit]):
 
 
 class FruitOrderingHook(QueryHook[Fruit]):
-    load: Sequence[LoadType] = [Fruit.name]
+    load: Sequence[LoadType] = [Fruit.water_percent]
 
     @override
     def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
-        return statement.order_by(alias.name.asc())
+        return statement.order_by(alias.water_percent.asc())
 
 
 # User

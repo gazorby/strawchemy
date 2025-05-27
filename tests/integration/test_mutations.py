@@ -354,7 +354,7 @@ async def test_create_with_to_many_create(
         "name": "new color",
         "fruits": [{"name": "new fruit 1"}, {"name": "new fruit 2"}],
     }
-    if dialect == "postgresql":
+    if dialect in ("postgresql", "sqlite"):
         query_tracker.assert_statements(2, "insert", sql_snapshot)
     else:
         query_tracker.assert_statements(3, "insert", sql_snapshot)
@@ -534,7 +534,7 @@ async def test_create_many(
     assert not result.errors
     assert result.data
     assert result.data["createColors"] == [{"name": "new color 1"}, {"name": "new color 2"}]
-    if dialect == "postgresql":
+    if dialect in ("postgresql", "sqlite"):
         query_tracker.assert_statements(1, "insert", sql_snapshot)
     else:
         query_tracker.assert_statements(2, "insert", sql_snapshot)
@@ -698,7 +698,7 @@ async def test_update_by_filter(
     ]
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
-    if dialect == "postgresql":
+    if dialect in ("postgresql", "sqlite"):
         query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
     else:
         query_tracker.assert_statements(2, "select", sql_snapshot)
@@ -730,7 +730,7 @@ async def test_update_by_filter_only_return_affected_objects(
     assert result.data["updateColorsFilter"] == []
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
-    if dialect == "postgresql":
+    if dialect in ("postgresql", "sqlite"):
         query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch id + name
     else:
         query_tracker.assert_statements(2, "select", sql_snapshot)
@@ -1082,7 +1082,7 @@ async def test_update_with_to_many_create(
     ]
 
     # Insert 2 new fruits, in a single batched query
-    if dialect == "postgresql":
+    if dialect in ("postgresql", "sqlite"):
         query_tracker.assert_statements(1, "insert", sql_snapshot)
     else:
         query_tracker.assert_statements(2, "insert", sql_snapshot)
@@ -1539,7 +1539,7 @@ async def test_delete_filter(
     ]
 
     query_tracker.assert_statements(1, "delete", sql_snapshot)
-    if dialect == "postgresql":
+    if dialect in ("postgresql", "sqlite"):
         query_tracker.assert_statements(1, "select", sql_snapshot)
     else:
         query_tracker.assert_statements(2, "select", sql_snapshot)
@@ -1569,7 +1569,7 @@ async def test_delete_all(
     assert result.data
     assert len(result.data["deleteUsers"]) == len(raw_users)
     query_tracker.assert_statements(1, "delete", sql_snapshot)
-    if dialect == "postgresql":
+    if dialect in ("postgresql", "sqlite"):
         query_tracker.assert_statements(1, "select", sql_snapshot)
     else:
         query_tracker.assert_statements(2, "select", sql_snapshot)

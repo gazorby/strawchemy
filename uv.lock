@@ -2467,12 +2467,16 @@ pydantic = [
 ]
 
 [package.dev-dependencies]
+aiosqlite = [
+    { name = "aiosqlite" },
+]
 build = [
     { name = "bump-my-version" },
     { name = "git-cliff" },
     { name = "unasyncd" },
 ]
 dev = [
+    { name = "aiosqlite" },
     { name = "asyncmy" },
     { name = "asyncpg" },
     { name = "bump-my-version" },
@@ -2516,6 +2520,7 @@ postgres = [
     { name = "psycopg2-binary" },
 ]
 test = [
+    { name = "aiosqlite" },
     { name = "asyncmy" },
     { name = "asyncpg" },
     { name = "covdefaults" },
@@ -2547,12 +2552,14 @@ requires-dist = [
 provides-extras = ["geo", "pydantic"]
 
 [package.metadata.requires-dev]
+aiosqlite = [{ name = "aiosqlite" }]
 build = [
     { name = "bump-my-version" },
     { name = "git-cliff" },
     { name = "unasyncd" },
 ]
 dev = [
+    { name = "aiosqlite" },
     { name = "asyncmy" },
     { name = "asyncpg", specifier = ">=0.29.0" },
     { name = "bump-my-version" },
@@ -2595,6 +2602,7 @@ postgres = [
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
 ]
 test = [
+    { name = "aiosqlite" },
     { name = "asyncmy" },
     { name = "asyncpg", specifier = ">=0.29.0" },
     { name = "covdefaults" },

@@ -1,4 +1,17 @@
 # serializer version: 1
+# name: test_inner_join_rewriting[session-tracked-async-inner-join-rewrite-aiosqlite_engine]
+  '''
+  SELECT color__fruits.sweetness,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color__fruits.sweetness > ?
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
 # name: test_inner_join_rewriting[session-tracked-async-inner-join-rewrite-asyncmy_engine]
   '''
   SELECT color__fruits.sweetness,
@@ -34,6 +47,19 @@
     JOIN fruit AS color__fruits
       ON color.id = color__fruits.color_id
    WHERE color__fruits.sweetness > %(sweetness_1)s::INTEGER
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_inner_join_rewriting[session-tracked-async-no-inner-join-rewrite-aiosqlite_engine]
+  '''
+  SELECT color__fruits.sweetness,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.created_at > ?
    ORDER BY color.id ASC,
             color__fruits.id ASC
   '''
@@ -92,6 +118,19 @@
             color__fruits.id ASC
   '''
 # ---
+# name: test_inner_join_rewriting[session-tracked-sync-inner-join-rewrite-sqlite_engine]
+  '''
+  SELECT color__fruits.sweetness,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color__fruits.sweetness > ?
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
 # name: test_inner_join_rewriting[session-tracked-sync-no-inner-join-rewrite-psycopg_engine]
   '''
   SELECT color__fruits.sweetness,
@@ -102,6 +141,19 @@
       ON color.id = color__fruits.color_id
    WHERE color.created_at > %(created_at_1)s::TIMESTAMP WITHOUT TIME
     ZONE
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_inner_join_rewriting[session-tracked-sync-no-inner-join-rewrite-sqlite_engine]
+  '''
+  SELECT color__fruits.sweetness,
+         color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.created_at > ?
    ORDER BY color.id ASC,
             color__fruits.id ASC
   '''
