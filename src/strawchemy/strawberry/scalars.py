@@ -33,4 +33,9 @@ Interval = scalar(
     specified_by_url="https://en.wikipedia.org/wiki/ISO_8601#Durations",
 )
 
-Time = scalar(NewType("Time", time), serialize=_serialize_time, parse_value=wrap_parser(time.fromisoformat, "Time"))
+Time = scalar(
+    NewType("Time", time),
+    serialize=_serialize_time,
+    parse_value=wrap_parser(time.fromisoformat, "Time"),
+    description="Time (isoformat)",
+)

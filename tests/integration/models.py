@@ -16,6 +16,7 @@ from sqlalchemy import (
     Double,
     ForeignKey,
     Integer,
+    Interval,
     MetaData,
     Numeric,
     Sequence,
@@ -190,7 +191,7 @@ class IntervalModel(IntervalBase):
 
     registry = Registry(metadata=interval_metadata)
 
-    time_delta_col: Mapped[timedelta]
+    time_delta_col: Mapped[timedelta] = mapped_column(Interval)
 
 
 class JSONModel(JSONBase):
