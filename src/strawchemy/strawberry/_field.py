@@ -541,7 +541,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
             raise StrawchemyFieldError(msg)
 
     def _update_by_ids_resolver(
-        self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
+        self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO], **_: Any
     ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
@@ -586,9 +586,9 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
     ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
-        if self.filter:
-            return self._update_by_filter_resolver(info, *args, **kwargs)
-        return self._update_by_ids_resolver(info, *args, **kwargs)
+        if self._filter is None:
+            return self._update_by_ids_resolver(info, *args, **kwargs)
+        return self._update_by_filter_resolver(info, *args, **kwargs)
 
 
 class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
