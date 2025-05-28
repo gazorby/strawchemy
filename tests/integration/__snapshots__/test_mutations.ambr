@@ -1,4 +1,18 @@
 # serializer version: 1
+# name: test_column_override[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_column_override[session-tracked-async-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
 # name: test_column_override[session-tracked-async-asyncmy_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
@@ -55,6 +69,35 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
+# name: test_column_override[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_column_override[session-tracked-sync-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-tracked-async-createColor-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-tracked-async-createColor-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_create[session-tracked-async-createColor-asyncmy_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
@@ -100,6 +143,21 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_create[session-tracked-async-createValidatedColor-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-tracked-async-createValidatedColor-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_create[session-tracked-async-createValidatedColor-asyncmy_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
@@ -128,6 +186,20 @@
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
    ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-tracked-async-createValidatedColor-manual-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-tracked-async-createValidatedColor-manual-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
 # name: test_create[session-tracked-async-createValidatedColor-manual-asyncmy_engine]
@@ -187,6 +259,21 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_create[session-tracked-async-createValidatedColorAllFragments-asyncmy_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
@@ -215,6 +302,20 @@
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
    ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-manual-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-tracked-async-createValidatedColorAllFragments-manual-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
 # name: test_create[session-tracked-async-createValidatedColorAllFragments-manual-asyncmy_engine]
@@ -289,6 +390,21 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_create[session-tracked-sync-createColor-sqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-tracked-sync-createColor-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_create[session-tracked-sync-createValidatedColor-manual-psycopg_engine]
   '''
   INSERT INTO color (name, created_at, updated_at, id)
@@ -296,6 +412,20 @@
   '''
 # ---
 # name: test_create[session-tracked-sync-createValidatedColor-manual-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColor-manual-sqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColor-manual-sqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -318,6 +448,21 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_create[session-tracked-sync-createValidatedColor-sqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColor-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_create[session-tracked-sync-createValidatedColorAllFragments-manual-psycopg_engine]
   '''
   INSERT INTO color (name, created_at, updated_at, id)
@@ -325,6 +470,20 @@
   '''
 # ---
 # name: test_create[session-tracked-sync-createValidatedColorAllFragments-manual-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColorAllFragments-manual-sqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColorAllFragments-manual-sqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -345,6 +504,27 @@
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
    ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColorAllFragments-sqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-tracked-sync-createValidatedColorAllFragments-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create_init_defaults[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO USER (name, bio, created_at, updated_at)
+  VALUES (?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_create_init_defaults[session-tracked-async-asyncmy_engine]
@@ -369,6 +549,27 @@
   '''
   INSERT INTO "user" (name, bio, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(bio)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
+  '''
+# ---
+# name: test_create_init_defaults[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO USER (name, bio, created_at, updated_at)
+  VALUES (?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_many[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_many[session-tracked-async-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
   '''
 # ---
 # name: test_create_many[session-tracked-async-asyncmy_engine]
@@ -435,6 +636,48 @@
     FROM color AS color
    WHERE color.id IN (__[POSTCOMPILE_id_1])
    ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create_many[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_many[session-tracked-sync-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-async-add-aiosqlite_engine]
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-async-add-aiosqlite_engine].1
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-async-add-aiosqlite_engine].2
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-async-add-asyncmy_engine]
@@ -518,6 +761,33 @@
          updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
     ZONE
    WHERE fruit.id = %(fruit_id)s::INTEGER
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-async-set-aiosqlite_engine]
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-async-set-aiosqlite_engine].1
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-async-set-aiosqlite_engine].2
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
   '''
 # ---
 # name: test_create_with_existing_to_many[session-tracked-async-set-asyncmy_engine]
@@ -631,6 +901,33 @@
    WHERE fruit.id = %(fruit_id)s::INTEGER
   '''
 # ---
+# name: test_create_with_existing_to_many[session-tracked-sync-add-sqlite_engine]
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-sync-add-sqlite_engine].1
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-sync-add-sqlite_engine].2
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
 # name: test_create_with_existing_to_many[session-tracked-sync-set-psycopg_engine]
   '''
   SELECT color__fruits.id,
@@ -659,6 +956,87 @@
    WHERE fruit.id = %(fruit_id)s::INTEGER
   '''
 # ---
+# name: test_create_with_existing_to_many[session-tracked-sync-set-sqlite_engine]
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-sync-set-sqlite_engine].1
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_existing_to_many[session-tracked-sync-set-sqlite_engine].2
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO derived_product (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine].1
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine].2
+  '''
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine].3
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine].4
+  '''
+  INSERT INTO fruit_farm (name, fruit_id, created_at, updated_at)
+  VALUES (?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine].5
+  '''
+  SELECT fruits__farms.name,
+         fruits__farms.id,
+         fruits__product.name AS name_1,
+         fruits__product.id AS id_1,
+         color__fruits.name AS name_2,
+         color__fruits.id AS id_2,
+         color.name AS name_3,
+         color.id AS id_3
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN derived_product AS fruits__product
+      ON fruits__product.id = color__fruits.derived_product_id
+    LEFT OUTER JOIN fruit_farm AS fruits__farms
+      ON color__fruits.id = fruits__farms.fruit_id
+   WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
+  '''
+# ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncmy_engine]
   '''
   INSERT INTO derived_product (name, created_at, updated_at)
@@ -673,14 +1051,14 @@
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncmy_engine].2
   '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncmy_engine].3
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncmy_engine].4
@@ -727,14 +1105,14 @@
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::INTEGER, $5::FLOAT, $6::NUMERIC(10, 6), $7::TIME WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, $9::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::INTEGER, $5::FLOAT, $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].3
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::NUMERIC(10, 6), $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].4
@@ -781,14 +1159,14 @@
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].2
   '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(derived_product_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(derived_product_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].3
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].4
@@ -835,14 +1213,14 @@
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(derived_product_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(derived_product_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].3
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].4
@@ -875,6 +1253,86 @@
             fruits__farms.id ASC
   '''
 # ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO derived_product (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine].1
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine].2
+  '''
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine].3
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine].4
+  '''
+  INSERT INTO fruit_farm (name, fruit_id, created_at, updated_at)
+  VALUES (?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine].5
+  '''
+  SELECT fruits__farms.name,
+         fruits__farms.id,
+         fruits__product.name AS name_1,
+         fruits__product.id AS id_1,
+         color__fruits.name AS name_2,
+         color__fruits.id AS id_2,
+         color.name AS name_3,
+         color.id AS id_3
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN derived_product AS fruits__product
+      ON fruits__product.id = color__fruits.derived_product_id
+    LEFT OUTER JOIN fruit_farm AS fruits__farms
+      ON color__fruits.id = fruits__farms.fruit_id
+   WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
+  '''
+# ---
+# name: test_create_with_to_many_create[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_many_create[session-tracked-async-aiosqlite_engine].1
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_many_create[session-tracked-async-aiosqlite_engine].2
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
 # name: test_create_with_to_many_create[session-tracked-async-asyncmy_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
@@ -883,14 +1341,14 @@
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-asyncmy_engine].1
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-asyncmy_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-asyncmy_engine].3
@@ -915,8 +1373,8 @@
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-asyncpg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::NUMERIC(10, 6), $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-asyncpg_engine].2
@@ -941,8 +1399,8 @@
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-psycopg_async_engine].1
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-async-psycopg_async_engine].2
@@ -967,8 +1425,8 @@
 # ---
 # name: test_create_with_to_many_create[session-tracked-sync-psycopg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_many_create[session-tracked-sync-psycopg_engine].2
@@ -983,6 +1441,62 @@
    WHERE color.id IN (__[POSTCOMPILE_id_2])
    ORDER BY color.id ASC,
             color__fruits.id ASC
+  '''
+# ---
+# name: test_create_with_to_many_create[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_many_create[session-tracked-sync-sqlite_engine].1
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_many_create[session-tracked-sync-sqlite_engine].2
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_create_with_to_many_create_and_nested_set[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruits__farms.id,
+         color__fruits.name,
+         color__fruits.id AS id_1,
+         color.name AS name_1,
+         color.id AS id_2
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit_farm AS fruits__farms
+      ON color__fruits.id = fruits__farms.fruit_id
+   WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
+  '''
+# ---
+# name: test_create_with_to_many_create_and_nested_set[session-tracked-async-aiosqlite_engine].1
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_many_create_and_nested_set[session-tracked-async-aiosqlite_engine].2
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-asyncmy_engine]
@@ -1011,8 +1525,8 @@
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-asyncmy_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-asyncpg_engine]
@@ -1041,8 +1555,8 @@
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-asyncpg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::NUMERIC(10, 6), $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-psycopg_async_engine]
@@ -1071,8 +1585,8 @@
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-async-psycopg_async_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-sync-psycopg_engine]
@@ -1101,8 +1615,64 @@
 # ---
 # name: test_create_with_to_many_create_and_nested_set[session-tracked-sync-psycopg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  '''
+# ---
+# name: test_create_with_to_many_create_and_nested_set[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruits__farms.id,
+         color__fruits.name,
+         color__fruits.id AS id_1,
+         color.name AS name_1,
+         color.id AS id_2
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit_farm AS fruits__farms
+      ON color__fruits.id = fruits__farms.fruit_id
+   WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
+  '''
+# ---
+# name: test_create_with_to_many_create_and_nested_set[session-tracked-sync-sqlite_engine].1
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_many_create_and_nested_set[session-tracked-sync-sqlite_engine].2
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_one_create[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit__color.name,
+         fruit__color.id,
+         fruit.name AS name_1,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
+# name: test_create_with_to_one_create[session-tracked-async-aiosqlite_engine].1
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_one_create[session-tracked-async-aiosqlite_engine].2
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-asyncmy_engine]
@@ -1127,8 +1697,8 @@
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-asyncmy_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-asyncpg_engine]
@@ -1153,8 +1723,8 @@
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-asyncpg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::NUMERIC(10, 6), $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-psycopg_async_engine]
@@ -1179,8 +1749,8 @@
 # ---
 # name: test_create_with_to_one_create[session-tracked-async-psycopg_async_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_create[session-tracked-sync-psycopg_engine]
@@ -1205,8 +1775,64 @@
 # ---
 # name: test_create_with_to_one_create[session-tracked-sync-psycopg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  '''
+# ---
+# name: test_create_with_to_one_create[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit__color.name,
+         fruit__color.id,
+         fruit.name AS name_1,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
+# name: test_create_with_to_one_create[session-tracked-sync-sqlite_engine].1
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_one_create[session-tracked-sync-sqlite_engine].2
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_one_create_and_nested_set[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT group__topics.id,
+         user__group.name,
+         user__group.id AS id_1,
+         user.name AS name_1,
+         user.id AS id_2
+    FROM USER AS USER
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = user.group_id
+    LEFT OUTER JOIN topic AS group__topics
+      ON user__group.id = group__topics.group_id
+   WHERE user.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY user.id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
+  '''
+# ---
+# name: test_create_with_to_one_create_and_nested_set[session-tracked-async-aiosqlite_engine].1
+  '''
+  INSERT INTO "group" (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_one_create_and_nested_set[session-tracked-async-aiosqlite_engine].2
+  '''
+  INSERT INTO USER (name, group_id, bio, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_create_with_to_one_create_and_nested_set[session-tracked-async-asyncmy_engine]
@@ -1329,6 +1955,55 @@
   VALUES (%(name)s::VARCHAR, %(group_id)s::INTEGER, %(bio)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
   '''
 # ---
+# name: test_create_with_to_one_create_and_nested_set[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT group__topics.id,
+         user__group.name,
+         user__group.id AS id_1,
+         user.name AS name_1,
+         user.id AS id_2
+    FROM USER AS USER
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = user.group_id
+    LEFT OUTER JOIN topic AS group__topics
+      ON user__group.id = group__topics.group_id
+   WHERE user.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY user.id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
+  '''
+# ---
+# name: test_create_with_to_one_create_and_nested_set[session-tracked-sync-sqlite_engine].1
+  '''
+  INSERT INTO "group" (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_one_create_and_nested_set[session-tracked-sync-sqlite_engine].2
+  '''
+  INSERT INTO USER (name, group_id, bio, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_one_set[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit__color.id,
+         fruit.name,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
+# name: test_create_with_to_one_set[session-tracked-async-aiosqlite_engine].1
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
 # name: test_create_with_to_one_set[session-tracked-async-asyncmy_engine]
   '''
   SELECT fruit__color.id,
@@ -1344,8 +2019,8 @@
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-asyncmy_engine].1
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-asyncpg_engine]
@@ -1363,8 +2038,8 @@
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-asyncpg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::NUMERIC(10, 6), $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-psycopg_async_engine]
@@ -1382,8 +2057,8 @@
 # ---
 # name: test_create_with_to_one_set[session-tracked-async-psycopg_async_engine].1
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_set[session-tracked-sync-psycopg_engine]
@@ -1401,8 +2076,46 @@
 # ---
 # name: test_create_with_to_one_set[session-tracked-sync-psycopg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  '''
+# ---
+# name: test_create_with_to_one_set[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit__color.id,
+         fruit.name,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
+# name: test_create_with_to_one_set[session-tracked-sync-sqlite_engine].1
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_with_to_one_set_null[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit__color.id,
+         fruit.name,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
+# name: test_create_with_to_one_set_null[session-tracked-async-aiosqlite_engine].1
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-asyncmy_engine]
@@ -1420,8 +2133,8 @@
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-asyncmy_engine].1
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-asyncpg_engine]
@@ -1439,8 +2152,8 @@
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-asyncpg_engine].1
   '''
-  INSERT INTO fruit (name, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::NUMERIC(10, 6), $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-psycopg_async_engine]
@@ -1458,8 +2171,8 @@
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-async-psycopg_async_engine].1
   '''
-  INSERT INTO fruit (name, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-sync-psycopg_engine]
@@ -1477,8 +2190,46 @@
 # ---
 # name: test_create_with_to_one_set_null[session-tracked-sync-psycopg_engine].1
   '''
-  INSERT INTO fruit (name, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  '''
+# ---
+# name: test_create_with_to_one_set_null[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit__color.id,
+         fruit.name,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
+# name: test_create_with_to_one_set_null[session-tracked-sync-sqlite_engine].1
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_delete_all[session-tracked-async-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER RETURNING id
+  '''
+# ---
+# name: test_delete_all[session-tracked-async-aiosqlite_engine].1
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         user.name AS name_1,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = user.group_id
+   ORDER BY user.id ASC,
+            user__group.id ASC
   '''
 # ---
 # name: test_delete_all[session-tracked-async-asyncmy_engine]
@@ -1560,6 +2311,47 @@
     LEFT OUTER JOIN "group" AS user__group
       ON user__group.id = "user".group_id
    ORDER BY "user".id ASC,
+            user__group.id ASC
+  '''
+# ---
+# name: test_delete_all[session-tracked-sync-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER RETURNING id
+  '''
+# ---
+# name: test_delete_all[session-tracked-sync-sqlite_engine].1
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         user.name AS name_1,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = user.group_id
+   ORDER BY user.id ASC,
+            user__group.id ASC
+  '''
+# ---
+# name: test_delete_filter[session-tracked-async-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = ? RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter[session-tracked-async-aiosqlite_engine].1
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         user.name AS name_1,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = user.group_id
+   WHERE user.name = ?
+   ORDER BY user.id ASC,
             user__group.id ASC
   '''
 # ---
@@ -1657,6 +2449,45 @@
             user__group.id ASC
   '''
 # ---
+# name: test_delete_filter[session-tracked-sync-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = ? RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter[session-tracked-sync-sqlite_engine].1
+  '''
+  SELECT user__group.name,
+         user__group.id,
+         user.name AS name_1,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = user.group_id
+   WHERE user.name = ?
+   ORDER BY user.id ASC,
+            user__group.id ASC
+  '''
+# ---
+# name: test_update[session-tracked-async-no-validation-aiosqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update[session-tracked-async-no-validation-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_update[session-tracked-async-no-validation-asyncmy_engine]
   '''
   UPDATE color
@@ -1710,6 +2541,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_update[session-tracked-async-validation-fragment-aiosqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update[session-tracked-async-validation-fragment-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_update[session-tracked-async-validation-fragment-asyncmy_engine]
   '''
   UPDATE color
@@ -1755,6 +2603,23 @@
   '''
 # ---
 # name: test_update[session-tracked-async-validation-fragment-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-tracked-async-validation-no-fragment-aiosqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update[session-tracked-async-validation-no-fragment-aiosqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -1834,6 +2699,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_update[session-tracked-sync-no-validation-sqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update[session-tracked-sync-no-validation-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_update[session-tracked-sync-validation-fragment-psycopg_engine]
   '''
   UPDATE color
@@ -1852,6 +2734,23 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_update[session-tracked-sync-validation-fragment-sqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update[session-tracked-sync-validation-fragment-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_update[session-tracked-sync-validation-no-fragment-psycopg_engine]
   '''
   UPDATE color
@@ -1862,6 +2761,39 @@
   '''
 # ---
 # name: test_update[session-tracked-sync-validation-no-fragment-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-tracked-sync-validation-no-fragment-sqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update[session-tracked-sync-validation-no-fragment-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update_by_filter[session-tracked-async-aiosqlite_engine]
+  '''
+  UPDATE color AS color
+     SET name = ?
+   WHERE color.name = ? RETURNING id
+  '''
+# ---
+# name: test_update_by_filter[session-tracked-async-aiosqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -1941,6 +2873,38 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_update_by_filter[session-tracked-sync-sqlite_engine]
+  '''
+  UPDATE color AS color
+     SET name = ?
+   WHERE color.name = ? RETURNING id
+  '''
+# ---
+# name: test_update_by_filter[session-tracked-sync-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update_by_filter_only_return_affected_objects[session-tracked-async-aiosqlite_engine]
+  '''
+  UPDATE color AS color
+     SET name = ?
+   WHERE color.name = ? RETURNING id
+  '''
+# ---
+# name: test_update_by_filter_only_return_affected_objects[session-tracked-async-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_update_by_filter_only_return_affected_objects[session-tracked-async-asyncmy_engine]
   '''
   UPDATE color AS color
@@ -2004,6 +2968,39 @@
   '''
 # ---
 # name: test_update_by_filter_only_return_affected_objects[session-tracked-sync-psycopg_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update_by_filter_only_return_affected_objects[session-tracked-sync-sqlite_engine]
+  '''
+  UPDATE color AS color
+     SET name = ?
+   WHERE color.name = ? RETURNING id
+  '''
+# ---
+# name: test_update_by_filter_only_return_affected_objects[session-tracked-sync-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update_many[session-tracked-async-aiosqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_many[session-tracked-async-aiosqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -2083,6 +3080,31 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_update_many[session-tracked-sync-sqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_many[session-tracked-sync-sqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update_no_init_defaults[session-tracked-async-aiosqlite_engine]
+  '''
+  UPDATE USER
+     SET name = ?,
+         updated_at = ?
+   WHERE user.id = ?
+  '''
+# ---
 # name: test_update_no_init_defaults[session-tracked-async-asyncmy_engine]
   '''
   UPDATE USER
@@ -2118,6 +3140,70 @@
    WHERE "user".id = %(user_id)s::INTEGER
   '''
 # ---
+# name: test_update_no_init_defaults[session-tracked-sync-sqlite_engine]
+  '''
+  UPDATE USER
+     SET name = ?,
+         updated_at = ?
+   WHERE user.id = ?
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO derived_product (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine].1
+  '''
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine].2
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine].3
+  '''
+  INSERT INTO fruit_farm (name, fruit_id, created_at, updated_at)
+  VALUES (?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine].4
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine].5
+  '''
+  SELECT fruits__farms.name,
+         fruits__farms.id,
+         fruits__product.name AS name_1,
+         fruits__product.id AS id_1,
+         color__fruits.name AS name_2,
+         color__fruits.id AS id_2,
+         color.name AS name_3,
+         color.id AS id_3
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN derived_product AS fruits__product
+      ON fruits__product.id = color__fruits.derived_product_id
+    LEFT OUTER JOIN fruit_farm AS fruits__farms
+      ON color__fruits.id = fruits__farms.fruit_id
+   WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
+  '''
+# ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncmy_engine]
   '''
   INSERT INTO derived_product (name, created_at, updated_at)
@@ -2126,14 +3212,14 @@
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncmy_engine].1
   '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncmy_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncmy_engine].3
@@ -2182,14 +3268,14 @@
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::INTEGER, $5::FLOAT, $6::NUMERIC(10, 6), $7::TIME WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, $9::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::INTEGER, $5::FLOAT, $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::NUMERIC(10, 6), $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-asyncpg_engine].3
@@ -2239,14 +3325,14 @@
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].1
   '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(derived_product_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(derived_product_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-psycopg_async_engine].3
@@ -2296,14 +3382,14 @@
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].1
   '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(derived_product_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(derived_product_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].2
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-sync-psycopg_engine].3
@@ -2343,6 +3429,91 @@
             color__fruits.id ASC,
             fruits__product.id ASC,
             fruits__farms.id ASC
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO derived_product (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine].1
+  '''
+  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine].2
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine].3
+  '''
+  INSERT INTO fruit_farm (name, fruit_id, created_at, updated_at)
+  VALUES (?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine].4
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_nested_mixed_relations_create[session-tracked-sync-sqlite_engine].5
+  '''
+  SELECT fruits__farms.name,
+         fruits__farms.id,
+         fruits__product.name AS name_1,
+         fruits__product.id AS id_1,
+         color__fruits.name AS name_2,
+         color__fruits.id AS id_2,
+         color.name AS name_3,
+         color.id AS id_3
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN derived_product AS fruits__product
+      ON fruits__product.id = color__fruits.derived_product_id
+    LEFT OUTER JOIN fruit_farm AS fruits__farms
+      ON color__fruits.id = fruits__farms.fruit_id
+   WHERE color.id IN (__[POSTCOMPILE_id_4])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__product.id ASC,
+            fruits__farms.id ASC
+  '''
+# ---
+# name: test_update_with_to_many_add[session-tracked-async-aiosqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_add[session-tracked-async-aiosqlite_engine].1
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_add[session-tracked-async-aiosqlite_engine].2
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_add[session-tracked-async-asyncmy_engine]
@@ -2467,10 +3638,75 @@
             color__fruits.id ASC
   '''
 # ---
+# name: test_update_with_to_many_add[session-tracked-sync-sqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_add[session-tracked-sync-sqlite_engine].1
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_add[session-tracked-sync-sqlite_engine].2
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_update_with_to_many_add_and_create[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_to_many_add_and_create[session-tracked-async-aiosqlite_engine].1
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_add_and_create[session-tracked-async-aiosqlite_engine].2
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_add_and_create[session-tracked-async-aiosqlite_engine].3
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-asyncmy_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-asyncmy_engine].1
@@ -2505,8 +3741,8 @@
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-asyncpg_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::NUMERIC(10, 6), $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-asyncpg_engine].1
@@ -2543,8 +3779,8 @@
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-psycopg_async_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-async-psycopg_async_engine].1
@@ -2581,8 +3817,8 @@
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-sync-psycopg_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-tracked-sync-psycopg_engine].1
@@ -2617,16 +3853,80 @@
             color__fruits.id ASC
   '''
 # ---
+# name: test_update_with_to_many_add_and_create[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_to_many_add_and_create[session-tracked-sync-sqlite_engine].1
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_add_and_create[session-tracked-sync-sqlite_engine].2
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_add_and_create[session-tracked-sync-sqlite_engine].3
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_update_with_to_many_create[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_to_many_create[session-tracked-async-aiosqlite_engine].1
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_create[session-tracked-async-aiosqlite_engine].2
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
 # name: test_update_with_to_many_create[session-tracked-async-asyncmy_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-asyncmy_engine].1
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-asyncmy_engine].2
@@ -2653,8 +3953,8 @@
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-asyncpg_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::NUMERIC(10, 6), $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-asyncpg_engine].1
@@ -2682,8 +3982,8 @@
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-psycopg_async_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-async-psycopg_async_engine].1
@@ -2711,8 +4011,8 @@
 # ---
 # name: test_update_with_to_many_create[session-tracked-sync-psycopg_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create[session-tracked-sync-psycopg_engine].1
@@ -2738,10 +4038,78 @@
             color__fruits.id ASC
   '''
 # ---
+# name: test_update_with_to_many_create[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_to_many_create[session-tracked-sync-sqlite_engine].1
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_create[session-tracked-sync-sqlite_engine].2
+  '''
+  SELECT color__fruits.name,
+         color__fruits.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_update_with_to_many_create_and_nested_set[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_to_many_create_and_nested_set[session-tracked-async-aiosqlite_engine].1
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_create_and_nested_set[session-tracked-async-aiosqlite_engine].2
+  '''
+  UPDATE fruit_farm
+     SET fruit_id = ?,
+         updated_at = ?
+   WHERE fruit_farm.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_create_and_nested_set[session-tracked-async-aiosqlite_engine].3
+  '''
+  SELECT fruits__farms.id,
+         color__fruits.name,
+         color__fruits.id AS id_1,
+         color.name AS name_1,
+         color.id AS id_2
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit_farm AS fruits__farms
+      ON color__fruits.id = fruits__farms.fruit_id
+   WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
+  '''
+# ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-asyncmy_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at)
-  VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-asyncmy_engine].1
@@ -2780,8 +4148,8 @@
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-asyncpg_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::NUMERIC(10, 6), $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-asyncpg_engine].1
@@ -2822,8 +4190,8 @@
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-psycopg_async_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-async-psycopg_async_engine].1
@@ -2864,8 +4232,8 @@
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-sync-psycopg_engine]
   '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, rarity, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(rarity)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-tracked-sync-psycopg_engine].1
@@ -2902,6 +4270,75 @@
    ORDER BY color.id ASC,
             color__fruits.id ASC,
             fruits__farms.id ASC
+  '''
+# ---
+# name: test_update_with_to_many_create_and_nested_set[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_to_many_create_and_nested_set[session-tracked-sync-sqlite_engine].1
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_create_and_nested_set[session-tracked-sync-sqlite_engine].2
+  '''
+  UPDATE fruit_farm
+     SET fruit_id = ?,
+         updated_at = ?
+   WHERE fruit_farm.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_create_and_nested_set[session-tracked-sync-sqlite_engine].3
+  '''
+  SELECT fruits__farms.id,
+         color__fruits.name,
+         color__fruits.id AS id_1,
+         color.name AS name_1,
+         color.id AS id_2
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit_farm AS fruits__farms
+      ON color__fruits.id = fruits__farms.fruit_id
+   WHERE color.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC,
+            fruits__farms.id ASC
+  '''
+# ---
+# name: test_update_with_to_many_remove[session-tracked-async-aiosqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_remove[session-tracked-async-aiosqlite_engine].1
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_remove[session-tracked-async-aiosqlite_engine].2
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_update_with_to_many_remove[session-tracked-async-asyncmy_engine]
@@ -3014,6 +4451,72 @@
   '''
 # ---
 # name: test_update_with_to_many_remove[session-tracked-sync-psycopg_engine].2
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_update_with_to_many_remove[session-tracked-sync-sqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_remove[session-tracked-sync-sqlite_engine].1
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_remove[session-tracked-sync-sqlite_engine].2
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_update_with_to_many_set[session-tracked-async-aiosqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_set[session-tracked-async-aiosqlite_engine].1
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.color_id IN (__[POSTCOMPILE_color_id_1])
+  '''
+# ---
+# name: test_update_with_to_many_set[session-tracked-async-aiosqlite_engine].2
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_set[session-tracked-async-aiosqlite_engine].3
   '''
   SELECT color__fruits.id,
          color.name,
@@ -3183,6 +4686,72 @@
             color__fruits.id ASC
   '''
 # ---
+# name: test_update_with_to_many_set[session-tracked-sync-sqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_set[session-tracked-sync-sqlite_engine].1
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.color_id IN (__[POSTCOMPILE_color_id_1])
+  '''
+# ---
+# name: test_update_with_to_many_set[session-tracked-sync-sqlite_engine].2
+  '''
+  UPDATE fruit
+     SET color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_many_set[session-tracked-sync-sqlite_engine].3
+  '''
+  SELECT color__fruits.id,
+         color.name,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE color.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_update_with_to_one_create[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_to_one_create[session-tracked-async-aiosqlite_engine].1
+  '''
+  UPDATE fruit
+     SET name = ?,
+         color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_one_create[session-tracked-async-aiosqlite_engine].2
+  '''
+  SELECT fruit__color.name,
+         fruit__color.id,
+         fruit.name AS name_1,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
 # name: test_update_with_to_one_create[session-tracked-async-asyncmy_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
@@ -3300,6 +4869,76 @@
    WHERE fruit.id IN (__[POSTCOMPILE_id_2])
    ORDER BY fruit.id ASC,
             fruit__color.id ASC
+  '''
+# ---
+# name: test_update_with_to_one_create[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_to_one_create[session-tracked-sync-sqlite_engine].1
+  '''
+  UPDATE fruit
+     SET name = ?,
+         color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_one_create[session-tracked-sync-sqlite_engine].2
+  '''
+  SELECT fruit__color.name,
+         fruit__color.id,
+         fruit.name AS name_1,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
+# name: test_update_with_to_one_create_and_nested_set[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO "group" (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_to_one_create_and_nested_set[session-tracked-async-aiosqlite_engine].1
+  '''
+  UPDATE USER
+     SET name = ?,
+         group_id = ?,
+         updated_at = ?
+   WHERE user.id = ?
+  '''
+# ---
+# name: test_update_with_to_one_create_and_nested_set[session-tracked-async-aiosqlite_engine].2
+  '''
+  UPDATE topic
+     SET group_id = ?,
+         updated_at = ?
+   WHERE topic.id = ?
+  '''
+# ---
+# name: test_update_with_to_one_create_and_nested_set[session-tracked-async-aiosqlite_engine].3
+  '''
+  SELECT group__topics.id,
+         user__group.name,
+         user__group.id AS id_1,
+         user.name AS name_1,
+         user.id AS id_2
+    FROM USER AS USER
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = user.group_id
+    LEFT OUTER JOIN topic AS group__topics
+      ON user__group.id = group__topics.group_id
+   WHERE user.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY user.id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
   '''
 # ---
 # name: test_update_with_to_one_create_and_nested_set[session-tracked-async-asyncmy_engine]
@@ -3472,6 +5111,69 @@
             group__topics.id ASC
   '''
 # ---
+# name: test_update_with_to_one_create_and_nested_set[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO "group" (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_update_with_to_one_create_and_nested_set[session-tracked-sync-sqlite_engine].1
+  '''
+  UPDATE USER
+     SET name = ?,
+         group_id = ?,
+         updated_at = ?
+   WHERE user.id = ?
+  '''
+# ---
+# name: test_update_with_to_one_create_and_nested_set[session-tracked-sync-sqlite_engine].2
+  '''
+  UPDATE topic
+     SET group_id = ?,
+         updated_at = ?
+   WHERE topic.id = ?
+  '''
+# ---
+# name: test_update_with_to_one_create_and_nested_set[session-tracked-sync-sqlite_engine].3
+  '''
+  SELECT group__topics.id,
+         user__group.name,
+         user__group.id AS id_1,
+         user.name AS name_1,
+         user.id AS id_2
+    FROM USER AS USER
+    LEFT OUTER JOIN "group" AS user__group
+      ON user__group.id = user.group_id
+    LEFT OUTER JOIN topic AS group__topics
+      ON user__group.id = group__topics.group_id
+   WHERE user.id IN (__[POSTCOMPILE_id_3])
+   ORDER BY user.id ASC,
+            user__group.id ASC,
+            group__topics.id ASC
+  '''
+# ---
+# name: test_update_with_to_one_set[session-tracked-async-aiosqlite_engine]
+  '''
+  UPDATE fruit
+     SET name = ?,
+         color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_one_set[session-tracked-async-aiosqlite_engine].1
+  '''
+  SELECT fruit__color.id,
+         fruit.name,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
 # name: test_update_with_to_one_set[session-tracked-async-asyncmy_engine]
   '''
   UPDATE fruit
@@ -3563,6 +5265,50 @@
             fruit__color.id ASC
   '''
 # ---
+# name: test_update_with_to_one_set[session-tracked-sync-sqlite_engine]
+  '''
+  UPDATE fruit
+     SET name = ?,
+         color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_one_set[session-tracked-sync-sqlite_engine].1
+  '''
+  SELECT fruit__color.id,
+         fruit.name,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
+# name: test_update_with_to_one_set_null[session-tracked-async-aiosqlite_engine]
+  '''
+  UPDATE fruit
+     SET name = ?,
+         color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_one_set_null[session-tracked-async-aiosqlite_engine].1
+  '''
+  SELECT fruit__color.id,
+         fruit.name,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
 # name: test_update_with_to_one_set_null[session-tracked-async-asyncmy_engine]
   '''
   UPDATE fruit
@@ -3642,6 +5388,28 @@
   '''
 # ---
 # name: test_update_with_to_one_set_null[session-tracked-sync-psycopg_engine].1
+  '''
+  SELECT fruit__color.id,
+         fruit.name,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS fruit__color
+      ON fruit__color.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            fruit__color.id ASC
+  '''
+# ---
+# name: test_update_with_to_one_set_null[session-tracked-sync-sqlite_engine]
+  '''
+  UPDATE fruit
+     SET name = ?,
+         color_id = ?,
+         updated_at = ?
+   WHERE fruit.id = ?
+  '''
+# ---
+# name: test_update_with_to_one_set_null[session-tracked-sync-sqlite_engine].1
   '''
   SELECT fruit__color.id,
          fruit.name,

@@ -25,6 +25,7 @@ Generates GraphQL types, inputs, queries and resolvers directly from SQLAlchemy 
 - 🛢 **Supported databases**:
   - PostgreSQL (using [asyncpg](https://github.com/MagicStack/asyncpg) or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
   - MySQL (using [asyncmy](https://github.com/long2ice/asyncmy))
+  - SQLite (using [aiosqlite](https://aiosqlite.omnilib.dev/en/stable/) or [sqlite](https://docs.python.org/3/library/sqlite3.html))
 
 > [!Warning]
 >

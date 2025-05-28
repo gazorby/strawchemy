@@ -1,4 +1,20 @@
 # serializer version: 1
+# name: test_get_one[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+    JOIN (
+          SELECT color.name AS name,
+                 color.created_at AS created_at,
+                 color.updated_at AS updated_at,
+                 color.id AS id
+            FROM color
+           WHERE color.name = ?
+         ) AS anon_1
+      ON color.id = anon_1.id
+  '''
+# ---
 # name: test_get_one[session-tracked-async-asyncmy_engine]
   '''
   SELECT color.name,
@@ -59,6 +75,22 @@
                  color.id AS id
             FROM color
            WHERE color.name = %(name_1)s::VARCHAR
+         ) AS anon_1
+      ON color.id = anon_1.id
+  '''
+# ---
+# name: test_get_one[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+    JOIN (
+          SELECT color.name AS name,
+                 color.created_at AS created_at,
+                 color.updated_at AS updated_at,
+                 color.id AS id
+            FROM color
+           WHERE color.name = ?
          ) AS anon_1
       ON color.id = anon_1.id
   '''

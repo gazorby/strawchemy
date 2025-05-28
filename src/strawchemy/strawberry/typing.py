@@ -7,7 +7,6 @@ if TYPE_CHECKING:
 
     from sqlalchemy import Select
     from strawberry import Info
-    from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
     from strawberry.types.base import WithStrawberryObjectDefinition
     from strawchemy.graph import Node
     from strawchemy.sqlalchemy.typing import AnyAsyncSession, AnySyncSession
@@ -28,7 +27,6 @@ __all__ = (
     "AnySessionGetter",
     "AsyncSessionGetter",
     "FilterStatementCallable",
-    "StrawchemyTypeFromPydantic",
     "StrawchemyTypeWithStrawberryObjectDefinition",
     "SyncSessionGetter",
 )
@@ -56,12 +54,9 @@ FunctionInfo: TypeAlias = "FilterFunctionInfo | OutputFunctionInfo"
 StrawberryGraphQLDTO: TypeAlias = "MappedStrawberryGraphQLDTO[_T] | UnmappedStrawberryGraphQLDTO[_T]"
 GraphQLDTO: TypeAlias = "StrawberryGraphQLDTO[_T] | MappedPydanticGraphQLDTO[_T]"
 MappedGraphQLDTO: TypeAlias = "MappedStrawberryGraphQLDTO[_T] | MappedPydanticGraphQLDTO[_T]"
-UnmappedGraphQLDTO: TypeAlias = "UnmappedStrawberryGraphQLDTO[_T]"
 AnyMappedDTO: TypeAlias = "MappedStrawberryGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
 QueryNodeType: TypeAlias = "Node[GraphQLFieldDefinition, QueryNodeMetadata]"
 
 if TYPE_CHECKING:
 
     class StrawchemyTypeWithStrawberryObjectDefinition(StrawchemyDTOAttributes, WithStrawberryObjectDefinition): ...
-
-    class StrawchemyTypeFromPydantic(StrawchemyDTOAttributes, StrawberryTypeFromPydantic[PydanticModel]): ...

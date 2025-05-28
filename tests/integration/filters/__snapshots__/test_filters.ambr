@@ -1,4 +1,24 @@
 # serializer version: 1
+# name: t  '''
+  SELECT fruit.sweetness,
+         fruit.  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > ?
+  '''
+# ---
+# name: test_and[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > ?
+     AND (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_and[session-tracked-async-asyncmy_engine]
   '''
   SELECT fruit.name,
@@ -40,6 +60,28 @@
     FROM fruit AS fruit
    WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
      AND (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_and[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > ?
+     AND (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_complex_logical_operators[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.sweetness > ? AND (fruit.name LIKE '%' || ? || '%' ESCAPE '/'))
+      OR (fruit.water_percent > ? AND fruit.sweetness < ?)
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -87,6 +129,26 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_complex_logical_operators[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.sweetness > ? AND (fruit.name LIKE '%' || ? || '%' ESCAPE '/'))
+      OR (fruit.water_percent > ? AND fruit.sweetness < ?)
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_eq[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_eq[session-tracked-async-asyncmy_engine]
   '''
   SELECT fruit.name,
@@ -121,6 +183,33 @@
     FROM fruit AS fruit
    WHERE fruit.name = %(name_1)s::VARCHAR
    ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_eq[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_filter_on_paginated_query[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           WHERE NOT (fruit.sweetness > ? AND fruit.sweetness IS NOT NULL)
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
   '''
 # ---
 # name: test_filter_on_paginated_query[session-tracked-async-asyncmy_engine]
@@ -191,6 +280,33 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
+# name: test_filter_on_paginated_query[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           WHERE NOT (fruit.sweetness > ? AND fruit.sweetness IS NOT NULL)
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+   LIMIT ?
+  OFFSET ?
+  '''
+# ---
+# name: test_gt[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_gt[session-tracked-async-asyncmy_engine]
   '''
   SELECT fruit.sweetness,
@@ -224,6 +340,24 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_gt[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_gte[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness >= ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -263,6 +397,24 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_gte[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness >= ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_in[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness IN (__[POSTCOMPILE_sweetness_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_in[session-tracked-async-asyncmy_engine]
   '''
   SELECT fruit.sweetness,
@@ -297,6 +449,24 @@
     FROM fruit AS fruit
    WHERE fruit.sweetness IN (__[POSTCOMPILE_sweetness_1])
    ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_in[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness IN (__[POSTCOMPILE_sweetness_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_isnull[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT user.bio,
+         user.id
+    FROM USER AS USER
+   WHERE user.bio IS NULL
+   ORDER BY user.id ASC
   '''
 # ---
 # name: test_isnull[session-tracked-async-asyncmy_engine]
@@ -335,6 +505,24 @@
    ORDER BY "user".id ASC
   '''
 # ---
+# name: test_isnull[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT user.bio,
+         user.id
+    FROM USER AS USER
+   WHERE user.bio IS NULL
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_lt[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness < ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_lt[session-tracked-async-asyncmy_engine]
   '''
   SELECT fruit.sweetness,
@@ -368,6 +556,24 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness < %(sweetness_1)s::INTEGER
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_lt[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness < ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_lte[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness <= ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -407,6 +613,24 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_lte[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness <= ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_neq[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name != ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_neq[session-tracked-async-asyncmy_engine]
   '''
   SELECT fruit.name,
@@ -440,6 +664,24 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.name != %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_neq[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name != ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_nin[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.sweetness NOT IN (__[POSTCOMPILE_sweetness_1]))
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -479,6 +721,22 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_nin[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.sweetness NOT IN (__[POSTCOMPILE_sweetness_1]))
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_no_filtering[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_no_filtering[session-tracked-async-asyncmy_engine]
   '''
   SELECT fruit.id
@@ -504,6 +762,22 @@
   '''
   SELECT fruit.id
     FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_no_filtering[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_not[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE NOT (fruit.sweetness < ? AND fruit.sweetness IS NOT NULL)
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -540,6 +814,26 @@
          fruit.id
     FROM fruit AS fruit
    WHERE NOT (fruit.sweetness < %(sweetness_1)s::INTEGER AND fruit.sweetness IS NOT NULL)
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_not[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE NOT (fruit.sweetness < ? AND fruit.sweetness IS NOT NULL)
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_or[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > ?
+      OR (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -587,6 +881,34 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_or[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.sweetness > ?
+      OR (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[sess  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE regexp_like(fruit.name, %s, %s)
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-async-contains-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-async-contains-asyncmy_engine]
   '''
   SELECT fruit.name,
@@ -611,6 +933,15 @@
          fruit.id
     FROM fruit AS fruit
    WHERE (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-async-endswith-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE '%' || ? ESCAPE '/')
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -641,6 +972,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-async-icontains-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (lower(fruit.name) LIKE '%' || lower(?) || '%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-async-icontains-asyncmy_engine]
   '''
   SELECT fruit.name,
@@ -665,6 +1005,15 @@
          fruit.id
     FROM fruit AS fruit
    WHERE (fruit.name ILIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-async-iendswith-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (lower(fruit.name) LIKE '%' || lower(?) ESCAPE '/')
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -695,6 +1044,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-async-ilike-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) LIKE lower(?)
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-async-ilike-asyncmy_engine]
   '''
   SELECT fruit.name,
@@ -719,6 +1077,15 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.name ILIKE %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-async-inregexp-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) NOT REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -749,6 +1116,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-async-iregexp-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) REGEXP ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-async-iregexp-asyncmy_engine]
   '''
   SELECT fruit.name,
@@ -773,6 +1149,15 @@
          fruit.id
     FROM fruit AS fruit
    WHERE lower(fruit.name) ~ %(lower_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-async-istartswith-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (lower(fruit.name) LIKE lower(?) || '%' ESCAPE '/')
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -803,6 +1188,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-async-like-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name LIKE ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-async-like-asyncmy_engine]
   '''
   SELECT fruit.name,
@@ -827,6 +1221,15 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.name LIKE %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-async-nilike-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) NOT LIKE lower(?)
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -857,6 +1260,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-async-nlike-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name NOT LIKE ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-async-nlike-asyncmy_engine]
   '''
   SELECT fruit.name,
@@ -881,6 +1293,15 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.name NOT LIKE %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-async-nregexp-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name NOT REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -911,6 +1332,15 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-async-regexp-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name REGEXP ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-async-regexp-asyncmy_engine]
   '''
   SELECT fruit.name,
@@ -935,6 +1365,15 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.name ~ %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-async-startswith-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE ? || '%' ESCAPE '/')
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -974,12 +1413,30 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-sync-contains-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-sync-endswith-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
    WHERE (fruit.name LIKE '%%' || %(name_1)s::VARCHAR ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-sync-endswith-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE '%' || ? ESCAPE '/')
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -992,12 +1449,30 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-sync-icontains-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (lower(fruit.name) LIKE '%' || lower(?) || '%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-sync-iendswith-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
    WHERE (fruit.name ILIKE '%%' || %(name_1)s::VARCHAR ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-sync-iendswith-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (lower(fruit.name) LIKE '%' || lower(?) ESCAPE '/')
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1010,12 +1485,30 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-sync-ilike-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) LIKE lower(?)
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-sync-inregexp-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
    WHERE lower(fruit.name) !~ %(lower_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-sync-inregexp-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) NOT REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1028,12 +1521,30 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-sync-iregexp-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) REGEXP ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-sync-istartswith-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
    WHERE (fruit.name ILIKE %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-sync-istartswith-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (lower(fruit.name) LIKE lower(?) || '%' ESCAPE '/')
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1046,12 +1557,30 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-sync-like-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name LIKE ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-sync-nilike-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.name NOT ILIKE %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-sync-nilike-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE lower(fruit.name) NOT LIKE lower(?)
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1064,12 +1593,30 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-sync-nlike-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name NOT LIKE ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-sync-nregexp-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.name !~ %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-sync-nregexp-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name NOT REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1082,12 +1629,30 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_string_filters[session-tracked-sync-regexp-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name REGEXP ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_string_filters[session-tracked-sync-startswith-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
    WHERE (fruit.name LIKE %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_string_filters[session-tracked-sync-startswith-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE (fruit.name LIKE ? || '%' ESCAPE '/')
    ORDER BY fruit.id ASC
   '''
 # ---
