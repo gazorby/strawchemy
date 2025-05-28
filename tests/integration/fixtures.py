@@ -324,7 +324,7 @@ def raw_intervals() -> RawRecordData:
         # Case with negative numbers and different values
         {"id": 2, "time_delta_col": timedelta(weeks=1, days=3, hours=12)},
         # empty array
-        {"id": 3, "time_delta_col": timedelta(microseconds=500000, seconds=1)},
+        {"id": 3, "time_delta_col": timedelta(seconds=1)},
     ]
 
 

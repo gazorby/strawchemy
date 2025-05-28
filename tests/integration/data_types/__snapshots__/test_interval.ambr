@@ -143,3 +143,35 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
+# name: test_timedelta_output[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   ORDER BY interval_model.id ASC
+  '''
+# ---
+# name: test_timedelta_output[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   ORDER BY interval_model.id ASC
+  '''
+# ---
+# name: test_timedelta_output[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   ORDER BY interval_model.id ASC
+  '''
+# ---
+# name: test_timedelta_output[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   ORDER BY interval_model.id ASC
+  '''
+# ---
