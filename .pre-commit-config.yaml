@@ -33,14 +33,14 @@ repos:
           - --toml=./pyproject.toml
 
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.4
+    rev: v1.7.7
     hooks:
       - id: actionlint
         args: ["-shellcheck", ""]
 
   # Commitizen
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.2.2
+    rev: v4.8.2
     hooks:
       - id: commitizen
 
@@ -51,7 +51,7 @@ repos:
         additional_dependencies: ["ruff"]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.9.6
+    rev: v0.11.11
     hooks:
       - id: ruff
         types_or: [python, pyi]
