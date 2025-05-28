@@ -185,3 +185,35 @@
    ORDER BY json_model.id ASC
   '''
 # ---
+# name: test_json_output[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   ORDER BY json_model.id ASC
+  '''
+# ---
+# name: test_json_output[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   ORDER BY json_model.id ASC
+  '''
+# ---
+# name: test_json_output[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   ORDER BY json_model.id ASC
+  '''
+# ---
+# name: test_json_output[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT json_model.dict_col,
+         json_model.id
+    FROM json_model AS json_model
+   ORDER BY json_model.id ASC
+  '''
+# ---

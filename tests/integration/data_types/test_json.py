@@ -92,7 +92,36 @@ async def test_json_filters(
     assert not result.errors
     assert result.data
     assert len(result.data["json"]) == len(expected_ids)
+
     for i, expected_id in enumerate(expected_ids):
         assert result.data["json"][i]["id"] == raw_json[expected_id]["id"]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_json_output(
+    any_query: AnyQueryExecutor,
+    raw_json: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            json {
+                id
+                dictCol
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    for interval in result.data["json"]:
+        expected_interval = next(f for f in raw_json if f["id"] == interval["id"])
+        assert interval["dictCol"] == expected_interval["dict_col"]
+
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
