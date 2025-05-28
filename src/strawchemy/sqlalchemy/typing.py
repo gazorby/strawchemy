@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
     from sqlalchemy.orm import DeclarativeBase, Session, scoped_session
     from sqlalchemy.sql import SQLColumnExpression
-    from strawchemy.strawberry.dto import OrderByEnum, QueryNode
+    from strawchemy.strawberry.dto import OrderByEnum
     from strawchemy.strawberry.filters.base import GraphQLComparison
 
     from ._executor import QueryExecutor
@@ -27,7 +27,6 @@ __all__ = (
     "QueryExecutorT",
     "QueryHookCallable",
     "RelationshipSide",
-    "SQLAlchemyQueryNode",
     "SessionT",
     "StatementType",
 )
@@ -40,8 +39,6 @@ QueryExecutorT = TypeVar("QueryExecutorT", bound="QueryExecutor[Any]")
 
 RelationshipSide: TypeAlias = Literal["parent", "target"]
 StatementType = Literal["lambda", "select"]
-LoadMode = Literal["load_options", "statement"]
-SQLAlchemyQueryNode: TypeAlias = "QueryNode"
 FunctionGenerator: TypeAlias = "Callable[..., Function[Any]]"
 QueryHookCallable: TypeAlias = "QueryHook[QueryHookDeclarativeT]"
 FilterMap: TypeAlias = "OrderedDict[tuple[type[Any], ...], type[GraphQLComparison]]"
