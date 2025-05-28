@@ -1,4 +1,13 @@
 # serializer version: 1
+# name: test_timedelta_components[session-tracked-async-days-aiosqlite_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) / (? + 0.0) = ?
+   ORDER BY interval_model.id ASC
+  '''
+# ---
 # name: test_timedelta_components[session-tracked-async-days-asyncmy_engine]
   '''
   SELECT interval_model.time_delta_col,
@@ -23,6 +32,15 @@
          interval_model.id
     FROM interval_model AS interval_model
    WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+   ORDER BY interval_model.id ASC
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-async-hours-aiosqlite_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) / (? + 0.0) = ?
    ORDER BY interval_model.id ASC
   '''
 # ---
@@ -53,6 +71,15 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
+# name: test_timedelta_components[session-tracked-async-minutes-aiosqlite_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) / (? + 0.0) = ?
+   ORDER BY interval_model.id ASC
+  '''
+# ---
 # name: test_timedelta_components[session-tracked-async-minutes-asyncmy_engine]
   '''
   SELECT interval_model.time_delta_col,
@@ -77,6 +104,15 @@
          interval_model.id
     FROM interval_model AS interval_model
    WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+   ORDER BY interval_model.id ASC
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-async-totalSeconds-aiosqlite_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) = ?
    ORDER BY interval_model.id ASC
   '''
 # ---
@@ -116,6 +152,15 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
+# name: test_timedelta_components[session-tracked-sync-days-sqlite_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) / (? + 0.0) = ?
+   ORDER BY interval_model.id ASC
+  '''
+# ---
 # name: test_timedelta_components[session-tracked-sync-hours-psycopg_engine]
   '''
   SELECT interval_model.time_delta_col,
@@ -125,12 +170,30 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
+# name: test_timedelta_components[session-tracked-sync-hours-sqlite_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) / (? + 0.0) = ?
+   ORDER BY interval_model.id ASC
+  '''
+# ---
 # name: test_timedelta_components[session-tracked-sync-minutes-psycopg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
     FROM interval_model AS interval_model
    WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
+   ORDER BY interval_model.id ASC
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-sync-minutes-sqlite_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) / (? + 0.0) = ?
    ORDER BY interval_model.id ASC
   '''
 # ---
@@ -172,6 +235,15 @@
   SELECT interval_model.time_delta_col,
          interval_model.id
     FROM interval_model AS interval_model
+   ORDER BY interval_model.id ASC
+  '''
+# ---
+# name: test_timedelta_components[session-tracked-sync-totalSeconds-sqlite_engine]
+  '''
+  SELECT interval_model.time_delta_col,
+         interval_model.id
+    FROM interval_model AS interval_model
+   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) = ?
    ORDER BY interval_model.id ASC
   '''
 # ---
