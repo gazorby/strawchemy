@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Protocol, cast, override
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast, override
 
 from sqlalchemy import ARRAY, JSON, ColumnElement, Dialect, Integer, Text, and_, func, not_, null, or_, type_coerce
 from sqlalchemy import cast as sqla_cast
@@ -443,6 +443,7 @@ class BaseTimeFilter(FilterProtocol):
 @dataclass(frozen=True)
 class TimeDeltaFilter(OrderFilter):
     comparison: TimeDeltaComparison
+    _seconds_in_day: ClassVar[int] = 60 * 60 * 24
 
     def _postgres_interval(
         self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
@@ -450,9 +451,10 @@ class TimeDeltaFilter(OrderFilter):
         expressions: list[ColumnElement[bool]] = []
 
         if self.comparison.days:
-            seconds_in_day = 60 * 60 * 24
             expressions.extend(
-                self.comparison.days.to_expressions(dialect, func.extract("EPOCH", model_attribute) / seconds_in_day)
+                self.comparison.days.to_expressions(
+                    dialect, func.extract("EPOCH", model_attribute) / self._seconds_in_day
+                )
             )
         if self.comparison.hours:
             expressions.extend(
@@ -473,9 +475,10 @@ class TimeDeltaFilter(OrderFilter):
         expressions: list[ColumnElement[bool]] = []
 
         if self.comparison.days:
-            seconds_in_day = 60 * 60 * 24
             expressions.extend(
-                self.comparison.days.to_expressions(dialect, func.unix_timestamp(model_attribute) / seconds_in_day)
+                self.comparison.days.to_expressions(
+                    dialect, func.unix_timestamp(model_attribute) / self._seconds_in_day
+                )
             )
         if self.comparison.hours:
             expressions.extend(
@@ -490,6 +493,38 @@ class TimeDeltaFilter(OrderFilter):
 
         return expressions
 
+    def _sqlite_interval(
+        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = []
+
+        if self.comparison.days:
+            expressions.extend(
+                self.comparison.days.to_expressions(
+                    dialect, sqla_cast(func.strftime("%s", model_attribute), Integer) / self._seconds_in_day
+                )
+            )
+        if self.comparison.hours:
+            expressions.extend(
+                self.comparison.hours.to_expressions(
+                    dialect, sqla_cast(func.strftime("%s", model_attribute), Integer) / 3600
+                )
+            )
+        if self.comparison.minutes:
+            expressions.extend(
+                self.comparison.minutes.to_expressions(
+                    dialect, sqla_cast(func.strftime("%s", model_attribute), Integer) / 60
+                )
+            )
+        if self.comparison.seconds:
+            expressions.extend(
+                self.comparison.seconds.to_expressions(
+                    dialect, sqla_cast(func.strftime("%s", model_attribute), Integer)
+                )
+            )
+
+        return expressions
+
     @override
     def to_expressions(
         self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
@@ -500,6 +535,8 @@ class TimeDeltaFilter(OrderFilter):
             expressions.extend(self._postgres_interval(dialect, model_attribute))
         elif dialect.name == "mysql":
             expressions.extend(self._mysql_interval(dialect, model_attribute))
+        elif dialect.name == "sqlite":
+            expressions.extend(self._sqlite_interval(dialect, model_attribute))
 
         return expressions
 
