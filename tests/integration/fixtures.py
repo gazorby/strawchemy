@@ -391,13 +391,18 @@ def raw_geo(dialect: SupportedDialect, raw_geo_flipped: RawRecordData) -> RawRec
 
 @pytest.fixture(scope="session")
 def postgis_service(
-    docker_service: DockerService, xdist_postgres_isolation_level: XdistIsolationLevel
+    docker_service: DockerService,
+    xdist_postgres_isolation_level: XdistIsolationLevel,
+    postgres_user: str,
+    postgres_password: str,
 ) -> Generator[PostgresService, None, None]:
     with _provide_postgres_service(
         docker_service,
         image="postgis/postgis:17-3.5",
         name="postgis-17",
         xdist_postgres_isolate=xdist_postgres_isolation_level,
+        user=postgres_user,
+        password=postgres_password,
     ) as service:
         yield service
 
