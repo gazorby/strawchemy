@@ -18,6 +18,10 @@ def _serialize_time(value: time | timedelta) -> str:
     return value.isoformat()
 
 
+def _serialize(value: timedelta) -> str:
+    return json.encode(value).decode()
+
+
 Interval = scalar(
     NewType("Interval", timedelta),
     description=(
@@ -25,7 +29,7 @@ Interval = scalar(
         "[ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations)."
     ),
     parse_value=partial(json.decode, type=timedelta),
-    serialize=json.encode,
+    serialize=_serialize,
     specified_by_url="https://en.wikipedia.org/wiki/ISO_8601#Durations",
 )
 

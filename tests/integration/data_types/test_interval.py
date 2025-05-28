@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
+import msgspec
 import pytest
 
 from sqlalchemy import Insert, MetaData, insert
@@ -72,12 +73,12 @@ async def test_timedelta_components(
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = f"""
-            {{
-                intervals(filter: {{ timeDeltaCol: {{ {component}: {{ eq: {value} }} }} }}) {{
-                    id
-                    timeDeltaCol
-                }}
+        {{
+            intervals(filter: {{ timeDeltaCol: {{ {component}: {{ eq: {value} }} }} }}) {{
+                id
+                timeDeltaCol
             }}
+        }}
     """
     result = await maybe_async(any_query(query))
     assert not result.errors
@@ -85,5 +86,34 @@ async def test_timedelta_components(
     assert len(result.data["intervals"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
         assert result.data["intervals"][i]["id"] == raw_intervals[expected_id]["id"]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_timedelta_output(
+    any_query: AnyQueryExecutor,
+    raw_intervals: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            intervals {
+                id
+                timeDeltaCol
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert len(result.data["intervals"]) == len(raw_intervals)
+
+    for interval in result.data["intervals"]:
+        expected_interval = next(f for f in raw_intervals if f["id"] == interval["id"])
+        assert interval["timeDeltaCol"] == msgspec.json.encode(expected_interval["time_delta_col"]).decode()
+
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
