@@ -36,7 +36,7 @@ class NodeResult(Generic[ModelT]):
     node_key: Callable[[QueryNodeType], str]
 
     def value(self, key: QueryNodeType) -> Any:
-        if key.value.is_computed:
+        if key.value.is_computed or key.metadata.data.is_transform:
             return self.computed_values[self.node_key(key)]
         return getattr(self.model, key.value.model_field_name)
 

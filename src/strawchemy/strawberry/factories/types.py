@@ -4,8 +4,11 @@ import dataclasses
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Any, Self, TypeVar, override
 
+from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase
-from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
+from strawberry.annotation import StrawberryAnnotation
+from strawberry.types.arguments import StrawberryArgument
+from strawchemy.constants import AGGREGATIONS_KEY, JSON_PATH_KEY, NODES_KEY
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import DTOFactory, MappedDTO
 from strawchemy.dto.exceptions import EmptyDTOError
@@ -88,7 +91,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             related_dto=dto,
         )
 
-    def _add_relation_fields(
+    def _update_fields(
         self,
         dto: type[GraphQLDTOT],
         base: type[Any] | None,
@@ -109,6 +112,20 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 strawberry_field = self._mapper.field(pagination=pagination, order_by=order_by_input, root_field=False)
                 attributes[field.name] = strawberry_field
                 annotations[field.name] = type_annotation
+            elif (
+                not field.is_relation
+                and field.has_model_field
+                and self.inspector.model_field_type(field) in {JSON, dict}
+            ):
+                attributes[field.name] = self._mapper.field(
+                    root_field=False,
+                    arguments=[
+                        StrawberryArgument(
+                            JSON_PATH_KEY, None, type_annotation=StrawberryAnnotation(annotation=str | None)
+                        )
+                    ],
+                )
+                annotations[field.name] = field.type_ | None
 
         dto.__annotations__ |= annotations
         for name, value in attributes.items():
@@ -203,9 +220,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         )
         child_options = child_options or _ChildOptions()
         if self.graphql_type(dto_config) == "object":
-            dto = self._add_relation_fields(
-                dto, base, pagination=child_options.pagination, order_by=child_options.order_by
-            )
+            dto = self._update_fields(dto, base, pagination=child_options.pagination, order_by=child_options.order_by)
         if register_type:
             return self._register_type(
                 dto,

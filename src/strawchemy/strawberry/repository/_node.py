@@ -63,7 +63,7 @@ class StrawberryQueryNode(QueryNode, Generic[T]):
         for child in self.children:
             if not isinstance(child, StrawberryQueryNode):
                 continue
-            if child.value.is_computed:
+            if child.value.is_computed or child.metadata.data.is_transform:
                 kwargs[child.value.name] = self.computed_value(child, node_result)
             elif child.value.is_relation:
                 value = node_result.value(child)

@@ -55,7 +55,7 @@ def sync_query(dialect: SupportedDialect) -> type[Any]:
         pytest.param("contains", {"key1": "value1"}, [0], id="contains"),
         pytest.param(
             "containedIn",
-            {"key1": "value1", "key2": 2, "nested": {"inner": "value"}, "extra": "value"},
+            {"key1": "value1", "key2": 2, "key3": 3, "key4": None, "nested": {"inner": "value"}, "extra": "value"},
             [0, 2],
             id="containedIn",
         ),
@@ -122,6 +122,43 @@ async def test_json_output(
     for interval in result.data["json"]:
         expected_interval = next(f for f in raw_json if f["id"] == interval["id"])
         assert interval["dictCol"] == expected_interval["dict_col"]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("$.key1", id="key1"),
+        pytest.param("$.key3", id="key3"),
+        pytest.param("$.key4", id="key4"),
+        pytest.param("$.nested", id="nested"),
+    ],
+)
+@pytest.mark.snapshot
+async def test_json_extract_path(
+    path: str,
+    any_query: AnyQueryExecutor,
+    raw_json: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = f"""
+        {{
+            json {{
+                id
+                dictCol(path: "{path}")
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    for json in result.data["json"]:
+        expected_dict_col = next(f for f in raw_json if f["id"] == json["id"])
+        assert json["dictCol"] == expected_dict_col["dict_col"].get(path.strip("$."), {})
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

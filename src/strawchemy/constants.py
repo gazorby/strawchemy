@@ -16,3 +16,4 @@ AGGREGATIONS_KEY = "aggregations"
 NODES_KEY = "nodes"
 
 DATA_KEY = "data"
+JSON_PATH_KEY = "path"

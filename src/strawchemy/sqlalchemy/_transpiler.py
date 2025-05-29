@@ -83,13 +83,14 @@ class QueryTranspiler(Generic[DeclarativeT]):
         query_hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] | None = None,
         deterministic_ordering: bool = False,
     ) -> None:
-        self._inspector = SQLAlchemyGraphQLInspector(cast("SupportedDialect", dialect.name), [model.registry])
+        supported_dialect = cast("SupportedDialect", dialect.name)
+        self._inspector = SQLAlchemyGraphQLInspector(supported_dialect, [model.registry])
         self._aggregation_prefix: str = "aggregation"
         self._aggregation_joins: dict[QueryNodeType, AggregationJoin] = {}
         self._statement = statement
         self._deterministic_ordering = deterministic_ordering
         self.dialect = dialect
-        self.scope = scope or QueryScope(model, inspector=self._inspector)
+        self.scope = scope or QueryScope(model, supported_dialect, inspector=self._inspector)
 
         self._hook_applier = HookApplier(self.scope, query_hooks or defaultdict(list))
 
@@ -376,8 +377,9 @@ class QueryTranspiler(Generic[DeclarativeT]):
         Returns:
             The modified statement with the load options applied
         """
-        columns = self.scope.inspect(node).columns()
-        self.scope.selected_columns.extend(columns)
+        columns, column_transforms = self.scope.inspect(node).columns()
+        for column_transform in column_transforms:
+            statement = statement.add_columns(column_transform.attribute)
         eager_options: list[_AbstractLoad] = []
         load = contains_eager(self.scope.aliased_attribute(node))
         if columns:
@@ -598,13 +600,13 @@ class QueryTranspiler(Generic[DeclarativeT]):
     def _select(self, selection_tree: QueryNodeType) -> tuple[Select[tuple[DeclarativeT]], list[Join]]:
         aggregation_joins: list[Join] = []
         statement = self._base_statement()
-        root_columns = self.scope.inspect(selection_tree).columns()
-        self.scope.selected_columns.extend(root_columns)
+        root_columns, column_transforms = self.scope.inspect(selection_tree).columns()
+        for column_transform in column_transforms:
+            statement = statement.add_columns(column_transform.attribute)
         for node in selection_tree.iter_depth_first():
             if node.value.is_aggregate:
                 function_columns, new_join = self._upsert_aggregations(node, aggregation_joins)
                 statement = statement.add_columns(*function_columns)
-                self.scope.selected_columns.extend(function_columns)
                 if new_join:
                     aggregation_joins.append(new_join)
         # Only load selected root columns + those of child relations
@@ -628,9 +630,6 @@ class QueryTranspiler(Generic[DeclarativeT]):
         if self._inspector.db_features.supports_distinct_on:
             return bool(query_graph.distinct_on and (query_graph.order_by_tree or self._deterministic_ordering))
         return bool(query_graph.distinct_on)
-
-    def _filter_order_by_relation_node(self, join: Join, node: QueryNodeType) -> bool:
-        return join.node.value.model_field is node.value.model_field
 
     def _relation_order_by(self, query_graph: QueryGraph[DeclarativeT], query: Query) -> list[OrderBySpec]:
         selected_tree = query_graph.resolved_selection_tree()

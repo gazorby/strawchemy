@@ -11,7 +11,7 @@ from msgspec import convert
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.nodes import FragmentSpread, InlineFragment, SelectedField, Selection
-from strawchemy.constants import ORDER_BY_KEY
+from strawchemy.constants import JSON_PATH_KEY, ORDER_BY_KEY
 from strawchemy.dto.base import ModelT
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graph import NodeMetadata
@@ -106,18 +106,16 @@ class StrawchemyRepository(Generic[T]):
         self._build(inner_root_type, resolver_selection.selections, node)
         self._tree = node.merge_same_children(match_on="value_equality")
 
-    @classmethod
     def _relation_filter(
-        cls, selection: SelectedField, strawberry_field: StrawberryField, auto_snake_case: bool = True
+        self, selection: SelectedField, strawberry_field: StrawberryField, arguments: dict[str, Any]
     ) -> RelationFilterDTO:
         argument_types = {arg.python_name: arg.type for arg in strawberry_field.arguments}
-        selection_arguments = snake_keys(selection.arguments) if auto_snake_case else selection.arguments
-        if order_by_args := selection_arguments.get(ORDER_BY_KEY):
+        if order_by_args := arguments.get(ORDER_BY_KEY):
             if not isinstance(order_by_args, list):
-                selection_arguments[ORDER_BY_KEY] = [selection_arguments[ORDER_BY_KEY]]
+                arguments[ORDER_BY_KEY] = [arguments[ORDER_BY_KEY]]
             order_by_model = strawberry_contained_user_type(argument_types[ORDER_BY_KEY])
-            return convert(selection_arguments, type=OrderByRelationFilterDTO[order_by_model], strict=False)
-        return convert(selection_arguments, type=RelationFilterDTO, strict=False)
+            return convert(arguments, type=OrderByRelationFilterDTO[order_by_model], strict=False)
+        return convert(arguments, type=RelationFilterDTO, strict=False)
 
     @classmethod
     def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]] | None:
@@ -154,6 +152,7 @@ class StrawchemyRepository(Generic[T]):
                 continue
             if not isinstance(selection, SelectedField) or selection.name in self._ignored_field_names:
                 continue
+
             model_field_name = camel_to_snake(selection.name) if self.auto_snake_case else selection.name
             strawberry_field = next(field for field in strawberry_definition.fields if field.name == model_field_name)
             strawberry_field_type = strawberry_contained_user_type(strawberry_field.type)
@@ -176,12 +175,15 @@ class StrawchemyRepository(Generic[T]):
             except KeyError:
                 continue
 
+            selection_arguments = snake_keys(selection.arguments) if self.auto_snake_case else selection.arguments
+
             child_node = StrawberryQueryNode(
                 value=field_definition,
                 node_metadata=NodeMetadata(
                     QueryNodeMetadata(
-                        relation_filter=self._relation_filter(selection, strawberry_field),
+                        relation_filter=self._relation_filter(selection, strawberry_field, selection_arguments),
                         strawberry_type=strawberry_field_type,
+                        json_path=selection_arguments.get(JSON_PATH_KEY),
                     )
                 ),
             )
