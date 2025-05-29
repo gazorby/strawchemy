@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase
     from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
+    from strawberry.types.arguments import StrawberryArgument
     from strawberry.types.field import _RESOLVER_TYPE
     from strawchemy.validation.pydantic import PydanticMapper
 
@@ -98,6 +99,7 @@ class Strawchemy:
         order_by: type[OrderByDTO] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
+        arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
@@ -125,6 +127,7 @@ class Strawchemy:
         order_by: type[OrderByDTO] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
+        arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
@@ -152,6 +155,7 @@ class Strawchemy:
         order_by: type[OrderByDTO] | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
+        arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
@@ -207,6 +211,7 @@ class Strawchemy:
             extensions=extensions or [],
             registry_namespace=namespace,
             description=description,
+            arguments=arguments,
         )
         return field(resolver) if resolver else field
 

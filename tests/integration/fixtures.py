@@ -332,11 +332,10 @@ def raw_intervals() -> RawRecordData:
 def raw_json() -> RawRecordData:
     return [
         # Standard case with typical values
-        {"id": 1, "dict_col": {"key1": "value1", "key2": 2, "nested": {"inner": "value"}}},
+        {"id": 1, "dict_col": {"key1": "value1", "key2": 2, "nested": {"inner": "value"}, "key3": 3, "key4": None}},
         # Case with negative numbers and different values
-        {"id": 2, "dict_col": {"status": "pending", "count": 0}},
-        # empty array
-        {"id": 3, "dict_col": {}},
+        {"id": 2, "dict_col": {"status": "pending", "count": 0, "key3": 3, "key4": None}},
+        {"id": 3, "dict_col": {"key3": 3, "key4": None}},
     ]
 
 

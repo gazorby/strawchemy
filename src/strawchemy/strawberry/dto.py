@@ -96,6 +96,11 @@ class QueryNodeMetadata:
     relation_filter: RelationFilterDTO = dataclasses.field(default_factory=RelationFilterDTO)
     order_by: OrderByEnum | None = None
     strawberry_type: type[Any] | None = None
+    json_path: str | None = None
+
+    @property
+    def is_transform(self) -> bool:
+        return bool(self.json_path)
 
 
 class StrawchemyDTOAttributes:

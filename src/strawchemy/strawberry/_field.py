@@ -131,6 +131,7 @@ class StrawchemyField(StrawberryField):
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
         execution_options: dict[str, Any] | None = None,
         id_field_name: str = "id",
+        arguments: list[StrawberryArgument] | None = None,
         # Original StrawberryField args
         python_name: str | None = None,
         graphql_name: str | None = None,
@@ -183,6 +184,8 @@ class StrawchemyField(StrawberryField):
             directives,
             extensions,
         )
+
+        self._arguments = arguments
 
     def _type_or_annotation(self) -> StrawberryType | type[WithStrawberryObjectDefinition] | object | str:
         type_ = self.type

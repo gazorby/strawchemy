@@ -24,15 +24,10 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeAlias, override
 
-from sqlalchemy import (
-    ColumnElement,
-    Function,
-    Label,
-    func,
-    inspect,
-    literal_column,
-)
+from sqlalchemy import ColumnElement, Function, Label, func, inspect, literal_column
+from sqlalchemy import cast as sqla_cast
 from sqlalchemy import distinct as sqla_distinct
+from sqlalchemy.dialects import mysql, postgresql
 from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
 from sqlalchemy.orm.util import AliasedClass
 from strawchemy.constants import NODES_KEY
@@ -50,6 +45,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql.elements import NamedColumn
     from strawchemy.strawberry.typing import QueryNodeType
+    from strawchemy.typing import SupportedDialect
 
     from .typing import DeclarativeSubT, FunctionGenerator, RelationshipSide
 
@@ -103,6 +99,11 @@ class AggregationFunctionInfo:
         return func
 
 
+@dataclass(frozen=True)
+class ColumnTransform:
+    attribute: QueryableAttribute[Any]
+
+
 class NodeInspect:
     """Inspection helper for SQLAlchemy query nodes.
 
@@ -152,6 +153,26 @@ class NodeInspect:
                 ]
             )
         return selected_fks
+
+    def _transform_column(
+        self, node: QueryNodeType, attribute: QueryableAttribute[Any]
+    ) -> QueryableAttribute[Any] | ColumnTransform:
+        transform: Function[Any] | None = None
+        if node.metadata.data.json_path:
+            if self.scope.dialect == "postgresql":
+                transform = func.coalesce(
+                    func.jsonb_path_query_first(
+                        attribute, sqla_cast(node.metadata.data.json_path, postgresql.JSONPATH)
+                    ),
+                    sqla_cast({}, postgresql.JSONB),
+                )
+            elif self.scope.dialect == "mysql":
+                transform = func.coalesce(
+                    func.json_extract(attribute, node.metadata.data.json_path), sqla_cast({}, mysql.JSON)
+                )
+        if transform is not None:
+            return ColumnTransform(transform.label(self.scope.key(node)))
+        return attribute
 
     @property
     def children(self) -> list[NodeInspect]:
@@ -226,19 +247,26 @@ class NodeInspect:
             label_name = self.scope.key(self.node)
         return function_node, function_info.apply(*function_args).label(label_name)
 
-    def columns(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
+    def columns(
+        self, alias: AliasedClass[Any] | None = None
+    ) -> tuple[list[QueryableAttribute[Any]], list[ColumnTransform]]:
         columns: list[QueryableAttribute[Any]] = []
+        transforms: list[ColumnTransform] = []
         property_set: set[MapperProperty[Any]] = set()
         for child in self.node.children:
             if not child.value.is_relation and not child.value.is_computed:
                 aliased = self.scope.aliased_attribute(child, alias)
-                columns.append(aliased)
                 property_set.add(aliased.property)
+                aliased = self._transform_column(child, aliased)
+                if isinstance(aliased, ColumnTransform):
+                    transforms.append(aliased)
+                else:
+                    columns.append(aliased)
 
-        id_attributes = self.scope.aliased_id_attributes(self.node, alias)
         # Ensure id columns are added
+        id_attributes = self.scope.aliased_id_attributes(self.node, alias)
         columns.extend(attribute for attribute in id_attributes if attribute.property not in property_set)
-        return columns
+        return columns, transforms
 
     def foreign_key_columns(
         self, side: RelationshipSide, alias: AliasedClass[Any] | None = None
@@ -254,7 +282,8 @@ class NodeInspect:
         ]
 
     def selection(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
-        return [*self.columns(alias), *self._foreign_keys_selection(alias)]
+        columns, _ = self.columns(alias)
+        return [*columns, *self._foreign_keys_selection(alias)]
 
 
 class QueryScope(Generic[DeclarativeT]):
@@ -295,6 +324,7 @@ class QueryScope(Generic[DeclarativeT]):
     def __init__(
         self,
         model: type[DeclarativeT],
+        dialect: SupportedDialect,
         root_alias: AliasedClass[DeclarativeBase] | None = None,
         parent: QueryScope[Any] | None = None,
         alias_map: dict[tuple[QueryNodeType, RelationshipSide], AliasedClass[Any]] | None = None,
@@ -311,10 +341,10 @@ class QueryScope(Generic[DeclarativeT]):
         self._literal_namespace: str = "__strawchemy"
         self._inspector = inspector or SQLAlchemyInspector([model.registry])
 
+        self.dialect: SupportedDialect = dialect
         self.model = model
         self.level: int = self._parent.level + 1 if self._parent else 0
         self.columns: dict[QueryNodeType, NamedColumn[Any]] = {}
-        self.selected_columns: list[NamedColumn[Any] | QueryableAttribute[Any]] = []
         self.selection_function_nodes: set[QueryNodeType] = set()
         self.order_by_function_nodes: set[QueryNodeType] = set()
         self.where_function_nodes: set[QueryNodeType] = set()
@@ -520,6 +550,7 @@ class QueryScope(Generic[DeclarativeT]):
             parent=self,
             alias_map=self._node_alias_map,
             inspector=self._inspector,
+            dialect=self.dialect,
         )
 
     @override

@@ -65,7 +65,7 @@
     decimalCol: Decimal!
     boolCol: Boolean!
     uuidCol: UUID!
-    dictCol: JSON!
+    dictCol(path: String): JSON
     arrayStrCol: [String!]!
     id: UUID!
   }
