@@ -162,3 +162,27 @@ async def test_json_extract_path(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_json_extract_inner_path(
+    any_query: AnyQueryExecutor, raw_json: RawRecordData, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+        {
+            json {
+                id
+                dictCol(path: "$.nested.inner")
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    for json in result.data["json"]:
+        expected_dict_col = next(f for f in raw_json if f["id"] == json["id"])
+        assert json["dictCol"] == expected_dict_col["dict_col"].get("nested", {}).get("inner", {})
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

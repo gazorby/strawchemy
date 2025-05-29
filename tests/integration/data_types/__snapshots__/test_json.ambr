@@ -1,4 +1,36 @@
 # serializer version: 1
+# name: test_json_extract_inner_path[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT json_model.id,
+         coalesce(json_extract(json_model.dict_col, %s), CAST(%s AS JSON)) AS json_model__dict_col
+    FROM json_model AS json_model
+   ORDER BY json_model.id ASC
+  '''
+# ---
+# name: test_json_extract_inner_path[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT json_model.id,
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS json_model__dict_col
+    FROM json_model AS json_model
+   ORDER BY json_model.id ASC
+  '''
+# ---
+# name: test_json_extract_inner_path[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT json_model.id,
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+    FROM json_model AS json_model
+   ORDER BY json_model.id ASC
+  '''
+# ---
+# name: test_json_extract_inner_path[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT json_model.id,
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+    FROM json_model AS json_model
+   ORDER BY json_model.id ASC
+  '''
+# ---
 # name: test_json_extract_path[session-tracked-async-asyncpg_engine]
   '''
   SELECT json_model.id,
