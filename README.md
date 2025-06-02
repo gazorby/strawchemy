@@ -31,10 +31,6 @@ Generates GraphQL types, inputs, queries and resolvers directly from SQLAlchemy 
 >
 > Please note that strawchemy is currently in a pre-release stage of development. This means that the library is still under active development and the initial API is subject to change. We encourage you to experiment with strawchemy and provide feedback, but be sure to pin and update carefully until a stable release is available.
 
-## Database support
-
-Currently, only PostgreSQL is officially supported and tested (using [asyncpg](https://github.com/MagicStack/asyncpg) or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
-
 ## Table of Contents
 
 - [Installation](#installation)
