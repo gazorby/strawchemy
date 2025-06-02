@@ -118,6 +118,12 @@ depends = "_install"
 alias = "ti-mysql"
 run = '{{vars.nox_py13}} -t mysql -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
+[tasks."test:integration-sqlite"]
+description = "Run integration tests"
+depends = "_install"
+alias = "ti-sqlite"
+run = '{{vars.nox_py13}} -t sqlite -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
 [tasks."test:integration:coverage"]
 description = "Run integration tests with coverage"
 depends = "_install"

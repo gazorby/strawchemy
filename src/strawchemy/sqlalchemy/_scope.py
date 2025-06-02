@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeAlias, overr
 from sqlalchemy import ColumnElement, Function, Label, func, inspect, literal_column
 from sqlalchemy import cast as sqla_cast
 from sqlalchemy import distinct as sqla_distinct
-from sqlalchemy.dialects import mysql, postgresql
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
 from sqlalchemy.orm.util import AliasedClass
 from strawchemy.constants import NODES_KEY
@@ -103,6 +103,23 @@ class AggregationFunctionInfo:
 class ColumnTransform:
     attribute: QueryableAttribute[Any]
 
+    @classmethod
+    def _new(
+        cls, attribute: Function[Any] | QueryableAttribute[Any], node: QueryNodeType, scope: QueryScope[Any]
+    ) -> Self:
+        return cls(attribute.label(scope.key(node)))
+
+    @classmethod
+    def extract_json(cls, attribute: QueryableAttribute[Any], node: QueryNodeType, scope: QueryScope[Any]) -> Self:
+        if scope.dialect == "postgresql":
+            transform = func.coalesce(
+                func.jsonb_path_query_first(attribute, sqla_cast(node.metadata.data.json_path, postgresql.JSONPATH)),
+                sqla_cast({}, postgresql.JSONB),
+            )
+        else:
+            transform = func.coalesce(attribute.op("->")(node.metadata.data.json_path), func.json_object())
+        return cls._new(transform, node, scope)
+
 
 class NodeInspect:
     """Inspection helper for SQLAlchemy query nodes.
@@ -157,22 +174,10 @@ class NodeInspect:
     def _transform_column(
         self, node: QueryNodeType, attribute: QueryableAttribute[Any]
     ) -> QueryableAttribute[Any] | ColumnTransform:
-        transform: Function[Any] | None = None
+        transform: ColumnTransform | None = None
         if node.metadata.data.json_path:
-            if self.scope.dialect == "postgresql":
-                transform = func.coalesce(
-                    func.jsonb_path_query_first(
-                        attribute, sqla_cast(node.metadata.data.json_path, postgresql.JSONPATH)
-                    ),
-                    sqla_cast({}, postgresql.JSONB),
-                )
-            elif self.scope.dialect == "mysql":
-                transform = func.coalesce(
-                    func.json_extract(attribute, node.metadata.data.json_path), sqla_cast({}, mysql.JSON)
-                )
-        if transform is not None:
-            return ColumnTransform(transform.label(self.scope.key(node)))
-        return attribute
+            transform = ColumnTransform.extract_json(attribute, node, self.scope)
+        return attribute if transform is None else transform
 
     @property
     def children(self) -> list[NodeInspect]:

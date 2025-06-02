@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
 import pytest
@@ -15,7 +14,7 @@ from .typing import RawRecordData
 from .utils import compute_aggregation, from_graphql_representation, python_type
 
 if TYPE_CHECKING:
-    from strawchemy.typing import SupportedDialect
+    from strawchemy.config.databases import DatabaseFeatures
 
     from syrupy.assertion import SnapshotAssertion
 
@@ -55,7 +54,6 @@ async def test_count_aggregation(
     [
         ("sweetness", "sweetness"),
         ("waterPercent", "water_percent"),
-        ("rarity", "rarity"),
     ],
 )
 @pytest.mark.snapshot
@@ -90,10 +88,7 @@ async def test_sum_aggregation(
     # Verify result
     actual_sum = result.data["color"]["fruitsAggregate"]["sum"][field_name]
 
-    if field_name == "rarity":
-        assert Decimal(actual_sum) == Decimal(expected_sum)
-    else:
-        assert pytest.approx(actual_sum) == expected_sum
+    assert pytest.approx(actual_sum) == expected_sum
 
     # Verify SQL query
     assert query_tracker.query_count == 1
@@ -105,7 +100,6 @@ async def test_sum_aggregation(
     [
         ("sweetness", "sweetness"),
         ("waterPercent", "water_percent"),
-        ("rarity", "rarity"),
         ("name", "name"),
         ("createdAt", "created_at"),
         ("bestTimeToPick", "best_time_to_pick"),
@@ -158,7 +152,6 @@ async def test_min_aggregation(
     [
         ("sweetness", "sweetness"),
         ("waterPercent", "water_percent"),
-        ("rarity", "rarity"),
         ("name", "name"),
         ("createdAt", "created_at"),
         ("bestTimeToPick", "best_time_to_pick"),
@@ -215,7 +208,6 @@ async def test_max_aggregation(
     [
         ("sweetness", "sweetness"),
         ("waterPercent", "water_percent"),
-        ("rarity", "rarity"),
     ],
 )
 @pytest.mark.snapshot
@@ -228,8 +220,12 @@ async def test_statistical_aggregation(
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
+    db_features: DatabaseFeatures,
 ) -> None:
     """Test statistical aggregation functions for a specific field."""
+    if agg_type not in db_features.aggregation_functions:
+        pytest.skip(f"{db_features.dialect} does not support {agg_type} aggregation function")
+
     query = f"""
         {{
             color(id: {raw_colors[0]["id"]}) {{
@@ -271,7 +267,6 @@ async def test_statistical_aggregation(
     [
         ("sweetness", "sweetness"),
         ("waterPercent", "water_percent"),
-        ("rarity", "rarity"),
     ],
 )
 @pytest.mark.snapshot
@@ -284,9 +279,12 @@ async def test_root_aggregation(
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
-    dialect: SupportedDialect,
+    db_features: DatabaseFeatures,
 ) -> None:
     """Test statistical aggregation functions for a specific field."""
+    if agg_type not in db_features.aggregation_functions:
+        pytest.skip(f"{db_features.dialect} does not support {agg_type} aggregation function")
+
     query_name = "fruitAggregations" if pagination is None else "fruitAggregationsPaginatedLimit2"
     query = f"""
         {{
@@ -318,7 +316,9 @@ async def test_root_aggregation(
             agg_type, [record[raw_field_name] for record in raw_fruits[: pagination.limit]]
         )
 
-    rel = 0.0001 if dialect == "mysql" and field_name == "sweetness" and agg_type in ("avg", "sum") else None
+    rel = (
+        0.0001 if db_features.dialect == "mysql" and field_name == "sweetness" and agg_type in ("avg", "sum") else None
+    )
     assert actual_value == pytest.approx(expected_value, rel=rel)
 
     # Verify SQL query

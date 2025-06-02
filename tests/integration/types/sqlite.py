@@ -22,24 +22,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.util import AliasedClass
 from strawberry.extensions.field_extension import AsyncExtensionResolver, FieldExtension, SyncExtensionResolver
-from tests.integration.models import (
-    ArrayModel,
-    Color,
-    DateTimeModel,
-    Fruit,
-    FruitFarm,
-    IntervalModel,
-    JSONModel,
-    RankedUser,
-    User,
-)
+from tests.integration.models import Color, DateTimeModel, Fruit, FruitFarm, IntervalModel, JSONModel, RankedUser, User
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from strawchemy.sqlalchemy.hook import LoadType
-
-strawchemy = Strawchemy("postgresql")
+strawchemy = Strawchemy("sqlite")
 
 
 def _check_lower_case(value: str) -> str:
@@ -245,17 +234,6 @@ class RankedUserType: ...
 @strawchemy.pydantic.create(RankedUser, include="all")
 class RankedUserCreateValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
-
-
-# Array type
-
-
-@strawchemy.filter(ArrayModel, include="all")
-class ArrayFilter: ...
-
-
-@strawchemy.type(ArrayModel, include="all")
-class ArrayType: ...
 
 
 # Interval type
@@ -495,16 +473,6 @@ class DateTimeSyncQuery:
     date_times: list[DateTimeType] = strawchemy.field(
         filter_input=DateTimeFilter, repository_type=StrawchemySyncRepository
     )
-
-
-@strawberry.type
-class ArrayAsyncQuery:
-    array: list[ArrayType] = strawchemy.field(filter_input=ArrayFilter, repository_type=StrawchemyAsyncRepository)
-
-
-@strawberry.type
-class ArraySyncQuery:
-    array: list[ArrayType] = strawchemy.field(filter_input=ArrayFilter, repository_type=StrawchemySyncRepository)
 
 
 # Mutations

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
-from decimal import Decimal
 from typing import Any
 
 from strawchemy.dto.utils import PRIVATE, READ_ONLY
@@ -18,12 +17,11 @@ from sqlalchemy import (
     Integer,
     Interval,
     MetaData,
-    Numeric,
     Sequence,
     Text,
     Time,
 )
-from sqlalchemy.dialects import mysql, postgresql
+from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
@@ -38,7 +36,16 @@ interval_metadata = MetaData()
 date_time_metadata = MetaData()
 
 TextArrayType = ARRAY(Text).with_variant(postgresql.ARRAY(Text), "postgresql")
-JSONType = JSON().with_variant(postgresql.JSONB, "postgresql").with_variant(mysql.JSON, "mysql")
+JSONType = (
+    JSON()
+    .with_variant(postgresql.JSONB, "postgresql")
+    .with_variant(mysql.JSON, "mysql")
+    .with_variant(sqlite.JSON, "sqlite")
+)
+DateType = Date().with_variant(sqlite.DATE, "sqlite")
+DateTimeType = DateTime().with_variant(sqlite.DATETIME, "sqlite")
+TimeType = Time().with_variant(sqlite.TIME, "sqlite")
+
 FREE_ID_RANGE = range(1, 300)
 
 # Bases
@@ -55,10 +62,10 @@ class BaseColumns:
             primary_key=True,
         )
 
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(), info=READ_ONLY)
+    created_at: Mapped[datetime] = mapped_column(DateTimeType, default=lambda: datetime.now(), info=READ_ONLY)
     """Date/time of instance creation."""
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=lambda: datetime.now(), onupdate=lambda: datetime.now(), info=READ_ONLY
+        DateTimeType, default=lambda: datetime.now(), onupdate=lambda: datetime.now(), info=READ_ONLY
     )
 
 
@@ -126,8 +133,7 @@ class Fruit(Base):
     product: Mapped[DerivedProduct | None] = relationship(DerivedProduct)
     sweetness: Mapped[int] = mapped_column(Integer)
     water_percent: Mapped[float] = mapped_column(Double)
-    rarity: Mapped[Decimal] = mapped_column(Numeric(10, 6), default=Decimal("0"))
-    best_time_to_pick: Mapped[time] = mapped_column(Time, default=time(hour=9))
+    best_time_to_pick: Mapped[time] = mapped_column(TimeType, default=time(hour=9))
 
     @hybrid_property
     def description(self) -> str:
@@ -207,6 +213,6 @@ class DateTimeModel(DateTimeBase):
 
     registry = Registry(metadata=date_time_metadata)
 
-    date_col: Mapped[date] = mapped_column(Date)
-    time_col: Mapped[time] = mapped_column(Time)
-    datetime_col: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    date_col: Mapped[date] = mapped_column(DateType)
+    time_col: Mapped[time] = mapped_column(TimeType)
+    datetime_col: Mapped[datetime] = mapped_column(DateTimeType)

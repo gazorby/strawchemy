@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, time, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from functools import partial
 from typing import NewType
 
@@ -9,13 +9,17 @@ from msgspec import json
 from strawberry import scalar
 from strawberry.schema.types.base_scalars import wrap_parser
 
-__all__ = ("Interval", "Time")
+__all__ = ("Date", "DateTime", "Interval", "Time")
 
 
-def _serialize_time(value: time | timedelta) -> str:
+def _serialize_time(value: time | timedelta | str) -> str:
     if isinstance(value, timedelta):
         value = (datetime.min.replace(tzinfo=UTC) + value).time()
-    return value.isoformat()
+    return value if isinstance(value, str) else value.isoformat()
+
+
+def _serialize_date(value: date | datetime | str) -> str:
+    return value.isoformat() if isinstance(value, date | datetime) else value
 
 
 def _serialize(value: timedelta) -> str:
@@ -38,4 +42,10 @@ Time = scalar(
     serialize=_serialize_time,
     parse_value=wrap_parser(time.fromisoformat, "Time"),
     description="Time (isoformat)",
+)
+Date = scalar(NewType("Date", date), serialize=_serialize_date, parse_value=wrap_parser(date.fromisoformat, "Date"))
+DateTime = scalar(
+    NewType("DateTime", datetime),
+    serialize=_serialize_date,
+    parse_value=wrap_parser(datetime.fromisoformat, "DateTime"),
 )

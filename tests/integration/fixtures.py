@@ -5,8 +5,7 @@ from __future__ import annotations
 import dataclasses
 from copy import copy
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, time, timedelta
-from decimal import Decimal
+from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, cast
 
 import pytest
@@ -15,7 +14,7 @@ from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
-from strawchemy.strawberry.scalars import Interval, Time
+from strawchemy.strawberry.scalars import Date, DateTime, Interval, Time
 
 from sqlalchemy import (
     URL,
@@ -43,6 +42,7 @@ from tests.fixtures import DefaultQuery
 from tests.integration.types import AnyAsyncMutationType, AnyAsyncQueryType, AnySyncQueryType
 from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types
+from tests.integration.types import sqlite as sqlite_types
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
@@ -84,7 +84,13 @@ __all__ = (
 )
 
 FilterableStatement: TypeAlias = Literal["insert", "update", "select", "delete"]
-scalar_overrides: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval, time: Time}
+scalar_overrides: dict[object, Any] = {
+    dict[str, Any]: JSON,
+    timedelta: Interval,
+    time: Time,
+    date: Date,
+    datetime: DateTime,
+}
 engine_plugins: list[str] = []
 
 if GEO_INSTALLED:
@@ -187,7 +193,6 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "name": "Apple",
             "sweetness": 4,
             "water_percent": 0.84,
-            "rarity": Decimal("0.1"),
             "best_time_to_pick": time(hour=9),
             "color_id": raw_colors[0]["id"],
         },
@@ -196,8 +201,7 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "created_at": datetime.now().replace(second=2, microsecond=0),
             "name": "Cherry",
             "sweetness": 9,
-            "water_percent": 0.81,
-            "rarity": Decimal("0.2"),
+            "water_percent": 0.93,
             "best_time_to_pick": time(hour=10, minute=30),
             "color_id": raw_colors[0]["id"],
         },
@@ -207,7 +211,6 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "name": "Banana",
             "sweetness": 2,
             "water_percent": 0.75,
-            "rarity": Decimal("0.3"),
             "best_time_to_pick": time(hour=17, minute=15),
             "color_id": raw_colors[1]["id"],
         },
@@ -217,7 +220,6 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "name": "Lemon",
             "sweetness": 1,
             "water_percent": 0.88,
-            "rarity": Decimal("0.4"),
             "best_time_to_pick": time(hour=20),
             "color_id": raw_colors[1]["id"],
         },
@@ -227,7 +229,6 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "name": "Quince",
             "sweetness": 3,
             "water_percent": 0.81,
-            "rarity": Decimal("0.5"),
             "best_time_to_pick": time(hour=13),
             "color_id": raw_colors[1]["id"],
         },
@@ -237,7 +238,6 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "name": "Orange",
             "sweetness": 8,
             "water_percent": 0.86,
-            "rarity": Decimal("0.6"),
             "best_time_to_pick": time(hour=12, minute=12),
             "color_id": raw_colors[2]["id"],
         },
@@ -247,7 +247,6 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "name": "clementine",
             "sweetness": 14,
             "water_percent": 0.9,
-            "rarity": Decimal("0.7"),
             "best_time_to_pick": time(hour=0, minute=0),
             "color_id": raw_colors[2]["id"],
         },
@@ -257,7 +256,6 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "name": "Strawberry",
             "sweetness": 5,
             "water_percent": 0.91,
-            "rarity": Decimal("0.8"),
             "best_time_to_pick": time(hour=9),
             "color_id": raw_colors[3]["id"],
         },
@@ -267,7 +265,6 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "name": "Cantaloupe",
             "sweetness": 0,
             "water_percent": 0.51,
-            "rarity": Decimal("0.9"),
             "best_time_to_pick": time(hour=20, minute=45, second=15, microsecond=10),
             "color_id": raw_colors[3]["id"],
         },
@@ -277,7 +274,6 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "name": "Watermelon",
             "sweetness": 7,
             "water_percent": 0.92,
-            "rarity": Decimal("0.55"),
             "best_time_to_pick": time(hour=19, microsecond=55),
             "color_id": raw_colors[4]["id"],
         },
@@ -287,7 +283,6 @@ def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
             "name": "Pears",
             "sweetness": 11,
             "water_percent": 0.15,
-            "rarity": Decimal("0.26"),
             "best_time_to_pick": time(hour=2),
             "color_id": raw_colors[4]["id"],
         },
@@ -347,21 +342,21 @@ def raw_date_times() -> RawRecordData:
             "id": 1,
             "date_col": date(2023, 1, 15),
             "time_col": time(14, 30, 45),
-            "datetime_col": datetime(2023, 1, 15, 14, 30, 45, tzinfo=UTC),
+            "datetime_col": datetime(2023, 1, 15, 14, 30, 45),  # noqa: DTZ001
         },
         # Case with negative numbers and different values
         {
             "id": 2,
             "date_col": date(2022, 12, 31),
             "time_col": time(8, 15, 0),
-            "datetime_col": datetime(2022, 12, 31, 23, 59, 59, tzinfo=UTC),
+            "datetime_col": datetime(2022, 12, 31, 23, 59, 59),  # noqa: DTZ001
         },
         # empty array
         {
             "id": 3,
             "date_col": date(2024, 2, 29),  # leap year
             "time_col": time(0, 0, 0),
-            "datetime_col": datetime(2024, 2, 29, 0, 0, 0, tzinfo=UTC),
+            "datetime_col": datetime(2024, 2, 29, 0, 0, 0),  # noqa: DTZ001
         },
     ]
 
@@ -454,6 +449,14 @@ def sqlite_engine(tmp_path: Path) -> Generator[Engine, None, None]:
                 pytest.mark.psycopg_sync,
                 pytest.mark.integration,
                 pytest.mark.xdist_group("postgres"),
+            ],
+        ),
+        pytest.param(
+            "sqlite_engine",
+            marks=[
+                pytest.mark.sqlite,
+                pytest.mark.integration,
+                pytest.mark.xdist_group("sqlite"),
             ],
         ),
     ],
@@ -552,6 +555,14 @@ async def psycopg_async_engine(postgres_database_service: PostgresService) -> As
 @pytest.fixture(
     name="async_engine",
     params=[
+        pytest.param(
+            "aiosqlite_engine",
+            marks=[
+                pytest.mark.aiosqlite,
+                pytest.mark.integration,
+                pytest.mark.xdist_group("sqlite"),
+            ],
+        ),
         pytest.param(
             "asyncpg_engine",
             marks=[
@@ -675,6 +686,8 @@ def mapper(dialect: SupportedDialect) -> Strawchemy:
         return postgres_types.strawchemy
     if dialect == "mysql":
         return mysql_types.strawchemy
+    if dialect == "sqlite":
+        return sqlite_types.strawchemy
     msg = f"Unknown dialect: {dialect}"
     raise ValueError(msg)
 
@@ -693,6 +706,8 @@ def async_query(dialect: SupportedDialect) -> type[AnyAsyncQueryType | DefaultQu
         return postgres_types.AsyncQuery
     if dialect == "mysql":
         return mysql_types.AsyncQuery
+    if dialect == "sqlite":
+        return sqlite_types.AsyncQuery
     return DefaultQuery
 
 
@@ -702,6 +717,8 @@ def sync_query(dialect: SupportedDialect) -> type[AnySyncQueryType | DefaultQuer
         return postgres_types.SyncQuery
     if dialect == "mysql":
         return mysql_types.SyncQuery
+    if dialect == "sqlite":
+        return sqlite_types.SyncQuery
     return DefaultQuery
 
 
@@ -711,6 +728,8 @@ def async_mutation(dialect: SupportedDialect) -> type[AnyAsyncMutationType] | No
         return postgres_types.AsyncMutation
     if dialect == "mysql":
         return mysql_types.AsyncMutation
+    if dialect == "sqlite":
+        return sqlite_types.AsyncMutation
     return None
 
 
@@ -720,6 +739,8 @@ def sync_mutation(dialect: SupportedDialect) -> type[Any] | None:
         return postgres_types.SyncMutation
     if dialect == "mysql":
         return mysql_types.SyncMutation
+    if dialect == "sqlite":
+        return sqlite_types.SyncMutation
     return None
 
 

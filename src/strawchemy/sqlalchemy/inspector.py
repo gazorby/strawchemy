@@ -19,6 +19,7 @@ from strawchemy.strawberry.filters import (
     GraphQLComparison,
     JSONComparison,
     OrderComparison,
+    SQLITEJSONComparison,
     TextComparison,
     TimeComparison,
     TimeDeltaComparison,
@@ -77,6 +78,8 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
             from strawchemy.strawberry.filters.geo import GeoComparison
 
             filters_map |= {(Geometry, WKBElement, WKTElement): GeoComparison}
+        if self.db_features.dialect == "sqlite":
+            filters_map[(dict,)] = SQLITEJSONComparison
         return filters_map
 
     @classmethod

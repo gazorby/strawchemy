@@ -12,6 +12,7 @@ from tests.integration.fixtures import QueryTracker
 from tests.integration.models import IntervalModel, interval_metadata
 from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types
+from tests.integration.types import sqlite as sqlite_types
 from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
@@ -41,6 +42,8 @@ def async_query(dialect: SupportedDialect) -> type[Any]:
         return postgres_types.IntervalAsyncQuery
     if dialect == "mysql":
         return mysql_types.IntervalAsyncQuery
+    if dialect == "sqlite":
+        return sqlite_types.IntervalAsyncQuery
     pytest.skip(f"Interval tests can't be run on this dialect: {dialect}")
 
 
@@ -50,6 +53,8 @@ def sync_query(dialect: SupportedDialect) -> type[Any]:
         return postgres_types.IntervalSyncQuery
     if dialect == "mysql":
         return mysql_types.IntervalSyncQuery
+    if dialect == "sqlite":
+        return sqlite_types.IntervalSyncQuery
     pytest.skip(f"Interval tests can't be run on this dialect: {dialect}")
 
 

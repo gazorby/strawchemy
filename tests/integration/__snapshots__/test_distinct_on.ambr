@@ -1,4 +1,23 @@
 # serializer version: 1
+# name: test_distinct_and_order_by[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.id AS id,
+                 color.name AS name,
+                 color.name AS name__1,
+                 color.id AS id__1,
+                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, color.id DESC) AS __strawchemy_distinct_on_rank_0
+            FROM color AS color
+           ORDER BY color.name ASC,
+                    color.id DESC
+         ) AS color
+   WHERE color.__strawchemy_distinct_on_rank_0 = ?
+   ORDER BY color.name ASC,
+            color.id DESC
+  '''
+# ---
 # name: test_distinct_and_order_by[session-tracked-async-asyncmy_engine]
   '''
   SELECT color.name,
@@ -75,6 +94,25 @@
             color.id DESC
   '''
 # ---
+# name: test_distinct_and_order_by[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.id AS id,
+                 color.name AS name,
+                 color.name AS name__1,
+                 color.id AS id__1,
+                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, color.id DESC) AS __strawchemy_distinct_on_rank_0
+            FROM color AS color
+           ORDER BY color.name ASC,
+                    color.id DESC
+         ) AS color
+   WHERE color.__strawchemy_distinct_on_rank_0 = ?
+   ORDER BY color.name ASC,
+            color.id DESC
+  '''
+# ---
 # name: test_distinct_on[session-tracked-async-asyncmy_engine]
   '''
   SELECT color.name,
@@ -102,6 +140,21 @@
            ORDER BY color.id ASC
          ) AS color
    WHERE color.__strawchemy_distinct_on_rank_0 = $1::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_distinct_on[session-tracked-async-deterministic-ordering-aiosqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.id AS id,
+                 color.name AS name,
+                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM color AS color
+           ORDER BY color.id ASC
+         ) AS color
+   WHERE color.__strawchemy_distinct_on_rank_0 = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -148,6 +201,19 @@
          ) AS color
    WHERE color.__strawchemy_distinct_on_rank_0 = %(param_1)s::INTEGER
    ORDER BY color.id ASC
+  '''
+# ---
+# name: test_distinct_on[session-tracked-async-non-deterministic-ordering-aiosqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.id AS id,
+                 color.name AS name,
+                 row_number() OVER (PARTITION BY color.name) AS __strawchemy_distinct_on_rank_0
+            FROM color AS color
+         ) AS color
+   WHERE color.__strawchemy_distinct_on_rank_0 = ?
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-non-deterministic-ordering-asyncmy_engine]
@@ -209,12 +275,40 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_distinct_on[session-tracked-sync-deterministic-ordering-sqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.id AS id,
+                 color.name AS name,
+                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM color AS color
+           ORDER BY color.id ASC
+         ) AS color
+   WHERE color.__strawchemy_distinct_on_rank_0 = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_distinct_on[session-tracked-sync-non-deterministic-ordering-psycopg_engine]
   '''
   SELECT DISTINCT
       ON (color.name) color.name,
          color.id
     FROM color AS color
+  '''
+# ---
+# name: test_distinct_on[session-tracked-sync-non-deterministic-ordering-sqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.id AS id,
+                 color.name AS name,
+                 row_number() OVER (PARTITION BY color.name) AS __strawchemy_distinct_on_rank_0
+            FROM color AS color
+         ) AS color
+   WHERE color.__strawchemy_distinct_on_rank_0 = ?
   '''
 # ---
 # name: test_distinct_on[session-tracked-sync-psycopg_engine]
