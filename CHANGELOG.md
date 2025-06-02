@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.17.0](https://github.com/gazorby/strawchemy/compare/v0.16.0..v0.17.0) - 2025-06-02
+
+### 🚀 Features
+
+- *(json)* Extract path - ([924d89a](https://github.com/gazorby/strawchemy/commit/924d89a897dec86241728cee2ea1156590453799))
+- *(sqlite)* Initial support - ([e71bcda](https://github.com/gazorby/strawchemy/commit/e71bcda9e446039c2a741b32e49935cf03c56e87))
+- *(sqlite)* Add JSON filtering - ([4b510d8](https://github.com/gazorby/strawchemy/commit/4b510d8df21f56b5088ebcd5caa3f28fe91085ec))
+- *(sqlite)* Add interval filtering - ([6b81592](https://github.com/gazorby/strawchemy/commit/6b81592cbd9a88d25d4a3267fea5d639ae880cf9))
+- *(sqlite)* Add json path extraction - ([3593a07](https://github.com/gazorby/strawchemy/commit/3593a077d8c446560a125f990ac7564784880660))
+
+### 🐛 Bug Fixes
+
+- *(interval)* Output serialization - ([7e6e822](https://github.com/gazorby/strawchemy/commit/7e6e822937a598ff25b470282ec9b6a0f9bdb1bd))
+- *(update-by-id)* Do not pass empty where filter to the resolver - ([393970f](https://github.com/gazorby/strawchemy/commit/393970fe4ef469450093e468e8131ab4a1591946))
+
+### 🚜 Refactor
+
+- *(sqlite)* Minor fixes - ([387356f](https://github.com/gazorby/strawchemy/commit/387356f15174c8705e0d5ac08abbf4e823a2aad2))
+- *(typing)* Remove unused types - ([cc39392](https://github.com/gazorby/strawchemy/commit/cc393929f76c653b3b7f0e20c87e678ba4ce655b))
+
+### 📚 Documentation
+
+- Mention sqlite in the readme - ([46acbec](https://github.com/gazorby/strawchemy/commit/46acbec7c78d4c84f72db66296ad8bd799f90080))
+
+### 🧪 Testing
+
+- *(integration)* Add missing fixtures - ([a1a1e26](https://github.com/gazorby/strawchemy/commit/a1a1e264900058286a9e446d8e2c66a9ebf28d7a))
+- *(interval)* Fix mysql - ([cc6de21](https://github.com/gazorby/strawchemy/commit/cc6de2183913c0da2f7aace79b50b1f52bb6ca28))
+- *(json)* Test output - ([d80bfe7](https://github.com/gazorby/strawchemy/commit/d80bfe7314a7ba2ad831374415e6a20cb21d1345))
+- *(json)* Add case for extracting inner json structure - ([9da2df9](https://github.com/gazorby/strawchemy/commit/9da2df91ec9813494a2d8fba9d82a280ba2d6e37))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.17.0 - ([cda53ea](https://github.com/gazorby/strawchemy/commit/cda53ea2d2e32f6c772a9e46306203069c600ec2))
+- Upgrade dependencies - ([d8a9dd1](https://github.com/gazorby/strawchemy/commit/d8a9dd1bc2e57ca12d088b0ec58407449a6f865b))
 ## [0.16.0](https://github.com/gazorby/strawchemy/compare/v0.15.6..v0.16.0) - 2025-05-27
 
 ### 🚀 Features
