@@ -413,7 +413,9 @@ async def test_create_with_to_many_set_exclusive_with_add_and_create(
     assert not result.data
     assert result.errors
     assert len(result.errors) == 1
-    assert result.errors[0].args[0] == "You cannot use `set` with `create` or `add` in -to-many relation input"
+    assert (
+        result.errors[0].args[0] == "You cannot use `set` with `create`, `upsert` or `add` in a -to-many relation input"
+    )
 
 
 @pytest.mark.snapshot
@@ -882,7 +884,9 @@ async def test_update_with_to_one_set_and_create_fail(
     assert not result.data
     assert result.errors
     assert len(result.errors) == 1
-    assert result.errors[0].args[0] == "You cannot use both `set` and `create` in a -to-one relation input"
+    assert (
+        result.errors[0].args[0] == "You cannot use `set` along with `create` or `upsert` in a -to-one relation input"
+    )
 
 
 @pytest.mark.snapshot
@@ -1354,7 +1358,8 @@ async def test_update_with_to_many_set_exclusive_with_add_create_remove(
     assert result.errors
     assert len(result.errors) == 1
     assert (
-        result.errors[0].args[0] == "You cannot use `set` with `create`, `add` or `remove` in a -to-many relation input"
+        result.errors[0].args[0]
+        == "You cannot use `set` with `create`, `upsert`, `add` or `remove` in a -to-many relation input"
     )
 
 
@@ -1452,8 +1457,8 @@ async def test_update_many(
         mutation {{
             updateColors(
                 data: [
-                    {{ id: {color_id1_gql}, name: "batch updated color" }},
-                    {{ id: {color_id2_gql}, name: "batch updated color" }}
+                    {{ id: {color_id1_gql}, name: "batch updated color 1" }},
+                    {{ id: {color_id2_gql}, name: "batch updated color 2" }}
                 ]
             ) {{
                 id
@@ -1468,8 +1473,8 @@ async def test_update_many(
     updated_colors = sorted(result.data["updateColors"], key=lambda x: x["id"])
     expected_colors = sorted(
         [
-            {"id": to_graphql_representation(raw_colors[0]["id"], "output"), "name": "batch updated color"},
-            {"id": to_graphql_representation(raw_colors[1]["id"], "output"), "name": "batch updated color"},
+            {"id": to_graphql_representation(raw_colors[0]["id"], "output"), "name": "batch updated color 1"},
+            {"id": to_graphql_representation(raw_colors[1]["id"], "output"), "name": "batch updated color 2"},
         ],
         key=lambda x: x["id"],
     )
@@ -1584,7 +1589,7 @@ async def test_column_override(
 ) -> None:
     query = """
         mutation {
-            createBlueColor(data: { name: "Green" }) {
+            createBlueColor(data: { name: "New Green" }) {
                 name
             }
         }
@@ -1592,7 +1597,7 @@ async def test_column_override(
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["createBlueColor"] == {"name": "Blue"}
+    assert result.data["createBlueColor"] == {"name": "New Blue"}
     query_tracker.assert_statements(1, "insert", sql_snapshot)
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
@@ -1651,7 +1656,7 @@ async def test_read_only_column_override(query_name: str, query: str, any_query:
             "createAppleColor",
             """
                 mutation {
-                    createAppleColor(data: { name: "Red" }) {
+                    createAppleColor(data: { name: "Apple Red" }) {
                         name
                         fruits {
                             name
@@ -1665,7 +1670,7 @@ async def test_read_only_column_override(query_name: str, query: str, any_query:
             "createColorForExistingFruits",
             """
                 mutation {
-                    createColorForExistingFruits(data: { name: "Red" }) {
+                    createColorForExistingFruits(data: { name: "Apple Red" }) {
                         name
                         fruits {
                             name
@@ -1681,7 +1686,10 @@ async def test_relationship_to_many_override(query_name: str, query: str, any_qu
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data[query_name] == {"name": "Red", "fruits": [{"name": "Apple"}, {"name": "Strawberry"}]}
+    assert result.data[query_name] == {
+        "name": "Apple Red",
+        "fruits": [{"name": "New Apple"}, {"name": "New Strawberry"}],
+    }
 
 
 @pytest.mark.parametrize(
@@ -1691,7 +1699,7 @@ async def test_relationship_to_many_override(query_name: str, query: str, any_qu
             "createRedFruit",
             """
             mutation {
-                createRedFruit(data: { name: "Apple", sweetness: 1, waterPercent: 0.1 }) {
+                createRedFruit(data: { name: "New Apple", sweetness: 1, waterPercent: 0.1 }) {
                     name
                     color {
                         name
@@ -1705,7 +1713,7 @@ async def test_relationship_to_many_override(query_name: str, query: str, any_qu
             "createFruitForExistingColor",
             """
             mutation {
-                createFruitForExistingColor(data: { name: "Apple", sweetness: 1, waterPercent: 0.1 }) {
+                createFruitForExistingColor(data: { name: "New Apple", sweetness: 1, waterPercent: 0.1 }) {
                     name
                     color {
                         name
@@ -1721,4 +1729,4 @@ async def test_relationship_to_one_override(query_name: str, query: str, any_que
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data[query_name] == {"name": "Apple", "color": {"name": "Red"}}
+    assert result.data[query_name] == {"name": "New Apple", "color": {"name": "New Red"}}

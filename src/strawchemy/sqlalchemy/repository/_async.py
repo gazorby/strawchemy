@@ -3,17 +3,19 @@ from __future__ import annotations
 from collections import defaultdict, namedtuple
 from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias, TypeVar
 
-from sqlalchemy import ColumnElement, Row, and_, delete, insert, inspect, select, update
+from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
 from sqlalchemy.orm import RelationshipProperty
 from strawchemy.sqlalchemy._executor import AsyncQueryExecutor, QueryResult
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
 from strawchemy.sqlalchemy.typing import AnyAsyncSession, DeclarativeT
+from strawchemy.strawberry.mutation.input import UpsertData
 from strawchemy.strawberry.mutation.types import RelationType
 
-from ._base import SQLAlchemyGraphQLRepository
+from ._base import InsertData, SQLAlchemyGraphQLRepository
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+    from enum import Enum
 
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.orm.util import AliasedClass
@@ -27,28 +29,30 @@ __all__ = ("SQLAlchemyGraphQLAsyncRepository",)
 T = TypeVar("T", bound=Any)
 
 _RowLike: TypeAlias = "Row[Any] | NamedTuple"
-_InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where"]
+_InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where", "upsert"]
 
 
 class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, AnyAsyncSession]):
-    async def _insert_many(self, model_type: type[DeclarativeBase], values: list[dict[str, Any]]) -> Sequence[Row[Any]]:
-        if self._dialect.insert_executemany_returning_sort_by_parameter_order:
+    async def _insert_many(self, data: InsertData) -> Sequence[Row[Any]]:
+        if self._dialect.insert_executemany_returning_sort_by_parameter_order and not (
+            self._dialect.name == "postgresql" and data.is_upsert
+        ):
             results = await self.session.execute(
-                insert(model_type).returning(*model_type.__mapper__.primary_key, sort_by_parameter_order=True),
-                values,
+                self._insert_statement(data).returning(
+                    *data.model_type.__mapper__.primary_key, sort_by_parameter_order=True
+                ),
+                data.values,
             )
             return results.all()
         rows: Sequence[Row[Any]] = []
         conn = await self.session.connection()
-        for value in values:
-            cursor = await conn.execute(insert(model_type).values(**value))
+        for value in data.values:
+            cursor = await conn.execute(self._insert_statement(data).values(**value))
             assert cursor.inserted_primary_key is not None
             rows.append(cursor.inserted_primary_key)
         return rows
 
-    async def _insert_nested(
-        self, model_type: type[DeclarativeBase], values: list[dict[str, Any]], level: LevelInput
-    ) -> None:
+    async def _insert_nested(self, data: InsertData, level: LevelInput) -> None:
         """Inserts multiple records for a given model type and updates related instances.
 
         This internal method performs a bulk insert operation for the specified
@@ -59,23 +63,22 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         relationships where applicable.
 
         Args:
-            model_type: The SQLAlchemy declarative base class to insert records for.
-            values: A list of dictionaries, where each dictionary represents the
-                data for a single record to be inserted.
+            data: An InsertData object containing the model type, values to insert,
+                and optional upsert configuration for handling conflicts.
             level: The input level containing information about the instances being
                 created and their relationships, used to update instances with
                 generated primary and foreign keys.
         """
-        instance_ids: Sequence[Row[Any]] = await self._insert_many(model_type, values)
+        instance_ids: Sequence[Row[Any]] = await self._insert_many(data)
 
-        pk_names = [pk.name for pk in model_type.__mapper__.primary_key]
+        pk_names = [pk.name for pk in data.model_type.__mapper__.primary_key]
 
         pk_index, fk_index = 0, 0
         for relation_input in level.inputs:
-            if not isinstance(relation_input.instance, model_type):
+            if not isinstance(relation_input.instance, data.model_type):
                 continue
             # Update Pks
-            for column in model_type.__mapper__.primary_key:
+            for column in data.model_type.__mapper__.primary_key:
                 setattr(relation_input.instance, column.key, instance_ids[pk_index][pk_names.index(column.key)])
             pk_index += 1
             if relation_input.relation.relation_type is RelationType.TO_MANY:
@@ -148,14 +151,17 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             data: The processed input data containing nested structures and
                 relationship information.
         """
-        for level in data.filter_by_level(RelationType.TO_ONE, ["create"]):
+        for level in data.filter_by_level(RelationType.TO_ONE, ["create", "upsert"]):
             insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
+            upsert_data_map: dict[type[DeclarativeBase], UpsertData] = {}
 
             for create_input in level.inputs:
                 insert_params[create_input.relation.related].append(self._to_dict(create_input.instance))
+                if create_input.relation.upsert is not None:
+                    upsert_data_map[create_input.relation.related] = create_input.relation.upsert
 
             for model_type, values in insert_params.items():
-                await self._insert_nested(model_type, values, level)
+                await self._insert_nested(InsertData(model_type, values, upsert_data_map.get(model_type)), level)
 
     async def _update_to_many_relations(self, data: Input[DeclarativeT], created_ids: Sequence[_RowLike]) -> None:
         """Updates foreign keys to connect existing related objects for to-many relationships.
@@ -267,8 +273,9 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 of the main objects created in the parent operation. Used to set
                 foreign keys on the newly created related objects.
         """
-        for level in data.filter_by_level(RelationType.TO_MANY, ["create"]):
+        for level in data.filter_by_level(RelationType.TO_MANY, ["create", "upsert"]):
             insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
+            upsert_data_map: dict[type[DeclarativeBase], UpsertData] = {}
             for create_input in level.inputs:
                 relation = create_input.relation
                 prop = relation.attribute
@@ -280,19 +287,32 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                     if local.key and remote.key
                 }
                 insert_params[relation.related].append(self._to_dict(create_input.instance) | fks)
+                if create_input.relation.upsert is not None:
+                    upsert_data_map[create_input.relation.related] = create_input.relation.upsert
 
             for model_type, values in insert_params.items():
-                await self._insert_nested(model_type, values, level)
+                await self._insert_nested(InsertData(model_type, values, upsert_data_map.get(model_type)), level)
 
     async def _execute_insert_or_update(
         self,
         mode: _InsertOrUpdate,
         data: Input[DeclarativeT],
         dto_filter: BooleanFilterDTO | None,
+        upsert_update_fields: list[EnumDTO] | None = None,
+        upsert_confict_constraint: Enum | None = None,
     ) -> Sequence[_RowLike]:
         values = [self._to_dict(instance) for instance in data.instances]
         if mode == "insert":
-            return await self._insert_many(self.model, values)
+            return await self._insert_many(InsertData(self.model, values))
+
+        if mode == "upsert":
+            return await self._insert_many(
+                InsertData(
+                    self.model,
+                    values,
+                    UpsertData(update_fields=upsert_update_fields or [], conflict_constraint=upsert_confict_constraint),
+                )
+            )
 
         pks = [column.key for column in self.model.__mapper__.primary_key]
         pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
@@ -310,12 +330,13 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         mode: _InsertOrUpdate,
         data: Input[DeclarativeT],
         dto_filter: BooleanFilterDTO | None = None,
+        upsert_update_fields: list[EnumDTO] | None = None,
     ) -> Sequence[_RowLike]:
         self._connect_to_one_relations(data)
         data.add_non_input_relations()
         async with self.session.begin_nested() as transaction:
             await self._create_nested_to_one_relations(data)
-            instance_ids = await self._execute_insert_or_update(mode, data, dto_filter)
+            instance_ids = await self._execute_insert_or_update(mode, data, dto_filter, upsert_update_fields)
             await self._create_to_many_relations(data, instance_ids)
             await self._update_to_many_relations(data, instance_ids)
             await self._set_to_many_relations(mode, data, instance_ids)
@@ -508,6 +529,16 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             according to the selection.
         """
         created_ids = await self._mutate("insert", data)
+        return await self._list_by_ids(created_ids, selection)
+
+    async def upsert(
+        self,
+        data: Input[DeclarativeT],
+        selection: QueryNodeType | None = None,
+        update_fields: list[EnumDTO] | None = None,
+        dto_filter: BooleanFilterDTO | None = None,
+    ) -> QueryResult[DeclarativeT]:
+        created_ids = await self._mutate("upsert", data, dto_filter=dto_filter, upsert_update_fields=update_fields)
         return await self._list_by_ids(created_ids, selection)
 
     async def update_by_ids(

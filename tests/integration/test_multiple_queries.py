@@ -13,7 +13,7 @@ async def test_create_update_delete(any_query: AnyQueryExecutor) -> None:
 
     create_query = """
         mutation {{
-            createColor(data: {{ id: {id}, name: "Blue" }}) {{
+            createColor(data: {{ id: {id}, name: "New Blue" }}) {{
                 name
             }}
         }}
@@ -24,7 +24,7 @@ async def test_create_update_delete(any_query: AnyQueryExecutor) -> None:
             updateColor(
                 data: {{
                     id: {id},
-                    name: "Green"
+                    name: "New Green"
                 }}
             ) {{
                 id
@@ -67,27 +67,27 @@ async def test_create_update_delete(any_query: AnyQueryExecutor) -> None:
     result = await maybe_async(any_query(create_query.format(id=color_id)))
     assert not result.errors
     assert result.data
-    assert result.data["createColor"] == {"name": "Blue"}
+    assert result.data["createColor"] == {"name": "New Blue"}
     # Get
     result = await maybe_async(any_query(get_query.format(id=color_id)))
     assert not result.errors
     assert result.data
-    assert result.data["color"] == {"name": "Blue"}
+    assert result.data["color"] == {"name": "New Blue"}
     # Update
     result = await maybe_async(any_query(update_query.format(id=color_id)))
     assert not result.errors
     assert result.data
-    assert result.data["updateColor"] == {"name": "Green", "id": color_id}
+    assert result.data["updateColor"] == {"name": "New Green", "id": color_id}
     # Get
     result = await maybe_async(any_query(get_query.format(id=color_id)))
     assert not result.errors
     assert result.data
-    assert result.data["color"] == {"name": "Green"}
+    assert result.data["color"] == {"name": "New Green"}
     # Delete
     result = await maybe_async(any_query(delete_query.format(id=color_id)))
     assert not result.errors
     assert result.data
-    assert result.data["deleteColor"] == [{"name": "Green", "id": color_id}]
+    assert result.data["deleteColor"] == [{"name": "New Green", "id": color_id}]
     # List
     result = await maybe_async(any_query(list_query.format(id=color_id)))
     assert not result.errors

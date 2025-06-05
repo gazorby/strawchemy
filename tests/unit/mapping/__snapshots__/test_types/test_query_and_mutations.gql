@@ -8,21 +8,42 @@
     id: UUID
   }
   
+  """Update fields enum"""
+  enum ColorFruitsConflictFields {
+    id
+  }
+  
   """Identifier input"""
   input ColorFruitsIdFieldsInput {
     id: UUID!
   }
   
   """Add new or existing objects"""
-  input ColorFruitsIdFieldsInputColorFruitInputToManyCreateInput {
+  input ColorFruitsIdFieldsInputColorFruitInputColorFruitsUpdateFieldsColorFruitsConflictFieldsToManyCreateInput {
     set: [ColorFruitsIdFieldsInput!]
     add: [ColorFruitsIdFieldsInput!]
     create: [ColorFruitInput!]
+    upsert: ColorFruitsIdFieldsInputColorFruitInputColorFruitsUpdateFieldsColorFruitsConflictFieldsToManyUpsertInput
+  }
+  
+  """Add new objects or update if existing"""
+  input ColorFruitsIdFieldsInputColorFruitInputColorFruitsUpdateFieldsColorFruitsConflictFieldsToManyUpsertInput {
+    create: [ColorFruitInput!]!
+    conflictFields: ColorFruitsConflictFields!
+    updateFields: [ColorFruitsUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum ColorFruitsUpdateFields {
+    name
+    colorId
+    sweetness
+    id
   }
   
   """GraphQL create input type"""
   input ColorInput {
-    fruits: ColorFruitsIdFieldsInputColorFruitInputToManyCreateInput
+    fruits: ColorFruitsIdFieldsInputColorFruitInputColorFruitsUpdateFieldsColorFruitsConflictFieldsToManyCreateInput
     name: String!
     id: UUID
   }
@@ -50,15 +71,28 @@
     varSamp: FruitNumericFields!
   }
   
+  """Update fields enum"""
+  enum FruitColorConflictFields {
+    id
+  }
+  
   """Identifier input"""
   input FruitColorIdFieldsInput {
     id: UUID!
   }
   
   """Add a new or existing object"""
-  input FruitColorIdFieldsInputFruitColorInputToOneInput {
+  input FruitColorIdFieldsInputFruitColorInputFruitColorUpdateFieldsFruitColorConflictFieldsToOneInput {
     set: FruitColorIdFieldsInput
     create: FruitColorInput
+    upsert: FruitColorIdFieldsInputFruitColorInputFruitColorUpdateFieldsFruitColorConflictFieldsToOneUpsertInput
+  }
+  
+  """Add new object or update if existing"""
+  input FruitColorIdFieldsInputFruitColorInputFruitColorUpdateFieldsFruitColorConflictFieldsToOneUpsertInput {
+    create: FruitColorInput!
+    conflictFields: FruitColorConflictFields
+    updateFields: [FruitColorUpdateFields!]
   }
   
   """GraphQL create input type"""
@@ -67,9 +101,15 @@
     id: UUID
   }
   
+  """Update fields enum"""
+  enum FruitColorUpdateFields {
+    name
+    id
+  }
+  
   """GraphQL create input type"""
   input FruitInput {
-    color: FruitColorIdFieldsInputFruitColorInputToOneInput = null
+    color: FruitColorIdFieldsInputFruitColorInputFruitColorUpdateFieldsFruitColorConflictFieldsToOneInput = null
     name: String!
     sweetness: Int!
     id: UUID

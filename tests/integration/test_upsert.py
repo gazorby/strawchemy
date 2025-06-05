@@ -1,0 +1,252 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import pytest
+
+from syrupy.assertion import SnapshotAssertion
+from tests.typing import AnyQueryExecutor
+from tests.utils import maybe_async
+
+from .fixtures import QueryTracker
+
+if TYPE_CHECKING:
+    from strawchemy.typing import SupportedDialect
+
+pytestmark = [pytest.mark.integration]
+
+
+# To-One Upsert Tests
+
+
+@pytest.mark.snapshot
+async def test_to_one_upsert_create_new(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Tests upsert mutation that creates a new record when no match is found."""
+    query = """
+        mutation {
+            updateFruit(
+                data: {
+                    id: 1,
+                    name: "Grape",
+                    sweetness: 7,
+                    waterPercent: 0.85,
+                    color: {
+                        upsert: {
+                            create: { name: "Purple" }
+                        }
+                    }
+                }
+            ) {
+                id
+                name
+                color {
+                    name
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["updateFruit"] == {
+        "id": 1,
+        "name": "Grape",
+        "color": {"name": "Purple"},
+    }
+
+    query_tracker.assert_statements(1, "insert", sql_snapshot)  # Insert new color
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update fruit's color_id
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated fruit + new color
+
+
+@pytest.mark.snapshot
+async def test_to_one_upsert_update_existing(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Tests upsert mutation that updates an existing record when a match is found."""
+    query = """
+        mutation {
+            updateFruit(
+                data: {
+                    id: 1,
+                    name: "Apple - Granny smith",
+                    color: {
+                        upsert: {
+                            create: { name: "Green" }
+                            conflictFields: name
+                        }
+                    }
+                }
+            ) {
+                id
+                name
+                color {
+                    name
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["updateFruit"] == {
+        "id": 1,
+        "name": "Apple - Granny smith",
+        "color": {"name": "Green"},
+    }
+
+    query_tracker.assert_statements(1, "update", sql_snapshot)
+    query_tracker.assert_statements(1, "update", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+# To-Many Upsert Tests
+
+
+@pytest.mark.snapshot
+async def test_to_many_upsert_create_new(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+) -> None:
+    """Tests to-many upsert mutation that creates new records."""
+    query = """
+        mutation {
+            updateColor(
+                data: {
+                    id: 1,
+                    name: "Bright Red",
+                    fruits: {
+                        upsert: {
+                            create: [
+                                { name: "Pomegranate", sweetness: 6, waterPercent: 0.82 },
+                                { name: "Plums", sweetness: 7, waterPercent: 0.87 }
+                            ]
+                            conflictFields: name
+                        }
+                    }
+                }
+            ) {
+                id
+                name
+                fruits {
+                    name
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["updateColor"] == {
+        "id": 1,
+        "name": "Bright Red",
+        "fruits": [{"name": "Apple"}, {"name": "Cherry"}, {"name": "Pomegranate"}, {"name": "Plums"}],
+    }
+
+    if dialect == "sqlite":
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
+
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + new fruits
+
+
+@pytest.mark.snapshot
+async def test_to_many_upsert_update_existing(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+) -> None:
+    """Tests to-many upsert mutation that updates existing records."""
+    query = """
+        mutation {
+            updateColor(
+                data: {
+                    id: 1,
+                    name: "Bright Red",
+                    fruits: {
+                        upsert: {
+                            create: [
+                                { name: "Apple", sweetness: 6, waterPercent: 0.82 },
+                                { name: "Cherry", sweetness: 7, waterPercent: 0.87 }
+                            ]
+                            conflictFields: name
+                        }
+                    }
+                }
+            ) {
+                id
+                name
+                fruits {
+                    name
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["updateColor"] == {
+        "id": 1,
+        "name": "Bright Red",
+        "fruits": [{"name": "Apple"}, {"name": "Cherry"}],
+    }
+
+    if dialect == "sqlite":
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
+
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + new fruits
+
+
+@pytest.mark.snapshot
+async def test_to_many_upsert_mixed_create_and_update(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+) -> None:
+    """Tests to-many upsert mutation that both creates new records and updates existing ones."""
+    query = """
+        mutation {
+            updateColor(
+                data: {
+                    id: 1,
+                    name: "Bright Red",
+                    fruits: {
+                        upsert: {
+                            create: [
+                                { name: "Plums", sweetness: 6, waterPercent: 0.82 },
+                                { name: "Cherry", sweetness: 7, waterPercent: 0.87 }
+                            ]
+                            conflictFields: name
+                        }
+                    }
+                }
+            ) {
+                id
+                name
+                fruits {
+                    name
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["updateColor"] == {
+        "id": 1,
+        "name": "Bright Red",
+        "fruits": [{"name": "Apple"}, {"name": "Cherry"}, {"name": "Plums"}],
+    }
+
+    if dialect == "sqlite":
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
+
+    query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + new fruits

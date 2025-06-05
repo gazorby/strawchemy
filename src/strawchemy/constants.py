@@ -17,3 +17,5 @@ NODES_KEY = "nodes"
 
 DATA_KEY = "data"
 JSON_PATH_KEY = "path"
+
+UPSERT_UPDATE_FIELDS = "update_fields"

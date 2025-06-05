@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Generator
-from typing import TYPE_CHECKING, Any, Self, TypeVar, override
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Self, TypeVar, cast, override
 
 from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase
@@ -36,7 +37,7 @@ from strawchemy.utils import non_optional_type_hint, snake_to_camel
 
 from .aggregations import AggregationInspector
 from .base import GraphQLDTOFactory, MappedGraphQLDTOT, StrawchemyMappedFactory, _ChildOptions
-from .enum import EnumDTOFactory
+from .enum import EnumDTOBackend, EnumDTOFactory
 from .inputs import OrderByDTOFactory
 
 if TYPE_CHECKING:
@@ -404,6 +405,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
         self._identifier_input_dto_builder = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO[DeclarativeBase])
         self._identifier_input_dto_factory = DTOFactory(self.inspector, self.backend)
+        self._upsert_fields_enum_factory = EnumDTOFactory(self.inspector, EnumDTOBackend())
 
     def _identifier_input(
         self,
@@ -428,7 +430,41 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
                 )
                 raise EmptyDTOError(msg) from error
 
-        return self._register_type(base, dto_config, node, description="Identifier input")
+        return self._register_type(base, dto_config, node, description="Identifier input", user_defined=False)
+
+    def _upsert_udpate_fields(
+        self,
+        field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
+        node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
+        dto_config: DTOConfig,
+    ) -> type[EnumDTO]:
+        name = f"{node.root.value.model.__name__}{snake_to_camel(field.name)}UpdateFields"
+        related_model = field.related_model
+        assert related_model
+        update_fields = self._upsert_fields_enum_factory.factory(
+            related_model, dataclasses.replace(dto_config, purpose=Purpose.WRITE), name=name
+        )
+        return self._mapper.registry.register_enum(update_fields, name=name, description="Update fields enum")
+
+    def _upsert_conflict_fields(
+        self,
+        field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
+        node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
+        dto_config: DTOConfig,
+    ) -> type[Enum]:
+        name = f"{node.root.value.model.__name__}{snake_to_camel(field.name)}ConflictFields"
+        related_model = field.related_model
+        assert related_model
+        conflict_fields = Enum(
+            name,
+            [
+                (f"{'_'.join(col.key for col in constraint.columns)}", constraint)
+                for constraint in self.inspector.unique_constraints(related_model)
+            ],
+        )
+        return self._mapper.registry.register_enum(
+            cast("type[Enum]", conflict_fields), name=name, description="Update fields enum"
+        )
 
     @override
     def _cache_key(
@@ -489,19 +525,28 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         self._resolve_relation_type(field, dto_config, node, mode=mode, **factory_kwargs)
         identifier_input = self._identifier_input(field, node)
         field_required = self.inspector.required(field.model_field)
+        upsert_update_fields = self._upsert_udpate_fields(field, node, dto_config)
+        upsert_conflict_fields = self._upsert_conflict_fields(field, node, dto_config)
+
         if field.uselist:
             if mode == "create":
-                input_type = ToManyCreateInput[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
+                input_type = ToManyCreateInput[
+                    identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields  # pyright: ignore[reportInvalidTypeArguments]
+                ]
             else:
                 type_ = (
                     RequiredToManyUpdateInput
                     if self.inspector.reverse_relation_required(field.model_field)
                     else ToManyUpdateInput
                 )
-                input_type = type_[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
+                input_type = type_[  # pyright: ignore[reportInvalidTypeArguments]
+                    identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields
+                ]
         else:
             type_ = RequiredToOneInput if field_required else ToOneInput
-            input_type = type_[identifier_input, field.related_dto]  # pyright: ignore[reportInvalidTypeArguments]
+            input_type = type_[  # pyright: ignore[reportInvalidTypeArguments]
+                identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields
+            ]
         return input_type if field_required and mode == "create" else input_type | None
 
     @override

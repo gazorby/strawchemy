@@ -9,7 +9,20 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast, get_args, get_or
 
 from typing_extensions import TypeIs
 
-from sqlalchemy import Column, Sequence, SQLColumnExpression, event, inspect, orm, sql
+from sqlalchemy import (
+    Column,
+    Index,
+    PrimaryKeyConstraint,
+    Sequence,
+    SQLColumnExpression,
+    Table,
+    UniqueConstraint,
+    event,
+    inspect,
+    orm,
+    sql,
+)
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import (
     NO_VALUE,
     ColumnProperty,
@@ -31,12 +44,13 @@ from strawchemy.dto.types import DTO_MISSING, DTO_UNSET, DTOConfig, DTOFieldConf
 from strawchemy.utils import is_type_hint_optional
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
+    from collections.abc import Callable, Generator, Iterable
     from types import ModuleType
 
     from shapely import Geometry
 
     from sqlalchemy.orm import MapperProperty
+    from sqlalchemy.sql.schema import ColumnCollectionConstraint
     from strawchemy.graph import Node
 
 
@@ -233,6 +247,24 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             return any(not column.nullable for column in prop.local_columns)
         return False
 
+    def _field_definitions_from_columns(
+        self, model: type[DeclarativeBase], columns: Iterable[Column[Any]], dto_config: DTOConfig
+    ) -> list[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
+        mapper = inspect(model)
+        type_hints = self.get_type_hints(model)
+
+        return [
+            (
+                column.key,
+                self.field_definition(
+                    mapper.attrs[column.key].class_attribute,
+                    dto_config,
+                    type_hint=type_hints.get(column.key, DTO_MISSING),
+                ),
+            )
+            for column in columns
+        ]
+
     @classmethod
     def pk_attributes(cls, mapper: Mapper[Any]) -> list[QueryableAttribute[Any]]:
         return [mapper.attrs[column.key].class_attribute for column in mapper.primary_key]
@@ -325,17 +357,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         self, model: type[DeclarativeBase], dto_config: DTOConfig
     ) -> list[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
         mapper = inspect(model)
-        type_hints = self.get_type_hints(model)
-
-        return [
-            (
-                pk.key,
-                self.field_definition(
-                    mapper.attrs[pk.key].class_attribute, dto_config, type_hint=type_hints.get(pk.key, DTO_MISSING)
-                ),
-            )
-            for pk in mapper.primary_key
-        ]
+        return self._field_definitions_from_columns(model, mapper.primary_key, dto_config)
 
     @override
     def relation_model(self, model_field: QueryableAttribute[Any]) -> type[DeclarativeBase]:
@@ -397,3 +419,12 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         if not self._is_relationship(model_field.property):
             return False
         return any(self._relationship_required(relationship) for relationship in model_field.property._reverse_property)  # noqa: SLF001
+
+    def unique_constraints(self, model: type[DeclarativeBase]) -> list[ColumnCollectionConstraint | Index]:
+        if not isinstance(model.__table__, Table):
+            return []
+        return [
+            constraint
+            for constraint in model.__table__.constraints
+            if isinstance(constraint, PrimaryKeyConstraint | UniqueConstraint | postgresql.ExcludeConstraint | Index)
+        ]

@@ -10,6 +10,7 @@ from strawchemy.dto.utils import PRIVATE, READ_ONLY
 from sqlalchemy import (
     ARRAY,
     JSON,
+    VARCHAR,
     Date,
     DateTime,
     Double,
@@ -20,6 +21,7 @@ from sqlalchemy import (
     Sequence,
     Text,
     Time,
+    UniqueConstraint,
 )
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.ext.declarative import declared_attr
@@ -123,7 +125,7 @@ class DerivedProduct(Base):
 class Fruit(Base):
     __tablename__ = "fruit"
 
-    name: Mapped[str] = mapped_column(Text)
+    name: Mapped[str] = mapped_column(VARCHAR(255))
     color_id: Mapped[int | None] = mapped_column(ForeignKey("color.id"), nullable=True, default=None)
     color: Mapped[Color | None] = relationship("Color", back_populates="fruits")
     farms: Mapped[list[FruitFarm]] = relationship(FruitFarm)
@@ -135,6 +137,8 @@ class Fruit(Base):
     water_percent: Mapped[float] = mapped_column(Double)
     best_time_to_pick: Mapped[time] = mapped_column(TimeType, default=time(hour=9))
 
+    __table_args__ = (UniqueConstraint(name),)
+
     @hybrid_property
     def description(self) -> str:
         return f"The {self.name} color id is {self.color_id}"
@@ -144,7 +148,9 @@ class Color(Base):
     __tablename__ = "color"
 
     fruits: Mapped[list[Fruit]] = relationship("Fruit", back_populates="color")
-    name: Mapped[str] = mapped_column(Text)
+    name: Mapped[str] = mapped_column(VARCHAR(255))
+
+    __table_args__ = (UniqueConstraint(name),)
 
 
 class Group(Base):

@@ -16,13 +16,13 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def raw_colors() -> RawRecordData:
+def raw_users() -> RawRecordData:
     return [
-        {"id": 1, "name": "Red"},
-        {"id": 2, "name": "Red"},
-        {"id": 3, "name": "Orange"},
-        {"id": 4, "name": "Orange"},
-        {"id": 5, "name": "Pink"},
+        {"id": 1, "name": "Alice", "group_id": None, "bio": None},
+        {"id": 2, "name": "Alice", "group_id": None, "bio": None},
+        {"id": 3, "name": "Charlie", "group_id": None, "bio": None},
+        {"id": 4, "name": "Charlie", "group_id": None, "bio": None},
+        {"id": 4, "name": "Bob", "group_id": None, "bio": None},
     ]
 
 
@@ -39,12 +39,12 @@ async def test_distinct_on(
     deterministic_ordering: bool,
 ) -> None:
     config.deterministic_ordering = deterministic_ordering
-    result = await maybe_async(any_query("{ colors(distinctOn: [name]) { id name } }"))
+    result = await maybe_async(any_query("{ users(distinctOn: [name]) { id name } }"))
     assert not result.errors
     assert result.data
 
     expected = [{"id": 1, "name": "Red"}, {"id": 3, "name": "Orange"}, {"id": 5, "name": "Pink"}]
-    assert all(color in result.data["colors"] for color in expected)
+    assert all(user in result.data["users"] for user in expected)
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
@@ -55,13 +55,13 @@ async def test_distinct_and_order_by(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     result = await maybe_async(
-        any_query("{ colors(distinctOn: [name], orderBy: [{name: ASC}, {id: DESC}]) { id name } }")
+        any_query("{ users(distinctOn: [name], orderBy: [{name: ASC}, {id: DESC}]) { id name } }")
     )
     assert not result.errors
     assert result.data
 
     expected = [{"id": 2, "name": "Red"}, {"id": 4, "name": "Orange"}, {"id": 5, "name": "Pink"}]
-    assert all(color in result.data["colors"] for color in expected)
+    assert all(user in result.data["users"] for user in expected)
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

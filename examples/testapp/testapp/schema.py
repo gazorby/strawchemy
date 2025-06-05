@@ -16,6 +16,7 @@ from .types import (
     TicketPartial,
     TicketType,
     TicketUpdate,
+    TicketUpsertFields,
     strawchemy,
 )
 
@@ -37,6 +38,9 @@ class Mutation:
         TicketCreate, validation=PydanticValidation(TicketCreateValidation)
     )
     create_tickets: list[TicketType] = strawchemy.create(TicketCreate)
+    upsert_ticket: TicketType = strawchemy.upsert(
+        TicketCreate, upsert_fields=TicketUpsertFields, filter_input=TicketFilter
+    )
 
     create_project: ProjectType = strawchemy.create(ProjectCreate)
     create_projects: list[ProjectType] = strawchemy.create(ProjectCreate)

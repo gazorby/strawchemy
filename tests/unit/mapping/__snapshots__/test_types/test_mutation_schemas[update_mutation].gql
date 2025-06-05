@@ -317,22 +317,41 @@
     distinct: Boolean = false
   }
   
+  """Update fields enum"""
+  enum GroupColorConflictFields {
+    id
+  }
+  
   """Identifier input"""
   input GroupColorIdFieldsInput {
     id: UUID!
   }
   
   """Add a new or existing object"""
-  input GroupColorIdFieldsInputGroupColorInputRequiredToOneInput {
+  input GroupColorIdFieldsInputGroupColorInputGroupColorUpdateFieldsGroupColorConflictFieldsRequiredToOneInput {
     set: GroupColorIdFieldsInput
     create: GroupColorInput
+    upsert: GroupColorIdFieldsInputGroupColorInputGroupColorUpdateFieldsGroupColorConflictFieldsToOneUpsertInput
+  }
+  
+  """Add new object or update if existing"""
+  input GroupColorIdFieldsInputGroupColorInputGroupColorUpdateFieldsGroupColorConflictFieldsToOneUpsertInput {
+    create: GroupColorInput!
+    conflictFields: GroupColorConflictFields
+    updateFields: [GroupColorUpdateFields!]
   }
   
   """GraphQL update_by_pk input type"""
   input GroupColorInput {
-    fruits: GroupFruitsIdFieldsInputGroupFruitInputToManyUpdateInput
+    fruits: GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyUpdateInput
     name: String
     id: UUID!
+  }
+  
+  """Update fields enum"""
+  enum GroupColorUpdateFields {
+    name
+    id
   }
   
   enum GroupCountFields {
@@ -368,17 +387,38 @@
     id: UUID!
   }
   
+  """Update fields enum"""
+  enum GroupFruitsConflictFields {
+    id
+  }
+  
   """Identifier input"""
   input GroupFruitsIdFieldsInput {
     id: UUID!
   }
   
   """Add new objects or update existing ones"""
-  input GroupFruitsIdFieldsInputGroupFruitInputToManyUpdateInput {
+  input GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyUpdateInput {
     set: [GroupFruitsIdFieldsInput!]
     add: [GroupFruitsIdFieldsInput!]
     create: [GroupFruitInput!]
+    upsert: GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyUpsertInput
     remove: [GroupFruitsIdFieldsInput!]
+  }
+  
+  """Add new objects or update if existing"""
+  input GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyUpsertInput {
+    create: [GroupFruitInput!]!
+    conflictFields: GroupFruitsConflictFields!
+    updateFields: [GroupFruitsUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum GroupFruitsUpdateFields {
+    name
+    colorId
+    sweetness
+    id
   }
   
   """GraphQL type"""
@@ -392,9 +432,9 @@
   
   """GraphQL update_by_filter input type"""
   input GroupPartial {
-    tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput
-    users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
-    color: GroupColorIdFieldsInputGroupColorInputRequiredToOneInput
+    tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsRequiredToOneInput
+    users: GroupUsersIdFieldsInputGroupUserInputGroupUsersUpdateFieldsGroupUsersConflictFieldsToManyUpdateInput
+    color: GroupColorIdFieldsInputGroupColorInputGroupColorUpdateFieldsGroupColorConflictFieldsRequiredToOneInput
     name: String
     id: UUID
   }
@@ -408,27 +448,47 @@
     name
   }
   
+  """Update fields enum"""
+  enum GroupTagConflictFields {
+    id
+  }
+  
   """Identifier input"""
   input GroupTagIdFieldsInput {
     id: UUID!
   }
   
   """Add a new or existing object"""
-  input GroupTagIdFieldsInputGroupTagInputRequiredToOneInput {
+  input GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsRequiredToOneInput {
     set: GroupTagIdFieldsInput
     create: GroupTagInput
+    upsert: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneUpsertInput
   }
   
   """Add a new or existing object"""
-  input GroupTagIdFieldsInputGroupTagInputToOneInput {
+  input GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneInput {
     set: GroupTagIdFieldsInput
     create: GroupTagInput
+    upsert: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneUpsertInput
+  }
+  
+  """Add new object or update if existing"""
+  input GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneUpsertInput {
+    create: GroupTagInput!
+    conflictFields: GroupTagConflictFields
+    updateFields: [GroupTagUpdateFields!]
   }
   
   """GraphQL update_by_pk input type"""
   input GroupTagInput {
     name: String
     id: UUID!
+  }
+  
+  """Update fields enum"""
+  enum GroupTagUpdateFields {
+    name
+    id
   }
   
   """GraphQL type"""
@@ -447,18 +507,23 @@
   
   """GraphQL update_by_pk input type"""
   input GroupUpdate {
-    tag: GroupTagIdFieldsInputGroupTagInputRequiredToOneInput
-    users: GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput
-    color: GroupColorIdFieldsInputGroupColorInputRequiredToOneInput
+    tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsRequiredToOneInput
+    users: GroupUsersIdFieldsInputGroupUserInputGroupUsersUpdateFieldsGroupUsersConflictFieldsToManyUpdateInput
+    color: GroupColorIdFieldsInputGroupColorInputGroupColorUpdateFieldsGroupColorConflictFieldsRequiredToOneInput
     name: String
     id: UUID!
   }
   
   """GraphQL update_by_pk input type"""
   input GroupUserInput {
-    tag: GroupTagIdFieldsInputGroupTagInputToOneInput
+    tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneInput
     name: String
     id: UUID!
+  }
+  
+  """Update fields enum"""
+  enum GroupUsersConflictFields {
+    id
   }
   
   """Identifier input"""
@@ -467,11 +532,27 @@
   }
   
   """Add new objects or update existing ones"""
-  input GroupUsersIdFieldsInputGroupUserInputToManyUpdateInput {
+  input GroupUsersIdFieldsInputGroupUserInputGroupUsersUpdateFieldsGroupUsersConflictFieldsToManyUpdateInput {
     set: [GroupUsersIdFieldsInput!]
     add: [GroupUsersIdFieldsInput!]
     create: [GroupUserInput!]
+    upsert: GroupUsersIdFieldsInputGroupUserInputGroupUsersUpdateFieldsGroupUsersConflictFieldsToManyUpsertInput
     remove: [GroupUsersIdFieldsInput!]
+  }
+  
+  """Add new objects or update if existing"""
+  input GroupUsersIdFieldsInputGroupUserInputGroupUsersUpdateFieldsGroupUsersConflictFieldsToManyUpsertInput {
+    create: [GroupUserInput!]!
+    conflictFields: GroupUsersConflictFields!
+    updateFields: [GroupUsersUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum GroupUsersUpdateFields {
+    name
+    groupId
+    tagId
+    id
   }
   
   """
@@ -608,22 +689,41 @@
     id: UUIDGenericComparison
   }
   
+  """Update fields enum"""
+  enum TagColorConflictFields {
+    id
+  }
+  
   """Identifier input"""
   input TagColorIdFieldsInput {
     id: UUID!
   }
   
   """Add a new or existing object"""
-  input TagColorIdFieldsInputTagColorInputRequiredToOneInput {
+  input TagColorIdFieldsInputTagColorInputTagColorUpdateFieldsTagColorConflictFieldsRequiredToOneInput {
     set: TagColorIdFieldsInput
     create: TagColorInput
+    upsert: TagColorIdFieldsInputTagColorInputTagColorUpdateFieldsTagColorConflictFieldsToOneUpsertInput
+  }
+  
+  """Add new object or update if existing"""
+  input TagColorIdFieldsInputTagColorInputTagColorUpdateFieldsTagColorConflictFieldsToOneUpsertInput {
+    create: TagColorInput!
+    conflictFields: TagColorConflictFields
+    updateFields: [TagColorUpdateFields!]
   }
   
   """GraphQL update_by_pk input type"""
   input TagColorInput {
-    fruits: TagFruitsIdFieldsInputTagFruitInputToManyUpdateInput
+    fruits: TagFruitsIdFieldsInputTagFruitInputTagFruitsUpdateFieldsTagFruitsConflictFieldsToManyUpdateInput
     name: String
     id: UUID!
+  }
+  
+  """Update fields enum"""
+  enum TagColorUpdateFields {
+    name
+    id
   }
   
   enum TagCountFields {
@@ -638,25 +738,51 @@
     id: UUID!
   }
   
+  """Update fields enum"""
+  enum TagFruitsConflictFields {
+    id
+  }
+  
   """Identifier input"""
   input TagFruitsIdFieldsInput {
     id: UUID!
   }
   
   """Add new objects or update existing ones"""
-  input TagFruitsIdFieldsInputTagFruitInputToManyUpdateInput {
+  input TagFruitsIdFieldsInputTagFruitInputTagFruitsUpdateFieldsTagFruitsConflictFieldsToManyUpdateInput {
     set: [TagFruitsIdFieldsInput!]
     add: [TagFruitsIdFieldsInput!]
     create: [TagFruitInput!]
+    upsert: TagFruitsIdFieldsInputTagFruitInputTagFruitsUpdateFieldsTagFruitsConflictFieldsToManyUpsertInput
     remove: [TagFruitsIdFieldsInput!]
+  }
+  
+  """Add new objects or update if existing"""
+  input TagFruitsIdFieldsInputTagFruitInputTagFruitsUpdateFieldsTagFruitsConflictFieldsToManyUpsertInput {
+    create: [TagFruitInput!]!
+    conflictFields: TagFruitsConflictFields!
+    updateFields: [TagFruitsUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum TagFruitsUpdateFields {
+    name
+    colorId
+    sweetness
+    id
   }
   
   """GraphQL update_by_pk input type"""
   input TagGroupInput {
-    users: TagUsersIdFieldsInputTagUserInputToManyUpdateInput
-    color: TagColorIdFieldsInputTagColorInputRequiredToOneInput
+    users: TagUsersIdFieldsInputTagUserInputTagUsersUpdateFieldsTagUsersConflictFieldsToManyUpdateInput
+    color: TagColorIdFieldsInputTagColorInputTagColorUpdateFieldsTagColorConflictFieldsRequiredToOneInput
     name: String
     id: UUID!
+  }
+  
+  """Update fields enum"""
+  enum TagGroupsConflictFields {
+    id
   }
   
   """Identifier input"""
@@ -665,10 +791,26 @@
   }
   
   """Add new objects or update existing ones"""
-  input TagGroupsIdFieldsInputTagGroupInputRequiredToManyUpdateInput {
+  input TagGroupsIdFieldsInputTagGroupInputTagGroupsUpdateFieldsTagGroupsConflictFieldsRequiredToManyUpdateInput {
     set: [TagGroupsIdFieldsInput!]
     add: [TagGroupsIdFieldsInput!]
     create: [TagGroupInput!]
+    upsert: TagGroupsIdFieldsInputTagGroupInputTagGroupsUpdateFieldsTagGroupsConflictFieldsToManyUpsertInput
+  }
+  
+  """Add new objects or update if existing"""
+  input TagGroupsIdFieldsInputTagGroupInputTagGroupsUpdateFieldsTagGroupsConflictFieldsToManyUpsertInput {
+    create: [TagGroupInput!]!
+    conflictFields: TagGroupsConflictFields!
+    updateFields: [TagGroupsUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum TagGroupsUpdateFields {
+    name
+    tagId
+    colorId
+    id
   }
   
   enum TagMinMaxStringFieldsEnum {
@@ -679,15 +821,34 @@
     name
   }
   
+  """Update fields enum"""
+  enum TagTagConflictFields {
+    id
+  }
+  
   """Identifier input"""
   input TagTagIdFieldsInput {
     id: UUID!
   }
   
   """Add a new or existing object"""
-  input TagTagIdFieldsInputTagUpdateToOneInput {
+  input TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneInput {
     set: TagTagIdFieldsInput
     create: TagUpdate
+    upsert: TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneUpsertInput
+  }
+  
+  """Add new object or update if existing"""
+  input TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneUpsertInput {
+    create: TagUpdate!
+    conflictFields: TagTagConflictFields
+    updateFields: [TagTagUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum TagTagUpdateFields {
+    name
+    id
   }
   
   """GraphQL type"""
@@ -702,16 +863,21 @@
   
   """GraphQL update_by_pk input type"""
   input TagUpdate {
-    groups: TagGroupsIdFieldsInputTagGroupInputRequiredToManyUpdateInput
+    groups: TagGroupsIdFieldsInputTagGroupInputTagGroupsUpdateFieldsTagGroupsConflictFieldsRequiredToManyUpdateInput
     name: String
     id: UUID!
   }
   
   """GraphQL update_by_pk input type"""
   input TagUserInput {
-    tag: TagTagIdFieldsInputTagUpdateToOneInput
+    tag: TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneInput
     name: String
     id: UUID!
+  }
+  
+  """Update fields enum"""
+  enum TagUsersConflictFields {
+    id
   }
   
   """Identifier input"""
@@ -720,11 +886,27 @@
   }
   
   """Add new objects or update existing ones"""
-  input TagUsersIdFieldsInputTagUserInputToManyUpdateInput {
+  input TagUsersIdFieldsInputTagUserInputTagUsersUpdateFieldsTagUsersConflictFieldsToManyUpdateInput {
     set: [TagUsersIdFieldsInput!]
     add: [TagUsersIdFieldsInput!]
     create: [TagUserInput!]
+    upsert: TagUsersIdFieldsInputTagUserInputTagUsersUpdateFieldsTagUsersConflictFieldsToManyUpsertInput
     remove: [TagUsersIdFieldsInput!]
+  }
+  
+  """Add new objects or update if existing"""
+  input TagUsersIdFieldsInputTagUserInputTagUsersUpdateFieldsTagUsersConflictFieldsToManyUpsertInput {
+    create: [TagUserInput!]!
+    conflictFields: TagUsersConflictFields!
+    updateFields: [TagUsersUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum TagUsersUpdateFields {
+    name
+    groupId
+    tagId
+    id
   }
   
   """

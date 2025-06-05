@@ -1,17 +1,3 @@
-"""This module defines factories for creating GraphQL DTOs (Data Transfer Objects).
-
-It includes factories for:
-- Aggregate DTOs
-- Aggregate Filter DTOs
-- OrderBy DTOs
-- Type DTOs
-- Filter DTOs
-- Enum DTOs
-
-These factories are used to generate DTOs that are compatible with GraphQL schemas,
-allowing for efficient data transfer and filtering in GraphQL queries.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Iterable
@@ -20,14 +6,7 @@ from types import new_class
 from typing import TYPE_CHECKING, Any, TypeVar, cast, override
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from strawchemy.dto.base import (
-    DTOBackend,
-    DTOBase,
-    DTOFactory,
-    DTOFieldDefinition,
-    ModelInspector,
-    Relation,
-)
+from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, ModelInspector, Relation
 from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
 from strawchemy.strawberry.dto import EnumDTO, GraphQLFieldDefinition
 from strawchemy.utils import snake_to_lower_camel_case
@@ -138,6 +117,29 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
         return super().decorator(
             model,
             purpose,
+            include=include,
+            exclude=exclude,
+            partial=partial,
+            aliases=aliases,
+            alias_generator=alias_generator,
+            type_map=type_map,
+            **kwargs,
+        )
+
+    def input(
+        self,
+        model: type[DeclarativeBase],
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool | None = None,
+        type_map: Mapping[Any, Any] | None = None,
+        aliases: Mapping[str, str] | None = None,
+        alias_generator: Callable[[str], str] | None = None,
+        **kwargs: Any,
+    ) -> Callable[[type[Any]], type[EnumDTO]]:
+        return super().decorator(
+            model,
+            Purpose.WRITE,
             include=include,
             exclude=exclude,
             partial=partial,
