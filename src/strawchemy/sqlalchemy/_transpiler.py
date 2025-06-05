@@ -706,7 +706,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             query.order_by = self._order_by(query_graph.order_by_nodes, query.joins)
             query.joins.extend(query.order_by.joins)
             if distinct_on_rank:
-                query.where = Where.from_expressions(subquery_builder.distinct_on_condition())
+                query.where = Where.from_expressions(subquery_builder.distinct_on_condition(subquery_alias))
             elif query.where:
                 query.where.clear_expressions()
         else:

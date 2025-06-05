@@ -428,8 +428,8 @@ class SubqueryBuilder(Generic[DeclarativeT]):
     def _distinct_on_rank_column(self) -> str:
         return self.scope.key("distinct_on_rank")
 
-    def distinct_on_condition(self) -> ColumnElement[bool]:
-        return self.scope.literal_column(self.name, self._distinct_on_rank_column) == 1
+    def distinct_on_condition(self, aliased_subquery: AliasedClass[DeclarativeT]) -> ColumnElement[bool]:
+        return inspect(aliased_subquery).selectable.columns[self._distinct_on_rank_column] == 1
 
     @property
     def name(self) -> str:

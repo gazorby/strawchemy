@@ -485,7 +485,7 @@ class QueryScope(Generic[DeclarativeT]):
         return columns
 
     def literal_column(self, from_name: str, column_name: str) -> Label[Any]:
-        return literal_column(f"{from_name}.{column_name}").label(self._add_scope_id(column_name))
+        return literal_column(f"{(from_name)}.{column_name}").label(self._add_scope_id(column_name))
 
     def set_relation_alias(
         self,

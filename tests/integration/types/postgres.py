@@ -107,6 +107,10 @@ class UserCreate: ...
 class UserUpdateInput: ...
 
 
+@strawchemy.distinct_on(User, include="all")
+class UserDistinctOn: ...
+
+
 # Fruit
 
 
@@ -362,7 +366,10 @@ class AsyncQuery:
     # User
     user: UserType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
     users: list[UserType] = strawchemy.field(
-        filter_input=UserFilter, order_by=UserOrderBy, repository_type=StrawchemyAsyncRepository
+        filter_input=UserFilter,
+        order_by=UserOrderBy,
+        repository_type=StrawchemyAsyncRepository,
+        distinct_on=UserDistinctOn,
     )
 
     # Custom resolvers
@@ -444,7 +451,10 @@ class SyncQuery:
     # User
     user: UserType = strawchemy.field(repository_type=StrawchemySyncRepository)
     users: list[UserType] = strawchemy.field(
-        filter_input=UserFilter, order_by=UserOrderBy, repository_type=StrawchemySyncRepository
+        filter_input=UserFilter,
+        order_by=UserOrderBy,
+        repository_type=StrawchemySyncRepository,
+        distinct_on=UserDistinctOn,
     )
 
     # Custom resolvers

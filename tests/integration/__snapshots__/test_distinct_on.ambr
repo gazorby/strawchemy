@@ -1,116 +1,116 @@
 # serializer version: 1
 # name: test_distinct_and_order_by[session-tracked-async-aiosqlite_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT user.name,
+         user.id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 color.name AS name__1,
-                 color.id AS id__1,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, color.id DESC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.name ASC,
-                    color.id DESC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = ?
-   ORDER BY color.name ASC,
-            color.id DESC
+          SELECT user.id AS id,
+                 user.name AS name,
+                 user.name AS name__1,
+                 user.id AS id__1,
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS __strawchemy_distinct_on_rank_0
+            FROM USER AS USER
+           ORDER BY user.name ASC,
+                    user.id DESC
+         ) AS USER
+   WHERE user.__strawchemy_distinct_on_rank_0 = ?
+   ORDER BY user.name ASC,
+            user.id DESC
   '''
 # ---
 # name: test_distinct_and_order_by[session-tracked-async-asyncmy_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT user.name,
+         user.id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 color.name AS name__1,
-                 color.id AS id__1,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, color.id DESC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.name ASC,
-                    color.id DESC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = %s
-   ORDER BY color.name ASC,
-            color.id DESC
+          SELECT user.id AS id,
+                 user.name AS name,
+                 user.name AS name__1,
+                 user.id AS id__1,
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS __strawchemy_distinct_on_rank_0
+            FROM USER AS USER
+           ORDER BY user.name ASC,
+                    user.id DESC
+         ) AS USER
+   WHERE user.__strawchemy_distinct_on_rank_0 = %s
+   ORDER BY user.name ASC,
+            user.id DESC
   '''
 # ---
 # name: test_distinct_and_order_by[session-tracked-async-asyncpg_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT "user".name,
+         "user".id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 color.name AS name__1,
-                 color.id AS id__1,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, color.id DESC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.name ASC,
-                    color.id DESC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = $1::INTEGER
-   ORDER BY color.name ASC,
-            color.id DESC
+          SELECT "user".id AS id,
+                 "user".name AS name,
+                 "user".name AS name__1,
+                 "user".id AS id__1,
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS __strawchemy_distinct_on_rank_0
+            FROM "user" AS "user"
+           ORDER BY "user".name ASC,
+                    "user".id DESC
+         ) AS "user"
+   WHERE "user".__strawchemy_distinct_on_rank_0 = $1::INTEGER
+   ORDER BY "user".name ASC,
+            "user".id DESC
   '''
 # ---
 # name: test_distinct_and_order_by[session-tracked-async-psycopg_async_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT "user".name,
+         "user".id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 color.name AS name__1,
-                 color.id AS id__1,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, color.id DESC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.name ASC,
-                    color.id DESC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = %(param_1)s::INTEGER
-   ORDER BY color.name ASC,
-            color.id DESC
+          SELECT "user".id AS id,
+                 "user".name AS name,
+                 "user".name AS name__1,
+                 "user".id AS id__1,
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS __strawchemy_distinct_on_rank_0
+            FROM "user" AS "user"
+           ORDER BY "user".name ASC,
+                    "user".id DESC
+         ) AS "user"
+   WHERE "user".__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   ORDER BY "user".name ASC,
+            "user".id DESC
   '''
 # ---
 # name: test_distinct_and_order_by[session-tracked-sync-psycopg_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT "user".name,
+         "user".id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 color.name AS name__1,
-                 color.id AS id__1,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, color.id DESC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.name ASC,
-                    color.id DESC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = %(param_1)s::INTEGER
-   ORDER BY color.name ASC,
-            color.id DESC
+          SELECT "user".id AS id,
+                 "user".name AS name,
+                 "user".name AS name__1,
+                 "user".id AS id__1,
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS __strawchemy_distinct_on_rank_0
+            FROM "user" AS "user"
+           ORDER BY "user".name ASC,
+                    "user".id DESC
+         ) AS "user"
+   WHERE "user".__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   ORDER BY "user".name ASC,
+            "user".id DESC
   '''
 # ---
 # name: test_distinct_and_order_by[session-tracked-sync-sqlite_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT user.name,
+         user.id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 color.name AS name__1,
-                 color.id AS id__1,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, color.id DESC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.name ASC,
-                    color.id DESC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = ?
-   ORDER BY color.name ASC,
-            color.id DESC
+          SELECT user.id AS id,
+                 user.name AS name,
+                 user.name AS name__1,
+                 user.id AS id__1,
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS __strawchemy_distinct_on_rank_0
+            FROM USER AS USER
+           ORDER BY user.name ASC,
+                    user.id DESC
+         ) AS USER
+   WHERE user.__strawchemy_distinct_on_rank_0 = ?
+   ORDER BY user.name ASC,
+            user.id DESC
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-asyncmy_engine]
@@ -145,104 +145,104 @@
 # ---
 # name: test_distinct_on[session-tracked-async-deterministic-ordering-aiosqlite_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT user.name,
+         user.id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.id ASC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = ?
-   ORDER BY color.id ASC
+          SELECT user.id AS id,
+                 user.name AS name,
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM USER AS USER
+           ORDER BY user.id ASC
+         ) AS USER
+   WHERE user.__strawchemy_distinct_on_rank_0 = ?
+   ORDER BY user.id ASC
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-deterministic-ordering-asyncmy_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT user.name,
+         user.id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.id ASC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = %s
-   ORDER BY color.id ASC
+          SELECT user.id AS id,
+                 user.name AS name,
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM USER AS USER
+           ORDER BY user.id ASC
+         ) AS USER
+   WHERE user.__strawchemy_distinct_on_rank_0 = %s
+   ORDER BY user.id ASC
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-deterministic-ordering-asyncpg_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT "user".name,
+         "user".id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.id ASC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = $1::INTEGER
-   ORDER BY color.id ASC
+          SELECT "user".id AS id,
+                 "user".name AS name,
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM "user" AS "user"
+           ORDER BY "user".id ASC
+         ) AS "user"
+   WHERE "user".__strawchemy_distinct_on_rank_0 = $1::INTEGER
+   ORDER BY "user".id ASC
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-deterministic-ordering-psycopg_async_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT "user".name,
+         "user".id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.id ASC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = %(param_1)s::INTEGER
-   ORDER BY color.id ASC
+          SELECT "user".id AS id,
+                 "user".name AS name,
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM "user" AS "user"
+           ORDER BY "user".id ASC
+         ) AS "user"
+   WHERE "user".__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   ORDER BY "user".id ASC
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-non-deterministic-ordering-aiosqlite_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT user.name,
+         user.id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = ?
+          SELECT user.id AS id,
+                 user.name AS name,
+                 row_number() OVER (PARTITION BY user.name) AS __strawchemy_distinct_on_rank_0
+            FROM USER AS USER
+         ) AS USER
+   WHERE user.__strawchemy_distinct_on_rank_0 = ?
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-non-deterministic-ordering-asyncmy_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT user.name,
+         user.id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = %s
+          SELECT user.id AS id,
+                 user.name AS name,
+                 row_number() OVER (PARTITION BY user.name) AS __strawchemy_distinct_on_rank_0
+            FROM USER AS USER
+         ) AS USER
+   WHERE user.__strawchemy_distinct_on_rank_0 = %s
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-non-deterministic-ordering-asyncpg_engine]
   '''
   SELECT DISTINCT
-      ON (color.name) color.name,
-         color.id
-    FROM color AS color
+      ON ("user".name) "user".name,
+         "user".id
+    FROM "user" AS "user"
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-non-deterministic-ordering-psycopg_async_engine]
   '''
   SELECT DISTINCT
-      ON (color.name) color.name,
-         color.id
-    FROM color AS color
+      ON ("user".name) "user".name,
+         "user".id
+    FROM "user" AS "user"
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-psycopg_async_engine]
@@ -262,53 +262,53 @@
 # ---
 # name: test_distinct_on[session-tracked-sync-deterministic-ordering-psycopg_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT "user".name,
+         "user".id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.id ASC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = %(param_1)s::INTEGER
-   ORDER BY color.id ASC
+          SELECT "user".id AS id,
+                 "user".name AS name,
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM "user" AS "user"
+           ORDER BY "user".id ASC
+         ) AS "user"
+   WHERE "user".__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   ORDER BY "user".id ASC
   '''
 # ---
 # name: test_distinct_on[session-tracked-sync-deterministic-ordering-sqlite_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT user.name,
+         user.id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.id ASC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = ?
-   ORDER BY color.id ASC
+          SELECT user.id AS id,
+                 user.name AS name,
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM USER AS USER
+           ORDER BY user.id ASC
+         ) AS USER
+   WHERE user.__strawchemy_distinct_on_rank_0 = ?
+   ORDER BY user.id ASC
   '''
 # ---
 # name: test_distinct_on[session-tracked-sync-non-deterministic-ordering-psycopg_engine]
   '''
   SELECT DISTINCT
-      ON (color.name) color.name,
-         color.id
-    FROM color AS color
+      ON ("user".name) "user".name,
+         "user".id
+    FROM "user" AS "user"
   '''
 # ---
 # name: test_distinct_on[session-tracked-sync-non-deterministic-ordering-sqlite_engine]
   '''
-  SELECT color.name,
-         color.id
+  SELECT user.name,
+         user.id
     FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = ?
+          SELECT user.id AS id,
+                 user.name AS name,
+                 row_number() OVER (PARTITION BY user.name) AS __strawchemy_distinct_on_rank_0
+            FROM USER AS USER
+         ) AS USER
+   WHERE user.__strawchemy_distinct_on_rank_0 = ?
   '''
 # ---
 # name: test_distinct_on[session-tracked-sync-psycopg_engine]

@@ -22,7 +22,7 @@ def raw_users() -> RawRecordData:
         {"id": 2, "name": "Alice", "group_id": None, "bio": None},
         {"id": 3, "name": "Charlie", "group_id": None, "bio": None},
         {"id": 4, "name": "Charlie", "group_id": None, "bio": None},
-        {"id": 4, "name": "Bob", "group_id": None, "bio": None},
+        {"id": 5, "name": "Bob", "group_id": None, "bio": None},
     ]
 
 
@@ -43,7 +43,8 @@ async def test_distinct_on(
     assert not result.errors
     assert result.data
 
-    expected = [{"id": 1, "name": "Red"}, {"id": 3, "name": "Orange"}, {"id": 5, "name": "Pink"}]
+    expected = [{"id": 1, "name": "Alice"}, {"id": 3, "name": "Charlie"}, {"id": 5, "name": "Bob"}]
+    assert len(result.data["users"]) == len(expected)
     assert all(user in result.data["users"] for user in expected)
 
     assert query_tracker.query_count == 1
@@ -60,8 +61,7 @@ async def test_distinct_and_order_by(
     assert not result.errors
     assert result.data
 
-    expected = [{"id": 2, "name": "Red"}, {"id": 4, "name": "Orange"}, {"id": 5, "name": "Pink"}]
-    assert all(user in result.data["users"] for user in expected)
+    assert result.data["users"] == [{"id": 2, "name": "Alice"}, {"id": 5, "name": "Bob"}, {"id": 4, "name": "Charlie"}]
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
