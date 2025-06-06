@@ -2537,6 +2537,7 @@ test = [
     { name = "pytest-xdist" },
     { name = "sqlparse" },
     { name = "syrupy" },
+    { name = "testapp" },
 ]
 
 [package.metadata]
@@ -2619,6 +2620,7 @@ test = [
     { name = "pytest-xdist" },
     { name = "sqlparse" },
     { name = "syrupy" },
+    { name = "testapp", editable = "examples/testapp" },
 ]
 
 [[package]]
