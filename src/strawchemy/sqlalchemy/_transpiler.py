@@ -22,7 +22,22 @@ from collections import defaultdict
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generic, Self, cast, override
 
-from sqlalchemy import Dialect, Label, Select, and_, func, inspect, not_, null, or_, select, true
+from sqlalchemy import (
+    Dialect,
+    Label,
+    Select,
+    and_,
+    column,
+    func,
+    inspect,
+    literal_column,
+    not_,
+    null,
+    or_,
+    select,
+    text,
+    true,
+)
 from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
 from sqlalchemy.sql.elements import ColumnElement
 from strawchemy.constants import AGGREGATIONS_KEY
@@ -125,6 +140,11 @@ class QueryTranspiler(Generic[DeclarativeT]):
             yield self
         finally:
             self.scope = current_scope
+
+    def _literal_column(self, from_name: str, column_name: str) -> Label[Any]:
+        # Trick to properly render "table.column_name" using quote when needed
+        temp_statement = select(column(column_name)).select_from(text(from_name)).alias(from_name)
+        return literal_column(str(temp_statement.c[column_name])).label(column_name)
 
     def _filter_to_expressions(
         self,
@@ -273,7 +293,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
                 join.subquery_alias, distinct=aggregation.distinct
             )
             _, created = join.upsert_column_to_subquery(function)
-            function_column = self.scope.literal_column(join.name, self.scope.key(function_node))
+            function_column = self.scope.scoped_column(join.selectable, self.scope.key(function_node))
             if created:
                 self.scope.columns[function_node] = function_column
                 self.scope.where_function_nodes.add(function_node)
@@ -283,26 +303,33 @@ class QueryTranspiler(Generic[DeclarativeT]):
         function_node, function = aggregation_node_inspect.filter_function(
             aggregated_alias, distinct=aggregation.distinct
         )
-        function_column = self.scope.literal_column(aggregation_name, self.scope.key(function_node))
-        bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
-        self.scope.columns[function_node] = function_column
-        self.scope.where_function_nodes.add(function_node)
 
         if self._inspector.db_features.supports_lateral:
-            statement = select(function).where(root_relation.expression).select_from(aggregated_alias_inspected)
+            statement = (
+                select(function)
+                .where(root_relation.expression)
+                .select_from(aggregated_alias_inspected)
+                .lateral(aggregation_name)
+            )
             join = AggregationJoin(
-                target=statement.lateral(aggregation_name),
+                target=statement,
                 onclause=true(),
                 node=aggregation_node,
                 subquery_alias=aggregated_alias,
             )
         else:
+            statement = select(function).select_from(aggregated_alias_inspected)
             join = self._aggregation_cte_join(
                 node=aggregation_node,
                 alias=aggregated_alias,
-                statement=select(function).select_from(aggregated_alias_inspected),
+                statement=statement,
                 cte_name=aggregation_name,
             )
+
+        function_column = self._literal_column(aggregation_name, self.scope.key(function_node))
+        bool_expressions.extend(aggregation.predicate.to_expressions(self.dialect, function_column))
+        self.scope.columns[function_node] = function_column
+        self.scope.where_function_nodes.add(function_node)
 
         self._aggregation_joins[aggregation_node] = join
         return join, bool_expressions
@@ -339,7 +366,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         if existing_join:
             for node, function in functions.items():
                 _, created = existing_join.upsert_column_to_subquery(function)
-                function_column = self.scope.literal_column(existing_join.name, self.scope.key(node))
+                function_column = self.scope.scoped_column(existing_join.selectable, self.scope.key(node))
                 if created:
                     self.scope.columns[node] = function_column
                 function_columns.append(function_column)
@@ -354,7 +381,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
                     cte_name=self.scope.key(self._aggregation_prefix),
                 )
             for node in functions:
-                function_column = self.scope.literal_column(new_join.name, self.scope.key(node))
+                function_column = self.scope.scoped_column(new_join.selectable, self.scope.key(node))
                 self.scope.columns[node] = function_column
                 function_columns.append(function_column)
 
@@ -483,7 +510,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         self.scope.set_relation_alias(node, "target", cte_alias)
         limit_offset_condition: list[ColumnElement[bool]] = []
         if rank_column is not None:
-            rank_column = self.scope.literal_column(name, rank_column.name)
+            rank_column = self.scope.scoped_column(statement, rank_column.name)
             if query.offset is not None:
                 limit_offset_condition.append(rank_column > query.offset)
             if query.limit is not None:
@@ -650,7 +677,10 @@ class QueryTranspiler(Generic[DeclarativeT]):
             elif join.order_nodes:
                 order_by_spec.extend(
                     [
-                        (self.scope.literal_column(join.name, node.value.model_field_name), node.metadata.data.order_by)
+                        (
+                            self.scope.scoped_column(join.selectable, node.value.model_field_name),
+                            node.metadata.data.order_by,
+                        )
                         for node in join.order_nodes
                         if node.metadata.data.order_by
                     ]
