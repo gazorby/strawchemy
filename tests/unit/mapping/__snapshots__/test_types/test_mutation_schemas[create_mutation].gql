@@ -67,7 +67,7 @@
     sum: GroupSumFields!
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum GroupColorConflictFields {
     id
   }
@@ -111,7 +111,7 @@
     id: UUID
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum GroupFruitsConflictFields {
     id
   }
@@ -163,7 +163,7 @@
     name: String
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum GroupTagConflictFields {
     id
   }
@@ -227,7 +227,7 @@
     id: UUID
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum GroupUsersConflictFields {
     id
   }

@@ -8,7 +8,7 @@
     id: UUID
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum ColorFruitsConflictFields {
     id
   }
@@ -71,7 +71,7 @@
     varSamp: FruitNumericFields!
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum FruitColorConflictFields {
     id
   }

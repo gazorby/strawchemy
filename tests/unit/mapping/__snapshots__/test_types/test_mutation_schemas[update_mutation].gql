@@ -317,7 +317,7 @@
     distinct: Boolean = false
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum GroupColorConflictFields {
     id
   }
@@ -387,7 +387,7 @@
     id: UUID!
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum GroupFruitsConflictFields {
     id
   }
@@ -448,7 +448,7 @@
     name
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum GroupTagConflictFields {
     id
   }
@@ -521,7 +521,7 @@
     id: UUID!
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum GroupUsersConflictFields {
     id
   }
@@ -689,7 +689,7 @@
     id: UUIDGenericComparison
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum TagColorConflictFields {
     id
   }
@@ -738,7 +738,7 @@
     id: UUID!
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum TagFruitsConflictFields {
     id
   }
@@ -780,7 +780,7 @@
     id: UUID!
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum TagGroupsConflictFields {
     id
   }
@@ -821,7 +821,7 @@
     name
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum TagTagConflictFields {
     id
   }
@@ -875,7 +875,7 @@
     id: UUID!
   }
   
-  """Update fields enum"""
+  """Conflict fields enum"""
   enum TagUsersConflictFields {
     id
   }

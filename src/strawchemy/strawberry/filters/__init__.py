@@ -8,12 +8,12 @@ from .inputs import (
     GraphQLComparison,
     GraphQLComparisonT,
     GraphQLFilter,
-    JSONComparison,
     OrderComparison,
-    SQLITEJSONComparison,
     TextComparison,
     TimeComparison,
     TimeDeltaComparison,
+    _JSONComparison,
+    _SQLiteJSONComparison,
 )
 
 __all__ = (
@@ -24,10 +24,10 @@ __all__ = (
     "GraphQLComparison",
     "GraphQLComparisonT",
     "GraphQLFilter",
-    "JSONComparison",
     "OrderComparison",
-    "SQLITEJSONComparison",
     "TextComparison",
     "TimeComparison",
     "TimeDeltaComparison",
+    "_JSONComparison",
+    "_SQLiteJSONComparison",
 )

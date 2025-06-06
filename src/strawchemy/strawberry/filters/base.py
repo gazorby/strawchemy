@@ -20,11 +20,11 @@ if TYPE_CHECKING:
         DateTimeComparison,
         EqualityComparison,
         GraphQLComparison,
-        JSONComparison,
         OrderComparison,
         TextComparison,
         TimeComparison,
         TimeDeltaComparison,
+        _JSONComparison,
     )
 
 
@@ -157,7 +157,7 @@ class TextFilter(OrderFilter):
 
 @dataclass(frozen=True)
 class JSONFilter(EqualityFilter):
-    comparison: JSONComparison
+    comparison: _JSONComparison
 
     def _postgres_json(
         self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]
