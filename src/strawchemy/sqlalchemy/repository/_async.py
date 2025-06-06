@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, namedtuple
-from typing import TYPE_CHECKING, Any, Literal, NamedTuple, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, NamedTuple, TypeAlias, TypeVar
 
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
 from sqlalchemy.orm import RelationshipProperty
@@ -11,11 +11,10 @@ from strawchemy.sqlalchemy.typing import AnyAsyncSession, DeclarativeT
 from strawchemy.strawberry.mutation.input import UpsertData
 from strawchemy.strawberry.mutation.types import RelationType
 
-from ._base import InsertData, SQLAlchemyGraphQLRepository
+from ._base import InsertData, MutationData, SQLAlchemyGraphQLRepository
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from enum import Enum
 
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.orm.util import AliasedClass
@@ -24,12 +23,13 @@ if TYPE_CHECKING:
     from strawchemy.strawberry.mutation.input import Input, LevelInput
     from strawchemy.strawberry.typing import QueryNodeType
 
+    from ._base import InsertOrUpdate
+
 __all__ = ("SQLAlchemyGraphQLAsyncRepository",)
 
 T = TypeVar("T", bound=Any)
 
 _RowLike: TypeAlias = "Row[Any] | NamedTuple"
-_InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where", "upsert"]
 
 
 class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, AnyAsyncSession]):
@@ -213,10 +213,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 await self.session.execute(update(model_type), values)
 
     async def _set_to_many_relations(
-        self,
-        mode: _InsertOrUpdate,
-        data: Input[DeclarativeT],
-        created_ids: Sequence[_RowLike],
+        self, mode: InsertOrUpdate, data: Input[DeclarativeT], created_ids: Sequence[_RowLike]
     ) -> None:
         for level in data.filter_by_level(RelationType.TO_MANY, ["set"]):
             remove_old_ids: defaultdict[type[DeclarativeBase], defaultdict[str, list[Any]]] = defaultdict(
@@ -293,53 +290,42 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             for model_type, values in insert_params.items():
                 await self._insert_nested(InsertData(model_type, values, upsert_data_map.get(model_type)), level)
 
-    async def _execute_insert_or_update(
-        self,
-        mode: _InsertOrUpdate,
-        data: Input[DeclarativeT],
-        dto_filter: BooleanFilterDTO | None,
-        upsert_update_fields: list[EnumDTO] | None = None,
-        upsert_confict_constraint: Enum | None = None,
-    ) -> Sequence[_RowLike]:
-        values = [self._to_dict(instance) for instance in data.instances]
-        if mode == "insert":
+    async def _execute_insert_or_update(self, data: MutationData[DeclarativeT]) -> Sequence[_RowLike]:
+        values = [self._to_dict(instance) for instance in data.input.instances]
+        if data.mode == "insert":
             return await self._insert_many(InsertData(self.model, values))
 
-        if mode == "upsert":
+        if data.mode == "upsert":
             return await self._insert_many(
                 InsertData(
                     self.model,
                     values,
-                    UpsertData(update_fields=upsert_update_fields or [], conflict_constraint=upsert_confict_constraint),
+                    UpsertData(
+                        update_fields=data.upsert_update_fields or [], conflict_constraint=data.upsert_conflict_fields
+                    ),
                 )
             )
 
         pks = [column.key for column in self.model.__mapper__.primary_key]
         pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
 
-        if mode == "update_by_pks":
+        if data.mode == "update_by_pks":
             await self.session.execute(update(self.model), values)
             return [pk_tuple(*[instance[name] for name in pks]) for instance in values]
 
         transpiler = QueryTranspiler(self.model, self._dialect, statement=self.statement)
-        where_expressions = transpiler.filter_expressions(dto_filter) if dto_filter else None
+        where_expressions = transpiler.filter_expressions(data.dto_filter) if data.dto_filter else None
         return await self._update_where(transpiler.scope.root_alias, values[0], where_expressions)
 
-    async def _mutate(
-        self,
-        mode: _InsertOrUpdate,
-        data: Input[DeclarativeT],
-        dto_filter: BooleanFilterDTO | None = None,
-        upsert_update_fields: list[EnumDTO] | None = None,
-    ) -> Sequence[_RowLike]:
-        self._connect_to_one_relations(data)
-        data.add_non_input_relations()
+    async def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[_RowLike]:
+        self._connect_to_one_relations(data.input)
+        data.input.add_non_input_relations()
         async with self.session.begin_nested() as transaction:
-            await self._create_nested_to_one_relations(data)
-            instance_ids = await self._execute_insert_or_update(mode, data, dto_filter, upsert_update_fields)
-            await self._create_to_many_relations(data, instance_ids)
-            await self._update_to_many_relations(data, instance_ids)
-            await self._set_to_many_relations(mode, data, instance_ids)
+            await self._create_nested_to_one_relations(data.input)
+            instance_ids = await self._execute_insert_or_update(data)
+            await self._create_to_many_relations(data.input, instance_ids)
+            await self._update_to_many_relations(data.input, instance_ids)
+            await self._set_to_many_relations(data.mode, data.input, instance_ids)
             await transaction.commit()
         return instance_ids
 
@@ -528,7 +514,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             A QueryResult containing the newly created records, structured
             according to the selection.
         """
-        created_ids = await self._mutate("insert", data)
+        created_ids = await self._mutate(MutationData("insert", data))
         return await self._list_by_ids(created_ids, selection)
 
     async def upsert(
@@ -536,9 +522,18 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         data: Input[DeclarativeT],
         selection: QueryNodeType | None = None,
         update_fields: list[EnumDTO] | None = None,
+        conflict_fields: EnumDTO | None = None,
         dto_filter: BooleanFilterDTO | None = None,
     ) -> QueryResult[DeclarativeT]:
-        created_ids = await self._mutate("upsert", data, dto_filter=dto_filter, upsert_update_fields=update_fields)
+        created_ids = await self._mutate(
+            MutationData(
+                "upsert",
+                data,
+                dto_filter=dto_filter,
+                upsert_update_fields=update_fields,
+                upsert_conflict_fields=conflict_fields,
+            )
+        )
         return await self._list_by_ids(created_ids, selection)
 
     async def update_by_ids(
@@ -559,7 +554,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             A QueryResult containing the updated records, structured
             according to the selection.
         """
-        updated_ids = await self._mutate("update_by_pks", data)
+        updated_ids = await self._mutate(MutationData("update_by_pks", data))
         return await self._list_by_ids(updated_ids, selection)
 
     async def update_by_filter(
@@ -568,7 +563,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         dto_filter: BooleanFilterDTO,
         selection: QueryNodeType | None = None,
     ) -> QueryResult[DeclarativeT]:
-        updated_ids = await self._mutate("update_where", data, dto_filter)
+        updated_ids = await self._mutate(MutationData("update_where", data, dto_filter))
         return await self._list_by_ids(updated_ids, selection)
 
     async def delete(

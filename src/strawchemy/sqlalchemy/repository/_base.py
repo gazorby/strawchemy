@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeAlias, TypeVar
 
 from sqlalchemy import Column, Function, Insert, Row, func, insert
 from sqlalchemy.dialects import mysql, postgresql, sqlite
@@ -31,6 +31,7 @@ __all__ = ("SQLAlchemyGraphQLRepository",)
 
 
 T = TypeVar("T", bound=Any)
+InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where", "upsert"]
 
 
 @dataclass(frozen=True)
@@ -75,6 +76,15 @@ class InsertData:
         ):
             update_fields = {auto_increment_pk_column: func.last_insert_id(auto_increment_pk_column)} | update_fields
         return update_fields
+
+
+@dataclass(frozen=True)
+class MutationData(Generic[DeclarativeT]):
+    mode: InsertOrUpdate
+    input: Input[DeclarativeT]
+    dto_filter: BooleanFilterDTO | None = None
+    upsert_update_fields: list[EnumDTO] | None = None
+    upsert_conflict_fields: EnumDTO | None = None
 
 
 class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):

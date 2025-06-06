@@ -834,7 +834,13 @@ class QueryTracker:
 
     @property
     def query_count(self) -> int:
-        return len(self.executions)
+        return len(
+            [
+                execution
+                for execution in self.executions
+                if isinstance(execution.clause_element, tuple(self._clause_map.values()))
+            ]
+        )
 
     def __getitem__(self, index: int) -> QueryInspector:
         return self.executions[index]

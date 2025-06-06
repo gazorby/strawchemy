@@ -35,6 +35,7 @@ from strawchemy.constants import (
     NODES_KEY,
     OFFSET_KEY,
     ORDER_BY_KEY,
+    UPSERT_CONFLICT_FIELDS,
     UPSERT_UPDATE_FIELDS,
 )
 from strawchemy.dto.base import MappedDTO
@@ -547,11 +548,13 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
         self,
         input_type: type[MappedGraphQLDTO[T]],
         update_fields_enum: type[EnumDTO],
+        conflict_fields_enum: type[EnumDTO],
         *args: Any,
         **kwargs: Any,
     ) -> None:
         super().__init__(input_type, *args, **kwargs)
         self._update_fields_enum = update_fields_enum
+        self._conflict_fields_enum = conflict_fields_enum
 
     def _upsert_resolver(
         self,
@@ -559,6 +562,7 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
         data: AnyMappedDTO | Sequence[AnyMappedDTO],
         filter_input: BooleanFilterDTO | None = None,
         update_fields: list[EnumDTO] | None = None,
+        conflict_fields: EnumDTO | None = None,
     ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
@@ -566,8 +570,12 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
         except InputValidationError as error:
             return error.graphql_type()
         if isinstance(repository, StrawchemyAsyncRepository):
-            return self._input_result_async(repository.upsert(input_data, filter_input, update_fields), input_data)
-        return self._input_result_sync(repository.upsert(input_data, filter_input, update_fields), input_data)
+            return self._input_result_async(
+                repository.upsert(input_data, filter_input, update_fields, conflict_fields), input_data
+            )
+        return self._input_result_sync(
+            repository.upsert(input_data, filter_input, update_fields, conflict_fields), input_data
+        )
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -577,7 +585,13 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
                 None,
                 type_annotation=StrawberryAnnotation(list[self._update_fields_enum] | None),
                 default=None,
-            )
+            ),
+            StrawberryArgument(
+                UPSERT_CONFLICT_FIELDS,
+                None,
+                type_annotation=StrawberryAnnotation(self._conflict_fields_enum | None),
+                default=None,
+            ),
         ]
         if self.is_list:
             arguments.append(

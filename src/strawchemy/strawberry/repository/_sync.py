@@ -116,8 +116,9 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
         data: Input[InputModel],
         filter_input: BooleanFilterDTO | None = None,
         update_fields: list[EnumDTO] | None = None,
+        conflict_fields: EnumDTO | None = None,
     ) -> GraphQLResult[InputModel, T]:
-        query_results = self.graphql_repository().upsert(data, self._tree, update_fields, filter_input)
+        query_results = self.graphql_repository().upsert(data, self._tree, update_fields, conflict_fields, filter_input)
         return GraphQLResult(query_results, self._tree)
 
     def update_by_id(self, data: Input[InputModel]) -> GraphQLResult[InputModel, T]:

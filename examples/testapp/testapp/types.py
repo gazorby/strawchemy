@@ -24,8 +24,12 @@ class TicketFilter: ...
 class TicketType: ...
 
 
-@strawchemy.upsert_fields(Ticket, include="all")
+@strawchemy.upsert_update_fields(Ticket, include="all")
 class TicketUpsertFields: ...
+
+
+@strawchemy.upsert_conflict_fields(Ticket, include="all")
+class TicketUpsertConflictFields: ...
 
 
 @strawchemy.create_input(Ticket, include="all")

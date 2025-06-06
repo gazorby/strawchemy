@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawchemy.strawberry.factories.aggregations import EnumDTOFactory
-from strawchemy.strawberry.factories.enum import EnumDTOBackend
+from strawchemy.strawberry.factories.enum import EnumDTOBackend, UpsertConflictFieldsEnumDTOBackend
 
 from .config.base import StrawchemyConfig
 from .dto.backend.strawberry import StrawberrryDTOBackend
@@ -27,6 +27,7 @@ from .strawberry.factories.types import (
     OrderByDTOFactory,
     RootAggregateTypeDTOFactory,
     TypeDTOFactory,
+    UpsertConflictFieldsDTOFactory,
 )
 from .strawberry.mutation import types
 from .types import DefaultOffsetPagination
@@ -62,6 +63,9 @@ class Strawchemy:
 
         strawberry_backend = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO)
         enum_backend = EnumDTOBackend(self.config.auto_snake_case)
+        upsert_conflict_fields_enum_backend = UpsertConflictFieldsEnumDTOBackend(
+            self.config.inspector, self.config.auto_snake_case
+        )
 
         self._aggregate_filter_factory = AggregateFilterDTOFactory(self)
         self._order_by_factory = OrderByDTOFactory(self)
@@ -72,9 +76,12 @@ class Strawchemy:
             self, strawberry_backend, type_factory=self._type_factory
         )
         self._enum_factory = EnumDTOFactory(self.config.inspector, enum_backend)
-        self.filter_factory = BooleanFilterDTOFactory(self, aggregate_filter_factory=self._aggregate_filter_factory)
+        self._filter_factory = BooleanFilterDTOFactory(self, aggregate_filter_factory=self._aggregate_filter_factory)
+        self._upsert_conflict_factory = UpsertConflictFieldsDTOFactory(
+            self.config.inspector, upsert_conflict_fields_enum_backend
+        )
 
-        self.filter = self.filter_factory.input
+        self.filter = self._filter_factory.input
         self.aggregate_filter = self._aggregate_filter_factory.input
         self.distinct_on = self._distinct_on_enum_factory.decorator
         self.input = self._input_factory.input
@@ -84,7 +91,8 @@ class Strawchemy:
         self.order = self._order_by_factory.input
         self.type = self._type_factory.type
         self.aggregate = self._aggregation_factory.type
-        self.upsert_fields = self._enum_factory.input
+        self.upsert_update_fields = self._enum_factory.input
+        self.upsert_conflict_fields = self._upsert_conflict_factory.input
 
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
@@ -269,10 +277,10 @@ class Strawchemy:
     def upsert(
         self,
         input_type: type[MappedGraphQLDTO[T]],
+        update_fields: type[EnumDTO],
+        conflict_fields: type[EnumDTO],
         resolver: _RESOLVER_TYPE[Any] | None = None,
         *,
-        upsert_fields: type[EnumDTO],
-        filter_input: type[BooleanFilterDTO],
         repository_type: AnyRepository | None = None,
         name: str | None = None,
         description: str | None = None,
@@ -292,8 +300,8 @@ class Strawchemy:
 
         field = StrawchemyUpsertMutationField(
             input_type,
-            update_fields_enum=upsert_fields,
-            filter_type=filter_input,
+            update_fields_enum=update_fields,
+            conflict_fields_enum=conflict_fields,
             config=self.config,
             repository_type=repository_type_,
             python_name=None,

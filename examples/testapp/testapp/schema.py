@@ -16,6 +16,7 @@ from .types import (
     TicketPartial,
     TicketType,
     TicketUpdate,
+    TicketUpsertConflictFields,
     TicketUpsertFields,
     strawchemy,
 )
@@ -39,7 +40,7 @@ class Mutation:
     )
     create_tickets: list[TicketType] = strawchemy.create(TicketCreate)
     upsert_ticket: TicketType = strawchemy.upsert(
-        TicketCreate, upsert_fields=TicketUpsertFields, filter_input=TicketFilter
+        TicketCreate, update_fields=TicketUpsertFields, conflict_fields=TicketUpsertConflictFields
     )
 
     create_project: ProjectType = strawchemy.create(ProjectCreate)

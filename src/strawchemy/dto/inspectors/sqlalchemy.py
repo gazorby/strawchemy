@@ -420,7 +420,8 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             return False
         return any(self._relationship_required(relationship) for relationship in model_field.property._reverse_property)  # noqa: SLF001
 
-    def unique_constraints(self, model: type[DeclarativeBase]) -> list[ColumnCollectionConstraint | Index]:
+    @classmethod
+    def unique_constraints(cls, model: type[DeclarativeBase]) -> list[ColumnCollectionConstraint | Index]:
         if not isinstance(model.__table__, Table):
             return []
         return [

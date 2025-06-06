@@ -19,3 +19,4 @@ DATA_KEY = "data"
 JSON_PATH_KEY = "path"
 
 UPSERT_UPDATE_FIELDS = "update_fields"
+UPSERT_CONFLICT_FIELDS = "conflict_fields"

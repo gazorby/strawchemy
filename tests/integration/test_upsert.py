@@ -16,6 +16,162 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration]
 
 
+@pytest.mark.snapshot
+async def test_upsert_one_new(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+        mutation {
+            upsertFruit(
+                data: {
+                    name: "Grape",
+                    sweetness: 7,
+                    waterPercent: 0.85
+                }
+            ) {
+                name
+                sweetness
+                waterPercent
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["upsertFruit"] == {
+        "name": "Grape",
+        "sweetness": 7,
+        "waterPercent": 0.85,
+    }
+
+    assert query_tracker.query_count == 2
+    query_tracker.assert_statements(1, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_upsert_one_existing(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+        mutation {
+            upsertFruit(
+                data: {
+                    name: "Apple",
+                    sweetness: 0,
+                    waterPercent: 0
+                },
+                conflictFields: name
+            ) {
+                id
+                name
+                sweetness
+                waterPercent
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["upsertFruit"] == {
+        "id": 1,
+        "name": "Apple",
+        "sweetness": 0,
+        "waterPercent": 0,
+    }
+
+    assert query_tracker.query_count == 2
+    query_tracker.assert_statements(1, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_upsert_many_new(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+) -> None:
+    query = """
+        mutation {
+            upsertFruits(
+                data: [
+                    {
+                        name: "Grape",
+                        sweetness: 7,
+                        waterPercent: 0.85
+                    },
+                    {
+                        name: "Blueberries",
+                        sweetness: 6,
+                        waterPercent: 0.93
+                    },
+                ]
+            ) {
+                name
+                sweetness
+                waterPercent
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["upsertFruits"] == [
+        {"name": "Grape", "sweetness": 7, "waterPercent": 0.85},
+        {"name": "Blueberries", "sweetness": 6, "waterPercent": 0.93},
+    ]
+
+    if dialect in {"postgresql", "mysql"}:
+        assert query_tracker.query_count == 3
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
+    else:
+        assert query_tracker.query_count == 2
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_upsert_many_new_and_existing(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+) -> None:
+    query = """
+        mutation {
+            upsertFruits(
+                data: [
+                    {
+                        name: "Apple",
+                        sweetness: 7,
+                        waterPercent: 0.85
+                    },
+                    {
+                        name: "Blueberries",
+                        sweetness: 6,
+                        waterPercent: 0.93
+                    },
+                ],
+                conflictFields: name
+            ) {
+                name
+                sweetness
+                waterPercent
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["upsertFruits"] == [
+        {"name": "Apple", "sweetness": 7, "waterPercent": 0.85},
+        {"name": "Blueberries", "sweetness": 6, "waterPercent": 0.93},
+    ]
+
+    if dialect in {"postgresql", "mysql"}:
+        assert query_tracker.query_count == 3
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
+    else:
+        assert query_tracker.query_count == 2
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
 # To-One Upsert Tests
 
 

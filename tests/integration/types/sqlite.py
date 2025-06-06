@@ -162,6 +162,14 @@ class FruitCreateInput: ...
 class FruitUpdateInput: ...
 
 
+@strawchemy.upsert_update_fields(Fruit, include="all")
+class FruitUpsertFields: ...
+
+
+@strawchemy.upsert_conflict_fields(Fruit, include="all")
+class FruitUpsertConflictFields: ...
+
+
 # Color
 
 
@@ -522,6 +530,19 @@ class AsyncMutation:
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemyAsyncRepository
     )
+    # Fruit - upsert
+    upsert_fruit: FruitType = strawchemy.upsert(
+        FruitCreateInput,
+        update_fields=FruitUpsertFields,
+        conflict_fields=FruitUpsertConflictFields,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    upsert_fruits: list[FruitType] = strawchemy.upsert(
+        FruitCreateInput,
+        update_fields=FruitUpsertFields,
+        conflict_fields=FruitUpsertConflictFields,
+        repository_type=StrawchemyAsyncRepository,
+    )
     # User - Update
     update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemyAsyncRepository)
     create_user: UserType = strawchemy.create(UserCreate, repository_type=StrawchemyAsyncRepository)
@@ -633,6 +654,19 @@ class SyncMutation:
     update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemySyncRepository)
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemySyncRepository
+    )
+    # Fruit - upsert
+    upsert_fruit: FruitType = strawchemy.upsert(
+        FruitCreateInput,
+        update_fields=FruitUpsertFields,
+        conflict_fields=FruitUpsertConflictFields,
+        repository_type=StrawchemySyncRepository,
+    )
+    upsert_fruits: list[FruitType] = strawchemy.upsert(
+        FruitCreateInput,
+        update_fields=FruitUpsertFields,
+        conflict_fields=FruitUpsertConflictFields,
+        repository_type=StrawchemySyncRepository,
     )
     # User - Update
     update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemySyncRepository)
