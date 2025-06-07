@@ -57,9 +57,57 @@ async def test_upsert_one_new(
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
+@pytest.mark.parametrize(
+    ("query", "name"),
+    [
+        pytest.param(
+            """
+            mutation {
+                upsertFruit(
+                    data: {
+                        name: "Apple",
+                        sweetness: 0,
+                        waterPercent: 0
+                    },
+                    conflictFields: name
+                ) {
+                    id
+                    name
+                    sweetness
+                    waterPercent
+                }
+            }
+            """,
+            "Apple",
+            id="unique-constraint",
+        ),
+        pytest.param(
+            """
+            mutation {
+                upsertFruit(
+                    data: {
+                        id: 1
+                        name: "Blueberries",
+                        sweetness: 0,
+                        waterPercent: 0
+                    },
+                    conflictFields: id
+                ) {
+                    id
+                    name
+                    sweetness
+                    waterPercent
+                }
+            }
+            """,
+            "Blueberries",
+            id="pk-constraint",
+        ),
+    ],
+)
 @pytest.mark.snapshot
 async def test_upsert_one_existing(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query: str, name: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test upserting a single existing fruit record with conflict resolution.
 
@@ -71,32 +119,10 @@ async def test_upsert_one_existing(
     - The original ID to be preserved in the response
     - Exactly 2 SQL queries: 1 INSERT (with conflict resolution) and 1 SELECT
     """
-    query = """
-        mutation {
-            upsertFruit(
-                data: {
-                    name: "Apple",
-                    sweetness: 0,
-                    waterPercent: 0
-                },
-                conflictFields: name
-            ) {
-                id
-                name
-                sweetness
-                waterPercent
-            }
-        }
-    """
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["upsertFruit"] == {
-        "id": 1,
-        "name": "Apple",
-        "sweetness": 0,
-        "waterPercent": 0,
-    }
+    assert result.data["upsertFruit"] == {"id": 1, "name": name, "sweetness": 0, "waterPercent": 0}
 
     assert query_tracker.query_count == 2
     query_tracker.assert_statements(1, "insert", sql_snapshot)

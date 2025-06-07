@@ -1628,6 +1628,100 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_upsert_one_existing[session-tracked-async-pk-constraint-aiosqlite_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON
+  CONFLICT (id) DO UPDATE
+     SET name = excluded.name,
+         sweetness = excluded.sweetness,
+         water_percent = excluded.water_percent,
+         best_time_to_pick = excluded.best_time_to_pick,
+         id = excluded.id RETURNING id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-pk-constraint-aiosqlite_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-pk-constraint-asyncmy_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%s, %s, %s, %s, %s, %s, %s) AS NEW
+      ON DUPLICATE KEY UPDATE name = new.name,
+         sweetness = new.sweetness,
+         water_percent = new.water_percent,
+         best_time_to_pick = new.best_time_to_pick,
+         id = new.id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-pk-constraint-asyncmy_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-pk-constraint-asyncpg_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::INTEGER)
+      ON
+  CONFLICT (id) DO UPDATE
+     SET name = excluded.name,
+         sweetness = excluded.sweetness,
+         water_percent = excluded.water_percent,
+         best_time_to_pick = excluded.best_time_to_pick,
+         id = excluded.id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-pk-constraint-asyncpg_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-pk-constraint-psycopg_async_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, %(id)s::INTEGER)
+      ON
+  CONFLICT (id) DO UPDATE
+     SET name = excluded.name,
+         sweetness = excluded.sweetness,
+         water_percent = excluded.water_percent,
+         best_time_to_pick = excluded.best_time_to_pick,
+         id = excluded.id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-pk-constraint-psycopg_async_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
 # name: test_upsert_one_existing[session-tracked-async-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
@@ -1641,6 +1735,145 @@
   '''
 # ---
 # name: test_upsert_one_existing[session-tracked-async-psycopg_async_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-unique-constraint-aiosqlite_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?)
+      ON
+  CONFLICT (name) DO UPDATE
+     SET name = excluded.name,
+         sweetness = excluded.sweetness,
+         water_percent = excluded.water_percent,
+         best_time_to_pick = excluded.best_time_to_pick RETURNING id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-unique-constraint-aiosqlite_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-unique-constraint-asyncmy_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (%s, %s, %s, %s, %s, %s) AS NEW
+      ON DUPLICATE KEY UPDATE name = new.name,
+         sweetness = new.sweetness,
+         water_percent = new.water_percent,
+         best_time_to_pick = new.best_time_to_pick,
+         id = last_insert_id(fruit.id)
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-unique-constraint-asyncmy_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-unique-constraint-asyncpg_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
+      ON
+  CONFLICT (name) DO UPDATE
+     SET name = excluded.name,
+         sweetness = excluded.sweetness,
+         water_percent = excluded.water_percent,
+         best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-unique-constraint-asyncpg_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-unique-constraint-psycopg_async_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
+      ON
+  CONFLICT (name) DO UPDATE
+     SET name = excluded.name,
+         sweetness = excluded.sweetness,
+         water_percent = excluded.water_percent,
+         best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-async-unique-constraint-psycopg_async_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-psycopg_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, %(id)s::INTEGER)
+      ON
+  CONFLICT (id) DO UPDATE
+     SET name = excluded.name,
+         sweetness = excluded.sweetness,
+         water_percent = excluded.water_percent,
+         best_time_to_pick = excluded.best_time_to_pick,
+         id = excluded.id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-psycopg_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-sqlite_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (?, ?, ?, ?, ?, ?, ?)
+      ON
+  CONFLICT (id) DO UPDATE
+     SET name = excluded.name,
+         sweetness = excluded.sweetness,
+         water_percent = excluded.water_percent,
+         best_time_to_pick = excluded.best_time_to_pick,
+         id = excluded.id RETURNING id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-sqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1687,6 +1920,52 @@
   '''
 # ---
 # name: test_upsert_one_existing[session-tracked-sync-sqlite_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-psycopg_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
+      ON
+  CONFLICT (name) DO UPDATE
+     SET name = excluded.name,
+         sweetness = excluded.sweetness,
+         water_percent = excluded.water_percent,
+         best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-psycopg_engine].1
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-sqlite_engine]
+  '''
+  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
+  VALUES (?, ?, ?, ?, ?, ?)
+      ON
+  CONFLICT (name) DO UPDATE
+     SET name = excluded.name,
+         sweetness = excluded.sweetness,
+         water_percent = excluded.water_percent,
+         best_time_to_pick = excluded.best_time_to_pick RETURNING id
+  '''
+# ---
+# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-sqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
