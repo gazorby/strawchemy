@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.18.0](https://github.com/gazorby/strawchemy/compare/v0.17.0..v0.18.0) - 2025-06-07
+
+### 🚀 Features
+
+- *(mutation)* Initial upsert support - ([b45272e](https://github.com/gazorby/strawchemy/commit/b45272e7c12afc6fbc34598bf81830071e6c54f6))
+
+### 🐛 Bug Fixes
+
+- Do not rely on literal_column to reference computed column in some distinct on scenarios - ([5ac834f](https://github.com/gazorby/strawchemy/commit/5ac834f5b50441c6f899c6bd4fda5210484c8605))
+
+### 🚜 Refactor
+
+- *(testapp)* Disable enable_touch_updated_timestamp_listener as it mess up with integration tests - ([1c4c2c4](https://github.com/gazorby/strawchemy/commit/1c4c2c4ba076d7d4b0097e919864708dba9ddc58))
+- *(transpiler)* Use literal_column less often and use a more reliable method when necessary - ([e0f047f](https://github.com/gazorby/strawchemy/commit/e0f047fe4d125e369c26667ef9dc7c727d5bd6d1))
+- *(upsert)* Restrict conflict constraints to pk, unique and exclude constraints - ([338543b](https://github.com/gazorby/strawchemy/commit/338543b587592ac1d3a37897a917e1cbfbccdc75))
+
+### 📚 Documentation
+
+- *(readme)* Update database support - ([7c55100](https://github.com/gazorby/strawchemy/commit/7c55100d2cff009ddae6eb5b52b9ec74ee7679ab))
+- *(readme)* Add section for upsert mutations - ([99b7096](https://github.com/gazorby/strawchemy/commit/99b709619a38cdef600ec8dd19444371de524007))
+
+### 🧪 Testing
+
+- *(unit)* Add test case for the example app - ([feb598f](https://github.com/gazorby/strawchemy/commit/feb598f490177f1eb8be531cc00bef00d5e6c80f))
+- *(upsert)* Add test cases for root upsert mutations - ([9ce29a0](https://github.com/gazorby/strawchemy/commit/9ce29a0f085d457a4940f5c0a2958ac47cf05497))
+- *(upsert)* Update test documentation - ([28f11a6](https://github.com/gazorby/strawchemy/commit/28f11a63bb87b6efa78e83aba22b38db5f6a1f11))
+- *(upsert)* Add pk conflict test case - ([638f872](https://github.com/gazorby/strawchemy/commit/638f87251e744ff13bf33d4fdfc5b4e95bc0b988))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.18.0 - ([56c2238](https://github.com/gazorby/strawchemy/commit/56c22380db2f8324178e9c7f122c14ccf57bf01a))
+- *(testapp)* Add pydantic - ([48980a2](https://github.com/gazorby/strawchemy/commit/48980a291aab590b96179e85666f4d385aafc18b))
+- *(uv)* Include testapp in dev dependancies - ([79567b6](https://github.com/gazorby/strawchemy/commit/79567b67813233d6e862c178cf36012c1352335c))
 ## [0.17.0](https://github.com/gazorby/strawchemy/compare/v0.16.0..v0.17.0) - 2025-06-02
 
 ### 🚀 Features
