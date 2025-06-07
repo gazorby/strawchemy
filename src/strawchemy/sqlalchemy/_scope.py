@@ -24,7 +24,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeAlias, override
 
-from sqlalchemy import ColumnElement, Function, Label, func, inspect, literal_column
+from sqlalchemy import ColumnElement, FromClause, Function, Label, Select, func, inspect
 from sqlalchemy import cast as sqla_cast
 from sqlalchemy import distinct as sqla_distinct
 from sqlalchemy.dialects import postgresql
@@ -484,15 +484,11 @@ class QueryScope(Generic[DeclarativeT]):
 
         return columns
 
-    def literal_column(self, from_name: str, column_name: str) -> Label[Any]:
-        return literal_column(f"{from_name}.{column_name}").label(self._add_scope_id(column_name))
+    def scoped_column(self, clause: Select[Any] | FromClause, column_name: str) -> Label[Any]:
+        columns = clause.selected_columns if isinstance(clause, Select) else clause.columns
+        return columns[column_name].label(self._add_scope_id(column_name))
 
-    def set_relation_alias(
-        self,
-        node: QueryNodeType,
-        side: RelationshipSide,
-        alias: AliasedClass[Any],
-    ) -> None:
+    def set_relation_alias(self, node: QueryNodeType, side: RelationshipSide, alias: AliasedClass[Any]) -> None:
         self._node_alias_map[(node, side)] = alias
 
     def id_field_definitions(self, model: type[DeclarativeBase]) -> list[GraphQLFieldDefinition]:

@@ -2537,6 +2537,7 @@ test = [
     { name = "pytest-xdist" },
     { name = "sqlparse" },
     { name = "syrupy" },
+    { name = "testapp" },
 ]
 
 [package.metadata]
@@ -2619,6 +2620,7 @@ test = [
     { name = "pytest-xdist" },
     { name = "sqlparse" },
     { name = "syrupy" },
+    { name = "testapp", editable = "examples/testapp" },
 ]
 
 [[package]]
@@ -2640,6 +2642,7 @@ source = { editable = "examples/testapp" }
 dependencies = [
     { name = "aiosqlite" },
     { name = "litestar", extra = ["sqlalchemy", "standard"] },
+    { name = "pydantic" },
     { name = "sqlalchemy" },
     { name = "strawberry-graphql" },
 ]
@@ -2648,6 +2651,7 @@ dependencies = [
 requires-dist = [
     { name = "aiosqlite" },
     { name = "litestar", extras = ["sqlalchemy", "standard"] },
+    { name = "pydantic" },
     { name = "sqlalchemy" },
     { name = "strawberry-graphql" },
 ]

@@ -65,6 +65,7 @@ test = [
   { include-group = "postgres" },
   { include-group = "mysql" },
   { include-group = "aiosqlite" },
+  "testapp",
   "nox[uv]",
   "pytest",
   "pytest-cov",

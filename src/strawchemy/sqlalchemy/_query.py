@@ -70,14 +70,14 @@ class Join:
     order_nodes: list[QueryNodeType] = dataclasses.field(default_factory=list)
 
     @property
-    def _selectable(self) -> NamedFromClause:
+    def _relationship(self) -> RelationshipProperty[Any]:
+        return cast("RelationshipProperty[Any]", self.node.value.model_field.property)
+
+    @property
+    def selectable(self) -> NamedFromClause:
         if isinstance(self.target, AliasedClass):
             return cast("NamedFromClause", inspect(self.target).selectable)
         return self.target
-
-    @property
-    def _relationship(self) -> RelationshipProperty[Any]:
-        return cast("RelationshipProperty[Any]", self.node.value.model_field.property)
 
     @property
     def order(self) -> int:
@@ -85,7 +85,7 @@ class Join:
 
     @property
     def name(self) -> str:
-        return self._selectable.name
+        return self.selectable.name
 
     @property
     def to_many(self) -> bool:
@@ -120,9 +120,9 @@ class AggregationJoin(Join):
 
     @property
     def _inner_select(self) -> Select[Any]:
-        if isinstance(self._selectable, CTE):
-            return cast("Select[Any]", self._selectable.element)
-        self_join = cast("AliasedReturnsRows", self._selectable)
+        if isinstance(self.selectable, CTE):
+            return cast("Select[Any]", self.selectable.element)
+        self_join = cast("AliasedReturnsRows", self.selectable)
         return cast("Select[Any]", cast("Subquery", self_join.element).element)
 
     def _existing_function_column(self, new_column: ColumnElement[Any]) -> ColumnElement[Any] | None:
@@ -151,7 +151,7 @@ class AggregationJoin(Join):
     def add_column_to_subquery(self, column: ColumnElement[Any]) -> None:
         new_sub_select = self._inner_select.add_columns(self._ensure_unique_name(column))
 
-        if isinstance(self._selectable, Lateral):
+        if isinstance(self.selectable, Lateral):
             new_sub_select = new_sub_select.lateral(self.name)
         else:
             new_sub_select = new_sub_select.cte(self.name)
@@ -428,8 +428,8 @@ class SubqueryBuilder(Generic[DeclarativeT]):
     def _distinct_on_rank_column(self) -> str:
         return self.scope.key("distinct_on_rank")
 
-    def distinct_on_condition(self) -> ColumnElement[bool]:
-        return self.scope.literal_column(self.name, self._distinct_on_rank_column) == 1
+    def distinct_on_condition(self, aliased_subquery: AliasedClass[DeclarativeT]) -> ColumnElement[bool]:
+        return inspect(aliased_subquery).selectable.columns[self._distinct_on_rank_column] == 1
 
     @property
     def name(self) -> str:
@@ -467,7 +467,9 @@ class SubqueryBuilder(Generic[DeclarativeT]):
             )
         for function_node in self.scope.referenced_function_nodes:
             only_columns.append(self.scope.columns[function_node])
-            self.scope.columns[function_node] = self.scope.literal_column(self.name, self.scope.key(function_node))
+            self.scope.columns[function_node] = self.scope.scoped_column(
+                inspect(self.alias).selectable, self.scope.key(function_node)
+            )
 
         if query.distinct_on and not query.use_distinct_on:
             order_by_expressions = query.order_by.expressions if query.order_by else []

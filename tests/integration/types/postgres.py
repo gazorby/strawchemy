@@ -107,6 +107,10 @@ class UserCreate: ...
 class UserUpdateInput: ...
 
 
+@strawchemy.distinct_on(User, include="all")
+class UserDistinctOn: ...
+
+
 # Fruit
 
 
@@ -167,6 +171,14 @@ class FruitCreateInput: ...
 
 @strawchemy.pk_update_input(Fruit, include="all")
 class FruitUpdateInput: ...
+
+
+@strawchemy.upsert_update_fields(Fruit, include="all")
+class FruitUpsertFields: ...
+
+
+@strawchemy.upsert_conflict_fields(Fruit, include="all")
+class FruitUpsertConflictFields: ...
 
 
 # Color
@@ -362,7 +374,10 @@ class AsyncQuery:
     # User
     user: UserType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
     users: list[UserType] = strawchemy.field(
-        filter_input=UserFilter, order_by=UserOrderBy, repository_type=StrawchemyAsyncRepository
+        filter_input=UserFilter,
+        order_by=UserOrderBy,
+        repository_type=StrawchemyAsyncRepository,
+        distinct_on=UserDistinctOn,
     )
 
     # Custom resolvers
@@ -444,7 +459,10 @@ class SyncQuery:
     # User
     user: UserType = strawchemy.field(repository_type=StrawchemySyncRepository)
     users: list[UserType] = strawchemy.field(
-        filter_input=UserFilter, order_by=UserOrderBy, repository_type=StrawchemySyncRepository
+        filter_input=UserFilter,
+        order_by=UserOrderBy,
+        repository_type=StrawchemySyncRepository,
+        distinct_on=UserDistinctOn,
     )
 
     # Custom resolvers
@@ -544,6 +562,19 @@ class AsyncMutation:
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemyAsyncRepository
     )
+    # Fruit - upsert
+    upsert_fruit: FruitType = strawchemy.upsert(
+        FruitCreateInput,
+        update_fields=FruitUpsertFields,
+        conflict_fields=FruitUpsertConflictFields,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    upsert_fruits: list[FruitType] = strawchemy.upsert(
+        FruitCreateInput,
+        update_fields=FruitUpsertFields,
+        conflict_fields=FruitUpsertConflictFields,
+        repository_type=StrawchemyAsyncRepository,
+    )
     # User - Update
     update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemyAsyncRepository)
     create_user: UserType = strawchemy.create(UserCreate, repository_type=StrawchemyAsyncRepository)
@@ -553,15 +584,15 @@ class AsyncMutation:
 
     @strawberry.field
     async def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
-        return (await StrawchemyAsyncRepository(ColorType, info).create(Input(data, name="Blue"))).graphql_type()
+        return (await StrawchemyAsyncRepository(ColorType, info).create(Input(data, name="New Blue"))).graphql_type()
 
     @strawberry.field
     async def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
         color_input.instances[0].fruits.extend(
             [
-                Fruit(name="Apple", sweetness=1, water_percent=0.5),
-                Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
+                Fruit(name="New Apple", sweetness=1, water_percent=0.5),
+                Fruit(name="New Strawberry", sweetness=1, water_percent=0.5),
             ]
         )
         return (await StrawchemyAsyncRepository(ColorType, info).create(color_input)).graphql_type()
@@ -571,8 +602,8 @@ class AsyncMutation:
         color_input = Input(data)
         session = cast("AsyncSession", info.context.session)
         apple, strawberry = (
-            Fruit(name="Apple", sweetness=1, water_percent=0.5),
-            Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
+            Fruit(name="New Apple", sweetness=1, water_percent=0.5),
+            Fruit(name="New Strawberry", sweetness=1, water_percent=0.5),
         )
         session.add_all([apple, strawberry])
         await session.commit()
@@ -583,14 +614,14 @@ class AsyncMutation:
     @strawberry.field
     async def create_red_fruit(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
         fruit_input = Input(data)
-        fruit_input.instances[0].color = Color(name="Red")
+        fruit_input.instances[0].color = Color(name="New Red")
         return (await StrawchemyAsyncRepository(FruitType, info).create(fruit_input)).graphql_type()
 
     @strawberry.field
     async def create_fruit_for_existing_color(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
         fruit_input = Input(data)
         session = cast("AsyncSession", info.context.session)
-        red = Color(name="Red")
+        red = Color(name="New Red")
         session.add(red)
         await session.commit()
         fruit_input.instances[0].color = red
@@ -656,6 +687,19 @@ class SyncMutation:
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemySyncRepository
     )
+    # Fruit - upsert
+    upsert_fruit: FruitType = strawchemy.upsert(
+        FruitCreateInput,
+        update_fields=FruitUpsertFields,
+        conflict_fields=FruitUpsertConflictFields,
+        repository_type=StrawchemySyncRepository,
+    )
+    upsert_fruits: list[FruitType] = strawchemy.upsert(
+        FruitCreateInput,
+        update_fields=FruitUpsertFields,
+        conflict_fields=FruitUpsertConflictFields,
+        repository_type=StrawchemySyncRepository,
+    )
     # User - Update
     update_user: UserType = strawchemy.update_by_ids(UserUpdateInput, repository_type=StrawchemySyncRepository)
     create_user: UserType = strawchemy.create(UserCreate, repository_type=StrawchemySyncRepository)
@@ -665,15 +709,15 @@ class SyncMutation:
 
     @strawberry.field
     def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
-        return StrawchemySyncRepository(ColorType, info).create(Input(data, name="Blue")).graphql_type()
+        return StrawchemySyncRepository(ColorType, info).create(Input(data, name="New Blue")).graphql_type()
 
     @strawberry.field
     def create_apple_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
         color_input = Input(data)
         color_input.instances[0].fruits.extend(
             [
-                Fruit(name="Apple", sweetness=1, water_percent=0.5),
-                Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
+                Fruit(name="New Apple", sweetness=1, water_percent=0.5),
+                Fruit(name="New Strawberry", sweetness=1, water_percent=0.5),
             ]
         )
         return StrawchemySyncRepository(ColorType, info).create(color_input).graphql_type()
@@ -683,8 +727,8 @@ class SyncMutation:
         color_input = Input(data)
         session = cast("Session", info.context.session)
         apple, strawberry = (
-            Fruit(name="Apple", sweetness=1, water_percent=0.5),
-            Fruit(name="Strawberry", sweetness=1, water_percent=0.5),
+            Fruit(name="New Apple", sweetness=1, water_percent=0.5),
+            Fruit(name="New Strawberry", sweetness=1, water_percent=0.5),
         )
         session.add_all([apple, strawberry])
         session.commit()
@@ -695,14 +739,14 @@ class SyncMutation:
     @strawberry.field
     def create_red_fruit(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
         fruit_input = Input(data)
-        fruit_input.instances[0].color = Color(name="Red")
+        fruit_input.instances[0].color = Color(name="New Red")
         return StrawchemySyncRepository(FruitType, info).create(fruit_input).graphql_type()
 
     @strawberry.field
     def create_fruit_for_existing_color(self, info: strawberry.Info, data: FruitCreateInput) -> FruitType:
         fruit_input = Input(data)
         session = cast("Session", info.context.session)
-        red = Color(name="Red")
+        red = Color(name="New Red")
         session.add(red)
         session.commit()
         fruit_input.instances[0].color = red

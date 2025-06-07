@@ -27,7 +27,17 @@ from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.base import StrawberryList, StrawberryOptional, StrawberryType, WithStrawberryObjectDefinition
 from strawberry.types.field import UNRESOLVED, StrawberryField
-from strawchemy.constants import DATA_KEY, DISTINCT_ON_KEY, FILTER_KEY, LIMIT_KEY, NODES_KEY, OFFSET_KEY, ORDER_BY_KEY
+from strawchemy.constants import (
+    DATA_KEY,
+    DISTINCT_ON_KEY,
+    FILTER_KEY,
+    LIMIT_KEY,
+    NODES_KEY,
+    OFFSET_KEY,
+    ORDER_BY_KEY,
+    UPSERT_CONFLICT_FIELDS,
+    UPSERT_UPDATE_FIELDS,
+)
 from strawchemy.dto.base import MappedDTO
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.strawberry.dto import (
@@ -531,6 +541,71 @@ class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
     ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         return self._create_resolver(info, *args, **kwargs)
+
+
+class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMutationField):
+    def __init__(
+        self,
+        input_type: type[MappedGraphQLDTO[T]],
+        update_fields_enum: type[EnumDTO],
+        conflict_fields_enum: type[EnumDTO],
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        super().__init__(input_type, *args, **kwargs)
+        self._update_fields_enum = update_fields_enum
+        self._conflict_fields_enum = conflict_fields_enum
+
+    def _upsert_resolver(
+        self,
+        info: Info,
+        data: AnyMappedDTO | Sequence[AnyMappedDTO],
+        filter_input: BooleanFilterDTO | None = None,
+        update_fields: list[EnumDTO] | None = None,
+        conflict_fields: EnumDTO | None = None,
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
+        repository = self._get_repository(info)
+        try:
+            input_data = Input(data, self._validation)
+        except InputValidationError as error:
+            return error.graphql_type()
+        if isinstance(repository, StrawchemyAsyncRepository):
+            return self._input_result_async(
+                repository.upsert(input_data, filter_input, update_fields, conflict_fields), input_data
+            )
+        return self._input_result_sync(
+            repository.upsert(input_data, filter_input, update_fields, conflict_fields), input_data
+        )
+
+    @override
+    def auto_arguments(self) -> list[StrawberryArgument]:
+        arguments = [
+            StrawberryArgument(
+                UPSERT_UPDATE_FIELDS,
+                None,
+                type_annotation=StrawberryAnnotation(list[self._update_fields_enum] | None),
+                default=None,
+            ),
+            StrawberryArgument(
+                UPSERT_CONFLICT_FIELDS,
+                None,
+                type_annotation=StrawberryAnnotation(self._conflict_fields_enum | None),
+                default=None,
+            ),
+        ]
+        if self.is_list:
+            arguments.append(
+                StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(list[self._input_type]))
+            )
+        else:
+            arguments.append(StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(self._input_type)))
+        return arguments
+
+    @override
+    def resolver(
+        self, info: Info[Any, Any], *args: Any, **kwargs: Any
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
+        return self._upsert_resolver(info, *args, **kwargs)
 
 
 class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMutationField):

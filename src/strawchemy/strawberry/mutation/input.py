@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Hashable, Sequence
+from collections.abc import Hashable, Iterator, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, cast, override
 
@@ -10,12 +10,14 @@ from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
 from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 
-from .types import RelationType, ToManyCreateInput, ToManyUpdateInput, ToOneInput
+from .types import RelationType, ToManyCreateInput, ToManyUpdateInput, ToManyUpsertInput, ToOneInput, ToOneUpsertInput
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
+    from enum import Enum
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+    from strawchemy.strawberry.dto import EnumDTO
     from strawchemy.strawberry.typing import MappedGraphQLDTO
     from strawchemy.validation.base import ValidationProtocol
 
@@ -26,12 +28,31 @@ T = TypeVar("T", bound=MappedDTO[Any])
 DeclarativeBaseT = TypeVar("DeclarativeBaseT", bound="DeclarativeBase")
 InputModel = TypeVar("InputModel", bound="DeclarativeBase")
 RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
-RelationInputType: TypeAlias = Literal["set", "create", "add", "remove"]
+RelationInputType: TypeAlias = Literal["set", "create", "add", "remove", "upsert"]
 
 
 def _has_record(model: DeclarativeBase) -> bool:
     state = inspect(model)
     return state.persistent or state.detached
+
+
+@dataclass(frozen=True)
+class UpsertData:
+    instances: list[DeclarativeBase] = dataclasses.field(default_factory=list)
+    conflict_constraint: Enum | None = None
+    update_fields: list[EnumDTO] = dataclasses.field(default_factory=list)
+
+    @classmethod
+    def from_upsert_input(cls, data: ToOneUpsertInput[Any, Any, Any] | ToManyUpsertInput[Any, Any, Any]) -> Self:
+        instances = data.to_mapped()
+        return cls(
+            instances=instances if isinstance(instances, list) else [instances],
+            update_fields=data.update_fields or [],
+            conflict_constraint=data.conflict_fields,
+        )
+
+    def __iter__(self) -> Iterator[DeclarativeBase]:
+        return iter(self.instances)
 
 
 @dataclass
@@ -43,6 +64,7 @@ class _UnboundRelationInput:
     add: list[DeclarativeBase] = dataclasses.field(default_factory=list)
     remove: list[DeclarativeBase] = dataclasses.field(default_factory=list)
     create: list[DeclarativeBase] = dataclasses.field(default_factory=list)
+    upsert: UpsertData | None = None
     input_index: int = -1
     level: int = 0
 
@@ -58,7 +80,7 @@ class _UnboundRelationInput:
             self.add.append(model)
 
     def __bool__(self) -> bool:
-        return bool(self.set or self.add or self.remove or self.create) or self.set is None
+        return bool(self.set or self.add or self.remove or self.create or self.upsert) or self.set is None
 
 
 @dataclass(kw_only=True)
@@ -85,6 +107,7 @@ class RelationInput(_UnboundRelationInput):
             create=unbound.create,
             input_index=unbound.input_index,
             level=unbound.level,
+            upsert=unbound.upsert,
         )
 
     def _set_event(self, target: DeclarativeBase, value: DeclarativeBase | None, *_: Any, **__: Any) -> None:
@@ -126,6 +149,7 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
         field_value = getattr(parent, field.model_field_name)
         add, remove, create = [], [], []
         set_: list[Any] | None = []
+        upsert: UpsertData | None = None
         relation_type = RelationType.TO_MANY
         if isinstance(field_value, ToOneInput):
             relation_type = RelationType.TO_ONE
@@ -140,9 +164,12 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
                 add = [dto.to_mapped() for dto in field_value.add]
         if isinstance(field_value, ToManyUpdateInput) and field_value.remove:
             remove = [dto.to_mapped() for dto in field_value.remove]
-        if isinstance(field_value, ToOneInput | ToManyUpdateInput | ToManyCreateInput) and field_value.create:
-            create = value if isinstance(value, list) else [value]
-        if set_ is None or set_ or add or remove or create:
+        if isinstance(field_value, ToOneInput | ToManyUpdateInput | ToManyCreateInput):
+            if field_value.create:
+                create = value if isinstance(value, list) else [value]
+            if field_value.upsert:
+                upsert = UpsertData.from_upsert_input(field_value.upsert)
+        if set_ is None or set_ or add or remove or create or upsert is not None:
             assert field.related_model
             self.current_relations.append(
                 _UnboundRelationInput(
@@ -154,6 +181,7 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
                     remove=remove,
                     create=create,
                     level=level,
+                    upsert=upsert,
                 )
             )
         return value

@@ -18,6 +18,7 @@ config = SQLAlchemyAsyncConfig(
     connection_string="sqlite+aiosqlite:///basic_async.sqlite",
     create_all=True,
     metadata=Base.metadata,
+    enable_touch_updated_timestamp_listener=False,  # Disturb strawchemy integration tests
     engine_config=EngineConfig(echo=True),
 )
 

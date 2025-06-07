@@ -9,44 +9,27 @@ from .models import Milestone, Project, Ticket
 
 strawchemy = Strawchemy(StrawchemyConfig("sqlite", repository_type=StrawchemyAsyncRepository))
 
-# Filter
-
-
-@strawchemy.filter(Ticket, include="all")
-class TicketFilter: ...
-
-
-@strawchemy.filter(Project, include="all")
-class ProjectFilter: ...
-
-
-# Order
+# Ticket
 
 
 @strawchemy.order(Ticket, include="all")
 class TicketOrder: ...
 
 
-@strawchemy.order(Project, include="all")
-class ProjectOrder: ...
-
-
-# types
+@strawchemy.filter(Ticket, include="all")
+class TicketFilter: ...
 
 
 @strawchemy.type(Ticket, include="all", filter_input=TicketFilter, order_by=TicketOrder, override=True)
 class TicketType: ...
 
 
-@strawchemy.type(Project, include="all", filter_input=ProjectFilter, order_by=ProjectOrder, override=True)
-class ProjectType: ...
+@strawchemy.upsert_update_fields(Ticket, include="all")
+class TicketUpsertFields: ...
 
 
-@strawchemy.type(Milestone, include="all", override=True)
-class MilestoneType: ...
-
-
-# Input types
+@strawchemy.upsert_conflict_fields(Ticket, include="all")
+class TicketUpsertConflictFields: ...
 
 
 @strawchemy.create_input(Ticket, include="all")
@@ -61,8 +44,30 @@ class TicketUpdate: ...
 class TicketPartial: ...
 
 
+# Project
+
+
+@strawchemy.order(Project, include="all")
+class ProjectOrder: ...
+
+
+@strawchemy.filter(Project, include="all")
+class ProjectFilter: ...
+
+
+@strawchemy.type(Project, include="all", filter_input=ProjectFilter, order_by=ProjectOrder, override=True)
+class ProjectType: ...
+
+
 @strawchemy.create_input(Project, include="all", override=True)
 class ProjectCreate: ...
+
+
+# Milestone
+
+
+@strawchemy.type(Milestone, include="all", override=True)
+class MilestoneType: ...
 
 
 @strawchemy.create_input(Milestone, include="all", override=True)

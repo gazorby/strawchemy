@@ -17,13 +17,12 @@ from strawchemy.strawberry.filters import (
     DateTimeComparison,
     EqualityComparison,
     GraphQLComparison,
-    JSONComparison,
     OrderComparison,
-    SQLITEJSONComparison,
     TextComparison,
     TimeComparison,
     TimeDeltaComparison,
 )
+from strawchemy.strawberry.filters.inputs import make_full_json_comparison_input, make_sqlite_json_comparison_input
 
 if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition
@@ -47,7 +46,6 @@ _DEFAULT_FILTERS_MAP: FilterMap = OrderedDict(
         (bool,): EqualityComparison,
         (int, float, Decimal): OrderComparison,
         (str,): TextComparison,
-        (dict,): JSONComparison,
     }
 )
 
@@ -79,7 +77,9 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
 
             filters_map |= {(Geometry, WKBElement, WKTElement): GeoComparison}
         if self.db_features.dialect == "sqlite":
-            filters_map[(dict,)] = SQLITEJSONComparison
+            filters_map[(dict,)] = make_sqlite_json_comparison_input()
+        else:
+            filters_map[(dict,)] = make_full_json_comparison_input()
         return filters_map
 
     @classmethod

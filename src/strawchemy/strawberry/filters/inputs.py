@@ -11,6 +11,7 @@ compare fields of DTOs in GraphQL queries.
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
+from functools import cache
 from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar
 
 import strawberry
@@ -41,17 +42,17 @@ __all__ = (
     "DateComparison",
     "EqualityComparison",
     "GraphQLComparison",
-    "JSONComparison",
     "OrderComparison",
     "TextComparison",
     "TimeComparison",
     "TimeDeltaComparison",
+    "_JSONComparison",
 )
 
 T = TypeVar("T")
 GraphQLComparisonT = TypeVar("GraphQLComparisonT", bound="GraphQLComparison")
 GraphQLFilter: TypeAlias = "GraphQLComparison | OrderByEnum"
-AnyGraphQLComparison: TypeAlias = "EqualityComparison[Any] | OrderComparison[Any] | TextComparison | DateComparison | TimeComparison | DateTimeComparison | TimeDeltaComparison | ArrayComparison[Any] | JSONComparison"
+AnyGraphQLComparison: TypeAlias = "EqualityComparison[Any] | OrderComparison[Any] | TextComparison | DateComparison | TimeComparison | DateTimeComparison | TimeDeltaComparison | ArrayComparison[Any] | _JSONComparison | _SQLiteJSONComparison"
 AnyOrderGraphQLComparison: TypeAlias = (
     "OrderComparison[Any] | TextComparison | DateComparison | TimeComparison | DateTimeComparison | TimeDeltaComparison"
 )
@@ -180,54 +181,6 @@ class TextComparison(OrderComparison[str]):
     icontains: str | None = UNSET
 
 
-@strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))
-class JSONComparison(EqualityComparison[dict[str, Any]]):
-    """JSON comparison class for GraphQL filters.
-
-    This class provides a set of JSON comparison operators that can be
-    used to filter data based on containment, key existence, and other
-    JSON-specific properties.
-
-    Attributes:
-        contains: Filters for JSON values that contain this JSON object.
-        contained_in: Filters for JSON values that are contained in this JSON object.
-        has_key: Filters for JSON values that have this key.
-        has_key_all: Filters for JSON values that have all of these keys.
-        has_key_any: Filters for JSON values that have any of these keys.
-    """
-
-    __strawchemy_filter__ = JSONFilter
-
-    contains: dict[str, Any] | None = UNSET
-    contained_in: dict[str, Any] | None = UNSET
-    has_key: str | None = UNSET
-    has_key_all: list[str] | None = UNSET
-    has_key_any: list[str] | None = UNSET
-
-
-@strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))
-class SQLITEJSONComparison(EqualityComparison[dict[str, Any]]):
-    """JSON comparison class for GraphQL filters.
-
-    This class provides a set of JSON comparison operators that can be
-    used to filter data based on containment, key existence, and other
-    JSON-specific properties.
-
-    Attributes:
-        contains: Filters for JSON values that contain this JSON object.
-        contained_in: Filters for JSON values that are contained in this JSON object.
-        has_key: Filters for JSON values that have this key.
-        has_key_all: Filters for JSON values that have all of these keys.
-        has_key_any: Filters for JSON values that have any of these keys.
-    """
-
-    __strawchemy_filter__ = JSONFilter
-
-    has_key: str | None = UNSET
-    has_key_all: list[str] | None = UNSET
-    has_key_any: list[str] | None = UNSET
-
-
 @strawberry.input(name="ArrayComparison", description=_DESCRIPTION.format(field="List fields"))
 class ArrayComparison(EqualityComparison[T], Generic[T]):
     """Postgres array comparison class for GraphQL filters.
@@ -325,3 +278,63 @@ class DateTimeComparison(OrderComparison[datetime]):
     hour: OrderComparison[int] | None = UNSET
     minute: OrderComparison[int] | None = UNSET
     second: OrderComparison[int] | None = UNSET
+
+
+class _JSONComparison(EqualityComparison[dict[str, Any]]):
+    """JSON comparison class for GraphQL filters.
+
+    This class provides a set of JSON comparison operators that can be
+    used to filter data based on containment, key existence, and other
+    JSON-specific properties.
+
+    Attributes:
+        contains: Filters for JSON values that contain this JSON object.
+        contained_in: Filters for JSON values that are contained in this JSON object.
+        has_key: Filters for JSON values that have this key.
+        has_key_all: Filters for JSON values that have all of these keys.
+        has_key_any: Filters for JSON values that have any of these keys.
+    """
+
+    __strawchemy_filter__ = JSONFilter
+
+    contains: dict[str, Any] | None = UNSET
+    contained_in: dict[str, Any] | None = UNSET
+    has_key: str | None = UNSET
+    has_key_all: list[str] | None = UNSET
+    has_key_any: list[str] | None = UNSET
+
+
+class _SQLiteJSONComparison(EqualityComparison[dict[str, Any]]):
+    """JSON comparison class for GraphQL filters.
+
+    This class provides a set of JSON comparison operators that can be
+    used to filter data based on containment, key existence, and other
+    JSON-specific properties.
+
+    Attributes:
+        contains: Filters for JSON values that contain this JSON object.
+        contained_in: Filters for JSON values that are contained in this JSON object.
+        has_key: Filters for JSON values that have this key.
+        has_key_all: Filters for JSON values that have all of these keys.
+        has_key_any: Filters for JSON values that have any of these keys.
+    """
+
+    __strawchemy_filter__ = JSONFilter
+
+    has_key: str | None = UNSET
+    has_key_all: list[str] | None = UNSET
+    has_key_any: list[str] | None = UNSET
+
+
+@cache
+def make_full_json_comparison_input() -> type[_JSONComparison]:
+    return strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))(
+        _JSONComparison
+    )
+
+
+@cache
+def make_sqlite_json_comparison_input() -> type[_SQLiteJSONComparison]:
+    return strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))(
+        _SQLiteJSONComparison
+    )
