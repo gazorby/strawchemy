@@ -11,7 +11,6 @@ from typing_extensions import TypeIs
 
 from sqlalchemy import (
     Column,
-    Index,
     PrimaryKeyConstraint,
     Sequence,
     SQLColumnExpression,
@@ -421,11 +420,11 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         return any(self._relationship_required(relationship) for relationship in model_field.property._reverse_property)  # noqa: SLF001
 
     @classmethod
-    def unique_constraints(cls, model: type[DeclarativeBase]) -> list[ColumnCollectionConstraint | Index]:
+    def unique_constraints(cls, model: type[DeclarativeBase]) -> list[ColumnCollectionConstraint]:
         if not isinstance(model.__table__, Table):
             return []
         return [
             constraint
             for constraint in model.__table__.constraints
-            if isinstance(constraint, PrimaryKeyConstraint | UniqueConstraint | postgresql.ExcludeConstraint | Index)
+            if isinstance(constraint, PrimaryKeyConstraint | UniqueConstraint | postgresql.ExcludeConstraint)
         ]
