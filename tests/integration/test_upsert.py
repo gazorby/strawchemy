@@ -20,6 +20,14 @@ pytestmark = [pytest.mark.integration]
 async def test_upsert_one_new(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
+    """Test upserting a single new fruit record.
+
+    This test verifies that the upsertFruit mutation correctly creates a new fruit
+    record when no existing record matches. The test expects:
+    - A successful GraphQL mutation response
+    - The new fruit data to be returned correctly
+    - Exactly 2 SQL queries: 1 INSERT and 1 SELECT
+    """
     query = """
         mutation {
             upsertFruit(
@@ -53,6 +61,16 @@ async def test_upsert_one_new(
 async def test_upsert_one_existing(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
+    """Test upserting a single existing fruit record with conflict resolution.
+
+    This test verifies that the upsertFruit mutation correctly updates an existing
+    fruit record when a conflict is detected on the specified conflict field (name).
+    The test expects:
+    - A successful GraphQL mutation response with conflictFields specified
+    - The existing fruit record to be updated with new values
+    - The original ID to be preserved in the response
+    - Exactly 2 SQL queries: 1 INSERT (with conflict resolution) and 1 SELECT
+    """
     query = """
         mutation {
             upsertFruit(
@@ -89,6 +107,16 @@ async def test_upsert_one_existing(
 async def test_upsert_many_new(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
 ) -> None:
+    """Test upserting multiple new fruit records.
+
+    This test verifies that the upsertFruits mutation correctly creates multiple new
+    fruit records when no existing records match. The test expects:
+    - A successful GraphQL mutation response
+    - All new fruit data to be returned in the correct order
+    - Different SQL query patterns based on database dialect:
+      * PostgreSQL/MySQL: 3 queries (2 INSERTs + 1 SELECT)
+      * SQLite: 2 queries (1 batch INSERT + 1 SELECT)
+    """
     query = """
         mutation {
             upsertFruits(
@@ -132,6 +160,18 @@ async def test_upsert_many_new(
 async def test_upsert_many_new_and_existing(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
 ) -> None:
+    """Test upserting multiple fruits with mixed new and existing records.
+
+    This test verifies that the upsertFruits mutation correctly handles a batch
+    operation containing both new records (to be created) and existing records
+    (to be updated) based on conflict resolution using the name field. The test expects:
+    - A successful GraphQL mutation response with conflictFields specified
+    - Mixed create/update operations to be handled correctly
+    - All fruit data to be returned with updated values
+    - Different SQL query patterns based on database dialect:
+      * PostgreSQL/MySQL: 3 queries (2 INSERTs with conflict resolution + 1 SELECT)
+      * SQLite: 2 queries (1 batch INSERT with conflict resolution + 1 SELECT)
+    """
     query = """
         mutation {
             upsertFruits(
