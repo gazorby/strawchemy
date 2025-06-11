@@ -9,7 +9,9 @@ class TranspilingError(Exception):
     """Raised when an error occurs during transpiling."""
 
 
-class QueryResultError(Exception): ...
+class QueryResultError(Exception):
+    """Raised when an error occurs during query result processing or mapping."""
 
 
-class QueryHookError(Exception): ...
+class QueryHookError(Exception):
+    """Raised when an error occurs within a query hook's execution."""

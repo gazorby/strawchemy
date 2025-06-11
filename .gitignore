@@ -188,3 +188,5 @@ mise.local.toml
 
 # Example apps
 *.sqlite
+
+.windsurf

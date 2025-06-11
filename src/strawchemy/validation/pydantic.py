@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any, ClassVar, override
@@ -131,11 +132,30 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
 
 
 class PydanticMapper:
+    """Provides methods to generate Pydantic models for input validation.
+
+    This class leverages a `StrawchemyInputValidationFactory` to create
+    Pydantic models tailored for different input scenarios such as creation,
+    update by primary key, and update by filter.
+    """
+
     def __init__(self, strawchemy: Strawchemy) -> None:
+        """Initializes the PydanticMapper.
+
+        Args:
+            strawchemy: An instance of the Strawchemy class.
+        """
         pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
-        self._strawchemy = strawchemy
-        self._validation_factory = StrawchemyInputValidationFactory(self._strawchemy, pydantic_backend)
+        self._strawchemy: Strawchemy = strawchemy
+        """The Strawchemy instance used for schema introspection."""
+        self._validation_factory: StrawchemyInputValidationFactory = StrawchemyInputValidationFactory(
+            self._strawchemy, pydantic_backend
+        )
+        """Factory for creating input validation Pydantic models."""
 
         self.create = partial(self._validation_factory.input, mode="create")
+        """Generates a Pydantic model for 'create' input validation."""
         self.pk_update = partial(self._validation_factory.input, mode="update_by_pk")
+        """Generates a Pydantic model for 'update_by_pk' input validation."""
         self.filter_update = partial(self._validation_factory.input, mode="update_by_filter")
+        """Generates a Pydantic model for 'update_by_filter' input validation."""

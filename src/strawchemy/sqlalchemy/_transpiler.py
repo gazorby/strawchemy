@@ -1,18 +1,10 @@
 """Transpiles a GraphQL query into a SQLAlchemy query.
 
-This module contains the Transpiler class, which is responsible for
-converting a GraphQL query into a SQLAlchemy query. It also defines
-several helper classes and functions that are used in the transpilation
-process.
+This module contains the QueryTranspiler class, which is responsible for
+converting a GraphQL query into a SQLAlchemy query.
 
 Classes:
-    Transpiler: Transpiles a GraphQL query into a SQLAlchemy query.
-
-Data classes:
-    _Join: Represents a join between two tables.
-    _Query: Represents a SQLAlchemy query.
-    _AggregationJoin: Represents a join for aggregations.
-    _Conjunction: Represents a conjunction of boolean expressions.
+    QueryTranspiler: Transpiles a GraphQL query into a SQLAlchemy query.
 """
 
 from __future__ import annotations
@@ -98,6 +90,16 @@ class QueryTranspiler(Generic[DeclarativeT]):
         query_hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] | None = None,
         deterministic_ordering: bool = False,
     ) -> None:
+        """Initializes the QueryTranspiler.
+
+        Args:
+            model: The SQLAlchemy model to transpile queries for.
+            dialect: The SQLAlchemy dialect to use.
+            statement: An optional base SQLAlchemy statement to build upon.
+            scope: An optional existing QueryScope.
+            query_hooks: Optional hooks to apply during query transpilation.
+            deterministic_ordering: Whether to ensure deterministic ordering of results.
+        """
         supported_dialect = cast("SupportedDialect", dialect.name)
         self._inspector = SQLAlchemyGraphQLInspector(supported_dialect, [model.registry])
         self._aggregation_prefix: str = "aggregation"
@@ -110,6 +112,16 @@ class QueryTranspiler(Generic[DeclarativeT]):
         self._hook_applier = HookApplier(self.scope, query_hooks or defaultdict(list))
 
     def _base_statement(self) -> Select[tuple[DeclarativeT]]:
+        """Creates the base select statement for the query.
+
+        If a `self._statement` was provided during initialization, this method
+        joins the root alias of the current scope to an aliased subquery
+        derived from `self._statement`. Otherwise, it returns a simple select
+        from the root alias.
+
+        Returns:
+            The base SQLAlchemy Select statement.
+        """
         if self._statement is not None:
             root_mapper = class_mapper(self.scope.model)
             alias = self._statement.subquery().alias()
@@ -142,7 +154,20 @@ class QueryTranspiler(Generic[DeclarativeT]):
             self.scope = current_scope
 
     def _literal_column(self, from_name: str, column_name: str) -> Label[Any]:
-        # Trick to properly render "table.column_name" using quote when needed
+        """Creates a literal column label, ensuring proper quoting.
+
+        This method is used to generate a column label that correctly
+        handles quoting for identifiers, especially when dealing with names
+        that might contain special characters or reserved keywords, by
+        constructing a temporary select statement.
+
+        Args:
+            from_name: The name of the table or alias from which the column originates.
+            column_name: The name of the column.
+
+        Returns:
+            A SQLAlchemy Label construct for the column.
+        """
         temp_statement = select(column(column_name)).select_from(text(from_name)).alias(from_name)
         return literal_column(str(temp_statement.c[column_name])).label(column_name)
 
@@ -471,6 +496,17 @@ class QueryTranspiler(Generic[DeclarativeT]):
         return join
 
     def _lateral_join(self, node: QueryNodeType, target_alias: AliasedClass[Any], query: Query, is_outer: bool) -> Join:
+        """Creates a LATERAL join for a given node.
+
+        Args:
+            node: The query node representing the relation to join.
+            target_alias: The aliased class for the target of the join.
+            query: The subquery definition for the lateral join.
+            is_outer: Whether to perform an outer join.
+
+        Returns:
+            A Join object representing the lateral join.
+        """
         target_insp = inspect(target_alias)
         aliased_attribute = self.scope.aliased_attribute(node)
         node_inspect = self.scope.inspect(node)
@@ -483,6 +519,19 @@ class QueryTranspiler(Generic[DeclarativeT]):
         return Join(statement, node=node, is_outer=is_outer, onclause=true())
 
     def _cte_join(self, node: QueryNodeType, target_alias: AliasedClass[Any], query: Query, is_outer: bool) -> Join:
+        """Creates a CTE-based join for a given node.
+
+        This is used when LATERAL joins are not supported by the database.
+
+        Args:
+            node: The query node representing the relation to join.
+            target_alias: The aliased class for the target of the join.
+            query: The subquery definition for the CTE.
+            is_outer: Whether to perform an outer join.
+
+        Returns:
+            A Join object representing the CTE-based join.
+        """
         aliased_attribute = self.scope.aliased_attribute(node)
         remote_fks = self.scope.inspect(node).foreign_key_columns("target", target_alias)
         rank_column: Label[int] | None = None
@@ -540,6 +589,20 @@ class QueryTranspiler(Generic[DeclarativeT]):
     def _aggregation_cte_join(
         self, node: QueryNodeType, alias: AliasedClass[Any], statement: Select[Any], cte_name: str
     ) -> AggregationJoin:
+        """Creates an aggregation join using a Common Table Expression (CTE).
+
+        This method is used for aggregations when LATERAL joins are not supported
+        or not suitable.
+
+        Args:
+            node: The query node to create an aggregation join for.
+            alias: The aliased class for the target of the aggregation.
+            statement: The SQLAlchemy select statement for the aggregation.
+            cte_name: The name to use for the CTE.
+
+        Returns:
+            An AggregationJoin object representing the CTE-based aggregation join.
+        """
         remote_fks = self.scope.inspect(node).foreign_key_columns("target", alias)
         cte_statement = (
             statement.add_columns(*remote_fks)
@@ -625,6 +688,20 @@ class QueryTranspiler(Generic[DeclarativeT]):
         return OrderBy(self._inspector.db_features, columns, joins)
 
     def _select(self, selection_tree: QueryNodeType) -> tuple[Select[tuple[DeclarativeT]], list[Join]]:
+        """Builds the main SELECT statement based on the selection tree.
+
+        This method constructs the core SQLAlchemy SELECT statement, incorporating
+        selected columns, aggregations, and eager loading options for relations
+        defined in the `selection_tree`.
+
+        Args:
+            selection_tree: The query node tree representing the fields to select.
+
+        Returns:
+            A tuple containing:
+                - The constructed SQLAlchemy Select statement.
+                - A list of Join objects required for aggregations.
+        """
         aggregation_joins: list[Join] = []
         statement = self._base_statement()
         root_columns, column_transforms = self.scope.inspect(selection_tree).columns()
@@ -654,11 +731,34 @@ class QueryTranspiler(Generic[DeclarativeT]):
         return statement, aggregation_joins
 
     def _use_distinct_rank(self, query_graph: QueryGraph[DeclarativeT]) -> bool:
+        """Determines if DISTINCT ON should be implemented using RANK() window function.
+
+        This is necessary when the database dialect does not natively support
+        DISTINCT ON, or when specific ordering is required with DISTINCT ON.
+
+        Args:
+            query_graph: The query graph containing distinct_on and order_by information.
+
+        Returns:
+            True if RANK() should be used for distinct operation, False otherwise.
+        """
         if self._inspector.db_features.supports_distinct_on:
             return bool(query_graph.distinct_on and (query_graph.order_by_tree or self._deterministic_ordering))
         return bool(query_graph.distinct_on)
 
     def _relation_order_by(self, query_graph: QueryGraph[DeclarativeT], query: Query) -> list[OrderBySpec]:
+        """Generates ORDER BY specifications for related entities in the query.
+
+        Ensures consistent ordering for joined relations, especially when
+        deterministic ordering is enabled or specific order nodes are defined for a join.
+
+        Args:
+            query_graph: The query graph containing selection and ordering information.
+            query: The current Query object being built.
+
+        Returns:
+            A list of OrderBySpec tuples for related entities.
+        """
         selected_tree = query_graph.resolved_selection_tree()
         order_by_spec: list[OrderBySpec] = []
         for join in sorted(query.joins):
@@ -694,6 +794,21 @@ class QueryTranspiler(Generic[DeclarativeT]):
         offset: int | None = None,
         allow_null: bool = False,
     ) -> Query:
+        """Constructs the final SQLAlchemy Query object from a QueryGraph.
+
+        This method orchestrates the assembly of the SELECT statement, WHERE clauses,
+        ORDER BY clauses, LIMIT/OFFSET, DISTINCT ON logic, and all necessary JOINs
+        (including subquery and aggregation joins).
+
+        Args:
+            query_graph: The graph representation of the query to build.
+            limit: Optional limit for pagination.
+            offset: Optional offset for pagination.
+            allow_null: Whether to allow nulls in filter conditions.
+
+        Returns:
+            The fully constructed Query object.
+        """
         joins: list[Join] = []
         subquery_join_nodes: set[QueryNodeType] = set()
         distinct_on_rank = self._use_distinct_rank(query_graph)
@@ -783,12 +898,9 @@ class QueryTranspiler(Generic[DeclarativeT]):
             limit: Maximum number of results to return.
             offset: Number of results to skip before returning.
             distinct_on: Fields to apply DISTINCT ON to.
-            statement_type: Type of statement to generate ('lambda' by default).
             allow_null: Whether to allow null values in filter conditions.
-            root_aggregations: Whether to include aggregations at the root level.
-            query_hooks: Dictionary mapping nodes to query modification functions.
-            executor_cls: Executor type to return
-            execution_options: Options for statement execution
+            executor_cls: Executor type to return. Defaults to SyncQueryExecutor.
+            execution_options: Options for statement execution.
 
         Returns:
             A QueryExecutor instance that can execute the built query.
@@ -796,13 +908,13 @@ class QueryTranspiler(Generic[DeclarativeT]):
         Example:
             ```python
             # Create an executor that selects user data with filtering and ordering
-            executor = transpiler.executor(
+            executor = transpiler.select_executor(
                 selection_tree=user_fields_tree,
                 dto_filter=BooleanFilterDTO(field="age", op="gt", value=18),
                 order_by=[OrderByDTO(field="name", direction="ASC")],
                 limit=10
             )
-            results = await executor.execute()
+            results = await executor.execute() # If using an async executor
             ```
         """
         query_graph = QueryGraph(

@@ -1,3 +1,9 @@
+"""Base repository module for Strawchemy framework.
+
+This module provides the core repository implementation for GraphQL data access
+in Strawchemy, including base classes for query building and result handling.
+"""
+
 from __future__ import annotations
 
 import dataclasses
@@ -43,13 +49,37 @@ T = TypeVar("T")
 
 @dataclass
 class GraphQLResult(Generic[ModelT, T]):
+    """Container for GraphQL query results with conversion utilities.
+
+    This class provides methods to convert raw query results into their corresponding
+    GraphQL types, handling both single results and collections.
+
+    Attributes:
+        query_result: The raw query result from the database
+        tree: The query tree used to construct the result
+    """
+
     query_result: QueryResult[ModelT]
     tree: StrawberryQueryNode[T]
 
     def graphql_type(self) -> T:
+        """Convert the query result to a single GraphQL type.
+
+        Returns:
+            A single instance of the GraphQL type
+
+        Raises:
+            NoResultFound: If no result is found
+            MultipleResultsFound: If multiple results are found
+        """
         return self.tree.node_result_to_strawberry_type(self.query_result.one())
 
     def graphql_type_or_none(self) -> T | None:
+        """Convert the query result to a single GraphQL type or None.
+
+        Returns:
+            A single instance of the GraphQL type, or None if no result is found
+        """
         node_result = self.query_result.one_or_none()
         return self.tree.node_result_to_strawberry_type(node_result) if node_result else None
 
@@ -63,21 +93,62 @@ class GraphQLResult(Generic[ModelT, T]):
     def graphql_list(self) -> list[T]: ...
 
     def graphql_list(self, root_aggregations: bool = False) -> list[T] | T:
+        """Convert the query result to a list of GraphQL types or aggregated result.
+
+        Args:
+            root_aggregations: If True, returns aggregated results as a single object.
+                             If False, returns a list of individual results.
+
+        Returns:
+            Either a list of GraphQL types or a single aggregated result object,
+            depending on the root_aggregations flag
+        """
         if root_aggregations:
             return self.tree.aggregation_query_result_to_strawberry_type(self.query_result)
         return [self.tree.node_result_to_strawberry_type(node_result) for node_result in self.query_result]
 
     @property
     def instances(self) -> Sequence[ModelT]:
+        """Get the raw model instances from the query result.
+
+        Returns:
+            A sequence of raw model instances
+        """
         return self.query_result.nodes
 
     @property
     def instance(self) -> ModelT:
+        """Get a single raw model instance from the query result.
+
+        Returns:
+            A single model instance
+
+        Raises:
+            NoResultFound: If no result is found
+            MultipleResultsFound: If multiple results are found
+        """
         return self.query_result.one().model
 
 
 @dataclass
 class StrawchemyRepository(Generic[T]):
+    """Base repository for GraphQL data access in Strawchemy.
+
+    This class provides the core functionality for building and executing GraphQL queries
+    against a database, with support for filtering, ordering, and field selection.
+
+    Args:
+        type: The Strawberry GraphQL type this repository works with
+        info: The GraphQL resolver info object
+        root_aggregations: Whether to enable root-level aggregations
+        auto_snake_case: Whether to automatically convert field names to snake_case
+
+    Attributes:
+        _ignored_field_names: Set of field names to ignore during query building
+        _query_hooks: Dictionary of query hooks registered for different query nodes
+        _tree: The query tree built from the GraphQL selection
+    """
+
     _ignored_field_names: ClassVar[frozenset[str]] = frozenset({"__typename"})
 
     type: type[T]

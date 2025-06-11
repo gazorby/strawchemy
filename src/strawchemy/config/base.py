@@ -1,3 +1,5 @@
+"""Configuration objects for Strawchemy."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -17,6 +19,22 @@ if TYPE_CHECKING:
 
 @dataclass
 class StrawchemyConfig:
+    """Global configuration for Strawchemy.
+
+    Attributes:
+        dialect: The SQLAlchemy dialect being used.
+        session_getter: Function to retrieve SQLAlchemy session from strawberry `Info` object.
+        auto_snake_case: Automatically convert snake cased names to camel case.
+        repository_type: Repository class to use for auto resolvers.
+        filter_overrides: Override default filters with custom filters.
+        execution_options: SQLAlchemy execution options for repository operations.
+        pagination_default_limit: Default pagination limit when `pagination=True`.
+        pagination: Enable/disable pagination on list resolvers.
+        default_id_field_name: Name for primary key fields arguments on primary key resolvers.
+        deterministic_ordering: Force deterministic ordering for list resolvers.
+        inspector: The SQLAlchemyGraphQLInspector instance.
+    """
+
     dialect: SupportedDialect
     session_getter: AnySessionGetter = default_session_getter
     """Function to retrieve SQLAlchemy session from strawberry `Info` object."""
@@ -40,4 +58,5 @@ class StrawchemyConfig:
     inspector: SQLAlchemyGraphQLInspector = field(init=False)
 
     def __post_init__(self) -> None:
+        """Initializes the SQLAlchemyGraphQLInspector after the dataclass is created."""
         self.inspector = SQLAlchemyGraphQLInspector(self.dialect, filter_overrides=self.filter_overrides)

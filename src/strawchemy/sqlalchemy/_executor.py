@@ -31,16 +31,44 @@ __all__ = ("AsyncQueryExecutor", "NodeResult", "QueryExecutor", "SyncQueryExecut
 
 @dataclass
 class NodeResult(Generic[ModelT]):
+    """Represents a single node result from a query.
+
+    Attributes:
+        model: The SQLAlchemy model instance.
+        computed_values: A dictionary of computed values for this node.
+        node_key: A callable to generate a key for a query node type.
+    """
+
     model: ModelT
     computed_values: dict[str, Any]
     node_key: Callable[[QueryNodeType], str]
 
     def value(self, key: QueryNodeType) -> Any:
+        """Retrieves the value for a given query node type.
+
+        If the key represents a computed or transformed value, it's fetched
+        from `computed_values`. Otherwise, it's retrieved as an attribute
+        from the `model`.
+
+        Args:
+            key: The query node type representing the desired value.
+
+        Returns:
+            The value corresponding to the key.
+        """
         if key.value.is_computed or key.metadata.data.is_transform:
             return self.computed_values[self.node_key(key)]
         return getattr(self.model, key.value.model_field_name)
 
     def copy_with(self, model: Any) -> Self:
+        """Creates a copy of this NodeResult with a new model.
+
+        Args:
+            model: The new model instance to use.
+
+        Returns:
+            A new NodeResult instance with the updated model.
+        """
         return dataclasses.replace(self, model=model)
 
 
@@ -69,28 +97,67 @@ class QueryResult(Generic[ModelT]):
             self.node_computed_values = [{} for _ in range(len(self.nodes))]
 
     def __iter__(self) -> Generator[NodeResult[ModelT]]:
+        """Iterates over the query results, yielding NodeResult instances.
+
+        Yields:
+            NodeResult[ModelT]: An individual result node.
+        """
         for model, computed_values in zip(self.nodes, self.node_computed_values, strict=True):
             yield NodeResult(model, computed_values, self.node_key)
 
     def filter_in(self, **kwargs: Sequence[Any]) -> Self:
+        """Filters the query results based on attribute values.
+
+        Keeps only the nodes where the specified attributes are present in the
+        provided sequences of values.
+
+        Args:
+            **kwargs: Keyword arguments where keys are attribute names of the
+                model and values are sequences of allowed values for that attribute.
+
+        Returns:
+            A new QueryResult instance with the filtered nodes.
+        """
         filtered = [
             (model, computed_values)
             for model, computed_values in zip(self.nodes, self.node_computed_values, strict=True)
             if all(getattr(model, key) in value for key, value in kwargs.items())
         ]
-        nodes, computed_values = list(map(list, zip(*filtered, strict=True)))
+        nodes, computed_values = list(map(list, zip(*filtered, strict=True))) if filtered else ([], [])
         return dataclasses.replace(self, nodes=nodes, node_computed_values=computed_values)
 
     def value(self, key: QueryNodeType) -> Any:
+        """Retrieves a query-level computed value.
+
+        Args:
+            key: The query node type representing the desired query-level
+                computed value.
+
+        Returns:
+            The computed value for the query.
+        """
         return self.query_computed_values[self.node_key(key)]
 
     def one(self) -> NodeResult[ModelT]:
+        """Returns the single result node.
+
+        Raises:
+            QueryResultError: If the number of nodes is not exactly one.
+
+        Returns:
+            The single NodeResult.
+        """
         if len(self.nodes) != 1 or len(self.node_computed_values) != 1:
             msg = f"Expected one item, got {len(self.nodes)}"
             raise QueryResultError(msg)
         return NodeResult(self.nodes[0], self.node_computed_values[0], self.node_key)
 
     def one_or_none(self) -> NodeResult[ModelT] | None:
+        """Returns the single result node, or None if there isn't exactly one result.
+
+        Returns:
+            The single NodeResult or None.
+        """
         try:
             return self.one()
         except QueryResultError:
@@ -164,13 +231,24 @@ class QueryExecutor(Generic[DeclarativeT]):
 
 @dataclass
 class AsyncQueryExecutor(QueryExecutor[DeclarativeT]):
+    """Extends QueryExecutor to provide asynchronous query execution.
+
+    This class inherits the query building capabilities of `QueryExecutor`
+    and adapts them for an asynchronous environment. It uses an `AnyAsyncSession`
+    to execute the SQLAlchemy statements and retrieve results.
+
+    The primary methods `execute`, `list`, and `get_one_or_none` are implemented
+    as asynchronous methods, suitable for use with `async/await`.
+    """
+
     async def execute(self, session: AnyAsyncSession) -> Result[tuple[DeclarativeT, Any]]:
-        """Executes the given SQLAlchemy statement.
+        """Executes the SQLAlchemy statement.
+
+        The statement to be executed is determined by the `self.statement()`
+        method.
 
         Args:
             session: The SQLAlchemy AnyAsyncSession to use.
-            statement: The SQLAlchemy statement to execute. If None, the
-                base statement is used.
 
         Returns:
             The result of the execution.
@@ -180,10 +258,11 @@ class AsyncQueryExecutor(QueryExecutor[DeclarativeT]):
     async def list(self, session: AnyAsyncSession) -> QueryResult[DeclarativeT]:
         """Executes the statement and returns a QueryResult object containing all results.
 
+        The statement to be executed is determined by the `self.statement()`
+        method.
+
         Args:
             session: The SQLAlchemy AnyAsyncSession to use.
-            statement: The SQLAlchemy statement to execute. If None, the
-                base statement is used.
 
         Returns:
             A QueryResult object containing all results.
@@ -193,10 +272,11 @@ class AsyncQueryExecutor(QueryExecutor[DeclarativeT]):
     async def get_one_or_none(self, session: AnyAsyncSession) -> QueryResult[DeclarativeT]:
         """Executes the statement and returns a QueryResult object containing at most one result.
 
+        The statement to be executed is determined by the `self.statement()`
+        method.
+
         Args:
             session: The SQLAlchemy AnyAsyncSession to use.
-            statement: The SQLAlchemy statement to execute. If None, the
-                base statement is used.
 
         Returns:
             A QueryResult object containing at most one result.
@@ -206,13 +286,24 @@ class AsyncQueryExecutor(QueryExecutor[DeclarativeT]):
 
 @dataclass
 class SyncQueryExecutor(QueryExecutor[DeclarativeT]):
+    """Extends QueryExecutor to provide synchronous query execution.
+
+    This class inherits the query building capabilities of `QueryExecutor`
+    and adapts them for a synchronous environment. It uses an `AnySyncSession`
+    to execute the SQLAlchemy statements and retrieve results.
+
+    The primary methods `execute`, `list`, and `get_one_or_none` are implemented
+    as synchronous methods.
+    """
+
     def execute(self, session: AnySyncSession) -> Result[tuple[DeclarativeT, Any]]:
-        """Executes the given SQLAlchemy statement.
+        """Executes the SQLAlchemy statement.
+
+        The statement to be executed is determined by the `self.statement()`
+        method.
 
         Args:
             session: The SQLAlchemy AnySyncSession to use.
-            statement: The SQLAlchemy statement to execute. If None, the
-                base statement is used.
 
         Returns:
             The result of the execution.
@@ -222,10 +313,11 @@ class SyncQueryExecutor(QueryExecutor[DeclarativeT]):
     def list(self, session: AnySyncSession) -> QueryResult[DeclarativeT]:
         """Executes the statement and returns a QueryResult object containing all results.
 
+        The statement to be executed is determined by the `self.statement()`
+        method.
+
         Args:
             session: The SQLAlchemy AnySyncSession to use.
-            statement: The SQLAlchemy statement to execute. If None, the
-                base statement is used.
 
         Returns:
             A QueryResult object containing all results.
@@ -235,10 +327,11 @@ class SyncQueryExecutor(QueryExecutor[DeclarativeT]):
     def get_one_or_none(self, session: AnySyncSession) -> QueryResult[DeclarativeT]:
         """Executes the statement and returns a QueryResult object containing at most one result.
 
+        The statement to be executed is determined by the `self.statement()`
+        method.
+
         Args:
             session: The SQLAlchemy AnySyncSession to use.
-            statement: The SQLAlchemy statement to execute. If None, the
-                base statement is used.
 
         Returns:
             A QueryResult object containing at most one result.
