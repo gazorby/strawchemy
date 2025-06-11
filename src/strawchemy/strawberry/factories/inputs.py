@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Generator, Sequence
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
@@ -146,7 +147,9 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
                 if field.uselist and field.related_dto:
                     field.type_ = field.related_dto | None
                 if aggregate_filters:
-                    aggregation_field = self._aggregation_field(field, dto_config)
+                    aggregation_field = self._aggregation_field(
+                        field, dataclasses.replace(dto_config, partial_default=UNSET)
+                    )
                     field_map[key + aggregation_field.name] = aggregation_field
                     yield aggregation_field
             else:
@@ -364,10 +367,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         return OrderByEnum
 
     def _order_by_aggregation_fields(
-        self,
-        aggregation: FilterFunctionInfo,
-        model: type[Any],
-        dto_config: DTOConfig,
+        self, aggregation: FilterFunctionInfo, model: type[Any], dto_config: DTOConfig
     ) -> type[OrderByDTO]:
         field_defs = [
             FunctionArgFieldDefinition(
@@ -397,7 +397,10 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             else:
                 type_hint = OrderByEnum
             dto_config = DTOConfig(
-                dto_config.purpose, aliases={aggregation.function: aggregation.field_name}, partial=dto_config.partial
+                dto_config.purpose,
+                aliases={aggregation.function: aggregation.field_name},
+                partial=dto_config.partial,
+                partial_default=UNSET,
             )
             field_definitions.append(
                 FunctionFieldDefinition(

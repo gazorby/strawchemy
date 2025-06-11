@@ -2,25 +2,25 @@
 # name: test_query_schemas[argument_override]
   '''
   input ColorAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum = null
+    name: OrderByEnum
   }
   
   input ColorAggregateNumericFieldsOrderBy {
-    name: OrderByEnum = null
+    name: OrderByEnum
   }
   
   input ColorAggregateOrderBy {
-    count: OrderByEnum = null
-    maxString: ColorAggregateMinMaxStringFieldsOrderBy = null
-    minString: ColorAggregateMinMaxStringFieldsOrderBy = null
-    sum: ColorAggregateNumericFieldsOrderBy = null
+    count: OrderByEnum
+    maxString: ColorAggregateMinMaxStringFieldsOrderBy
+    minString: ColorAggregateMinMaxStringFieldsOrderBy
+    sum: ColorAggregateNumericFieldsOrderBy
   }
   
   """
   Boolean expression to compare fields. All fields are combined with logical 'AND'.
   """
   input ColorOrderBy {
-    fruitsAggregate: FruitAggregateOrderBy = null
+    fruitsAggregate: FruitAggregateOrderBy
     fruits: FruitOrderBy
     name: OrderByEnum
     id: OrderByEnum
@@ -50,25 +50,25 @@
   }
   
   input FruitAggregateMinMaxStringFieldsOrderBy {
-    name: OrderByEnum = null
+    name: OrderByEnum
   }
   
   input FruitAggregateNumericFieldsOrderBy {
-    sweetness: OrderByEnum = null
+    sweetness: OrderByEnum
   }
   
   input FruitAggregateOrderBy {
-    avg: FruitAggregateNumericFieldsOrderBy = null
-    count: OrderByEnum = null
-    max: FruitAggregateNumericFieldsOrderBy = null
-    maxString: FruitAggregateMinMaxStringFieldsOrderBy = null
-    min: FruitAggregateNumericFieldsOrderBy = null
-    minString: FruitAggregateMinMaxStringFieldsOrderBy = null
-    stddevPop: FruitAggregateNumericFieldsOrderBy = null
-    stddevSamp: FruitAggregateNumericFieldsOrderBy = null
-    sum: FruitAggregateNumericFieldsOrderBy = null
-    varPop: FruitAggregateNumericFieldsOrderBy = null
-    varSamp: FruitAggregateNumericFieldsOrderBy = null
+    avg: FruitAggregateNumericFieldsOrderBy
+    count: OrderByEnum
+    max: FruitAggregateNumericFieldsOrderBy
+    maxString: FruitAggregateMinMaxStringFieldsOrderBy
+    min: FruitAggregateNumericFieldsOrderBy
+    minString: FruitAggregateMinMaxStringFieldsOrderBy
+    stddevPop: FruitAggregateNumericFieldsOrderBy
+    stddevSamp: FruitAggregateNumericFieldsOrderBy
+    sum: FruitAggregateNumericFieldsOrderBy
+    varPop: FruitAggregateNumericFieldsOrderBy
+    varSamp: FruitAggregateNumericFieldsOrderBy
   }
   
   """GraphQL type"""
