@@ -388,8 +388,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
             for name, field in id_fields:
                 if self.inspector.has_default(field.model_field):
                     annotations_overrides[name] = field.type_hint | None
-        return dataclasses.replace(
-            dto_config,
+        return dto_config.copy_with(
             annotation_overrides=annotations_overrides,
             partial=partial,
             partial_default=UNSET,

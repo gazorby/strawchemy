@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import dataclasses
+import platform
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
@@ -390,9 +391,10 @@ def postgis_service(
     postgres_user: str,
     postgres_password: str,
 ) -> Generator[PostgresService, None, None]:
+    repo = "imresamu/postgis-arm64" if "arm" in platform.processor().lower() else "postgis/postgis"
     with _provide_postgres_service(
         docker_service,
-        image="postgis/postgis:17-3.5",
+        image=f"{repo}:17-3.5",
         name="postgis-17",
         xdist_postgres_isolate=xdist_postgres_isolation_level,
         user=postgres_user,

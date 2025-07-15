@@ -79,7 +79,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         self, field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
     ) -> GraphQLFieldDefinition:
         related_model = self.inspector.relation_model(field_def.model_field)
-        aggregate_dto_config = dataclasses.replace(dto_config, annotation_overrides={})
+        aggregate_dto_config = dto_config.copy_with(annotation_overrides={})
         dto = self._aggregation_factory.factory(
             model=related_model, dto_config=aggregate_dto_config, parent_field_def=field_def
         )
@@ -480,7 +480,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         related_model = field.related_model
         assert related_model
         update_fields = self._upsert_update_fields_enum_factory.factory(
-            related_model, dataclasses.replace(dto_config, purpose=Purpose.WRITE), name=name
+            related_model, dto_config.copy_with(purpose=Purpose.WRITE, include="all"), name=name
         )
         return self._mapper.registry.register_enum(update_fields, name=name, description="Update fields enum")
 
@@ -494,7 +494,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         related_model = field.related_model
         assert related_model
         conflict_fields = self._upsert_conflict_fields_enum_factory.factory(
-            related_model, dataclasses.replace(dto_config, purpose=Purpose.WRITE), name=name
+            related_model, dto_config.copy_with(purpose=Purpose.WRITE, include="all"), name=name
         )
         return self._mapper.registry.register_enum(conflict_fields, name=name, description="Conflict fields enum")
 

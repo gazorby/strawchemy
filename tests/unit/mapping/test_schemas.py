@@ -229,6 +229,7 @@ def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
         pytest.param("create.Mutation", id="create_mutation"),
         pytest.param("update.Mutation", id="update_mutation"),
         pytest.param("delete.Mutation", id="delete_mutation"),
+        pytest.param("create_no_id.Mutation", id="create_no_id"),
     ],
 )
 @pytest.mark.snapshot

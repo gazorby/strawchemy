@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 from collections.abc import Generator, Sequence
 from typing import TYPE_CHECKING, Any, TypeVar, override
 
@@ -147,9 +146,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
                 if field.uselist and field.related_dto:
                     field.type_ = field.related_dto | None
                 if aggregate_filters:
-                    aggregation_field = self._aggregation_field(
-                        field, dataclasses.replace(dto_config, partial_default=UNSET)
-                    )
+                    aggregation_field = self._aggregation_field(field, dto_config.copy_with(partial_default=UNSET))
                     field_map[key + aggregation_field.name] = aggregation_field
                     yield aggregation_field
             else:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from functools import cached_property
@@ -418,9 +417,7 @@ class AggregationInspector:
         return dto
 
     def output_functions(self, model: type[Any], dto_config: DTOConfig) -> list[OutputFunctionInfo]:
-        int_as_float_config = dataclasses.replace(
-            dto_config, type_overrides={int: float | None, int | None: float | None}
-        )
+        int_as_float_config = dto_config.copy_with(type_overrides={int: float | None, int | None: float | None})
         numeric_fields = self.numeric_field_type(model, int_as_float_config)
         aggregations: list[OutputFunctionInfo] = []
 

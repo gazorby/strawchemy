@@ -1,0 +1,283 @@
+# serializer version: 1
+# name: test_query_schemas[auto_order_by]
+  '''
+  input ColorAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input ColorAggregateNumericFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input ColorAggregateOrderBy {
+    count: OrderByEnum
+    maxString: ColorAggregateMinMaxStringFieldsOrderBy
+    minString: ColorAggregateMinMaxStringFieldsOrderBy
+    sum: ColorAggregateNumericFieldsOrderBy
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input ColorOrderBy {
+    fruitsAggregate: FruitAggregateOrderBy
+    fruits: FruitOrderBy
+    name: OrderByEnum
+    id: OrderByEnum
+  }
+  
+  """GraphQL type"""
+  type ColorType {
+    fruitsAggregate: FruitAggregate!
+  
+    """Fetch objects from the FruitType collection"""
+    fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
+    name: String!
+    id: UUID!
+  }
+  
+  """Aggregation fields"""
+  type FruitAggregate {
+    avg: FruitNumericFields!
+    count: Int
+    max: FruitMinMaxFields!
+    min: FruitMinMaxFields!
+    stddevPop: FruitNumericFields!
+    stddevSamp: FruitNumericFields!
+    sum: FruitSumFields!
+    varPop: FruitNumericFields!
+    varSamp: FruitNumericFields!
+  }
+  
+  input FruitAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input FruitAggregateNumericFieldsOrderBy {
+    sweetness: OrderByEnum
+  }
+  
+  input FruitAggregateOrderBy {
+    avg: FruitAggregateNumericFieldsOrderBy
+    count: OrderByEnum
+    max: FruitAggregateNumericFieldsOrderBy
+    maxString: FruitAggregateMinMaxStringFieldsOrderBy
+    min: FruitAggregateNumericFieldsOrderBy
+    minString: FruitAggregateMinMaxStringFieldsOrderBy
+    stddevPop: FruitAggregateNumericFieldsOrderBy
+    stddevSamp: FruitAggregateNumericFieldsOrderBy
+    sum: FruitAggregateNumericFieldsOrderBy
+    varPop: FruitAggregateNumericFieldsOrderBy
+    varSamp: FruitAggregateNumericFieldsOrderBy
+  }
+  
+  """GraphQL type"""
+  type FruitMinMaxFields {
+    name: String
+    sweetness: Int
+  }
+  
+  """GraphQL type"""
+  type FruitNumericFields {
+    sweetness: Float
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input FruitOrderBy {
+    colorAggregate: ColorAggregateOrderBy
+    color: ColorOrderBy
+    name: OrderByEnum
+    colorId: OrderByEnum
+    sweetness: OrderByEnum
+    id: OrderByEnum
+  }
+  
+  """GraphQL type"""
+  type FruitSumFields {
+    name: String
+    sweetness: Int
+  }
+  
+  """GraphQL type"""
+  type FruitType {
+    color: ColorType!
+    name: String!
+    colorId: UUID
+    sweetness: Int!
+    id: UUID!
+  }
+  
+  """Aggregation fields"""
+  type GroupAggregate {
+    count: Int
+    max: GroupMinMaxFields!
+    min: GroupMinMaxFields!
+    sum: GroupSumFields!
+  }
+  
+  input GroupAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input GroupAggregateNumericFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input GroupAggregateOrderBy {
+    count: OrderByEnum
+    maxString: GroupAggregateMinMaxStringFieldsOrderBy
+    minString: GroupAggregateMinMaxStringFieldsOrderBy
+    sum: GroupAggregateNumericFieldsOrderBy
+  }
+  
+  """GraphQL type"""
+  type GroupMinMaxFields {
+    name: String
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input GroupOrderBy {
+    tagAggregate: TagAggregateOrderBy
+    tag: TagOrderBy
+    usersAggregate: UserAggregateOrderBy
+    users: UserOrderBy
+    colorAggregate: ColorAggregateOrderBy
+    color: ColorOrderBy
+    name: OrderByEnum
+    tagId: OrderByEnum
+    colorId: OrderByEnum
+    id: OrderByEnum
+  }
+  
+  """GraphQL type"""
+  type GroupSumFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type GroupType {
+    tag: TagType!
+    usersAggregate: UserAggregate!
+  
+    """Fetch objects from the UserType collection"""
+    users(orderBy: [UserOrderBy!] = null): [UserType!]!
+    color: ColorType!
+    name: String!
+    tagId: UUID!
+    colorId: UUID!
+    id: UUID!
+  }
+  
+  enum OrderByEnum {
+    ASC
+    ASC_NULLS_FIRST
+    ASC_NULLS_LAST
+    DESC
+    DESC_NULLS_FIRST
+    DESC_NULLS_LAST
+  }
+  
+  type Query {
+    """Fetch objects from the GroupType collection"""
+    group: [GroupType!]!
+  }
+  
+  input TagAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input TagAggregateNumericFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input TagAggregateOrderBy {
+    count: OrderByEnum
+    maxString: TagAggregateMinMaxStringFieldsOrderBy
+    minString: TagAggregateMinMaxStringFieldsOrderBy
+    sum: TagAggregateNumericFieldsOrderBy
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input TagOrderBy {
+    groupsAggregate: GroupAggregateOrderBy
+    groups: GroupOrderBy
+    name: OrderByEnum
+    id: OrderByEnum
+  }
+  
+  """GraphQL type"""
+  type TagType {
+    groupsAggregate: GroupAggregate!
+  
+    """Fetch objects from the GroupType collection"""
+    groups(orderBy: [GroupOrderBy!] = null): [GroupType!]!
+    name: String!
+    id: UUID!
+  }
+  
+  scalar UUID
+  
+  """Aggregation fields"""
+  type UserAggregate {
+    count: Int
+    max: UserMinMaxFields!
+    min: UserMinMaxFields!
+    sum: UserSumFields!
+  }
+  
+  input UserAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input UserAggregateNumericFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input UserAggregateOrderBy {
+    count: OrderByEnum
+    maxString: UserAggregateMinMaxStringFieldsOrderBy
+    minString: UserAggregateMinMaxStringFieldsOrderBy
+    sum: UserAggregateNumericFieldsOrderBy
+  }
+  
+  """GraphQL type"""
+  type UserMinMaxFields {
+    name: String
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input UserOrderBy {
+    groupAggregate: GroupAggregateOrderBy
+    group: GroupOrderBy
+    tagAggregate: TagAggregateOrderBy
+    tag: TagOrderBy
+    name: OrderByEnum
+    groupId: OrderByEnum
+    tagId: OrderByEnum
+    id: OrderByEnum
+  }
+  
+  """GraphQL type"""
+  type UserSumFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type UserType {
+    group: GroupType!
+    tag: TagType!
+    name: String!
+    groupId: UUID
+    tagId: UUID
+    id: UUID!
+  }
+  '''
+# ---

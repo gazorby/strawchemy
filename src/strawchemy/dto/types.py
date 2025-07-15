@@ -167,6 +167,40 @@ class DTOConfig:
         if self.exclude:
             self.include = "all"
 
+    def copy_with(
+        self,
+        purpose: Purpose | None = None,
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool | None = None,
+        unset_sentinel: Any | None = None,
+        type_overrides: Mapping[Any, Any] | None = None,
+        annotation_overrides: dict[str, Any] | None = None,
+        aliases: Mapping[str, str] | None = None,
+        exclude_defaults: bool | None = None,
+        alias_generator: Callable[[str], str] | None = None,
+        partial_default: Any | None = None,
+    ) -> DTOConfig:
+        """Create a copy of the DTOConfig with the specified changes."""
+        if include is None and exclude is None:
+            include, exclude = self.include, self.exclude
+        else:
+            include = include or []
+            exclude = exclude or []
+        return DTOConfig(
+            include=include,
+            exclude=exclude,
+            purpose=self.purpose if purpose is None else purpose,
+            partial=self.partial if partial is None else partial,
+            unset_sentinel=self.unset_sentinel if unset_sentinel is None else unset_sentinel,
+            type_overrides=self.type_overrides if type_overrides is None else type_overrides,
+            annotation_overrides=self.annotation_overrides if annotation_overrides is None else annotation_overrides,
+            aliases=self.aliases if aliases is None else aliases,
+            exclude_defaults=self.exclude_defaults if exclude_defaults is None else exclude_defaults,
+            alias_generator=self.alias_generator if alias_generator is None else alias_generator,
+            partial_default=self.partial_default if partial_default is None else partial_default,
+        )
+
     def with_base_annotations(self, base: type[Any]) -> DTOConfig:
         """Merge type annotations from a base class into this DTOConfig.
 
