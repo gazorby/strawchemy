@@ -65,6 +65,6 @@ class GeoComparison(GraphQLComparison):
 
     __strawchemy_filter__ = GeoFilter
 
-    contains_geometry: GeoJSON | None = UNSET
-    within_geometry: GeoJSON | None = UNSET
+    contains_geometry: GeoJSON | None = UNSET  # type: ignore[assignment]
+    within_geometry: GeoJSON | None = UNSET  # type: ignore[assignment]
     is_null: bool | None = UNSET

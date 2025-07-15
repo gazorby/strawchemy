@@ -206,7 +206,6 @@ run = "ruff format --check"
 description = "Run pyright"
 depends = "_install"
 run = "uv run pyright"
-env = { PYRIGHT_PYTHON_PYLANCE_VERSION = "latest-release" }
 
 [tasks.vulture]
 description = "Run vulture"

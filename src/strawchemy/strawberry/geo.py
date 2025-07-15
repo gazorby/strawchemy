@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, NewType
+from typing import Any
 
 import shapely
 from geoalchemy2 import WKBElement, WKTElement
@@ -33,7 +33,6 @@ __all__ = (
     "GeoJSONMultiPolygon",
     "GeoJSONPoint",
     "GeoJSONPolygon",
-    "StrawberryGeoComparison",
 )
 
 
@@ -68,7 +67,7 @@ def _parse_geojson(val: dict[str, Any], geometry: type[PydanticGeometry] | None 
 
 
 GeoJSON = strawberry.scalar(
-    NewType("GeoJSON", _GeometryHolder),
+    _GeometryHolder,
     description=(
         "The `GeoJSON` type represents GeoJSON values as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -79,7 +78,7 @@ GeoJSON = strawberry.scalar(
 )
 
 GeoJSONPoint = strawberry.scalar(
-    NewType("GeoJSONPoint", object),
+    object,
     description=(
         "The `GeoJSONPoint` type represents GeoJSON Point object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -90,7 +89,7 @@ GeoJSONPoint = strawberry.scalar(
 )
 
 GeoJSONMultiPoint = strawberry.scalar(
-    NewType("GeoJSONMultiPoint", object),
+    object,
     description=(
         "The `GeoJSONMultiPoint` type represents GeoJSON MultiPoint object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -101,7 +100,7 @@ GeoJSONMultiPoint = strawberry.scalar(
 )
 
 GeoJSONPolygon = strawberry.scalar(
-    NewType("GeoJSONPolygon", object),
+    object,
     description=(
         "The `GeoJSONPolygon` type represents GeoJSON Polygon object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -112,7 +111,7 @@ GeoJSONPolygon = strawberry.scalar(
 )
 
 GeoJSONMultiPolygon = strawberry.scalar(
-    NewType("GeoJSONMultiPolygon", object),
+    object,
     description=(
         "The `GeoJSONMultiPolygon` type represents GeoJSON MultiPolygon object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -123,7 +122,7 @@ GeoJSONMultiPolygon = strawberry.scalar(
 )
 
 GeoJSONLineString = strawberry.scalar(
-    NewType("GeoJSONLineString", object),
+    object,
     description=(
         "The `GeoJSONLineString` type represents GeoJSON LineString object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -134,7 +133,7 @@ GeoJSONLineString = strawberry.scalar(
 )
 
 GeoJSONMultiLineString = strawberry.scalar(
-    NewType("GeoJSONMultiLineString", object),
+    object,
     description=(
         "The `GeoJSONMultiLineString` type represents GeoJSON MultiLineString object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -145,7 +144,7 @@ GeoJSONMultiLineString = strawberry.scalar(
 )
 
 GeoJSONGeometryCollection = strawberry.scalar(
-    NewType("GeoJSONGeometryCollection", object),
+    object,
     description=(
         "The `GeoJSONGeometryCollection` type represents GeoJSON GeometryCollection object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -154,12 +153,6 @@ GeoJSONGeometryCollection = strawberry.scalar(
     parse_value=partial(_parse_geojson, geometry=GeometryCollection),
     specified_by_url="https://datatracker.ietf.org/doc/html/rfc7946",
 )
-
-
-class StrawberryGeoComparison:
-    contains_geometry: GeoJSON | None = strawberry.UNSET
-    within_geometry: GeoJSON | None = strawberry.UNSET
-    is_null: bool | None = strawberry.UNSET
 
 
 GEO_SCALAR_OVERRIDES: dict[object, type[Any]] = {
