@@ -54,7 +54,7 @@ dev = [
   "debugpy",
 ]
 doc = ["git-cliff>=2.6.1"]
-lint = ["pyright[nodejs]", "ruff", "vulture"]
+lint = ["pyright[nodejs] == 1.1.403", "ruff", "vulture"]
 mysql = ["asyncmy", "cryptography"]
 postgres = [
   "asyncpg>=0.29.0",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime, time, timedelta
 from functools import partial
-from typing import NewType
+from typing import NewType, TypeVar
 
 from msgspec import json
 
@@ -10,6 +10,8 @@ from strawberry import scalar
 from strawberry.schema.types.base_scalars import wrap_parser
 
 __all__ = ("Date", "DateTime", "Interval", "Time")
+
+T = TypeVar("T")
 
 
 def _serialize_time(value: time | timedelta | str) -> str:
@@ -26,8 +28,13 @@ def _serialize(value: timedelta) -> str:
     return json.encode(value).decode()
 
 
+def new_type(name: str, type_: type[T]) -> type[T]:
+    # Needed for pyright
+    return NewType(name, type_)  # pyright: ignore[reportArgumentType]
+
+
 Interval = scalar(
-    NewType("Interval", timedelta),
+    new_type("Interval", timedelta),
     description=(
         "The `Interval` scalar type represents a duration of time as specified by "
         "[ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations)."
@@ -38,14 +45,14 @@ Interval = scalar(
 )
 
 Time = scalar(
-    NewType("Time", time),
+    new_type("Time", time),
     serialize=_serialize_time,
     parse_value=wrap_parser(time.fromisoformat, "Time"),
     description="Time (isoformat)",
 )
-Date = scalar(NewType("Date", date), serialize=_serialize_date, parse_value=wrap_parser(date.fromisoformat, "Date"))
+Date = scalar(new_type("Date", date), serialize=_serialize_date, parse_value=wrap_parser(date.fromisoformat, "Date"))
 DateTime = scalar(
-    NewType("DateTime", datetime),
+    new_type("DateTime", datetime),
     serialize=_serialize_date,
     parse_value=wrap_parser(datetime.fromisoformat, "DateTime"),
 )
