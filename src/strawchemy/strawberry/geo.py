@@ -79,7 +79,7 @@ GeoJSON = strawberry.scalar(
 )
 
 GeoJSONPoint = strawberry.scalar(
-    object,
+    new_type("GeoJSONPoint", object),
     description=(
         "The `GeoJSONPoint` type represents GeoJSON Point object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -90,7 +90,7 @@ GeoJSONPoint = strawberry.scalar(
 )
 
 GeoJSONMultiPoint = strawberry.scalar(
-    object,
+    new_type("GeoJSONMultiPoint", object),
     description=(
         "The `GeoJSONMultiPoint` type represents GeoJSON MultiPoint object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -101,7 +101,7 @@ GeoJSONMultiPoint = strawberry.scalar(
 )
 
 GeoJSONPolygon = strawberry.scalar(
-    object,
+    new_type("GeoJSONPolygon", object),
     description=(
         "The `GeoJSONPolygon` type represents GeoJSON Polygon object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -112,7 +112,7 @@ GeoJSONPolygon = strawberry.scalar(
 )
 
 GeoJSONMultiPolygon = strawberry.scalar(
-    object,
+    new_type("GeoJSONMultiPolygon", object),
     description=(
         "The `GeoJSONMultiPolygon` type represents GeoJSON MultiPolygon object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -123,7 +123,7 @@ GeoJSONMultiPolygon = strawberry.scalar(
 )
 
 GeoJSONLineString = strawberry.scalar(
-    object,
+    new_type("GeoJSONLineString", object),
     description=(
         "The `GeoJSONLineString` type represents GeoJSON LineString object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -134,7 +134,7 @@ GeoJSONLineString = strawberry.scalar(
 )
 
 GeoJSONMultiLineString = strawberry.scalar(
-    object,
+    new_type("GeoJSONMultiLineString", object),
     description=(
         "The `GeoJSONMultiLineString` type represents GeoJSON MultiLineString object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -145,7 +145,7 @@ GeoJSONMultiLineString = strawberry.scalar(
 )
 
 GeoJSONGeometryCollection = strawberry.scalar(
-    object,
+    new_type("GeoJSONGeometryCollection", object),
     description=(
         "The `GeoJSONGeometryCollection` type represents GeoJSON GeometryCollection object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"

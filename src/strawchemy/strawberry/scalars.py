@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, time, timedelta
-from functools import cache, partial
+from functools import partial
 from typing import NewType, TypeVar
 
 from msgspec import json
@@ -28,7 +28,6 @@ def _serialize(value: timedelta) -> str:
     return json.encode(value).decode()
 
 
-@cache
 def new_type(name: str, type_: type[T]) -> type[T]:
     # Needed for pyright
     return NewType(name, type_)  # pyright: ignore[reportArgumentType]
