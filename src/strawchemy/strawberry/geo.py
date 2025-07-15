@@ -22,6 +22,7 @@ from pydantic import TypeAdapter
 from shapely import Geometry, to_geojson
 
 import strawberry
+from strawchemy.strawberry.scalars import new_type
 
 __all__ = (
     "GEO_SCALAR_OVERRIDES",
@@ -67,7 +68,7 @@ def _parse_geojson(val: dict[str, Any], geometry: type[PydanticGeometry] | None 
 
 
 GeoJSON = strawberry.scalar(
-    _GeometryHolder,
+    new_type("GeoJSON", _GeometryHolder),
     description=(
         "The `GeoJSON` type represents GeoJSON values as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
