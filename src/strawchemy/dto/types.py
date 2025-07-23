@@ -17,6 +17,9 @@ if TYPE_CHECKING:
 
 __all__ = ("DTOAuto", "DTOConfig", "DTOFieldConfig", "DTOMissing", "ExcludeFields", "IncludeFields", "Purpose")
 
+DTOScope: TypeAlias = Literal["global", "dto"]
+
+
 IncludeFields: TypeAlias = Union[list[str], set[str], Literal["all"]]
 ExcludeFields: TypeAlias = Union[list[str], set[str]]
 
@@ -158,6 +161,8 @@ class DTOConfig:
     aliases: Mapping[str, str] = field(default_factory=dict)
     exclude_defaults: bool = False
     alias_generator: Optional[Callable[[str], str]] = None
+    scope: Optional[DTOScope] = None
+    exclude_from_scope: bool = False
 
     def __post_init__(self) -> None:
         if self.aliases and self.alias_generator is not None:
@@ -171,17 +176,19 @@ class DTOConfig:
 
     def copy_with(
         self,
-        purpose: Optional[Purpose] = None,
+        purpose: Union[Purpose, type[DTOUnset]] = DTOUnset,
         include: Optional[IncludeFields] = None,
         exclude: Optional[ExcludeFields] = None,
-        partial: Optional[bool] = None,
-        unset_sentinel: Optional[Any] = None,
-        type_overrides: Optional[Mapping[Any, Any]] = None,
-        annotation_overrides: Optional[dict[str, Any]] = None,
-        aliases: Optional[Mapping[str, str]] = None,
-        exclude_defaults: Optional[bool] = None,
-        alias_generator: Optional[Callable[[str], str]] = None,
-        partial_default: Optional[Any] = None,
+        partial: Union[bool, type[DTOUnset]] = DTOUnset,
+        unset_sentinel: Union[Any, type[DTOUnset]] = DTOUnset,
+        type_overrides: Union[Mapping[Any, Any], type[DTOUnset]] = DTOUnset,
+        annotation_overrides: Union[dict[str, Any], type[DTOUnset]] = DTOUnset,
+        aliases: Union[Mapping[str, str], type[DTOUnset]] = DTOUnset,
+        exclude_defaults: Union[bool, type[DTOUnset]] = DTOUnset,
+        alias_generator: Union[Callable[[str], str], type[DTOUnset]] = DTOUnset,
+        partial_default: Union[Any, type[DTOUnset]] = DTOUnset,
+        scope: Union[DTOScope, type[DTOUnset]] = DTOUnset,
+        exclude_from_scope: Union[bool, type[DTOUnset]] = DTOUnset,
     ) -> DTOConfig:
         """Create a copy of the DTOConfig with the specified changes."""
         if include is None and exclude is None:
@@ -192,15 +199,19 @@ class DTOConfig:
         return DTOConfig(
             include=include,
             exclude=exclude,
-            purpose=self.purpose if purpose is None else purpose,
-            partial=self.partial if partial is None else partial,
-            unset_sentinel=self.unset_sentinel if unset_sentinel is None else unset_sentinel,
-            type_overrides=self.type_overrides if type_overrides is None else type_overrides,
-            annotation_overrides=self.annotation_overrides if annotation_overrides is None else annotation_overrides,
-            aliases=self.aliases if aliases is None else aliases,
-            exclude_defaults=self.exclude_defaults if exclude_defaults is None else exclude_defaults,
-            alias_generator=self.alias_generator if alias_generator is None else alias_generator,
-            partial_default=self.partial_default if partial_default is None else partial_default,
+            purpose=self.purpose if purpose is DTOUnset else purpose,
+            partial=self.partial if partial is DTOUnset else partial,
+            unset_sentinel=self.unset_sentinel if unset_sentinel is DTOUnset else unset_sentinel,
+            type_overrides=self.type_overrides if type_overrides is DTOUnset else type_overrides,
+            annotation_overrides=self.annotation_overrides
+            if annotation_overrides is DTOUnset
+            else annotation_overrides,
+            aliases=self.aliases if aliases is DTOUnset else aliases,
+            exclude_defaults=self.exclude_defaults if exclude_defaults is DTOUnset else exclude_defaults,
+            alias_generator=self.alias_generator if alias_generator is DTOUnset else alias_generator,
+            partial_default=self.partial_default if partial_default is DTOUnset else partial_default,
+            scope=self.scope if scope is DTOUnset else scope,
+            exclude_from_scope=self.exclude_from_scope if exclude_from_scope is DTOUnset else exclude_from_scope,
         )
 
     def with_base_annotations(self, base: type[Any]) -> DTOConfig:

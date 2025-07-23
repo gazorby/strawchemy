@@ -194,6 +194,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
         current_node: Optional[Node[Relation[Any, MappedGraphQLDTOT], None]] = None,
         raise_if_no_fields: bool = False,
+        tags: Optional[set[str]] = None,
         backend_kwargs: Optional[dict[str, Any]] = None,
         *,
         child_options: Optional[_ChildOptions] = None,
@@ -213,6 +214,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             parent_field_def,
             current_node,
             raise_if_no_fields,
+            tags,
             backend_kwargs,
             aggregations=aggregations if dto_config.purpose is Purpose.READ else False,
             register_type=False,
@@ -307,6 +309,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
         current_node: Optional[Node[Relation[Any, MappedGraphQLDTOT], None]] = None,
         raise_if_no_fields: bool = False,
+        tags: Optional[set[str]] = None,
         backend_kwargs: Optional[dict[str, Any]] = None,
         *,
         aggregations: bool = True,
@@ -320,6 +323,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
             parent_field_def,
             current_node,
             raise_if_no_fields,
+            tags,
             backend_kwargs,
             aggregations=aggregations,
             **kwargs,
@@ -455,7 +459,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         related_model = field.related_model
         assert related_model
         id_fields = list(self.inspector.id_field_definitions(related_model, write_all_config))
-        dto_config = DTOConfig(Purpose.WRITE, include={name for name, _ in id_fields})
+        dto_config = DTOConfig(Purpose.WRITE, include={name for name, _ in id_fields}, exclude_from_scope=True)
         base = self._identifier_input_dto_factory.dtos.get(name)
         if base is None:
             try:
@@ -612,6 +616,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
         current_node: Optional[Node[Relation[Any, MappedGraphQLDTOT], None]] = None,
         raise_if_no_fields: bool = False,
+        tags: Optional[set[str]] = None,
         backend_kwargs: Optional[dict[str, Any]] = None,
         *,
         description: Optional[str] = None,
@@ -626,6 +631,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
             parent_field_def,
             current_node,
             raise_if_no_fields,
+            tags=tags or set() | {mode},
             backend_kwargs=backend_kwargs,
             description=description or f"GraphQL {mode} input type",
             mode=mode,

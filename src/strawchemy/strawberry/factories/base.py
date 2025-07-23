@@ -17,16 +17,16 @@ from __future__ import annotations
 import dataclasses
 from collections.abc import Generator, Sequence
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, get_type_hints
+from typing import TYPE_CHECKING, Any, Optional, Literal, TypeVar, Union, get_type_hints
 
-from typing_extensions import dataclass_transform, override
+from typing_extensions import dataclass_transform, override, TypeAlias
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import UNSET
 from strawberry.types.auto import StrawberryAuto
 from strawberry.utils.typing import type_has_annotation
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
-from strawchemy.dto.types import DTOAuto, DTOConfig, Purpose
+from strawchemy.dto.types import DTOAuto, DTOConfig, DTOScope, Purpose
 from strawchemy.dto.utils import config
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graph import Node
@@ -65,6 +65,12 @@ MappedGraphQLDTOT = TypeVar("MappedGraphQLDTOT", bound="MappedGraphQLDTO[Any]")
 UnmappedGraphQLDTOT = TypeVar("UnmappedGraphQLDTOT", bound="UnmappedStrawberryGraphQLDTO[Any]")
 StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyDTOAttributes")
 
+TypeScope: TypeAlias = Literal["schema", "type"]
+
+
+def type_scope_to_dto_scope(scope: TypeScope) -> DTOScope:
+    return "global" if scope == "schema" else "dto"
+
 
 @dataclasses.dataclass(eq=True, frozen=True)
 class _ChildOptions:
@@ -88,7 +94,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
 
     def _type_info(
         self,
-        dto: type[Any],
+        dto: type[StrawchemyDTOT],
         dto_config: DTOConfig,
         current_node: Optional[Node[Relation[Any, GraphQLDTOT], None]],
         override: bool = False,
@@ -97,6 +103,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
     ) -> RegistryTypeInfo:
         child_options = child_options or _ChildOptions()
         graphql_type = self.graphql_type(dto_config)
+        model = dto.__dto_model__ if issubclass(dto, MappedStrawberryGraphQLDTO) else None  # type: ignore[reportGeneralTypeIssues]
         type_info = RegistryTypeInfo(
             name=dto.__name__,
             graphql_type=graphql_type,
@@ -104,6 +111,9 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
             user_defined=user_defined,
             pagination=DefaultOffsetPagination() if child_options.pagination is True else child_options.pagination,
             order_by=child_options.order_by,
+            scope=dto_config.scope,
+            model=model,
+            exclude_from_scope=dto_config.exclude_from_scope,
         )
         if self._mapper.registry.name_clash(type_info) and current_node is not None:
             type_info = dataclasses.replace(
@@ -176,6 +186,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         type_map: Optional[Mapping[Any, Any]] = None,
         aliases: Optional[Mapping[str, str]] = None,
         alias_generator: Optional[Callable[[str], str]] = None,
+        scope: Optional[DTOScope] = None,
     ) -> DTOConfig:
         return config(
             purpose,
@@ -185,6 +196,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
             type_map=type_map,
             alias_generator=alias_generator,
             aliases=aliases,
+            scope=scope,
         )
 
     def _type_wrapper(
@@ -206,6 +218,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         query_hook: Optional[Union[QueryHook[T], list[QueryHook[T]]]] = None,
         override: bool = False,
         purpose: Purpose = Purpose.READ,
+        scope: DTOScope | None = None,
     ) -> Callable[[type[Any]], type[GraphQLDTOT]]:
         def wrapper(class_: type[Any]) -> type[GraphQLDTOT]:
             dto_config = config(
@@ -216,6 +229,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 type_map=type_map,
                 alias_generator=alias_generator,
                 aliases=aliases,
+                scope=scope,
             )
             dto = self.factory(
                 model=model,
@@ -253,6 +267,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         directives: Optional[Sequence[object]] = (),
         override: bool = False,
         purpose: Purpose = Purpose.WRITE,
+        scope: DTOScope | None = None,
         **kwargs: Any,
     ) -> Callable[[type[Any]], type[GraphQLDTOT]]:
         def wrapper(class_: type[Any]) -> type[GraphQLDTOT]:
@@ -264,6 +279,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 type_map=type_map,
                 alias_generator=alias_generator,
                 aliases=aliases,
+                scope=scope,
             )
             dto = self.factory(
                 model=model,
@@ -329,6 +345,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
         current_node: Optional[Node[Relation[Any, GraphQLDTOT], None]] = None,
         raise_if_no_fields: bool = False,
+        tags: Optional[set[str]] = None,
         backend_kwargs: Optional[dict[str, Any]] = None,
         *,
         description: Optional[str] = None,
@@ -350,7 +367,8 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
             parent_field_def,
             current_node,
             raise_if_no_fields,
-            backend_kwargs,
+            tags,
+            backend_kwargs=backend_kwargs,
             field_map=field_map,
             **kwargs,
         )
@@ -421,6 +439,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         query_hook: Optional[Union[QueryHook[T], list[QueryHook[T]]]] = None,
         override: bool = False,
         purpose: Purpose = Purpose.READ,
+        scope: TypeScope | None = None,
     ) -> Callable[[type[Any]], type[MappedGraphQLDTO[T]]]:
         return self._type_wrapper(
             model=model,
@@ -440,6 +459,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
             query_hook=query_hook,
             override=override,
             purpose=purpose,
+            scope=type_scope_to_dto_scope(scope) if scope else None,
         )
 
     @dataclass_transform(order_default=True, kw_only_default=True)
@@ -459,6 +479,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         directives: Optional[Sequence[object]] = (),
         override: bool = False,
         purpose: Purpose = Purpose.WRITE,
+        scope: TypeScope | None = None,
         **kwargs: Any,
     ) -> Callable[[type[Any]], type[MappedGraphQLDTO[T]]]:
         return self._input_wrapper(
@@ -475,6 +496,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
             override=override,
             purpose=purpose,
             mode=mode,
+            scope=type_scope_to_dto_scope(scope) if scope else None,
             **kwargs,
         )
 
@@ -488,6 +510,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
         current_node: Optional[Node[Relation[Any, MappedGraphQLDTOT], None]] = None,
         raise_if_no_fields: bool = False,
+        tags: Optional[set[str]] = None,
         backend_kwargs: Optional[dict[str, Any]] = None,
         *,
         mode: Optional[InputType] = None,
@@ -503,6 +526,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
             parent_field_def,
             current_node,
             raise_if_no_fields,
+            tags,
             backend_kwargs=backend_kwargs,
             mode=mode,
             **kwargs,

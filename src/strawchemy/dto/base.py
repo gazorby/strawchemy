@@ -95,6 +95,7 @@ class DTOBase(Generic[ModelT]):
         __dto_model__: type[ModelT]
         __dto_config__: ClassVar[DTOConfig]
         __dto_field_definitions__: ClassVar[dict[str, DTOFieldDefinition[Any, Any]]]
+        __dto_tags__: set[str]
 
 
 class MappedDTO(DTOBase[ModelT]):
@@ -410,6 +411,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         self._dto_cache: dict[Hashable, type[DTOBaseT]] = {}
         self._unresolved_refs: defaultdict[str, list[type[DTOBaseT]]] = defaultdict(list)
+        self._scoped_dto_names: dict[Hashable, str] = {}
 
     def should_exclude_field(
         self,
@@ -455,7 +457,9 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     ) -> Any:
         type_hint = self.type_map.get(field.type_hint, field.type_)
         relation_model = self.inspector.relation_model(field.model_field)
-        dto_name = self.dto_name(relation_model.__name__, dto_config, node)
+        dto_name = self._scoped_dto_names.get(
+            self._scoped_cache_key(relation_model, dto_config), self.dto_name(relation_model.__name__, dto_config, node)
+        )
         relation_child = Relation(relation_model, name=dto_name)
         parent = node.find_parent(lambda parent: parent.value == relation_child)
 
@@ -507,24 +511,41 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     ) -> Node[Relation[Any, DTOBaseT], None]:
         return Node(Relation(model=model, name=name)) if node is None else node
 
-    def _cache_key(
-        self, model: type[Any], dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None], **factory_kwargs: Any
-    ) -> Hashable:
-        base_key = frozenset(
+    def _base_cache_key(self, dto_config: DTOConfig) -> Hashable:
+        return frozenset(
             [
                 (dto_config.purpose, dto_config.partial, dto_config.alias_generator),
                 tuple(dto_config.type_overrides.items()),
             ]
         )
-        node_key = frozenset()
-        if node.is_root:
-            root_key = [
-                frozenset(dto_config.include if dto_config.include != "all" else ()),
-                frozenset(dto_config.exclude),
-                frozenset(dto_config.aliases.items()),
-                frozenset(dto_config.annotation_overrides.items()),
+
+    def _root_cache_key(self, dto_config: DTOConfig) -> Hashable:
+        root_key = [
+            frozenset(dto_config.include if dto_config.include != "all" else ()),
+            frozenset(dto_config.exclude),
+            frozenset(dto_config.aliases.items()),
+            frozenset(dto_config.annotation_overrides.items()),
+        ]
+        return frozenset(key for key in root_key if key)
+
+    def _scoped_cache_key(self, model: type[Any], dto_config: DTOConfig) -> Hashable:
+        return frozenset(
+            [
+                (model, self._base_cache_key(dto_config), frozenset()),
             ]
-            node_key = frozenset(key for key in root_key if key)
+        )
+
+    def _cache_key(
+        self,
+        model: type[Any],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, DTOBaseT], None],
+        **factory_kwargs: Any,
+    ) -> Hashable:
+        base_key = self._base_cache_key(dto_config)
+        node_key = frozenset()
+        if node.is_root and dto_config.scope != "global":
+            node_key = self._root_cache_key(dto_config)
         return (model, base_key, node_key)
 
     def _factory(
@@ -630,6 +651,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         parent_field_def: Optional[DTOFieldDefinition[ModelT, ModelFieldT]] = None,
         current_node: Optional[Node[Relation[Any, DTOBaseT], None]] = None,
         raise_if_no_fields: bool = False,
+        tags: Optional[set[str]] = None,
         backend_kwargs: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
@@ -639,10 +661,15 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             name = base.__name__ if base else self.dto_name(model.__name__, dto_config, current_node)
         node = self._node_or_root(model, name, current_node)
 
+        scoped_cache_key = self._scoped_cache_key(model, dto_config) if not dto_config.exclude_from_scope else DTO_UNSET
         cache_key = self._cache_key(model, dto_config, node, **kwargs)
 
-        if dto := self._dto_cache.get(cache_key):
+        if dto_config.scope == "global":
+            self._scoped_dto_names[self._scoped_cache_key(model, dto_config)] = name
+
+        if (dto := self._dto_cache.get(cache_key)) or (dto := self._dto_cache.get(scoped_cache_key)):
             return self.backend.copy(dto, name) if node.is_root else dto
+
         dto = self._factory(
             name,
             model,
@@ -657,6 +684,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         dto.__dto_config__ = dto_config
         dto.__dto_model__ = model
+        dto.__dto_tags__ = tags or set()
 
         self.dtos[name] = dto
         if node.is_root and base is not None:
@@ -673,6 +701,9 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             self._unresolved_refs[ref.name].append(dto)
 
         self._dto_cache[cache_key] = dto
+
+        if dto_config.scope is not None:
+            self._dto_cache[self._scoped_cache_key(model, dto_config)] = dto
 
         return dto
 
