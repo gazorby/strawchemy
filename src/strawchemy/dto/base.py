@@ -414,12 +414,17 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         explictly_excluded = node.is_root and field.model_field_name in dto_config.exclude
         explicitly_included = node.is_root and field.model_field_name in dto_config.include
 
+        # Exclude fields not present in init if purpose is write
         if dto_config.purpose is Purpose.WRITE and not explicitly_included:
             explictly_excluded = explictly_excluded or not field.init
         if dto_config.include == "all" and not explictly_excluded:
             explicitly_included = True
 
-        excluded = (explictly_excluded or not explicitly_included) or dto_config.purpose not in field.allowed_purposes
+        excluded = dto_config.purpose not in field.allowed_purposes
+        if node.is_root:
+            excluded = excluded or (explictly_excluded or not explicitly_included)
+        else:
+            excluded = excluded or explictly_excluded
         return not has_override and excluded
 
     def _resolve_basic_type(self, field: DTOFieldDefinition[ModelT, ModelFieldT], dto_config: DTOConfig) -> Any:

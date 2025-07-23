@@ -13,6 +13,12 @@ class FruitType:
     pass
 
 
+@strawchemy.type(Fruit, include=["color"])
+class FruitWithColorType:
+    pass
+
+
 @strawberry.type
 class Query:
     fruit: FruitType
+    fruit_with_color: FruitWithColorType

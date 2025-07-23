@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Any, Self, TypeVar, override
 
@@ -366,7 +365,7 @@ class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
     ) -> type[AggregateDTOT]:
         field_map = field_map if field_map is not None else {}
         model_field = parent_field_def.model_field if parent_field_def else None
-        as_partial_config = dataclasses.replace(dto_config, partial=True)
+        aggregate_config = dto_config.copy_with(partial=True, include="all")
         field_definitions: list[FunctionFieldDefinition] = [
             FunctionFieldDefinition(
                 dto_config=dto_config,
@@ -377,7 +376,7 @@ class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
                 _function=aggregation,
                 default=aggregation.default,
             )
-            for aggregation in self._aggregation_builder.output_functions(model, as_partial_config)
+            for aggregation in self._aggregation_builder.output_functions(model, aggregate_config)
         ]
 
         root_key = DTOKey.from_dto_node(node)
