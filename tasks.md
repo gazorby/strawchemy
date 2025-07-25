@@ -289,6 +289,58 @@ Run unit tests without extras dependencies
 
 #### `[test]`
 
+## `test:unit:py10`
+
+- Depends: _install
+
+- **Usage**: `test:unit:py10 [test]`
+- **Aliases**: `tu10`
+
+Run unit tests on python 3.10
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit:py11`
+
+- Depends: _install
+
+- **Usage**: `test:unit:py11 [test]`
+- **Aliases**: `tu11`
+
+Run unit tests on python 3.11
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit:py12`
+
+- Depends: _install
+
+- **Usage**: `test:unit:py12 [test]`
+- **Aliases**: `tu12`
+
+Run unit tests on python 3.12
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit:py9`
+
+- Depends: _install
+
+- **Usage**: `test:unit:py9 [test]`
+- **Aliases**: `tu9`
+
+Run unit tests on python 3.9
+
+### Arguments
+
+#### `[test]`
+
 ## `test:update-snapshots`
 
 - Depends: _install

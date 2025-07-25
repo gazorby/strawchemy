@@ -5,9 +5,9 @@ import contextlib
 from dataclasses import MISSING as DATACLASS_MISSING
 from dataclasses import Field, fields
 from inspect import getmodule, signature
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast, get_args, get_origin, get_type_hints, override
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast, get_args, get_origin, get_type_hints
 
-from typing_extensions import TypeIs
+from typing_extensions import TypeIs, override
 
 from sqlalchemy import (
     Column,
@@ -323,7 +323,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                 and column_prop.type.geometry_type in _shapely_geometry_map
             ):
                 geo_type_hint = _shapely_geometry_map[column_prop.type.geometry_type]
-                type_hint = Optional[geo_type_hint] if is_type_hint_optional(type_hint) else geo_type_hint  # noqa: UP007
+                type_hint = Optional[geo_type_hint] if is_type_hint_optional(type_hint) else geo_type_hint
 
         return DTOFieldDefinition(
             type_hint=type_hint,

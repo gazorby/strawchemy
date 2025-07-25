@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from typing import Optional, Self
+from typing import Optional
 from uuid import UUID, uuid4
 
 import pytest
 from strawchemy.dto import DTOConfig, Purpose, PurposeConfig, config, field
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.utils import DTOFieldConfig, read_all_config, write_all_config
+from typing_extensions import Self
 
 from tests.typing import AnyFactory, MappedPydanticFactory
 from tests.unit.dc_models import (
@@ -166,7 +167,7 @@ def test_model_field_config(factory: AnyFactory, config: DTOConfig, model: type[
     if config.purpose is Purpose.WRITE:
         assert DTOInspect(tomato_dto).has_init_field("sugarness")
         assert DTOInspect(tomato_dto).field_type("weight") is int
-        assert DTOInspect(tomato_dto).field_type("popularity") == Optional[float]  # noqa: UP007
+        assert DTOInspect(tomato_dto).field_type("popularity") == Optional[float]
     else:
         assert not DTOInspect(tomato_dto).has_init_field("sugarness")
         assert DTOInspect(tomato_dto).field_type("weight") is float
@@ -214,7 +215,7 @@ def test_column_property(factory: AnyFactory, model: type[UserWithGreeting | Use
 @pytest.mark.parametrize("factory", factory_iterator())
 def test_self_reference(factory: AnyFactory, model: type[SponsoredUser | SponsoredUserDataclass]) -> None:
     user_dto = factory.factory(model, read_all_config)
-    assert DTOInspect(user_dto).field_type("sponsor") == Optional[Self]  # pyright: ignore[reportGeneralTypeIssues]  # noqa: UP007
+    assert DTOInspect(user_dto).field_type("sponsor") == Optional[Self]  # pyright: ignore[reportGeneralTypeIssues]
     assert DTOInspect(user_dto).field_type("sponsored") == list[Self]  # pyright: ignore[reportGeneralTypeIssues]
 
 

@@ -10,7 +10,9 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self
+from typing import TYPE_CHECKING, Any, Generic, Literal
+
+from typing_extensions import Self
 
 from strawchemy.dto import ModelT
 

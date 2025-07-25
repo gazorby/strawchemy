@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import re
-from types import NoneType, UnionType
 from typing import TYPE_CHECKING, Any, Optional, Union, get_args, get_origin
+
+from strawchemy.typing import UNION_TYPES
 
 if TYPE_CHECKING:
     from re import Pattern
@@ -62,8 +63,11 @@ def non_optional_type_hint(type_hint: Any) -> Any:
     origin, args = get_origin(type_hint), get_args(type_hint)
     if origin is Optional:
         return args
-    if origin in (Union, UnionType):
-        return Union[*tuple([arg for arg in args if arg not in (None, NoneType)])]
+    if origin in UNION_TYPES:
+        union_args = tuple([arg for arg in args if arg not in (None, type(None))])
+        if len(union_args) == 1:
+            return union_args[0]
+        return Union[union_args]
     return type_hint
 
 
@@ -86,7 +90,7 @@ def is_type_hint_optional(type_hint: Any) -> bool:
         return False
     if origin is Optional:
         return True
-    if origin in (Union, UnionType):
+    if origin in UNION_TYPES:
         args = get_args(type_hint)
         return any(arg is type(None) for arg in args)
     return False

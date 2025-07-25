@@ -4,23 +4,9 @@ import dataclasses
 from collections.abc import Sequence
 from functools import cached_property
 from inspect import isclass
-from types import UnionType
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Literal,
-    Optional,
-    Self,
-    TypeAlias,
-    TypeVar,
-    Union,
-    cast,
-    get_args,
-    get_origin,
-    override,
-)
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, cast, get_args, get_origin
 
-from typing_extensions import TypeIs
+from typing_extensions import Self, TypeAlias, TypeIs, override
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition
@@ -49,6 +35,7 @@ from strawchemy.strawberry.dto import (
 )
 from strawchemy.strawberry.mutation.input import Input
 from strawchemy.types import DefaultOffsetPagination
+from strawchemy.typing import UNION_TYPES
 from strawchemy.utils import is_type_hint_optional
 from strawchemy.validation.base import InputValidationError
 
@@ -106,7 +93,7 @@ def _is_list(
         type_ = origin
         if origin is Optional:
             type_ = get_args(type_)[0]
-        if origin in (Union, UnionType) and len(args := get_args(type_)) == _OPTIONAL_UNION_ARG_SIZE:
+        if origin in UNION_TYPES and len(args := get_args(type_)) == _OPTIONAL_UNION_ARG_SIZE:
             type_ = args[0] if args[0] is not type(None) else args[1]
 
     return isinstance(type_, StrawberryList) or type_ is list

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated, Any, cast, override
+from typing import TYPE_CHECKING, Annotated, Any, cast
 
 from pydantic import AfterValidator
 from strawchemy import (
@@ -16,6 +16,7 @@ from strawchemy import (
 )
 from strawchemy.types import DefaultOffsetPagination
 from strawchemy.validation.pydantic import PydanticValidation
+from typing_extensions import override
 
 import strawberry
 from sqlalchemy import Select, select

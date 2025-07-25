@@ -16,17 +16,22 @@ classifiers = [
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.9",
   "Topic :: Database",
   "Topic :: Database :: Database Engines/Servers",
   "Topic :: Software Development",
   "Typing :: Typed",
 ]
-dependencies = ["msgspec", "sqlalchemy>=2.0.10", "strawberry-graphql"]
+dependencies = [
+  "msgspec",
+  "sqlalchemy>=2.0.10",
+  "strawberry-graphql",
+  "typing-extensions",
+]
 
 [project.urls]
 Changelog = "https://github.com/gazorby/strawchemy/blob/main/CHANGELOG.md"
@@ -56,11 +61,7 @@ dev = [
 doc = ["git-cliff>=2.6.1"]
 lint = ["pyright[nodejs] == 1.1.403", "ruff", "vulture"]
 mysql = ["asyncmy", "cryptography"]
-postgres = [
-  "asyncpg>=0.29.0",
-  "psycopg2-binary>=2.9.10",
-  "psycopg[binary,pool]>=3.2.3",
-]
+postgres = ["asyncpg>=0.29.0", "psycopg[binary,pool]>=3.2.3"]
 test = [
   { include-group = "postgres" },
   { include-group = "mysql" },
@@ -272,7 +273,7 @@ exclude = [
   "**/alembic/versions",
 ]
 verboseOutput = true
-pythonVersion = "3.12"
+pythonVersion = "3.9"
 typeCheckingMode = "strict"
 reportUnknownMemberType = false
 reportMissingTypeStubs = false
@@ -303,7 +304,7 @@ asyncio_default_fixture_loop_scope = "function"
 [tool.ruff]
 line-length = 120
 fix = true
-target-version = "py311"
+target-version = "py39"
 exclude = [
   ".bzr",
   ".direnv",
@@ -389,6 +390,8 @@ default-groups = ["test", "lint"]
 
 [tool.uv.sources]
 testapp = { workspace = true }
+# Temporary pin to allow msgspec 0.19.0+ on python 3.13
+unasyncd = { git = "https://github.com/provinzkraut/unasyncd", rev = "6d630bd7f411d6052c429b7fb4481fd17f18b0a6" }
 
 [tool.uv.workspace]
 members = ["examples/*"]

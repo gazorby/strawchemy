@@ -4,7 +4,9 @@ import dataclasses
 import sys
 from collections import deque
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, overload, override
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, overload
+
+from typing_extensions import Self, TypeAlias, override
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Hashable

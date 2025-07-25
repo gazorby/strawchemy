@@ -8,10 +8,11 @@ for generating DTOs from models, and support for mapping DTOs to SQLAlchemy mode
 from __future__ import annotations
 
 from inspect import getmodule
-from typing import TYPE_CHECKING, Annotated, Any, TypeVar, override
+from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, create_model
 from pydantic.fields import Field, FieldInfo
+from typing_extensions import override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOMissingType

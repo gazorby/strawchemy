@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, ClassVar, override
+from typing import TYPE_CHECKING, ClassVar
+
+from typing_extensions import override
 
 from syrupy.exceptions import TaintedSnapshotError
 from syrupy.extensions.amber.serializer import AmberDataSerializer

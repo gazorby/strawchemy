@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, TypeVar, override
+from typing import Any, TypeVar
 
 from geoalchemy2 import functions as geo_func
+from typing_extensions import override
 
 import strawberry
 from sqlalchemy import ColumnElement, Dialect, null

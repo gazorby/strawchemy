@@ -5,11 +5,11 @@ import inspect
 from dataclasses import dataclass
 from enum import Enum, auto
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload, override
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
 
 from strawchemy.dto.base import DTOFactory
 from strawchemy.sqlalchemy.inspector import SQLAlchemyInspector
-from typing_extensions import TypeIs
+from typing_extensions import TypeIs, override
 
 import strawberry
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -189,6 +189,9 @@ try:
 
     class PydanticInspect(DTOInspectProtocol):
         dto: type[BaseModel]
+
+        def __init__(self, dto: type[BaseModel]) -> None:
+            self.dto = dto
 
         @classmethod
         @override

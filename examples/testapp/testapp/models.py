@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
 from strawchemy.dto.utils import READ_ONLY
 
 from sqlalchemy import DateTime, ForeignKey, MetaData
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+UTC = timezone.utc
+
 
 metadata, geo_metadata = MetaData(), MetaData()
 

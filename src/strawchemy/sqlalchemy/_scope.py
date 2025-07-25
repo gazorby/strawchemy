@@ -22,7 +22,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Self, TypeAlias, override
+from typing import TYPE_CHECKING, Any, ClassVar, Generic
+
+from typing_extensions import Self, TypeAlias, override
 
 from sqlalchemy import ColumnElement, FromClause, Function, Label, Select, func, inspect
 from sqlalchemy import cast as sqla_cast

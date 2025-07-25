@@ -5,10 +5,11 @@ import re
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from statistics import mean, pstdev, pvariance, stdev, variance
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
 from pydantic import TypeAdapter
+from typing_extensions import TypeAlias
 
 from sqlalchemy import inspect
 from tests.integration.types import postgres as pg_types

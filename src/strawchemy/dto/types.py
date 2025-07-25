@@ -5,7 +5,9 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, get_type_hints, override
+from typing import TYPE_CHECKING, Any, Literal, Union, get_type_hints
+
+from typing_extensions import TypeAlias, override
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -13,8 +15,8 @@ if TYPE_CHECKING:
 
 __all__ = ("DTO_AUTO", "DTO_MISSING", "DTOConfig", "DTOFieldConfig", "ExcludeFields", "IncludeFields", "Purpose")
 
-IncludeFields: TypeAlias = list[str] | set[str] | Literal["all"]
-ExcludeFields: TypeAlias = list[str] | set[str]
+IncludeFields: TypeAlias = Union[list[str], set[str], Literal["all"]]
+ExcludeFields: TypeAlias = Union[list[str], set[str]]
 
 
 class DTOMissingType:

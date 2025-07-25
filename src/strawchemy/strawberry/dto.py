@@ -36,13 +36,12 @@ from typing import (
     ClassVar,
     Generic,
     Literal,
-    Self,
     TypeVar,
     overload,
-    override,
 )
 
 from msgspec import Struct, field, json
+from typing_extensions import Self, override
 
 import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -227,9 +226,8 @@ class FilterFunctionInfo:
         return self.field_name_
 
 
-@dataclass(kw_only=True, eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class GraphQLFieldDefinition(DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]):
-    config: DTOFieldConfig = dataclasses.field(default_factory=DTOFieldConfig)
     is_aggregate: bool = False
     is_function: bool = False
     is_function_arg: bool = False
@@ -293,13 +291,13 @@ class GraphQLFieldDefinition(DTOFieldDefinition[DeclarativeBase, QueryableAttrib
         return hash(self) != hash(other)
 
 
-@dataclass(kw_only=True, eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class AggregateFieldDefinition(GraphQLFieldDefinition):
     is_relation: bool = True
     is_aggregate: bool = True
 
 
-@dataclass(kw_only=True, eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FunctionFieldDefinition(GraphQLFieldDefinition):
     is_relation: bool = False
 
@@ -327,7 +325,7 @@ class FunctionFieldDefinition(GraphQLFieldDefinition):
         )
 
 
-@dataclass(kw_only=True, eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class FunctionArgFieldDefinition(FunctionFieldDefinition):
     def __post_init__(self) -> None:
         super().__post_init__()

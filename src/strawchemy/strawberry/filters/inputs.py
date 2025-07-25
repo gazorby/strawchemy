@@ -12,7 +12,9 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 from functools import cache
-from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
+
+from typing_extensions import TypeAlias
 
 import strawberry
 from sqlalchemy import Dialect

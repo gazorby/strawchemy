@@ -26,7 +26,7 @@ __all__ = ("SQLAlchemyGraphQLRepository", "StrawberryQueryNode")
 T = TypeVar("T")
 
 
-@dataclass(kw_only=True, eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class StrawberryQueryNode(QueryNode, Generic[T]):
     @property
     def strawberry_type(self) -> type[T]:

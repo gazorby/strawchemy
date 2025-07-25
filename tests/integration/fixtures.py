@@ -7,7 +7,7 @@ import platform
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
-from typing import TYPE_CHECKING, Any, Literal, Self, TypeAlias, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import pytest
 import sqlparse
@@ -16,6 +16,7 @@ from pytest_lazy_fixtures import lf
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.strawberry.scalars import Date, DateTime, Interval, Time
+from typing_extensions import Self, TypeAlias
 
 from sqlalchemy import (
     URL,

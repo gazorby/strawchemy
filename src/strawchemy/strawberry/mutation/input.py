@@ -3,7 +3,9 @@ from __future__ import annotations
 import dataclasses
 from collections.abc import Hashable, Iterator, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, cast, override
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar, cast
+
+from typing_extensions import Self, TypeAlias, override
 
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
@@ -55,18 +57,30 @@ class UpsertData:
         return iter(self.instances)
 
 
-@dataclass
 class _UnboundRelationInput:
-    attribute: MapperProperty[Any]
-    related: type[DeclarativeBase]
-    relation_type: RelationType
-    set: list[DeclarativeBase] | None = dataclasses.field(default_factory=list)
-    add: list[DeclarativeBase] = dataclasses.field(default_factory=list)
-    remove: list[DeclarativeBase] = dataclasses.field(default_factory=list)
-    create: list[DeclarativeBase] = dataclasses.field(default_factory=list)
-    upsert: UpsertData | None = None
-    input_index: int = -1
-    level: int = 0
+    def __init__(
+        self,
+        attribute: MapperProperty[Any],
+        related: type[DeclarativeBase],
+        relation_type: RelationType,
+        set_: list[DeclarativeBase] | None = None,
+        add: list[DeclarativeBase] | None = None,
+        remove: list[DeclarativeBase] | None = None,
+        create: list[DeclarativeBase] | None = None,
+        upsert: UpsertData | None = None,
+        input_index: int = -1,
+        level: int = 0,
+    ) -> None:
+        self.attribute = attribute
+        self.related = related
+        self.relation_type = relation_type
+        self.set = set_ if set_ is not None else []
+        self.add = add if add is not None else []
+        self.remove = remove if remove is not None else []
+        self.create = create if create is not None else []
+        self.upsert = upsert
+        self.input_index = input_index
+        self.level = level
 
     def add_instance(self, model: DeclarativeBase) -> None:
         if not _has_record(model):
@@ -80,14 +94,38 @@ class _UnboundRelationInput:
             self.add.append(model)
 
     def __bool__(self) -> bool:
-        return bool(self.set or self.add or self.remove or self.create or self.upsert) or self.set is None
+        return bool(self.set or self.add or self.remove or self.create or self.upsert)
 
 
-@dataclass(kw_only=True)
 class RelationInput(_UnboundRelationInput):
-    parent: DeclarativeBase
+    def __init__(
+        self,
+        attribute: MapperProperty[Any],
+        related: type[DeclarativeBase],
+        parent: DeclarativeBase,
+        relation_type: RelationType,
+        set_: list[DeclarativeBase] | None = None,
+        add: list[DeclarativeBase] | None = None,
+        remove: list[DeclarativeBase] | None = None,
+        create: list[DeclarativeBase] | None = None,
+        upsert: UpsertData | None = None,
+        input_index: int = -1,
+        level: int = 0,
+    ) -> None:
+        super().__init__(
+            attribute=attribute,
+            related=related,
+            relation_type=relation_type,
+            set_=set_,
+            add=add,
+            remove=remove,
+            create=create,
+            upsert=upsert,
+            input_index=input_index,
+            level=level,
+        )
+        self.parent = parent
 
-    def __post_init__(self) -> None:
         if self.relation_type is RelationType.TO_ONE:
             event.listens_for(self.attribute, "set")(self._set_event)
         else:
@@ -100,7 +138,7 @@ class RelationInput(_UnboundRelationInput):
             attribute=unbound.attribute,
             related=unbound.related,
             parent=model,
-            set=unbound.set,
+            set_=unbound.set,
             add=unbound.add,
             remove=unbound.remove,
             relation_type=unbound.relation_type,
@@ -176,7 +214,7 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
                     attribute=field.model_field.property,
                     related=field.related_model,
                     relation_type=relation_type,
-                    set=set_,
+                    set_=set_,
                     add=add,
                     remove=remove,
                     create=create,

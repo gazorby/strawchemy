@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal
+
+from typing_extensions import TypeAlias
 
 from sqlalchemy.orm import ColumnProperty, RelationshipProperty, joinedload, selectinload, undefer
 from sqlalchemy.orm.strategy_options import _AbstractLoad

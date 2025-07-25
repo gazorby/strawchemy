@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from functools import partial
 from typing import NewType, TypeVar
 
@@ -10,6 +10,8 @@ from strawberry import scalar
 from strawberry.schema.types.base_scalars import wrap_parser
 
 __all__ = ("Date", "DateTime", "Interval", "Time")
+
+UTC = timezone.utc
 
 T = TypeVar("T")
 

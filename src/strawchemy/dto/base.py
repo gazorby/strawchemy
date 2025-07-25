@@ -17,16 +17,15 @@ from typing import (
     Generic,
     Optional,
     Protocol,
-    Self,
-    TypeAlias,
     TypeVar,
     cast,
     get_args,
     get_origin,
     get_type_hints,
-    override,
     runtime_checkable,
 )
+
+from typing_extensions import Self, TypeAlias, override
 
 from strawchemy.dto.exceptions import DTOError, EmptyDTOError
 from strawchemy.graph import Node
@@ -199,7 +198,7 @@ class DTOBackend(Protocol, Generic[DTOBaseT]):
         return new_class(name, (dto,))
 
 
-@dataclass(slots=True)
+@dataclass
 class Reference(Generic[T, DTOBaseT]):
     name: str
     node: Node[Relation[T, DTOBaseT], None]
@@ -209,7 +208,7 @@ class Reference(Generic[T, DTOBaseT]):
         return f"{self.__class__.__name__}({self.name})"
 
 
-@dataclass(slots=True)
+@dataclass
 class Relation(Generic[T, DTOBaseT]):
     model: type[T] = field(compare=True)
     name: str = field(compare=False)
@@ -263,7 +262,6 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
 
 @dataclass
 class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
-    config: DTOFieldConfig
     dto_config: DTOConfig
 
     model: type[ModelT]
@@ -271,8 +269,9 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
 
     _name: str = field(init=False)
 
-    is_relation: bool
     type_hint: Any
+    is_relation: bool = False
+    config: DTOFieldConfig = field(default_factory=DTOFieldConfig)
     _model_field: ModelFieldT | DTOMissingType = DTO_MISSING
     related_model: type[ModelT] | None = None
     related_dto: type[DTOBase[ModelT]] | ForwardRef | None = None
@@ -476,7 +475,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             dto = list[dto]
 
         if (is_type_hint_optional(type_hint) and not field.complete) or field.partial:
-            return Optional[dto]  # noqa: UP007
+            return Optional[dto]
         return dto
 
     def _resolve_type(

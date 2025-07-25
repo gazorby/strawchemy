@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
+
+from typing_extensions import override
 
 import strawberry
 from strawberry import UNSET

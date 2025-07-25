@@ -12,7 +12,9 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Generic, Self, cast, override
+from typing import TYPE_CHECKING, Any, Generic, cast
+
+from typing_extensions import Self, override
 
 from sqlalchemy import (
     Dialect,

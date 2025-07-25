@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast, override
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast
+
+from typing_extensions import override
 
 from sqlalchemy import ARRAY, JSON, ColumnElement, Dialect, Integer, Text, and_, func, not_, null, or_, type_coerce
 from sqlalchemy import cast as sqla_cast

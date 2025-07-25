@@ -3,7 +3,9 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast, override
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast
+
+from typing_extensions import override
 
 from sqlalchemy.orm import DeclarativeBase
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend

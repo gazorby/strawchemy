@@ -3,9 +3,10 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any, ClassVar, override
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pydantic import ValidationError
+from typing_extensions import override
 
 from sqlalchemy.orm import DeclarativeBase
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend

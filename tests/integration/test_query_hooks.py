@@ -92,12 +92,12 @@ async def test_load_relationships_nested(
 
     assert not result.errors
     assert result.data
-    assert result.data[query] == [
-        {
-            "farms": f"Farms are: {', '.join(f'{fruit["name"]} farm' for fruit in raw_fruits if fruit['color_id'] == color['id'])}"
-        }
+
+    farm_names = [
+        ", ".join(f"{fruit['name']} farm" for fruit in raw_fruits if fruit["color_id"] == color["id"])
         for color in raw_colors
     ]
+    assert result.data[query] == [{"farms": f"Farms are: {name}"} for name in farm_names]
 
     query_tracker.assert_statements(2, "select", sql_snapshot)
 

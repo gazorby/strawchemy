@@ -4,7 +4,9 @@ from collections.abc import Iterable
 from enum import Enum
 from inspect import getmodule
 from types import new_class
-from typing import TYPE_CHECKING, Any, TypeVar, cast, override
+from typing import TYPE_CHECKING, Any, TypeVar, cast
+
+from typing_extensions import override
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation

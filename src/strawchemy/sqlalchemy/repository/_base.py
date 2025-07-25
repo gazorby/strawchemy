@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
+
+from typing_extensions import TypeAlias
 
 from sqlalchemy import Column, Function, Insert, Row, func, insert
 from sqlalchemy.dialects import mysql, postgresql, sqlite

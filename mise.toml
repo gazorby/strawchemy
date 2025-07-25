@@ -1,5 +1,6 @@
 [env]
 PROJECT_NAME = "strawchemy"
+UV_PYTHON = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
 _.python.venv = { path = ".venv" }
 _.file = ".env.json"
 
@@ -9,12 +10,18 @@ uv = "latest"
 jq = "latest"
 pre-commit = "latest"
 actionlint = "latest"
+python = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
 
 [vars]
 local_pytest_options = "-n=6 -vv"
 pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
 ci_pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --junit-xml=./junit.xml -o junit_family=legacy"
-nox_py13 = "uv run nox -r -p=3.13"
+nox_py13 = "uv run nox -r -P=3.13"
+nox_py12 = "uv run nox -r -P=3.12"
+nox_py11 = "uv run nox -r -P=3.11"
+nox_py10 = "uv run nox -r -P=3.10"
+nox_py9 = "uv run nox -r -P=3.9"
+
 cleanable_paths = '''{{
 [
   ".nox",
@@ -38,7 +45,9 @@ cleanable_paths = '''{{
 ] | join(sep=" ")
 }}'''
 
+# ###############
 # Dependencies
+# ###############
 
 [tasks._install]
 description = "Install dependencies"
@@ -63,7 +72,9 @@ run = "pre-commit install --install-hooks 2>&1"
 description = "Install test dependencies only"
 run = "uv sync --only-group test"
 
+# ###############
 # Test
+# ###############
 
 [tasks.test]
 description = "Run tests"
@@ -78,6 +89,34 @@ depends = "_install"
 alias = "tc"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:unit:py12"]
+description = "Run unit tests on python 3.12"
+depends = "_install"
+alias = "tu12"
+usage = 'arg "<test>" default=""'
+run = '{{vars.nox_py12}} -t unit -- tests/unit {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:unit:py11"]
+description = "Run unit tests on python 3.11"
+depends = "_install"
+alias = "tu11"
+usage = 'arg "<test>" default=""'
+run = '{{vars.nox_py11}} -t unit -- tests/unit {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:unit:py10"]
+description = "Run unit tests on python 3.10"
+depends = "_install"
+alias = "tu10"
+usage = 'arg "<test>" default=""'
+run = '{{vars.nox_py10}} -t unit -- tests/unit {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
+
+[tasks."test:unit:py9"]
+description = "Run unit tests on python 3.9"
+depends = "_install"
+alias = "tu9"
+usage = 'arg "<test>" default=""'
+run = '{{vars.nox_py9}} -t unit -- tests/unit {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit"]
 description = "Run unit tests"
@@ -150,7 +189,9 @@ description = "Run snapshot-based tests and update snapshots"
 depends = "_install"
 run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update"
 
+# ###############
 # CI
+# ###############
 
 [tasks."ci:test"]
 description = "Run tests in CI"
@@ -183,7 +224,9 @@ description = "Output test session names for CI"
 depends = "install:test"
 run = "nox --json -t tests -l | jq 'map(.name) | unique'"
 
+# ###############
 # Linting
+# ###############
 
 [tasks."ruff:check"]
 description = "Check ruff formatting"
@@ -226,7 +269,9 @@ description = "Run pre-commit checks"
 depends = "install:pre-commit"
 run = "pre-commit run --color=always --all-files"
 
+# ###############
 # Tools
+# ###############
 
 [tasks.auto-bump]
 description = "Auto bump the version"

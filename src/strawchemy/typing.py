@@ -1,11 +1,22 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, TypeAlias
+import sys
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, Union
+
+from typing_extensions import TypeAlias
+
+if sys.version_info >= (3, 10):
+    from types import UnionType
+
+    UNION_TYPES = (Union, UnionType)
+else:
+    UNION_TYPES = (Union,)
+
 
 if TYPE_CHECKING:
     from . import StrawchemyAsyncRepository, StrawchemySyncRepository
 
-__all__ = ("AnyRepository", "DataclassProtocol", "SupportedDialect")
+__all__ = ("UNION_TYPES", "AnyRepository", "DataclassProtocol", "SupportedDialect")
 
 
 class DataclassProtocol(Protocol):

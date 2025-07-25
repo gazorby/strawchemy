@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import TYPE_CHECKING, Any, Self, TypeVar, override
+from typing import TYPE_CHECKING, Any, TypeVar, Union
+
+from typing_extensions import Self, override
 
 from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -125,7 +127,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                         )
                     ],
                 )
-                annotations[field.name] = field.type_ | None
+                annotations[field.name] = Union[field.type_, None]
 
         dto.__annotations__ |= annotations
         for name, value in attributes.items():

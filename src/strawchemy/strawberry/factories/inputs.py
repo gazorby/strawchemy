@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Generator, Sequence
-from typing import TYPE_CHECKING, Any, TypeVar, override
+from typing import TYPE_CHECKING, Any, TypeVar, Union
+
+from typing_extensions import override
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import UNSET
@@ -142,9 +144,9 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         ):
             key = DTOKey.from_dto_node(node)
             if field.is_relation:
-                field.type_ = field.type_ | None
+                field.type_ = Union[field.type_, None]
                 if field.uselist and field.related_dto:
-                    field.type_ = field.related_dto | None
+                    field.type_ = Union[field.related_dto, None]
                 if aggregate_filters:
                     aggregation_field = self._aggregation_field(field, dto_config.copy_with(partial_default=UNSET))
                     field_map[key + aggregation_field.name] = aggregation_field
