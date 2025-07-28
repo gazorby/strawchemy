@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, ClassVar, override
+from typing import TYPE_CHECKING, ClassVar, Optional, Union, override
 
 from syrupy.exceptions import TaintedSnapshotError
 from syrupy.extensions.amber.serializer import AmberDataSerializer
@@ -24,9 +24,9 @@ class SingleAmberFileExtension(SingleFileSnapshotExtension):
         self,
         data: SerializableData,
         *,
-        exclude: PropertyFilter | None = None,
-        include: PropertyFilter | None = None,
-        matcher: PropertyMatcher | None = None,
+        exclude: Optional[PropertyFilter] = None,
+        include: Optional[PropertyFilter] = None,
+        matcher: Optional[PropertyMatcher] = None,
     ) -> SerializedData:
         return self.serializer_class.serialize(data, exclude=exclude, include=include, matcher=matcher)
 
@@ -42,7 +42,7 @@ class SingleAmberFileExtension(SingleFileSnapshotExtension):
     @override
     def _read_snapshot_data_from_location(
         self, *, snapshot_location: str, snapshot_name: str, session_id: str
-    ) -> SerializableData | None:
+    ) -> Optional[SerializableData]:
         snapshots = self.__cacheable_read_snapshot(snapshot_location=snapshot_location, cache_key=session_id)
         snapshot = snapshots.get(snapshot_name)
         tainted = bool(snapshots.tainted or (snapshot and snapshot.tainted))

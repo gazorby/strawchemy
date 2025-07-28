@@ -10,7 +10,7 @@ import dataclasses
 from collections import defaultdict
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Optional, TypeVar, Union, overload
 
 from msgspec import convert
 
@@ -74,7 +74,7 @@ class GraphQLResult(Generic[ModelT, T]):
         """
         return self.tree.node_result_to_strawberry_type(self.query_result.one())
 
-    def graphql_type_or_none(self) -> T | None:
+    def graphql_type_or_none(self) -> Optional[T]:
         """Convert the query result to a single GraphQL type or None.
 
         Returns:
@@ -92,7 +92,7 @@ class GraphQLResult(Generic[ModelT, T]):
     @overload
     def graphql_list(self) -> list[T]: ...
 
-    def graphql_list(self, root_aggregations: bool = False) -> list[T] | T:
+    def graphql_list(self, root_aggregations: bool = False) -> Union[list[T], T]:
         """Convert the query result to a list of GraphQL types or aggregated result.
 
         Args:

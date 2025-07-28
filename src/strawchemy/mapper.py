@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from functools import cached_property, partial
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawchemy.strawberry.factories.aggregations import EnumDTOFactory
@@ -81,7 +81,7 @@ class Strawchemy:
         pydantic (PydanticMapper): A mapper for generating Pydantic models.
     """
 
-    def __init__(self, config: StrawchemyConfig | SupportedDialect) -> None:
+    def __init__(self, config: Union[StrawchemyConfig, SupportedDialect]) -> None:
         """Initializes the Strawchemy instance.
 
         Sets up the configuration, registry, and various DTO factories
@@ -159,27 +159,27 @@ class Strawchemy:
         self,
         resolver: _RESOLVER_TYPE[Any],
         *,
-        filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
-        distinct_on: type[EnumDTO] | None = None,
-        pagination: bool | DefaultOffsetPagination | None = None,
-        arguments: list[StrawberryArgument] | None = None,
-        id_field_name: str | None = None,
+        filter_input: Optional[type[BooleanFilterDTO]] = None,
+        order_by: Optional[type[OrderByDTO]] = None,
+        distinct_on: Optional[type[EnumDTO]] = None,
+        pagination: Union[bool, DefaultOffsetPagination, None] = None,
+        arguments: Optional[list[StrawberryArgument]] = None,
+        id_field_name: Optional[str] = None,
         root_aggregations: bool = False,
-        filter_statement: FilterStatementCallable | None = None,
-        execution_options: dict[str, Any] | None = None,
-        query_hook: QueryHook[Any] | Sequence[QueryHook[Any]] | None = None,
-        repository_type: AnyRepository | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        permission_classes: list[type[BasePermission]] | None = None,
-        deprecation_reason: str | None = None,
+        filter_statement: Optional[FilterStatementCallable] = None,
+        execution_options: Optional[dict[str, Any]] = None,
+        query_hook: Union[QueryHook[Any], Sequence[QueryHook[Any]], None] = None,
+        repository_type: Optional[AnyRepository] = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        permission_classes: Optional[list[type[BasePermission]]] = None,
+        deprecation_reason: Optional[str] = None,
         default: Any = dataclasses.MISSING,
-        default_factory: Callable[..., object] | object = dataclasses.MISSING,
-        metadata: Mapping[Any, Any] | None = None,
+        default_factory: Union[Callable[..., object], object] = dataclasses.MISSING,
+        metadata: Optional[Mapping[Any, Any]] = None,
         directives: Sequence[object] = (),
-        graphql_type: Any | None = None,
-        extensions: list[FieldExtension] | None = None,
+        graphql_type: Optional[Any] = None,
+        extensions: Optional[list[FieldExtension]] = None,
         root_field: bool = True,
     ) -> StrawchemyField: ...
 
