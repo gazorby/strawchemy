@@ -74,9 +74,6 @@ jobs:
         id: docker-buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Setup nox
-        run: pip install nox
-
       - name: Setup mise
         uses: jdx/mise-action@v2
         with:

@@ -191,7 +191,7 @@ run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update
 [tasks."ci:test"]
 description = "Run tests in CI"
 usage = 'arg "<session>"'
-run = "nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 {{  vars.ci_pytest_coverage_options}}"
+run = "uvx nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 {{  vars.ci_pytest_coverage_options}}"
 
 [tasks."ci:lint"]
 description = "Lint CI yaml files"
@@ -200,7 +200,7 @@ run = "actionlint -shellcheck ''"
 [tasks."ci:test-matrix"]
 description = "Output test matrix for CI"
 run = '''
-    nox --json -t tests -t ci -l |
+    uvx nox --json -t tests -t ci -l |
     jq 'map(
         {
         session,
@@ -214,7 +214,7 @@ run = '''
 
 [tasks."ci:test-sessions"]
 description = "Output test session names for CI"
-run = "nox --json -t tests -l | jq 'map(.name) | unique'"
+run = "uvx nox --json -t tests -l | jq 'map(.name) | unique'"
 
 # ###############
 # Linting
