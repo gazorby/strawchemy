@@ -74,16 +74,16 @@ jobs:
         id: docker-buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Nox cache
-        id: nox-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .nox
-          key: ${{ runner.os }}-nox-${{ matrix.session.session }}-${{hashFiles('**/uv.lock') }}-${{ hashFiles('**/noxfile.py') }}
-          restore-keys: |
-            ${{ runner.os }}-nox-${{ matrix.session.session }}-
-            ${{ runner.os }}-nox-
+      # - name: Nox cache
+      #   id: nox-cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: |
+      #       ./.nox
+      #     key: ${{ runner.os }}-nox-${{ matrix.session.session }}-${{hashFiles('**/uv.lock') }}-${{ hashFiles('**/noxfile.py') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-nox-${{ matrix.session.session }}-
+      #       ${{ runner.os }}-nox-
 
       - name: Setup mise
         uses: jdx/mise-action@v2
