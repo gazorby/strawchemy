@@ -62,10 +62,6 @@ description = "Install dependencies and pre-commit hooks"
 alias = "i"
 depends = ["install:pre-commit", "_install"]
 
-[tasks."install:test"]
-description = "Install dependencies and pre-commit hooks"
-run = "uv pip install nox nox-uv"
-
 [tasks."install:pre-commit"]
 description = "Install pre-commit hooks"
 run = "pre-commit install --install-hooks 2>&1"
@@ -191,10 +187,14 @@ run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update
 # CI
 # ###############
 
+[tasks."ci:install"]
+description = "Install dependencies and pre-commit hooks"
+run = "uv venv --allow-existing && uv pip install nox nox-uv"
+
 [tasks."ci:test"]
 description = "Run tests in CI"
 usage = 'arg "<session>"'
-depends = "install:test"
+depends = "ci:install"
 env = { UV_PYTHON_PREFERENCE = "only-managed" }
 run = "nox -t tests -s '{{arg(name='session')}}' -- -n=2 {{  vars.ci_pytest_coverage_options}}"
 
@@ -204,7 +204,7 @@ run = "actionlint -shellcheck ''"
 
 [tasks."ci:test-matrix"]
 description = "Output test matrix for CI"
-depends = "install:test"
+depends = "ci:install"
 run = '''
     nox --json -t tests -t ci -l |
     jq 'map(
@@ -220,7 +220,7 @@ run = '''
 
 [tasks."ci:test-sessions"]
 description = "Output test session names for CI"
-depends = "install:test"
+depends = "ci:install"
 run = "nox --json -t tests -l | jq 'map(.name) | unique'"
 
 # ###############

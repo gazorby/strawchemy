@@ -6,6 +6,12 @@
 
 Auto bump the version
 
+## `ci:install`
+
+- **Usage**: `ci:install`
+
+Install dependencies and pre-commit hooks
+
 ## `ci:lint`
 
 - **Usage**: `ci:lint`
@@ -14,7 +20,7 @@ Lint CI yaml files
 
 ## `ci:test`
 
-- Depends: install:test
+- Depends: ci:install
 
 - **Usage**: `ci:test <session>`
 
@@ -26,7 +32,7 @@ Run tests in CI
 
 ## `ci:test-matrix`
 
-- Depends: install:test
+- Depends: ci:install
 
 - **Usage**: `ci:test-matrix`
 
@@ -34,7 +40,7 @@ Output test matrix for CI
 
 ## `ci:test-sessions`
 
-- Depends: install:test
+- Depends: ci:install
 
 - **Usage**: `ci:test-sessions`
 
@@ -61,12 +67,6 @@ Install dependencies and pre-commit hooks
 - **Usage**: `install:pre-commit`
 
 Install pre-commit hooks
-
-## `install:test`
-
-- **Usage**: `install:test`
-
-Install dependencies and pre-commit hooks
 
 ## `lint`
 
