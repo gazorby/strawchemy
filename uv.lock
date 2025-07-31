@@ -1429,6 +1429,18 @@ uv = [
 ]
 
 [[package]]
+name = "nox-uv"
+version = "0.6.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "nox" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f2/18/726fc3942a5d2a6a8686d0b220aa12e8459e4294181c7842715e7dc0c2db/nox_uv-0.6.2.tar.gz", hash = "sha256:a7a0ffa9a868f48cf919e09f18fb266a89d5cac69a69ce1799fcfd6a7ba09285", size = 4937, upload-time = "2025-07-31T00:28:44.719Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fb/7c/b6d82aa05f9790846733cd7d5696641f5bdf8704d267a9ccb9e92b977f9d/nox_uv-0.6.2-py3-none-any.whl", hash = "sha256:705b3054d0f3f8134872f03e01ea29ee35d5c8a8a7085b3751306c82d35d4b6d", size = 5335, upload-time = "2025-07-31T00:28:43.961Z" },
+]
+
+[[package]]
 name = "numpy"
 version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2352,6 +2364,8 @@ version = "0.18.0"
 source = { editable = "." }
 dependencies = [
     { name = "msgspec" },
+    { name = "nox" },
+    { name = "nox-uv" },
     { name = "sqlalchemy" },
     { name = "strawberry-graphql" },
     { name = "typing-extensions" },
@@ -2388,6 +2402,7 @@ dev = [
     { name = "debugpy" },
     { name = "git-cliff" },
     { name = "nox", extra = ["uv"] },
+    { name = "nox-uv" },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -2426,6 +2441,7 @@ test = [
     { name = "covdefaults" },
     { name = "cryptography" },
     { name = "nox", extra = ["uv"] },
+    { name = "nox-uv" },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -2444,6 +2460,8 @@ requires-dist = [
     { name = "geoalchemy2", marker = "extra == 'geo'" },
     { name = "geojson-pydantic", marker = "extra == 'geo'" },
     { name = "msgspec" },
+    { name = "nox", specifier = ">=2025.5.1" },
+    { name = "nox-uv", specifier = ">=0.6.2" },
     { name = "pydantic", marker = "extra == 'pydantic'" },
     { name = "shapely", marker = "extra == 'geo'" },
     { name = "sqlalchemy", specifier = ">=2.0.10" },
@@ -2471,6 +2489,7 @@ dev = [
     { name = "git-cliff" },
     { name = "git-cliff", specifier = ">=2.6.1" },
     { name = "nox", extras = ["uv"] },
+    { name = "nox-uv" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.3" },
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
@@ -2507,6 +2526,7 @@ test = [
     { name = "covdefaults" },
     { name = "cryptography" },
     { name = "nox", extras = ["uv"] },
+    { name = "nox-uv" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.3" },
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = ">=0.24" },

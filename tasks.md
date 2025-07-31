@@ -14,6 +14,8 @@ Lint CI yaml files
 
 ## `ci:test`
 
+- Depends: install:test
+
 - **Usage**: `ci:test <session>`
 
 Run tests in CI
@@ -24,11 +26,15 @@ Run tests in CI
 
 ## `ci:test-matrix`
 
+- Depends: install:test
+
 - **Usage**: `ci:test-matrix`
 
 Output test matrix for CI
 
 ## `ci:test-sessions`
+
+- Depends: install:test
 
 - **Usage**: `ci:test-sessions`
 
@@ -55,6 +61,12 @@ Install dependencies and pre-commit hooks
 - **Usage**: `install:pre-commit`
 
 Install pre-commit hooks
+
+## `install:test`
+
+- **Usage**: `install:test`
+
+Install dependencies and pre-commit hooks
 
 ## `lint`
 
