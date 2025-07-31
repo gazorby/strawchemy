@@ -18,10 +18,17 @@ nox.options.error_on_external_run = True
 nox.options.default_venv_backend = "uv"
 
 
+def _set_uv_env(session: Session) -> dict[str, str]:
+    return {
+        "UV_PROJECT_ENVIRONMENT": session.virtualenv.location,
+        "UV_PYTHON": str(Path(session.virtualenv.bin) / "python"),
+    }
+
+
 @nox.session(name="unit", python=SUPPORTED_PYTHON_VERSIONS, tags=["tests", "unit", "ci"])
 def unit_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
-    session.run_install("uv", "sync", "--all-extras", "--group=test")
+    session.run_install("uv", "sync", "--all-extras", "--group=test", env=_set_uv_env(session))
     args: list[str] = ["-m=not integration", "tests/unit", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
@@ -29,7 +36,7 @@ def unit_tests(session: Session) -> None:
 @nox.session(name="unit-no-extras", python=SUPPORTED_PYTHON_VERSIONS, tags=["tests", "unit", "ci"])
 def unit_tests_no_extras(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
-    session.run_install("uv", "sync", "--group=test")
+    session.run_install("uv", "sync", "--group=test", env=_set_uv_env(session))
     args: list[str] = ["-m=not integration", "tests/unit", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
@@ -49,7 +56,7 @@ def integration_tests(session: Session) -> None:
 )
 def integration_postgres_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
-    session.run_install("uv", "sync", "--all-extras", "--group=test")
+    session.run_install("uv", "sync", "--all-extras", "--group=test", env=_set_uv_env(session))
     args: list[str] = ["-m=asyncpg or psycopg_async or psycopg_sync", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
@@ -59,7 +66,7 @@ def integration_postgres_tests(session: Session) -> None:
 )
 def integration_mysql_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
-    session.run_install("uv", "sync", "--all-extras", "--group=test")
+    session.run_install("uv", "sync", "--all-extras", "--group=test", env=_set_uv_env(session))
     args: list[str] = ["-m=asyncmy", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
@@ -69,6 +76,6 @@ def integration_mysql_tests(session: Session) -> None:
 )
 def integration_sqlite_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
-    session.run_install("uv", "sync", "--all-extras", "--group=test")
+    session.run_install("uv", "sync", "--all-extras", "--group=test", env=_set_uv_env(session))
     args: list[str] = ["-m aiosqlite or sqlite", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
