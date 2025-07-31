@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 from urllib.parse import quote
 
 from geoalchemy2 import WKTElement
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 __all__ = ("_element_to_geojson_io_url", "geo_data_visualization_urls")
 
 
-def _element_to_geojson_io_url(element: WKBElement | WKTElement | str) -> str:
+def _element_to_geojson_io_url(element: Union[Union[WKBElement, WKTElement], str]) -> str:
     base_url = "https://geojson.io/#data=data:application/json,"
     if isinstance(element, str):
         element = WKTElement(element)

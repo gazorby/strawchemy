@@ -12,7 +12,9 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 from functools import cache
-from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar, Union
+
+from typing_extensions import TypeAlias
 
 import strawberry
 from sqlalchemy import Dialect
@@ -73,11 +75,11 @@ class GraphQLComparison:
         _field_node: A private attribute that stores the DTO field node.
     """
 
-    __strawchemy_field_node__: Private[QueryNodeType | None] = None
+    __strawchemy_field_node__: Private[Optional[QueryNodeType]] = None
     __strawchemy_filter__: Private[type[FilterProtocol]]
 
     def to_expressions(
-        self, dialect: Dialect, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
+        self, dialect: Dialect, model_attribute: Union[QueryableAttribute[Any], ColumnElement[Any]]
     ) -> list[ColumnElement[bool]]:
         return self.__strawchemy_filter__(self).to_expressions(dialect, model_attribute)
 
@@ -112,11 +114,11 @@ class EqualityComparison(GraphQLComparison, Generic[T]):
 
     __strawchemy_filter__ = EqualityFilter
 
-    eq: T | None = UNSET
-    neq: T | None = UNSET
-    is_null: bool | None = UNSET
-    in_: list[T] | None = strawberry.field(name="in", default=UNSET)
-    nin: list[T] | None = UNSET
+    eq: Optional[T] = UNSET
+    neq: Optional[T] = UNSET
+    is_null: Optional[bool] = UNSET
+    in_: Optional[list[T]] = strawberry.field(name="in", default=UNSET)
+    nin: Optional[list[T]] = UNSET
 
 
 @strawberry.input(name="OrderComparison", description=_DESCRIPTION.format(field="fields supporting order comparisons"))
@@ -135,10 +137,10 @@ class OrderComparison(EqualityComparison[T]):
 
     __strawchemy_filter__ = OrderFilter
 
-    gt: T | None = UNSET
-    gte: T | None = UNSET
-    lt: T | None = UNSET
-    lte: T | None = UNSET
+    gt: Optional[T] = UNSET
+    gte: Optional[T] = UNSET
+    lt: Optional[T] = UNSET
+    lte: Optional[T] = UNSET
 
 
 @strawberry.input(name="TextComparison", description=_DESCRIPTION.format(field="String fields"))
@@ -165,20 +167,20 @@ class TextComparison(OrderComparison[str]):
 
     __strawchemy_filter__ = TextFilter
 
-    like: str | None = UNSET
-    nlike: str | None = UNSET
-    ilike: str | None = UNSET
-    nilike: str | None = UNSET
-    regexp: str | None = UNSET
-    iregexp: str | None = UNSET
-    nregexp: str | None = UNSET
-    inregexp: str | None = UNSET
-    startswith: str | None = UNSET
-    endswith: str | None = UNSET
-    contains: str | None = UNSET
-    istartswith: str | None = UNSET
-    iendswith: str | None = UNSET
-    icontains: str | None = UNSET
+    like: Optional[str] = UNSET
+    nlike: Optional[str] = UNSET
+    ilike: Optional[str] = UNSET
+    nilike: Optional[str] = UNSET
+    regexp: Optional[str] = UNSET
+    iregexp: Optional[str] = UNSET
+    nregexp: Optional[str] = UNSET
+    inregexp: Optional[str] = UNSET
+    startswith: Optional[str] = UNSET
+    endswith: Optional[str] = UNSET
+    contains: Optional[str] = UNSET
+    istartswith: Optional[str] = UNSET
+    iendswith: Optional[str] = UNSET
+    icontains: Optional[str] = UNSET
 
 
 @strawberry.input(name="ArrayComparison", description=_DESCRIPTION.format(field="List fields"))
@@ -197,9 +199,9 @@ class ArrayComparison(EqualityComparison[T], Generic[T]):
 
     __strawchemy_filter__ = ArrayFilter
 
-    contains: list[T] | None = UNSET
-    contained_in: list[T] | None = UNSET
-    overlap: list[T] | None = UNSET
+    contains: Optional[list[T]] = UNSET
+    contained_in: Optional[list[T]] = UNSET
+    overlap: Optional[list[T]] = UNSET
 
 
 @strawberry.input(name="DateComparison", description=_DESCRIPTION.format(field="Date fields"))
@@ -222,14 +224,14 @@ class DateComparison(OrderComparison[date]):
 
     __strawchemy_filter__ = DateFilter
 
-    year: OrderComparison[int] | None = UNSET
-    month: OrderComparison[int] | None = UNSET
-    day: OrderComparison[int] | None = UNSET
-    week_day: OrderComparison[int] | None = UNSET
-    week: OrderComparison[int] | None = UNSET
-    quarter: OrderComparison[int] | None = UNSET
-    iso_year: OrderComparison[int] | None = UNSET
-    iso_week_day: OrderComparison[int] | None = UNSET
+    year: Optional[OrderComparison[int]] = UNSET
+    month: Optional[OrderComparison[int]] = UNSET
+    day: Optional[OrderComparison[int]] = UNSET
+    week_day: Optional[OrderComparison[int]] = UNSET
+    week: Optional[OrderComparison[int]] = UNSET
+    quarter: Optional[OrderComparison[int]] = UNSET
+    iso_year: Optional[OrderComparison[int]] = UNSET
+    iso_week_day: Optional[OrderComparison[int]] = UNSET
 
 
 @strawberry.input(name="TimeComparison", description=_DESCRIPTION.format(field="Time fields"))
@@ -247,37 +249,37 @@ class TimeComparison(OrderComparison[time]):
 
     __strawchemy_filter__ = TimeFilter
 
-    hour: OrderComparison[int] | None = UNSET
-    minute: OrderComparison[int] | None = UNSET
-    second: OrderComparison[int] | None = UNSET
+    hour: Optional[OrderComparison[int]] = UNSET
+    minute: Optional[OrderComparison[int]] = UNSET
+    second: Optional[OrderComparison[int]] = UNSET
 
 
 @strawberry.input(name="IntervalComparison", description=_DESCRIPTION.format(field="Interval fields"))
 class TimeDeltaComparison(OrderComparison[timedelta]):
     __strawchemy_filter__ = TimeDeltaFilter
 
-    days: OrderComparison[float] | None = UNSET
-    hours: OrderComparison[float] | None = UNSET
-    minutes: OrderComparison[float] | None = UNSET
-    seconds: OrderComparison[float] | None = UNSET
+    days: Optional[OrderComparison[float]] = UNSET
+    hours: Optional[OrderComparison[float]] = UNSET
+    minutes: Optional[OrderComparison[float]] = UNSET
+    seconds: Optional[OrderComparison[float]] = UNSET
 
 
 @strawberry.input(name="DateTimeComparison", description=_DESCRIPTION.format(field="DateTime fields"))
 class DateTimeComparison(OrderComparison[datetime]):
     __strawchemy_filter__ = DateTimeFilter
 
-    year: OrderComparison[int] | None = UNSET
-    month: OrderComparison[int] | None = UNSET
-    day: OrderComparison[int] | None = UNSET
-    week_day: OrderComparison[int] | None = UNSET
-    week: OrderComparison[int] | None = UNSET
-    quarter: OrderComparison[int] | None = UNSET
-    iso_year: OrderComparison[int] | None = UNSET
-    iso_week_day: OrderComparison[int] | None = UNSET
+    year: Optional[OrderComparison[int]] = UNSET
+    month: Optional[OrderComparison[int]] = UNSET
+    day: Optional[OrderComparison[int]] = UNSET
+    week_day: Optional[OrderComparison[int]] = UNSET
+    week: Optional[OrderComparison[int]] = UNSET
+    quarter: Optional[OrderComparison[int]] = UNSET
+    iso_year: Optional[OrderComparison[int]] = UNSET
+    iso_week_day: Optional[OrderComparison[int]] = UNSET
 
-    hour: OrderComparison[int] | None = UNSET
-    minute: OrderComparison[int] | None = UNSET
-    second: OrderComparison[int] | None = UNSET
+    hour: Optional[OrderComparison[int]] = UNSET
+    minute: Optional[OrderComparison[int]] = UNSET
+    second: Optional[OrderComparison[int]] = UNSET
 
 
 class _JSONComparison(EqualityComparison[dict[str, Any]]):
@@ -297,11 +299,11 @@ class _JSONComparison(EqualityComparison[dict[str, Any]]):
 
     __strawchemy_filter__ = JSONFilter
 
-    contains: dict[str, Any] | None = UNSET
-    contained_in: dict[str, Any] | None = UNSET
-    has_key: str | None = UNSET
-    has_key_all: list[str] | None = UNSET
-    has_key_any: list[str] | None = UNSET
+    contains: Optional[dict[str, Any]] = UNSET
+    contained_in: Optional[dict[str, Any]] = UNSET
+    has_key: Optional[str] = UNSET
+    has_key_all: Optional[list[str]] = UNSET
+    has_key_any: Optional[list[str]] = UNSET
 
 
 class _SQLiteJSONComparison(EqualityComparison[dict[str, Any]]):
@@ -321,9 +323,9 @@ class _SQLiteJSONComparison(EqualityComparison[dict[str, Any]]):
 
     __strawchemy_filter__ = JSONFilter
 
-    has_key: str | None = UNSET
-    has_key_all: list[str] | None = UNSET
-    has_key_any: list[str] | None = UNSET
+    has_key: Optional[str] = UNSET
+    has_key_all: Optional[list[str]] = UNSET
+    has_key_any: Optional[list[str]] = UNSET
 
 
 @cache

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional, Union
+
 import pytest
 
 from syrupy.assertion import SnapshotAssertion
@@ -29,7 +31,7 @@ pytestmark = [pytest.mark.integration]
 @pytest.mark.snapshot
 async def test_count_aggregation_filter(
     predicate: str,
-    value: int | list[int],
+    value: Union[int, list[int]],
     expected_indices: list[int],
     any_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
@@ -307,7 +309,7 @@ async def test_avg_aggregation_filter(
 )
 @pytest.mark.snapshot
 async def test_count_aggregation_filter_with_distinct(
-    distinct: bool | None,
+    distinct: Optional[bool],
     expected_count: int,
     expected_color_indices: list[int],
     any_query: AnyQueryExecutor,

@@ -11,22 +11,31 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Web Environment",
   "Intended Audience :: Developers",
-  "Intended Audience :: System Administrators",
   "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.9",
   "Topic :: Database",
   "Topic :: Database :: Database Engines/Servers",
+  "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
   "Topic :: Software Development",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Typed",
 ]
-dependencies = ["msgspec", "sqlalchemy>=2.0.10", "strawberry-graphql"]
+dependencies = [
+  "msgspec",
+  "nox>=2025.5.1",
+  "nox-uv>=0.6.2",
+  "sqlalchemy>=2.0.10",
+  "strawberry-graphql",
+  "typing-extensions",
+]
 
 [project.urls]
 Changelog = "https://github.com/gazorby/strawchemy/blob/main/CHANGELOG.md"
@@ -34,6 +43,7 @@ Documentation = "https://github.com/gazorby/strawchemy"
 Homepage = "https://github.com/gazorby/strawchemy"
 Issues = "https://github.com/gazorby/strawchemy/issues"
 Repository = "https://github.com/gazorby/strawchemy"
+"Sponsor on GitHub" = "https://github.com/sponsors/gazorby"
 
 [project.optional-dependencies]
 geo = ["GeoAlchemy2", "geojson-pydantic", "shapely"]
@@ -54,19 +64,16 @@ dev = [
   "debugpy",
 ]
 doc = ["git-cliff>=2.6.1"]
-lint = ["pyright[nodejs] == 1.1.403", "ruff", "vulture"]
+lint = ["basedpyright", "ruff", "vulture"]
 mysql = ["asyncmy", "cryptography"]
-postgres = [
-  "asyncpg>=0.29.0",
-  "psycopg2-binary>=2.9.10",
-  "psycopg[binary,pool]>=3.2.3",
-]
+postgres = ["asyncpg>=0.29.0", "psycopg[binary,pool]>=3.2.3"]
 test = [
   { include-group = "postgres" },
   { include-group = "mysql" },
   { include-group = "aiosqlite" },
   "testapp",
   "nox[uv]",
+  "nox-uv",
   "pytest",
   "pytest-cov",
   "pytest-asyncio>=0.24",
@@ -82,6 +89,37 @@ test = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.basedpyright]
+venv = ".venv"
+exclude = [
+  "**/__pycache__",
+  "**/.hypothesis",
+  "**/.mypy_cache",
+  "**/.pytest_cache",
+  "**/.ruff_cache",
+  "**/.venv",
+  "**/.tox",
+  "**/.nox",
+  "**/build",
+  "**/dist",
+  "**/node_modules",
+  "**/cdk.out",
+  "**/alembic/versions",
+]
+verboseOutput = true
+pythonVersion = "3.9"
+typeCheckingMode = "strict"
+reportUnknownMemberType = false
+reportMissingTypeStubs = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportPrivateUsage = false
+reportUnnecessaryTypeIgnoreComment = true
+reportImplicitOverride = true
+reportPropertyTypeMismatch = true
+reportShadowedImports = true
+strictGenericNarrowing = true
 
 [tool.bumpversion]
 allow_dirty = true
@@ -254,36 +292,6 @@ token = ""
 [tool.hatch.build.targets.wheel]
 packages = ["src/strawchemy"]
 
-[tool.pyright]
-venv = ".venv"
-exclude = [
-  "**/__pycache__",
-  "**/.hypothesis",
-  "**/.mypy_cache",
-  "**/.pytest_cache",
-  "**/.ruff_cache",
-  "**/.venv",
-  "**/.tox",
-  "**/.nox",
-  "**/build",
-  "**/dist",
-  "**/node_modules",
-  "**/cdk.out",
-  "**/alembic/versions",
-]
-verboseOutput = true
-pythonVersion = "3.12"
-typeCheckingMode = "strict"
-reportUnknownMemberType = false
-reportMissingTypeStubs = false
-reportUnknownArgumentType = false
-reportUnknownVariableType = false
-reportPrivateUsage = false
-reportUnnecessaryTypeIgnoreComment = true
-reportImplicitOverride = true
-reportPropertyTypeMismatch = true
-reportShadowedImports = true
-
 [tool.pytest.ini_options]
 markers = [
   "snapshot: snapshot-based tests using syrupy",
@@ -297,13 +305,14 @@ markers = [
   "asyncpg: SQLAlchemy Postgres (asyncpg) Tests",
 ]
 testpaths = ["tests"]
+xfail_strict = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 120
 fix = true
-target-version = "py311"
+target-version = "py39"
 exclude = [
   ".bzr",
   ".direnv",
@@ -349,6 +358,7 @@ ignore = [
   "ANN401",  # flake8-annotations - typing Any disallowed in function arguments
   "FBT",  # flake8-annotations - boolean trap. Try to remove this in the future
   "PT013",  # flake8-pytest-style - Incorrect import of pytest
+  "UP007",  # flake8-builtins - Unnecessary `Union` annotation
 ]
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
@@ -389,6 +399,8 @@ default-groups = ["test", "lint"]
 
 [tool.uv.sources]
 testapp = { workspace = true }
+# Temporary pin to allow msgspec 0.19.0+ on python 3.13
+unasyncd = { git = "https://github.com/provinzkraut/unasyncd", rev = "6d630bd7f411d6052c429b7fb4481fd17f18b0a6" }
 
 [tool.uv.workspace]
 members = ["examples/*"]

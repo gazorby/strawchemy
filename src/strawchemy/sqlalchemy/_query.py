@@ -4,7 +4,9 @@ import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Generic, Self, cast
+from typing import TYPE_CHECKING, Any, Generic, Optional, Union, cast
+
+from typing_extensions import Self
 
 from sqlalchemy import (
     CTE,
@@ -61,7 +63,6 @@ if TYPE_CHECKING:
 __all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
 
 
-@dataclass
 class Join:
     """Represents a join to be applied to a SQLAlchemy query.
 
@@ -77,11 +78,19 @@ class Join:
             particularly relevant for ordered relationships.
     """
 
-    target: QueryableAttribute[Any] | NamedFromClause | AliasedClass[Any]
-    node: QueryNodeType
-    onclause: _OnClauseArgument | None = None
-    is_outer: bool = False
-    order_nodes: list[QueryNodeType] = dataclasses.field(default_factory=list)
+    def __init__(
+        self,
+        target: Union[Union[QueryableAttribute[Any], NamedFromClause], AliasedClass[Any]],
+        node: QueryNodeType,
+        onclause: Optional[_OnClauseArgument] = None,
+        is_outer: bool = False,
+        order_nodes: Optional[list[QueryNodeType]] = None,
+    ) -> None:
+        self.target = target
+        self.node = node
+        self.onclause = onclause
+        self.is_outer = is_outer
+        self.order_nodes = order_nodes if order_nodes is not None else []
 
     @property
     def _relationship(self) -> RelationshipProperty[Any]:
@@ -93,7 +102,7 @@ class Join:
         """The SQLAlchemy selectable (table, CTE, etc.) for this join target."""
         if isinstance(self.target, AliasedClass):
             return cast("NamedFromClause", inspect(self.target).selectable)
-        return self.target
+        return cast("NamedFromClause", self.target)
 
     @property
     def order(self) -> int:
@@ -130,7 +139,6 @@ class Join:
         return self.order >= other.order
 
 
-@dataclass(kw_only=True)
 class AggregationJoin(Join):
     """Represents a join specifically for aggregation purposes, often involving a subquery.
 
@@ -143,12 +151,20 @@ class AggregationJoin(Join):
         _column_names: Internal tracking of column names within the subquery to ensure uniqueness.
     """
 
-    subquery_alias: AliasedClass[Any]
+    def __init__(
+        self,
+        target: Union[Union[QueryableAttribute[Any], NamedFromClause], AliasedClass[Any]],
+        node: QueryNodeType,
+        subquery_alias: AliasedClass[Any],
+        onclause: Optional[_OnClauseArgument] = None,
+        is_outer: bool = False,
+        order_nodes: Optional[list[QueryNodeType]] = None,
+    ) -> None:
+        super().__init__(target, node, onclause, is_outer, order_nodes)
+        self.subquery_alias = subquery_alias
+        self._column_names: defaultdict[str, int] = defaultdict(int)
 
-    _column_names: defaultdict[str, int] = dataclasses.field(init=False, default_factory=lambda: defaultdict(int))
-
-    def __post_init__(self) -> None:
-        """Initializes the _column_names mapping from the subquery's selected columns."""
+        # Initialize the _column_names mapping from the subquery's selected columns
         for column in self._inner_select.selected_columns:
             if isinstance(column, NamedColumn):
                 self._column_names[column.name] = 1
@@ -161,7 +177,7 @@ class AggregationJoin(Join):
         self_join = cast("AliasedReturnsRows", self.selectable)
         return cast("Select[Any]", cast("Subquery", self_join.element).element)
 
-    def _existing_function_column(self, new_column: ColumnElement[Any]) -> ColumnElement[Any] | None:
+    def _existing_function_column(self, new_column: ColumnElement[Any]) -> Optional[ColumnElement[Any]]:
         """Checks if an equivalent column (typically a function call) already exists in the subquery.
 
         This is used to avoid adding duplicate aggregate functions to the subquery.
@@ -177,7 +193,7 @@ class AggregationJoin(Join):
             new_base_columns = new_column.base_columns
             if len(base_columns) != len(new_base_columns):
                 continue
-            for first, other in zip(base_columns, new_base_columns, strict=True):
+            for first, other in zip(base_columns, new_base_columns):
                 if not first.compare(other):
                     break
             else:
@@ -268,14 +284,14 @@ class QueryGraph(Generic[DeclarativeT]):
     """
 
     scope: QueryScope[DeclarativeT]
-    selection_tree: QueryNodeType | None = None
+    selection_tree: Optional[QueryNodeType] = None
     order_by: Sequence[OrderByDTO] = dataclasses.field(default_factory=list)
     distinct_on: list[EnumDTO] = dataclasses.field(default_factory=list)
-    dto_filter: BooleanFilterDTO | None = None
+    dto_filter: Optional[BooleanFilterDTO] = None
 
-    query_filter: Filter | None = dataclasses.field(init=False, default=None)
-    where_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
-    subquery_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
+    query_filter: Optional[Filter] = dataclasses.field(init=False, default=None)
+    where_join_tree: Optional[QueryNodeType] = dataclasses.field(init=False, default=None)
+    subquery_join_tree: Optional[QueryNodeType] = dataclasses.field(init=False, default=None)
     root_join_tree: QueryNodeType = dataclasses.field(init=False)
     order_by_nodes: list[QueryNodeType] = dataclasses.field(init=False, default_factory=list)
 
@@ -329,7 +345,7 @@ class QueryGraph(Generic[DeclarativeT]):
         return tree
 
     @cached_property
-    def order_by_tree(self) -> QueryNodeType | None:
+    def order_by_tree(self) -> Optional[QueryNodeType]:
         """Creates a query node tree from a list of order by DTOs.
 
         Args:
@@ -338,7 +354,7 @@ class QueryGraph(Generic[DeclarativeT]):
         Returns:
             A query node tree representing the order by clauses, or None if no DTOs provided.
         """
-        merged_tree: QueryNodeType | None = None
+        merged_tree: Optional[QueryNodeType] = None
         max_order: int = 0
         for order_by_dto in self.order_by:
             tree = order_by_dto.tree()
@@ -350,7 +366,7 @@ class QueryGraph(Generic[DeclarativeT]):
             max_order = max(orders) + 1
         return merged_tree
 
-    def root_aggregation_tree(self) -> QueryNodeType | None:
+    def root_aggregation_tree(self) -> Optional[QueryNodeType]:
         if self.selection_tree:
             return self.selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
         return None
@@ -603,11 +619,11 @@ class Query:
     db_features: DatabaseFeatures
     distinct_on: DistinctOn
     joins: list[Join] = dataclasses.field(default_factory=list)
-    where: Where | None = None
-    order_by: OrderBy | None = None
+    where: Optional[Where] = None
+    order_by: Optional[OrderBy] = None
     root_aggregation_functions: list[Label[Any]] = dataclasses.field(default_factory=list)
-    limit: int | None = None
-    offset: int | None = None
+    limit: Optional[int] = None
+    offset: Optional[int] = None
     use_distinct_on: bool = False
 
     def _distinct_on(self, statement: Select[Any], order_by_expressions: list[UnaryExpression[Any]]) -> Select[Any]:
@@ -803,7 +819,7 @@ class SubqueryBuilder(Generic[DeclarativeT]):
             used in further query construction (e.g., by joining it).
         """
         statement = select(inspect(self.alias)).options(raiseload("*"))
-        only_columns: list[QueryableAttribute[Any] | NamedColumn[Any]] = [
+        only_columns: list[Union[QueryableAttribute[Any], NamedColumn[Any]]] = [
             *self.scope.inspect(query_graph.root_join_tree).selection(self.alias),
             *[self.scope.aliased_attribute(node) for node in query_graph.order_by_nodes if not node.value.is_computed],
         ]

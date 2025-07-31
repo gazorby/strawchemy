@@ -4,7 +4,9 @@ import dataclasses
 import sys
 from collections import deque
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, overload, override
+from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, Union, overload
+
+from typing_extensions import Self, TypeAlias, override
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Hashable
@@ -37,8 +39,8 @@ class NodeMetadata(Generic[T]):
 def merge_trees(
     first: NodeT,
     other: AnyNode,
-    match_on: MatchOn | Callable[[AnyNode, AnyNode], bool],
-    _merged: NodeT | None = None,
+    match_on: Union[MatchOn, Callable[[AnyNode, AnyNode], bool]],
+    _merged: Optional[NodeT] = None,
 ) -> NodeT:
     """Merge other into first.
 
@@ -75,8 +77,8 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
     """Very minimalist implementation of a direct graph."""
 
     value: NodeValueT
-    node_metadata: NodeMetadata[NodeMetadataT] | None = None
-    parent: Node[NodeValueT, NodeMetadataT] | None = None
+    node_metadata: Optional[NodeMetadata[NodeMetadataT]] = None
+    parent: Optional[Node[NodeValueT, NodeMetadataT]] = None
     insert_order: int = field(default_factory=int)
     children: list[Node[NodeValueT, NodeMetadataT]] = field(default_factory=list)
     graph_metadata: GraphMetadata[Any] = field(default_factory=lambda: GraphMetadata(metadata={}))
@@ -112,8 +114,8 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
     def _new(
         self,
         value: NodeValueT,
-        metadata: NodeMetadata[Any] | None = None,
-        parent: Node[NodeValueT, NodeMetadataT] | None = None,
+        metadata: Optional[NodeMetadata[Any]] = None,
+        parent: Optional[Node[NodeValueT, NodeMetadataT]] = None,
     ) -> Self:
         """Create a new node instance with the same graph metadata.
 
@@ -183,7 +185,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         cls,
         left: Node[NodeValueT, NodeMetadataT],
         right: Node[NodeValueT, NodeMetadataT],
-        match_on: MatchOn | Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool],
+        match_on: Union[MatchOn, Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool]],
     ) -> bool:
         """Compare two nodes based on a matching condition.
 
@@ -207,7 +209,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
             return left.value == right.value
         return left.value is right.value
 
-    def insert_child(self, value: NodeValueT, metadata: NodeMetadata[Any] | None = None) -> Self:
+    def insert_child(self, value: NodeValueT, metadata: Optional[NodeMetadata[Any]] = None) -> Self:
         """Add a new child with the given value to this node.
 
         Args:
@@ -246,9 +248,10 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
     def upsert_child(
         self,
         value: NodeValueT,
-        metadata: NodeMetadata[Any] | None = None,
-        match_on: MatchOn
-        | Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool] = "node_identity",
+        metadata: Optional[NodeMetadata[Any]] = None,
+        match_on: Union[
+            MatchOn, Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool]
+        ] = "node_identity",
     ) -> tuple[Node[NodeValueT, NodeMetadataT], bool]:
         """Insert a new child node if no matching child exists, otherwise return the existing one.
 
@@ -336,8 +339,9 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         cls,
         left: list[Node[NodeValueT, NodeMetadataT]],
         right: list[Node[NodeValueT, NodeMetadataT]],
-        match_on: MatchOn
-        | Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool] = "node_identity",
+        match_on: Union[
+            MatchOn, Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool]
+        ] = "node_identity",
     ) -> list[Node[NodeValueT, NodeMetadataT]]:
         """Find the common path between two lists of nodes.
 
@@ -388,16 +392,16 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
     @overload
     def find_parent(
         self, func: Callable[[Node[NodeValueT, NodeMetadataT]], bool], strict: Literal[False]
-    ) -> Node[NodeValueT, NodeMetadataT] | None: ...
+    ) -> Optional[Node[NodeValueT, NodeMetadataT]]: ...
 
     @overload
     def find_parent(
         self, func: Callable[[Node[NodeValueT, NodeMetadataT]], bool], strict: bool = False
-    ) -> Node[NodeValueT, NodeMetadataT] | None: ...
+    ) -> Optional[Node[NodeValueT, NodeMetadataT]]: ...
 
     def find_parent(
         self, func: Callable[[Node[NodeValueT, NodeMetadataT]], bool], strict: bool = False
-    ) -> Node[NodeValueT, NodeMetadataT] | None:
+    ) -> Optional[Node[NodeValueT, NodeMetadataT]]:
         """Find the first parent node that satisfies a given condition.
 
         Args:
@@ -433,7 +437,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         func: Callable[[Node[NodeValueT, NodeMetadataT]], bool],
         strict: Literal[False],
         iteration_mode: IterationMode = "depth_first",
-    ) -> Node[NodeValueT, NodeMetadataT] | None: ...
+    ) -> Optional[Node[NodeValueT, NodeMetadataT]]: ...
 
     @overload
     def find_child(
@@ -441,14 +445,14 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         func: Callable[[Node[NodeValueT, NodeMetadataT]], bool],
         strict: bool = False,
         iteration_mode: IterationMode = "depth_first",
-    ) -> Node[NodeValueT, NodeMetadataT] | None: ...
+    ) -> Optional[Node[NodeValueT, NodeMetadataT]]: ...
 
     def find_child(
         self,
         func: Callable[[Node[NodeValueT, NodeMetadataT]], bool],
         strict: bool = False,
         iteration_mode: IterationMode = "depth_first",
-    ) -> Node[NodeValueT, NodeMetadataT] | None:
+    ) -> Optional[Node[NodeValueT, NodeMetadataT]]:
         """Find the first child node that satisfies a given condition.
 
         Args:
@@ -472,7 +476,8 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         return None
 
     def merge_same_children(
-        self, match_on: MatchOn | Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool]
+        self,
+        match_on: Union[MatchOn, Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool]],
     ) -> Self:
         """Create a new node by merging children that match according to the given condition.
 

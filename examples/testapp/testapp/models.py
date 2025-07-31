@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+from typing import Optional
 from uuid import UUID, uuid4
 
 from strawchemy.dto.utils import READ_ONLY
 
 from sqlalchemy import DateTime, ForeignKey, MetaData
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+
+UTC = timezone.utc
+
 
 metadata, geo_metadata = MetaData(), MetaData()
 
@@ -28,8 +32,8 @@ class Ticket(Base):
     __tablename__ = "ticket"
 
     name: Mapped[str]
-    project_id: Mapped[UUID | None] = mapped_column(ForeignKey("project.id"), nullable=True, default=None)
-    project: Mapped[Project | None] = relationship("Project", back_populates="tickets")
+    project_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("project.id"), nullable=True, default=None)
+    project: Mapped[Optional[Project]] = relationship("Project", back_populates="tickets")
 
 
 class Milestone(Base):
@@ -47,9 +51,9 @@ class Tag(Base):
 class Project(Base):
     __tablename__ = "project"
 
-    milestone_id: Mapped[UUID | None] = mapped_column(ForeignKey("milestone.id"), nullable=True, default=None)
-    tag_id: Mapped[UUID | None] = mapped_column(ForeignKey("tag.id"), nullable=True, default=None)
+    milestone_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("milestone.id"), nullable=True, default=None)
+    tag_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("tag.id"), nullable=True, default=None)
     tickets: Mapped[list[Ticket]] = relationship(Ticket, back_populates="project")
-    milestone: Mapped[Milestone | None] = relationship(Milestone, back_populates="projects")
-    tag: Mapped[Tag | None] = relationship(Tag)
+    milestone: Mapped[Optional[Milestone]] = relationship(Milestone, back_populates="projects")
+    tag: Mapped[Optional[Tag]] = relationship(Tag)
     name: Mapped[str]

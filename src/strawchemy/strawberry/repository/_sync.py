@@ -9,7 +9,7 @@ pattern, built on top of SQLAlchemy's asynchronous API.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, Optional, TypeVar
 
 from strawchemy.sqlalchemy.repository import SQLAlchemyGraphQLSyncRepository
 from strawchemy.strawberry._utils import default_session_getter, dto_model_from_type, strawberry_contained_user_type
@@ -51,9 +51,9 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
 
     # sqlalchemy related settings
     session_getter: SyncSessionGetter = default_session_getter
-    session: AnySyncSession | None = None
-    filter_statement: Select[tuple[Any]] | None = None
-    execution_options: dict[str, Any] | None = None
+    session: Optional[AnySyncSession] = None
+    filter_statement: Optional[Select[tuple[Any]]] = None
+    execution_options: Optional[dict[str, Any]] = None
     deterministic_ordering: bool = False
 
     def graphql_repository(self) -> SQLAlchemyGraphQLSyncRepository[Any]:
@@ -72,11 +72,11 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
 
     def get_one_or_none(
         self,
-        filter_input: BooleanFilterDTO | None = None,
-        order_by: list[OrderByDTO] | None = None,
-        distinct_on: list[EnumDTO] | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
+        filter_input: Optional[BooleanFilterDTO] = None,
+        order_by: Optional[list[OrderByDTO]] = None,
+        distinct_on: Optional[list[EnumDTO]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
     ) -> GraphQLResult[Any, T]:
         """Asynchronously get at most one result matching the criteria or None.
 
@@ -103,11 +103,11 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
 
     def get_one(
         self,
-        filter_input: BooleanFilterDTO | None = None,
-        order_by: list[OrderByDTO] | None = None,
-        distinct_on: list[EnumDTO] | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
+        filter_input: Optional[BooleanFilterDTO] = None,
+        order_by: Optional[list[OrderByDTO]] = None,
+        distinct_on: Optional[list[EnumDTO]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
     ) -> GraphQLResult[Any, T]:
         """Asynchronously get exactly one result matching the criteria.
 
@@ -155,11 +155,11 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
 
     def list(
         self,
-        filter_input: BooleanFilterDTO | None = None,
-        order_by: list[OrderByDTO] | None = None,
-        distinct_on: list[EnumDTO] | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
+        filter_input: Optional[BooleanFilterDTO] = None,
+        order_by: Optional[list[OrderByDTO]] = None,
+        distinct_on: Optional[list[EnumDTO]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
     ) -> GraphQLResult[Any, T]:
         """Asynchronously get a list of entities matching the criteria.
 
@@ -199,9 +199,9 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
     def upsert(
         self,
         data: Input[InputModel],
-        filter_input: BooleanFilterDTO | None = None,
-        update_fields: list[EnumDTO] | None = None,
-        conflict_fields: EnumDTO | None = None,
+        filter_input: Optional[BooleanFilterDTO] = None,
+        update_fields: Optional[list[EnumDTO]] = None,
+        conflict_fields: Optional[EnumDTO] = None,
     ) -> GraphQLResult[InputModel, T]:
         """Asynchronously insert or update an entity.
 
@@ -245,7 +245,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
         query_results = self.graphql_repository().update_by_filter(data, filter_input, self._tree)
         return GraphQLResult(query_results, self._tree)
 
-    def delete(self, filter_input: BooleanFilterDTO | None) -> GraphQLResult[Any, T]:
+    def delete(self, filter_input: Optional[BooleanFilterDTO]) -> GraphQLResult[Any, T]:
         """Asynchronously delete entities matching the given filter.
 
         Args:

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from functools import partial
-from typing import NewType, TypeVar
+from typing import NewType, TypeVar, Union
 
 from msgspec import json
 
@@ -11,17 +11,19 @@ from strawberry.schema.types.base_scalars import wrap_parser
 
 __all__ = ("Date", "DateTime", "Interval", "Time")
 
+UTC = timezone.utc
+
 T = TypeVar("T")
 
 
-def _serialize_time(value: time | timedelta | str) -> str:
+def _serialize_time(value: Union[Union[time, timedelta], str]) -> str:
     if isinstance(value, timedelta):
         value = (datetime.min.replace(tzinfo=UTC) + value).time()
     return value if isinstance(value, str) else value.isoformat()
 
 
-def _serialize_date(value: date | datetime | str) -> str:
-    return value.isoformat() if isinstance(value, date | datetime) else value
+def _serialize_date(value: Union[Union[date, datetime], str]) -> str:
+    return value.isoformat() if isinstance(value, (date, datetime)) else value
 
 
 def _serialize(value: timedelta) -> str:

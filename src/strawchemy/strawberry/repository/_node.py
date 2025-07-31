@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar, Union, cast
 
 from strawberry.types import get_object_definition
 from strawberry.utils.typing import type_has_annotation
 from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
-from strawchemy.dto.types import DTO_MISSING
+from strawchemy.dto.types import DTOMissing
 from strawchemy.graph import GraphError
 from strawchemy.sqlalchemy import SQLAlchemyGraphQLRepository
 from strawchemy.strawberry._instance import MapperModelInstance
@@ -26,7 +26,7 @@ __all__ = ("SQLAlchemyGraphQLRepository", "StrawberryQueryNode")
 T = TypeVar("T")
 
 
-@dataclass(kw_only=True, eq=False, repr=False)
+@dataclass(eq=False, repr=False)
 class StrawberryQueryNode(QueryNode, Generic[T]):
     @property
     def strawberry_type(self) -> type[T]:
@@ -34,7 +34,7 @@ class StrawberryQueryNode(QueryNode, Generic[T]):
             raise GraphError
         return self.metadata.data.strawberry_type
 
-    def _model_instance_attribute(self) -> str | None:
+    def _model_instance_attribute(self) -> Optional[str]:
         return next(
             (
                 field.name
@@ -47,9 +47,9 @@ class StrawberryQueryNode(QueryNode, Generic[T]):
     @classmethod
     def _default_type_kwargs(cls, node: StrawberryQueryNode[Any]) -> dict[str, Any]:
         strawberry_definition = get_object_definition(node.strawberry_type, strict=True)
-        return {field.name: DTO_MISSING for field in strawberry_definition.fields if field.init}
+        return {field.name: DTOMissing for field in strawberry_definition.fields if field.init}
 
-    def computed_value(self, node: QueryNodeType, result: NodeResult[Any] | QueryResult[Any]) -> T:
+    def computed_value(self, node: QueryNodeType, result: Union[NodeResult[Any], QueryResult[Any]]) -> T:
         strawberry_definition = get_object_definition(node.metadata.data.strawberry_type)
         if strawberry_definition is None or node.metadata.data.strawberry_type is None:
             return result.value(node)
@@ -67,7 +67,7 @@ class StrawberryQueryNode(QueryNode, Generic[T]):
                 kwargs[child.value.name] = self.computed_value(child, node_result)
             elif child.value.is_relation:
                 value = node_result.value(child)
-                if isinstance(value, list | tuple):
+                if isinstance(value, (list, tuple)):
                     kwargs[child.value.name] = [
                         child.node_result_to_strawberry_type(node_result.copy_with(element)) for element in value
                     ]

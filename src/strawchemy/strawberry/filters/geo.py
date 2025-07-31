@@ -2,9 +2,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, TypeVar, override
+from typing import Any, Optional, TypeVar, Union
 
 from geoalchemy2 import functions as geo_func
+from typing_extensions import override
 
 import strawberry
 from sqlalchemy import ColumnElement, Dialect, null
@@ -26,7 +27,7 @@ class GeoFilter(FilterProtocol):
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
+        self, dialect: Dialect, model_attribute: Union[QueryableAttribute[Any], ColumnElement[Any]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -65,6 +66,6 @@ class GeoComparison(GraphQLComparison):
 
     __strawchemy_filter__ = GeoFilter
 
-    contains_geometry: GeoJSON | None = UNSET  # type: ignore[assignment]
-    within_geometry: GeoJSON | None = UNSET  # type: ignore[assignment]
-    is_null: bool | None = UNSET
+    contains_geometry: Optional[GeoJSON] = UNSET  # type: ignore[assignment]
+    within_geometry: Optional[GeoJSON] = UNSET  # type: ignore[assignment]
+    is_null: Optional[bool] = UNSET

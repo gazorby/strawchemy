@@ -139,7 +139,7 @@ coverage:                                          ## Run tests with coverage re
 .PHONY: pyright
 pyright:                                           ## Run pyright
 	@echo "${INFO} Running pyright... 🔍"
-	@uv run pyright
+	@uv run basedpyright
 	@echo "${OK} Pyright checks passed ✨"
 
 .PHONY: type-check

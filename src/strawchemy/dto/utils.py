@@ -12,7 +12,7 @@ It exports the following:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from .constants import DTO_INFO_KEY
 from .types import DTOConfig, DTOFieldConfig, ExcludeFields, IncludeFields, Purpose, PurposeConfig
@@ -36,12 +36,12 @@ __all__ = (
 
 def config(
     purpose: Purpose,
-    include: IncludeFields | None = None,
-    exclude: ExcludeFields | None = None,
-    partial: bool | None = None,
-    type_map: Mapping[Any, Any] | None = None,
-    aliases: Mapping[str, str] | None = None,
-    alias_generator: Callable[[str], str] | None = None,
+    include: Optional[IncludeFields] = None,
+    exclude: Optional[ExcludeFields] = None,
+    partial: Optional[bool] = None,
+    type_map: Optional[Mapping[Any, Any]] = None,
+    aliases: Optional[Mapping[str, str]] = None,
+    alias_generator: Optional[Callable[[str], str]] = None,
 ) -> DTOConfig:
     config = DTOConfig(purpose, alias_generator=alias_generator)
     if exclude:
@@ -58,9 +58,9 @@ def config(
 
 
 def field(
-    purposes: set[Purpose] | None = None,
-    default_config: PurposeConfig | None = None,
-    configs: dict[Purpose, PurposeConfig] | None = None,
+    purposes: Optional[set[Purpose]] = None,
+    default_config: Optional[PurposeConfig] = None,
+    configs: Optional[dict[Purpose, PurposeConfig]] = None,
 ) -> dict[str, DTOFieldConfig]:
     return {
         DTO_INFO_KEY: DTOFieldConfig(

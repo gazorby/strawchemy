@@ -8,13 +8,15 @@ for generating DTOs from models, and support for mapping DTOs to SQLAlchemy mode
 from __future__ import annotations
 
 from inspect import getmodule
-from typing import TYPE_CHECKING, Annotated, Any, TypeVar, override
+from typing import TYPE_CHECKING, Annotated, Any, Optional, TypeVar
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, create_model
 from pydantic.fields import Field, FieldInfo
+from typing_extensions import override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT
-from strawchemy.dto.types import DTO_MISSING, DTOMissingType
+from strawchemy.dto.types import DTOMissing
+from strawchemy.utils import get_annotations
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -47,16 +49,16 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         kwargs: dict[str, Any] = {}
         if field_def.required:
             kwargs["default"] = ...
-        elif not isinstance(field_def.default_factory, DTOMissingType):
+        elif field_def.default_factory is not DTOMissing:
             kwargs["default_factory"] = field_def.default_factory
-        elif not isinstance(field_def.default, DTOMissingType):
+        elif field_def.default is not DTOMissing:
             kwargs["default"] = field_def.default
         if field_def.purpose_config.alias:
             kwargs["alias"] = field_def.model_field_name
         return Field(**kwargs)
 
     @override
-    def update_forward_refs(self, dto: type[PydanticDTOT], namespace: dict[str, type[PydanticDTOT]]) -> None | bool:
+    def update_forward_refs(self, dto: type[PydanticDTOT], namespace: dict[str, type[PydanticDTOT]]) -> Optional[bool]:
         dto.model_rebuild(_types_namespace=namespace, raise_errors=False)
 
     @override
@@ -65,17 +67,17 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         name: str,
         model: type[ModelT],
         field_definitions: Iterable[DTOFieldDefinition[ModelT, ModelFieldT]],
-        base: type[Any] | None = None,
-        config_dict: ConfigDict | None = None,
+        base: Optional[type[Any]] = None,
+        config_dict: Optional[ConfigDict] = None,
         docstring: bool = True,
         **kwargs: Any,
     ) -> type[PydanticDTOT]:
         fields: dict[str, tuple[Any, FieldInfo]] = {}
-        base_annotations = base.__annotations__ if base else {}
+        base_annotations = get_annotations(base) if base else {}
 
         for field_def in field_definitions:
             field_type = field_def.type_
-            validator: BeforeValidator | None = None
+            validator: Optional[BeforeValidator] = None
             if field_def.purpose_config.validator:
                 validator = BeforeValidator(field_def.purpose_config.validator)
             if validator:
@@ -85,8 +87,8 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         # Copy fields from base to avoid Pydantic warning about shadowing fields
         for f_name in base_annotations:
             field_info: FieldInfo = Field()
-            attribute = getattr(base, f_name, DTO_MISSING)
-            if not isinstance(attribute, DTOMissingType):
+            attribute = getattr(base, f_name, DTOMissing)
+            if attribute is not DTOMissing:
                 field_info = attribute if isinstance(attribute, FieldInfo) else Field(default=attribute)
             field_type = fields[f_name][0] if f_name in fields else base_annotations[f_name]
             fields[f_name] = (field_type, field_info)

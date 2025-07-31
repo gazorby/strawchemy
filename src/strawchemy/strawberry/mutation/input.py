@@ -3,7 +3,9 @@ from __future__ import annotations
 import dataclasses
 from collections.abc import Hashable, Iterator, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, Literal, Self, TypeAlias, TypeVar, cast, override
+from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, Union, cast, final
+
+from typing_extensions import Self, TypeAlias, override
 
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
@@ -31,6 +33,10 @@ RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
 RelationInputType: TypeAlias = Literal["set", "create", "add", "remove", "upsert"]
 
 
+@final
+class _Unset: ...
+
+
 def _has_record(model: DeclarativeBase) -> bool:
     state = inspect(model)
     return state.persistent or state.detached
@@ -39,11 +45,11 @@ def _has_record(model: DeclarativeBase) -> bool:
 @dataclass(frozen=True)
 class UpsertData:
     instances: list[DeclarativeBase] = dataclasses.field(default_factory=list)
-    conflict_constraint: Enum | None = None
+    conflict_constraint: Optional[Enum] = None
     update_fields: list[EnumDTO] = dataclasses.field(default_factory=list)
 
     @classmethod
-    def from_upsert_input(cls, data: ToOneUpsertInput[Any, Any, Any] | ToManyUpsertInput[Any, Any, Any]) -> Self:
+    def from_upsert_input(cls, data: Union[ToOneUpsertInput[Any, Any, Any], ToManyUpsertInput[Any, Any, Any]]) -> Self:
         instances = data.to_mapped()
         return cls(
             instances=instances if isinstance(instances, list) else [instances],
@@ -55,18 +61,30 @@ class UpsertData:
         return iter(self.instances)
 
 
-@dataclass
 class _UnboundRelationInput:
-    attribute: MapperProperty[Any]
-    related: type[DeclarativeBase]
-    relation_type: RelationType
-    set: list[DeclarativeBase] | None = dataclasses.field(default_factory=list)
-    add: list[DeclarativeBase] = dataclasses.field(default_factory=list)
-    remove: list[DeclarativeBase] = dataclasses.field(default_factory=list)
-    create: list[DeclarativeBase] = dataclasses.field(default_factory=list)
-    upsert: UpsertData | None = None
-    input_index: int = -1
-    level: int = 0
+    def __init__(
+        self,
+        attribute: MapperProperty[Any],
+        related: type[DeclarativeBase],
+        relation_type: RelationType,
+        set_: Union[list[DeclarativeBase], None, type[_Unset]] = _Unset,
+        add: Optional[list[DeclarativeBase]] = None,
+        remove: Optional[list[DeclarativeBase]] = None,
+        create: Optional[list[DeclarativeBase]] = None,
+        upsert: Optional[UpsertData] = None,
+        input_index: int = -1,
+        level: int = 0,
+    ) -> None:
+        self.attribute = attribute
+        self.related = related
+        self.relation_type = relation_type
+        self.set: Optional[list[DeclarativeBase]] = set_ if set_ is not _Unset else []
+        self.add = add if add is not None else []
+        self.remove = remove if remove is not None else []
+        self.create = create if create is not None else []
+        self.upsert = upsert
+        self.input_index = input_index
+        self.level = level
 
     def add_instance(self, model: DeclarativeBase) -> None:
         if not _has_record(model):
@@ -83,11 +101,35 @@ class _UnboundRelationInput:
         return bool(self.set or self.add or self.remove or self.create or self.upsert) or self.set is None
 
 
-@dataclass(kw_only=True)
 class RelationInput(_UnboundRelationInput):
-    parent: DeclarativeBase
+    def __init__(
+        self,
+        attribute: MapperProperty[Any],
+        related: type[DeclarativeBase],
+        parent: DeclarativeBase,
+        relation_type: RelationType,
+        set_: Union[list[DeclarativeBase], None, type[_Unset]] = _Unset,
+        add: Optional[list[DeclarativeBase]] = None,
+        remove: Optional[list[DeclarativeBase]] = None,
+        create: Optional[list[DeclarativeBase]] = None,
+        upsert: Optional[UpsertData] = None,
+        input_index: int = -1,
+        level: int = 0,
+    ) -> None:
+        super().__init__(
+            attribute=attribute,
+            related=related,
+            relation_type=relation_type,
+            set_=set_,
+            add=add,
+            remove=remove,
+            create=create,
+            upsert=upsert,
+            input_index=input_index,
+            level=level,
+        )
+        self.parent = parent
 
-    def __post_init__(self) -> None:
         if self.relation_type is RelationType.TO_ONE:
             event.listens_for(self.attribute, "set")(self._set_event)
         else:
@@ -100,7 +142,7 @@ class RelationInput(_UnboundRelationInput):
             attribute=unbound.attribute,
             related=unbound.related,
             parent=model,
-            set=unbound.set,
+            set_=unbound.set,
             add=unbound.add,
             remove=unbound.remove,
             relation_type=unbound.relation_type,
@@ -110,7 +152,7 @@ class RelationInput(_UnboundRelationInput):
             upsert=unbound.upsert,
         )
 
-    def _set_event(self, target: DeclarativeBase, value: DeclarativeBase | None, *_: Any, **__: Any) -> None:
+    def _set_event(self, target: DeclarativeBase, value: Optional[DeclarativeBase], *_: Any, **__: Any) -> None:
         if value is None:
             return
         if _has_record(value):
@@ -148,8 +190,8 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
     ) -> Any:
         field_value = getattr(parent, field.model_field_name)
         add, remove, create = [], [], []
-        set_: list[Any] | None = []
-        upsert: UpsertData | None = None
+        set_: Optional[list[Any]] = []
+        upsert: Optional[UpsertData] = None
         relation_type = RelationType.TO_MANY
         if isinstance(field_value, ToOneInput):
             relation_type = RelationType.TO_ONE
@@ -157,14 +199,14 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
                 set_ = None
             elif field_value.set:
                 set_ = [field_value.set.to_mapped()]
-        elif isinstance(field_value, ToManyUpdateInput | ToManyCreateInput):
+        elif isinstance(field_value, (ToManyUpdateInput, ToManyCreateInput)):
             if field_value.set:
                 set_ = [dto.to_mapped() for dto in field_value.set]
             if field_value.add:
                 add = [dto.to_mapped() for dto in field_value.add]
         if isinstance(field_value, ToManyUpdateInput) and field_value.remove:
             remove = [dto.to_mapped() for dto in field_value.remove]
-        if isinstance(field_value, ToOneInput | ToManyUpdateInput | ToManyCreateInput):
+        if isinstance(field_value, (ToOneInput, ToManyUpdateInput, ToManyCreateInput)):
             if field_value.create:
                 create = value if isinstance(value, list) else [value]
             if field_value.upsert:
@@ -176,7 +218,7 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
                     attribute=field.model_field.property,
                     related=field.related_model,
                     relation_type=relation_type,
-                    set=set_,
+                    set_=set_,
                     add=add,
                     remove=remove,
                     create=create,
@@ -227,8 +269,8 @@ class LevelInput:
 class Input(Generic[InputModel]):
     def __init__(
         self,
-        dtos: MappedGraphQLDTO[InputModel] | Sequence[MappedGraphQLDTO[InputModel]],
-        _validation_: ValidationProtocol[InputModel] | None = None,
+        dtos: Union[MappedGraphQLDTO[InputModel], Sequence[MappedGraphQLDTO[InputModel]]],
+        _validation_: Optional[ValidationProtocol[InputModel]] = None,
         **override: Any,
     ) -> None:
         self.max_level = 0
@@ -257,7 +299,7 @@ class Input(Generic[InputModel]):
         return inspect(model)
 
     def _add_non_input_relations(
-        self, model: DeclarativeBase, input_index: int, _level: int = 0, _seen: set[Hashable] | None = None
+        self, model: DeclarativeBase, input_index: int, _level: int = 0, _seen: Optional[set[Hashable]] = None
     ) -> None:
         seen = _seen or set()
         _level += 1
@@ -288,7 +330,7 @@ class Input(Generic[InputModel]):
                 relation_type=relation_type,
                 related=relationship.entity.mapper.class_,
             )
-            if isinstance(relationship_value, tuple | list):
+            if isinstance(relationship_value, (tuple, list)):
                 model_list = cast("list[DeclarativeBase]", relationship_value)
                 for value in model_list:
                     if self._model_identity(value) in seen:

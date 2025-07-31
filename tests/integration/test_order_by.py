@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, Union
 
 import pytest
 
@@ -99,7 +99,7 @@ async def test_order_by_aggregations(
     assert not result.errors
     assert result.data
 
-    water_percent_map: dict[str, float | Decimal] = {
+    water_percent_map: dict[str, Union[float, Decimal]] = {
         color["id"]: compute_aggregation(
             aggregation, [fruit["water_percent"] for fruit in raw_fruits if fruit["color_id"] == color["id"]]
         )

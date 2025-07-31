@@ -4,7 +4,9 @@ from collections.abc import Iterable
 from enum import Enum
 from inspect import getmodule
 from types import new_class
-from typing import TYPE_CHECKING, Any, TypeVar, cast, override
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
+
+from typing_extensions import override
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
@@ -32,8 +34,8 @@ class EnumDTOBackend(DTOBackend[EnumDTO]):
         name: str,
         model: type[DeclarativeBase],
         field_definitions: Iterable[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]],
-        base: type[Any] | None = None,
-        values: Iterable[Any] | None = None,
+        base: Optional[type[Any]] = None,
+        values: Optional[Iterable[Any]] = None,
         **kwargs: Any,
     ) -> type[EnumDTO]:
         field_map = {
@@ -54,7 +56,7 @@ class EnumDTOBackend(DTOBackend[EnumDTO]):
             module = model_module.__name__
         return cast(
             "type[EnumDTO]",
-            EnumDTO(value=name, names=list(zip(list(field_map), values, strict=True)), type=base, module=module),
+            EnumDTO(value=name, names=list(zip(list(field_map), values)), type=base, module=module),
         )
 
     @override
@@ -77,8 +79,8 @@ class UpsertConflictFieldsEnumDTOBackend(EnumDTOBackend):
         name: str,
         model: type[DeclarativeBase],
         field_definitions: Iterable[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]],
-        base: type[Any] | None = None,
-        values: Iterable[Any] | None = None,
+        base: Optional[type[Any]] = None,
+        values: Optional[Iterable[Any]] = None,
         **kwargs: Any,
     ) -> type[EnumDTO]:
         constraint_columns = self._inspector.unique_constraints(model)
@@ -100,15 +102,15 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
     def __init__(
         self,
         inspector: SQLAlchemyGraphQLInspector,
-        backend: DTOBackend[EnumDTO] | None = None,
+        backend: Optional[DTOBackend[EnumDTO]] = None,
         handle_cycles: bool = True,
-        type_map: dict[Any, Any] | None = None,
+        type_map: Optional[dict[Any, Any]] = None,
     ) -> None:
         super().__init__(inspector, backend or EnumDTOBackend(), handle_cycles, type_map)
 
     @override
     def dto_name(
-        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None
+        self, base_name: str, dto_config: DTOConfig, node: Optional[Node[Relation[Any, EnumDTO], None]] = None
     ) -> str:
         return f"{base_name}Fields"
 
@@ -128,7 +130,7 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
         name: str,
         model: type[DeclarativeBase],
         dto_config: DTOConfig,
-        base: type[DTOBase[DeclarativeBase]] | None,
+        base: Optional[type[DTOBase[DeclarativeBase]]],
         node: Node[Relation[DeclarativeBase, EnumDTO], None],
         raise_if_no_fields: bool = False,
         **kwargs: Any,
@@ -141,12 +143,12 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
         self,
         model: type[DeclarativeBase],
         purpose: Purpose = Purpose.READ,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
+        include: Optional[IncludeFields] = None,
+        exclude: Optional[ExcludeFields] = None,
+        partial: Optional[bool] = None,
+        type_map: Optional[Mapping[Any, Any]] = None,
+        aliases: Optional[Mapping[str, str]] = None,
+        alias_generator: Optional[Callable[[str], str]] = None,
         **kwargs: Any,
     ) -> Callable[[type[Any]], type[EnumDTO]]:
         return super().decorator(
@@ -164,12 +166,12 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
     def input(
         self,
         model: type[DeclarativeBase],
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
+        include: Optional[IncludeFields] = None,
+        exclude: Optional[ExcludeFields] = None,
+        partial: Optional[bool] = None,
+        type_map: Optional[Mapping[Any, Any]] = None,
+        aliases: Optional[Mapping[str, str]] = None,
+        alias_generator: Optional[Callable[[str], str]] = None,
         **kwargs: Any,
     ) -> Callable[[type[Any]], type[EnumDTO]]:
         return super().decorator(
@@ -187,7 +189,7 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
     def upsert_conflict_fields(
         self,
         model: type[DeclarativeBase],
-        name: str | None = None,
+        name: Optional[str] = None,
     ) -> type[Enum]:
         name = name or f"{model.__name__}ConflictFields"
         return cast(

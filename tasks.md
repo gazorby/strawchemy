@@ -6,6 +6,12 @@
 
 Auto bump the version
 
+## `ci:install`
+
+- **Usage**: `ci:install`
+
+Install dependencies and pre-commit hooks
+
 ## `ci:lint`
 
 - **Usage**: `ci:lint`
@@ -14,7 +20,7 @@ Lint CI yaml files
 
 ## `ci:test`
 
-- Depends: install:test
+- Depends: ci:install
 
 - **Usage**: `ci:test <session>`
 
@@ -26,7 +32,7 @@ Run tests in CI
 
 ## `ci:test-matrix`
 
-- Depends: install:test
+- Depends: ci:install
 
 - **Usage**: `ci:test-matrix`
 
@@ -34,7 +40,7 @@ Output test matrix for CI
 
 ## `ci:test-sessions`
 
-- Depends: install:test
+- Depends: ci:install
 
 - **Usage**: `ci:test-sessions`
 
@@ -61,12 +67,6 @@ Install dependencies and pre-commit hooks
 - **Usage**: `install:pre-commit`
 
 Install pre-commit hooks
-
-## `install:test`
-
-- **Usage**: `install:test`
-
-Install test dependencies only
 
 ## `lint`
 
@@ -99,7 +99,7 @@ Run pre-commit checks
 
 - **Usage**: `pyright`
 
-Run pyright
+Run basedpyright
 
 ## `render:usage`
 
@@ -284,6 +284,58 @@ Run unit tests with coverage
 - **Aliases**: `tug`
 
 Run unit tests without extras dependencies
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit:py10`
+
+- Depends: _install
+
+- **Usage**: `test:unit:py10 [test]`
+- **Aliases**: `tu10`
+
+Run unit tests on python 3.10
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit:py11`
+
+- Depends: _install
+
+- **Usage**: `test:unit:py11 [test]`
+- **Aliases**: `tu11`
+
+Run unit tests on python 3.11
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit:py12`
+
+- Depends: _install
+
+- **Usage**: `test:unit:py12 [test]`
+- **Aliases**: `tu12`
+
+Run unit tests on python 3.12
+
+### Arguments
+
+#### `[test]`
+
+## `test:unit:py9`
+
+- Depends: _install
+
+- **Usage**: `test:unit:py9 [test]`
+- **Aliases**: `tu9`
+
+Run unit tests on python 3.9
 
 ### Arguments
 

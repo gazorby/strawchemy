@@ -10,7 +10,9 @@ from __future__ import annotations
 
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Optional
+
+from typing_extensions import TypeAlias
 
 from sqlalchemy.orm import ColumnProperty, RelationshipProperty, joinedload, selectinload, undefer
 from sqlalchemy.orm.strategy_options import _AbstractLoad
@@ -52,7 +54,7 @@ class QueryHook(Generic[DeclarativeT]):
             object, providing context about the current GraphQL request.
     """
 
-    info_var: ClassVar[ContextVar[Info[Any, Any] | None]] = ContextVar("info", default=None)
+    info_var: ClassVar[ContextVar[Optional[Info[Any, Any]]]] = ContextVar("info", default=None)
     load: Sequence[LoadType] = field(default_factory=list)
 
     _columns: list[InstrumentedAttribute[Any]] = field(init=False, default_factory=list)
@@ -97,7 +99,7 @@ class QueryHook(Generic[DeclarativeT]):
                     raise QueryHookError(msg)
 
     def _load_relationships(
-        self, load_spec: RelationshipLoadSpec, parent_alias: AliasedClass[Any] | None = None
+        self, load_spec: RelationshipLoadSpec, parent_alias: Optional[AliasedClass[Any]] = None
     ) -> _AbstractLoad:
         """Constructs SQLAlchemy loader options for a relationship.
 

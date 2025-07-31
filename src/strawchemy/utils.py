@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import inspect
 import re
-from types import NoneType, UnionType
+import sys
 from typing import TYPE_CHECKING, Any, Optional, Union, get_args, get_origin
+
+from strawchemy.typing import UNION_TYPES
 
 if TYPE_CHECKING:
     from re import Pattern
@@ -49,7 +52,7 @@ def snake_keys(value: dict[str, Any]) -> dict[str, Any]:
     res: dict[Any, Any] = {}
     for k, v in value.items():
         to_snake: str = camel_to_snake(k)
-        if isinstance(v, list | tuple):
+        if isinstance(v, (list, tuple)):
             res[to_snake] = [snake_keys(el) for el in v]
         elif isinstance(v, dict):
             res[to_snake] = snake_keys(v)
@@ -62,8 +65,11 @@ def non_optional_type_hint(type_hint: Any) -> Any:
     origin, args = get_origin(type_hint), get_args(type_hint)
     if origin is Optional:
         return args
-    if origin in (Union, UnionType):
-        return Union[*tuple([arg for arg in args if arg not in (None, NoneType)])]
+    if origin in UNION_TYPES:
+        union_args = tuple([arg for arg in args if arg not in (None, type(None))])
+        if len(union_args) == 1:
+            return union_args[0]
+        return Union[union_args]
     return type_hint
 
 
@@ -86,7 +92,14 @@ def is_type_hint_optional(type_hint: Any) -> bool:
         return False
     if origin is Optional:
         return True
-    if origin in (Union, UnionType):
+    if origin in UNION_TYPES:
         args = get_args(type_hint)
         return any(arg is type(None) for arg in args)
     return False
+
+
+def get_annotations(obj: Any) -> dict[str, Any]:
+    """Get the annotations of the given object."""
+    if sys.version_info >= (3, 10):
+        return inspect.get_annotations(obj)
+    return obj.__dict__.get("__annotations__", {}) if isinstance(obj, type) else getattr(obj, "__annotations__", {})

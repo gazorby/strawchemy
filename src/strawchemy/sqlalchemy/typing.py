@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
+
+from typing_extensions import TypeAlias
 
 if TYPE_CHECKING:
     from collections import OrderedDict

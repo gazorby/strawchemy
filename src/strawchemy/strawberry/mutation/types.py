@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar, override
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Optional, TypeVar, Union
+
+from typing_extensions import override
 
 import strawberry
 from strawberry import UNSET
 from strawberry.types import get_object_definition
 from strawchemy.dto.base import MappedDTO, ToMappedProtocol, VisitorProtocol
-from strawchemy.dto.types import DTO_UNSET, DTOUnsetType
+from strawchemy.dto.types import DTOUnset
 
 if TYPE_CHECKING:
     from strawchemy.strawberry.dto import EnumDTO
@@ -42,14 +44,14 @@ class RelationType(Enum):
 @strawberry.input(description="Add new object or update if existing")
 class ToOneUpsertInput(ToMappedProtocol[Any], Generic[UpdateFieldsT, ConflictFieldsT, RelationInputT]):
     create: RelationInputT
-    conflict_fields: ConflictFieldsT | None = UNSET
-    update_fields: list[UpdateFieldsT] | None = UNSET
+    conflict_fields: Optional[ConflictFieldsT] = UNSET
+    update_fields: Optional[list[UpdateFieldsT]] = UNSET
 
     @override
     def to_mapped(
         self,
-        visitor: VisitorProtocol[Any] | None = None,
-        override: dict[str, Any] | None = None,
+        visitor: Optional[VisitorProtocol[Any]] = None,
+        override: Optional[dict[str, Any]] = None,
         level: int = 0,
     ) -> Any:
         return self.create.to_mapped(visitor, level=level, override=override)
@@ -59,13 +61,13 @@ class ToOneUpsertInput(ToMappedProtocol[Any], Generic[UpdateFieldsT, ConflictFie
 class ToManyUpsertInput(ToMappedProtocol[Any], Generic[UpdateFieldsT, ConflictFieldsT, RelationInputT]):
     create: list[RelationInputT]
     conflict_fields: ConflictFieldsT
-    update_fields: list[UpdateFieldsT] | None = UNSET
+    update_fields: Optional[list[UpdateFieldsT]] = UNSET
 
     @override
     def to_mapped(
         self,
-        visitor: VisitorProtocol[Any] | None = None,
-        override: dict[str, Any] | None = None,
+        visitor: Optional[VisitorProtocol[Any]] = None,
+        override: Optional[dict[str, Any]] = None,
         level: int = 0,
     ) -> list[Any]:
         return [dto.to_mapped(visitor, level=level, override=override) for dto in self.create]
@@ -73,17 +75,17 @@ class ToManyUpsertInput(ToMappedProtocol[Any], Generic[UpdateFieldsT, ConflictFi
 
 @strawberry.input(description=_TO_ONE_DESCRIPTION)
 class ToOneInput(ToMappedProtocol[Any], Generic[T, RelationInputT, UpdateFieldsT, ConflictFieldsT]):
-    set: T | None = UNSET
-    create: RelationInputT | None = UNSET
-    upsert: ToOneUpsertInput[UpdateFieldsT, ConflictFieldsT, RelationInputT] | None = UNSET
+    set: Optional[T] = UNSET
+    create: Optional[RelationInputT] = UNSET
+    upsert: Optional[ToOneUpsertInput[UpdateFieldsT, ConflictFieldsT, RelationInputT]] = UNSET
 
     @override
     def to_mapped(
         self,
-        visitor: VisitorProtocol[Any] | None = None,
-        override: dict[str, Any] | None = None,
+        visitor: Optional[VisitorProtocol[Any]] = None,
+        override: Optional[dict[str, Any]] = None,
         level: int = 0,
-    ) -> Any | DTOUnsetType:
+    ) -> Union[Any, type[DTOUnset]]:
         if (self.create or self.upsert) and self.set:
             msg = "You cannot use `set` along with `create` or `upsert` in a -to-one relation input"
             raise ValueError(msg)
@@ -91,22 +93,22 @@ class ToOneInput(ToMappedProtocol[Any], Generic[T, RelationInputT, UpdateFieldsT
             return self.create.to_mapped(visitor, level=level, override=override)
         if self.upsert:
             return self.upsert.to_mapped(visitor, level=level, override=override)
-        return DTO_UNSET
+        return DTOUnset
 
 
 @strawberry.input(description=_TO_ONE_DESCRIPTION)
 class RequiredToOneInput(ToOneInput[T, RelationInputT, UpdateFieldsT, ConflictFieldsT]):
-    set: T | None = UNSET
-    create: RelationInputT | None = UNSET
-    upsert: ToOneUpsertInput[UpdateFieldsT, ConflictFieldsT, RelationInputT] | None = UNSET
+    set: Optional[T] = UNSET
+    create: Optional[RelationInputT] = UNSET
+    upsert: Optional[ToOneUpsertInput[UpdateFieldsT, ConflictFieldsT, RelationInputT]] = UNSET
 
     @override
     def to_mapped(
         self,
-        visitor: VisitorProtocol[Any] | None = None,
-        override: dict[str, Any] | None = None,
+        visitor: Optional[VisitorProtocol[Any]] = None,
+        override: Optional[dict[str, Any]] = None,
         level: int = 0,
-    ) -> Any | DTOUnsetType:
+    ) -> Union[Any, type[DTOUnset]]:
         if not self.create and not self.set:
             msg = "Relation is required, you must set either `set`, `create` or `upsert`."
             raise ValueError(msg)
@@ -115,18 +117,18 @@ class RequiredToOneInput(ToOneInput[T, RelationInputT, UpdateFieldsT, ConflictFi
 
 @strawberry.input(description=_TO_MANY_DESCRIPTION)
 class ToManyCreateInput(ToMappedProtocol[Any], Generic[T, RelationInputT, UpdateFieldsT, ConflictFieldsT]):
-    set: list[T] | None = UNSET
-    add: list[T] | None = UNSET
-    create: list[RelationInputT] | None = UNSET
-    upsert: ToManyUpsertInput[UpdateFieldsT, ConflictFieldsT, RelationInputT] | None = UNSET
+    set: Optional[list[T]] = UNSET
+    add: Optional[list[T]] = UNSET
+    create: Optional[list[RelationInputT]] = UNSET
+    upsert: Optional[ToManyUpsertInput[UpdateFieldsT, ConflictFieldsT, RelationInputT]] = UNSET
 
     @override
     def to_mapped(
         self,
-        visitor: VisitorProtocol[Any] | None = None,
-        override: dict[str, Any] | None = None,
+        visitor: Optional[VisitorProtocol[Any]] = None,
+        override: Optional[dict[str, Any]] = None,
         level: int = 0,
-    ) -> list[Any] | DTOUnsetType:
+    ) -> Union[list[Any], type[DTOUnset]]:
         if self.set and (self.create or self.upsert or self.add):
             msg = "You cannot use `set` with `create`, `upsert` or `add` in a -to-many relation input"
             raise ValueError(msg)
@@ -134,45 +136,45 @@ class ToManyCreateInput(ToMappedProtocol[Any], Generic[T, RelationInputT, Update
             return [dto.to_mapped(visitor, level=level, override=override) for dto in self.create]
         if self.upsert:
             return self.upsert.to_mapped(visitor, level=level, override=override)
-        return DTO_UNSET
+        return DTOUnset
 
 
 @strawberry.input(description=_TO_MANY_UPDATE_DESCRIPTION)
 class RequiredToManyUpdateInput(ToMappedProtocol[Any], Generic[T, RelationInputT, UpdateFieldsT, ConflictFieldsT]):
-    set: list[T] | None = UNSET
-    add: list[T] | None = UNSET
-    create: list[RelationInputT] | None = UNSET
-    upsert: ToManyUpsertInput[UpdateFieldsT, ConflictFieldsT, RelationInputT] | None = UNSET
+    set: Optional[list[T]] = UNSET
+    add: Optional[list[T]] = UNSET
+    create: Optional[list[RelationInputT]] = UNSET
+    upsert: Optional[ToManyUpsertInput[UpdateFieldsT, ConflictFieldsT, RelationInputT]] = UNSET
 
     @override
     def to_mapped(
         self,
-        visitor: VisitorProtocol[Any] | None = None,
-        override: dict[str, Any] | None = None,
+        visitor: Optional[VisitorProtocol[Any]] = None,
+        override: Optional[dict[str, Any]] = None,
         level: int = 0,
-    ) -> list[Any] | DTOUnsetType:
+    ) -> Union[list[Any], type[DTOUnset]]:
         if self.create:
             return [dto.to_mapped(visitor, level=level, override=override) for dto in self.create]
         if self.upsert:
             return self.upsert.to_mapped(visitor, level=level, override=override)
-        return DTO_UNSET
+        return DTOUnset
 
 
 @strawberry.input(description=_TO_MANY_UPDATE_DESCRIPTION)
 class ToManyUpdateInput(RequiredToManyUpdateInput[T, RelationInputT, UpdateFieldsT, ConflictFieldsT]):
-    set: list[T] | None = UNSET
-    add: list[T] | None = UNSET
-    remove: list[T] | None = UNSET
-    create: list[RelationInputT] | None = UNSET
-    upsert: ToManyUpsertInput[UpdateFieldsT, ConflictFieldsT, RelationInputT] | None = UNSET
+    set: Optional[list[T]] = UNSET
+    add: Optional[list[T]] = UNSET
+    remove: Optional[list[T]] = UNSET
+    create: Optional[list[RelationInputT]] = UNSET
+    upsert: Optional[ToManyUpsertInput[UpdateFieldsT, ConflictFieldsT, RelationInputT]] = UNSET
 
     @override
     def to_mapped(
         self,
-        visitor: VisitorProtocol[Any] | None = None,
-        override: dict[str, Any] | None = None,
+        visitor: Optional[VisitorProtocol[Any]] = None,
+        override: Optional[dict[str, Any]] = None,
         level: int = 0,
-    ) -> list[Any] | DTOUnsetType:
+    ) -> Union[list[Any], type[DTOUnset]]:
         if self.set and (self.create or self.add or self.remove):
             msg = "You cannot use `set` with `create`, `upsert`, `add` or `remove` in a -to-many relation input"
             raise ValueError(msg)
