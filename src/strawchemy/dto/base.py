@@ -661,7 +661,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             name = base.__name__ if base else self.dto_name(model.__name__, dto_config, current_node)
         node = self._node_or_root(model, name, current_node)
 
-        scoped_cache_key = self._scoped_cache_key(model, dto_config) if not dto_config.exclude_from_scope else DTO_UNSET
+        scoped_cache_key = self._scoped_cache_key(model, dto_config) if not dto_config.exclude_from_scope else DTOUnset
         cache_key = self._cache_key(model, dto_config, node, **kwargs)
 
         if dto_config.scope == "global":

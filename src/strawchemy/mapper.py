@@ -86,7 +86,7 @@ class Strawchemy:
         self,
         config: Union[StrawchemyConfig, SupportedDialect],
         strawberry_config: Optional[StrawberryConfig] = None,
-    ]) -> None:
+    ) -> None:
         """Initializes the Strawchemy instance.
 
         Sets up the configuration, registry, and various DTO factories

@@ -17,9 +17,9 @@ from __future__ import annotations
 import dataclasses
 from collections.abc import Generator, Sequence
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Optional, Literal, TypeVar, Union, get_type_hints
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union, get_type_hints
 
-from typing_extensions import dataclass_transform, override, TypeAlias
+from typing_extensions import TypeAlias, dataclass_transform, override
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import UNSET

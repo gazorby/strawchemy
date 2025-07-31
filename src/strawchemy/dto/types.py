@@ -179,7 +179,7 @@ class DTOConfig:
         purpose: Union[Purpose, type[DTOUnset]] = DTOUnset,
         include: Optional[IncludeFields] = None,
         exclude: Optional[ExcludeFields] = None,
-        partial: Union[bool, type[DTOUnset]] = DTOUnset,
+        partial: Union[bool, None, type[DTOUnset]] = DTOUnset,
         unset_sentinel: Union[Any, type[DTOUnset]] = DTOUnset,
         type_overrides: Union[Mapping[Any, Any], type[DTOUnset]] = DTOUnset,
         annotation_overrides: Union[dict[str, Any], type[DTOUnset]] = DTOUnset,
