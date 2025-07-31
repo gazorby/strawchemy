@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import dataclasses
-import typing
 from collections.abc import Hashable, Iterator, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, Union, cast, final
 
 from typing_extensions import Self, TypeAlias, override
 
@@ -34,7 +33,7 @@ RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
 RelationInputType: TypeAlias = Literal["set", "create", "add", "remove", "upsert"]
 
 
-@typing.final
+@final
 class _Unset: ...
 
 

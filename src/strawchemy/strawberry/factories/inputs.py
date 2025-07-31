@@ -9,7 +9,7 @@ from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import UNSET
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, Relation
-from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOMissingType, Purpose
+from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
 from strawchemy.graph import Node
 from strawchemy.strawberry._registry import RegistryTypeInfo
 from strawchemy.strawberry.dto import (
@@ -156,7 +156,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
                 field.type_ = Optional[comparison_type]
 
             field.default = UNSET
-            field.default_factory = DTO_MISSING
+            field.default_factory = DTOMissing
             yield field
 
     @override
@@ -246,7 +246,7 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
         dto_config: DTOConfig,
         dto_name: str,
         aggregation: FilterFunctionInfo,
-        model_field: Union[DTOMissingType, QueryableAttribute[Any]],
+        model_field: Union[type[DTOMissing], QueryableAttribute[Any]],
         parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]],
     ) -> type[AggregationFunctionFilterDTO]:
         dto_config = DTOConfig(Purpose.WRITE)
@@ -261,7 +261,7 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
                     type_hint=list[aggregation.enum_fields]
                     if aggregation.require_arguments
                     else Optional[list[aggregation.enum_fields]],
-                    default_factory=DTO_MISSING if aggregation.require_arguments else list,
+                    default_factory=DTOMissing if aggregation.require_arguments else list,
                     _function=aggregation,
                     _model_field=model_field,
                 ),
@@ -312,7 +312,7 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
     ) -> type[AggregateFilterDTO]:
         function_aliases: dict[str, AggregationFunction] = {}
         field_defs: list[GraphQLFieldDefinition] = []
-        model_field = DTO_MISSING if parent_field_def is None else parent_field_def.model_field
+        model_field = DTOMissing if parent_field_def is None else parent_field_def.model_field
         for aggregation in self.aggregation_builder.filter_functions(model, dto_config):
             if aggregation.function != aggregation.field_name:
                 function_aliases[aggregation.field_name] = aggregation.function

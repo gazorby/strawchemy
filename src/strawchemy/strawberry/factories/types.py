@@ -13,7 +13,7 @@ from strawchemy.constants import AGGREGATIONS_KEY, JSON_PATH_KEY, NODES_KEY
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import DTOFactory, MappedDTO
 from strawchemy.dto.exceptions import EmptyDTOError
-from strawchemy.dto.types import DTO_MISSING, DTOConfig, Purpose
+from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
 from strawchemy.dto.utils import read_all_partial_config, read_partial, write_all_config
 from strawchemy.graph import Node
 from strawchemy.strawberry.dto import (
@@ -372,7 +372,7 @@ class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
             FunctionFieldDefinition(
                 dto_config=dto_config,
                 model=model,
-                _model_field=model_field if model_field is not None else DTO_MISSING,
+                _model_field=model_field if model_field is not None else DTOMissing,
                 model_field_name=aggregation.function,
                 type_hint=aggregation.output_type,
                 _function=aggregation,

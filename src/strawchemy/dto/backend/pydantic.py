@@ -15,7 +15,7 @@ from pydantic.fields import Field, FieldInfo
 from typing_extensions import override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT
-from strawchemy.dto.types import DTO_MISSING, DTOMissingType
+from strawchemy.dto.types import DTOMissing
 from strawchemy.utils import get_annotations
 
 if TYPE_CHECKING:
@@ -49,9 +49,9 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         kwargs: dict[str, Any] = {}
         if field_def.required:
             kwargs["default"] = ...
-        elif not isinstance(field_def.default_factory, DTOMissingType):
+        elif field_def.default_factory is not DTOMissing:
             kwargs["default_factory"] = field_def.default_factory
-        elif not isinstance(field_def.default, DTOMissingType):
+        elif field_def.default is not DTOMissing:
             kwargs["default"] = field_def.default
         if field_def.purpose_config.alias:
             kwargs["alias"] = field_def.model_field_name
@@ -87,8 +87,8 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         # Copy fields from base to avoid Pydantic warning about shadowing fields
         for f_name in base_annotations:
             field_info: FieldInfo = Field()
-            attribute = getattr(base, f_name, DTO_MISSING)
-            if not isinstance(attribute, DTOMissingType):
+            attribute = getattr(base, f_name, DTOMissing)
+            if attribute is not DTOMissing:
                 field_info = attribute if isinstance(attribute, FieldInfo) else Field(default=attribute)
             field_type = fields[f_name][0] if f_name in fields else base_annotations[f_name]
             fields[f_name] = (field_type, field_info)

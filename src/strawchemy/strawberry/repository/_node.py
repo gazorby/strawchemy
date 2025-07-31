@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar, Union, cast
 from strawberry.types import get_object_definition
 from strawberry.utils.typing import type_has_annotation
 from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
-from strawchemy.dto.types import DTO_MISSING
+from strawchemy.dto.types import DTOMissing
 from strawchemy.graph import GraphError
 from strawchemy.sqlalchemy import SQLAlchemyGraphQLRepository
 from strawchemy.strawberry._instance import MapperModelInstance
@@ -47,7 +47,7 @@ class StrawberryQueryNode(QueryNode, Generic[T]):
     @classmethod
     def _default_type_kwargs(cls, node: StrawberryQueryNode[Any]) -> dict[str, Any]:
         strawberry_definition = get_object_definition(node.strawberry_type, strict=True)
-        return {field.name: DTO_MISSING for field in strawberry_definition.fields if field.init}
+        return {field.name: DTOMissing for field in strawberry_definition.fields if field.init}
 
     def computed_value(self, node: QueryNodeType, result: Union[NodeResult[Any], QueryResult[Any]]) -> T:
         strawberry_definition = get_object_definition(node.metadata.data.strawberry_type)

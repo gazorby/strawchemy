@@ -49,7 +49,7 @@ import strawberry
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.dto.backend.strawberry import MappedStrawberryDTO, StrawberryDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
-from strawchemy.dto.types import DTO_MISSING, DTOConfig, DTOFieldConfig, Purpose
+from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOMissing, Purpose
 from strawchemy.graph import AnyNode, GraphMetadata, MatchOn, Node, NodeMetadata, NodeT
 from strawchemy.sqlalchemy.hook import QueryHook  # noqa: TC001
 from strawchemy.utils import camel_to_snake
@@ -208,7 +208,7 @@ class OutputFunctionInfo:
     function: AggregationFunction
     output_type: Any
     require_arguments: bool = True
-    default: Any = DTO_MISSING
+    default: Any = DTOMissing
 
 
 @dataclass

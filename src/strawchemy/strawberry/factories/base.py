@@ -26,7 +26,7 @@ from strawberry import UNSET
 from strawberry.types.auto import StrawberryAuto
 from strawberry.utils.typing import type_has_annotation
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
-from strawchemy.dto.types import DTO_AUTO, DTOConfig, Purpose
+from strawchemy.dto.types import DTOAuto, DTOConfig, Purpose
 from strawchemy.dto.utils import config
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.graph import Node
@@ -154,7 +154,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         base_annotations_copy = base_annotations.copy()
         for name, annotation in base_annotations.items():
             if type_has_annotation(annotation, StrawberryAuto):
-                config.annotation_overrides[name] = DTO_AUTO
+                config.annotation_overrides[name] = DTOAuto
                 base_annotations_copy.pop(name)
         base.__annotations__ = base_annotations_copy
         return config

@@ -10,7 +10,7 @@ from typing_extensions import override
 import strawberry
 from strawberry.types.field import StrawberryField
 from strawchemy.dto.base import DTOBackend, DTOBase, MappedDTO, ModelFieldT, ModelT
-from strawchemy.dto.types import DTO_MISSING, DTOMissingType
+from strawchemy.dto.types import DTOMissing
 from strawchemy.utils import get_annotations
 
 if TYPE_CHECKING:
@@ -33,7 +33,7 @@ class MappedStrawberryDTO(MappedDTO[ModelT]): ...
 class FieldInfo:
     name: str
     type: Any
-    field: Union[StrawberryField, DTOMissingType] = DTO_MISSING
+    field: Union[StrawberryField, type[DTOMissing]] = DTOMissing
 
 
 class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
@@ -46,12 +46,12 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
 
     def _construct_field_info(self, field_def: DTOFieldDefinition[ModelT, ModelFieldT]) -> FieldInfo:
         strawberry_field: Optional[StrawberryField] = None
-        if not isinstance(field_def.default_factory, DTOMissingType):
+        if field_def.default_factory is not DTOMissing:
             if isinstance(field_def.default_factory(), (list, tuple)):
                 strawberry_field = strawberry.field(default_factory=list)
             else:
                 strawberry_field = strawberry.field(default=strawberry.UNSET)
-        if not isinstance(field_def.default, DTOMissingType):
+        if field_def.default is not DTOMissing:
             strawberry_field = strawberry.field(default=field_def.default)
         if strawberry_field:
             return FieldInfo(field_def.name, field_def.type_, strawberry_field)
@@ -102,7 +102,7 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         bases = (base, self.dto_base) if base else (self.dto_base,)
 
         annotations = self._base_annotations | {field.name: field.type for field in fields}
-        attributes = {field.name: field.field for field in fields if field.field is not DTO_MISSING}
+        attributes = {field.name: field.field for field in fields if field.field is not DTOMissing}
         base_attributes = {
             name: getattr(self.dto_base, name) for name in self._base_annotations if hasattr(self.dto_base, name)
         }

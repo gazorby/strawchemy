@@ -63,11 +63,11 @@ def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> A
     """
     expected = value
 
-    if isinstance(value, Union[Union[datetime, date], time]):
+    if isinstance(value, (datetime, date, time)):
         expected = value.isoformat()
     elif isinstance(value, timedelta):
         expected = _TimeDeltaType.dump_python(value, mode="json")
-    elif isinstance(value, Union[Decimal, UUID]):
+    elif isinstance(value, (Decimal, UUID)):
         expected = str(value)
 
     if mode == "input":
@@ -77,7 +77,7 @@ def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> A
             expected = "false"
         elif isinstance(value, dict):
             expected = re.sub(r'"([^"]+)":', r"\g<1>:", json.dumps(value))
-        if isinstance(value, Union[Union[Union[str, datetime], date], time]):
+        if isinstance(value, (str, datetime, date, time)):
             expected = f'"{expected}"'
 
     return expected

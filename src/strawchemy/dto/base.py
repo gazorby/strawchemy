@@ -33,13 +33,12 @@ from strawchemy.graph import Node
 from strawchemy.utils import is_type_hint_optional, non_optional_type_hint
 
 from .types import (
-    DTO_AUTO,
-    DTO_MISSING,
-    DTO_SKIP,
-    DTO_UNSET,
+    DTOAuto,
     DTOConfig,
     DTOFieldConfig,
-    DTOMissingType,
+    DTOMissing,
+    DTOSkip,
+    DTOUnset,
     ExcludeFields,
     IncludeFields,
     Purpose,
@@ -118,7 +117,7 @@ class MappedDTO(DTOBase[ModelT]):
             dc_fields = {f.name: f for f in dataclasses.fields(self.__dto_model__)}
 
         for name, field_def in self.__dto_field_definitions__.items():
-            if (value := override.get(name, DTO_MISSING)) and value is not DTO_MISSING:
+            if (value := override.get(name, DTOMissing)) and value is not DTOMissing:
                 model_kwargs[name] = value
                 continue
             if (field := dc_fields.get(name)) and not field.init:
@@ -127,7 +126,7 @@ class MappedDTO(DTOBase[ModelT]):
             if TYPE_CHECKING:
                 value: Union[
                     Union[Union[Union[ModelT, ToMappedProtocol[Any]], list[ModelT]], list[ToMappedProtocol[Any]]],
-                    DTOMissingType,
+                    type[DTOMissing],
                 ]
 
             value = getattr(self, name)
@@ -145,7 +144,7 @@ class MappedDTO(DTOBase[ModelT]):
             if visitor is not None:
                 value = visitor.field_value(self, field_def, value, level + 1)
 
-            if value is DTO_UNSET or value is self.__dto_config__.unset_sentinel:
+            if value is DTOUnset or value is self.__dto_config__.unset_sentinel:
                 continue
 
             model_kwargs[field_def.model_field_name] = value
@@ -282,19 +281,19 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
     type_hint: Any
     is_relation: bool = False
     config: DTOFieldConfig = field(default_factory=DTOFieldConfig)
-    _model_field: Union[ModelFieldT, DTOMissingType] = DTO_MISSING
+    _model_field: Union[ModelFieldT, type[DTOMissing]] = DTOMissing
     related_model: Optional[type[ModelT]] = None
     related_dto: Optional[Union[type[DTOBase[ModelT]], ForwardRef]] = None
     self_reference: bool = False
     uselist: bool = False
     init: bool = True
-    type_hint_override: Any = DTO_MISSING
+    type_hint_override: Any = DTOMissing
     partial: Optional[bool] = None
     alias: Optional[str] = None
-    default: Any = DTO_MISSING
-    default_factory: Union[Callable[..., Any], DTOMissingType] = DTO_MISSING
+    default: Any = DTOMissing
+    default_factory: Union[Callable[..., Any], type[DTOMissing]] = DTOMissing
 
-    _type: Any = DTO_MISSING
+    _type: Any = DTOMissing
 
     def __post_init__(self) -> None:
         self._name = self.model_field_name
@@ -305,7 +304,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
         if self.purpose_config.alias is not None:
             self._name = self.purpose_config.alias
             self.alias = self.purpose_config.alias
-        if self.purpose_config.type_override is not DTO_MISSING:
+        if self.purpose_config.type_override is not DTOMissing:
             self.type_hint_override = self.purpose_config.type_override
 
         # DTO config
@@ -314,7 +313,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
         if (alias := self.dto_config.alias(self.model_field_name)) is not None:
             self._name = alias
             self.alias = alias
-        if (type_override_ := self.dto_config.type_overrides.get(self.type_hint, DTO_MISSING)) is not DTO_MISSING:
+        if (type_override_ := self.dto_config.type_overrides.get(self.type_hint, DTOMissing)) is not DTOMissing:
             self.type_hint_override = type_override_
 
         if self.partial:
@@ -322,7 +321,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
 
     @property
     def model_field(self) -> ModelFieldT:
-        if isinstance(self._model_field, DTOMissingType):
+        if self._model_field is DTOMissing:
             msg = "Field does not have a model_field set"
             raise DTOError(msg)
         return self._model_field
@@ -333,7 +332,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
 
     @property
     def has_model_field(self) -> bool:
-        return not isinstance(self._model_field, DTOMissingType)
+        return self._model_field is not DTOMissing
 
     @property
     def model_identity(self) -> Union[type[ModelT], ModelFieldT]:
@@ -352,7 +351,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
 
     @property
     def type_(self) -> Any:
-        if self._type is not DTO_MISSING:
+        if self._type is not DTOMissing:
             return self._type
         type_hint = self.type_hint_override if self.has_type_override else self.type_hint
         return Optional[type_hint] if self.partial else type_hint
@@ -363,7 +362,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
 
     @property
     def has_type_override(self) -> bool:
-        return self.type_hint_override is not DTO_MISSING
+        return self.type_hint_override is not DTOMissing
 
     @property
     def allowed_purposes(self) -> set[Purpose]:
@@ -598,9 +597,9 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         for model_field_name, field_def in self.inspector.field_definitions(model, dto_config):
             has_override = model_field_name in annotations
-            has_auto_override = has_override and annotations[model_field_name] is DTO_AUTO
+            has_auto_override = has_override and annotations[model_field_name] is DTOAuto
 
-            if has_override and annotations[model_field_name] is not DTO_AUTO:
+            if has_override and annotations[model_field_name] is not DTOAuto:
                 no_fields = False
                 field_def.type_ = annotations[model_field_name]
 
@@ -610,7 +609,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             if not has_override or has_auto_override:
                 no_fields = False
                 field_def.type_ = self._resolve_type(field_def, dto_config, node, **factory_kwargs)
-                if field_def.type_ is DTO_SKIP:
+                if field_def.type_ is DTOSkip:
                     continue
 
             yield field_def

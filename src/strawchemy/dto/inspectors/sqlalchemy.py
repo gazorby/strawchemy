@@ -39,7 +39,7 @@ from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, ModelInspector, Relation
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.exceptions import ModelInspectorError
-from strawchemy.dto.types import DTO_MISSING, DTO_UNSET, DTOConfig, DTOFieldConfig, DTOMissingType, Purpose
+from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOMissing, DTOUnset, Purpose
 from strawchemy.utils import is_type_hint_optional
 
 if TYPE_CHECKING:
@@ -178,8 +178,8 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     @classmethod
     def _defaults(
         cls, attribute: MapperProperty[Any]
-    ) -> tuple[Union[Any, DTOMissingType], Union[Callable[..., Any], DTOMissingType]]:
-        default, default_factory = DTO_MISSING, DTO_MISSING
+    ) -> tuple[Union[Any, type[DTOMissing]], Union[Callable[..., Any], type[DTOMissing]]]:
+        default, default_factory = DTOMissing, DTOMissing
         model = attribute.parent.class_
         element = cls._column_or_relationship(attribute)
 
@@ -191,12 +191,12 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             default_factory = field.default_factory
 
         default_factory = (
-            getattr(element, "default_factory", DTO_MISSING) if default_factory is DTO_MISSING else default_factory
+            getattr(element, "default_factory", DTOMissing) if default_factory is DTOMissing else default_factory
         )
-        default = getattr(element, "default", DTO_MISSING) if default is DTO_MISSING else default
+        default = getattr(element, "default", DTOMissing) if default is DTOMissing else default
 
         if isinstance(element, Column):
-            if not isinstance(default, DTOMissingType) and default is not None:
+            if default is not DTOMissing and default is not None:
                 if default.is_scalar:
                     default = default.arg
                 elif default.is_callable:
@@ -213,19 +213,19 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                     ):
                         default_factory = lambda: default.arg({})  # noqa: E731
                 elif isinstance(default, Sequence):
-                    default = DTO_UNSET
+                    default = DTOUnset
                 else:
                     msg = "Unexpected default type"
                     raise ValueError(msg)
             elif default is None and not element.nullable:
-                default = DTO_MISSING
-        elif isinstance(element, RelationshipProperty) and default is DTO_MISSING and element.uselist:
+                default = DTOMissing
+        elif isinstance(element, RelationshipProperty) and default is DTOMissing and element.uselist:
             default_factory = list
-        elif default is DTO_MISSING:
+        elif default is DTOMissing:
             default = None
 
-        if default_factory is not DTO_MISSING:
-            return DTO_MISSING, default_factory
+        if default_factory is not DTOMissing:
+            return DTOMissing, default_factory
         return default, default_factory
 
     def _field_config(self, elem: MapperProperty[Any]) -> DTOFieldConfig:
@@ -258,7 +258,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                 self.field_definition(
                     mapper.attrs[column.key].class_attribute,
                     dto_config,
-                    type_hint=type_hints.get(column.key, DTO_MISSING),
+                    type_hint=type_hints.get(column.key, DTOMissing),
                 ),
             )
             for column in columns
@@ -284,7 +284,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
 
     @override
     def field_definition(
-        self, model_field: QueryableAttribute[T], dto_config: DTOConfig, type_hint: Any = DTO_MISSING
+        self, model_field: QueryableAttribute[T], dto_config: DTOConfig, type_hint: Any = DTOMissing
     ) -> DTOFieldDefinition[DeclarativeBase, QueryableAttribute[T]]:
         mapper = model_field.parent.mapper
         relation_model = None
@@ -292,7 +292,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         elem = prop if isinstance(prop, MappedSQLExpression) else mapper.attrs[model_field.key]
         config = self._field_config(elem)
         if dto_config.exclude_defaults:
-            default, default_factory = DTO_MISSING, DTO_MISSING
+            default, default_factory = DTOMissing, DTOMissing
         else:
             default, default_factory = self._defaults(elem)
         uselist = self._uselist(elem)
@@ -301,7 +301,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         with contextlib.suppress(ModelInspectorError):
             relation_model = self.relation_model(prop.class_attribute)
 
-        if type_hint is DTO_MISSING:
+        if type_hint is DTOMissing:
             if isinstance(prop, RelationshipProperty):
                 type_hint = prop.argument
             elif isinstance(prop, Column):
@@ -309,7 +309,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             elif isinstance(prop, ColumnProperty) and len(prop.columns) == 1:
                 type_hint = prop.columns[0].type.python_type
             else:
-                type_hint = self.get_type_hints(mapper.class_).get(model_field.key, DTO_MISSING)
+                type_hint = self.get_type_hints(mapper.class_).get(model_field.key, DTOMissing)
 
         type_hint = self._resolve_model_type_hint(type_hint)
 
@@ -348,7 +348,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         type_hints = self.get_type_hints(model)
         for prop in mapper.attrs:
             mapper_attr = mapper.attrs[prop.key]
-            type_hint = type_hints.get(prop.key, DTO_MISSING)
+            type_hint = type_hints.get(prop.key, DTOMissing)
             yield prop.key, self.field_definition(mapper_attr.class_attribute, dto_config, type_hint=type_hint)
 
     @override
@@ -391,7 +391,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
 
     @override
     def has_default(self, model_field: QueryableAttribute[Any]) -> bool:
-        return any(default is not DTO_MISSING for default in self._defaults(model_field.property))
+        return any(default is not DTOMissing for default in self._defaults(model_field.property))
 
     @override
     def required(self, model_field: QueryableAttribute[Any]) -> bool:

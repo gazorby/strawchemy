@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, Optional, Union, get_type_hints
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union, final, get_type_hints
 
 from typing_extensions import TypeAlias, override
 
@@ -15,42 +15,40 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
 
-__all__ = ("DTO_AUTO", "DTO_MISSING", "DTOConfig", "DTOFieldConfig", "ExcludeFields", "IncludeFields", "Purpose")
+__all__ = ("DTOAuto", "DTOConfig", "DTOFieldConfig", "DTOMissing", "ExcludeFields", "IncludeFields", "Purpose")
 
 IncludeFields: TypeAlias = Union[list[str], set[str], Literal["all"]]
 ExcludeFields: TypeAlias = Union[list[str], set[str]]
 
 
-class DTOMissingType:
+@final
+class DTOMissing:
     """A sentinel type to detect if a parameter is supplied or not when.
 
     constructing pydantic FieldInfo.
     """
 
 
-class DTOAutoType: ...
+@final
+class DTOAuto: ...
 
 
-class DTOSkipFieldType: ...
+@final
+class DTOSkip: ...
 
 
-class DTOUnsetType:
+@final
+class DTOUnset:
     @override
     def __str__(self) -> str:
         return ""
 
     @override
     def __repr__(self) -> str:
-        return "DTO_UNSET"
+        return "DTOUnset"
 
     def __bool__(self) -> bool:
         return False
-
-
-DTO_MISSING = DTOMissingType()
-DTO_UNSET = DTOUnsetType()
-DTO_AUTO = DTOAutoType()
-DTO_SKIP = DTOAutoType()
 
 
 class Purpose(str, Enum):
@@ -80,7 +78,7 @@ class Purpose(str, Enum):
 class PurposeConfig:
     """Mark the field as read-only, or private."""
 
-    type_override: Optional[Any] = DTO_MISSING
+    type_override: Optional[Any] = DTOMissing
     validator: Optional[Callable[[Any], Any]] = None
     """Single argument callables that are defined on the DTO as validators for the field."""
     alias: Optional[str] = None
@@ -154,7 +152,7 @@ class DTOConfig:
     partial: Optional[bool] = None
     """Make all field optional."""
     partial_default: Any = None
-    unset_sentinel: Any = DTO_UNSET
+    unset_sentinel: Any = DTOUnset
     type_overrides: Mapping[Any, Any] = field(default_factory=dict)
     annotation_overrides: dict[str, Any] = field(default_factory=dict)
     aliases: Mapping[str, str] = field(default_factory=dict)
