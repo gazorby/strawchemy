@@ -1,6 +1,5 @@
 [env]
 PROJECT_NAME = "strawchemy"
-UV_PYTHON = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
 _.python.venv = { path = ".venv" }
 _.file = ".env.json"
 
