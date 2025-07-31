@@ -436,7 +436,9 @@ def psycopg_engine(postgres_database_service: PostgresService) -> Generator[Engi
 
 @pytest.fixture
 def sqlite_engine(tmp_path: Path) -> Generator[Engine, None, None]:
-    engine = create_engine(f"sqlite:///{tmp_path}/test.db", poolclass=NullPool)
+    db_path = tmp_path / "test.db"
+    db_path.unlink(missing_ok=True)
+    engine = create_engine(f"sqlite:///{db_path}", poolclass=NullPool)
     try:
         yield engine
     finally:
