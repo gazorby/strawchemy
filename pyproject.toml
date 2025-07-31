@@ -11,7 +11,6 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Environment :: Web Environment",
   "Intended Audience :: Developers",
-  "Intended Audience :: System Administrators",
   "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
@@ -23,7 +22,10 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Database",
   "Topic :: Database :: Database Engines/Servers",
+  "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
   "Topic :: Software Development",
+  "Topic :: Software Development :: Libraries",
+  "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Typed",
 ]
 dependencies = [
@@ -39,6 +41,7 @@ Documentation = "https://github.com/gazorby/strawchemy"
 Homepage = "https://github.com/gazorby/strawchemy"
 Issues = "https://github.com/gazorby/strawchemy/issues"
 Repository = "https://github.com/gazorby/strawchemy"
+"Sponsor on GitHub" = "https://github.com/sponsors/gazorby"
 
 [project.optional-dependencies]
 geo = ["GeoAlchemy2", "geojson-pydantic", "shapely"]
@@ -298,6 +301,7 @@ markers = [
   "asyncpg: SQLAlchemy Postgres (asyncpg) Tests",
 ]
 testpaths = ["tests"]
+xfail_strict = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
