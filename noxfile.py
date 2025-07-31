@@ -8,7 +8,7 @@ import nox
 if TYPE_CHECKING:
     from nox import Session
 
-SUPPORTED_PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12.11", "3.13"]
+SUPPORTED_PYTHON_VERSIONS = ["3.9", "3.10", "3.11", "3.12", "3.13"]
 COMMON_PYTEST_OPTIONS = ["-n=2", "--showlocals", "-vv"]
 
 here = Path(__file__).parent
