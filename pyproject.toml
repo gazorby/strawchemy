@@ -62,7 +62,7 @@ dev = [
   "debugpy",
 ]
 doc = ["git-cliff>=2.6.1"]
-lint = ["pyright[nodejs] == 1.1.403", "ruff", "vulture"]
+lint = ["basedpyright", "ruff", "vulture"]
 mysql = ["asyncmy", "cryptography"]
 postgres = ["asyncpg>=0.29.0", "psycopg[binary,pool]>=3.2.3"]
 test = [
@@ -86,6 +86,37 @@ test = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.basedpyright]
+venv = ".venv"
+exclude = [
+  "**/__pycache__",
+  "**/.hypothesis",
+  "**/.mypy_cache",
+  "**/.pytest_cache",
+  "**/.ruff_cache",
+  "**/.venv",
+  "**/.tox",
+  "**/.nox",
+  "**/build",
+  "**/dist",
+  "**/node_modules",
+  "**/cdk.out",
+  "**/alembic/versions",
+]
+verboseOutput = true
+pythonVersion = "3.9"
+typeCheckingMode = "strict"
+reportUnknownMemberType = false
+reportMissingTypeStubs = false
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportPrivateUsage = false
+reportUnnecessaryTypeIgnoreComment = true
+reportImplicitOverride = true
+reportPropertyTypeMismatch = true
+reportShadowedImports = true
+strictGenericNarrowing = true
 
 [tool.bumpversion]
 allow_dirty = true
@@ -257,36 +288,6 @@ token = ""
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/strawchemy"]
-
-[tool.pyright]
-venv = ".venv"
-exclude = [
-  "**/__pycache__",
-  "**/.hypothesis",
-  "**/.mypy_cache",
-  "**/.pytest_cache",
-  "**/.ruff_cache",
-  "**/.venv",
-  "**/.tox",
-  "**/.nox",
-  "**/build",
-  "**/dist",
-  "**/node_modules",
-  "**/cdk.out",
-  "**/alembic/versions",
-]
-verboseOutput = true
-pythonVersion = "3.9"
-typeCheckingMode = "strict"
-reportUnknownMemberType = false
-reportMissingTypeStubs = false
-reportUnknownArgumentType = false
-reportUnknownVariableType = false
-reportPrivateUsage = false
-reportUnnecessaryTypeIgnoreComment = true
-reportImplicitOverride = true
-reportPropertyTypeMismatch = true
-reportShadowedImports = true
 
 [tool.pytest.ini_options]
 markers = [

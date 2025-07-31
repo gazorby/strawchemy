@@ -246,9 +246,9 @@ description = "Format code"
 run = "ruff format --check"
 
 [tasks.pyright]
-description = "Run pyright"
+description = "Run basedpyright"
 depends = "_install"
-run = "uv run pyright"
+run = "uv run basedpyright"
 
 [tasks.vulture]
 description = "Run vulture"

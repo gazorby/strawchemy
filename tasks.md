@@ -99,7 +99,7 @@ Run pre-commit checks
 
 - **Usage**: `pyright`
 
-Run pyright
+Run basedpyright
 
 ## `render:usage`
 
