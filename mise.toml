@@ -21,7 +21,6 @@ nox_py12 = "uv run nox -r -P=3.12"
 nox_py11 = "uv run nox -r -P=3.11"
 nox_py10 = "uv run nox -r -P=3.10"
 nox_py9 = "uv run nox -r -P=3.9"
-
 cleanable_paths = '''{{
 [
   ".nox",
@@ -67,10 +66,6 @@ depends = ["install:pre-commit", "_install"]
 [tasks."install:pre-commit"]
 description = "Install pre-commit hooks"
 run = "pre-commit install --install-hooks 2>&1"
-
-[tasks."install:test"]
-description = "Install test dependencies only"
-run = "uv sync --only-group test"
 
 # ###############
 # Test
@@ -195,9 +190,8 @@ run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update
 
 [tasks."ci:test"]
 description = "Run tests in CI"
-depends = "install:test"
 usage = 'arg "<session>"'
-run = "uv run nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 {{  vars.ci_pytest_coverage_options}}"
+run = "nox -r -t tests -s '{{arg(name='session')}}' -- -n=2 {{  vars.ci_pytest_coverage_options}}"
 
 [tasks."ci:lint"]
 description = "Lint CI yaml files"
@@ -205,7 +199,6 @@ run = "actionlint -shellcheck ''"
 
 [tasks."ci:test-matrix"]
 description = "Output test matrix for CI"
-depends = "install:test"
 run = '''
     nox --json -t tests -t ci -l |
     jq 'map(
@@ -221,7 +214,6 @@ run = '''
 
 [tasks."ci:test-sessions"]
 description = "Output test session names for CI"
-depends = "install:test"
 run = "nox --json -t tests -l | jq 'map(.name) | unique'"
 
 # ###############
