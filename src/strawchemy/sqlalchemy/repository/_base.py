@@ -172,7 +172,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         for relation in data.relations:
             prop = relation.attribute
             if (
-                not relation.set
+                (not relation.set and relation.set is not None)
                 or not isinstance(prop, RelationshipProperty)
                 or relation.relation_type is not RelationType.TO_ONE
             ):

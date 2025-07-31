@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
+import typing
 from collections.abc import Hashable, Iterator, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, Union, cast
@@ -33,6 +34,10 @@ RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
 RelationInputType: TypeAlias = Literal["set", "create", "add", "remove", "upsert"]
 
 
+@typing.final
+class _Unset: ...
+
+
 def _has_record(model: DeclarativeBase) -> bool:
     state = inspect(model)
     return state.persistent or state.detached
@@ -63,7 +68,7 @@ class _UnboundRelationInput:
         attribute: MapperProperty[Any],
         related: type[DeclarativeBase],
         relation_type: RelationType,
-        set_: Optional[list[DeclarativeBase]] = None,
+        set_: Union[list[DeclarativeBase], None, type[_Unset]] = _Unset,
         add: Optional[list[DeclarativeBase]] = None,
         remove: Optional[list[DeclarativeBase]] = None,
         create: Optional[list[DeclarativeBase]] = None,
@@ -74,7 +79,7 @@ class _UnboundRelationInput:
         self.attribute = attribute
         self.related = related
         self.relation_type = relation_type
-        self.set = set_ if set_ is not None else []
+        self.set: Optional[list[DeclarativeBase]] = set_ if set_ is not _Unset else []
         self.add = add if add is not None else []
         self.remove = remove if remove is not None else []
         self.create = create if create is not None else []
@@ -94,7 +99,7 @@ class _UnboundRelationInput:
             self.add.append(model)
 
     def __bool__(self) -> bool:
-        return bool(self.set or self.add or self.remove or self.create or self.upsert)
+        return bool(self.set or self.add or self.remove or self.create or self.upsert) or self.set is None
 
 
 class RelationInput(_UnboundRelationInput):
@@ -104,7 +109,7 @@ class RelationInput(_UnboundRelationInput):
         related: type[DeclarativeBase],
         parent: DeclarativeBase,
         relation_type: RelationType,
-        set_: Optional[list[DeclarativeBase]] = None,
+        set_: Union[list[DeclarativeBase], None, type[_Unset]] = _Unset,
         add: Optional[list[DeclarativeBase]] = None,
         remove: Optional[list[DeclarativeBase]] = None,
         create: Optional[list[DeclarativeBase]] = None,
