@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated, Any, cast
+from typing import TYPE_CHECKING, Annotated, Any, Optional, Union, cast
 
 from pydantic import AfterValidator
 from strawchemy import (
@@ -368,7 +368,7 @@ class AsyncQuery:
         return (await repo.get_one()).graphql_type()
 
     @strawchemy.field
-    async def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
+    async def get_color(self, info: strawberry.Info, color: str) -> Optional[ColorType]:
         repo = StrawchemyAsyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
         return (await repo.get_one_or_none()).graphql_type_or_none()
 
@@ -453,7 +453,7 @@ class SyncQuery:
         return repo.get_one().graphql_type()
 
     @strawchemy.field
-    def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
+    def get_color(self, info: strawberry.Info, color: str) -> Optional[ColorType]:
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
         return repo.get_one_or_none().graphql_type_or_none()
 
@@ -503,7 +503,7 @@ class DateTimeSyncQuery:
 class AsyncMutation:
     # Color - Create
     create_color: ColorType = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
-    create_validated_color: ColorType | ValidationErrorType = strawchemy.create(
+    create_validated_color: Union[ColorType, ValidationErrorType] = strawchemy.create(
         ColorCreateInput,
         validation=PydanticValidation(ColorCreateValidation),
         repository_type=StrawchemyAsyncRepository,
@@ -511,7 +511,7 @@ class AsyncMutation:
     create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemyAsyncRepository)
     # Color - Update
     update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemyAsyncRepository)
-    update_validated_color: ColorType | ValidationErrorType = strawchemy.update_by_ids(
+    update_validated_color: Union[ColorType, ValidationErrorType] = strawchemy.update_by_ids(
         ColorUpdateInput,
         validation=PydanticValidation(ColorPkUpdateValidation),
         repository_type=StrawchemyAsyncRepository,
@@ -601,7 +601,7 @@ class AsyncMutation:
     @strawberry.field
     async def create_color_manual_validation(
         self, info: strawberry.Info, data: ColorCreateInput
-    ) -> ColorType | ValidationErrorType:
+    ) -> Union[ColorType, ValidationErrorType]:
         try:
             return (
                 await StrawchemyAsyncRepository(ColorType, info).create(
@@ -614,7 +614,7 @@ class AsyncMutation:
     @strawberry.field
     async def create_validated_ranked_user(
         self, info: strawberry.Info, data: RankedUserCreateInput
-    ) -> RankedUserType | ValidationErrorType:
+    ) -> Union[RankedUserType, ValidationErrorType]:
         try:
             user_input = Input(data, PydanticValidation(RankedUserCreateValidation), rank=1)
         except InputValidationError as error:
@@ -630,13 +630,13 @@ class AsyncMutation:
 class SyncMutation:
     # Color - Create
     create_color: ColorType = strawchemy.create(ColorCreateInput, repository_type=StrawchemySyncRepository)
-    create_validated_color: ColorType | ValidationErrorType = strawchemy.create(
+    create_validated_color: Union[ColorType, ValidationErrorType] = strawchemy.create(
         ColorCreateInput, validation=PydanticValidation(ColorCreateValidation), repository_type=StrawchemySyncRepository
     )
     create_colors: list[ColorType] = strawchemy.create(ColorCreateInput, repository_type=StrawchemySyncRepository)
     # Color - Update
     update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput, repository_type=StrawchemySyncRepository)
-    update_validated_color: ColorType | ValidationErrorType = strawchemy.update_by_ids(
+    update_validated_color: Union[ColorType, ValidationErrorType] = strawchemy.update_by_ids(
         ColorUpdateInput,
         validation=PydanticValidation(ColorPkUpdateValidation),
         repository_type=StrawchemySyncRepository,
@@ -726,7 +726,7 @@ class SyncMutation:
     @strawberry.field
     def create_color_manual_validation(
         self, info: strawberry.Info, data: ColorCreateInput
-    ) -> ColorType | ValidationErrorType:
+    ) -> Union[ColorType, ValidationErrorType]:
         try:
             return (
                 StrawchemySyncRepository(ColorType, info)
@@ -739,7 +739,7 @@ class SyncMutation:
     @strawberry.field
     def create_validated_ranked_user(
         self, info: strawberry.Info, data: RankedUserCreateInput
-    ) -> RankedUserType | ValidationErrorType:
+    ) -> Union[RankedUserType, ValidationErrorType]:
         try:
             user_input = Input(data, PydanticValidation(RankedUserCreateValidation), rank=1)
         except InputValidationError as error:

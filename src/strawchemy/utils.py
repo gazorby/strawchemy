@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import inspect
 import re
+import sys
 from typing import TYPE_CHECKING, Any, Optional, Union, get_args, get_origin
 
 from strawchemy.typing import UNION_TYPES
@@ -50,7 +52,7 @@ def snake_keys(value: dict[str, Any]) -> dict[str, Any]:
     res: dict[Any, Any] = {}
     for k, v in value.items():
         to_snake: str = camel_to_snake(k)
-        if isinstance(v, list | tuple):
+        if isinstance(v, (list, tuple)):
             res[to_snake] = [snake_keys(el) for el in v]
         elif isinstance(v, dict):
             res[to_snake] = snake_keys(v)
@@ -94,3 +96,10 @@ def is_type_hint_optional(type_hint: Any) -> bool:
         args = get_args(type_hint)
         return any(arg is type(None) for arg in args)
     return False
+
+
+def get_annotations(obj: Any) -> dict[str, Any]:
+    """Get the annotations of the given object."""
+    if sys.version_info >= (3, 10):
+        return inspect.get_annotations(obj)
+    return obj.__dict__.get("__annotations__", {}) if isinstance(obj, type) else getattr(obj, "__annotations__", {})

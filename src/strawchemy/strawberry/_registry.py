@@ -5,7 +5,20 @@ from collections import defaultdict
 from copy import copy
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, cast, get_args, get_origin, overload
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    ForwardRef,
+    Literal,
+    NewType,
+    Optional,
+    TypeVar,
+    Union,
+    cast,
+    get_args,
+    get_origin,
+    overload,
+)
 
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
@@ -44,7 +57,7 @@ _RegistryMissing = NewType("_RegistryMissing", object)
 
 @dataclass
 class _TypeReference:
-    ref_holder: StrawberryField | StrawberryArgument
+    ref_holder: Union[StrawberryField, StrawberryArgument]
 
     @classmethod
     def _replace_contained_type(
@@ -58,7 +71,7 @@ class _TypeReference:
         container_copy.of_type = replaced
         return container_copy
 
-    def _set_type(self, strawberry_type: type[WithStrawberryObjectDefinition] | StrawberryContainer) -> None:
+    def _set_type(self, strawberry_type: Union[type[WithStrawberryObjectDefinition], StrawberryContainer]) -> None:
         if isinstance(self.ref_holder, StrawberryField):
             self.ref_holder.type = strawberry_type
         self.ref_holder.type_annotation = StrawberryAnnotation(
@@ -79,7 +92,7 @@ class RegistryTypeInfo:
     graphql_type: GraphQLType
     user_defined: bool = False
     override: bool = False
-    pagination: DefaultOffsetPagination | Literal[False] = False
+    pagination: Union[DefaultOffsetPagination, Literal[False]] = False
     order_by: bool = False
 
 
@@ -95,8 +108,8 @@ class StrawberryRegistry:
         self._names_map: defaultdict[GraphQLType, dict[str, RegistryTypeInfo]] = defaultdict(dict)
         self._tracked_type_names: defaultdict[GraphQLType, set[str]] = defaultdict(set)
 
-    def _update_references(self, field: StrawberryField | StrawberryArgument, graphql_type: GraphQLType) -> None:
-        field_type_name: str | None = None
+    def _update_references(self, field: Union[StrawberryField, StrawberryArgument], graphql_type: GraphQLType) -> None:
+        field_type_name: Optional[str] = None
         for inner_type in strawberry_contained_types(field.type):
             if field_type_def := get_object_definition(inner_type):
                 field_type_name = field_type_def.name
@@ -120,7 +133,7 @@ class StrawberryRegistry:
 
     def _track_references(
         self,
-        strawberry_type: type[WithStrawberryObjectDefinition | StrawberryTypeFromPydantic[PydanticModel]],
+        strawberry_type: type[Union[WithStrawberryObjectDefinition, StrawberryTypeFromPydantic[PydanticModel]]],
         graphql_type: GraphQLType,
         force: bool = False,
     ) -> None:
@@ -166,7 +179,7 @@ class StrawberryRegistry:
             arg_types.extend(cls._inner_types(arg_type))
         return tuple(arg_types)
 
-    def _get(self, type_info: RegistryTypeInfo) -> type[Any] | None:
+    def _get(self, type_info: RegistryTypeInfo) -> Optional[type[Any]]:
         if (existing := self.get(type_info.graphql_type, type_info.name, None)) and existing.override:
             return self._type_map[existing]
         if not type_info.override and (existing := self._type_map.get(type_info)):
@@ -200,9 +213,9 @@ class StrawberryRegistry:
     def get(self, graphql_type: GraphQLType, name: str) -> RegistryTypeInfo: ...
 
     @overload
-    def get(self, graphql_type: GraphQLType, name: str, default: T) -> RegistryTypeInfo | T: ...
+    def get(self, graphql_type: GraphQLType, name: str, default: T) -> Union[RegistryTypeInfo, T]: ...
 
-    def get(self, graphql_type: GraphQLType, name: str, default: T = _RegistryMissing) -> RegistryTypeInfo | T:
+    def get(self, graphql_type: GraphQLType, name: str, default: T = _RegistryMissing) -> Union[RegistryTypeInfo, T]:
         if default is _RegistryMissing:
             return self._names_map[graphql_type][name]
         return self._names_map[graphql_type].get(name, default)
@@ -223,8 +236,8 @@ class StrawberryRegistry:
         self,
         type_: type[Any],
         type_info: RegistryTypeInfo,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
+        description: Optional[str] = None,
+        directives: Optional[Sequence[object]] = (),
     ) -> type[Any]:
         self._check_conflicts(type_info)
         if has_object_definition(type_):
@@ -246,8 +259,8 @@ class StrawberryRegistry:
     def register_enum(
         self,
         enum_type: type[EnumT],
-        name: str | None = None,
-        description: str | None = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
         directives: Iterable[object] = (),
     ) -> type[EnumT]:
         type_name = name or f"{enum_type.__name__}Enum"

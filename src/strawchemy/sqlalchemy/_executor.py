@@ -10,7 +10,7 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, Literal
+from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, Union
 
 from typing_extensions import Self
 
@@ -104,7 +104,7 @@ class QueryResult(Generic[ModelT]):
         Yields:
             NodeResult[ModelT]: An individual result node.
         """
-        for model, computed_values in zip(self.nodes, self.node_computed_values, strict=True):
+        for model, computed_values in zip(self.nodes, self.node_computed_values):
             yield NodeResult(model, computed_values, self.node_key)
 
     def filter_in(self, **kwargs: Sequence[Any]) -> Self:
@@ -122,10 +122,10 @@ class QueryResult(Generic[ModelT]):
         """
         filtered = [
             (model, computed_values)
-            for model, computed_values in zip(self.nodes, self.node_computed_values, strict=True)
+            for model, computed_values in zip(self.nodes, self.node_computed_values)
             if all(getattr(model, key) in value for key, value in kwargs.items())
         ]
-        nodes, computed_values = list(map(list, zip(*filtered, strict=True))) if filtered else ([], [])
+        nodes, computed_values = list(map(list, zip(*filtered))) if filtered else ([], [])
         return dataclasses.replace(self, nodes=nodes, node_computed_values=computed_values)
 
     def value(self, key: QueryNodeType) -> Any:
@@ -154,7 +154,7 @@ class QueryResult(Generic[ModelT]):
             raise QueryResultError(msg)
         return NodeResult(self.nodes[0], self.node_computed_values[0], self.node_key)
 
-    def one_or_none(self) -> NodeResult[ModelT] | None:
+    def one_or_none(self) -> Optional[NodeResult[ModelT]]:
         """Returns the single result node, or None if there isn't exactly one result.
 
         Returns:
@@ -179,7 +179,7 @@ class QueryExecutor(Generic[DeclarativeT]):
     scope: QueryScope[Any]
     apply_unique: bool = False
     root_aggregation_functions: list[Label[Any]] = dataclasses.field(default_factory=list)
-    execution_options: dict[str, Any] | None = None
+    execution_options: Optional[dict[str, Any]] = None
 
     def _to_query_result(
         self, result: Result[tuple[DeclarativeT, Any]], fetch: Literal["one_or_none", "all"]
@@ -206,7 +206,7 @@ class QueryExecutor(Generic[DeclarativeT]):
             (obj, *computed_values) = row
             (_, *computed_fields) = row._fields
             nodes.append(obj)
-            computed.append(dict(zip(computed_fields, computed_values, strict=True)))
+            computed.append(dict(zip(computed_fields, computed_values)))
 
         root_aggregations_set = {function.name for function in self.root_aggregation_functions}
         first_computed = computed[0] if computed else {}
@@ -219,7 +219,7 @@ class QueryExecutor(Generic[DeclarativeT]):
             node_key=self.scope.key,
         )
 
-    def statement(self) -> Select[tuple[DeclarativeT]] | StatementLambdaElement:
+    def statement(self) -> Union[Select[tuple[DeclarativeT]], StatementLambdaElement]:
         """Returns the SQLAlchemy statement to be executed.
 
         Returns:

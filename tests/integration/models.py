@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
-from typing import Any
+from typing import Any, Optional
 
 from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
@@ -126,13 +126,13 @@ class Fruit(Base):
     __tablename__ = "fruit"
 
     name: Mapped[str] = mapped_column(VARCHAR(255))
-    color_id: Mapped[int | None] = mapped_column(ForeignKey("color.id"), nullable=True, default=None)
-    color: Mapped[Color | None] = relationship("Color", back_populates="fruits")
+    color_id: Mapped[Optional[int]] = mapped_column(ForeignKey("color.id"), nullable=True, default=None)
+    color: Mapped[Optional[Color]] = relationship("Color", back_populates="fruits")
     farms: Mapped[list[FruitFarm]] = relationship(FruitFarm)
-    derived_product_id: Mapped[int | None] = mapped_column(
+    derived_product_id: Mapped[Optional[int]] = mapped_column(
         ForeignKey("derived_product.id"), nullable=True, default=None
     )
-    product: Mapped[DerivedProduct | None] = relationship(DerivedProduct)
+    product: Mapped[Optional[DerivedProduct]] = relationship(DerivedProduct)
     sweetness: Mapped[int] = mapped_column(Integer)
     water_percent: Mapped[float] = mapped_column(Double)
     best_time_to_pick: Mapped[time] = mapped_column(TimeType, default=time(hour=9))
@@ -172,9 +172,9 @@ class User(Base):
 
     name: Mapped[str] = mapped_column(Text)
     greeting: Mapped[str] = column_property("Hello, " + name)
-    group_id: Mapped[int | None] = mapped_column(ForeignKey("group.id"))
-    group: Mapped[Group | None] = relationship(Group)
-    bio: Mapped[str | None] = mapped_column(Text, default=None)
+    group_id: Mapped[Optional[int]] = mapped_column(ForeignKey("group.id"))
+    group: Mapped[Optional[Group]] = relationship(Group)
+    bio: Mapped[Optional[str]] = mapped_column(Text, default=None)
 
     def __init__(self, **kw: Any) -> None:
         super().__init__(**kw)

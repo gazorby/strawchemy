@@ -36,7 +36,9 @@ from typing import (
     ClassVar,
     Generic,
     Literal,
+    Optional,
     TypeVar,
+    Union,
     overload,
 )
 
@@ -70,8 +72,8 @@ class _ArgumentValue:
 
 
 class RelationFilterDTO(Struct, frozen=True, dict=True):
-    limit: int | None = None
-    offset: int | None = None
+    limit: Optional[int] = None
+    offset: Optional[int] = None
 
     @cached_property
     def _json(self) -> bytes:
@@ -93,9 +95,9 @@ class QueryGraphMetadata:
 @dataclass
 class QueryNodeMetadata:
     relation_filter: RelationFilterDTO = dataclasses.field(default_factory=RelationFilterDTO)
-    order_by: OrderByEnum | None = None
-    strawberry_type: type[Any] | None = None
-    json_path: str | None = None
+    order_by: Optional[OrderByEnum] = None
+    strawberry_type: Optional[type[Any]] = None
+    json_path: Optional[str] = None
 
     @property
     def is_transform(self) -> bool:
@@ -106,10 +108,10 @@ class StrawchemyDTOAttributes:
     __strawchemy_description__: ClassVar[str] = "GraphQL type"
     __strawchemy_is_root_aggregation_type__: ClassVar[bool] = False
     __strawchemy_field_map__: ClassVar[dict[DTOKey, GraphQLFieldDefinition]] = {}
-    __strawchemy_query_hook__: ClassVar[QueryHook[Any] | list[QueryHook[Any]] | None] = None
-    __strawchemy_filter__: ClassVar[type[Any] | None] = None
-    __strawchemy_order_by__: ClassVar[type[Any] | None] = None
-    __strawchemy_input_type__: ClassVar[InputType | None] = None
+    __strawchemy_query_hook__: ClassVar[Optional[Union[QueryHook[Any], list[QueryHook[Any]]]]] = None
+    __strawchemy_filter__: ClassVar[Optional[type[Any]]] = None
+    __strawchemy_order_by__: ClassVar[Optional[type[Any]]] = None
+    __strawchemy_input_type__: ClassVar[Optional[InputType]] = None
 
 
 class _Key(Generic[T]):
@@ -132,28 +134,28 @@ class _Key(Generic[T]):
 
     separator: str = ":"
 
-    def __init__(self, components: Sequence[T | str] | str | None = None) -> None:
+    def __init__(self, components: Optional[Union[Sequence[Union[T, str]], str]] = None) -> None:
         self._key: str = ""
         if isinstance(components, str):
             self._key = components
         elif components:
             self._key = str(self.extend(components))
 
-    def _components_to_str(self, objects: Sequence[T | str]) -> Sequence[str]:
+    def _components_to_str(self, objects: Sequence[Union[T, str]]) -> Sequence[str]:
         return [obj if isinstance(obj, str) else self.to_str(obj) for obj in objects]
 
     def to_str(self, obj: T) -> str:
         raise NotImplementedError
 
-    def append(self, component: T | str) -> Self:
+    def append(self, component: Union[T, str]) -> Self:
         return self.extend([component])
 
-    def extend(self, components: Sequence[T | str]) -> Self:
+    def extend(self, components: Sequence[Union[T, str]]) -> Self:
         str_components = self._components_to_str(components)
         self._key = self.separator.join([self._key, *str_components] if self._key else str_components)
         return self
 
-    def __add__(self, other: Self | str) -> Self:
+    def __add__(self, other: Union[Self, str]) -> Self:
         if isinstance(other, str):
             return self.__class__((self._key, other))
         return self.__class__((self._key, other._key))
@@ -217,7 +219,7 @@ class FilterFunctionInfo:
     comparison_type: type[GraphQLComparison]
     require_arguments: bool = True
 
-    field_name_: str | None = None
+    field_name_: Optional[str] = None
 
     @property
     def field_name(self) -> str:
@@ -232,7 +234,7 @@ class GraphQLFieldDefinition(DTOFieldDefinition[DeclarativeBase, QueryableAttrib
     is_function: bool = False
     is_function_arg: bool = False
 
-    _function: FunctionInfo | None = None
+    _function: Optional[FunctionInfo] = None
 
     def _hash_identity(self) -> Hashable:
         return (
@@ -262,15 +264,15 @@ class GraphQLFieldDefinition(DTOFieldDefinition[DeclarativeBase, QueryableAttrib
         return self.is_function or self.is_function_arg or self.is_aggregate
 
     @overload
-    def function(self, strict: Literal[False]) -> FunctionInfo | None: ...
+    def function(self, strict: Literal[False]) -> Optional[FunctionInfo]: ...
 
     @overload
     def function(self, strict: Literal[True]) -> FunctionInfo: ...
 
     @overload
-    def function(self, strict: bool = False) -> FunctionInfo | None: ...
+    def function(self, strict: bool = False) -> Optional[FunctionInfo]: ...
 
-    def function(self, strict: bool = False) -> FunctionInfo | None:
+    def function(self, strict: bool = False) -> Optional[FunctionInfo]:
         if not strict:
             return self._function
         if self._function is None:
@@ -311,7 +313,7 @@ class FunctionFieldDefinition(GraphQLFieldDefinition):
         cls,
         field_def: DTOFieldDefinition[ModelT, ModelFieldT],
         *,
-        function: FilterFunctionInfo | OutputFunctionInfo,
+        function: Union[FilterFunctionInfo, OutputFunctionInfo],
         **kwargs: Any,
     ) -> Self:
         return super().from_field(field_def, _function=function, **kwargs)
@@ -334,7 +336,7 @@ class FunctionArgFieldDefinition(FunctionFieldDefinition):
 
 @dataclass(eq=False)
 class QueryNode(Node[GraphQLFieldDefinition, QueryNodeMetadata]):
-    node_metadata: NodeMetadata[QueryNodeMetadata] | None = dataclasses.field(
+    node_metadata: Optional[NodeMetadata[QueryNodeMetadata]] = dataclasses.field(
         default_factory=lambda: NodeMetadata(QueryNodeMetadata())
     )
     graph_metadata: GraphMetadata[QueryGraphMetadata] = dataclasses.field(
@@ -359,7 +361,7 @@ class QueryNode(Node[GraphQLFieldDefinition, QueryNodeMetadata]):
         cls,
         left: AnyNode,
         right: AnyNode,
-        match_on: Callable[[AnyNode, AnyNode], bool] | MatchOn,
+        match_on: Union[Callable[[AnyNode, AnyNode], bool], MatchOn],
     ) -> bool:
         if match_on == "value_equality":
             return left.value.model is right.value.model and left.value.model_field_name == right.value.model_field_name
@@ -370,7 +372,7 @@ class QueryNode(Node[GraphQLFieldDefinition, QueryNodeMetadata]):
         cls,
         model: type[DeclarativeBase],
         root_aggregations: bool = False,
-        strawberry_type: type[Any] | None = None,
+        strawberry_type: Optional[type[Any]] = None,
     ) -> Self:
         root_name = camel_to_snake(model.__name__)
         field_def = GraphQLFieldDefinition(
@@ -397,14 +399,14 @@ class AggregationFilter:
     function_info: FilterFunctionInfo
     predicate: EqualityComparison[Any]
     field_node: QueryNodeType
-    distinct: bool | None = None
+    distinct: Optional[bool] = None
 
 
 @dataclass
 class Filter:
-    and_: list[Self | GraphQLComparison | AggregationFilter] = dataclasses.field(default_factory=list)
+    and_: list[Union[Union[Self, GraphQLComparison], AggregationFilter]] = dataclasses.field(default_factory=list)
     or_: list[Self] = dataclasses.field(default_factory=list)
-    not_: Self | None = None
+    not_: Optional[Self] = None
 
     def __bool__(self) -> bool:
         return bool(self.and_ or self.or_ or self.not_)
@@ -446,16 +448,16 @@ class AggregationFunctionFilterDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]
 
     arguments: list[_ArgumentValue]
     predicate: EqualityComparison[Any]
-    distinct: bool | None = None
+    distinct: Optional[bool] = None
 
 
 class OrderByDTO(GraphQLFilterDTO):
-    def tree(self, _node: QueryNodeType | None = None) -> QueryNodeType:
+    def tree(self, _node: Optional[QueryNodeType] = None) -> QueryNodeType:
         node = _node or QueryNode.root_node(self.__dto_model__)
         key = DTOKey.from_query_node(node)
 
         for name in self.dto_set_fields:
-            value: OrderByDTO | OrderByEnum = getattr(self, name)
+            value: Union[OrderByDTO, OrderByEnum] = getattr(self, name)
             field = self.__strawchemy_field_map__[key + name]
             if isinstance(field, FunctionFieldDefinition) and not field.has_model_field:
                 field.model_field = node.value.model_field
@@ -471,9 +473,9 @@ class OrderByDTO(GraphQLFilterDTO):
 class BooleanFilterDTO(GraphQLFilterDTO):
     and_: list[Self] = strawberry.field(default_factory=list, name="_and")
     or_: list[Self] = strawberry.field(default_factory=list, name="_or")
-    not_: Self | None = strawberry.field(default=strawberry.UNSET, name="_not")
+    not_: Optional[Self] = strawberry.field(default=strawberry.UNSET, name="_not")
 
-    def filters_tree(self, _node: QueryNodeType | None = None) -> tuple[QueryNodeType, Filter]:
+    def filters_tree(self, _node: Optional[QueryNodeType] = None) -> tuple[QueryNodeType, Filter]:
         node = _node or QueryNode.root_node(self.__dto_model__)
         key = DTOKey.from_query_node(node)
         query = Filter(
@@ -482,7 +484,7 @@ class BooleanFilterDTO(GraphQLFilterDTO):
             not_=self.not_.filters_tree(node)[1] if self.not_ else None,
         )
         for name in self.dto_set_fields:
-            value: EqualityComparison[Any] | BooleanFilterDTO | AggregateFilterDTO = getattr(self, name)
+            value: Union[Union[EqualityComparison[Any], BooleanFilterDTO], AggregateFilterDTO] = getattr(self, name)
             field = self.__strawchemy_field_map__[key + name]
             if isinstance(value, BooleanFilterDTO):
                 child, _ = node.upsert_child(field, match_on="value_equality")

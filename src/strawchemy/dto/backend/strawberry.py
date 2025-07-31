@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from inspect import getmodule
 from types import new_class
-from typing import TYPE_CHECKING, Any, TypeVar, get_origin
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, get_origin
 
 from typing_extensions import override
 
@@ -11,6 +11,7 @@ import strawberry
 from strawberry.types.field import StrawberryField
 from strawchemy.dto.base import DTOBackend, DTOBase, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOMissingType
+from strawchemy.utils import get_annotations
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -32,7 +33,7 @@ class MappedStrawberryDTO(MappedDTO[ModelT]): ...
 class FieldInfo:
     name: str
     type: Any
-    field: StrawberryField | DTOMissingType = DTO_MISSING
+    field: Union[StrawberryField, DTOMissingType] = DTO_MISSING
 
 
 class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
@@ -40,13 +41,13 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         self.dto_base = dto_base
         base_cls = origin if (origin := get_origin(dto_base)) else dto_base
         self._base_annotations = {
-            name: value for name, value in base_cls.__annotations__.items() if not self._is_private_attribute(name)
+            name: value for name, value in get_annotations(base_cls).items() if not self._is_private_attribute(name)
         }
 
     def _construct_field_info(self, field_def: DTOFieldDefinition[ModelT, ModelFieldT]) -> FieldInfo:
-        strawberry_field: StrawberryField | None = None
+        strawberry_field: Optional[StrawberryField] = None
         if not isinstance(field_def.default_factory, DTOMissingType):
-            if isinstance(field_def.default_factory(), list | tuple):
+            if isinstance(field_def.default_factory(), (list, tuple)):
                 strawberry_field = strawberry.field(default_factory=list)
             else:
                 strawberry_field = strawberry.field(default=strawberry.UNSET)
@@ -62,7 +63,7 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
 
     @override
     def copy(self, dto: type[AnnotatedDTOT], name: str) -> type[AnnotatedDTOT]:
-        annotations = dto.__annotations__
+        annotations = get_annotations(dto)
         attributes = {name: getattr(dto, name) for name in annotations if hasattr(dto, name)}
         attributes |= {
             name: value
@@ -84,7 +85,7 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         name: str,
         model: type[Any],
         field_definitions: Iterable[DTOFieldDefinition[Any, ModelFieldT]],
-        base: type[Any] | None = None,
+        base: Optional[type[Any]] = None,
         **kwargs: Any,
     ) -> type[AnnotatedDTOT]:
         fields: list[FieldInfo] = []
@@ -107,7 +108,7 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         }
         doc = f"DTO generated to be decorated by strawberry for {model.__name__} model"
         if base:
-            annotations |= base.__annotations__
+            annotations |= get_annotations(base)
             attributes |= {name: value for name, value in base.__dict__.items() if isinstance(value, StrawberryField)}
             doc = base.__doc__ or doc
 

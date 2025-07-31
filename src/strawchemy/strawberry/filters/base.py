@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, Union, cast
 
 from typing_extensions import override
 
@@ -35,7 +35,7 @@ class FilterProtocol(Protocol):
     comparison: GraphQLComparison
 
     def to_expressions(
-        self, dialect: Dialect, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
+        self, dialect: Dialect, model_attribute: Union[QueryableAttribute[Any], ColumnElement[Any]]
     ) -> list[ColumnElement[bool]]:
         return []
 
@@ -48,7 +48,7 @@ class EqualityFilter(FilterProtocol):
     def to_expressions(
         self,
         dialect: Dialect,
-        model_attribute: QueryableAttribute[Any] | ColumnElement[Any],
+        model_attribute: Union[QueryableAttribute[Any], ColumnElement[Any]],
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -74,7 +74,7 @@ class OrderFilter(EqualityFilter):
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
+        self, dialect: Dialect, model_attribute: Union[QueryableAttribute[Any], ColumnElement[Any]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
 
@@ -95,7 +95,7 @@ class TextFilter(OrderFilter):
     comparison: TextComparison
 
     def _like_expressions(
-        self, model_attribute: QueryableAttribute[str] | ColumnElement[str]
+        self, model_attribute: Union[QueryableAttribute[str], ColumnElement[str]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -111,7 +111,7 @@ class TextFilter(OrderFilter):
         return expressions
 
     def _regexp_expressions(
-        self, dialect: Dialect, model_attribute: QueryableAttribute[str] | ColumnElement[str]
+        self, dialect: Dialect, model_attribute: Union[QueryableAttribute[str], ColumnElement[str]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
         if self.comparison.regexp is not UNSET or self.comparison.nregexp is not UNSET:
@@ -135,7 +135,7 @@ class TextFilter(OrderFilter):
     def to_expressions(
         self,
         dialect: Dialect,
-        model_attribute: QueryableAttribute[str] | ColumnElement[str],
+        model_attribute: Union[QueryableAttribute[str], ColumnElement[str]],
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
         expressions.extend(self._like_expressions(model_attribute))
@@ -162,7 +162,7 @@ class JSONFilter(EqualityFilter):
     comparison: _JSONComparison
 
     def _postgres_json(
-        self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]
+        self, model_attribute: Union[ColumnElement[JSON], QueryableAttribute[JSON]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
         as_postgres_jsonb = type_coerce(model_attribute, pg.JSONB)
@@ -179,7 +179,9 @@ class JSONFilter(EqualityFilter):
             expressions.append(as_postgres_jsonb.has_any(sqla_cast(self.comparison.has_key_any, pg.ARRAY(Text))))
         return expressions
 
-    def _mysql_json(self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]) -> list[ColumnElement[bool]]:
+    def _mysql_json(
+        self, model_attribute: Union[ColumnElement[JSON], QueryableAttribute[JSON]]
+    ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
         as_mysql_json = type_coerce(model_attribute, mysql.JSON)
 
@@ -200,7 +202,7 @@ class JSONFilter(EqualityFilter):
         return expressions
 
     def _sqlite_json(
-        self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]
+        self, model_attribute: Union[ColumnElement[JSON], QueryableAttribute[JSON]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -228,7 +230,7 @@ class JSONFilter(EqualityFilter):
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: QueryableAttribute[JSON] | ColumnElement[JSON]
+        self, dialect: Dialect, model_attribute: Union[QueryableAttribute[JSON], ColumnElement[JSON]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
 
@@ -248,7 +250,7 @@ class ArrayFilter(EqualityFilter):
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[ARRAY[Any]] | QueryableAttribute[ARRAY[Any]]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[ARRAY[Any]], QueryableAttribute[ARRAY[Any]]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
         as_postgres_array = type_coerce(model_attribute, pg.ARRAY(cast("ARRAY[Any]", model_attribute.type).item_type))
@@ -264,10 +266,10 @@ class ArrayFilter(EqualityFilter):
 
 @dataclass(frozen=True)
 class BaseDateFilter(FilterProtocol):
-    comparison: DateComparison | DateTimeComparison
+    comparison: Union[DateComparison, DateTimeComparison]
 
     def _sqlite_date(
-        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[date], QueryableAttribute[date]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -316,7 +318,7 @@ class BaseDateFilter(FilterProtocol):
         return expressions
 
     def _postgres_date(
-        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[date], QueryableAttribute[date]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -346,7 +348,7 @@ class BaseDateFilter(FilterProtocol):
         return expressions
 
     def _mysql_date(
-        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[date], QueryableAttribute[date]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -377,7 +379,7 @@ class BaseDateFilter(FilterProtocol):
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[Any], QueryableAttribute[Any]]
     ) -> list[ColumnElement[bool]]:
         expressions = super().to_expressions(dialect, model_attribute)
         if dialect.name == "postgresql":
@@ -392,10 +394,10 @@ class BaseDateFilter(FilterProtocol):
 
 @dataclass(frozen=True)
 class BaseTimeFilter(FilterProtocol):
-    comparison: TimeComparison | DateTimeComparison
+    comparison: Union[TimeComparison, DateTimeComparison]
 
     def _sqlite_time(
-        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[date], QueryableAttribute[date]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -415,7 +417,7 @@ class BaseTimeFilter(FilterProtocol):
         return expressions
 
     def _extract_time(
-        self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[date], QueryableAttribute[date]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -430,7 +432,7 @@ class BaseTimeFilter(FilterProtocol):
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[Any] | QueryableAttribute[Any]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[Any], QueryableAttribute[Any]]
     ) -> list[ColumnElement[bool]]:
         expressions = super().to_expressions(dialect, model_attribute)
 
@@ -448,7 +450,7 @@ class TimeDeltaFilter(OrderFilter):
     _seconds_in_day: ClassVar[int] = 60 * 60 * 24
 
     def _postgres_interval(
-        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[timedelta], QueryableAttribute[timedelta]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -472,7 +474,7 @@ class TimeDeltaFilter(OrderFilter):
         return expressions
 
     def _mysql_interval(
-        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[timedelta], QueryableAttribute[timedelta]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -496,7 +498,7 @@ class TimeDeltaFilter(OrderFilter):
         return expressions
 
     def _sqlite_interval(
-        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[timedelta], QueryableAttribute[timedelta]]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -529,7 +531,7 @@ class TimeDeltaFilter(OrderFilter):
 
     @override
     def to_expressions(
-        self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
+        self, dialect: Dialect, model_attribute: Union[ColumnElement[timedelta], QueryableAttribute[timedelta]]
     ) -> list[ColumnElement[bool]]:
         expressions = super().to_expressions(dialect, model_attribute)
 

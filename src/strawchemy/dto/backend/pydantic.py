@@ -8,7 +8,7 @@ for generating DTOs from models, and support for mapping DTOs to SQLAlchemy mode
 from __future__ import annotations
 
 from inspect import getmodule
-from typing import TYPE_CHECKING, Annotated, Any, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, Optional, TypeVar
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, create_model
 from pydantic.fields import Field, FieldInfo
@@ -16,6 +16,7 @@ from typing_extensions import override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTO_MISSING, DTOMissingType
+from strawchemy.utils import get_annotations
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -57,7 +58,7 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         return Field(**kwargs)
 
     @override
-    def update_forward_refs(self, dto: type[PydanticDTOT], namespace: dict[str, type[PydanticDTOT]]) -> None | bool:
+    def update_forward_refs(self, dto: type[PydanticDTOT], namespace: dict[str, type[PydanticDTOT]]) -> Optional[bool]:
         dto.model_rebuild(_types_namespace=namespace, raise_errors=False)
 
     @override
@@ -66,17 +67,17 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         name: str,
         model: type[ModelT],
         field_definitions: Iterable[DTOFieldDefinition[ModelT, ModelFieldT]],
-        base: type[Any] | None = None,
-        config_dict: ConfigDict | None = None,
+        base: Optional[type[Any]] = None,
+        config_dict: Optional[ConfigDict] = None,
         docstring: bool = True,
         **kwargs: Any,
     ) -> type[PydanticDTOT]:
         fields: dict[str, tuple[Any, FieldInfo]] = {}
-        base_annotations = base.__annotations__ if base else {}
+        base_annotations = get_annotations(base) if base else {}
 
         for field_def in field_definitions:
             field_type = field_def.type_
-            validator: BeforeValidator | None = None
+            validator: Optional[BeforeValidator] = None
             if field_def.purpose_config.validator:
                 validator = BeforeValidator(field_def.purpose_config.validator)
             if validator:

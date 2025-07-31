@@ -18,6 +18,7 @@ from typing import (
     Optional,
     Protocol,
     TypeVar,
+    Union,
     cast,
     get_args,
     get_origin,
@@ -48,7 +49,7 @@ from .utils import config
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Hashable, Iterable, Mapping
-    from typing import Any
+    from typing import Any, Union
 
 
 __all__ = ("DTOFactory", "DTOFieldDefinition", "MappedDTO", "ModelInspector")
@@ -81,7 +82,10 @@ class VisitorProtocol(Protocol, Generic[ModelT]):
 @runtime_checkable
 class ToMappedProtocol(Protocol, Generic[ModelT]):
     def to_mapped(
-        self, visitor: VisitorProtocol[ModelT] | None = None, override: dict[str, Any] | None = None, level: int = 0
+        self,
+        visitor: Optional[VisitorProtocol[ModelT]] = None,
+        override: Optional[dict[str, Any]] = None,
+        level: int = 0,
     ) -> Any: ...
 
 
@@ -98,7 +102,10 @@ class MappedDTO(DTOBase[ModelT]):
     """Base class to define DTO mapping classes."""
 
     def to_mapped(
-        self, visitor: VisitorProtocol[ModelT] | None = None, override: dict[str, Any] | None = None, level: int = 0
+        self,
+        visitor: Optional[VisitorProtocol[ModelT]] = None,
+        override: Optional[dict[str, Any]] = None,
+        level: int = 0,
     ) -> ModelT:
         """Create an instance of `self.__d_model__`.
 
@@ -118,11 +125,14 @@ class MappedDTO(DTOBase[ModelT]):
                 continue
 
             if TYPE_CHECKING:
-                value: ModelT | ToMappedProtocol[Any] | list[ModelT] | list[ToMappedProtocol[Any]] | DTOMissingType
+                value: Union[
+                    Union[Union[Union[ModelT, ToMappedProtocol[Any]], list[ModelT]], list[ToMappedProtocol[Any]]],
+                    DTOMissingType,
+                ]
 
             value = getattr(self, name)
 
-            if isinstance(value, list | tuple):
+            if isinstance(value, (list, tuple)):
                 value = [
                     dto.to_mapped(visitor, level=level + 1)
                     if isinstance(dto, ToMappedProtocol)
@@ -160,7 +170,7 @@ class DTOBackend(Protocol, Generic[DTOBaseT]):
         name: str,
         model: type[Any],
         field_definitions: Iterable[DTOFieldDefinition[Any, Any]],
-        base: type[Any] | None = None,
+        base: Optional[type[Any]] = None,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
         """Build a Data transfer object (DTO) from an SQAlchemy model.
@@ -181,7 +191,7 @@ class DTOBackend(Protocol, Generic[DTOBaseT]):
         """
         raise NotImplementedError
 
-    def update_forward_refs(self, dto: type[DTOBaseT], namespace: dict[str, type[DTOBaseT]]) -> None | bool:
+    def update_forward_refs(self, dto: type[DTOBaseT], namespace: dict[str, type[DTOBaseT]]) -> Optional[bool]:
         """Update forward refs for the given DTO.
 
         Args:
@@ -212,7 +222,7 @@ class Reference(Generic[T, DTOBaseT]):
 class Relation(Generic[T, DTOBaseT]):
     model: type[T] = field(compare=True)
     name: str = field(compare=False)
-    dto: type[DTOBaseT] | None = field(default=None, compare=False)
+    dto: Optional[type[DTOBaseT]] = field(default=None, compare=False)
     forward_refs: list[Reference[T, DTOBaseT]] = field(default_factory=list, compare=False)
 
     @override
@@ -272,17 +282,17 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
     type_hint: Any
     is_relation: bool = False
     config: DTOFieldConfig = field(default_factory=DTOFieldConfig)
-    _model_field: ModelFieldT | DTOMissingType = DTO_MISSING
-    related_model: type[ModelT] | None = None
-    related_dto: type[DTOBase[ModelT]] | ForwardRef | None = None
+    _model_field: Union[ModelFieldT, DTOMissingType] = DTO_MISSING
+    related_model: Optional[type[ModelT]] = None
+    related_dto: Optional[Union[type[DTOBase[ModelT]], ForwardRef]] = None
     self_reference: bool = False
     uselist: bool = False
     init: bool = True
     type_hint_override: Any = DTO_MISSING
-    partial: bool | None = None
-    alias: str | None = None
+    partial: Optional[bool] = None
+    alias: Optional[str] = None
     default: Any = DTO_MISSING
-    default_factory: Callable[..., Any] | DTOMissingType = DTO_MISSING
+    default_factory: Union[Callable[..., Any], DTOMissingType] = DTO_MISSING
 
     _type: Any = DTO_MISSING
 
@@ -326,7 +336,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
         return not isinstance(self._model_field, DTOMissingType)
 
     @property
-    def model_identity(self) -> type[ModelT] | ModelFieldT:
+    def model_identity(self) -> Union[type[ModelT], ModelFieldT]:
         try:
             return self.model_field
         except DTOError:
@@ -345,7 +355,7 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
         if self._type is not DTO_MISSING:
             return self._type
         type_hint = self.type_hint_override if self.has_type_override else self.type_hint
-        return type_hint | None if self.partial else type_hint
+        return Optional[type_hint] if self.partial else type_hint
 
     @type_.setter
     def type_(self, value: Any) -> None:
@@ -387,7 +397,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         inspector: ModelInspector[ModelT, ModelFieldT],
         backend: DTOBackend[DTOBaseT],
         handle_cycles: bool = True,
-        type_map: dict[Any, Any] | None = None,
+        type_map: Optional[dict[Any, Any]] = None,
     ) -> None:
         """Initialize internal state to keep track of generated DTOs."""
         # Mapping of all existing dtos names to their class, both declared and generated
@@ -494,7 +504,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self,
         model: type[Any],
         name: str,
-        node: Node[Relation[Any, DTOBaseT], None] | None = None,
+        node: Optional[Node[Relation[Any, DTOBaseT], None]] = None,
     ) -> Node[Relation[Any, DTOBaseT], None]:
         return Node(Relation(model=model, name=name)) if node is None else node
 
@@ -524,10 +534,10 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         model: type[ModelT],
         dto_config: DTOConfig,
         node: Node[Relation[Any, DTOBaseT], None],
-        base: type[Any] | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
+        base: Optional[type[Any]] = None,
+        parent_field_def: Optional[DTOFieldDefinition[ModelT, ModelFieldT]] = None,
         raise_if_no_fields: bool = False,
-        backend_kwargs: dict[str, Any] | None = None,
+        backend_kwargs: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
         self_ref_fields: list[DTOFieldDefinition[ModelT, ModelFieldT]] = []
@@ -565,7 +575,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         return TYPING_NS | self.dtos
 
     def dto_name(
-        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, DTOBaseT], None] | None = None
+        self, base_name: str, dto_config: DTOConfig, node: Optional[Node[Relation[Any, DTOBaseT], None]] = None
     ) -> str:
         return f"{base_name}{dto_config.purpose.value.capitalize()}DTO"
 
@@ -574,7 +584,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         name: str,
         model: type[ModelT],
         dto_config: DTOConfig,
-        base: type[DTOBase[ModelT]] | None,
+        base: Optional[type[DTOBase[ModelT]]],
         node: Node[Relation[ModelT, DTOBaseT], None],
         raise_if_no_fields: bool = False,
         **factory_kwargs: Any,
@@ -616,12 +626,12 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self,
         model: type[ModelT],
         dto_config: DTOConfig,
-        base: type[Any] | None = None,
-        name: str | None = None,
-        parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
-        current_node: Node[Relation[Any, DTOBaseT], None] | None = None,
+        base: Optional[type[Any]] = None,
+        name: Optional[str] = None,
+        parent_field_def: Optional[DTOFieldDefinition[ModelT, ModelFieldT]] = None,
+        current_node: Optional[Node[Relation[Any, DTOBaseT], None]] = None,
         raise_if_no_fields: bool = False,
-        backend_kwargs: dict[str, Any] | None = None,
+        backend_kwargs: Optional[dict[str, Any]] = None,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
         """Build a Data transfer object (DTO) from an SQAlchemy model."""
@@ -671,12 +681,12 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self,
         model: type[ModelT],
         purpose: Purpose,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
+        include: Optional[IncludeFields] = None,
+        exclude: Optional[ExcludeFields] = None,
+        partial: Optional[bool] = None,
+        type_map: Optional[Mapping[Any, Any]] = None,
+        aliases: Optional[Mapping[str, str]] = None,
+        alias_generator: Optional[Callable[[str], str]] = None,
         **kwargs: Any,
     ) -> Callable[[type[Any]], type[DTOBaseT]]:
         def wrapper(class_: type[Any]) -> type[DTOBaseT]:

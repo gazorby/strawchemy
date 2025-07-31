@@ -5,7 +5,7 @@ import re
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from statistics import mean, pstdev, pvariance, stdev, variance
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Union
 from uuid import UUID
 
 from pydantic import TypeAdapter
@@ -63,11 +63,11 @@ def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> A
     """
     expected = value
 
-    if isinstance(value, datetime | date | time):
+    if isinstance(value, Union[Union[datetime, date], time]):
         expected = value.isoformat()
     elif isinstance(value, timedelta):
         expected = _TimeDeltaType.dump_python(value, mode="json")
-    elif isinstance(value, Decimal | UUID):
+    elif isinstance(value, Union[Decimal, UUID]):
         expected = str(value)
 
     if mode == "input":
@@ -77,7 +77,7 @@ def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> A
             expected = "false"
         elif isinstance(value, dict):
             expected = re.sub(r'"([^"]+)":', r"\g<1>:", json.dumps(value))
-        if isinstance(value, str | datetime | date | time):
+        if isinstance(value, Union[Union[Union[str, datetime], date], time]):
             expected = f'"{expected}"'
 
     return expected
@@ -97,8 +97,8 @@ def python_type(model: type[DeclarativeBase], col_name: str) -> type[Any]:
 
 def compute_aggregation(
     graphql_aggregation: Literal["max", "min", "sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
-    iterable: Iterable[int | float],
-) -> float | Decimal:
+    iterable: Iterable[Union[int, float]],
+) -> Union[float, Decimal]:
     if graphql_aggregation == "max":
         value = max(iterable)
     elif graphql_aggregation == "min":

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from typing import TYPE_CHECKING, Any, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
 from typing_extensions import Self, override
 
@@ -33,7 +33,7 @@ from strawchemy.strawberry.mutation.types import (
     ToOneInput,
 )
 from strawchemy.strawberry.typing import AggregateDTOT, GraphQLDTOT, InputType
-from strawchemy.utils import non_optional_type_hint, snake_to_camel
+from strawchemy.utils import get_annotations, non_optional_type_hint, snake_to_camel
 
 from .aggregations import AggregationInspector
 from .base import GraphQLDTOFactory, MappedGraphQLDTOT, StrawchemyMappedFactory, _ChildOptions
@@ -63,9 +63,9 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         mapper: Strawchemy,
         backend: DTOBackend[MappedGraphQLDTOT],
         handle_cycles: bool = True,
-        type_map: dict[Any, Any] | None = None,
-        aggregation_factory: AggregateDTOFactory[AggregateDTOT] | None = None,
-        order_by_factory: OrderByDTOFactory | None = None,
+        type_map: Optional[dict[Any, Any]] = None,
+        aggregation_factory: Optional[AggregateDTOFactory[AggregateDTOT]] = None,
+        order_by_factory: Optional[OrderByDTOFactory] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
@@ -96,8 +96,8 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
     def _update_fields(
         self,
         dto: type[GraphQLDTOT],
-        base: type[Any] | None,
-        pagination: bool | DefaultOffsetPagination = False,
+        base: Optional[type[Any]],
+        pagination: Union[bool, DefaultOffsetPagination] = False,
         order_by: bool = False,
     ) -> type[GraphQLDTOT]:
         attributes: dict[str, Any] = {}
@@ -123,7 +123,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                     root_field=False,
                     arguments=[
                         StrawberryArgument(
-                            JSON_PATH_KEY, None, type_annotation=StrawberryAnnotation(annotation=str | None)
+                            JSON_PATH_KEY, None, type_annotation=StrawberryAnnotation(annotation=Optional[str])
                         )
                     ],
                 )
@@ -134,8 +134,8 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             setattr(dto, name, value)
 
         if base:
-            dto.__annotations__ |= base.__annotations__
-            for name, value in base.__annotations__.items():
+            dto.__annotations__ |= get_annotations(base)
+            for name, value in get_annotations(base).items():
                 if not hasattr(base, name):
                     continue
                 setattr(dto, name, value)
@@ -155,7 +155,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
 
     @override
     def dto_name(
-        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None
+        self, base_name: str, dto_config: DTOConfig, node: Optional[Node[Relation[Any, MappedGraphQLDTOT], None]] = None
     ) -> str:
         return f"{base_name}{'Input' if dto_config.purpose is Purpose.WRITE else ''}Type"
 
@@ -165,12 +165,12 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         name: str,
         model: type[DeclarativeT],
         dto_config: DTOConfig,
-        base: type[DTOBase[DeclarativeBase]] | None,
+        base: Optional[type[DTOBase[DeclarativeBase]]],
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         raise_if_no_fields: bool = False,
         *,
         aggregations: bool = False,
-        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
+        field_map: Optional[dict[DTOKey, GraphQLFieldDefinition]] = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], None, None]:
         field_map = field_map if field_map is not None else {}
@@ -189,17 +189,17 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         self,
         model: type[DeclarativeT],
         dto_config: DTOConfig,
-        base: type[Any] | None = None,
-        name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
+        base: Optional[type[Any]] = None,
+        name: Optional[str] = None,
+        parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
+        current_node: Optional[Node[Relation[Any, MappedGraphQLDTOT], None]] = None,
         raise_if_no_fields: bool = False,
-        backend_kwargs: dict[str, Any] | None = None,
+        backend_kwargs: Optional[dict[str, Any]] = None,
         *,
-        child_options: _ChildOptions | None = None,
+        child_options: Optional[_ChildOptions] = None,
         aggregations: bool = True,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
+        description: Optional[str] = None,
+        directives: Optional[Sequence[object]] = (),
         override: bool = False,
         user_defined: bool = False,
         register_type: bool = True,
@@ -243,9 +243,9 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         mapper: Strawchemy,
         backend: DTOBackend[MappedGraphQLDTOT],
         handle_cycles: bool = True,
-        type_map: dict[Any, Any] | None = None,
-        type_factory: TypeDTOFactory[MappedGraphQLDTOT] | None = None,
-        aggregation_factory: AggregateDTOFactory[AggregateDTOT] | None = None,
+        type_map: Optional[dict[Any, Any]] = None,
+        type_factory: Optional[TypeDTOFactory[MappedGraphQLDTOT]] = None,
+        aggregation_factory: Optional[AggregateDTOFactory[AggregateDTOT]] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
@@ -256,7 +256,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
 
     @override
     def dto_name(
-        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None
+        self, base_name: str, dto_config: DTOConfig, node: Optional[Node[Relation[Any, MappedGraphQLDTOT], None]] = None
     ) -> str:
         return f"{base_name}Root"
 
@@ -266,11 +266,11 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         name: str,
         model: type[DeclarativeT],
         dto_config: DTOConfig,
-        base: type[DTOBase[DeclarativeBase]] | None,
+        base: Optional[type[DTOBase[DeclarativeBase]]],
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         raise_if_no_fields: bool = False,
         aggregations: bool = False,
-        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
+        field_map: Optional[dict[DTOKey, GraphQLFieldDefinition]] = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], None, None]:
         if not node.is_root:
@@ -302,12 +302,12 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         self,
         model: type[DeclarativeT],
         dto_config: DTOConfig,
-        base: type[Any] | None = None,
-        name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
+        base: Optional[type[Any]] = None,
+        name: Optional[str] = None,
+        parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
+        current_node: Optional[Node[Relation[Any, MappedGraphQLDTOT], None]] = None,
         raise_if_no_fields: bool = False,
-        backend_kwargs: dict[str, Any] | None = None,
+        backend_kwargs: Optional[dict[str, Any]] = None,
         *,
         aggregations: bool = True,
         **kwargs: Any,
@@ -334,8 +334,8 @@ class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
         mapper: Strawchemy,
         backend: DTOBackend[AggregateDTOT],
         handle_cycles: bool = True,
-        type_map: dict[Any, Any] | None = None,
-        aggregation_builder: AggregationInspector | None = None,
+        type_map: Optional[dict[Any, Any]] = None,
+        aggregation_builder: Optional[AggregationInspector] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
@@ -347,7 +347,7 @@ class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
 
     @override
     def dto_name(
-        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, AggregateDTOT], None] | None = None
+        self, base_name: str, dto_config: DTOConfig, node: Optional[Node[Relation[Any, AggregateDTOT], None]] = None
     ) -> str:
         return f"{base_name}Aggregate"
 
@@ -358,11 +358,11 @@ class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
         model: type[DeclarativeT],
         dto_config: DTOConfig,
         node: Node[Relation[Any, AggregateDTOT], None],
-        base: type[Any] | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
+        base: Optional[type[Any]] = None,
+        parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
         raise_if_no_fields: bool = False,
-        backend_kwargs: dict[str, Any] | None = None,
-        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
+        backend_kwargs: Optional[dict[str, Any]] = None,
+        field_map: Optional[dict[DTOKey, GraphQLFieldDefinition]] = None,
         **kwargs: Any,
     ) -> type[AggregateDTOT]:
         field_map = field_map if field_map is not None else {}
@@ -389,7 +389,7 @@ class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
 class DistinctOnFieldsDTOFactory(EnumDTOFactory):
     @override
     def dto_name(
-        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None
+        self, base_name: str, dto_config: DTOConfig, node: Optional[Node[Relation[Any, EnumDTO], None]] = None
     ) -> str:
         return f"{base_name}DistinctOnFields"
 
@@ -400,15 +400,15 @@ class UpsertConflictFieldsDTOFactory(EnumDTOFactory):
     def __init__(
         self,
         inspector: SQLAlchemyGraphQLInspector,
-        backend: UpsertConflictFieldsEnumDTOBackend | None = None,
+        backend: Optional[UpsertConflictFieldsEnumDTOBackend] = None,
         handle_cycles: bool = True,
-        type_map: dict[Any, Any] | None = None,
+        type_map: Optional[dict[Any, Any]] = None,
     ) -> None:
         super().__init__(inspector, backend or UpsertConflictFieldsEnumDTOBackend(inspector), handle_cycles, type_map)
 
     @override
     def dto_name(
-        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None
+        self, base_name: str, dto_config: DTOConfig, node: Optional[Node[Relation[Any, EnumDTO], None]] = None
     ) -> str:
         return f"{base_name}ConflictFields"
 
@@ -437,7 +437,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         mapper: Strawchemy,
         backend: DTOBackend[MappedGraphQLDTOT],
         handle_cycles: bool = True,
-        type_map: dict[Any, Any] | None = None,
+        type_map: Optional[dict[Any, Any]] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
@@ -525,7 +525,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
+        node: Optional[Node[Relation[Any, MappedGraphQLDTOT], None]] = None,
     ) -> str:
         return f"{node.root.value.model.__name__ if node else ''}{base_name}Input"
 
@@ -580,7 +580,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
             input_type = type_[  # pyright: ignore[reportInvalidTypeArguments]
                 identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields
             ]
-        return input_type if field_required and mode == "create" else input_type | None
+        return input_type if field_required and mode == "create" else Optional[input_type]
 
     @override
     def iter_field_definitions(
@@ -588,7 +588,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         name: str,
         model: type[DeclarativeT],
         dto_config: DTOConfig,
-        base: type[DTOBase[DeclarativeBase]] | None,
+        base: Optional[type[DTOBase[DeclarativeBase]]],
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         raise_if_no_fields: bool = False,
         *,
@@ -607,14 +607,14 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         self,
         model: type[DeclarativeT],
         dto_config: DTOConfig = read_partial,
-        base: type[Any] | None = None,
-        name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
+        base: Optional[type[Any]] = None,
+        name: Optional[str] = None,
+        parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
+        current_node: Optional[Node[Relation[Any, MappedGraphQLDTOT], None]] = None,
         raise_if_no_fields: bool = False,
-        backend_kwargs: dict[str, Any] | None = None,
+        backend_kwargs: Optional[dict[str, Any]] = None,
         *,
-        description: str | None = None,
+        description: Optional[str] = None,
         mode: InputType,
         **kwargs: Any,
     ) -> type[MappedGraphQLDTOT]:

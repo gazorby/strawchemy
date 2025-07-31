@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, Union
 
 from typing_extensions import TypeAlias
 
@@ -40,7 +40,7 @@ InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where", "
 class InsertData:
     model_type: type[DeclarativeBase]
     values: list[dict[str, Any]]
-    upsert_data: UpsertData | None = None
+    upsert_data: Optional[UpsertData] = None
 
     @property
     def is_upsert(self) -> bool:
@@ -60,7 +60,7 @@ class InsertData:
 
     def upsert_set(
         self, dialect: SupportedDialect, columns: ReadOnlyColumnCollection[str, KeyedColumnElement[Any]]
-    ) -> Mapping[Column[Any], KeyedColumnElement[Any] | Function[Any]]:
+    ) -> Mapping[Column[Any], Union[KeyedColumnElement[Any], Function[Any]]]:
         update_fields_set = {
             dto_field.field_definition.model_field_name for dto_field in self.upsert_data_or_raise.update_fields
         } or {name for value_dict in self.values for name in value_dict}
@@ -84,9 +84,9 @@ class InsertData:
 class MutationData(Generic[DeclarativeT]):
     mode: InsertOrUpdate
     input: Input[DeclarativeT]
-    dto_filter: BooleanFilterDTO | None = None
-    upsert_update_fields: list[EnumDTO] | None = None
-    upsert_conflict_fields: EnumDTO | None = None
+    dto_filter: Optional[BooleanFilterDTO] = None
+    upsert_update_fields: Optional[list[EnumDTO]] = None
+    upsert_conflict_fields: Optional[EnumDTO] = None
 
 
 class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
@@ -94,8 +94,8 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         self,
         model: type[DeclarativeT],
         session: SessionT,
-        statement: Select[tuple[DeclarativeT]] | None = None,
-        execution_options: dict[str, Any] | None = None,
+        statement: Optional[Select[tuple[DeclarativeT]]] = None,
+        execution_options: Optional[dict[str, Any]] = None,
         deterministic_ordering: bool = False,
     ) -> None:
         self.model = model
@@ -109,15 +109,15 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
     def _get_query_executor(
         self,
         executor_type: type[QueryExecutorT],
-        selection: QueryNodeType | None = None,
-        dto_filter: BooleanFilterDTO | None = None,
-        order_by: list[OrderByDTO] | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
-        distinct_on: list[EnumDTO] | None = None,
+        selection: Optional[QueryNodeType] = None,
+        dto_filter: Optional[BooleanFilterDTO] = None,
+        order_by: Optional[list[OrderByDTO]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        distinct_on: Optional[list[EnumDTO]] = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
-        execution_options: dict[str, Any] | None = None,
+        query_hooks: Optional[defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]]] = None,
+        execution_options: Optional[dict[str, Any]] = None,
     ) -> QueryExecutorT:
         transpiler = QueryTranspiler(
             self.model,
@@ -172,7 +172,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         for relation in data.relations:
             prop = relation.attribute
             if (
-                (not relation.set and relation.set is not None)
+                not relation.set
                 or not isinstance(prop, RelationshipProperty)
                 or relation.relation_type is not RelationType.TO_ONE
             ):

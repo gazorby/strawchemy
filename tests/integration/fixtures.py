@@ -7,7 +7,7 @@ import platform
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, Optional, Union, cast
 
 import pytest
 import sqlparse
@@ -704,7 +704,7 @@ def config(mapper: Strawchemy) -> Generator[StrawchemyConfig]:
 
 
 @pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[AnyAsyncQueryType | DefaultQuery]:
+def async_query(dialect: SupportedDialect) -> type[Union[AnyAsyncQueryType, DefaultQuery]]:
     if dialect == "postgresql":
         return postgres_types.AsyncQuery
     if dialect == "mysql":
@@ -715,7 +715,7 @@ def async_query(dialect: SupportedDialect) -> type[AnyAsyncQueryType | DefaultQu
 
 
 @pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[AnySyncQueryType | DefaultQuery]:
+def sync_query(dialect: SupportedDialect) -> type[Union[AnySyncQueryType, DefaultQuery]]:
     if dialect == "postgresql":
         return postgres_types.SyncQuery
     if dialect == "mysql":
@@ -726,7 +726,7 @@ def sync_query(dialect: SupportedDialect) -> type[AnySyncQueryType | DefaultQuer
 
 
 @pytest.fixture
-def async_mutation(dialect: SupportedDialect) -> type[AnyAsyncMutationType] | None:
+def async_mutation(dialect: SupportedDialect) -> Optional[type[AnyAsyncMutationType]]:
     if dialect == "postgresql":
         return postgres_types.AsyncMutation
     if dialect == "mysql":
@@ -737,7 +737,7 @@ def async_mutation(dialect: SupportedDialect) -> type[AnyAsyncMutationType] | No
 
 
 @pytest.fixture
-def sync_mutation(dialect: SupportedDialect) -> type[Any] | None:
+def sync_mutation(dialect: SupportedDialect) -> Optional[type[Any]]:
     if dialect == "postgresql":
         return postgres_types.SyncMutation
     if dialect == "mysql":
@@ -761,8 +761,8 @@ def query_tracker(request: FixtureRequest) -> QueryTracker:
 def any_query(
     sync_query: type[Any],
     async_query: type[Any],
-    async_mutation: type[Any] | None,
-    sync_mutation: type[Any] | None,
+    async_mutation: Optional[type[Any]],
+    sync_mutation: Optional[type[Any]],
     request: FixtureRequest,
 ) -> AnyQueryExecutor:
     if isinstance(request.param, AsyncSession):
@@ -784,7 +784,7 @@ def no_session_query(sync_query: type[Any]) -> SyncQueryExecutor:
 
 @dataclass
 class QueryInspector:
-    clause_element: Compiled | str | ClauseElement
+    clause_element: Union[Union[Compiled, str], ClauseElement]
     dialect: Dialect
     multiparams: list[dict[str, Any]] = dataclasses.field(default_factory=list)
     params: dict[str, Any] = dataclasses.field(default_factory=dict)
@@ -816,8 +816,8 @@ class QueryTracker:
 
     def _event_listener(
         self,
-        conn: Connection | AsyncConnection,
-        clauseelement: Compiled | str | ClauseElement,
+        conn: Union[Connection, AsyncConnection],
+        clauseelement: Union[Union[Compiled, str], ClauseElement],
         multiparams: list[dict[str, Any]],
         params: dict[str, Any],
         execution_options: dict[str, Any],
@@ -852,7 +852,10 @@ class QueryTracker:
         return iter(self.executions)
 
     def assert_statements(
-        self, count: int, statement_type: FilterableStatement | None = None, snapshot: SnapshotAssertion | None = None
+        self,
+        count: int,
+        statement_type: Optional[FilterableStatement] = None,
+        snapshot: Optional[SnapshotAssertion] = None,
     ) -> None:
         filtered = self.filter(statement_type) if statement_type is not None else self
         assert filtered.query_count == count

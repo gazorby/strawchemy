@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Optional, Union
 
 from pydantic import AfterValidator
 from strawchemy import Input, InputValidationError, Strawchemy, StrawchemySyncRepository, ValidationErrorType
@@ -50,7 +50,7 @@ class GroupCreateValidation:
 @strawchemy.pydantic.create(User, include="all")
 class UserCreateValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
-    group: GroupCreateValidation | None = strawberry.UNSET
+    group: Optional[GroupCreateValidation] = strawberry.UNSET
 
 
 @strawchemy.pydantic.pk_update(User, include="all")
@@ -65,24 +65,24 @@ class UserFilterValidation:
 
 @strawberry.type
 class Mutation:
-    create_user: UserType | ValidationErrorType = strawchemy.create(
+    create_user: Union[UserType, ValidationErrorType] = strawchemy.create(
         UserCreate, validation=PydanticValidation(UserCreateValidation)
     )
     missing_validation_in_type: UserType = strawchemy.create(
         UserCreate, validation=PydanticValidation(UserCreateValidation)
     )
-    update_users: list[UserType | ValidationErrorType] = strawchemy.update(
+    update_users: list[Union[UserType, ValidationErrorType]] = strawchemy.update(
         UserUpdate, filter_input=UserFilter, validation=PydanticValidation(UserFilterValidation)
     )
-    update_user_by_id: UserType | ValidationErrorType = strawchemy.update_by_ids(
+    update_user_by_id: Union[UserType, ValidationErrorType] = strawchemy.update_by_ids(
         UserPkUpdate, validation=PydanticValidation(UserPkUpdateValidation)
     )
-    update_user_by_ids: list[UserType | ValidationErrorType] = strawchemy.update_by_ids(
+    update_user_by_ids: list[Union[UserType, ValidationErrorType]] = strawchemy.update_by_ids(
         UserPkUpdate, validation=PydanticValidation(UserPkUpdateValidation)
     )
 
     @strawberry.field
-    def create_user_custom(self, info: strawberry.Info, data: UserCreate) -> UserType | ValidationErrorType:
+    def create_user_custom(self, info: strawberry.Info, data: UserCreate) -> Union[UserType, ValidationErrorType]:
         try:
             return (
                 StrawchemySyncRepository(UserType, info)
