@@ -79,7 +79,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.nox
+            .nox
           key: ${{ runner.os }}-nox-${{ matrix.session.session }}-${{hashFiles('**/uv.lock') }}-${{ hashFiles('**/noxfile.py') }}
           restore-keys: |
             ${{ runner.os }}-nox-${{ matrix.session.session }}-
