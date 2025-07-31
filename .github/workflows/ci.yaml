@@ -3,7 +3,6 @@ name: 🔂 Tests and linting
 env:
   COLUMNS: 120 # Makes the error summary table printed by pytest-pretty much easier to read
   PROJECT_NAME: "strawchemy"
-  UV_PYTHON_PREFERENCE: "only-managed"
 
 on:
   push:

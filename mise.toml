@@ -64,7 +64,7 @@ depends = ["install:pre-commit", "_install"]
 
 [tasks."install:test"]
 description = "Install dependencies and pre-commit hooks"
-run = "uv add nox nox-uv"
+run = "uv pip install nox nox-uv"
 
 [tasks."install:pre-commit"]
 description = "Install pre-commit hooks"
@@ -195,7 +195,8 @@ run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update
 description = "Run tests in CI"
 usage = 'arg "<session>"'
 depends = "install:test"
-run = "uv run nox -t tests -s '{{arg(name='session')}}' -- -n=2 {{  vars.ci_pytest_coverage_options}}"
+env = { UV_PYTHON_PREFERENCE = "only-managed" }
+run = "nox -t tests -s '{{arg(name='session')}}' -- -n=2 {{  vars.ci_pytest_coverage_options}}"
 
 [tasks."ci:lint"]
 description = "Lint CI yaml files"
@@ -205,7 +206,7 @@ run = "actionlint -shellcheck ''"
 description = "Output test matrix for CI"
 depends = "install:test"
 run = '''
-    uv run nox --json -t tests -t ci -l |
+    nox --json -t tests -t ci -l |
     jq 'map(
         {
         session,
@@ -220,7 +221,7 @@ run = '''
 [tasks."ci:test-sessions"]
 description = "Output test session names for CI"
 depends = "install:test"
-run = "uv run nox --json -t tests -l | jq 'map(.name) | unique'"
+run = "nox --json -t tests -l | jq 'map(.name) | unique'"
 
 # ###############
 # Linting
