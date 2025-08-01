@@ -1,7 +1,7 @@
 [env]
 PROJECT_NAME = "strawchemy"
 _.python.venv = { path = ".venv" }
-_.file = ".env.json"
+_.file = ".env"
 
 [tools]
 ruff = "latest"

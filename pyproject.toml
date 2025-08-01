@@ -62,6 +62,7 @@ dev = [
   { include-group = "aiosqlite" },
   "testapp",
   "debugpy",
+  "codeflash>=0.6.22",
 ]
 doc = ["git-cliff>=2.6.1"]
 lint = ["basedpyright", "ruff", "vulture"]
@@ -411,3 +412,11 @@ paths = ["src", "tests"]
 sort_by_size = true
 exclude = ["tests/fixtures.py", "tests/unit/schemas/mutations"]
 ignore_names = ["target"]
+
+[tool.codeflash]
+# All paths are relative to this pyproject.toml's directory.
+module-root = "src"
+tests-root = "tests"
+test-framework = "pytest"
+ignore-paths = []
+formatter-cmds = ["ruff check --exit-zero --fix $file", "ruff format $file"]
