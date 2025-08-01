@@ -163,7 +163,7 @@ Run tests with coverage
 
 - Depends: _install
 
-- **Usage**: `test:integration <test>…`
+- **Usage**: `test:integration [--python [python]] <test>…`
 - **Aliases**: `ti`
 
 Run integration tests
@@ -172,11 +172,17 @@ Run integration tests
 
 #### `<test>…`
 
+### Flags
+
+#### `--python [python]`
+
+**Default:** `3.13`
+
 ## `test:integration-all`
 
 - Depends: _install
 
-- **Usage**: `test:integration-all [test]`
+- **Usage**: `test:integration-all [--python [python]] [test]`
 - **Aliases**: `tia`
 
 Run integration tests on all supported python versions
@@ -185,11 +191,17 @@ Run integration tests on all supported python versions
 
 #### `[test]`
 
+### Flags
+
+#### `--python [python]`
+
+**Default:** `3.13`
+
 ## `test:integration-mysql`
 
 - Depends: _install
 
-- **Usage**: `test:integration-mysql <test>…`
+- **Usage**: `test:integration-mysql [--python [python]] <test>…`
 - **Aliases**: `ti-mysql`
 
 Run integration tests
@@ -198,11 +210,17 @@ Run integration tests
 
 #### `<test>…`
 
+### Flags
+
+#### `--python [python]`
+
+**Default:** `3.13`
+
 ## `test:integration-postgres`
 
 - Depends: _install
 
-- **Usage**: `test:integration-postgres <test>…`
+- **Usage**: `test:integration-postgres [--python [python]] <test>…`
 - **Aliases**: `ti-postgres`
 
 Run integration tests
@@ -211,11 +229,17 @@ Run integration tests
 
 #### `<test>…`
 
+### Flags
+
+#### `--python [python]`
+
+**Default:** `3.13`
+
 ## `test:integration-sqlite`
 
 - Depends: _install
 
-- **Usage**: `test:integration-sqlite <test>…`
+- **Usage**: `test:integration-sqlite [--python [python]] <test>…`
 - **Aliases**: `ti-sqlite`
 
 Run integration tests
@@ -224,11 +248,17 @@ Run integration tests
 
 #### `<test>…`
 
+### Flags
+
+#### `--python [python]`
+
+**Default:** `3.13`
+
 ## `test:integration:coverage`
 
 - Depends: _install
 
-- **Usage**: `test:integration:coverage [test]`
+- **Usage**: `test:integration:coverage [--python [python]] [test]`
 - **Aliases**: `tic`
 
 Run integration tests with coverage
@@ -237,11 +267,17 @@ Run integration tests with coverage
 
 #### `[test]`
 
+### Flags
+
+#### `--python [python]`
+
+**Default:** `3.13`
+
 ## `test:unit`
 
 - Depends: _install
 
-- **Usage**: `test:unit [test]`
+- **Usage**: `test:unit [--python [python]] [test]`
 - **Aliases**: `tu`
 
 Run unit tests
@@ -250,11 +286,17 @@ Run unit tests
 
 #### `[test]`
 
+### Flags
+
+#### `--python [python]`
+
+**Default:** `3.13`
+
 ## `test:unit-all`
 
 - Depends: _install
 
-- **Usage**: `test:unit-all [test]`
+- **Usage**: `test:unit-all [--python [python]] [test]`
 - **Aliases**: `tua`
 
 Run unit tests on all supported python versions
@@ -263,11 +305,17 @@ Run unit tests on all supported python versions
 
 #### `[test]`
 
+### Flags
+
+#### `--python [python]`
+
+**Default:** `3.13`
+
 ## `test:unit:coverage`
 
 - Depends: _install
 
-- **Usage**: `test:unit:coverage [test]`
+- **Usage**: `test:unit:coverage [--python [python]] [test]`
 - **Aliases**: `tuc`
 
 Run unit tests with coverage
@@ -276,70 +324,30 @@ Run unit tests with coverage
 
 #### `[test]`
 
+### Flags
+
+#### `--python [python]`
+
+**Default:** `3.13`
+
 ## `test:unit:no-extras`
 
 - Depends: _install
 
-- **Usage**: `test:unit:no-extras [test]`
+- **Usage**: `test:unit:no-extras [--python [python]] <test>…`
 - **Aliases**: `tug`
 
 Run unit tests without extras dependencies
 
 ### Arguments
 
-#### `[test]`
+#### `<test>…`
 
-## `test:unit:py10`
+### Flags
 
-- Depends: _install
+#### `--python [python]`
 
-- **Usage**: `test:unit:py10 [test]`
-- **Aliases**: `tu10`
-
-Run unit tests on python 3.10
-
-### Arguments
-
-#### `[test]`
-
-## `test:unit:py11`
-
-- Depends: _install
-
-- **Usage**: `test:unit:py11 [test]`
-- **Aliases**: `tu11`
-
-Run unit tests on python 3.11
-
-### Arguments
-
-#### `[test]`
-
-## `test:unit:py12`
-
-- Depends: _install
-
-- **Usage**: `test:unit:py12 [test]`
-- **Aliases**: `tu12`
-
-Run unit tests on python 3.12
-
-### Arguments
-
-#### `[test]`
-
-## `test:unit:py9`
-
-- Depends: _install
-
-- **Usage**: `test:unit:py9 [test]`
-- **Aliases**: `tu9`
-
-Run unit tests on python 3.9
-
-### Arguments
-
-#### `[test]`
+**Default:** `3.13`
 
 ## `test:update-snapshots`
 
