@@ -1,0 +1,43 @@
+name: ⚡ Codeflash
+
+on:
+  pull_request:
+    paths:
+      - "src/**"
+  workflow_dispatch:
+
+concurrency:
+  # Any new push to the PR will cancel the previous run, so that only the latest code is optimized
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  optimize:
+    name: Optimize new code in this PR
+    if: ${{ github.actor != 'codeflash-ai[bot]' }}
+    runs-on: ubuntu-latest
+    env:
+      CODEFLASH_API_KEY: ${{ secrets.CODEFLASH_API_KEY }}
+      CODEFLASH_PR_NUMBER: ${{ github.event.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable caching
+        uses: astral-sh/setup-uv@v6
+        id: uv
+        with:
+          enable-cache: true
+
+      - name: Install codeflash
+        id: install-codeflash
+        run: |
+          uv venv --allow-existing
+          uv add codeflash
+
+      - name: Run Codeflash to optimize code
+        id: optimize
+        run: |
+          codeflash
