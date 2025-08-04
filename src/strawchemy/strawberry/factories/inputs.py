@@ -295,7 +295,7 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
         dto.__dto_function_info__ = aggregation
         return self._mapper.registry.register_type(
             dto,
-            RegistryTypeInfo(dto.__name__, "input"),
+            RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config)),
             description=f"Boolean expression to compare {aggregation.function} aggregation.",
         )
 
@@ -388,7 +388,9 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             key + name: FunctionArgFieldDefinition.from_field(field, function=aggregation)
             for name, field in self.inspector.field_definitions(model, dto_config)
         }
-        return self._mapper.registry.register_type(dto, RegistryTypeInfo(dto.__name__, "input"))
+        return self._mapper.registry.register_type(
+            dto, RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config))
+        )
 
     def _order_by_aggregation(self, model: type[Any], dto_config: DTOConfig) -> type[OrderByDTO]:
         field_definitions: list[GraphQLFieldDefinition] = []
@@ -416,7 +418,9 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
 
         dto = self.backend.build(f"{model.__name__}AggregateOrderBy", model, field_definitions)
         dto.__strawchemy_field_map__ = {DTOKey([model, field.name]): field for field in field_definitions}
-        return self._mapper.registry.register_type(dto, RegistryTypeInfo(dto.__name__, "input"))
+        return self._mapper.registry.register_type(
+            dto, RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config))
+        )
 
     @override
     def _aggregation_field(

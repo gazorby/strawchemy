@@ -65,6 +65,15 @@ class _TypeReference:
     def _replace_contained_type(
         cls, container: StrawberryContainer, strawberry_type: type[WithStrawberryObjectDefinition]
     ) -> StrawberryContainer:
+        """Recursively replace the contained type in a StrawberryContainer.
+
+        Args:
+            container: The container to replace the type in.
+            strawberry_type: The type to replace with.
+
+        Returns:
+            A new container with the type replaced.
+        """
         container_copy = copy(container)
         if isinstance(container.of_type, StrawberryContainer):
             replaced = cls._replace_contained_type(container.of_type, strawberry_type)
@@ -74,6 +83,11 @@ class _TypeReference:
         return container_copy
 
     def _set_type(self, strawberry_type: Union[type[WithStrawberryObjectDefinition], StrawberryContainer]) -> None:
+        """Set the type of the referenced field or argument.
+
+        Args:
+            strawberry_type: The type to set.
+        """
         if isinstance(self.ref_holder, StrawberryField):
             self.ref_holder.type = strawberry_type
         self.ref_holder.type_annotation = StrawberryAnnotation(
@@ -82,6 +96,13 @@ class _TypeReference:
         )
 
     def update_type(self, strawberry_type: type[WithStrawberryObjectDefinition]) -> None:
+        """Update the type of the referenced field or argument.
+
+        If the referenced type is a container, it will recursively replace the contained type.
+
+        Args:
+            strawberry_type: The type to update to.
+        """
         if isinstance(self.ref_holder.type, StrawberryContainer):
             self._set_type(self._replace_contained_type(self.ref_holder.type, strawberry_type))
         else:
@@ -92,6 +113,7 @@ class _TypeReference:
 class RegistryTypeInfo:
     name: str
     graphql_type: GraphQLType
+    default_name: Optional[str] = None
     user_defined: bool = False
     override: bool = False
     pagination: Union[DefaultOffsetPagination, Literal[False]] = False
@@ -116,34 +138,68 @@ class StrawberryRegistry:
             lambda: defaultdict(list)
         )
         self._type_refs: defaultdict[Hashable, list[_TypeReference]] = defaultdict(list)
+        self._scoped_types: dict[Hashable, type[StrawchemyTypeWithStrawberryObjectDefinition]] = {}
         self._type_map: dict[RegistryTypeInfo, type[Any]] = {}
         self._names_map: defaultdict[GraphQLType, dict[str, RegistryTypeInfo]] = defaultdict(dict)
         self._tracked_type_names: defaultdict[GraphQLType, set[str]] = defaultdict(set)
 
-    def _update_references(self, field: Union[StrawberryField, StrawberryArgument], graphql_type: GraphQLType) -> None:
-        field_type_name: Optional[str] = None
-        for inner_type in strawberry_contained_types(field.type):
-            if field_type_def := get_object_definition(inner_type):
-                field_type_name = field_type_def.name
-            if field.type_annotation:
-                for type_ in self._inner_types(field.type_annotation.raw_annotation):
-                    if isinstance(type_, ForwardRef):
-                        field_type_name = type_.__forward_arg__
-                    elif isinstance(type_, str):
-                        field_type_name = type_
-                    else:
-                        continue
+    def _get_field_type_name(
+        self,
+        field: Union[StrawberryField, StrawberryArgument],
+        inner_type: Any,
+        graphql_type: GraphQLType,
+    ) -> Optional[str]:
+        """Get the type name of a field.
+
+        This will handle forward references and get the object definition if available.
+
+        Args:
+            field: The field or argument to get the type name from.
+            inner_type: The inner type of the field.
+            graphql_type: The graphql type of the field.
+
+        Returns:
+            The type name of the field, or None if it cannot be resolved.
+        """
+        if field.type_annotation:
+            for type_ in self._inner_types(field.type_annotation.raw_annotation):
+                if isinstance(type_, (str, ForwardRef)):
                     field.type_annotation.namespace = self.namespace(graphql_type)
-            if field_type_name:
-                type_ref = _TypeReference(field)
-                type_info = self.get(graphql_type, field_type_name, None)
-                if type_info and not type_info.exclude_from_scope:
-                    self._type_refs[type_info.scoped_id].append(type_ref)
-                if type_info is None or not type_info.override:
-                    self._forward_type_refs[graphql_type][field_type_name].append(type_ref)
-                else:
-                    type_ref.update_type(self._type_map[type_info])
-            if field_type_def:
+                    return type_.__forward_arg__ if isinstance(type_, ForwardRef) else type_
+
+        if field_type_def := get_object_definition(inner_type):
+            return field_type_def.name
+
+        return None
+
+    def _update_references(self, field: Union[StrawberryField, StrawberryArgument], graphql_type: GraphQLType) -> None:
+        """Update the references of a field.
+
+        This will resolve forward references and update the type of the field if necessary.
+
+        Args:
+            field: The field or argument to update the references of.
+            graphql_type: The graphql type of the field.
+        """
+        for inner_type in strawberry_contained_types(field.type):
+            field_type_name = self._get_field_type_name(field, inner_type, graphql_type)
+            if not field_type_name:
+                continue
+
+            type_ref = _TypeReference(field)
+            type_info = self.get(graphql_type, field_type_name, None)
+
+            if type_info and not type_info.exclude_from_scope:
+                self._type_refs[type_info.scoped_id].append(type_ref)
+                if scoped_type := self._scoped_types.get(type_info.scoped_id):
+                    type_ref.update_type(scoped_type)
+
+            if type_info is None or not type_info.override:
+                self._forward_type_refs[graphql_type][field_type_name].append(type_ref)
+            else:
+                type_ref.update_type(self._type_map[type_info])
+
+            if get_object_definition(inner_type):
                 self._track_references(inner_type, graphql_type)
 
     def _track_references(
@@ -152,6 +208,15 @@ class StrawberryRegistry:
         graphql_type: GraphQLType,
         force: bool = False,
     ) -> None:
+        """Track the references of a strawberry type.
+
+        This will recursively track the references of all fields and arguments of the given type.
+
+        Args:
+            strawberry_type: The type to track the references of.
+            graphql_type: The graphql type of the type.
+            force: Whether to force tracking the references even if the type has already been tracked.
+        """
         object_definition = get_object_definition(strawberry_type, strict=True)
         schema_name = self.strawberry_config.name_converter.get_name_from_type(strawberry_type)
         if not force and schema_name in self._tracked_type_names[graphql_type]:
@@ -167,14 +232,25 @@ class StrawberryRegistry:
             self._update_references(field, graphql_type)
 
     def _register_type(self, type_info: RegistryTypeInfo, strawberry_type: type[Any]) -> None:
+        """Register a type in the registry.
+
+        This will add the type to the namespace, update forward references, and track the references of the type.
+
+        Args:
+            type_info: The type info of the type to register.
+            strawberry_type: The type to register.
+        """
         self.namespace(type_info.graphql_type)[type_info.name] = strawberry_type
         if type_info.override or type_info.scope == "global":
             for reference in self._forward_type_refs[type_info.graphql_type][type_info.name]:
                 reference.update_type(strawberry_type)
+        self._track_references(strawberry_type, type_info.graphql_type, force=type_info.override)
         if type_info.scope == "global" and type_info.model:
+            if type_info.default_name:
+                self._namespaces[type_info.graphql_type][type_info.default_name] = strawberry_type
             for reference in self._type_refs[type_info.scoped_id]:
                 reference.update_type(strawberry_type)
-        self._track_references(strawberry_type, type_info.graphql_type, force=type_info.override)
+            self._scoped_types[type_info.scoped_id] = strawberry_type
         self._names_map[type_info.graphql_type][type_info.name] = type_info
         self._type_map[type_info] = strawberry_type
 
@@ -199,6 +275,16 @@ class StrawberryRegistry:
         return tuple(arg_types)
 
     def _get(self, type_info: RegistryTypeInfo) -> Optional[type[Any]]:
+        """Get a type from the registry.
+
+        This will return the type if it exists and is an override, or if it is not an override and a non-override type with the same info exists.
+
+        Args:
+            type_info: The type info of the type to get.
+
+        Returns:
+            The type if it exists, otherwise None.
+        """
         if (existing := self.get(type_info.graphql_type, type_info.name, None)) and existing.override:
             return self._type_map[existing]
         if not type_info.override and (existing := self._type_map.get(type_info)):
@@ -206,6 +292,13 @@ class StrawberryRegistry:
         return None
 
     def _check_conflicts(self, type_info: RegistryTypeInfo) -> None:
+        """Check for conflicts in the registry.
+
+        This will raise a ValueError if a conflict is found.
+
+        Args:
+            type_info: The type info to check for conflicts with.
+        """
         if (
             self.non_override_exists(type_info)
             or self.namespace("enum").get(type_info.name)

@@ -65,7 +65,7 @@ MappedGraphQLDTOT = TypeVar("MappedGraphQLDTOT", bound="MappedGraphQLDTO[Any]")
 UnmappedGraphQLDTOT = TypeVar("UnmappedGraphQLDTOT", bound="UnmappedStrawberryGraphQLDTO[Any]")
 StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyDTOAttributes")
 
-TypeScope: TypeAlias = Literal["schema", "type"]
+TypeScope: TypeAlias = Literal["schema"]
 
 
 def type_scope_to_dto_scope(scope: TypeScope) -> DTOScope:
@@ -103,9 +103,11 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
     ) -> RegistryTypeInfo:
         child_options = child_options or _ChildOptions()
         graphql_type = self.graphql_type(dto_config)
-        model = dto.__dto_model__ if issubclass(dto, MappedStrawberryGraphQLDTO) else None  # type: ignore[reportGeneralTypeIssues]
+        model: type[DeclarativeBase] | None = dto.__dto_model__ if issubclass(dto, MappedStrawberryGraphQLDTO) else None  # type: ignore[reportGeneralTypeIssues]
+        default_name = self.root_dto_name(model, dto_config, current_node) if model else dto.__name__
         type_info = RegistryTypeInfo(
             name=dto.__name__,
+            default_name=default_name,
             graphql_type=graphql_type,
             override=override,
             user_defined=user_defined,

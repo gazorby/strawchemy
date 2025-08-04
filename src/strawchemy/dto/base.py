@@ -599,6 +599,11 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     ) -> str:
         return f"{base_name}{dto_config.purpose.value.capitalize()}DTO"
 
+    def root_dto_name(
+        self, model: type[ModelT], dto_config: DTOConfig, node: Optional[Node[Relation[Any, DTOBaseT], None]] = None
+    ) -> str:
+        return self.dto_name(model.__name__, dto_config, node)
+
     def iter_field_definitions(
         self,
         name: str,
@@ -658,7 +663,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         """Build a Data transfer object (DTO) from an SQAlchemy model."""
         dto_config = dto_config.with_base_annotations(base) if base else dto_config
         if not name:
-            name = base.__name__ if base else self.dto_name(model.__name__, dto_config, current_node)
+            name = base.__name__ if base else self.root_dto_name(model, dto_config, current_node)
         node = self._node_or_root(model, name, current_node)
 
         scoped_cache_key = self._scoped_cache_key(model, dto_config) if not dto_config.exclude_from_scope else DTOUnset
