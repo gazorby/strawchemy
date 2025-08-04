@@ -40,4 +40,4 @@ jobs:
       - name: Run Codeflash to optimize code
         id: optimize
         run: |
-          codeflash
+          uv run codeflash
