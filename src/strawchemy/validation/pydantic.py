@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
     from strawchemy.graph import Node
     from strawchemy.sqlalchemy.typing import DeclarativeT
-    from strawchemy.strawberry.typing import InputType
+    from strawchemy.strawberry.typing import GraphQLPurpose
 
 
 @dataclass
@@ -71,7 +71,7 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
         dto_config: DTOConfig,
         node: Node[Relation[DeclarativeBase, MappedPydanticGraphQLDTO[Any]], None],
         *,
-        mode: InputType,
+        mode: GraphQLPurpose,
         **factory_kwargs: Any,
     ) -> Any:
         if not field.is_relation:
@@ -85,7 +85,7 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
             self,
             model: type[DeclarativeT],
             *,
-            mode: InputType,
+            mode: GraphQLPurpose,
             include: Optional[IncludeFields] = None,
             exclude: Optional[ExcludeFields] = None,
             partial: Optional[bool] = None,
@@ -114,7 +114,7 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
         backend_kwargs: Optional[dict[str, Any]] = None,
         *,
         description: Optional[str] = None,
-        mode: InputType,
+        mode: GraphQLPurpose,
         **kwargs: Any,
     ) -> type[MappedPydanticGraphQLDTO[DeclarativeT]]:
         return super().factory(
@@ -156,9 +156,9 @@ class PydanticMapper:
         )
         """Factory for creating input validation Pydantic models."""
 
-        self.create = partial(self._validation_factory.input, mode="create")
+        self.create = partial(self._validation_factory.input, mode="create_input")
         """Generates a Pydantic model for 'create' input validation."""
-        self.pk_update = partial(self._validation_factory.input, mode="update_by_pk")
+        self.pk_update = partial(self._validation_factory.input, mode="update_by_pk_input")
         """Generates a Pydantic model for 'update_by_pk' input validation."""
-        self.filter_update = partial(self._validation_factory.input, mode="update_by_filter")
+        self.filter_update = partial(self._validation_factory.input, mode="update_by_filter_input")
         """Generates a Pydantic model for 'update_by_filter' input validation."""

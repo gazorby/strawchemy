@@ -341,7 +341,7 @@
     updateFields: [GroupColorUpdateFields!]
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input GroupColorInput {
     fruits: GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyUpdateInput
     name: String
@@ -380,7 +380,7 @@
     id: UUIDGenericComparison
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input GroupFruitInput {
     name: String
     sweetness: Int
@@ -430,7 +430,7 @@
     name
   }
   
-  """GraphQL update_by_filter input type"""
+  """Filter update input"""
   input GroupPartial {
     tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsRequiredToOneInput
     users: GroupUsersIdFieldsInputGroupUserInputGroupUsersUpdateFieldsGroupUsersConflictFieldsToManyUpdateInput
@@ -479,7 +479,7 @@
     updateFields: [GroupTagUpdateFields!]
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input GroupTagInput {
     name: String
     id: UUID!
@@ -505,7 +505,7 @@
     id: UUID!
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input GroupUpdate {
     tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsRequiredToOneInput
     users: GroupUsersIdFieldsInputGroupUserInputGroupUsersUpdateFieldsGroupUsersConflictFieldsToManyUpdateInput
@@ -514,7 +514,7 @@
     id: UUID!
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input GroupUserInput {
     tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneInput
     name: String
@@ -621,7 +621,7 @@
     id: UUID!
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input SQLDataTypesUpdate {
     dateCol: Date
     timeCol: Time
@@ -713,7 +713,7 @@
     updateFields: [TagColorUpdateFields!]
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input TagColorInput {
     fruits: TagFruitsIdFieldsInputTagFruitInputTagFruitsUpdateFieldsTagFruitsConflictFieldsToManyUpdateInput
     name: String
@@ -731,7 +731,7 @@
     id
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input TagFruitInput {
     name: String
     sweetness: Int
@@ -772,7 +772,7 @@
     id
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input TagGroupInput {
     users: TagUsersIdFieldsInputTagUserInputTagUsersUpdateFieldsTagUsersConflictFieldsToManyUpdateInput
     color: TagColorIdFieldsInputTagColorInputTagColorUpdateFieldsTagColorConflictFieldsRequiredToOneInput
@@ -861,14 +861,14 @@
     id: UUID!
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input TagUpdate {
     groups: TagGroupsIdFieldsInputTagGroupInputTagGroupsUpdateFieldsTagGroupsConflictFieldsRequiredToManyUpdateInput
     name: String
     id: UUID!
   }
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input TagUserInput {
     tag: TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneInput
     name: String

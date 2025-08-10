@@ -171,7 +171,7 @@
     updatedAt
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input MilestoneCreate {
     projects: MilestoneProjectsIdFieldsInputProjectCreateMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyCreateInput
     name: String!
@@ -400,7 +400,7 @@
     updatedAt
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input ProjectCreate {
     name: String!
   }
@@ -768,7 +768,7 @@
     updatedAt
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input TicketCreate {
     project: TicketProjectIdFieldsInputTicketProjectInputTicketProjectUpdateFieldsTicketProjectConflictFieldsToOneInput = null
     name: String!
@@ -820,7 +820,7 @@
     updatedAt: OrderByEnum
   }
   
-  """GraphQL update_by_filter input type"""
+  """Filter update input"""
   input TicketPartial {
     project: TicketProjectIdFieldsInputTicketProjectInputTicketProjectUpdateFieldsTicketProjectConflictFieldsToOneInput
     name: String
@@ -880,7 +880,7 @@
   
   union TicketTypeValidationErrorType = TicketType | ValidationErrorType
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input TicketUpdate {
     project: TicketProjectIdFieldsInputTicketProjectInputTicketProjectUpdateFieldsTicketProjectConflictFieldsToOneInput
     name: String

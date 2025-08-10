@@ -25,7 +25,7 @@ from strawchemy.strawberry.dto import (
     OrderByDTO,
     OrderByEnum,
 )
-from strawchemy.strawberry.typing import AggregationFunction, GraphQLFilterDTOT
+from strawchemy.strawberry.typing import AggregationFunction, GraphQLFilterDTOT, GraphQLPurpose
 from strawchemy.utils import snake_to_camel
 
 from .aggregations import AggregationInspector
@@ -69,6 +69,7 @@ class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLD
         directives: Optional[Sequence[object]] = (),
         override: bool = False,
         purpose: Purpose = Purpose.READ,
+        mode: GraphQLPurpose = "filter",
         **kwargs: Any,
     ) -> Callable[[type[Any]], type[UnmappedGraphQLDTOT]]:
         return self._input_wrapper(
@@ -84,6 +85,7 @@ class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLD
             directives=directives,
             override=override,
             purpose=purpose,
+            mode=mode,
             **kwargs,
         )
 

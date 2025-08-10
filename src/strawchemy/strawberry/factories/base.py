@@ -42,7 +42,7 @@ from strawchemy.strawberry.dto import (
     StrawchemyDTOAttributes,
     UnmappedStrawberryGraphQLDTO,
 )
-from strawchemy.strawberry.typing import GraphQLDTOT, InputType, MappedGraphQLDTO
+from strawchemy.strawberry.typing import GraphQLDTOT, GraphQLPurpose, MappedGraphQLDTO
 from strawchemy.types import DefaultOffsetPagination
 from strawchemy.utils import get_annotations
 
@@ -189,6 +189,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         aliases: Optional[Mapping[str, str]] = None,
         alias_generator: Optional[Callable[[str], str]] = None,
         scope: Optional[DTOScope] = None,
+        tags: Optional[set[str]] = None,
     ) -> DTOConfig:
         return config(
             purpose,
@@ -199,11 +200,14 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
             alias_generator=alias_generator,
             aliases=aliases,
             scope=scope,
+            tags=tags,
         )
 
     def _type_wrapper(
         self,
         model: type[T],
+        *,
+        mode: GraphQLPurpose,
         include: Optional[IncludeFields] = None,
         exclude: Optional[ExcludeFields] = None,
         partial: Optional[bool] = None,
@@ -232,6 +236,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 alias_generator=alias_generator,
                 aliases=aliases,
                 scope=scope,
+                tags={mode},
             )
             dto = self.factory(
                 model=model,
@@ -243,12 +248,14 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 query_hook=query_hook,
                 override=override,
                 user_defined=True,
+                mode=mode,
                 child_options=_ChildOptions(pagination=child_pagination, order_by=child_order_by),
             )
             dto.__strawchemy_query_hook__ = query_hook
             if issubclass(dto, MappedStrawberryGraphQLDTO):
                 dto.__strawchemy_filter__ = filter_input
                 dto.__strawchemy_order_by__ = order_by
+            dto.__strawchemy_purpose__ = mode
             return dto
 
         return wrapper
@@ -257,7 +264,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         self,
         model: type[T],
         *,
-        mode: Optional[InputType] = None,
+        mode: GraphQLPurpose,
         include: Optional[IncludeFields] = None,
         exclude: Optional[ExcludeFields] = None,
         partial: Optional[bool] = None,
@@ -282,6 +289,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 alias_generator=alias_generator,
                 aliases=aliases,
                 scope=scope,
+                tags={mode},
             )
             dto = self.factory(
                 model=model,
@@ -295,7 +303,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 mode=mode,
                 **kwargs,
             )
-            dto.__strawchemy_input_type__ = mode
+            dto.__strawchemy_purpose__ = mode
             return dto
 
         return wrapper
@@ -391,22 +399,22 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
 
 
 class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
-    def _root_input_config(self, model: type[Any], dto_config: DTOConfig, mode: InputType) -> DTOConfig:
+    def _root_input_config(self, model: type[Any], dto_config: DTOConfig, mode: GraphQLPurpose) -> DTOConfig:
         annotations_overrides: dict[str, Any] = {}
         partial = dto_config.partial
         exclude_defaults = dto_config.exclude_defaults
         id_fields = self.inspector.id_field_definitions(model, dto_config)
         # Add PKs for update/delete inputs
-        if mode == "update_by_pk":
+        if mode == "update_by_pk_input":
             if set(dto_config.exclude) & {name for name, _ in id_fields}:
                 msg = (
                     "You cannot exclude primary key columns from an input type intended for create or update mutations"
                 )
                 raise StrawchemyError(msg)
             annotations_overrides |= {name: field.type_hint for name, field in id_fields}
-        if mode == "update_by_filter":
+        if mode == "update_by_filter_input":
             exclude_defaults = True
-        if mode in {"update_by_pk", "update_by_filter"}:
+        if mode in {"update_by_pk_input", "update_by_filter_input"}:
             partial = True
         # Exclude default generated PKs for create inputs, if not explicitly included
         elif dto_config.include == "all":
@@ -425,6 +433,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
     def type(
         self,
         model: type[T],
+        *,
         include: Optional[IncludeFields] = None,
         exclude: Optional[ExcludeFields] = None,
         partial: Optional[bool] = None,
@@ -442,6 +451,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         override: bool = False,
         purpose: Purpose = Purpose.READ,
         scope: TypeScope | None = None,
+        mode: GraphQLPurpose = "type",
     ) -> Callable[[type[Any]], type[MappedGraphQLDTO[T]]]:
         return self._type_wrapper(
             model=model,
@@ -462,6 +472,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
             override=override,
             purpose=purpose,
             scope=type_scope_to_dto_scope(scope) if scope else None,
+            mode=mode,
         )
 
     @dataclass_transform(order_default=True, kw_only_default=True)
@@ -469,7 +480,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         self,
         model: type[T],
         *,
-        mode: InputType,
+        mode: GraphQLPurpose,
         include: Optional[IncludeFields] = None,
         exclude: Optional[ExcludeFields] = None,
         partial: Optional[bool] = None,
@@ -515,10 +526,10 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         tags: Optional[set[str]] = None,
         backend_kwargs: Optional[dict[str, Any]] = None,
         *,
-        mode: Optional[InputType] = None,
+        mode: Optional[GraphQLPurpose] = None,
         **kwargs: Any,
     ) -> type[MappedGraphQLDTOT]:
-        if mode:
+        if mode and dto_config.purpose is Purpose.WRITE:
             dto_config = self._root_input_config(model, dto_config, mode)
         return super().factory(
             model,
@@ -590,6 +601,7 @@ class StrawchemyUnMappedDTOFactory(GraphQLDTOFactory[UnmappedGraphQLDTOT]):
         query_hook: Optional[Union[QueryHook[T], list[QueryHook[T]]]] = None,
         override: bool = False,
         purpose: Purpose = Purpose.READ,
+        mode: GraphQLPurpose = "type",
     ) -> Callable[[type[Any]], type[UnmappedStrawberryGraphQLDTO[T]]]:
         return self._type_wrapper(
             model=model,
@@ -609,4 +621,5 @@ class StrawchemyUnMappedDTOFactory(GraphQLDTOFactory[UnmappedGraphQLDTOT]):
             query_hook=query_hook,
             override=override,
             purpose=purpose,
+            mode=mode,
         )

@@ -43,6 +43,7 @@ def config(
     aliases: Optional[Mapping[str, str]] = None,
     alias_generator: Optional[Callable[[str], str]] = None,
     scope: Optional[DTOScope] = None,
+    tags: Optional[set[str]] = None,
 ) -> DTOConfig:
     config = DTOConfig(purpose, alias_generator=alias_generator, scope=scope)
     if exclude:
@@ -55,6 +56,8 @@ def config(
         config.aliases = aliases
     if partial is not None:
         config.partial = partial
+    if tags:
+        config.tags = tags
     return config
 
 

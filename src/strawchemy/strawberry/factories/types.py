@@ -32,7 +32,7 @@ from strawchemy.strawberry.mutation.types import (
     ToManyUpdateInput,
     ToOneInput,
 )
-from strawchemy.strawberry.typing import AggregateDTOT, GraphQLDTOT, InputType
+from strawchemy.strawberry.typing import AggregateDTOT, GraphQLDTOT, GraphQLPurpose
 from strawchemy.utils import get_annotations, non_optional_type_hint, snake_to_camel
 
 from .aggregations import AggregationInspector
@@ -503,6 +503,15 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         )
         return self._mapper.registry.register_enum(conflict_fields, name=name, description="Conflict fields enum")
 
+    def _description(self, mode: GraphQLPurpose) -> str:
+        if mode == "create_input":
+            return "Create input"
+        if mode == "update_by_pk_input":
+            return "Identifier update input"
+        if mode == "update_by_filter_input":
+            return "Filter update input"
+        return "Input"
+
     @override
     def _cache_key(
         self,
@@ -511,7 +520,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         node: Node[Relation[Any, MappedGraphQLDTOT], None],
         *,
         child_options: _ChildOptions,
-        mode: InputType,
+        mode: GraphQLPurpose,
         **factory_kwargs: Any,
     ) -> Hashable:
         return (
@@ -554,7 +563,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         *,
-        mode: InputType,
+        mode: GraphQLPurpose,
         **factory_kwargs: Any,
     ) -> Any:
         if not field.is_relation:
@@ -566,7 +575,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         upsert_conflict_fields = self._upsert_conflict_fields(field, node, dto_config)
 
         if field.uselist:
-            if mode == "create":
+            if mode == "create_input":
                 input_type = ToManyCreateInput[
                     identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields  # pyright: ignore[reportInvalidTypeArguments]
                 ]
@@ -584,7 +593,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
             input_type = type_[  # pyright: ignore[reportInvalidTypeArguments]
                 identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields
             ]
-        return input_type if field_required and mode == "create" else Optional[input_type]
+        return input_type if field_required and mode == "create_input" else Optional[input_type]
 
     @override
     def iter_field_definitions(
@@ -596,13 +605,13 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         raise_if_no_fields: bool = False,
         *,
-        mode: InputType,
+        mode: GraphQLPurpose,
         **factory_kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], None, None]:
         for field in super().iter_field_definitions(
             name, model, dto_config, base, node, raise_if_no_fields, mode=mode, **factory_kwargs
         ):
-            if mode == "update_by_pk" and self.inspector.is_primary_key(field.model_field):
+            if mode == "update_by_pk_input" and self.inspector.is_primary_key(field.model_field):
                 field.type_ = non_optional_type_hint(field.type_)
             yield field
 
@@ -620,7 +629,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         backend_kwargs: Optional[dict[str, Any]] = None,
         *,
         description: Optional[str] = None,
-        mode: InputType,
+        mode: GraphQLPurpose,
         **kwargs: Any,
     ) -> type[MappedGraphQLDTOT]:
         return super().factory(
@@ -633,7 +642,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
             raise_if_no_fields,
             tags=tags or set() | {mode},
             backend_kwargs=backend_kwargs,
-            description=description or f"GraphQL {mode} input type",
+            description=description or self._description(mode),
             mode=mode,
             **kwargs,
         )

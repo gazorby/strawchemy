@@ -46,7 +46,7 @@ if TYPE_CHECKING:
     from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
     from strawchemy.types import DefaultOffsetPagination
 
-    from .typing import GraphQLType, InputType
+    from .typing import GraphQLType
 
 
 __all__ = ("RegistryTypeInfo", "StrawberryRegistry")
@@ -120,12 +120,12 @@ class RegistryTypeInfo:
     order_by: bool = False
     scope: DTOScope | None = None
     model: type[DeclarativeBase] | None = None
-    input_type: InputType | None = None
+    tags: frozenset[str] = dataclasses.field(default_factory=frozenset)
     exclude_from_scope: bool = False
 
     @property
     def scoped_id(self) -> Hashable:
-        return (self.model, self.graphql_type, self.input_type)
+        return (self.model, self.graphql_type, self.tags)
 
 
 class StrawberryRegistry:

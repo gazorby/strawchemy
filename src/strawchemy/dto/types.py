@@ -163,6 +163,7 @@ class DTOConfig:
     alias_generator: Optional[Callable[[str], str]] = None
     scope: Optional[DTOScope] = None
     exclude_from_scope: bool = False
+    tags: set[str] = field(default_factory=set)
 
     def __post_init__(self) -> None:
         if self.aliases and self.alias_generator is not None:
@@ -189,6 +190,7 @@ class DTOConfig:
         partial_default: Union[Any, type[DTOUnset]] = DTOUnset,
         scope: Union[DTOScope, type[DTOUnset]] = DTOUnset,
         exclude_from_scope: Union[bool, type[DTOUnset]] = DTOUnset,
+        tags: Union[set[str], type[DTOUnset]] = DTOUnset,
     ) -> DTOConfig:
         """Create a copy of the DTOConfig with the specified changes."""
         if include is None and exclude is None:
@@ -212,6 +214,7 @@ class DTOConfig:
             partial_default=self.partial_default if partial_default is DTOUnset else partial_default,
             scope=self.scope if scope is DTOUnset else scope,
             exclude_from_scope=self.exclude_from_scope if exclude_from_scope is DTOUnset else exclude_from_scope,
+            tags=self.tags if tags is DTOUnset else tags,
         )
 
     def with_base_annotations(self, base: type[Any]) -> DTOConfig:
