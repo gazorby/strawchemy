@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import dataclasses
 from collections import defaultdict
-from copy import copy
 from enum import Enum
 from typing import (
     TYPE_CHECKING,
@@ -74,13 +73,15 @@ class _TypeReference:
         Returns:
             A new container with the type replaced.
         """
-        container_copy = copy(container)
         if isinstance(container.of_type, StrawberryContainer):
             replaced = cls._replace_contained_type(container.of_type, strawberry_type)
         else:
             replaced = strawberry_type
-        container_copy.of_type = replaced
-        return container_copy
+
+        new_container = type(container).__new__(type(container))
+        new_container.__dict__.update(container.__dict__)
+        new_container.of_type = replaced
+        return new_container
 
     def _set_type(self, strawberry_type: Union[type[WithStrawberryObjectDefinition], StrawberryContainer]) -> None:
         """Set the type of the referenced field or argument.
