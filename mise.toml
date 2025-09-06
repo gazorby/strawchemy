@@ -217,8 +217,7 @@ run = "uv run basedpyright"
 
 [tasks.vulture]
 description = "Run vulture"
-depends = "_install"
-run = "uv run vulture"
+run = "uv run --only-group lint vulture"
 
 [tasks.lint]
 description = "Lint the code"
