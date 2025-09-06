@@ -162,7 +162,7 @@ description = "Run tests in CI"
 usage = 'arg "<session>"'
 depends = "ci:install"
 env = { UV_PYTHON_PREFERENCE = "only-managed" }
-run = "nox -t tests -s '{{arg(name='session')}}' -- -n=2 {{  vars.ci_pytest_coverage_options}}"
+run = "nox -t tests -s '{{arg(name='session')}}' -- -n=2 {{vars.ci_pytest_coverage_options}}"
 
 [tasks."ci:lint"]
 description = "Lint CI yaml files"
