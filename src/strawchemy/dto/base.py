@@ -512,11 +512,11 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         return Node(Relation(model=model, name=name)) if node is None else node
 
     def _base_cache_key(self, dto_config: DTOConfig) -> Hashable:
-        return frozenset(
-            [
-                (dto_config.purpose, dto_config.partial, dto_config.alias_generator),
-                tuple(dto_config.type_overrides.items()),
-            ]
+        return (
+            dto_config.purpose,
+            dto_config.partial,
+            dto_config.alias_generator,
+            tuple(dto_config.type_overrides.items()),
         )
 
     def _root_cache_key(self, dto_config: DTOConfig) -> Hashable:
