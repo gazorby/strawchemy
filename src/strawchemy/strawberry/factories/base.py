@@ -101,10 +101,14 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         user_defined: bool = False,
         child_options: Optional[_ChildOptions] = None,
     ) -> RegistryTypeInfo:
-        child_options = child_options or _ChildOptions()
+        if child_options is None:
+            child_options = _ChildOptions()
         graphql_type = self.graphql_type(dto_config)
-        model: type[DeclarativeBase] | None = dto.__dto_model__ if issubclass(dto, MappedStrawberryGraphQLDTO) else None  # type: ignore[reportGeneralTypeIssues]
-        default_name = self.root_dto_name(model, dto_config, current_node) if model else dto.__name__
+        model = dto.__dto_model__ if issubclass(dto, MappedStrawberryGraphQLDTO) else None  # type: ignore[reportGeneralTypeIssues]
+        if model:
+            default_name = self.root_dto_name(model, dto_config, current_node)
+        else:
+            default_name = dto.__name__
         type_info = RegistryTypeInfo(
             name=dto.__name__,
             default_name=default_name,
@@ -118,6 +122,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
             exclude_from_scope=dto_config.exclude_from_scope,
         )
         if self._mapper.registry.name_clash(type_info) and current_node is not None:
+            # Efficient generator expression for join
             type_info = dataclasses.replace(
                 type_info, name="".join(node.value.name for node in current_node.path_from_root())
             )
