@@ -520,13 +520,13 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         )
 
     def _root_cache_key(self, dto_config: DTOConfig) -> Hashable:
-        root_key = [
-            frozenset(dto_config.include if dto_config.include != "all" else ()),
+        include = frozenset() if dto_config.include == "all" else frozenset(dto_config.include)
+        return (
+            include,
             frozenset(dto_config.exclude),
             frozenset(dto_config.aliases.items()),
             frozenset(dto_config.annotation_overrides.items()),
-        ]
-        return frozenset(key for key in root_key if key)
+        )
 
     def _scoped_cache_key(self, model: type[Any], dto_config: DTOConfig) -> Hashable:
         return frozenset(
