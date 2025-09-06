@@ -190,3 +190,5 @@ mise.local.toml
 *.sqlite
 
 .windsurf
+
+CLAUDE.md
