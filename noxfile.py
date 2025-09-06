@@ -17,7 +17,6 @@ here = Path(__file__).parent
 nox.options.default_venv_backend = "uv"
 nox.options.reuse_existing_virtualenvs = True
 nox.options.error_on_external_run = True
-nox.options.error_on_missing_interpreters = True
 
 
 @session(
