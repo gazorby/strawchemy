@@ -35,7 +35,7 @@ jobs:
         id: install-codeflash
         run: |
           uv venv --allow-existing
-          uv add codeflash
+          uv sync --only-group codeflash
 
       - name: Run Codeflash to optimize code
         id: optimize
