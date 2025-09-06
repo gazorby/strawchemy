@@ -171,9 +171,9 @@
     updatedAt
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input MilestoneCreate {
-    projects: MilestoneProjectsIdFieldsInputMilestoneProjectInputMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyCreateInput
+    projects: MilestoneProjectsIdFieldsInputProjectCreateMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyCreateInput
     name: String!
     id: UUID
   }
@@ -199,14 +199,6 @@
     updatedAt: OrderByEnum
   }
   
-  """GraphQL create input type"""
-  input MilestoneProjectInput {
-    tickets: MilestoneTicketsIdFieldsInputMilestoneTicketInputMilestoneTicketsUpdateFieldsMilestoneTicketsConflictFieldsToManyCreateInput
-    tag: MilestoneTagIdFieldsInputMilestoneTagInputMilestoneTagUpdateFieldsMilestoneTagConflictFieldsToOneInput = null
-    name: String!
-    id: UUID
-  }
-  
   """Conflict fields enum"""
   enum MilestoneProjectsConflictFields {
     id
@@ -218,16 +210,16 @@
   }
   
   """Add new or existing objects"""
-  input MilestoneProjectsIdFieldsInputMilestoneProjectInputMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyCreateInput {
+  input MilestoneProjectsIdFieldsInputProjectCreateMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyCreateInput {
     set: [MilestoneProjectsIdFieldsInput!]
     add: [MilestoneProjectsIdFieldsInput!]
-    create: [MilestoneProjectInput!]
-    upsert: MilestoneProjectsIdFieldsInputMilestoneProjectInputMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyUpsertInput
+    create: [ProjectCreate!]
+    upsert: MilestoneProjectsIdFieldsInputProjectCreateMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyUpsertInput
   }
   
   """Add new objects or update if existing"""
-  input MilestoneProjectsIdFieldsInputMilestoneProjectInputMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyUpsertInput {
-    create: [MilestoneProjectInput!]!
+  input MilestoneProjectsIdFieldsInputProjectCreateMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyUpsertInput {
+    create: [ProjectCreate!]!
     conflictFields: MilestoneProjectsConflictFields!
     updateFields: [MilestoneProjectsUpdateFields!]
   }
@@ -242,80 +234,6 @@
   
   enum MilestoneSumFieldsEnum {
     name
-  }
-  
-  """Conflict fields enum"""
-  enum MilestoneTagConflictFields {
-    id
-  }
-  
-  """Identifier input"""
-  input MilestoneTagIdFieldsInput {
-    id: UUID!
-  }
-  
-  """Add a new or existing object"""
-  input MilestoneTagIdFieldsInputMilestoneTagInputMilestoneTagUpdateFieldsMilestoneTagConflictFieldsToOneInput {
-    set: MilestoneTagIdFieldsInput
-    create: MilestoneTagInput
-    upsert: MilestoneTagIdFieldsInputMilestoneTagInputMilestoneTagUpdateFieldsMilestoneTagConflictFieldsToOneUpsertInput
-  }
-  
-  """Add new object or update if existing"""
-  input MilestoneTagIdFieldsInputMilestoneTagInputMilestoneTagUpdateFieldsMilestoneTagConflictFieldsToOneUpsertInput {
-    create: MilestoneTagInput!
-    conflictFields: MilestoneTagConflictFields
-    updateFields: [MilestoneTagUpdateFields!]
-  }
-  
-  """GraphQL create input type"""
-  input MilestoneTagInput {
-    name: String!
-    id: UUID
-  }
-  
-  """Update fields enum"""
-  enum MilestoneTagUpdateFields {
-    name
-    id
-  }
-  
-  """GraphQL create input type"""
-  input MilestoneTicketInput {
-    name: String!
-    id: UUID
-  }
-  
-  """Conflict fields enum"""
-  enum MilestoneTicketsConflictFields {
-    id
-  }
-  
-  """Identifier input"""
-  input MilestoneTicketsIdFieldsInput {
-    id: UUID!
-  }
-  
-  """Add new or existing objects"""
-  input MilestoneTicketsIdFieldsInputMilestoneTicketInputMilestoneTicketsUpdateFieldsMilestoneTicketsConflictFieldsToManyCreateInput {
-    set: [MilestoneTicketsIdFieldsInput!]
-    add: [MilestoneTicketsIdFieldsInput!]
-    create: [MilestoneTicketInput!]
-    upsert: MilestoneTicketsIdFieldsInputMilestoneTicketInputMilestoneTicketsUpdateFieldsMilestoneTicketsConflictFieldsToManyUpsertInput
-  }
-  
-  """Add new objects or update if existing"""
-  input MilestoneTicketsIdFieldsInputMilestoneTicketInputMilestoneTicketsUpdateFieldsMilestoneTicketsConflictFieldsToManyUpsertInput {
-    create: [MilestoneTicketInput!]!
-    conflictFields: MilestoneTicketsConflictFields!
-    updateFields: [MilestoneTicketsUpdateFields!]
-  }
-  
-  """Update fields enum"""
-  enum MilestoneTicketsUpdateFields {
-    name
-    projectId
-    id
   }
   
   """GraphQL type"""
@@ -482,13 +400,9 @@
     updatedAt
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input ProjectCreate {
-    tickets: ProjectTicketsIdFieldsInputProjectTicketInputProjectTicketsUpdateFieldsProjectTicketsConflictFieldsToManyCreateInput
-    milestone: ProjectMilestoneIdFieldsInputProjectMilestoneInputProjectMilestoneUpdateFieldsProjectMilestoneConflictFieldsToOneInput = null
-    tag: ProjectTagIdFieldsInputProjectTagInputProjectTagUpdateFieldsProjectTagConflictFieldsToOneInput = null
     name: String!
-    id: UUID
   }
   
   """
@@ -510,42 +424,6 @@
     id: UUIDGenericComparison
     createdAt: DateTimeComparison
     updatedAt: DateTimeComparison
-  }
-  
-  """Conflict fields enum"""
-  enum ProjectMilestoneConflictFields {
-    id
-  }
-  
-  """Identifier input"""
-  input ProjectMilestoneIdFieldsInput {
-    id: UUID!
-  }
-  
-  """Add a new or existing object"""
-  input ProjectMilestoneIdFieldsInputProjectMilestoneInputProjectMilestoneUpdateFieldsProjectMilestoneConflictFieldsToOneInput {
-    set: ProjectMilestoneIdFieldsInput
-    create: ProjectMilestoneInput
-    upsert: ProjectMilestoneIdFieldsInputProjectMilestoneInputProjectMilestoneUpdateFieldsProjectMilestoneConflictFieldsToOneUpsertInput
-  }
-  
-  """Add new object or update if existing"""
-  input ProjectMilestoneIdFieldsInputProjectMilestoneInputProjectMilestoneUpdateFieldsProjectMilestoneConflictFieldsToOneUpsertInput {
-    create: ProjectMilestoneInput!
-    conflictFields: ProjectMilestoneConflictFields
-    updateFields: [ProjectMilestoneUpdateFields!]
-  }
-  
-  """GraphQL create input type"""
-  input ProjectMilestoneInput {
-    name: String!
-    id: UUID
-  }
-  
-  """Update fields enum"""
-  enum ProjectMilestoneUpdateFields {
-    name
-    id
   }
   
   enum ProjectMinMaxDateTimeFieldsEnum {
@@ -607,80 +485,6 @@
   
   enum ProjectSumFieldsEnum {
     name
-  }
-  
-  """Conflict fields enum"""
-  enum ProjectTagConflictFields {
-    id
-  }
-  
-  """Identifier input"""
-  input ProjectTagIdFieldsInput {
-    id: UUID!
-  }
-  
-  """Add a new or existing object"""
-  input ProjectTagIdFieldsInputProjectTagInputProjectTagUpdateFieldsProjectTagConflictFieldsToOneInput {
-    set: ProjectTagIdFieldsInput
-    create: ProjectTagInput
-    upsert: ProjectTagIdFieldsInputProjectTagInputProjectTagUpdateFieldsProjectTagConflictFieldsToOneUpsertInput
-  }
-  
-  """Add new object or update if existing"""
-  input ProjectTagIdFieldsInputProjectTagInputProjectTagUpdateFieldsProjectTagConflictFieldsToOneUpsertInput {
-    create: ProjectTagInput!
-    conflictFields: ProjectTagConflictFields
-    updateFields: [ProjectTagUpdateFields!]
-  }
-  
-  """GraphQL create input type"""
-  input ProjectTagInput {
-    name: String!
-    id: UUID
-  }
-  
-  """Update fields enum"""
-  enum ProjectTagUpdateFields {
-    name
-    id
-  }
-  
-  """GraphQL create input type"""
-  input ProjectTicketInput {
-    name: String!
-    id: UUID
-  }
-  
-  """Conflict fields enum"""
-  enum ProjectTicketsConflictFields {
-    id
-  }
-  
-  """Identifier input"""
-  input ProjectTicketsIdFieldsInput {
-    id: UUID!
-  }
-  
-  """Add new or existing objects"""
-  input ProjectTicketsIdFieldsInputProjectTicketInputProjectTicketsUpdateFieldsProjectTicketsConflictFieldsToManyCreateInput {
-    set: [ProjectTicketsIdFieldsInput!]
-    add: [ProjectTicketsIdFieldsInput!]
-    create: [ProjectTicketInput!]
-    upsert: ProjectTicketsIdFieldsInputProjectTicketInputProjectTicketsUpdateFieldsProjectTicketsConflictFieldsToManyUpsertInput
-  }
-  
-  """Add new objects or update if existing"""
-  input ProjectTicketsIdFieldsInputProjectTicketInputProjectTicketsUpdateFieldsProjectTicketsConflictFieldsToManyUpsertInput {
-    create: [ProjectTicketInput!]!
-    conflictFields: ProjectTicketsConflictFields!
-    updateFields: [ProjectTicketsUpdateFields!]
-  }
-  
-  """Update fields enum"""
-  enum ProjectTicketsUpdateFields {
-    name
-    projectId
-    id
   }
   
   """GraphQL type"""
@@ -964,7 +768,7 @@
     updatedAt
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input TicketCreate {
     project: TicketProjectIdFieldsInputTicketProjectInputTicketProjectUpdateFieldsTicketProjectConflictFieldsToOneInput = null
     name: String!
@@ -985,42 +789,6 @@
     id: UUIDGenericComparison
     createdAt: DateTimeComparison
     updatedAt: DateTimeComparison
-  }
-  
-  """Conflict fields enum"""
-  enum TicketMilestoneConflictFields {
-    id
-  }
-  
-  """Identifier input"""
-  input TicketMilestoneIdFieldsInput {
-    id: UUID!
-  }
-  
-  """Add a new or existing object"""
-  input TicketMilestoneIdFieldsInputTicketMilestoneInputTicketMilestoneUpdateFieldsTicketMilestoneConflictFieldsToOneInput {
-    set: TicketMilestoneIdFieldsInput
-    create: TicketMilestoneInput
-    upsert: TicketMilestoneIdFieldsInputTicketMilestoneInputTicketMilestoneUpdateFieldsTicketMilestoneConflictFieldsToOneUpsertInput
-  }
-  
-  """Add new object or update if existing"""
-  input TicketMilestoneIdFieldsInputTicketMilestoneInputTicketMilestoneUpdateFieldsTicketMilestoneConflictFieldsToOneUpsertInput {
-    create: TicketMilestoneInput!
-    conflictFields: TicketMilestoneConflictFields
-    updateFields: [TicketMilestoneUpdateFields!]
-  }
-  
-  """GraphQL create input type"""
-  input TicketMilestoneInput {
-    name: String!
-    id: UUID
-  }
-  
-  """Update fields enum"""
-  enum TicketMilestoneUpdateFields {
-    name
-    id
   }
   
   enum TicketMinMaxDateTimeFieldsEnum {
@@ -1052,7 +820,7 @@
     updatedAt: OrderByEnum
   }
   
-  """GraphQL update_by_filter input type"""
+  """Filter update input"""
   input TicketPartial {
     project: TicketProjectIdFieldsInputTicketProjectInputTicketProjectUpdateFieldsTicketProjectConflictFieldsToOneInput
     name: String
@@ -1072,23 +840,15 @@
   """Add a new or existing object"""
   input TicketProjectIdFieldsInputTicketProjectInputTicketProjectUpdateFieldsTicketProjectConflictFieldsToOneInput {
     set: TicketProjectIdFieldsInput
-    create: TicketProjectInput
+    create: ProjectCreate
     upsert: TicketProjectIdFieldsInputTicketProjectInputTicketProjectUpdateFieldsTicketProjectConflictFieldsToOneUpsertInput
   }
   
   """Add new object or update if existing"""
   input TicketProjectIdFieldsInputTicketProjectInputTicketProjectUpdateFieldsTicketProjectConflictFieldsToOneUpsertInput {
-    create: TicketProjectInput!
+    create: ProjectCreate!
     conflictFields: TicketProjectConflictFields
     updateFields: [TicketProjectUpdateFields!]
-  }
-  
-  """GraphQL create input type"""
-  input TicketProjectInput {
-    milestone: TicketMilestoneIdFieldsInputTicketMilestoneInputTicketMilestoneUpdateFieldsTicketMilestoneConflictFieldsToOneInput = null
-    tag: TicketTagIdFieldsInputTicketTagInputTicketTagUpdateFieldsTicketTagConflictFieldsToOneInput = null
-    name: String!
-    id: UUID
   }
   
   """Update fields enum"""
@@ -1108,42 +868,6 @@
     name
   }
   
-  """Conflict fields enum"""
-  enum TicketTagConflictFields {
-    id
-  }
-  
-  """Identifier input"""
-  input TicketTagIdFieldsInput {
-    id: UUID!
-  }
-  
-  """Add a new or existing object"""
-  input TicketTagIdFieldsInputTicketTagInputTicketTagUpdateFieldsTicketTagConflictFieldsToOneInput {
-    set: TicketTagIdFieldsInput
-    create: TicketTagInput
-    upsert: TicketTagIdFieldsInputTicketTagInputTicketTagUpdateFieldsTicketTagConflictFieldsToOneUpsertInput
-  }
-  
-  """Add new object or update if existing"""
-  input TicketTagIdFieldsInputTicketTagInputTicketTagUpdateFieldsTicketTagConflictFieldsToOneUpsertInput {
-    create: TicketTagInput!
-    conflictFields: TicketTagConflictFields
-    updateFields: [TicketTagUpdateFields!]
-  }
-  
-  """GraphQL create input type"""
-  input TicketTagInput {
-    name: String!
-    id: UUID
-  }
-  
-  """Update fields enum"""
-  enum TicketTagUpdateFields {
-    name
-    id
-  }
-  
   """GraphQL type"""
   type TicketType {
     project: ProjectType
@@ -1156,7 +880,7 @@
   
   union TicketTypeValidationErrorType = TicketType | ValidationErrorType
   
-  """GraphQL update_by_pk input type"""
+  """Identifier update input"""
   input TicketUpdate {
     project: TicketProjectIdFieldsInputTicketProjectInputTicketProjectUpdateFieldsTicketProjectConflictFieldsToOneInput
     name: String

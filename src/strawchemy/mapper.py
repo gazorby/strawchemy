@@ -5,6 +5,7 @@ from functools import cached_property, partial
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, overload
 
 from strawberry.annotation import StrawberryAnnotation
+from strawberry.schema.config import StrawberryConfig
 from strawchemy.strawberry.factories.aggregations import EnumDTOFactory
 from strawchemy.strawberry.factories.enum import EnumDTOBackend, UpsertConflictFieldsEnumDTOBackend
 
@@ -81,7 +82,11 @@ class Strawchemy:
         pydantic (PydanticMapper): A mapper for generating Pydantic models.
     """
 
-    def __init__(self, config: Union[StrawchemyConfig, SupportedDialect]) -> None:
+    def __init__(
+        self,
+        config: Union[StrawchemyConfig, SupportedDialect],
+        strawberry_config: Optional[StrawberryConfig] = None,
+    ) -> None:
         """Initializes the Strawchemy instance.
 
         Sets up the configuration, registry, and various DTO factories
@@ -90,9 +95,11 @@ class Strawchemy:
         Args:
             config: A StrawchemyConfig instance or a supported dialect string
                     (e.g., "postgresql", "mysql") to initialize a default config.
+            strawberry_config: A StrawberryConfig instance to initialize the registry.
+                If not provided, a default StrawberryConfig will be used.
         """
         self.config = StrawchemyConfig(config) if isinstance(config, str) else config
-        self.registry = StrawberryRegistry()
+        self.registry = StrawberryRegistry(strawberry_config or StrawberryConfig())
 
         strawberry_backend = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO)
         enum_backend = EnumDTOBackend(self.config.auto_snake_case)
@@ -115,15 +122,15 @@ class Strawchemy:
         )
 
         self.filter = self._filter_factory.input
-        self.aggregate_filter = self._aggregate_filter_factory.input
+        self.aggregate_filter = partial(self._aggregate_filter_factory.input, mode="aggregate_filter")
         self.distinct_on = self._distinct_on_enum_factory.decorator
         self.input = self._input_factory.input
-        self.create_input = partial(self._input_factory.input, mode="create")
-        self.pk_update_input = partial(self._input_factory.input, mode="update_by_pk")
-        self.filter_update_input = partial(self._input_factory.input, mode="update_by_filter")
-        self.order = self._order_by_factory.input
+        self.create_input = partial(self._input_factory.input, mode="create_input")
+        self.pk_update_input = partial(self._input_factory.input, mode="update_by_pk_input")
+        self.filter_update_input = partial(self._input_factory.input, mode="update_by_filter_input")
+        self.order = partial(self._order_by_factory.input, mode="order_by")
         self.type = self._type_factory.type
-        self.aggregate = self._aggregation_factory.type
+        self.aggregate = partial(self._aggregation_factory.type, mode="aggregate_type")
         self.upsert_update_fields = self._enum_factory.input
         self.upsert_conflict_fields = self._upsert_conflict_factory.input
 

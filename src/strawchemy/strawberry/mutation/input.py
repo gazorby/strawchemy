@@ -284,7 +284,7 @@ class Input(Generic[InputModel]):
         for index, dto in enumerate(dtos):
             mapped = dto.to_mapped(
                 visitor=_InputVisitor(
-                    self, is_update=dto.__strawchemy_input_type__ in ("update_by_pk", "update_by_filter")
+                    self, is_update=dto.__strawchemy_purpose__ in ("update_by_pk_input", "update_by_filter_input")
                 ),
                 override=override,
             )

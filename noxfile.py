@@ -15,13 +15,17 @@ COMMON_PYTEST_OPTIONS = ["-n=2", "--showlocals", "-vv"]
 here = Path(__file__).parent
 
 nox.options.default_venv_backend = "uv"
-nox.options.reuse_existing_virtualenvs = True
 nox.options.error_on_external_run = True
 nox.options.error_on_missing_interpreters = True
 
 
 @session(
-    name="unit", python=SUPPORTED_PYTHON_VERSIONS, tags=["tests", "unit", "ci"], uv_groups=["test"], uv_all_extras=True
+    name="unit",
+    python=SUPPORTED_PYTHON_VERSIONS,
+    tags=["tests", "unit", "ci"],
+    uv_groups=["test"],
+    uv_all_extras=True,
+    uv_sync_locked=False,
 )
 def unit_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
@@ -35,6 +39,7 @@ def unit_tests(session: Session) -> None:
     tags=["tests", "unit", "ci"],
     uv_groups=["test"],
     uv_all_extras=False,
+    uv_sync_locked=False,
 )
 def unit_tests_no_extras(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
@@ -48,6 +53,7 @@ def unit_tests_no_extras(session: Session) -> None:
     tags=["tests", "docker", "integration"],
     uv_groups=["test"],
     uv_all_extras=True,
+    uv_sync_locked=False,
 )
 def integration_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
@@ -61,6 +67,7 @@ def integration_tests(session: Session) -> None:
     tags=["tests", "docker", "integration", "ci", "postgres"],
     uv_groups=["test"],
     uv_all_extras=True,
+    uv_sync_locked=False,
 )
 def integration_postgres_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
@@ -74,6 +81,7 @@ def integration_postgres_tests(session: Session) -> None:
     tags=["tests", "docker", "integration", "ci", "mysql"],
     uv_groups=["test"],
     uv_all_extras=True,
+    uv_sync_locked=False,
 )
 def integration_mysql_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
@@ -87,6 +95,7 @@ def integration_mysql_tests(session: Session) -> None:
     tags=["tests", "docker", "integration", "ci", "sqlite"],
     uv_groups=["test"],
     uv_all_extras=True,
+    uv_sync_locked=False,
 )
 def integration_sqlite_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)

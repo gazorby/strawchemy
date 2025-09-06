@@ -25,7 +25,7 @@ from strawchemy.strawberry.dto import (
     OrderByDTO,
     OrderByEnum,
 )
-from strawchemy.strawberry.typing import AggregationFunction, GraphQLFilterDTOT
+from strawchemy.strawberry.typing import AggregationFunction, GraphQLFilterDTOT, GraphQLPurpose
 from strawchemy.utils import snake_to_camel
 
 from .aggregations import AggregationInspector
@@ -69,6 +69,7 @@ class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLD
         directives: Optional[Sequence[object]] = (),
         override: bool = False,
         purpose: Purpose = Purpose.READ,
+        mode: GraphQLPurpose = "filter",
         **kwargs: Any,
     ) -> Callable[[type[Any]], type[UnmappedGraphQLDTOT]]:
         return self._input_wrapper(
@@ -84,6 +85,7 @@ class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLD
             directives=directives,
             override=override,
             purpose=purpose,
+            mode=mode,
             **kwargs,
         )
 
@@ -175,6 +177,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
         current_node: Optional[Node[Relation[Any, GraphQLFilterDTOT], None]] = None,
         raise_if_no_fields: bool = False,
+        tags: Optional[set[str]] = None,
         backend_kwargs: Optional[dict[str, Any]] = None,
         *,
         aggregate_filters: bool = True,
@@ -188,6 +191,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
             parent_field_def,
             current_node,
             raise_if_no_fields,
+            tags,
             backend_kwargs,
             aggregate_filters=aggregate_filters,
             **kwargs,
@@ -293,7 +297,7 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
         dto.__dto_function_info__ = aggregation
         return self._mapper.registry.register_type(
             dto,
-            RegistryTypeInfo(dto.__name__, "input"),
+            RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config)),
             description=f"Boolean expression to compare {aggregation.function} aggregation.",
         )
 
@@ -386,7 +390,9 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             key + name: FunctionArgFieldDefinition.from_field(field, function=aggregation)
             for name, field in self.inspector.field_definitions(model, dto_config)
         }
-        return self._mapper.registry.register_type(dto, RegistryTypeInfo(dto.__name__, "input"))
+        return self._mapper.registry.register_type(
+            dto, RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config))
+        )
 
     def _order_by_aggregation(self, model: type[Any], dto_config: DTOConfig) -> type[OrderByDTO]:
         field_definitions: list[GraphQLFieldDefinition] = []
@@ -414,7 +420,9 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
 
         dto = self.backend.build(f"{model.__name__}AggregateOrderBy", model, field_definitions)
         dto.__strawchemy_field_map__ = {DTOKey([model, field.name]): field for field in field_definitions}
-        return self._mapper.registry.register_type(dto, RegistryTypeInfo(dto.__name__, "input"))
+        return self._mapper.registry.register_type(
+            dto, RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config))
+        )
 
     @override
     def _aggregation_field(
@@ -449,6 +457,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
         current_node: Optional[Node[Relation[Any, OrderByDTO], None]] = None,
         raise_if_no_fields: bool = False,
+        tags: Optional[set[str]] = None,
         backend_kwargs: Optional[dict[str, Any]] = None,
         *,
         aggregate_filters: bool = True,
@@ -462,6 +471,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             parent_field_def,
             current_node,
             raise_if_no_fields,
+            tags,
             backend_kwargs,
             aggregate_filters=aggregate_filters,
             **kwargs,
