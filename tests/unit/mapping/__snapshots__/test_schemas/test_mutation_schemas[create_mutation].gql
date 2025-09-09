@@ -91,7 +91,7 @@
     updateFields: [GroupColorUpdateFields!]
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input GroupColorInput {
     fruits: GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyCreateInput
     name: String!
@@ -104,7 +104,7 @@
     id
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input GroupFruitInput {
     name: String!
     sweetness: Int!
@@ -144,7 +144,7 @@
     id
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input GroupInput {
     tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsRequiredToOneInput!
     users: GroupUsersIdFieldsInputGroupUserInputGroupUsersUpdateFieldsGroupUsersConflictFieldsToManyCreateInput
@@ -194,7 +194,7 @@
     updateFields: [GroupTagUpdateFields!]
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input GroupTagInput {
     name: String!
     id: UUID
@@ -220,7 +220,7 @@
     id: UUID!
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input GroupUserInput {
     tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneInput = null
     name: String!
@@ -288,7 +288,7 @@
     hello: String!
   }
   
-  """GraphQL create input type"""
+  """Create input"""
   input SQLDataTypesCreate {
     dateCol: Date!
     timeCol: Time!

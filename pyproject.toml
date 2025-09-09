@@ -1,6 +1,6 @@
 [project]
 name = "strawchemy"
-version = "0.18.0"
+version = "0.19.0"
 description = "Generate GraphQL API from SQLAlchemy models"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -8,33 +8,33 @@ license = { text = "MIT" }
 authors = [{ name = "gazorby", email = "gazorby@pm.me" }]
 keywords = ["API", "SQL", "graphql", "sqlalchemy", "strawberry"]
 classifiers = [
-  "Development Status :: 3 - Alpha",
-  "Environment :: Web Environment",
-  "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
-  "Natural Language :: English",
-  "Operating System :: OS Independent",
-  "Programming Language :: Python",
-  "Programming Language :: Python :: 3.9",
-  "Programming Language :: Python :: 3.10",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
-  "Topic :: Database",
-  "Topic :: Database :: Database Engines/Servers",
-  "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
-  "Topic :: Software Development",
-  "Topic :: Software Development :: Libraries",
-  "Topic :: Software Development :: Libraries :: Python Modules",
-  "Typing :: Typed",
+    "Development Status :: 3 - Alpha",
+    "Environment :: Web Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Database :: Database Engines/Servers",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
 dependencies = [
-  "msgspec",
-  "nox>=2025.5.1",
-  "nox-uv>=0.6.2",
-  "sqlalchemy>=2.0.10",
-  "strawberry-graphql",
-  "typing-extensions",
+    "msgspec",
+    "nox>=2025.5.1",
+    "nox-uv>=0.6.2",
+    "sqlalchemy>=2.0.10",
+    "strawberry-graphql",
+    "typing-extensions",
 ]
 
 [project.urls]
@@ -53,38 +53,38 @@ pydantic = ["pydantic"]
 aiosqlite = ["aiosqlite"]
 build = ["bump-my-version", "git-cliff", "unasyncd"]
 dev = [
-  { include-group = "build" },
-  { include-group = "test" },
-  { include-group = "lint" },
-  { include-group = "doc" },
-  { include-group = "postgres" },
-  { include-group = "mysql" },
-  { include-group = "aiosqlite" },
-  "testapp",
-  "debugpy",
-  "codeflash>=0.6.22",
+    { include-group = "build" },
+    { include-group = "test" },
+    { include-group = "lint" },
+    { include-group = "doc" },
+    { include-group = "postgres" },
+    { include-group = "mysql" },
+    { include-group = "aiosqlite" },
+    "testapp",
+    "debugpy",
 ]
+codeflash = ["codeflash"]
 doc = ["git-cliff>=2.6.1"]
 lint = ["basedpyright", "ruff", "vulture"]
 mysql = ["asyncmy", "cryptography"]
 postgres = ["asyncpg>=0.29.0", "psycopg[binary,pool]>=3.2.3"]
 test = [
-  { include-group = "postgres" },
-  { include-group = "mysql" },
-  { include-group = "aiosqlite" },
-  "testapp",
-  "nox[uv]",
-  "nox-uv",
-  "pytest",
-  "pytest-cov",
-  "pytest-asyncio>=0.24",
-  "pytest-pretty",
-  "pytest-xdist",
-  "pytest-databases[postgres,mysql]",
-  "pytest-lazy-fixtures",
-  "syrupy",
-  "sqlparse",
-  "covdefaults",
+    { include-group = "postgres" },
+    { include-group = "mysql" },
+    { include-group = "aiosqlite" },
+    "testapp",
+    "nox[uv]",
+    "nox-uv",
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio>=0.24",
+    "pytest-pretty",
+    "pytest-xdist",
+    "pytest-databases[postgres,mysql]",
+    "pytest-lazy-fixtures",
+    "syrupy",
+    "sqlparse",
+    "covdefaults",
 ]
 
 [build-system]
@@ -94,19 +94,19 @@ build-backend = "hatchling.build"
 [tool.basedpyright]
 venv = ".venv"
 exclude = [
-  "**/__pycache__",
-  "**/.hypothesis",
-  "**/.mypy_cache",
-  "**/.pytest_cache",
-  "**/.ruff_cache",
-  "**/.venv",
-  "**/.tox",
-  "**/.nox",
-  "**/build",
-  "**/dist",
-  "**/node_modules",
-  "**/cdk.out",
-  "**/alembic/versions",
+    "**/__pycache__",
+    "**/.hypothesis",
+    "**/.mypy_cache",
+    "**/.pytest_cache",
+    "**/.ruff_cache",
+    "**/.venv",
+    "**/.tox",
+    "**/.nox",
+    "**/build",
+    "**/dist",
+    "**/node_modules",
+    "**/cdk.out",
+    "**/alembic/versions",
 ]
 verboseOutput = true
 pythonVersion = "3.9"
@@ -126,7 +126,7 @@ strictGenericNarrowing = true
 allow_dirty = true
 commit = true
 commit_args = "--no-verify"
-current_version = "0.18.0"
+current_version = "0.19.0"
 ignore_missing_files = false
 ignore_missing_version = false
 message = "build(release): bump to v{new_version}"
@@ -236,7 +236,7 @@ footer = """
 trim = true
 # postprocessors
 postprocessors = [
-  # { pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" }, # replace repository URL
+    # { pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" }, # replace repository URL
 ]
 
 # render body even when there are no releases to process
@@ -253,30 +253,30 @@ filter_unconventional = true
 split_commits = false
 # regex for preprocessing the commit messages
 commit_preprocessors = [
-  # Replace issue numbers
-  # { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"},
-  # Check spelling of the commit with https://github.com/crate-ci/typos
-  # If the spelling is incorrect, it will be automatically fixed.
-  # { pattern = '.*', replace_command = 'typos --write-changes -' },
+    # Replace issue numbers
+    # { pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"},
+    # Check spelling of the commit with https://github.com/crate-ci/typos
+    # If the spelling is incorrect, it will be automatically fixed.
+    # { pattern = '.*', replace_command = 'typos --write-changes -' },
 ]
 # regex for parsing and grouping commits
 commit_parsers = [
-  { message = "^feat", group = "<!-- 0 -->🚀 Features" },
-  { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
-  { message = "^doc", group = "<!-- 3 -->📚 Documentation" },
-  { message = "^perf", group = "<!-- 4 -->⚡ Performance" },
-  { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
-  { message = "^style", group = "<!-- 5 -->🎨 Styling" },
-  { message = "^test", group = "<!-- 6 -->🧪 Testing" },
-  { message = "^build\\(release\\): prepare for", skip = true },
-  { message = "^build\\(deps.*\\)", skip = true },
-  { message = "^build\\(pr\\)", skip = true },
-  { message = "^build\\(pull\\)", skip = true },
-  { message = "^build|^ci", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
-  { body = ".*security", group = "<!-- 8 -->🛡️ Security" },
-  { message = "^revert", group = "<!-- 9 -->◀️ Revert" },
-  { message = ".*", group = "<!-- 10 -->💼 Other" },
-  { body = "$^", skip = true },
+    { message = "^feat", group = "<!-- 0 -->🚀 Features" },
+    { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
+    { message = "^doc", group = "<!-- 3 -->📚 Documentation" },
+    { message = "^perf", group = "<!-- 4 -->⚡ Performance" },
+    { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
+    { message = "^style", group = "<!-- 5 -->🎨 Styling" },
+    { message = "^test", group = "<!-- 6 -->🧪 Testing" },
+    { message = "^build\\(release\\): prepare for", skip = true },
+    { message = "^build\\(deps.*\\)", skip = true },
+    { message = "^build\\(pr\\)", skip = true },
+    { message = "^build\\(pull\\)", skip = true },
+    { message = "^build|^ci", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
+    { body = ".*security", group = "<!-- 8 -->🛡️ Security" },
+    { message = "^revert", group = "<!-- 9 -->◀️ Revert" },
+    { message = ".*", group = "<!-- 10 -->💼 Other" },
+    { body = "$^", skip = true },
 ]
 # filter out the commits that are not matched by commit parsers
 filter_commits = false
@@ -295,15 +295,15 @@ packages = ["src/strawchemy"]
 
 [tool.pytest.ini_options]
 markers = [
-  "snapshot: snapshot-based tests using syrupy",
-  "integration: SQLAlchemy integration tests",
-  "geo: Geoalchemy2 integration tests",
-  "aiosqlite: SQLite (aiosqlite) Tests",
-  "sqlite: SQLite Tests",
-  "asyncmy: MySQL (asyncmy) Tests",
-  "psycopg_async: SQLAlchemy Postgres (psycopg async) Tests",
-  "psycopg_sync: SQLAlchemy Postgres (psycopg sync) Tests",
-  "asyncpg: SQLAlchemy Postgres (asyncpg) Tests",
+    "snapshot: snapshot-based tests using syrupy",
+    "integration: SQLAlchemy integration tests",
+    "geo: Geoalchemy2 integration tests",
+    "aiosqlite: SQLite (aiosqlite) Tests",
+    "sqlite: SQLite Tests",
+    "asyncmy: MySQL (asyncmy) Tests",
+    "psycopg_async: SQLAlchemy Postgres (psycopg async) Tests",
+    "psycopg_sync: SQLAlchemy Postgres (psycopg sync) Tests",
+    "asyncpg: SQLAlchemy Postgres (asyncpg) Tests",
 ]
 testpaths = ["tests"]
 xfail_strict = true
@@ -315,51 +315,51 @@ line-length = 120
 fix = true
 target-version = "py39"
 exclude = [
-  ".bzr",
-  ".direnv",
-  ".eggs",
-  ".git",
-  ".hg",
-  ".mypy_cache",
-  ".nox",
-  ".tox",
-  ".pants.d",
-  ".ruff_cache",
-  ".svn",
-  ".venv",
-  "__pypackages__",
-  "_build",
-  "buck-out",
-  "build",
-  "dist",
-  "node_modules",
-  "venv",
-  "tests/codegen/snapshots",
-  "alembic/*  ",
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".tox",
+    ".pants.d",
+    ".ruff_cache",
+    ".svn",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "tests/codegen/snapshots",
+    "alembic/*  ",
 ]
 src = ["src/strawchemy", "tests"]
 
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-  "A005",  # flake8-builtins - module {name} shadows a Python standard-library module
-  "D100",  # pydocstyle - missing docstring in public module
-  "D101",  # pydocstyle - missing docstring in public class
-  "D102",  # pydocstyle - missing docstring in public method
-  "D103",  # pydocstyle - missing docstring in public function
-  "D104",  # pydocstyle - missing docstring in public package
-  "D105",  # pydocstyle - missing docstring in magic method
-  "D106",  # pydocstyle - missing docstring in public nested class
-  "D107",  # pydocstyle - missing docstring in __init__
-  "E501",  # pycodestyle - line too long, handled by ruff format
-  "PLR0913",  # pylint - too many arguments
-  "ARG002",  # flake8-unused-argument - unused arguments
-  "COM812",  # flake8-commas - Checks for the absence of trailing commas
-  "S101",  # flake8-bandit - Assert statements, investigate
-  "ANN401",  # flake8-annotations - typing Any disallowed in function arguments
-  "FBT",  # flake8-annotations - boolean trap. Try to remove this in the future
-  "PT013",  # flake8-pytest-style - Incorrect import of pytest
-  "UP007",  # flake8-builtins - Unnecessary `Union` annotation
+    "A005", # flake8-builtins - module {name} shadows a Python standard-library module
+    "D100", # pydocstyle - missing docstring in public module
+    "D101", # pydocstyle - missing docstring in public class
+    "D102", # pydocstyle - missing docstring in public method
+    "D103", # pydocstyle - missing docstring in public function
+    "D104", # pydocstyle - missing docstring in public package
+    "D105", # pydocstyle - missing docstring in magic method
+    "D106", # pydocstyle - missing docstring in public nested class
+    "D107", # pydocstyle - missing docstring in __init__
+    "E501", # pycodestyle - line too long, handled by ruff format
+    "PLR0913", # pylint - too many arguments
+    "ARG002", # flake8-unused-argument - unused arguments
+    "COM812", # flake8-commas - Checks for the absence of trailing commas
+    "S101", # flake8-bandit - Assert statements, investigate
+    "ANN401", # flake8-annotations - typing Any disallowed in function arguments
+    "FBT", # flake8-annotations - boolean trap. Try to remove this in the future
+    "PT013", # flake8-pytest-style - Incorrect import of pytest
+    "UP007", # flake8-builtins - Unnecessary `Union` annotation
 ]
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
@@ -397,6 +397,8 @@ StrawchemyAsyncRepository = "StrawchemySyncRepository"
 
 [tool.uv]
 default-groups = ["test", "lint"]
+# unasyncd prevent codeflash to be installed to the latest version, need
+conflicts = [[{ group = "build" }, { group = "codeflash" }]]
 
 [tool.uv.sources]
 testapp = { workspace = true }

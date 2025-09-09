@@ -359,8 +359,6 @@ Run snapshot-based tests and update snapshots
 
 ## `vulture`
 
-- Depends: _install
-
 - **Usage**: `vulture`
 
 Run vulture

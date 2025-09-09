@@ -267,77 +267,89 @@ See the [custom resolvers](#custom-resolvers) for more details
 
 </details>
 
-### Type override
+### Type Override
 
-By default, strawchemy generates strawberry types when visiting the model and the following relationships, but only if you have not already defined a type with the same name using the @strawchemy.type decorator, otherwise you will see an error.
+When generating types for relationships, Strawchemy creates default names (e.g., `<ModelName>Type`). If you have already defined a Python class with that same name, it will cause a name collision.
 
-To explicitly tell strawchemy to use your type, you need to define it with `@strawchemy.type(override=True)`.
+The `override=True` parameter tells Strawchemy that your definition should be used, resolving the conflict.
 
 <details>
-<summary>Using the Override Parameter</summary>
+<summary>Using `override=True`</summary>
+
+Consider these models:
 
 ```python
-from strawchemy import Strawchemy
-
-strawchemy = Strawchemy("postgresql")
-
-# Define models
-class Color(Base):
-    __tablename__ = "color"
+class Author(Base):
+    __tablename__ = "author"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    fruits: Mapped[list["Fruit"]] = relationship("Fruit", back_populates="color")
 
-class Fruit(Base):
-    __tablename__ = "fruit"
+class Book(Base):
+    __tablename__ = "book"
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str]
-    color_id: Mapped[int] = mapped_column(ForeignKey("color.id"))
-    color: Mapped[Color] = relationship("Color", back_populates="fruits")
-
-# Define a type with override=True
-@strawchemy.type(Color, include="all", override=True)
-class ColorType:
-    fruits: auto
-    name: int
-
-# Define another type that uses the same model
-@strawchemy.type(Fruit, include="all", override=True)
-class FruitType:
-    name: int
-    color: auto  # This will use the ColorType defined above
-
-# Define a query that uses these types
-@strawberry.type
-class Query:
-    fruit: FruitType = strawchemy.field()
+    title: Mapped[str]
+    author_id: Mapped[int] = mapped_column(ForeignKey("author.id"))
+    author: Mapped[Author] = relationship()
 ```
 
-The `override` parameter is useful in the following scenarios:
-
-1. **Type Reuse**: When you need to use the same type in multiple places where the same model is referenced.
-2. **Auto-generated Type Override**: When you want to override the default auto-generated type for a model.
-3. **Custom Type Names**: When you want to use a custom name for your type but still have it recognized as the type for a specific model.
-
-Without setting `override=True`, you would get an error like:
-
-```
-Type `FruitType` cannot be auto generated because it's already declared.
-You may want to set `override=True` on the existing type to use it everywhere.
-```
-
-This happens when Strawchemy tries to auto-generate a type for a model that already has a type defined for it.
-
-You can also use `override=True` with input types:
+If you define a type for `Book`, Strawchemy will inspect the `author` relationship and attempt to auto-generate a type for the `Author` model, naming it `AuthorType` by default. If you have already defined a class with that name, it will cause a name collision.
 
 ```python
-@strawchemy.order(Fruit, include="all", override=True)
-class FruitOrderBy:
-    # Custom order by fields
-    override: bool = True
+# Let's say you've already defined this class
+@strawchemy.type(Book, include="all")
+class BookType:
+    pass
+
+# This will cause an error because Strawchemy has already created `AuthorType` when generating `BookType`
+@strawchemy.type(Book, include="all")
+class AuthorType:
+    ...
+```
+
+You would see an error like: `Type 'AuthorType' cannot be auto generated because it's already declared.`
+
+To solve this, you can create a single, definitive `AuthorType` and mark it with `override=True`. This tells Strawchemy to use your version instead of generating a new one.
+
+```python
+@strawchemy.type(Author, include="all", override=True)
+class AuthorType:
+    pass
+
+# Now this works, because Strawchemy knows to use your `AuthorType`
+@strawchemy.type(Book, include="all")
+class BookType:
+    pass
 ```
 
 </details>
+
+### Reuse types in schema
+
+While `override=True` solves name collisions, `scope="global"` is used to promote consistency and reuse.
+
+By defining a type with `scope="global"`, you register it as the canonical type for a given SQLAlchemy model and purpose (e.g. a strawberry `type`, `filter`, or `input`). Strawchemy will then automatically use this globally-scoped type everywhere it's needed in your schema, rather than generating new ones.
+
+<details>
+<summary>Using `scope="global"`</summary>
+
+Let's define a global type for the `Color` model. This type will now be the default for the `Color` model across the entire schema.
+
+```python
+# This becomes the canonical type for the `Color` model
+@strawchemy.type(Color, include={"id", "name"}, scope="global")
+class ColorType:
+    pass
+
+# Another type that references the Color model
+@strawchemy.type(Fruit, include="all")
+class FruitType:
+    ...
+    # Strawchemy automatically uses the globally-scoped `ColorType` here
+    # without needing an explicit annotation.
+```
+
+This ensures that the `Color` model is represented consistently as `ColorType` in all parts of your GraphQL schema, such as in the `FruitType`'s `color` field, without needing to manually specify it every time.
+
 </details>
 
 ## Resolver Generation
@@ -1864,18 +1876,18 @@ Configuration is made by passing a `StrawchemyConfig` to the `Strawchemy` instan
 
 ### Configuration Options
 
-| Option                       | Type                                                        | Default                    | Description                                                                                                                              |
-| ---------------------------- | ----------------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `dialect`                    | `SupportedDialect`                                          |                            | Database dialect to use. Supported dialects are "postgresql", "mysql", "sqlite".                                                         |
-| `session_getter`             | `Callable[[Info], Session]`                                 | `default_session_getter`   | Function to retrieve SQLAlchemy session from strawberry `Info` object. By default, it retrieves the session from `info.context.session`. |
-| `auto_snake_case`            | `bool`                                                      | `True`                     | Automatically convert snake cased names to camel case in GraphQL schema.                                                                 |
-| `repository_type`            | `type[Repository] \| StrawchemySyncRepository`              | `StrawchemySyncRepository` | Repository class to use for auto resolvers.                                                                                              |
-| `filter_overrides`           | `OrderedDict[tuple[type, ...], type[SQLAlchemyFilterBase]]` | `None`                     | Override default filters with custom filters. This allows you to provide custom filter implementations for specific column types.        |
-| `execution_options`          | `dict[str, Any]`                                            | `None`                     | SQLAlchemy execution options for repository operations. These options are passed to the SQLAlchemy `execution_options()` method.         |
-| `pagination_default_limit`   | `int`                                                       | `100`                      | Default pagination limit when `pagination=True`.                                                                                         |
-| `pagination`                 | `bool`                                                      | `False`                    | Enable/disable pagination on list resolvers by default.                                                                                  |
-| `default_id_field_name`      | `str`                                                       | `"id"`                     | Name for primary key fields arguments on primary key resolvers.                                                                          |
-| `deterministic_ordering`     | `bool`                                                      | `True`                     | Force deterministic ordering for list resolvers.                                                                                         |
+| Option                     | Type                                                        | Default                    | Description                                                                                                                              |
+| -------------------------- | ----------------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `dialect`                  | `SupportedDialect`                                          |                            | Database dialect to use. Supported dialects are "postgresql", "mysql", "sqlite".                                                         |
+| `session_getter`           | `Callable[[Info], Session]`                                 | `default_session_getter`   | Function to retrieve SQLAlchemy session from strawberry `Info` object. By default, it retrieves the session from `info.context.session`. |
+| `auto_snake_case`          | `bool`                                                      | `True`                     | Automatically convert snake cased names to camel case in GraphQL schema.                                                                 |
+| `repository_type`          | `type[Repository] \| StrawchemySyncRepository`              | `StrawchemySyncRepository` | Repository class to use for auto resolvers.                                                                                              |
+| `filter_overrides`         | `OrderedDict[tuple[type, ...], type[SQLAlchemyFilterBase]]` | `None`                     | Override default filters with custom filters. This allows you to provide custom filter implementations for specific column types.        |
+| `execution_options`        | `dict[str, Any]`                                            | `None`                     | SQLAlchemy execution options for repository operations. These options are passed to the SQLAlchemy `execution_options()` method.         |
+| `pagination_default_limit` | `int`                                                       | `100`                      | Default pagination limit when `pagination=True`.                                                                                         |
+| `pagination`               | `bool`                                                      | `False`                    | Enable/disable pagination on list resolvers by default.                                                                                  |
+| `default_id_field_name`    | `str`                                                       | `"id"`                     | Name for primary key fields arguments on primary key resolvers.                                                                          |
+| `deterministic_ordering`   | `bool`                                                      | `True`                     | Force deterministic ordering for list resolvers.                                                                                         |
 
 ### Example
 

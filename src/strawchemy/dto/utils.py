@@ -15,7 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Optional
 
 from .constants import DTO_INFO_KEY
-from .types import DTOConfig, DTOFieldConfig, ExcludeFields, IncludeFields, Purpose, PurposeConfig
+from .types import DTOConfig, DTOFieldConfig, DTOScope, ExcludeFields, IncludeFields, Purpose, PurposeConfig
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -42,8 +42,10 @@ def config(
     type_map: Optional[Mapping[Any, Any]] = None,
     aliases: Optional[Mapping[str, str]] = None,
     alias_generator: Optional[Callable[[str], str]] = None,
+    scope: Optional[DTOScope] = None,
+    tags: Optional[set[str]] = None,
 ) -> DTOConfig:
-    config = DTOConfig(purpose, alias_generator=alias_generator)
+    config = DTOConfig(purpose, alias_generator=alias_generator, scope=scope)
     if exclude:
         config.exclude = exclude
     if include:
@@ -54,6 +56,8 @@ def config(
         config.aliases = aliases
     if partial is not None:
         config.partial = partial
+    if tags:
+        config.tags = tags
     return config
 
 

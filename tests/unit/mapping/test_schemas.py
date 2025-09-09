@@ -196,6 +196,9 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("order.auto_order_by.Query", id="auto_order_by"),
         pytest.param("aggregations.root_aggregations.Query", id="root_aggregations"),
         pytest.param("distinct.Query", id="distinct"),
+        pytest.param("scope.schema_before.Query", id="scope_schema_before"),
+        pytest.param("scope.schema_after.Query", id="scope_schema_after"),
+        pytest.param("scope.schema_in_the_middle.Query", id="scope_schema_in_the_middle"),
     ],
 )
 @pytest.mark.snapshot
@@ -499,3 +502,21 @@ def test_pydantic_validation_nested() -> None:
             "type": "value_error",
         }
     ]
+
+
+def test_schema_scope_override() -> None:
+    from tests.unit.schemas.scope.schema_after import Query as QueryAfter
+    from tests.unit.schemas.scope.schema_before import Query as QueryBefore
+    from tests.unit.schemas.scope.schema_in_the_middle import Query as QueryInTheMiddle
+
+    schema_in_the_middle = strawberry.Schema(query=QueryInTheMiddle, scalar_overrides=SCALAR_OVERRIDES)
+    schema_after = strawberry.Schema(query=QueryAfter, scalar_overrides=SCALAR_OVERRIDES)
+    schema_before = strawberry.Schema(query=QueryBefore, scalar_overrides=SCALAR_OVERRIDES)
+
+    schemas_str = [
+        textwrap.dedent(str(schema)).strip() for schema in [schema_in_the_middle, schema_after, schema_before]
+    ]
+
+    for schema in schemas_str:
+        assert "GroupType" not in schema
+        assert "GraphQLGroup" in schema

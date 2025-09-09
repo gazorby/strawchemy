@@ -51,7 +51,18 @@ AsyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnyAsyncSession]"
 SyncSessionGetter: TypeAlias = "Callable[[Info[Any, Any]], AnySyncSession]"
 AnySessionGetter: TypeAlias = "AsyncSessionGetter | SyncSessionGetter"
 FilterStatementCallable: TypeAlias = "Callable[[Info[Any, Any]], Select[tuple[Any]]]"
-InputType = Literal["create", "update_by_pk", "update_by_filter"]
+GraphQLPurpose: TypeAlias = Literal[
+    "type",
+    "aggregate_type",
+    "create_input",
+    "update_by_pk_input",
+    "update_by_filter_input",
+    "filter",
+    "aggregate_filter",
+    "order_by",
+    "upsert_update_fields",
+    "upsert_conflict_fields",
+]
 FunctionInfo: TypeAlias = "FilterFunctionInfo | OutputFunctionInfo"
 StrawberryGraphQLDTO: TypeAlias = "MappedStrawberryGraphQLDTO[_T] | UnmappedStrawberryGraphQLDTO[_T]"
 GraphQLDTO: TypeAlias = "StrawberryGraphQLDTO[_T] | MappedPydanticGraphQLDTO[_T]"

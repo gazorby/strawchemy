@@ -54,7 +54,7 @@ from strawchemy.graph import AnyNode, GraphMetadata, MatchOn, Node, NodeMetadata
 from strawchemy.sqlalchemy.hook import QueryHook  # noqa: TC001
 from strawchemy.utils import camel_to_snake
 
-from .typing import InputType, OrderByDTOT, QueryNodeType
+from .typing import GraphQLPurpose, OrderByDTOT, QueryNodeType
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
@@ -111,7 +111,7 @@ class StrawchemyDTOAttributes:
     __strawchemy_query_hook__: ClassVar[Optional[Union[QueryHook[Any], list[QueryHook[Any]]]]] = None
     __strawchemy_filter__: ClassVar[Optional[type[Any]]] = None
     __strawchemy_order_by__: ClassVar[Optional[type[Any]]] = None
-    __strawchemy_input_type__: ClassVar[Optional[InputType]] = None
+    __strawchemy_purpose__: ClassVar[Optional[GraphQLPurpose]] = None
 
 
 class _Key(Generic[T]):

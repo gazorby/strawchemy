@@ -2,6 +2,73 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.19.0](https://github.com/gazorby/strawchemy/compare/v0.18.0..v0.19.0) - 2025-09-06
+
+### 🚀 Features
+
+- *(schema)* Add type scope - ([d2bf861](https://github.com/gazorby/strawchemy/commit/d2bf86144212bc30c51e865fbf2aa6a4851ef0b6))
+
+### 🐛 Bug Fixes
+
+- *(input)* Set null - ([49679db](https://github.com/gazorby/strawchemy/commit/49679dbb3a25f9f2263824d7ccf52a2bcb288d07))
+- *(scalars)* Trick pyright when using NewType in scalars - ([037bc41](https://github.com/gazorby/strawchemy/commit/037bc41a26fc3130b1c26d57eeb13acd2034d3fc))
+- *(scalars)* Cache new_type func - ([2a09122](https://github.com/gazorby/strawchemy/commit/2a091224d6550107411c90011f94657cee61e84e))
+- *(scalars)* Add missing calls to new_type() - ([34bcfe2](https://github.com/gazorby/strawchemy/commit/34bcfe27b230898e40b8f7b9683ba4efabb21563))
+- *(schema)* Use UNSET rather than None as default on aggregation filters - ([3c925e4](https://github.com/gazorby/strawchemy/commit/3c925e4295a642640d72f405ced09accbcfcced4))
+- *(schema)* Fix excluding identifiers causing upsert types failing to be generated - ([ca7cb9e](https://github.com/gazorby/strawchemy/commit/ca7cb9e722082f260a195449a4d429be7ec0861a))
+- *(schema)* Fix recursive fields include/exclude logic when a relation is explicitly included - ([bf7872e](https://github.com/gazorby/strawchemy/commit/bf7872eff84d5ee29ca8666d0f1245eee158c584))
+- Add missing files - ([9871e80](https://github.com/gazorby/strawchemy/commit/9871e809eea8264d145105b985fbdbff006aa2a6))
+- Real support and test for python 3.9 - ([997c2e0](https://github.com/gazorby/strawchemy/commit/997c2e087160ce2b953ade58894f8431144a6bb9))
+
+### 🚜 Refactor
+
+- *(pyright)* Update - ([ae35cfe](https://github.com/gazorby/strawchemy/commit/ae35cfead7f8efc154216b0de5b993fee523560c))
+- *(schema)* Focus on schema scope - ([d9ebc79](https://github.com/gazorby/strawchemy/commit/d9ebc79028a74df0c8f666eba42db22b561f3cc8))
+- Wip - ([e9eb3bb](https://github.com/gazorby/strawchemy/commit/e9eb3bb08e037f0b77d82b8e4b9e2e5bd3e5c790))
+- Update sentinel types - ([36bf5ad](https://github.com/gazorby/strawchemy/commit/36bf5ad0dfd8a14a832d163ef3adf41c082e51db))
+- Update pyproject.toml - ([77c1ce0](https://github.com/gazorby/strawchemy/commit/77c1ce05b15063bcdadfbcb82643e84ebe31050e))
+- Fix rebase - ([39139ff](https://github.com/gazorby/strawchemy/commit/39139fff6d59638645777e80df51f2c448a0f878))
+- Wip - ([8698285](https://github.com/gazorby/strawchemy/commit/86982859e6ef4ec1769913b5b4fd48294771cecb))
+
+### 📚 Documentation
+
+- *(readme)* Document type scope feature - ([49ad491](https://github.com/gazorby/strawchemy/commit/49ad491019408ce6148333450d68b72e4e872f3c))
+- Add docstrings to improve code documentation - ([2548771](https://github.com/gazorby/strawchemy/commit/2548771d3082afabd1ccab4dc5e6aa52439f4fb3))
+
+### 🧪 Testing
+
+- *(integration)* Suppress warnings - ([49ff50e](https://github.com/gazorby/strawchemy/commit/49ff50e15e47e4ccca2a21aa437629cda8bac0af))
+- *(integration)* Remove any sqlite test db if existing - ([0dbdc48](https://github.com/gazorby/strawchemy/commit/0dbdc48cc0ad3eb070adf3f35141c5c40784de7a))
+- *(integration)* Pin python 3.12 to 3.12.11 patch - ([ca586cb](https://github.com/gazorby/strawchemy/commit/ca586cbacc90fea4dbaf2285ec5dbe7a2b5605ce))
+- *(nox)* Remove uv env vars in noxfile - ([3a06de1](https://github.com/gazorby/strawchemy/commit/3a06de1957c3730fab8acfce33382b9bf96d58f6))
+- *(nox)* Update - ([630115d](https://github.com/gazorby/strawchemy/commit/630115d12f3f1af39c709965d666a680b77472a3))
+- *(nox)* Update - ([f61901b](https://github.com/gazorby/strawchemy/commit/f61901b36c62abf3a70ac58860e0e25bdc469e2e))
+- *(nox)* Skip uv.lock check - ([7789e94](https://github.com/gazorby/strawchemy/commit/7789e94d9d62ce8fd51f56b7b1a01c423d81763e))
+- *(nox)* Skip interpreter check - ([3428af5](https://github.com/gazorby/strawchemy/commit/3428af5177d85b8b08f694747685da77f468ee51))
+- *(nox)* Disable reusing existing venvs - ([101b4f3](https://github.com/gazorby/strawchemy/commit/101b4f33d406e004ef87f8be432757963abf9f87))
+- Unpin 3.12 - ([573af54](https://github.com/gazorby/strawchemy/commit/573af54601a2ba74c19c82e90cac11c0448f0bbc))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(codeflash)* Use uv to run codeflash - ([89b17a9](https://github.com/gazorby/strawchemy/commit/89b17a989204e09876f57d4030d4c2997906d4ba))
+- *(lint)* Move to basedpyright - ([d3abcf4](https://github.com/gazorby/strawchemy/commit/d3abcf475e2bbf387653159f1f2f9e1a627ba0ff))
+- *(mise)* Allow passing python version to mise test targets - ([d286e63](https://github.com/gazorby/strawchemy/commit/d286e63b9cbb0a07e1f226044248b7dae6767b8f))
+- *(mise)* Update vulture task - ([2d1daaf](https://github.com/gazorby/strawchemy/commit/2d1daafde542e0f666b9a2aaec712265980ddedd))
+- *(nox)* Disable cache - ([a8541b7](https://github.com/gazorby/strawchemy/commit/a8541b71e62c0b7fe430234eafb5fe742d54bffa))
+- *(nox)* Simplify nox invocation - ([d8838de](https://github.com/gazorby/strawchemy/commit/d8838de7103e4ef77ebd310277ffa228d5700607))
+- *(nox)* Update - ([eae64cf](https://github.com/gazorby/strawchemy/commit/eae64cfd70d96900c0dfc8dbdaf2913ee9f84fc8))
+- *(nox)* Bring back cache - ([44084aa](https://github.com/gazorby/strawchemy/commit/44084aadbd397423386c7457ea7779a5f6657db7))
+- *(release)* Bump to v0.19.0 - ([2869de1](https://github.com/gazorby/strawchemy/commit/2869de1e3b3b8b13fd7cf9f9ef876a7a62db237b))
+- *(test)* Update .nox path for action caching - ([680855e](https://github.com/gazorby/strawchemy/commit/680855e07708587ba3675240548421327af0819f))
+- *(test)* Use uvx to invoke nox - ([a322b48](https://github.com/gazorby/strawchemy/commit/a322b48dce842e853ec5c505a15fdd3f9bc8b31f))
+- *(test)* Pin 3.12 again - ([f661bed](https://github.com/gazorby/strawchemy/commit/f661beddf960ac1cb106f76c46433caaa18047e7))
+- *(test)* Try setting uv pref to only-managed - ([478d6d7](https://github.com/gazorby/strawchemy/commit/478d6d7f97175cd44191f0ecf59c138f1312162a))
+- *(test)* Update - ([eb1aa5e](https://github.com/gazorby/strawchemy/commit/eb1aa5eac73e8fdcafc109871aed5d2d74227fc9))
+- Update .editorconfig - ([0ae1c7a](https://github.com/gazorby/strawchemy/commit/0ae1c7a778d70a36bf825dcd345cc796ecf697d2))
+- Add codeflash - ([e8dfdfb](https://github.com/gazorby/strawchemy/commit/e8dfdfbf93ddaa235bf56e5f4be2d329ac08f621))
+- Update .gitignore - ([09d69af](https://github.com/gazorby/strawchemy/commit/09d69afd3f08abfc66837627614d333e6826494d))
+- Update .gitignore - ([96c5e12](https://github.com/gazorby/strawchemy/commit/96c5e124d0c51b628fbe2efc0f93960b59f8cb15))
+- Fix codeflash - ([d791dfc](https://github.com/gazorby/strawchemy/commit/d791dfc4370799f415ca693ce457cf69ccd33062))
 ## [0.18.0](https://github.com/gazorby/strawchemy/compare/v0.17.0..v0.18.0) - 2025-06-07
 
 ### 🚀 Features
