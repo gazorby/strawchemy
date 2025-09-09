@@ -105,7 +105,9 @@ class UserType:
     pass
 
 
-@strawchemy.type(Post, include="all")
+# override=True is needed because strawchemy automatically generates a PostType
+# when mapping UserType due to the relationship between User and Post
+@strawchemy.type(Post, include="all", override=True)
 class PostType:
     pass
 
@@ -116,7 +118,9 @@ class UserFilter:
     pass
 
 
-@strawchemy.filter(Post, include="all")
+# override=True is needed for the same reason as PostType
+# strawchemy generates filters for related models automatically
+@strawchemy.filter(Post, include="all", override=True)
 class PostFilter:
     pass
 
@@ -127,7 +131,7 @@ class UserOrderBy:
     pass
 
 
-@strawchemy.order(Post, include="all")
+@strawchemy.order(Post, include="all", override=True)
 class PostOrderBy:
     pass
 
