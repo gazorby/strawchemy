@@ -80,7 +80,6 @@ test = [
     "pytest-xdist",
     "pytest-databases[postgres,mysql]",
     "pytest-lazy-fixtures",
-    "pytest-codspeed",
     "syrupy",
     "sqlparse",
     "covdefaults",
