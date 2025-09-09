@@ -30,11 +30,9 @@ classifiers = [
 ]
 dependencies = [
     "msgspec",
-    "nox>=2025.5.1",
-    "nox-uv>=0.6.2",
     "sqlalchemy>=2.0.10",
     "strawberry-graphql",
-    "typing-extensions",
+    "typing-extensions"
 ]
 
 [project.urls]

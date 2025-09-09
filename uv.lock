@@ -642,7 +642,8 @@ name = "crosshair-tool"
 version = "0.0.95"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "importlib-metadata" },
+    { name = "importlib-metadata", version = "8.0.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.10' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
+    { name = "importlib-metadata", version = "8.7.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.10' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
     { name = "packaging" },
     { name = "pygls" },
     { name = "typeshed-client" },
@@ -1158,12 +1159,32 @@ wheels = [
 name = "importlib-metadata"
 version = "8.0.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.13'",
+    "python_full_version >= '3.10' and python_full_version < '3.13'",
+    "python_full_version < '3.10'",
+]
 dependencies = [
-    { name = "zipp" },
+    { name = "zipp", marker = "(python_full_version < '3.10' and extra == 'group-10-strawchemy-dev') or (python_full_version >= '3.10' and extra == 'group-10-strawchemy-codeflash') or extra == 'group-10-strawchemy-build' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/20/ff/bd28f70283b9cca0cbf0c2a6082acbecd822d1962ae7b2a904861b9965f8/importlib_metadata-8.0.0.tar.gz", hash = "sha256:188bd24e4c346d3f0a933f275c2fec67050326a856b9a359881d7c2a697e8812", size = 52667, upload-time = "2024-06-25T18:38:04.538Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/dc/ef/38766b2edb096260d9b1b6ad35adaa0bce3b0567abb452b21eb074af88c4/importlib_metadata-8.0.0-py3-none-any.whl", hash = "sha256:15584cf2b1bf449d98ff8a6ff1abef57bf20f3ac6454f431736cd3e660921b2f", size = 24769, upload-time = "2024-06-25T18:38:02.324Z" },
+]
+
+[[package]]
+name = "importlib-metadata"
+version = "8.7.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.10'",
+]
+dependencies = [
+    { name = "zipp", marker = "(python_full_version < '3.10' and extra == 'group-10-strawchemy-codeflash') or (python_full_version < '3.10' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/76/66/650a33bd90f786193e4de4b3ad86ea60b53c89b669a5c7be931fac31cdb0/importlib_metadata-8.7.0.tar.gz", hash = "sha256:d13b81ad223b890aa16c5471f2ac3056cf76c5f10f82d6f9292f0b415f389000", size = 56641, upload-time = "2025-04-27T15:29:01.736Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/b0/36bd937216ec521246249be3bf9855081de4c5e06a0c9b4219dbeda50373/importlib_metadata-8.7.0-py3-none-any.whl", hash = "sha256:e5dd1551894c77868a30651cef00984d50e1002d06942a7101d34870c5f02afd", size = 27656, upload-time = "2025-04-27T15:29:00.214Z" },
 ]
 
 [[package]]
@@ -1399,7 +1420,8 @@ dependencies = [
     { name = "click" },
     { name = "exceptiongroup", marker = "python_full_version < '3.11'" },
     { name = "httpx" },
-    { name = "importlib-metadata", marker = "python_full_version < '3.10'" },
+    { name = "importlib-metadata", version = "8.0.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.10' and extra == 'group-10-strawchemy-build') or (python_full_version < '3.10' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
+    { name = "importlib-metadata", version = "8.7.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.10' and extra == 'group-10-strawchemy-codeflash') or (python_full_version < '3.10' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
     { name = "litestar-htmx" },
     { name = "msgspec" },
     { name = "multidict" },
@@ -2973,8 +2995,6 @@ version = "0.19.0"
 source = { editable = "." }
 dependencies = [
     { name = "msgspec" },
-    { name = "nox" },
-    { name = "nox-uv" },
     { name = "sqlalchemy" },
     { name = "strawberry-graphql" },
     { name = "typing-extensions" },
@@ -3072,8 +3092,6 @@ requires-dist = [
     { name = "geoalchemy2", marker = "extra == 'geo'" },
     { name = "geojson-pydantic", marker = "extra == 'geo'" },
     { name = "msgspec" },
-    { name = "nox", specifier = ">=2025.5.1" },
-    { name = "nox-uv", specifier = ">=0.6.2" },
     { name = "pydantic", marker = "extra == 'pydantic'" },
     { name = "shapely", marker = "extra == 'geo'" },
     { name = "sqlalchemy", specifier = ">=2.0.10" },
@@ -3282,7 +3300,7 @@ source = { git = "https://github.com/provinzkraut/unasyncd?rev=6d630bd7f411d6052
 dependencies = [
     { name = "anyio" },
     { name = "click" },
-    { name = "importlib-metadata", marker = "python_full_version < '3.10'" },
+    { name = "importlib-metadata", version = "8.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "libcst" },
     { name = "msgspec" },
     { name = "rich", version = "13.6.0", source = { registry = "https://pypi.org/simple" } },
