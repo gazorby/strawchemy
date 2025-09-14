@@ -17,7 +17,10 @@ tools:
     enabled: true
   hadolint:
     enabled: true
-
+  yamllint:
+    enabled: true
+  actionlint:
+    enabled: true
 chat:
   auto_reply: true
 
