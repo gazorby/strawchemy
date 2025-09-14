@@ -80,6 +80,7 @@ test = [
     "pytest-xdist",
     "pytest-databases[postgres,mysql]",
     "pytest-lazy-fixtures",
+    "pytest-codspeed",
     "syrupy",
     "sqlparse",
     "covdefaults",
@@ -296,12 +297,13 @@ markers = [
     "snapshot: snapshot-based tests using syrupy",
     "integration: SQLAlchemy integration tests",
     "geo: Geoalchemy2 integration tests",
-    "aiosqlite: SQLite (aiosqlite) Tests",
-    "sqlite: SQLite Tests",
-    "asyncmy: MySQL (asyncmy) Tests",
-    "psycopg_async: SQLAlchemy Postgres (psycopg async) Tests",
-    "psycopg_sync: SQLAlchemy Postgres (psycopg sync) Tests",
-    "asyncpg: SQLAlchemy Postgres (asyncpg) Tests",
+    "aiosqlite: SQLite (aiosqlite) tests",
+    "sqlite: SQLite tests",
+    "asyncmy: MySQL (asyncmy) tests",
+    "psycopg_async: SQLAlchemy Postgres (psycopg async) tests",
+    "psycopg_sync: SQLAlchemy Postgres (psycopg sync) tests",
+    "asyncpg: SQLAlchemy Postgres (asyncpg) tests",
+    "benchmark: Benchmark tests"
 ]
 testpaths = ["tests"]
 xfail_strict = true
