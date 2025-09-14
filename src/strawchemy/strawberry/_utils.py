@@ -17,13 +17,12 @@ __all__ = ("default_session_getter", "dto_model_from_type")
 
 
 def _get_or_subscribe(obj: Any, key: Any) -> Any:
-    try:
+    if hasattr(obj, key):
         return getattr(obj, key)
-    except AttributeError:
-        try:
-            return obj[key]
-        except (TypeError, KeyError) as exc:
-            raise SessionNotFoundError from exc
+    try:
+        return obj[key]
+    except (TypeError, KeyError) as exc:
+        raise SessionNotFoundError from exc
 
 
 def default_session_getter(info: Info[Any, Any]) -> Any:
