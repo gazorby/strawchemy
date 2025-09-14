@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Union
 from strawberry.types.base import StrawberryContainer, StrawberryType
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.union import StrawberryUnion
+from strawchemy.exceptions import SessionNotFoundError
 
 from .mutation.types import ErrorType
 
@@ -15,8 +16,22 @@ if TYPE_CHECKING:
 __all__ = ("default_session_getter", "dto_model_from_type")
 
 
+def _get_or_subscribe(obj: Any, key: Any) -> Any:
+    try:
+        return getattr(obj, key)
+    except AttributeError:
+        try:
+            return obj[key]
+        except (TypeError, KeyError) as exc:
+            raise SessionNotFoundError from exc
+
+
 def default_session_getter(info: Info[Any, Any]) -> Any:
-    return info.context.session
+    """Try getting the session from the info context, then the request context."""
+    try:
+        return _get_or_subscribe(info.context, "session")
+    except SessionNotFoundError:
+        return _get_or_subscribe(_get_or_subscribe(info.context, "request"), "session")
 
 
 def dto_model_from_type(type_: Any) -> Any:
