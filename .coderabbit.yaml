@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: "en-US"
+
+reviews:
+  profile: "assertive"
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords:
+      - "wip"
+      - "draft"
+
+tools:
+  ruff:
+    enabled: true
+  gitleaks:
+    enabled: true
+  hadolint:
+    enabled: true
+  yamllint:
+    enabled: true
+  actionlint:
+    enabled: true
+chat:
+  auto_reply: true
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "**/CLAUDE.md"
+      - "**/CONTRIBUTING.md"
