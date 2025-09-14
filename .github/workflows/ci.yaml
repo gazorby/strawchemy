@@ -6,11 +6,11 @@ env:
 
 on:
   push:
-    branches: [main, ci/*, dependabot/*, renovate/*]
+    branches: [ main, ci/*, dependabot/*, renovate/* ]
     tags:
       - "v*.*.*"
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -57,7 +57,7 @@ jobs:
 
   tests:
     name: 🔬 ${{ matrix.session.job_name }}
-    needs: [pre, generate-jobs-tests]
+    needs: [ pre, generate-jobs-tests ]
     if: github.ref_type == 'tag' || needs.pre.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     strategy:
@@ -119,9 +119,42 @@ jobs:
           name: test-results-${{ matrix.session.session }}
           path: junit-${{ matrix.session.session }}.xml
 
+  benchmarks:
+    name: 📈 Run benchmarks
+    needs: [ tests, generate-jobs-tests ]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Pip and nox cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache
+          key:
+            ${{ runner.os }}-benchmarks-${{ env.pythonLocation }}-${{ hashFiles('**/uv.lock') }} }}
+          restore-keys: |
+            ${{ runner.os }}-benchmarks-${{ env.pythonLocation }}
+
+      - name: Setup mise
+        uses: jdx/mise-action@v3
+        with:
+          cache: true
+          log_level: debug
+
+      - name: Run the benchmarks
+        uses: CodSpeedHQ/action@v4
+        with:
+          mode: instrumentation
+          run: mise run test:benchmarks
+          token: ${{ secrets.CODSPEED_TOKEN }} # optional for public repos
+
+
   upload-coverage:
     name: 🆙 Upload Coverage
-    needs: [tests, generate-jobs-tests]
+    needs: [ tests, generate-jobs-tests ]
     runs-on: ubuntu-latest
 
     steps:
@@ -155,7 +188,7 @@ jobs:
 
   upload-test-results:
     name: 📊 Upload test results
-    needs: [tests, generate-jobs-tests]
+    needs: [ tests, generate-jobs-tests ]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -208,6 +241,7 @@ jobs:
       - pre
       - tests
       - lint
+      - benchmarks
     steps:
       - name: Mark workflow as failed if lint or test did not pass or were cancelled
         if: contains(fromJson('["failure", "cancelled"]'), needs.tests.result) || contains(fromJson('["failure", "cancelled"]'), needs.lint.result)

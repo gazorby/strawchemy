@@ -146,6 +146,14 @@ Run tests
 
 #### `[test]`
 
+## `test:benchmarks`
+
+- Depends: _install
+
+- **Usage**: `test:benchmarks`
+
+Run benchmarks
+
 ## `test:coverage`
 
 - Depends: _install

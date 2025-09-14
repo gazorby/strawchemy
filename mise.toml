@@ -149,6 +149,12 @@ description = "Run snapshot-based tests and update snapshots"
 depends = "_install"
 run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update"
 
+[tasks."test:benchmarks"]
+description = "Run benchmarks"
+depends = "_install"
+run = "uv run pytest --codspeed tests/benchmarks"
+
+
 # ###############
 # CI
 # ###############
