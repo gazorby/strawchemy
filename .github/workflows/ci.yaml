@@ -134,7 +134,7 @@ jobs:
           path: |
             ~/.cache
           key:
-            ${{ runner.os }}-benchmarks-${{ env.pythonLocation }}-${{ hashFiles('**/uv.lock') }} }}
+            ${{ runner.os }}-benchmarks-${{ env.pythonLocation }}-${{ hashFiles('**/uv.lock') }}
           restore-keys: |
             ${{ runner.os }}-benchmarks-${{ env.pythonLocation }}
 
