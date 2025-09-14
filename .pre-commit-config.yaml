@@ -8,7 +8,7 @@ default_stages:
 repos:
   # General hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-toml
       - id: check-yaml
@@ -40,18 +40,18 @@ repos:
 
   # Commitizen
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.8.2
+    rev: v4.9.0
     hooks:
       - id: commitizen
 
   - repo: https://github.com/provinzkraut/unasyncd
-    rev: v0.8.1
+    rev: v0.9.0
     hooks:
       - id: unasyncd
         additional_dependencies: ["ruff"]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.11.11
+    rev: v0.13.0
     hooks:
       - id: ruff
         types_or: [python, pyi]
