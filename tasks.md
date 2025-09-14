@@ -148,7 +148,7 @@ Run tests
 
 ## `test:benchmarks`
 
-- Depends: _install
+- Depends: _install:test
 
 - **Usage**: `test:benchmarks`
 
