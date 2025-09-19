@@ -653,6 +653,126 @@
    ORDER BY color.id ASC
   '''
 # ---
+# name: test_create_set_secondary_table_relationship[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO USER (name, bio, created_at, updated_at)
+  VALUES (?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-async-aiosqlite_engine].1
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         user.name AS name_1,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON user.id = user_department_join_table_1.user_id
+   WHERE user.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY user.id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-async-asyncmy_engine]
+  '''
+  INSERT INTO USER (name, bio, created_at, updated_at)
+  VALUES (%s, %s, %s, %s)
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-async-asyncmy_engine].1
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         user.name AS name_1,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON user.id = user_department_join_table_1.user_id
+   WHERE user.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY user.id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-async-asyncpg_engine]
+  '''
+  INSERT INTO "user" (name, bio, created_at, updated_at, id)
+  VALUES ($1::VARCHAR, $2::VARCHAR, $3::TIMESTAMP WITHOUT TIME ZONE, $4::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-async-asyncpg_engine].1
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON "user".id = user_department_join_table_1.user_id
+   WHERE "user".id IN (__[POSTCOMPILE_id_2])
+   ORDER BY "user".id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-async-psycopg_async_engine]
+  '''
+  INSERT INTO "user" (name, bio, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(bio)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-async-psycopg_async_engine].1
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON "user".id = user_department_join_table_1.user_id
+   WHERE "user".id IN (__[POSTCOMPILE_id_2])
+   ORDER BY "user".id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-sync-psycopg_engine]
+  '''
+  INSERT INTO "user" (name, bio, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(bio)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-sync-psycopg_engine].1
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON "user".id = user_department_join_table_1.user_id
+   WHERE "user".id IN (__[POSTCOMPILE_id_2])
+   ORDER BY "user".id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO USER (name, bio, created_at, updated_at)
+  VALUES (?, ?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create_set_secondary_table_relationship[session-tracked-sync-sqlite_engine].1
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         user.name AS name_1,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON user.id = user_department_join_table_1.user_id
+   WHERE user.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY user.id ASC,
+            user__departments.id ASC
+  '''
+# ---
 # name: test_create_with_existing_to_many[session-tracked-async-add-aiosqlite_engine]
   '''
   SELECT color__fruits.id,
@@ -3146,6 +3266,168 @@
      SET name = ?,
          updated_at = ?
    WHERE user.id = ?
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-aiosqlite_engine]
+  '''
+  INSERT INTO user_department_join_table (user_id, department_id)
+  VALUES (?, ?)
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-aiosqlite_engine].1
+  '''
+  DELETE
+    FROM user_department_join_table
+   WHERE user_department_join_table.user_id IN (__[POSTCOMPILE_user_id_1])
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-aiosqlite_engine].2
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         user.name AS name_1,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON user.id = user_department_join_table_1.user_id
+   WHERE user.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY user.id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-asyncmy_engine]
+  '''
+  INSERT INTO user_department_join_table (user_id, department_id)
+  VALUES (%s, %s)
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-asyncmy_engine].1
+  '''
+  DELETE
+    FROM user_department_join_table
+   WHERE user_department_join_table.user_id IN (__[POSTCOMPILE_user_id_1])
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-asyncmy_engine].2
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         user.name AS name_1,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON user.id = user_department_join_table_1.user_id
+   WHERE user.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY user.id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-asyncpg_engine]
+  '''
+  INSERT INTO user_department_join_table (user_id, department_id)
+  VALUES ($1::INTEGER, $2::INTEGER)
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-asyncpg_engine].1
+  '''
+  DELETE
+    FROM user_department_join_table
+   WHERE user_department_join_table.user_id IN (__[POSTCOMPILE_user_id_1])
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-asyncpg_engine].2
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON "user".id = user_department_join_table_1.user_id
+   WHERE "user".id IN (__[POSTCOMPILE_id_2])
+   ORDER BY "user".id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-psycopg_async_engine]
+  '''
+  INSERT INTO user_department_join_table (user_id, department_id)
+  VALUES (%(user_id)s::INTEGER, %(department_id)s::INTEGER)
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-psycopg_async_engine].1
+  '''
+  DELETE
+    FROM user_department_join_table
+   WHERE user_department_join_table.user_id IN (__[POSTCOMPILE_user_id_1])
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-async-psycopg_async_engine].2
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON "user".id = user_department_join_table_1.user_id
+   WHERE "user".id IN (__[POSTCOMPILE_id_2])
+   ORDER BY "user".id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-sync-psycopg_engine]
+  '''
+  INSERT INTO user_department_join_table (user_id, department_id)
+  VALUES (%(user_id)s::INTEGER, %(department_id)s::INTEGER)
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-sync-psycopg_engine].1
+  '''
+  DELETE
+    FROM user_department_join_table
+   WHERE user_department_join_table.user_id IN (__[POSTCOMPILE_user_id_1])
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-sync-psycopg_engine].2
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         "user".name AS name_1,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON "user".id = user_department_join_table_1.user_id
+   WHERE "user".id IN (__[POSTCOMPILE_id_2])
+   ORDER BY "user".id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-sync-sqlite_engine]
+  '''
+  INSERT INTO user_department_join_table (user_id, department_id)
+  VALUES (?, ?)
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-sync-sqlite_engine].1
+  '''
+  DELETE
+    FROM user_department_join_table
+   WHERE user_department_join_table.user_id IN (__[POSTCOMPILE_user_id_1])
+  '''
+# ---
+# name: test_update_set_secondary_table_relationship[session-tracked-sync-sqlite_engine].2
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         user.name AS name_1,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON user.id = user_department_join_table_1.user_id
+   WHERE user.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY user.id ASC,
+            user__departments.id ASC
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-tracked-async-aiosqlite_engine]

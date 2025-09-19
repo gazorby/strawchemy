@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING
 
 import pytest
 from graphql import GraphQLError
-
 from strawberry.types import get_object_definition
+
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import maybe_async
 
@@ -134,6 +134,27 @@ async def test_filtered_statement(
     assert result.data
     assert len(result.data["colorsFiltered"]) == 1
     assert result.data["colorsFiltered"][0]["name"] == "Red"
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_secondary_table_relationships(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, raw_users: RawRecordData
+) -> None:
+    result = await maybe_async(any_query("{ users { id departments { id name } } }"))
+
+    assert not result.errors
+    assert result.data
+
+    assert len(result.data["users"]) == len(raw_users)
+    assert result.data["users"] == [
+        {"id": 1, "departments": [{"id": 1, "name": "IT"}]},
+        {"id": 2, "departments": [{"id": 2, "name": "Sales"}]},
+        {"id": 3, "departments": [{"id": 1, "name": "IT"}, {"id": 3, "name": "Platform"}]},
+        {"id": 4, "departments": []},
+    ]
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

@@ -179,3 +179,75 @@
             color__fruits.id ASC
   '''
 # ---
+# name: test_secondary_table_relationships[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON user.id = user_department_join_table_1.user_id
+   ORDER BY user.id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_secondary_table_relationships[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON user.id = user_department_join_table_1.user_id
+   ORDER BY user.id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_secondary_table_relationships[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON "user".id = user_department_join_table_1.user_id
+   ORDER BY "user".id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_secondary_table_relationships[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON "user".id = user_department_join_table_1.user_id
+   ORDER BY "user".id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_secondary_table_relationships[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         "user".id AS id_1
+    FROM "user" AS "user"
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON "user".id = user_department_join_table_1.user_id
+   ORDER BY "user".id ASC,
+            user__departments.id ASC
+  '''
+# ---
+# name: test_secondary_table_relationships[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT user__departments.name,
+         user__departments.id,
+         user.id AS id_1
+    FROM USER AS USER
+    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS user__departments ON user__departments.id = user_department_join_table_1.department_id)
+      ON user.id = user_department_join_table_1.user_id
+   ORDER BY user.id ASC,
+            user__departments.id ASC
+  '''
+# ---

@@ -84,6 +84,98 @@
   """Decimal (fixed-point)"""
   scalar Decimal
   
+  """Aggregation fields"""
+  type DepartmentAggregate {
+    count: Int
+    max: DepartmentMinMaxFields!
+    min: DepartmentMinMaxFields!
+    sum: DepartmentSumFields!
+  }
+  
+  """
+  Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
+  """
+  input DepartmentAggregateBoolExp {
+    count: DepartmentAggregateBoolExpCount
+    maxString: DepartmentAggregateBoolExpMaxstring
+    minString: DepartmentAggregateBoolExpMinstring
+    sum: DepartmentAggregateBoolExpSum
+  }
+  
+  """Boolean expression to compare count aggregation."""
+  input DepartmentAggregateBoolExpCount {
+    arguments: [DepartmentCountFields!] = []
+    predicate: IntOrderComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare max aggregation."""
+  input DepartmentAggregateBoolExpMaxstring {
+    arguments: [DepartmentMinMaxStringFieldsEnum!]!
+    predicate: TextComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare min aggregation."""
+  input DepartmentAggregateBoolExpMinstring {
+    arguments: [DepartmentMinMaxStringFieldsEnum!]!
+    predicate: TextComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare sum aggregation."""
+  input DepartmentAggregateBoolExpSum {
+    arguments: [DepartmentSumFieldsEnum!]!
+    predicate: FloatOrderComparison!
+    distinct: Boolean = false
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input DepartmentBoolExp {
+    _and: [DepartmentBoolExp!]! = []
+    _or: [DepartmentBoolExp!]! = []
+    _not: DepartmentBoolExp
+    usersAggregate: UserAggregateBoolExp
+    users: UserBoolExp
+    name: TextComparison
+    id: UUIDGenericComparison
+  }
+  
+  enum DepartmentCountFields {
+    name
+    id
+  }
+  
+  """GraphQL type"""
+  type DepartmentMinMaxFields {
+    name: String
+  }
+  
+  enum DepartmentMinMaxStringFieldsEnum {
+    name
+  }
+  
+  """GraphQL type"""
+  type DepartmentSumFields {
+    name: String
+  }
+  
+  enum DepartmentSumFieldsEnum {
+    name
+  }
+  
+  """GraphQL type"""
+  type DepartmentType {
+    usersAggregate: UserAggregate!
+  
+    """Fetch objects from the UserType collection"""
+    users: [UserType!]!
+    name: String!
+    id: UUID!
+  }
+  
   """
   Boolean expression to compare fields supporting order comparisons. All fields are combined with logical 'AND'
   """
@@ -361,6 +453,44 @@
     id
   }
   
+  """Identifier update input"""
+  input GroupDepartmentInput {
+    name: String
+    id: UUID!
+  }
+  
+  """Conflict fields enum"""
+  enum GroupDepartmentsConflictFields {
+    id
+  }
+  
+  """Identifier input"""
+  input GroupDepartmentsIdFieldsInput {
+    id: UUID!
+  }
+  
+  """Add new objects or update existing ones"""
+  input GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyUpdateInput {
+    set: [GroupDepartmentsIdFieldsInput!]
+    add: [GroupDepartmentsIdFieldsInput!]
+    create: [GroupDepartmentInput!]
+    upsert: GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyUpsertInput
+    remove: [GroupDepartmentsIdFieldsInput!]
+  }
+  
+  """Add new objects or update if existing"""
+  input GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyUpsertInput {
+    create: [GroupDepartmentInput!]!
+    conflictFields: GroupDepartmentsConflictFields!
+    updateFields: [GroupDepartmentsUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum GroupDepartmentsUpdateFields {
+    name
+    id
+  }
+  
   """
   Boolean expression to compare fields. All fields are combined with logical 'AND'.
   """
@@ -517,6 +647,7 @@
   """Identifier update input"""
   input GroupUserInput {
     tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneInput
+    departments: GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyUpdateInput
     name: String
     id: UUID!
   }
@@ -732,6 +863,44 @@
   }
   
   """Identifier update input"""
+  input TagDepartmentInput {
+    name: String
+    id: UUID!
+  }
+  
+  """Conflict fields enum"""
+  enum TagDepartmentsConflictFields {
+    id
+  }
+  
+  """Identifier input"""
+  input TagDepartmentsIdFieldsInput {
+    id: UUID!
+  }
+  
+  """Add new objects or update existing ones"""
+  input TagDepartmentsIdFieldsInputTagDepartmentInputTagDepartmentsUpdateFieldsTagDepartmentsConflictFieldsToManyUpdateInput {
+    set: [TagDepartmentsIdFieldsInput!]
+    add: [TagDepartmentsIdFieldsInput!]
+    create: [TagDepartmentInput!]
+    upsert: TagDepartmentsIdFieldsInputTagDepartmentInputTagDepartmentsUpdateFieldsTagDepartmentsConflictFieldsToManyUpsertInput
+    remove: [TagDepartmentsIdFieldsInput!]
+  }
+  
+  """Add new objects or update if existing"""
+  input TagDepartmentsIdFieldsInputTagDepartmentInputTagDepartmentsUpdateFieldsTagDepartmentsConflictFieldsToManyUpsertInput {
+    create: [TagDepartmentInput!]!
+    conflictFields: TagDepartmentsConflictFields!
+    updateFields: [TagDepartmentsUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum TagDepartmentsUpdateFields {
+    name
+    id
+  }
+  
+  """Identifier update input"""
   input TagFruitInput {
     name: String
     sweetness: Int
@@ -871,6 +1040,7 @@
   """Identifier update input"""
   input TagUserInput {
     tag: TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneInput
+    departments: TagDepartmentsIdFieldsInputTagDepartmentInputTagDepartmentsUpdateFieldsTagDepartmentsConflictFieldsToManyUpdateInput
     name: String
     id: UUID!
   }
@@ -1011,6 +1181,8 @@
     group: GroupFilter
     tagAggregate: TagAggregateBoolExp
     tag: TagBoolExp
+    departmentsAggregate: DepartmentAggregateBoolExp
+    departments: DepartmentBoolExp
     name: TextComparison
     groupId: UUIDGenericComparison
     tagId: UUIDGenericComparison
@@ -1046,6 +1218,10 @@
   type UserType {
     group: GroupType!
     tag: TagType!
+    departmentsAggregate: DepartmentAggregate!
+  
+    """Fetch objects from the DepartmentType collection"""
+    departments: [DepartmentType!]!
     name: String!
     groupId: UUID
     tagId: UUID

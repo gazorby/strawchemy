@@ -12,6 +12,34 @@
   }
   
   """Aggregation fields"""
+  type DepartmentAggregate {
+    count: Int
+    max: DepartmentMinMaxFields!
+    min: DepartmentMinMaxFields!
+    sum: DepartmentSumFields!
+  }
+  
+  """GraphQL type"""
+  type DepartmentMinMaxFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type DepartmentSumFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type DepartmentType {
+    usersAggregate: UserAggregate!
+  
+    """Fetch objects from the UserType collection"""
+    users: [UserType!]!
+    name: String!
+    id: UUID!
+  }
+  
+  """Aggregation fields"""
   type FruitAggregate {
     avg: FruitNumericFields!
     count: Int
@@ -91,6 +119,43 @@
   
   """Update fields enum"""
   enum GroupColorUpdateFields {
+    name
+    id
+  }
+  
+  """Create input"""
+  input GroupDepartmentInput {
+    name: String!
+    id: UUID
+  }
+  
+  """Conflict fields enum"""
+  enum GroupDepartmentsConflictFields {
+    id
+  }
+  
+  """Identifier input"""
+  input GroupDepartmentsIdFieldsInput {
+    id: UUID!
+  }
+  
+  """Add new or existing objects"""
+  input GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyCreateInput {
+    set: [GroupDepartmentsIdFieldsInput!]
+    add: [GroupDepartmentsIdFieldsInput!]
+    create: [GroupDepartmentInput!]
+    upsert: GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyUpsertInput
+  }
+  
+  """Add new objects or update if existing"""
+  input GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyUpsertInput {
+    create: [GroupDepartmentInput!]!
+    conflictFields: GroupDepartmentsConflictFields!
+    updateFields: [GroupDepartmentsUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum GroupDepartmentsUpdateFields {
     name
     id
   }
@@ -213,6 +278,7 @@
   """Create input"""
   input GroupUserInput {
     tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneInput = null
+    departments: GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyCreateInput
     name: String!
     id: UUID
   }
@@ -293,6 +359,10 @@
   type UserType {
     group: GroupType!
     tag: TagType!
+    departmentsAggregate: DepartmentAggregate!
+  
+    """Fetch objects from the DepartmentType collection"""
+    departments: [DepartmentType!]!
     name: String!
     groupId: UUID
     tagId: UUID
