@@ -5,7 +5,7 @@ from typing import Annotated
 from pydantic import AfterValidator
 from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemyConfig
 
-from .models import Milestone, Project, Ticket
+from .models import Customer, Milestone, Project, Ticket
 
 strawchemy = Strawchemy(StrawchemyConfig("sqlite", repository_type=StrawchemyAsyncRepository))
 
@@ -72,6 +72,17 @@ class MilestoneType: ...
 
 @strawchemy.create_input(Milestone, include="all", override=True)
 class MilestoneCreate: ...
+
+
+# Customer
+
+
+@strawchemy.type(Customer, include="all", override=True)
+class CustomerType: ...
+
+
+@strawchemy.create_input(Customer, include="all", override=True)
+class CustomerCreate: ...
 
 
 # Validation

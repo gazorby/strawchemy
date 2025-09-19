@@ -1,6 +1,200 @@
 # serializer version: 1
 # name: test_graphql_schema
   '''
+  """Aggregation fields"""
+  type CustomerAggregate {
+    count: Int
+    max: CustomerMinMaxFields!
+    min: CustomerMinMaxFields!
+    sum: CustomerSumFields!
+  }
+  
+  """
+  Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
+  """
+  input CustomerAggregateBoolExp {
+    count: CustomerAggregateBoolExpCount
+    maxDatetime: CustomerAggregateBoolExpMaxdatetime
+    maxString: CustomerAggregateBoolExpMaxstring
+    minDatetime: CustomerAggregateBoolExpMindatetime
+    minString: CustomerAggregateBoolExpMinstring
+    sum: CustomerAggregateBoolExpSum
+  }
+  
+  """Boolean expression to compare count aggregation."""
+  input CustomerAggregateBoolExpCount {
+    arguments: [CustomerCountFields!] = []
+    predicate: IntOrderComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare max aggregation."""
+  input CustomerAggregateBoolExpMaxdatetime {
+    arguments: [CustomerMinMaxDateTimeFieldsEnum!]!
+    predicate: DateTimeComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare max aggregation."""
+  input CustomerAggregateBoolExpMaxstring {
+    arguments: [CustomerMinMaxStringFieldsEnum!]!
+    predicate: TextComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare min aggregation."""
+  input CustomerAggregateBoolExpMindatetime {
+    arguments: [CustomerMinMaxDateTimeFieldsEnum!]!
+    predicate: DateTimeComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare min aggregation."""
+  input CustomerAggregateBoolExpMinstring {
+    arguments: [CustomerMinMaxStringFieldsEnum!]!
+    predicate: TextComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare sum aggregation."""
+  input CustomerAggregateBoolExpSum {
+    arguments: [CustomerSumFieldsEnum!]!
+    predicate: FloatOrderComparison!
+    distinct: Boolean = false
+  }
+  
+  input CustomerAggregateMinMaxDatetimeFieldsOrderBy {
+    createdAt: OrderByEnum!
+    updatedAt: OrderByEnum!
+  }
+  
+  input CustomerAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum!
+  }
+  
+  input CustomerAggregateNumericFieldsOrderBy {
+    name: OrderByEnum!
+  }
+  
+  input CustomerAggregateOrderBy {
+    count: OrderByEnum
+    maxDatetime: CustomerAggregateMinMaxDatetimeFieldsOrderBy
+    maxString: CustomerAggregateMinMaxStringFieldsOrderBy
+    minDatetime: CustomerAggregateMinMaxDatetimeFieldsOrderBy
+    minString: CustomerAggregateMinMaxStringFieldsOrderBy
+    sum: CustomerAggregateNumericFieldsOrderBy
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input CustomerBoolExp {
+    _and: [CustomerBoolExp!]! = []
+    _or: [CustomerBoolExp!]! = []
+    _not: CustomerBoolExp
+    projectsAggregate: ProjectAggregateBoolExp
+    projects: ProjectBoolExp
+    name: TextComparison
+    id: UUIDGenericComparison
+    createdAt: DateTimeComparison
+    updatedAt: DateTimeComparison
+  }
+  
+  enum CustomerCountFields {
+    name
+    id
+    createdAt
+    updatedAt
+  }
+  
+  """Create input"""
+  input CustomerCreate {
+    projects: CustomerProjectsIdFieldsInputProjectCreateCustomerProjectsUpdateFieldsCustomerProjectsConflictFieldsToManyCreateInput
+    name: String!
+    id: UUID
+  }
+  
+  enum CustomerMinMaxDateTimeFieldsEnum {
+    createdAt
+    updatedAt
+  }
+  
+  """GraphQL type"""
+  type CustomerMinMaxFields {
+    name: String
+    createdAt: DateTime
+    updatedAt: DateTime
+  }
+  
+  enum CustomerMinMaxStringFieldsEnum {
+    name
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input CustomerOrderBy {
+    projectsAggregate: ProjectAggregateOrderBy
+    projects: ProjectOrderBy
+    name: OrderByEnum
+    id: OrderByEnum
+    createdAt: OrderByEnum
+    updatedAt: OrderByEnum
+  }
+  
+  """Conflict fields enum"""
+  enum CustomerProjectsConflictFields {
+    id
+  }
+  
+  """Identifier input"""
+  input CustomerProjectsIdFieldsInput {
+    id: UUID!
+  }
+  
+  """Add new or existing objects"""
+  input CustomerProjectsIdFieldsInputProjectCreateCustomerProjectsUpdateFieldsCustomerProjectsConflictFieldsToManyCreateInput {
+    set: [CustomerProjectsIdFieldsInput!]
+    add: [CustomerProjectsIdFieldsInput!]
+    create: [ProjectCreate!]
+    upsert: CustomerProjectsIdFieldsInputProjectCreateCustomerProjectsUpdateFieldsCustomerProjectsConflictFieldsToManyUpsertInput
+  }
+  
+  """Add new objects or update if existing"""
+  input CustomerProjectsIdFieldsInputProjectCreateCustomerProjectsUpdateFieldsCustomerProjectsConflictFieldsToManyUpsertInput {
+    create: [ProjectCreate!]!
+    conflictFields: CustomerProjectsConflictFields!
+    updateFields: [CustomerProjectsUpdateFields!]
+  }
+  
+  """Update fields enum"""
+  enum CustomerProjectsUpdateFields {
+    tagId
+    name
+    id
+  }
+  
+  """GraphQL type"""
+  type CustomerSumFields {
+    name: String
+  }
+  
+  enum CustomerSumFieldsEnum {
+    name
+  }
+  
+  """GraphQL type"""
+  type CustomerType {
+    projectsAggregate: ProjectAggregate!
+  
+    """Fetch objects from the ProjectType collection"""
+    projects(filter: ProjectFilter = null, orderBy: [ProjectOrder!] = null): [ProjectType!]!
+    name: String!
+    id: UUID!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+  }
+  
   """Date with time (isoformat)"""
   scalar DateTime
   
@@ -71,6 +265,14 @@
     loc: [String!]!
     message: String!
     type: String!
+  }
+  
+  """Aggregation fields"""
+  type MilestoneAggregate {
+    count: Int
+    max: MilestoneMinMaxFields!
+    min: MilestoneMinMaxFields!
+    sum: MilestoneSumFields!
   }
   
   """
@@ -156,9 +358,10 @@
     _and: [MilestoneBoolExp!]! = []
     _or: [MilestoneBoolExp!]! = []
     _not: MilestoneBoolExp
-    projectsAggregate: ProjectAggregateBoolExp
-    projects: ProjectBoolExp
+    projectAggregate: ProjectAggregateBoolExp
+    project: ProjectBoolExp
     name: TextComparison
+    projectId: UUIDGenericComparison
     id: UUIDGenericComparison
     createdAt: DateTimeComparison
     updatedAt: DateTimeComparison
@@ -166,6 +369,7 @@
   
   enum MilestoneCountFields {
     name
+    projectId
     id
     createdAt
     updatedAt
@@ -173,7 +377,7 @@
   
   """Create input"""
   input MilestoneCreate {
-    projects: MilestoneProjectsIdFieldsInputProjectCreateMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyCreateInput
+    project: MilestoneProjectIdFieldsInputProjectCreateMilestoneProjectUpdateFieldsMilestoneProjectConflictFieldsToOneInput = null
     name: String!
     id: UUID
   }
@@ -181,6 +385,13 @@
   enum MilestoneMinMaxDateTimeFieldsEnum {
     createdAt
     updatedAt
+  }
+  
+  """GraphQL type"""
+  type MilestoneMinMaxFields {
+    name: String
+    createdAt: DateTime
+    updatedAt: DateTime
   }
   
   enum MilestoneMinMaxStringFieldsEnum {
@@ -191,45 +402,49 @@
   Boolean expression to compare fields. All fields are combined with logical 'AND'.
   """
   input MilestoneOrderBy {
-    projectsAggregate: ProjectAggregateOrderBy
-    projects: ProjectOrderBy
+    projectAggregate: ProjectAggregateOrderBy
+    project: ProjectOrderBy
     name: OrderByEnum
+    projectId: OrderByEnum
     id: OrderByEnum
     createdAt: OrderByEnum
     updatedAt: OrderByEnum
   }
   
   """Conflict fields enum"""
-  enum MilestoneProjectsConflictFields {
+  enum MilestoneProjectConflictFields {
     id
   }
   
   """Identifier input"""
-  input MilestoneProjectsIdFieldsInput {
+  input MilestoneProjectIdFieldsInput {
     id: UUID!
   }
   
-  """Add new or existing objects"""
-  input MilestoneProjectsIdFieldsInputProjectCreateMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyCreateInput {
-    set: [MilestoneProjectsIdFieldsInput!]
-    add: [MilestoneProjectsIdFieldsInput!]
-    create: [ProjectCreate!]
-    upsert: MilestoneProjectsIdFieldsInputProjectCreateMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyUpsertInput
+  """Add a new or existing object"""
+  input MilestoneProjectIdFieldsInputProjectCreateMilestoneProjectUpdateFieldsMilestoneProjectConflictFieldsToOneInput {
+    set: MilestoneProjectIdFieldsInput
+    create: ProjectCreate
+    upsert: MilestoneProjectIdFieldsInputProjectCreateMilestoneProjectUpdateFieldsMilestoneProjectConflictFieldsToOneUpsertInput
   }
   
-  """Add new objects or update if existing"""
-  input MilestoneProjectsIdFieldsInputProjectCreateMilestoneProjectsUpdateFieldsMilestoneProjectsConflictFieldsToManyUpsertInput {
-    create: [ProjectCreate!]!
-    conflictFields: MilestoneProjectsConflictFields!
-    updateFields: [MilestoneProjectsUpdateFields!]
+  """Add new object or update if existing"""
+  input MilestoneProjectIdFieldsInputProjectCreateMilestoneProjectUpdateFieldsMilestoneProjectConflictFieldsToOneUpsertInput {
+    create: ProjectCreate!
+    conflictFields: MilestoneProjectConflictFields
+    updateFields: [MilestoneProjectUpdateFields!]
   }
   
   """Update fields enum"""
-  enum MilestoneProjectsUpdateFields {
-    milestoneId
+  enum MilestoneProjectUpdateFields {
     tagId
     name
     id
+  }
+  
+  """GraphQL type"""
+  type MilestoneSumFields {
+    name: String
   }
   
   enum MilestoneSumFieldsEnum {
@@ -238,11 +453,9 @@
   
   """GraphQL type"""
   type MilestoneType {
-    projectsAggregate: ProjectAggregate!
-  
-    """Fetch objects from the ProjectType collection"""
-    projects(filter: ProjectFilter = null, orderBy: [ProjectOrder!] = null): [ProjectType!]!
+    project: ProjectType
     name: String!
+    projectId: UUID
     id: UUID!
     createdAt: DateTime!
     updatedAt: DateTime!
@@ -275,6 +488,9 @@
   
     """Fetch objects from the TicketType collection"""
     deleteTicket(filter: TicketFilter!): [TicketType!]!
+  
+    """Fetch object from the CustomerType collection by id"""
+    createCustomer(data: CustomerCreate!): CustomerType!
   }
   
   enum OrderByEnum {
@@ -379,11 +595,12 @@
     _not: ProjectBoolExp
     ticketsAggregate: TicketAggregateBoolExp
     tickets: TicketFilter
-    milestoneAggregate: MilestoneAggregateBoolExp
-    milestone: MilestoneBoolExp
+    milestonesAggregate: MilestoneAggregateBoolExp
+    milestones: MilestoneBoolExp
     tagAggregate: TagAggregateBoolExp
     tag: TagBoolExp
-    milestoneId: UUIDGenericComparison
+    customersAggregate: CustomerAggregateBoolExp
+    customers: CustomerBoolExp
     tagId: UUIDGenericComparison
     name: TextComparison
     id: UUIDGenericComparison
@@ -392,7 +609,6 @@
   }
   
   enum ProjectCountFields {
-    milestoneId
     tagId
     name
     id
@@ -414,11 +630,12 @@
     not_: ProjectFilter
     ticketsAggregate: TicketAggregateBoolExp
     tickets: TicketFilter
-    milestoneAggregate: MilestoneAggregateBoolExp
-    milestone: MilestoneBoolExp
+    milestonesAggregate: MilestoneAggregateBoolExp
+    milestones: MilestoneBoolExp
     tagAggregate: TagAggregateBoolExp
     tag: TagBoolExp
-    milestoneId: UUIDGenericComparison
+    customersAggregate: CustomerAggregateBoolExp
+    customers: CustomerBoolExp
     tagId: UUIDGenericComparison
     name: TextComparison
     id: UUIDGenericComparison
@@ -448,11 +665,12 @@
   input ProjectOrder {
     ticketsAggregate: TicketAggregateOrderBy
     tickets: TicketOrder
-    milestoneAggregate: MilestoneAggregateOrderBy
-    milestone: MilestoneOrderBy
+    milestonesAggregate: MilestoneAggregateOrderBy
+    milestones: MilestoneOrderBy
     tagAggregate: TagAggregateOrderBy
     tag: TagOrderBy
-    milestoneId: OrderByEnum
+    customersAggregate: CustomerAggregateOrderBy
+    customers: CustomerOrderBy
     tagId: OrderByEnum
     name: OrderByEnum
     id: OrderByEnum
@@ -466,11 +684,12 @@
   input ProjectOrderBy {
     ticketsAggregate: TicketAggregateOrderBy
     tickets: TicketOrder
-    milestoneAggregate: MilestoneAggregateOrderBy
-    milestone: MilestoneOrderBy
+    milestonesAggregate: MilestoneAggregateOrderBy
+    milestones: MilestoneOrderBy
     tagAggregate: TagAggregateOrderBy
     tag: TagOrderBy
-    milestoneId: OrderByEnum
+    customersAggregate: CustomerAggregateOrderBy
+    customers: CustomerOrderBy
     tagId: OrderByEnum
     name: OrderByEnum
     id: OrderByEnum
@@ -493,9 +712,15 @@
   
     """Fetch objects from the TicketType collection"""
     tickets(filter: TicketFilter = null, orderBy: [TicketOrder!] = null): [TicketType!]!
-    milestone: MilestoneType
+    milestonesAggregate: MilestoneAggregate!
+  
+    """Fetch objects from the MilestoneType collection"""
+    milestones: [MilestoneType!]!
     tag: TagType
-    milestoneId: UUID
+    customersAggregate: CustomerAggregate!
+  
+    """Fetch objects from the CustomerType collection"""
+    customers: [CustomerType!]!
     tagId: UUID
     name: String!
     id: UUID!
@@ -853,7 +1078,6 @@
   
   """Update fields enum"""
   enum TicketProjectUpdateFields {
-    milestoneId
     tagId
     name
     id

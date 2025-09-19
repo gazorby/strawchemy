@@ -8,6 +8,8 @@ from strawchemy.validation.pydantic import PydanticValidation
 import strawberry
 
 from .types import (
+    CustomerCreate,
+    CustomerType,
     MilestoneCreate,
     MilestoneType,
     ProjectCreate,
@@ -54,6 +56,8 @@ class Mutation:
     update_tickets: list[TicketType] = strawchemy.update(TicketPartial, TicketFilter)
 
     delete_ticket: list[TicketType] = strawchemy.delete(TicketFilter)
+
+    create_customer: CustomerType = strawchemy.create(CustomerCreate)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation)
