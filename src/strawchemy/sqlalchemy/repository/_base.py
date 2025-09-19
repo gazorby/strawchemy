@@ -5,11 +5,11 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, Optional, TypeVar, Union, cast
 
-from sqlalchemy.dialects import mysql, postgresql, sqlite
-from sqlalchemy.orm import RelationshipProperty
 from typing_extensions import TypeAlias
 
 from sqlalchemy import Column, Function, Insert, Row, Table, func, insert, inspect
+from sqlalchemy.dialects import mysql, postgresql, sqlite
+from sqlalchemy.orm import RelationshipProperty
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
@@ -19,11 +19,10 @@ from strawchemy.strawberry.mutation.types import RelationType
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.sql.base import ReadOnlyColumnCollection
     from sqlalchemy.sql.elements import KeyedColumnElement
-
-    from sqlalchemy import Select
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.strawberry.mutation.input import Input, LevelInput, UpsertData
@@ -227,24 +226,30 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
     def _many_to_many_values(
         self, model: DeclarativeBase, parent: Union[RowLike, DeclarativeBase], relationship: RelationshipProperty[Any]
     ) -> dict[str, Any]:
-        assert relationship.local_remote_pairs
-
-        return {
-            remote.key: getattr(model, local.key) if local.table is model.__table__ else getattr(parent, local.key)
-            for local, remote in relationship.local_remote_pairs
-            if local.key and remote.key
-        }
+        # Cache table and getattr for local usage
+        model_table = model.__table__
+        values = {}
+        for local, remote in relationship.local_remote_pairs:
+            if local.key and remote.key:
+                if local.table is model_table:
+                    values[remote.key] = getattr(model, local.key)
+                else:
+                    values[remote.key] = getattr(parent, local.key)
+        return values
 
     def _update_values(
         self, model: DeclarativeBase, parent: Union[RowLike, DeclarativeBase], relationship: RelationshipProperty[Any]
     ) -> dict[str, Any]:
+        # Preload keys and avoid dict merging
         assert relationship.local_remote_pairs
         if relationship.secondary is None:
-            return {column.key: getattr(model, column.key) for column in model.__mapper__.primary_key} | {
-                remote.key: getattr(parent, local.key)
-                for local, remote in relationship.local_remote_pairs
-                if local.key and remote.key
-            }
+            values = {}
+            for column in model.__mapper__.primary_key:
+                values[column.key] = getattr(model, column.key)
+            for local, remote in relationship.local_remote_pairs:
+                if local.key and remote.key:
+                    values[remote.key] = getattr(parent, local.key)
+            return values
         return self._many_to_many_values(model, parent, relationship)
 
     def _insert_values(
