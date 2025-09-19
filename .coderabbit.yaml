@@ -4,12 +4,20 @@ language: "en-US"
 reviews:
   profile: "assertive"
   high_level_summary: true
+  sequence_diagrams: false
+  path_filters:
+    - "!**/__snapshots__/**"
   auto_review:
+    ignore_usernames:
+      - "dependabot"
+      - "codeflash-ai"
+      - "renovate"
     enabled: true
     drafts: false
     ignore_title_keywords:
       - "wip"
       - "draft"
+
 
 tools:
   ruff:
