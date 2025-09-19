@@ -44,7 +44,7 @@
   
     """Fetch objects from the UserType collection"""
     users: [UserType!]!
-    name: String!
+    name: String
     id: UUID!
   }
   
@@ -134,7 +134,7 @@
   
   """Create input"""
   input GroupDepartmentInput {
-    name: String!
+    name: String = null
     id: UUID
   }
   

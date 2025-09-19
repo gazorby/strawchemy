@@ -199,7 +199,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                     )
                     self.session.execute(remove_previous_stmt)
                 insert_data = InsertData(model_type_or_table, set_values)
-                self.session.execute(self._insert_statement(insert_data).values(*insert_data.values))
+                self.session.execute(self._insert_statement(insert_data).values(insert_data.values))
 
     def _create_to_many_relations(self, data: Input[DeclarativeT], mutated_ids: Sequence[RowLike]) -> None:
         """Creates and connects new related objects for to-many relationships.

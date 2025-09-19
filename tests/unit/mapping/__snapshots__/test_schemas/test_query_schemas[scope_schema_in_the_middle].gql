@@ -35,7 +35,7 @@
   
     """Fetch objects from the GraphQLUser collection"""
     users: [GraphQLUser!]!
-    name: String!
+    name: String
     id: UUID!
   }
   

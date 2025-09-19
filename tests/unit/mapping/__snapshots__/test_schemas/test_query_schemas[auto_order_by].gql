@@ -85,7 +85,7 @@
   
     """Fetch objects from the UserType collection"""
     users(orderBy: [UserOrderBy!] = null): [UserType!]!
-    name: String!
+    name: String
     id: UUID!
   }
   

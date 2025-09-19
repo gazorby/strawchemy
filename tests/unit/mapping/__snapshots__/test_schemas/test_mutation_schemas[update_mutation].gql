@@ -172,7 +172,7 @@
   
     """Fetch objects from the UserType collection"""
     users: [UserType!]!
-    name: String!
+    name: String
     id: UUID!
   }
   
