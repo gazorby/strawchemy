@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from collections import defaultdict, namedtuple
-from typing import TYPE_CHECKING, Any, NamedTuple, Optional, TypeVar
+from inspect import isclass
+from typing import TYPE_CHECKING, Any, Optional, TypeVar
 
-from typing_extensions import TypeAlias
+from sqlalchemy.orm import RelationshipProperty
 
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
-from sqlalchemy.orm import RelationshipProperty
 from strawchemy.sqlalchemy._executor import QueryResult, SyncQueryExecutor
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
 from strawchemy.sqlalchemy.typing import AnySyncSession, DeclarativeT
@@ -22,18 +22,17 @@ if TYPE_CHECKING:
 
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.orm.util import AliasedClass
+
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.strawberry.mutation.input import Input, LevelInput
     from strawchemy.strawberry.typing import QueryNodeType
 
-    from ._base import InsertOrUpdate
+    from ._base import InsertOrUpdate, RowLike
 
 __all__ = ()
 
 T = TypeVar("T", bound=Any)
-
-_RowLike: TypeAlias = "Row[Any] | NamedTuple"
 
 
 class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, AnySyncSession]):
@@ -42,9 +41,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             self._dialect.name == "postgresql" and data.is_upsert
         ):
             results = self.session.execute(
-                self._insert_statement(data).returning(
-                    *data.model_type.__mapper__.primary_key, sort_by_parameter_order=True
-                ),
+                self._insert_statement(data).returning(*data.pks, sort_by_parameter_order=True),
                 data.values,
             )
             return results.all()
@@ -75,14 +72,14 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         """
         instance_ids: Sequence[Row[Any]] = self._insert_many(data)
 
-        pk_names = [pk.name for pk in data.model_type.__mapper__.primary_key]
+        pk_names = [pk.name for pk in data.pks]
 
         pk_index, fk_index = 0, 0
         for relation_input in level.inputs:
-            if not isinstance(relation_input.instance, data.model_type):
+            if isclass(data.model_type) and not isinstance(relation_input.instance, data.model_type):
                 continue
             # Update Pks
-            for column in data.model_type.__mapper__.primary_key:
+            for column in data.pks:
                 setattr(relation_input.instance, column.key, instance_ids[pk_index][pk_names.index(column.key)])
             pk_index += 1
             if relation_input.relation.relation_type is RelationType.TO_MANY:
@@ -156,18 +153,11 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                 relationship information.
         """
         for level in data.filter_by_level(RelationType.TO_ONE, ["create", "upsert"]):
-            insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
-            upsert_data_map: dict[type[DeclarativeBase], UpsertData] = {}
+            params = self._create_nested_to_one_params(level)
+            for model_type, values in params.insert.items():
+                self._insert_nested(InsertData(model_type, values, params.upsert_data_map.get(model_type)), level)
 
-            for create_input in level.inputs:
-                insert_params[create_input.relation.related].append(self._to_dict(create_input.instance))
-                if create_input.relation.upsert is not None:
-                    upsert_data_map[create_input.relation.related] = create_input.relation.upsert
-
-            for model_type, values in insert_params.items():
-                self._insert_nested(InsertData(model_type, values, upsert_data_map.get(model_type)), level)
-
-    def _update_to_many_relations(self, data: Input[DeclarativeT], created_ids: Sequence[_RowLike]) -> None:
+    def _update_to_many_relations(self, data: Input[DeclarativeT], mutated_ids: Sequence[RowLike]) -> None:
         """Updates foreign keys to connect existing related objects for to-many relationships.
 
         Iterates through the input data levels filtered for 'set' operations
@@ -177,89 +167,41 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
         Args:
             data: The processed input data containing relationship information.
-            created_ids: A sequence of RowLike objects containing the primary keys
+            mutated_ids: A sequence of RowLike objects containing the primary keys
                 of the main objects created or updated in the parent operation.
                 Used to link the 'set' relations to the correct parent.
         """
         for level in data.filter_by_level(RelationType.TO_MANY, ["add", "remove"]):
-            update_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
-            for level_input in level.inputs:
-                relation = level_input.relation
-                prop = relation.attribute
-                assert prop.local_remote_pairs
-                parent = created_ids[relation.input_index] if relation.level == 1 else relation.parent
-                update_params[relation.related].extend(
-                    [
-                        {
-                            column.key: getattr(relation_model, column.key)
-                            for column in relation_model.__mapper__.primary_key
-                        }
-                        | {
-                            remote.key: getattr(parent, local.key)
-                            for local, remote in prop.local_remote_pairs
-                            if local.key and remote.key
-                        }
-                        for relation_model in relation.add
-                    ]
-                )
-                update_params[relation.related].extend(
-                    [
-                        {
-                            column.key: getattr(relation_model, column.key)
-                            for column in relation_model.__mapper__.primary_key
-                        }
-                        | {remote.key: None for local, remote in prop.local_remote_pairs if local.key and remote.key}
-                        for relation_model in relation.remove
-                    ]
-                )
-
-            for model_type, values in update_params.items():
+            params = self._update_to_many_params(level, mutated_ids)
+            for model_type, values in params.update.items():
                 self.session.execute(update(model_type), values)
 
     def _set_to_many_relations(
-        self, mode: InsertOrUpdate, data: Input[DeclarativeT], created_ids: Sequence[_RowLike]
+        self, mode: InsertOrUpdate, data: Input[DeclarativeT], mutated_ids: Sequence[RowLike]
     ) -> None:
         for level in data.filter_by_level(RelationType.TO_MANY, ["set"]):
-            remove_old_ids: defaultdict[type[DeclarativeBase], defaultdict[str, list[Any]]] = defaultdict(
-                lambda: defaultdict(list)
-            )
-            set_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
-            for level_input in level.inputs:
-                relation = level_input.relation
-                prop = relation.attribute
-                assert prop.local_remote_pairs
-                parent = created_ids[relation.input_index] if relation.level == 1 else relation.parent
-                if relation.level == 1 and mode in {"update_by_pks", "update_where"}:
-                    for local, remote in prop.local_remote_pairs:
-                        remove_old_ids[relation.related][remote.key].append(getattr(parent, local.key))
-                for relation_model in relation.set or []:
-                    set_params[relation.related].append(
-                        {
-                            column.key: getattr(relation_model, column.key)
-                            for column in relation_model.__mapper__.primary_key
-                        }
-                        | {
-                            remote.key: getattr(parent, local.key)
-                            for local, remote in prop.local_remote_pairs
-                            if local.key and remote.key
-                        }
-                    )
+            params = self._set_to_many_params(level, mode, mutated_ids)
 
-            for model_type, set_values in set_params.items():
-                if current_ids := remove_old_ids[model_type]:
-                    # Remove previous relations
+            for model_type, set_values in params.insert.items():
+                if current_ids := params.delete[model_type]:
+                    attrs = inspect(model_type, raiseerr=True).attrs
                     remove_previous_stmt = update(model_type).where(
-                        and_(
-                            *[
-                                model_type.__mapper__.attrs[key].class_attribute.in_(ids)
-                                for key, ids in current_ids.items()
-                            ]
-                        )
+                        and_(*[attrs[key].class_attribute.in_(ids) for key, ids in current_ids.items()])
                     )
                     self.session.execute(remove_previous_stmt, dict.fromkeys(current_ids))
                 self.session.execute(update(model_type), set_values)
 
-    def _create_to_many_relations(self, data: Input[DeclarativeT], created_ids: Sequence[_RowLike]) -> None:
+            for model_type_or_table, set_values in params.insert_m2m.items():
+                if current_ids := params.delete_m2m[model_type_or_table]:
+                    columns = inspect(model_type_or_table, raiseerr=True).columns
+                    remove_previous_stmt = delete(model_type_or_table).where(
+                        and_(*[columns[key].in_(ids) for key, ids in current_ids.items()])
+                    )
+                    self.session.execute(remove_previous_stmt)
+                insert_data = InsertData(model_type_or_table, set_values)
+                self.session.execute(self._insert_statement(insert_data).values(*insert_data.values))
+
+    def _create_to_many_relations(self, data: Input[DeclarativeT], mutated_ids: Sequence[RowLike]) -> None:
         """Creates and connects new related objects for to-many relationships.
 
         Iterates through the input data levels filtered for 'create' operations
@@ -270,31 +212,21 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         Args:
             data: The processed input data containing nested structures and
                 relationship information.
-            created_ids: A sequence of RowLike objects containing the primary keys
+            mutated_ids: A sequence of RowLike objects containing the primary keys
                 of the main objects created in the parent operation. Used to set
                 foreign keys on the newly created related objects.
         """
         for level in data.filter_by_level(RelationType.TO_MANY, ["create", "upsert"]):
-            insert_params: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = defaultdict(list)
-            upsert_data_map: dict[type[DeclarativeBase], UpsertData] = {}
-            for create_input in level.inputs:
-                relation = create_input.relation
-                prop = relation.attribute
-                assert prop.local_remote_pairs
-                parent = created_ids[relation.input_index] if relation.level == 1 else relation.parent
-                fks = {
-                    remote.key: getattr(parent, local.key)
-                    for local, remote in prop.local_remote_pairs
-                    if local.key and remote.key
-                }
-                insert_params[relation.related].append(self._to_dict(create_input.instance) | fks)
-                if create_input.relation.upsert is not None:
-                    upsert_data_map[create_input.relation.related] = create_input.relation.upsert
+            params = self._create_to_many_params(level, mutated_ids)
 
-            for model_type, values in insert_params.items():
-                self._insert_nested(InsertData(model_type, values, upsert_data_map.get(model_type)), level)
+            for model_type, values in params.insert.items():
+                self._insert_nested(InsertData(model_type, values, params.upsert_data_map.get(model_type)), level)
 
-    def _execute_insert_or_update(self, data: MutationData[DeclarativeT]) -> Sequence[_RowLike]:
+            for model_type_or_table, set_values in params.insert_m2m.items():
+                insert_data = InsertData(model_type_or_table, set_values)
+                self.session.execute(self._insert_statement(insert_data).values(*insert_data.values))
+
+    def _execute_insert_or_update(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
         values = [self._to_dict(instance) for instance in data.input.instances]
         if data.mode == "insert":
             return self._insert_many(InsertData(self.model, values))
@@ -321,7 +253,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         where_expressions = transpiler.filter_expressions(data.dto_filter) if data.dto_filter else None
         return self._update_where(transpiler.scope.root_alias, values[0], where_expressions)
 
-    def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[_RowLike]:
+    def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
         self._connect_to_one_relations(data.input)
         data.input.add_non_input_relations()
         with self.session.begin_nested() as transaction:
@@ -334,7 +266,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         return instance_ids
 
     def _list_by_ids(
-        self, id_rows: Sequence[_RowLike], selection: Optional[QueryNodeType] = None
+        self, id_rows: Sequence[RowLike], selection: Optional[QueryNodeType] = None
     ) -> QueryResult[DeclarativeT]:
         """Retrieves multiple records by their primary keys with optional selection.
 

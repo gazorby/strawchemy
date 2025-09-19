@@ -12,6 +12,34 @@
   }
   
   """Aggregation fields"""
+  type DepartmentAggregate {
+    count: Int
+    max: DepartmentMinMaxFields!
+    min: DepartmentMinMaxFields!
+    sum: DepartmentSumFields!
+  }
+  
+  """GraphQL type"""
+  type DepartmentMinMaxFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type DepartmentSumFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type DepartmentType {
+    usersAggregate: UserAggregate!
+  
+    """Fetch objects from the GraphQLUser collection"""
+    users: [GraphQLUser!]!
+    name: String!
+    id: UUID!
+  }
+  
+  """Aggregation fields"""
   type FruitAggregate {
     avg: FruitNumericFields!
     count: Int
@@ -78,6 +106,10 @@
   type GraphQLUser {
     group: GraphQLGroup!
     tag: TagType!
+    departmentsAggregate: DepartmentAggregate!
+  
+    """Fetch objects from the DepartmentType collection"""
+    departments: [DepartmentType!]!
     name: String!
     groupId: UUID
     tagId: UUID
