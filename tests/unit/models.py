@@ -116,7 +116,7 @@ UserDepartmentJoinTable = Table(
 class Department(UUIDBase):
     __tablename__ = "department"
 
-    name: Mapped[str | None] = mapped_column(VARCHAR(255), nullable=True)
+    name: Mapped[Optional[str]] = mapped_column(VARCHAR(255), nullable=True)
     users: Mapped[list[User]] = relationship(
         User,
         secondary="user_department_join_table",
