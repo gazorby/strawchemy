@@ -3352,7 +3352,7 @@
 # name: test_update_set_secondary_table_relationship[session-tracked-async-psycopg_async_engine]
   '''
   INSERT INTO user_department_join_table (user_id, department_id)
-  VALUES (%(user_id)s::INTEGER, %(department_id)s::INTEGER)
+  VALUES (%(user_id_m0)s::INTEGER, %(department_id_m0)s::INTEGER)
   '''
 # ---
 # name: test_update_set_secondary_table_relationship[session-tracked-async-psycopg_async_engine].1
@@ -3379,7 +3379,7 @@
 # name: test_update_set_secondary_table_relationship[session-tracked-sync-psycopg_engine]
   '''
   INSERT INTO user_department_join_table (user_id, department_id)
-  VALUES (%(user_id)s::INTEGER, %(department_id)s::INTEGER)
+  VALUES (%(user_id_m0)s::INTEGER, %(department_id_m0)s::INTEGER)
   '''
 # ---
 # name: test_update_set_secondary_table_relationship[session-tracked-sync-psycopg_engine].1
