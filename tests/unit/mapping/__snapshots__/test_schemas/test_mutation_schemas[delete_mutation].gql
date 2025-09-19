@@ -75,6 +75,98 @@
     id: UUID!
   }
   
+  """Aggregation fields"""
+  type DepartmentAggregate {
+    count: Int
+    max: DepartmentMinMaxFields!
+    min: DepartmentMinMaxFields!
+    sum: DepartmentSumFields!
+  }
+  
+  """
+  Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
+  """
+  input DepartmentAggregateBoolExp {
+    count: DepartmentAggregateBoolExpCount
+    maxString: DepartmentAggregateBoolExpMaxstring
+    minString: DepartmentAggregateBoolExpMinstring
+    sum: DepartmentAggregateBoolExpSum
+  }
+  
+  """Boolean expression to compare count aggregation."""
+  input DepartmentAggregateBoolExpCount {
+    arguments: [DepartmentCountFields!] = []
+    predicate: IntOrderComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare max aggregation."""
+  input DepartmentAggregateBoolExpMaxstring {
+    arguments: [DepartmentMinMaxStringFieldsEnum!]!
+    predicate: TextComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare min aggregation."""
+  input DepartmentAggregateBoolExpMinstring {
+    arguments: [DepartmentMinMaxStringFieldsEnum!]!
+    predicate: TextComparison!
+    distinct: Boolean = false
+  }
+  
+  """Boolean expression to compare sum aggregation."""
+  input DepartmentAggregateBoolExpSum {
+    arguments: [DepartmentSumFieldsEnum!]!
+    predicate: FloatOrderComparison!
+    distinct: Boolean = false
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input DepartmentBoolExp {
+    _and: [DepartmentBoolExp!]! = []
+    _or: [DepartmentBoolExp!]! = []
+    _not: DepartmentBoolExp
+    usersAggregate: UserAggregateBoolExp
+    users: UserBoolExp
+    name: TextComparison
+    id: UUIDGenericComparison
+  }
+  
+  enum DepartmentCountFields {
+    name
+    id
+  }
+  
+  """GraphQL type"""
+  type DepartmentMinMaxFields {
+    name: String
+  }
+  
+  enum DepartmentMinMaxStringFieldsEnum {
+    name
+  }
+  
+  """GraphQL type"""
+  type DepartmentSumFields {
+    name: String
+  }
+  
+  enum DepartmentSumFieldsEnum {
+    name
+  }
+  
+  """GraphQL type"""
+  type DepartmentType {
+    usersAggregate: UserAggregate!
+  
+    """Fetch objects from the UserType collection"""
+    users: [UserType!]!
+    name: String
+    id: UUID!
+  }
+  
   """
   Boolean expression to compare fields supporting order comparisons. All fields are combined with logical 'AND'
   """
@@ -566,6 +658,8 @@
     group: GroupFilter
     tagAggregate: TagAggregateBoolExp
     tag: TagBoolExp
+    departmentsAggregate: DepartmentAggregateBoolExp
+    departments: DepartmentBoolExp
     name: TextComparison
     groupId: UUIDGenericComparison
     tagId: UUIDGenericComparison
@@ -601,6 +695,10 @@
   type UserType {
     group: GroupType!
     tag: TagType!
+    departmentsAggregate: DepartmentAggregate!
+  
+    """Fetch objects from the DepartmentType collection"""
+    departments: [DepartmentType!]!
     name: String!
     groupId: UUID
     tagId: UUID

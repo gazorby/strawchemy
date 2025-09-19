@@ -1,4 +1,4 @@
-# ruff: noqa: DTZ005
+# ruff: noqa: DTZ005, PLC0415
 
 from __future__ import annotations
 
@@ -13,6 +13,9 @@ import pytest
 import sqlparse
 from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
+from sqlalchemy.event import listens_for
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session, sessionmaker
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.strawberry.scalars import Date, DateTime, Interval, Time
@@ -36,9 +39,6 @@ from sqlalchemy import (
     create_engine,
     insert,
 )
-from sqlalchemy.event import listens_for
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import Session, sessionmaker
 from strawberry.scalars import JSON
 from tests.fixtures import DefaultQuery
 from tests.integration.types import AnyAsyncMutationType, AnyAsyncQueryType, AnySyncQueryType
@@ -48,7 +48,7 @@ from tests.integration.types import sqlite as sqlite_types
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
 
-from .models import Color, Fruit, FruitFarm, Group, Topic, User, metadata
+from .models import Color, Department, Fruit, FruitFarm, Group, Topic, User, UserDepartmentJoinTable, metadata
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, Iterator
@@ -62,7 +62,6 @@ if TYPE_CHECKING:
     from strawchemy import Strawchemy, StrawchemyConfig
     from strawchemy.sqlalchemy.typing import AnySession
     from strawchemy.typing import SupportedDialect
-
     from syrupy.assertion import SnapshotAssertion
 
     from .typing import RawRecordData
@@ -302,6 +301,16 @@ def raw_users(raw_groups: RawRecordData) -> RawRecordData:
 
 
 @pytest.fixture
+def raw_user_departments() -> RawRecordData:
+    return [
+        {"user_id": 1, "department_id": 1},
+        {"user_id": 2, "department_id": 2},
+        {"user_id": 3, "department_id": 3},
+        {"user_id": 3, "department_id": 1},
+    ]
+
+
+@pytest.fixture
 def raw_arrays() -> RawRecordData:
     return [
         # Standard case with typical values
@@ -360,6 +369,15 @@ def raw_date_times() -> RawRecordData:
             "time_col": time(0, 0, 0),
             "datetime_col": datetime(2024, 2, 29, 0, 0, 0),  # noqa: DTZ001
         },
+    ]
+
+
+@pytest.fixture
+def raw_departments() -> RawRecordData:
+    return [
+        {"id": 1, "name": "IT"},
+        {"id": 2, "name": "Sales"},
+        {"id": 3, "name": "Platform"},
     ]
 
 
@@ -619,6 +637,8 @@ def seed_insert_statements(
     raw_farms: RawRecordData,
     raw_groups: RawRecordData,
     raw_topics: RawRecordData,
+    raw_departments: RawRecordData,
+    raw_user_departments: RawRecordData,
 ) -> list[Insert]:
     return [
         insert(Group).values(raw_groups),
@@ -627,6 +647,8 @@ def seed_insert_statements(
         insert(Fruit).values(raw_fruits),
         insert(FruitFarm).values(raw_farms),
         insert(User).values(raw_users),
+        insert(Department).values(raw_departments),
+        insert(UserDepartmentJoinTable).values(raw_user_departments),
     ]
 
 

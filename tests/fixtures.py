@@ -5,16 +5,17 @@ from typing import TYPE_CHECKING
 
 import pytest
 from strawchemy import Strawchemy, StrawchemyConfig
-
-import strawberry
 from syrupy.assertion import SnapshotAssertion
 from syrupy.extensions.amber import AmberSnapshotExtension
+
+import strawberry
 from tests.utils import sqlalchemy_pydantic_factory
 
 from .syrupy import GraphQLFileExtension
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
+
     from tests.typing import MappedPydanticFactory
 
 __all__ = ("fx_sqlalchemy_pydantic_factory", "strawchemy")

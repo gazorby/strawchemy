@@ -37,6 +37,59 @@
   }
   
   """Aggregation fields"""
+  type DepartmentAggregate {
+    count: Int
+    max: DepartmentMinMaxFields!
+    min: DepartmentMinMaxFields!
+    sum: DepartmentSumFields!
+  }
+  
+  input DepartmentAggregateMinMaxStringFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input DepartmentAggregateNumericFieldsOrderBy {
+    name: OrderByEnum
+  }
+  
+  input DepartmentAggregateOrderBy {
+    count: OrderByEnum
+    maxString: DepartmentAggregateMinMaxStringFieldsOrderBy
+    minString: DepartmentAggregateMinMaxStringFieldsOrderBy
+    sum: DepartmentAggregateNumericFieldsOrderBy
+  }
+  
+  """GraphQL type"""
+  type DepartmentMinMaxFields {
+    name: String
+  }
+  
+  """
+  Boolean expression to compare fields. All fields are combined with logical 'AND'.
+  """
+  input DepartmentOrderBy {
+    usersAggregate: UserAggregateOrderBy
+    users: UserOrderBy
+    name: OrderByEnum
+    id: OrderByEnum
+  }
+  
+  """GraphQL type"""
+  type DepartmentSumFields {
+    name: String
+  }
+  
+  """GraphQL type"""
+  type DepartmentType {
+    usersAggregate: UserAggregate!
+  
+    """Fetch objects from the UserType collection"""
+    users(orderBy: [UserOrderBy!] = null): [UserType!]!
+    name: String
+    id: UUID!
+  }
+  
+  """Aggregation fields"""
   type FruitAggregate {
     avg: FruitNumericFields!
     count: Int
@@ -259,6 +312,8 @@
     group: GroupOrderBy
     tagAggregate: TagAggregateOrderBy
     tag: TagOrderBy
+    departmentsAggregate: DepartmentAggregateOrderBy
+    departments: DepartmentOrderBy
     name: OrderByEnum
     groupId: OrderByEnum
     tagId: OrderByEnum
@@ -274,6 +329,10 @@
   type UserType {
     group: GroupType!
     tag: TagType!
+    departmentsAggregate: DepartmentAggregate!
+  
+    """Fetch objects from the DepartmentType collection"""
+    departments(orderBy: [DepartmentOrderBy!] = null): [DepartmentType!]!
     name: String!
     groupId: UUID
     tagId: UUID

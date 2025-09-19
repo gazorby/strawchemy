@@ -1,16 +1,22 @@
-# ruff: noqa: TC003, DTZ005
+# ruff: noqa: DTZ005
 
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 from typing import Any, Optional
 
+from sqlalchemy.dialects import mysql, postgresql, sqlite
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
+from sqlalchemy.orm import registry as Registry  # noqa: N812
 from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
 from sqlalchemy import (
     ARRAY,
     JSON,
     VARCHAR,
+    Column,
     Date,
     DateTime,
     Double,
@@ -19,15 +25,11 @@ from sqlalchemy import (
     Interval,
     MetaData,
     Sequence,
+    Table,
     Text,
     Time,
     UniqueConstraint,
 )
-from sqlalchemy.dialects import mysql, postgresql, sqlite
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
-from sqlalchemy.orm import registry as Registry  # noqa: N812
 
 metadata = MetaData()
 geo_metadata = MetaData()
@@ -175,11 +177,35 @@ class User(Base):
     group_id: Mapped[Optional[int]] = mapped_column(ForeignKey("group.id"))
     group: Mapped[Optional[Group]] = relationship(Group)
     bio: Mapped[Optional[str]] = mapped_column(Text, default=None)
+    departments: Mapped[list["Department"]] = relationship(
+        "Department",
+        secondary="user_department_join_table",
+        back_populates="users",
+    )
 
     def __init__(self, **kw: Any) -> None:
         super().__init__(**kw)
         if self.bio is None:
             self.bio = "Lorem ipsum dolor sit amet, consectetur adipiscing elit"
+
+
+UserDepartmentJoinTable = Table(
+    "user_department_join_table",
+    Base.metadata,
+    Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
+    Column("department_id", ForeignKey("department.id", ondelete="CASCADE"), primary_key=True),
+)
+
+
+class Department(Base):
+    __tablename__ = "department"
+
+    name: Mapped[str] = mapped_column(VARCHAR(255), nullable=True)
+    users: Mapped[list[User]] = relationship(
+        User,
+        secondary="user_department_join_table",
+        back_populates="departments",
+    )
 
 
 class RankedUser(Base):

@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from syrupy.assertion import SnapshotAssertion
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
@@ -14,6 +13,7 @@ from .typing import RawRecordData
 
 if TYPE_CHECKING:
     from strawchemy.typing import SupportedDialect
+    from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]
 
@@ -569,6 +569,69 @@ async def test_create_init_defaults(
     query_tracker.assert_statements(1, "insert", sql_snapshot)
 
 
+@pytest.mark.snapshot
+async def test_create_with_secondary_table_set(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+            mutation {
+                createUser(
+                    data: {
+                        name: "Astrid",
+                        departments: { set: [ { id: 1 } ] }
+                    }
+                ) {
+                    name
+                    departments {
+                        id
+                        name
+                    }
+                }
+            }
+            """
+
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["createUser"] == {"name": "Astrid", "departments": [{"id": 1, "name": "IT"}]}
+
+    insert_tracker, select_tracker = query_tracker.filter("insert"), query_tracker.filter("select")
+    assert insert_tracker.query_count == 2
+    assert select_tracker.query_count == 1
+    assert insert_tracker[0].statement_formatted == sql_snapshot
+    assert select_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_create_with_secondary_table_create(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+            mutation {
+                createUser(
+                    data: {
+                        name: "Astrid",
+                        departments: { create: [ { name: "Support" } ] }
+                    }
+                ) {
+                    name
+                    departments {
+                        name
+                    }
+                }
+            }
+            """
+
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["createUser"] == {"name": "Astrid", "departments": [{"name": "Support"}]}
+
+    query_tracker.assert_statements(3, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
 # Update tests
 
 
@@ -981,7 +1044,7 @@ async def test_update_with_to_many_set(
         "fruits": [{"id": to_graphql_representation(raw_fruits[1]["id"], "output")}],
     }
 
-    # 1. Disconnect previous fruit
+    # 1. Disconnect previous fruits
     # 2. Update specified fruit's color_id
     # 3. Update color's name
     query_tracker.assert_statements(3, "update", sql_snapshot)
@@ -1505,6 +1568,37 @@ async def test_update_no_init_defaults(
     assert result.data["updateUser"] == {"name": "Jeanne", "bio": raw_users[3]["bio"]}
 
     query_tracker.assert_statements(1, "update", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_update_with_secondary_table_set(
+    raw_users: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = f"""
+    mutation {{
+        updateUser(data: {{ id: {raw_users[1]["id"]}, departments: {{ set: [ {{ id: 1 }} ] }} }}) {{
+            name
+            departments {{
+                id
+                name
+            }}
+        }}
+    }}
+    """
+
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["updateUser"] == {"name": "Bob", "departments": [{"id": 1, "name": "IT"}]}
+
+    assert query_tracker.query_count == 3
+    # Insert new m2m relation
+    query_tracker.assert_statements(1, "insert", sql_snapshot)
+    # Delete old ones
+    query_tracker.assert_statements(1, "delete", sql_snapshot)
+    # Select result
+    query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
 # Delete

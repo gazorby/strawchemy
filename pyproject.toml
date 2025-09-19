@@ -358,6 +358,7 @@ ignore = [
     "FBT", # flake8-annotations - boolean trap. Try to remove this in the future
     "PT013", # flake8-pytest-style - Incorrect import of pytest
     "UP007", # flake8-builtins - Unnecessary `Union` annotation
+    "UP045", # flake8-builtins - Unnecessary `Optional` annotation
 ]
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
