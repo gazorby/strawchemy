@@ -151,7 +151,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 relationship information.
         """
         for level in data.filter_by_level(RelationType.TO_ONE, ["create", "upsert"]):
-            params = self._create_nested_to_one_params(level)
+            params = self._to_one_nested_create_params(level)
             for model_type, values in params.insert.items():
                 await self._insert_nested(InsertData(model_type, values, params.upsert_data_map.get(model_type)), level)
 
@@ -170,7 +170,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 Used to link the 'set' relations to the correct parent.
         """
         for level in data.filter_by_level(RelationType.TO_MANY, ["add", "remove"]):
-            params = self._update_to_many_params(level, mutated_ids)
+            params = self._to_many_update_params(level, mutated_ids)
             for model_type, values in params.update.items():
                 await self.session.execute(update(model_type), values)
 
@@ -178,7 +178,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         self, mode: InsertOrUpdate, data: Input[DeclarativeT], mutated_ids: Sequence[RowLike]
     ) -> None:
         for level in data.filter_by_level(RelationType.TO_MANY, ["set"]):
-            params = self._set_to_many_params(level, mode, mutated_ids)
+            params = self._to_many_set_params(level, mode, mutated_ids)
 
             for model_type, set_values in params.insert.items():
                 if current_ids := params.delete[model_type]:
@@ -215,11 +215,11 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 foreign keys on the newly created related objects.
         """
         for level in data.filter_by_level(RelationType.TO_MANY, ["create", "upsert"]):
-            params = self._create_to_many_params(level, mutated_ids)
-
+            params = self._to_many_create_params(level, mutated_ids)
             for model_type, values in params.insert.items():
                 await self._insert_nested(InsertData(model_type, values, params.upsert_data_map.get(model_type)), level)
 
+            params = self._m2m_create_params(level, mutated_ids)
             for model_type_or_table, set_values in params.insert_m2m.items():
                 insert_data = InsertData(model_type_or_table, set_values)
                 await self.session.execute(self._insert_statement(insert_data).values(*insert_data.values))

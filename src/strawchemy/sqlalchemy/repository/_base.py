@@ -224,11 +224,10 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                 filter_dict[key].append(value)
         return filter_dict
 
-    def _many_to_many_values(
+    def _m2m_values(
         self, model: DeclarativeBase, parent: Union[RowLike, DeclarativeBase], relationship: RelationshipProperty[Any]
     ) -> dict[str, Any]:
         assert relationship.local_remote_pairs
-
         return {
             remote.key: getattr(model, local.key) if local.table is model.__table__ else getattr(parent, local.key)
             for local, remote in relationship.local_remote_pairs
@@ -245,22 +244,19 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                 for local, remote in relationship.local_remote_pairs
                 if local.key and remote.key
             }
-        return self._many_to_many_values(model, parent, relationship)
+        return self._m2m_values(model, parent, relationship)
 
-    def _insert_values(
-        self, model: DeclarativeBase, parent: Union[RowLike, DeclarativeBase], relationship: RelationshipProperty[Any]
-    ) -> dict[str, Any]:
-        assert relationship.local_remote_pairs
-        if relationship.secondary is None:
-            fks = {
-                remote.key: getattr(parent, local.key)
-                for local, remote in relationship.local_remote_pairs
-                if local.key and remote.key
-            }
-            return self._to_dict(model) | fks
-        return self._many_to_many_values(model, parent, relationship)
+    def _to_one_nested_create_params(self, level: LevelInput) -> QueryParams:
+        params = QueryParams()
 
-    def _set_to_many_params(
+        for create_input in level.inputs:
+            params.insert[create_input.relation.related].append(self._to_dict(create_input.instance))
+            if create_input.relation.upsert is not None:
+                params.upsert_data_map[create_input.relation.related] = create_input.relation.upsert
+
+        return params
+
+    def _to_many_set_params(
         self, level: LevelInput, mode: InsertOrUpdate, mutated_ids: Sequence[RowLike]
     ) -> QueryParams:
         params = QueryParams()
@@ -287,7 +283,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
 
         return params
 
-    def _update_to_many_params(self, level: LevelInput, mutated_ids: Sequence[RowLike]) -> QueryParams:
+    def _to_many_update_params(self, level: LevelInput, mutated_ids: Sequence[RowLike]) -> QueryParams:
         params = QueryParams()
 
         for level_input in level.inputs:
@@ -311,7 +307,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
 
         return params
 
-    def _create_to_many_params(self, level: LevelInput, mutated_ids: Sequence[RowLike]) -> QueryParams:
+    def _to_many_create_params(self, level: LevelInput, mutated_ids: Sequence[RowLike]) -> QueryParams:
         params = QueryParams()
 
         for create_input in level.inputs:
@@ -319,24 +315,31 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
             prop = cast("RelationshipProperty[Any]", relation.attribute)
             assert prop.local_remote_pairs
             parent = mutated_ids[relation.input_index] if relation.level == 1 else relation.parent
-            values = self._insert_values(create_input.instance, parent, prop)
-
+            fks: dict[str, Any] = {}
             if prop.secondary is None:
-                params.insert[relation.related].append(values)
-            else:
-                params.insert_m2m[cast("Table", prop.secondary)].append(values)
+                fks = {
+                    remote.key: getattr(parent, local.key)
+                    for local, remote in prop.local_remote_pairs
+                    if local.key and remote.key
+                }
+            params.insert[relation.related].append(self._to_dict(create_input.instance) | fks)
 
             if create_input.relation.upsert is not None:
                 params.upsert_data_map[create_input.relation.related] = create_input.relation.upsert
 
         return params
 
-    def _create_nested_to_one_params(self, level: LevelInput) -> QueryParams:
+    def _m2m_create_params(self, level: LevelInput, mutated_ids: Sequence[RowLike]) -> QueryParams:
         params = QueryParams()
 
         for create_input in level.inputs:
-            params.insert[create_input.relation.related].append(self._to_dict(create_input.instance))
-            if create_input.relation.upsert is not None:
-                params.upsert_data_map[create_input.relation.related] = create_input.relation.upsert
+            relation = create_input.relation
+            prop = cast("RelationshipProperty[Any]", relation.attribute)
+            assert prop.local_remote_pairs
+            parent = mutated_ids[relation.input_index] if relation.level == 1 else relation.parent
+            if prop.secondary is not None:
+                params.insert_m2m[cast("Table", prop.secondary)].append(
+                    self._m2m_values(create_input.instance, parent, prop)
+                )
 
         return params

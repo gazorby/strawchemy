@@ -570,7 +570,7 @@ async def test_create_init_defaults(
 
 
 @pytest.mark.snapshot
-async def test_create_set_secondary_table_relationship(
+async def test_create_with_secondary_table_set(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     query = """
@@ -601,6 +601,35 @@ async def test_create_set_secondary_table_relationship(
     assert select_tracker.query_count == 1
     assert insert_tracker[0].statement_formatted == sql_snapshot
     assert select_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_create_with_secondary_table_create(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    query = """
+            mutation {
+                createUser(
+                    data: {
+                        name: "Astrid",
+                        departments: { create: [ { name: "Support" } ] }
+                    }
+                ) {
+                    name
+                    departments {
+                        name
+                    }
+                }
+            }
+            """
+
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["createUser"] == {"name": "Astrid", "departments": [{"name": "Support"}]}
+
+    query_tracker.assert_statements(3, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
 # Update tests
@@ -1542,7 +1571,7 @@ async def test_update_no_init_defaults(
 
 
 @pytest.mark.snapshot
-async def test_update_set_secondary_table_relationship(
+async def test_update_with_secondary_table_set(
     raw_users: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     query = f"""
