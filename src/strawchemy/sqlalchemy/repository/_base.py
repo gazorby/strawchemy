@@ -1,14 +1,15 @@
 from __future__ import annotations
 
+import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, Optional, TypeVar, Union, cast
 
-from typing_extensions import TypeAlias
-
-from sqlalchemy import Column, Function, Insert, Row, func, insert
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.orm import RelationshipProperty
+from typing_extensions import TypeAlias
+
+from sqlalchemy import Column, Function, Insert, Row, Table, func, insert, inspect
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
@@ -18,29 +19,61 @@ from strawchemy.strawberry.mutation.types import RelationType
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.sql.base import ReadOnlyColumnCollection
     from sqlalchemy.sql.elements import KeyedColumnElement
+
+    from sqlalchemy import Select
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.strawberry.mutation.input import Input, UpsertData
+    from strawchemy.strawberry.mutation.input import Input, LevelInput, UpsertData
     from strawchemy.strawberry.typing import QueryNodeType
     from strawchemy.typing import SupportedDialect
 
 
-__all__ = ("SQLAlchemyGraphQLRepository",)
+__all__ = ("InsertOrUpdate", "RowLike", "SQLAlchemyGraphQLRepository")
 
 
 T = TypeVar("T", bound=Any)
+
 InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where", "upsert"]
+RowLike: TypeAlias = "Row[Any] | NamedTuple"
+_ModelOrTable: TypeAlias = "Union[type[DeclarativeBase], Table]"
+
+
+@dataclass
+class QueryParams:
+    insert: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = dataclasses.field(
+        default_factory=lambda: defaultdict(list)
+    )
+    update: defaultdict[type[DeclarativeBase], list[dict[str, Any]]] = dataclasses.field(
+        default_factory=lambda: defaultdict(list)
+    )
+    insert_m2m: defaultdict[_ModelOrTable, list[dict[str, Any]]] = dataclasses.field(
+        default_factory=lambda: defaultdict(list)
+    )
+    delete: defaultdict[_ModelOrTable, defaultdict[str, list[Any]]] = dataclasses.field(
+        default_factory=lambda: defaultdict(lambda: defaultdict(list))
+    )
+    delete_m2m: defaultdict[_ModelOrTable, defaultdict[str, list[Any]]] = dataclasses.field(
+        default_factory=lambda: defaultdict(lambda: defaultdict(list))
+    )
+    upsert_data_map: dict[type[DeclarativeBase], UpsertData] = dataclasses.field(default_factory=dict)
 
 
 @dataclass(frozen=True)
 class InsertData:
-    model_type: type[DeclarativeBase]
+    model_type: type[DeclarativeBase] | Table
     values: list[dict[str, Any]]
     upsert_data: Optional[UpsertData] = None
+
+    @property
+    def pks(self) -> tuple[Column[Any], ...]:
+        return inspect(self.model_type, raiseerr=True).primary_key
+
+    @property
+    def _columns(self) -> Mapping[str, Column[Any]]:
+        return inspect(self.model_type, raiseerr=True).columns
 
     @property
     def is_upsert(self) -> bool:
@@ -56,7 +89,7 @@ class InsertData:
     def conflict_target_columns(self) -> list[Column[Any]]:
         if self.upsert_data_or_raise.conflict_constraint:
             return list(self.upsert_data_or_raise.conflict_constraint.value.columns)
-        return list(self.model_type.__mapper__.primary_key)
+        return list(self.pks)
 
     def upsert_set(
         self, dialect: SupportedDialect, columns: ReadOnlyColumnCollection[str, KeyedColumnElement[Any]]
@@ -64,13 +97,12 @@ class InsertData:
         update_fields_set = {
             dto_field.field_definition.model_field_name for dto_field in self.upsert_data_or_raise.update_fields
         } or {name for value_dict in self.values for name in value_dict}
-        mapper = self.model_type.__mapper__
-        update_fields = {mapper.columns[name]: value for name, value in columns.items() if name in update_fields_set}
+        update_fields = {self._columns[name]: value for name, value in columns.items() if name in update_fields_set}
         if (
             dialect == "mysql"
             and (
                 auto_increment_pk_column := next(
-                    (column for column in self.model_type.__mapper__.primary_key if column.autoincrement),
+                    (column for column in self.pks if column.autoincrement),
                     None,
                 )
             )
@@ -191,3 +223,123 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
             for key, value in row._asdict().items():
                 filter_dict[key].append(value)
         return filter_dict
+
+    def _m2m_values(
+        self, model: DeclarativeBase, parent: Union[RowLike, DeclarativeBase], relationship: RelationshipProperty[Any]
+    ) -> dict[str, Any]:
+        assert relationship.local_remote_pairs
+        return {
+            remote.key: getattr(model, local.key) if local.table is model.__table__ else getattr(parent, local.key)
+            for local, remote in relationship.local_remote_pairs
+            if local.key and remote.key
+        }
+
+    def _update_values(
+        self, model: DeclarativeBase, parent: Union[RowLike, DeclarativeBase], relationship: RelationshipProperty[Any]
+    ) -> dict[str, Any]:
+        assert relationship.local_remote_pairs
+        if relationship.secondary is None:
+            return {column.key: getattr(model, column.key) for column in model.__mapper__.primary_key} | {
+                remote.key: getattr(parent, local.key)
+                for local, remote in relationship.local_remote_pairs
+                if local.key and remote.key
+            }
+        return self._m2m_values(model, parent, relationship)
+
+    def _to_one_nested_create_params(self, level: LevelInput) -> QueryParams:
+        params = QueryParams()
+
+        for create_input in level.inputs:
+            params.insert[create_input.relation.related].append(self._to_dict(create_input.instance))
+            if create_input.relation.upsert is not None:
+                params.upsert_data_map[create_input.relation.related] = create_input.relation.upsert
+
+        return params
+
+    def _to_many_set_params(
+        self, level: LevelInput, mode: InsertOrUpdate, mutated_ids: Sequence[RowLike]
+    ) -> QueryParams:
+        params = QueryParams()
+
+        for level_input in level.inputs:
+            relation = level_input.relation
+            prop = cast("RelationshipProperty[Any]", relation.attribute)
+            assert prop.local_remote_pairs
+            parent = mutated_ids[relation.input_index] if relation.level == 1 else relation.parent
+            if relation.level == 1 and mode in {"update_by_pks", "update_where"}:
+                for local, remote in prop.local_remote_pairs:
+                    if not local.key or not remote.key:
+                        continue
+                    if prop.secondary is None:
+                        params.delete[relation.related][remote.key].append(getattr(parent, local.key))
+                    elif local.table is not relation.related.__table__:
+                        params.delete_m2m[cast("Table", prop.secondary)][remote.key].append(getattr(parent, local.key))
+            for relation_model in relation.set or []:
+                values = self._update_values(relation_model, parent, prop)
+                if prop.secondary is None:
+                    params.insert[relation.related].append(values)
+                else:
+                    params.insert_m2m[cast("Table", prop.secondary)].append(values)
+
+        return params
+
+    def _to_many_update_params(self, level: LevelInput, mutated_ids: Sequence[RowLike]) -> QueryParams:
+        params = QueryParams()
+
+        for level_input in level.inputs:
+            relation = level_input.relation
+            prop = cast("RelationshipProperty[Any]", relation.attribute)
+            assert prop.local_remote_pairs
+            parent = mutated_ids[relation.input_index] if relation.level == 1 else relation.parent
+            params.update[relation.related].extend(
+                [self._update_values(relation_model, parent, prop) for relation_model in relation.add]
+            )
+            params.update[relation.related].extend(
+                [
+                    {
+                        column.key: getattr(relation_model, column.key)
+                        for column in relation_model.__mapper__.primary_key
+                    }
+                    | {remote.key: None for local, remote in prop.local_remote_pairs if local.key and remote.key}
+                    for relation_model in relation.remove
+                ]
+            )
+
+        return params
+
+    def _to_many_create_params(self, level: LevelInput, mutated_ids: Sequence[RowLike]) -> QueryParams:
+        params = QueryParams()
+
+        for create_input in level.inputs:
+            relation = create_input.relation
+            prop = cast("RelationshipProperty[Any]", relation.attribute)
+            assert prop.local_remote_pairs
+            parent = mutated_ids[relation.input_index] if relation.level == 1 else relation.parent
+            fks: dict[str, Any] = {}
+            if prop.secondary is None:
+                fks = {
+                    remote.key: getattr(parent, local.key)
+                    for local, remote in prop.local_remote_pairs
+                    if local.key and remote.key
+                }
+            params.insert[relation.related].append(self._to_dict(create_input.instance) | fks)
+
+            if create_input.relation.upsert is not None:
+                params.upsert_data_map[create_input.relation.related] = create_input.relation.upsert
+
+        return params
+
+    def _m2m_create_params(self, level: LevelInput, mutated_ids: Sequence[RowLike]) -> QueryParams:
+        params = QueryParams()
+
+        for create_input in level.inputs:
+            relation = create_input.relation
+            prop = cast("RelationshipProperty[Any]", relation.attribute)
+            assert prop.local_remote_pairs
+            parent = mutated_ids[relation.input_index] if relation.level == 1 else relation.parent
+            if prop.secondary is not None:
+                params.insert_m2m[cast("Table", prop.secondary)].append(
+                    self._m2m_values(create_input.instance, parent, prop)
+                )
+
+        return params

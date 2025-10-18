@@ -8,14 +8,14 @@ from decimal import Decimal
 from typing import Any, Optional
 from uuid import UUID, uuid4
 
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.types import Purpose, PurposeConfig
 from strawchemy.dto.utils import PRIVATE, READ_ONLY, WRITE_ONLY, field
 
-from sqlalchemy import VARCHAR, DateTime, Enum, ForeignKey, Text
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
+from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Table, Text
 
 
 def validate_tomato_type(value: str) -> str:
@@ -91,6 +91,11 @@ class User(UUIDBase):
     group: Mapped[Group] = relationship("Group", back_populates="users")
     tag_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("tag.id"))
     tag: Mapped[Tag] = relationship("Tag", uselist=False)
+    departments: Mapped[list["Department"]] = relationship(
+        "Department",
+        secondary="user_department_join_table",
+        back_populates="users",
+    )
 
     @property
     def group_prop(self) -> Optional[Group]:
@@ -98,6 +103,25 @@ class User(UUIDBase):
 
     def get_group(self) -> Optional[Group]:
         return self.group
+
+
+UserDepartmentJoinTable = Table(
+    "user_department_join_table",
+    UUIDBase.metadata,
+    Column("user_id", ForeignKey("user.id"), primary_key=True),
+    Column("department_id", ForeignKey("department.id"), primary_key=True),
+)
+
+
+class Department(UUIDBase):
+    __tablename__ = "department"
+
+    name: Mapped[Optional[str]] = mapped_column(VARCHAR(255), nullable=True)
+    users: Mapped[list[User]] = relationship(
+        User,
+        secondary="user_department_join_table",
+        back_populates="departments",
+    )
 
 
 class SponsoredUser(UUIDBase):
