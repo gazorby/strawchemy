@@ -14,6 +14,7 @@ from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
 from strawchemy.sqlalchemy.typing import DeclarativeT, QueryExecutorT, SessionT
+from strawchemy.strawberry.mutation.input import UpsertData
 from strawchemy.strawberry.mutation.types import RelationType
 
 if TYPE_CHECKING:
@@ -26,7 +27,7 @@ if TYPE_CHECKING:
     from sqlalchemy import Select
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.strawberry.mutation.input import Input, LevelInput, UpsertData
+    from strawchemy.strawberry.mutation.input import Input, LevelInput
     from strawchemy.strawberry.typing import QueryNodeType
     from strawchemy.typing import SupportedDialect
 
@@ -58,7 +59,7 @@ class QueryParams:
     delete_m2m: defaultdict[_ModelOrTable, defaultdict[str, list[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(lambda: defaultdict(list))
     )
-    upsert_data_map: dict[type[DeclarativeBase], UpsertData] = dataclasses.field(default_factory=dict)
+    upsert_data_map: dict[_ModelOrTable, UpsertData] = dataclasses.field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -324,8 +325,8 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                 }
             params.insert[relation.related].append(self._to_dict(create_input.instance) | fks)
 
-            if create_input.relation.upsert is not None:
-                params.upsert_data_map[create_input.relation.related] = create_input.relation.upsert
+            if relation.upsert is not None:
+                params.upsert_data_map[relation.related] = relation.upsert
 
         return params
 
@@ -337,9 +338,13 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
             prop = cast("RelationshipProperty[Any]", relation.attribute)
             assert prop.local_remote_pairs
             parent = mutated_ids[relation.input_index] if relation.level == 1 else relation.parent
-            if prop.secondary is not None:
-                params.insert_m2m[cast("Table", prop.secondary)].append(
-                    self._m2m_values(create_input.instance, parent, prop)
-                )
+            if prop.secondary is None:
+                continue
+
+            association_table = cast("Table", prop.secondary)
+            values = self._m2m_values(create_input.instance, parent, prop)
+            params.insert_m2m[association_table].append(values)
+            if create_input.relation.upsert is not None:
+                params.upsert_data_map[association_table] = UpsertData()
 
         return params

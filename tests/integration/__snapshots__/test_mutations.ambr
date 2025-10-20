@@ -1418,7 +1418,7 @@
 # name: test_create_with_secondary_table_create[session-tracked-async-psycopg_async_engine].2
   '''
   INSERT INTO user_department_join_table (user_id, department_id)
-  VALUES (%(user_id)s::INTEGER, %(department_id)s::INTEGER)
+  VALUES (%(user_id_m0)s::INTEGER, %(department_id_m0)s::INTEGER)
   '''
 # ---
 # name: test_create_with_secondary_table_create[session-tracked-async-psycopg_async_engine].3
@@ -1450,7 +1450,7 @@
 # name: test_create_with_secondary_table_create[session-tracked-sync-psycopg_engine].2
   '''
   INSERT INTO user_department_join_table (user_id, department_id)
-  VALUES (%(user_id)s::INTEGER, %(department_id)s::INTEGER)
+  VALUES (%(user_id_m0)s::INTEGER, %(department_id_m0)s::INTEGER)
   '''
 # ---
 # name: test_create_with_secondary_table_create[session-tracked-sync-psycopg_engine].3

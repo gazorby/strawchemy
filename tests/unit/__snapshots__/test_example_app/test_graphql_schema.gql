@@ -480,8 +480,8 @@
     """Fetch object from the MilestoneType collection by id"""
     createMilestone(data: MilestoneCreate!): MilestoneType!
   
-    """Fetch object from the TicketType collection by id"""
-    updateTicketsByIds(data: TicketUpdate!, filter: TicketFilter = null): TicketType!
+    """Fetch objects from the TicketType collection"""
+    updateTicketsByIds(data: TicketUpdate!, filter: TicketFilter = null): [TicketType!]!
   
     """Fetch objects from the TicketType collection"""
     updateTickets(data: TicketPartial!, filter: TicketFilter = null): [TicketType!]!

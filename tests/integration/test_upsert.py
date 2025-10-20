@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from syrupy.assertion import SnapshotAssertion
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
@@ -12,6 +11,7 @@ from .fixtures import QueryTracker
 
 if TYPE_CHECKING:
     from strawchemy.typing import SupportedDialect
+    from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]
 
@@ -341,8 +341,8 @@ async def test_to_many_upsert_create_new(
                     fruits: {
                         upsert: {
                             create: [
-                                { name: "Pomegranate", sweetness: 6, waterPercent: 0.82 },
-                                { name: "Plums", sweetness: 7, waterPercent: 0.87 }
+                                { id: 12 name: "Pomegranate", sweetness: 6, waterPercent: 0.82 },
+                                { id: 13 name: "Plums", sweetness: 7, waterPercent: 0.87 }
                             ]
                             conflictFields: name
                         }
@@ -352,6 +352,7 @@ async def test_to_many_upsert_create_new(
                 id
                 name
                 fruits {
+                    id
                     name
                 }
             }
@@ -364,7 +365,12 @@ async def test_to_many_upsert_create_new(
     assert result.data["updateColor"] == {
         "id": 1,
         "name": "Bright Red",
-        "fruits": [{"name": "Apple"}, {"name": "Cherry"}, {"name": "Pomegranate"}, {"name": "Plums"}],
+        "fruits": [
+            {"id": 1, "name": "Apple"},
+            {"id": 2, "name": "Cherry"},
+            {"id": 12, "name": "Pomegranate"},
+            {"id": 13, "name": "Plums"},
+        ],
     }
 
     if dialect == "sqlite":
@@ -472,3 +478,199 @@ async def test_to_many_upsert_mixed_create_and_update(
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
     query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + new fruits
+
+
+@pytest.mark.snapshot
+async def test_to_many_upsert_m2m(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+) -> None:
+    query = """
+        mutation {
+            updateUser(
+                data: {
+                    id: 1,
+                    departments: {
+                        upsert: {
+                            create: [
+                                { id: 1, name: "IT" },
+                                { id: 5, name: "Support" },
+                            ]
+                            conflictFields: id
+                        }
+                    }
+                }
+            ) {
+                id
+                name
+                departments {
+                    name
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["updateUser"] == {"id": 1, "name": "Alice", "departments": [{"name": "IT"}, {"name": "Support"}]}
+
+    if dialect == "sqlite":
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(3, "insert", sql_snapshot)
+    query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + new fruits
+
+
+# Batch upserts
+
+
+@pytest.mark.snapshot
+async def test_batch_upserts(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+) -> None:
+    query = """
+        mutation {
+            updateColors(
+                data: [
+                    {
+                        id: 1,
+                        fruits: {
+                            upsert: {
+                                create: [
+                                    { name: "Plums", sweetness: 6, waterPercent: 0.82 },
+                                ]
+                                conflictFields: name
+                            }
+                        }
+                    },
+                    {
+                        id: 2,
+                        fruits: {
+                            upsert: {
+                                create: [
+                                    { name: "Golden kiwi", sweetness: 11, waterPercent: 0.11 },
+                                ]
+                                conflictFields: name
+                            }
+                        }
+                    }
+                ]
+            ) {
+                id
+                name
+                fruits {
+                    name
+                    sweetness
+                    waterPercent
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["updateColors"] == [
+        {
+            "id": 1,
+            "name": "Red",
+            "fruits": [
+                {"name": "Apple", "sweetness": 4, "waterPercent": 0.84},
+                {"name": "Cherry", "sweetness": 9, "waterPercent": 0.93},
+                {"name": "Plums", "sweetness": 6, "waterPercent": 0.82},
+            ],
+        },
+        {
+            "id": 2,
+            "name": "Yellow",
+            "fruits": [
+                {"name": "Banana", "sweetness": 2, "waterPercent": 0.75},
+                {"name": "Lemon", "sweetness": 1, "waterPercent": 0.88},
+                {"name": "Quince", "sweetness": 3, "waterPercent": 0.81},
+                {"name": "Golden kiwi", "sweetness": 11, "waterPercent": 0.11},
+            ],
+        },
+    ]
+
+    if dialect == "sqlite":
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(2, "insert", sql_snapshot)
+
+    query_tracker.assert_statements(1, "select", sql_snapshot)
+
+
+@pytest.mark.snapshot
+async def test_batch_mixed_upsert_and_create(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+) -> None:
+    query = """
+        mutation {
+            updateColors(
+                data: [
+                    {
+                        id: 1,
+                        fruits: {
+                            upsert: {
+                                create: [
+                                    { name: "Plums", sweetness: 6, waterPercent: 0.82 },
+                                    { name: "Cherry", sweetness: 7, waterPercent: 0.87 }
+                                ]
+                                conflictFields: name
+                            }
+                        }
+                    },
+                    {
+                        id: 2,
+                        fruits: {
+                            create: [
+                                { name: "Coconut", sweetness: 2, waterPercent: 0.12 },
+                                { name: "Damson", sweetness: 10, waterPercent: 0.76 }
+                            ]
+                        }
+                    }
+                ]
+            ) {
+                id
+                name
+                fruits {
+                    name
+                    sweetness
+                    waterPercent
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["updateColors"] == [
+        {
+            "id": 1,
+            "name": "Red",
+            "fruits": [
+                {"name": "Apple", "sweetness": 4, "waterPercent": 0.84},
+                {"name": "Cherry", "sweetness": 7, "waterPercent": 0.87},
+                {"name": "Plums", "sweetness": 6, "waterPercent": 0.82},
+            ],
+        },
+        {
+            "id": 2,
+            "name": "Yellow",
+            "fruits": [
+                {"name": "Banana", "sweetness": 2, "waterPercent": 0.75},
+                {"name": "Lemon", "sweetness": 1, "waterPercent": 0.88},
+                {"name": "Quince", "sweetness": 3, "waterPercent": 0.81},
+                {"name": "Coconut", "sweetness": 2, "waterPercent": 0.12},
+                {"name": "Damson", "sweetness": 10, "waterPercent": 0.76},
+            ],
+        },
+    ]
+
+    if dialect == "sqlite":
+        query_tracker.assert_statements(1, "insert", sql_snapshot)
+    else:
+        query_tracker.assert_statements(4, "insert", sql_snapshot)
+
+    query_tracker.assert_statements(1, "select", sql_snapshot)

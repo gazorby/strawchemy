@@ -223,8 +223,10 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
             params = self._m2m_create_params(level, mutated_ids)
             for model_type_or_table, set_values in params.insert_m2m.items():
-                insert_data = InsertData(model_type_or_table, set_values)
-                self.session.execute(self._insert_statement(insert_data).values(*insert_data.values))
+                insert_data = InsertData(
+                    model_type_or_table, set_values, params.upsert_data_map.get(model_type_or_table)
+                )
+                self.session.execute(self._insert_statement(insert_data).values(insert_data.values))
 
     def _execute_insert_or_update(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
         values = [self._to_dict(instance) for instance in data.input.instances]

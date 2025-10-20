@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import dataclasses
+from collections import defaultdict
 from collections.abc import Hashable, Iterator, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, Union, cast, final
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Optional, TypeVar, Union, cast, final
+from weakref import WeakSet
 
+from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
 from typing_extensions import Self, TypeAlias, override
 
-from sqlalchemy import event, inspect
-from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
+from sqlalchemy import inspect
 from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 
@@ -19,6 +21,7 @@ if TYPE_CHECKING:
     from enum import Enum
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+
     from strawchemy.strawberry.dto import EnumDTO
     from strawchemy.strawberry.typing import MappedGraphQLDTO
     from strawchemy.validation.base import ValidationProtocol
@@ -44,7 +47,7 @@ def _has_record(model: DeclarativeBase) -> bool:
 
 @dataclass(frozen=True)
 class UpsertData:
-    instances: list[DeclarativeBase] = dataclasses.field(default_factory=list)
+    instances: set[DeclarativeBase] = dataclasses.field(default_factory=set)
     conflict_constraint: Optional[Enum] = None
     update_fields: list[EnumDTO] = dataclasses.field(default_factory=list)
 
@@ -52,13 +55,57 @@ class UpsertData:
     def from_upsert_input(cls, data: Union[ToOneUpsertInput[Any, Any, Any], ToManyUpsertInput[Any, Any, Any]]) -> Self:
         instances = data.to_mapped()
         return cls(
-            instances=instances if isinstance(instances, list) else [instances],
+            instances=set(instances) if isinstance(instances, list) else {instances},
             update_fields=data.update_fields or [],
             conflict_constraint=data.conflict_fields,
         )
 
     def __iter__(self) -> Iterator[DeclarativeBase]:
         return iter(self.instances)
+
+
+class Listener:
+    relations: ClassVar[WeakSet[RelationInput]] = WeakSet()
+    _listeners: ClassVar[defaultdict[MapperProperty[Any], set[Literal["set", "append", "remove"]]]] = defaultdict(set)
+
+    @classmethod
+    def configure(cls, relation: RelationInput) -> None: ...
+
+    @classmethod
+    def _get_relation(cls, target: DeclarativeBase) -> Optional[RelationInput]:
+        return next((rel for rel in cls.relations if rel.parent is target), None)
+
+    @classmethod
+    def _set_event(
+        cls,
+        target: DeclarativeBase,
+        value: Optional[DeclarativeBase],
+        *_: Any,
+        **__: Any,
+    ) -> None:
+        if value is None:
+            return
+        if relation := cls._get_relation(target):
+            if _has_record(value):
+                relation.set = [value]
+            else:
+                relation.create = [value]
+
+    @classmethod
+    def _append_event(cls, target: DeclarativeBase, value: DeclarativeBase, *_: Any, **__: Any) -> None:
+        if relation := cls._get_relation(target):
+            if _has_record(value):
+                relation.add.append(value)
+            else:
+                relation.create.append(value)
+
+    @classmethod
+    def _remove_event(cls, target: DeclarativeBase, value: DeclarativeBase, *_: Any, **__: Any) -> None:
+        if relation := cls._get_relation(target):
+            if _has_record(value):
+                relation.add = [model for model in relation.add if model is not value]
+            else:
+                relation.create = [model for model in relation.create if model is not value]
 
 
 class _UnboundRelationInput:
@@ -108,6 +155,7 @@ class RelationInput(_UnboundRelationInput):
         related: type[DeclarativeBase],
         parent: DeclarativeBase,
         relation_type: RelationType,
+        listener: Listener,
         set_: Union[list[DeclarativeBase], None, type[_Unset]] = _Unset,
         add: Optional[list[DeclarativeBase]] = None,
         remove: Optional[list[DeclarativeBase]] = None,
@@ -128,16 +176,11 @@ class RelationInput(_UnboundRelationInput):
             input_index=input_index,
             level=level,
         )
+        listener.configure(self)
         self.parent = parent
 
-        if self.relation_type is RelationType.TO_ONE:
-            event.listens_for(self.attribute, "set")(self._set_event)
-        else:
-            event.listens_for(self.attribute, "append")(self._append_event)
-            event.listens_for(self.attribute, "remove")(self._remove_event)
-
     @classmethod
-    def from_unbound(cls, unbound: _UnboundRelationInput, model: DeclarativeBase) -> Self:
+    def from_unbound(cls, unbound: _UnboundRelationInput, model: DeclarativeBase, listener: Listener) -> Self:
         return cls(
             attribute=unbound.attribute,
             related=unbound.related,
@@ -150,32 +193,14 @@ class RelationInput(_UnboundRelationInput):
             input_index=unbound.input_index,
             level=unbound.level,
             upsert=unbound.upsert,
+            listener=listener,
         )
-
-    def _set_event(self, target: DeclarativeBase, value: Optional[DeclarativeBase], *_: Any, **__: Any) -> None:
-        if value is None:
-            return
-        if _has_record(value):
-            self.set = [value]
-        else:
-            self.create = [value]
-
-    def _append_event(self, target: DeclarativeBase, value: DeclarativeBase, *_: Any, **__: Any) -> None:
-        if _has_record(value):
-            self.add.append(value)
-        else:
-            self.create.append(value)
-
-    def _remove_event(self, target: DeclarativeBase, value: DeclarativeBase, *_: Any, **__: Any) -> None:
-        if _has_record(value):
-            self.add = [model for model in self.add if model is not value]
-        else:
-            self.create = [model for model in self.create if model is not value]
 
 
 @dataclass
 class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT, InputModel]):
     input_data: Input[InputModel]
+    listener: Listener
     is_update: bool = False
 
     current_relations: list[_UnboundRelationInput] = dataclasses.field(default_factory=list)
@@ -249,7 +274,7 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
                     delattr(model, attribute)
 
         for relation in self.current_relations:
-            self.input_data.add_relation(RelationInput.from_unbound(relation, model))
+            self.input_data.add_relation(RelationInput.from_unbound(relation, model, self.listener))
         self.current_relations.clear()
         # Return dict because .model_validate will be called at root level
         return model if level == 1 or self.input_data.validation is None else params
@@ -279,12 +304,15 @@ class Input(Generic[InputModel]):
         self.dtos: list[MappedDTO[InputModel]] = []
         self.validation = _validation_
         self.list_input = isinstance(dtos, Sequence)
+        self.listener = Listener()
 
         dtos = dtos if isinstance(dtos, Sequence) else [dtos]
         for index, dto in enumerate(dtos):
             mapped = dto.to_mapped(
                 visitor=_InputVisitor(
-                    self, is_update=dto.__strawchemy_purpose__ in ("update_by_pk_input", "update_by_filter_input")
+                    self,
+                    listener=self.listener,
+                    is_update=dto.__strawchemy_purpose__ in ("update_by_pk_input", "update_by_filter_input"),
                 ),
                 override=override,
             )
@@ -329,6 +357,7 @@ class Input(Generic[InputModel]):
                 input_index=input_index,
                 relation_type=relation_type,
                 related=relationship.entity.mapper.class_,
+                listener=self.listener,
             )
             if isinstance(relationship_value, (tuple, list)):
                 model_list = cast("list[DeclarativeBase]", relationship_value)
@@ -367,7 +396,7 @@ class Input(Generic[InputModel]):
                         for mapped in relation_input
                         if relation.relation_type is relation_type
                     )
-                    level_input.inputs.extend(input_data)
+                level_input.inputs.extend(input_data)
             if level_input.inputs:
                 levels.append(level_input)
 

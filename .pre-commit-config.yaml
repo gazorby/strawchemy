@@ -1,5 +1,5 @@
 default_language_version:
-  python: "3.9"
+  python: "3.13"
 
 default_stages:
   - pre-commit
@@ -33,14 +33,14 @@ repos:
           - --toml=./pyproject.toml
 
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.7
+    rev: v1.7.8
     hooks:
       - id: actionlint
         args: ["-shellcheck", ""]
 
   # Commitizen
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.9.0
+    rev: v4.9.1
     hooks:
       - id: commitizen
 
@@ -51,7 +51,7 @@ repos:
         additional_dependencies: ["ruff"]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.13.0
+    rev: v0.14.1
     hooks:
       - id: ruff-check
         types_or: [python, pyi]
