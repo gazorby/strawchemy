@@ -103,7 +103,7 @@ jobs:
           mv junit* junit-${{ matrix.session.session }}.xml
 
       - name: Upload coverage data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         id: upload-coverage-data
         if: ${{ always() }}
         with:
@@ -112,7 +112,7 @@ jobs:
           include-hidden-files: true
 
       - name: Upload test results data
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         id: upload-test-results-data
         if: ${{ always() }}
         with:
