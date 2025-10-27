@@ -4,7 +4,6 @@ _.python.venv = { path = ".venv" }
 _.file = ".env"
 
 [tools]
-ruff = "latest"
 uv = "latest"
 jq = "latest"
 pre-commit = "latest"
@@ -162,7 +161,7 @@ description = "Run tests in CI"
 usage = 'arg "<session>"'
 depends = "ci:install"
 env = { UV_PYTHON_PREFERENCE = "only-managed" }
-run = "nox -t tests -s '{{arg(name='session')}}' -- -n=2 {{vars.ci_pytest_coverage_options}}"
+run = "uv run nox -t tests -s '{{arg(name='session')}}' -- -n=2 {{vars.ci_pytest_coverage_options}}"
 
 [tasks."ci:lint"]
 description = "Lint CI yaml files"
@@ -172,7 +171,7 @@ run = "actionlint -shellcheck ''"
 description = "Output test matrix for CI"
 depends = "ci:install"
 run = '''
-    nox --json -t tests -t ci -l |
+    uv run nox --json -t tests -t ci -l |
     jq 'map(
         {
         session,
@@ -187,7 +186,7 @@ run = '''
 [tasks."ci:test-sessions"]
 description = "Output test session names for CI"
 depends = "ci:install"
-run = "nox --json -t tests -l | jq 'map(.name) | unique'"
+run = "uv run nox --json -t tests -l | jq 'map(.name) | unique'"
 
 # ###############
 # Linting
@@ -196,19 +195,19 @@ run = "nox --json -t tests -l | jq 'map(.name) | unique'"
 [tasks."ruff:check"]
 description = "Check ruff formatting"
 depends = "_install"
-run = "ruff check"
+run = "uv run ruff check"
 
 [tasks."ruff:fix"]
 description = "Fix ruff errors"
-run = "ruff check --fix --unsafe-fixes"
+run = "uv run ruff check --fix --unsafe-fixes"
 
 [tasks."ruff:format"]
 description = "Format code"
-run = "ruff format"
+run = "uv run ruff format"
 
 [tasks."ruff:format:check"]
 description = "Format code"
-run = "ruff format --check"
+run = "uv run ruff format --check"
 
 [tasks.pyright]
 description = "Run basedpyright"
