@@ -20,7 +20,7 @@
     },
     {
       "matchDepTypes": [
-        "devDependencies"
+        "tool.uv.dev-dependencies\n"
       ],
       "dependencyDashboardCategory": "\uD83D\uDEE0\uFE0F Development Dependencies"
     },
