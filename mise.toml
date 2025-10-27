@@ -195,19 +195,19 @@ run = "nox --json -t tests -l | jq 'map(.name) | unique'"
 [tasks."ruff:check"]
 description = "Check ruff formatting"
 depends = "_install"
-run = "ruff check"
+run = "uv run ruff check"
 
 [tasks."ruff:fix"]
 description = "Fix ruff errors"
-run = "ruff check --fix --unsafe-fixes"
+run = "uv run ruff check --fix --unsafe-fixes"
 
 [tasks."ruff:format"]
 description = "Format code"
-run = "ruff format"
+run = "uv run ruff format"
 
 [tasks."ruff:format:check"]
 description = "Format code"
-run = "ruff format --check"
+run = "uv run ruff format --check"
 
 [tasks.pyright]
 description = "Run basedpyright"
