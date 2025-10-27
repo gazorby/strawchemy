@@ -8,7 +8,7 @@ uv = "latest"
 jq = "latest"
 pre-commit = "latest"
 actionlint = "latest"
-python = "{{ get_env(name='PYTHON_VERSION', default='3.13') }}"
+python = "3.14.0"
 
 [vars]
 local_pytest_options = "-n=6 -vv"
