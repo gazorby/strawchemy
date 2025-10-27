@@ -1,8 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended",
-    "config:semverAllMonthly"
+    "config:best-practices",
+    "config:semverAllWeekly"
   ],
   "dependencyDashboard": true,
   "dependencyDashboardApproval": true,
