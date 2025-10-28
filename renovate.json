@@ -2,7 +2,9 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:best-practices",
-    "config:semverAllWeekly"
+    "schedule:weekly",
+    ":maintainLockFilesWeekly",
+    ":preserveSemverRanges"
   ],
   "dependencyDashboard": true,
   "dependencyDashboardApproval": true,
