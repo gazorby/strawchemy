@@ -22,12 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
 
       - name: Set up git-cliff
-        uses: kenji-miyake/setup-git-cliff@v2
+        uses: kenji-miyake/setup-git-cliff@2778609c643a39a2576c4bae2e493b855eb4aee8 # v2
 
       - name: Get next version
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.releaseType == 'auto' }}
