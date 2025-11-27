@@ -14,10 +14,10 @@ jobs:
     environment: publish
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@1e862dfacbd1d6d858c55d9b792c756523627244 # v7
         with:
           enable-cache: true
 
@@ -34,7 +34,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Upload wheels to release
-        uses: svenstaro/upload-release-action@v2
+        uses: svenstaro/upload-release-action@6b7fa9f267e90b50a19fef07b3596790bb941741 # v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: dist/*

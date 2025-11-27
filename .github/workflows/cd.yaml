@@ -15,12 +15,12 @@ jobs:
     environment: release
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
         with:
           fetch-depth: 0
 
       - name: Generate documentation changelog
-        uses: orhun/git-cliff-action@v4
+        uses: orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51 # v4
         id: git-cliff-repo
         with:
           config: pyproject.toml
@@ -31,7 +31,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate release changelog
-        uses: orhun/git-cliff-action@v4
+        uses: orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51 # v4
         id: git-cliff-release
         with:
           config: pyproject.toml
@@ -52,7 +52,7 @@ jobs:
           git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git main
 
       - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@5be0e66d93ac7ed76da52eca8bb058f665c3a5fe # v2
         with:
           body: ${{ steps.git-cliff-release.outputs.content }}
           generate_release_notes: true
