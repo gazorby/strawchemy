@@ -46,6 +46,11 @@ description = "Install dependencies"
 hide = true
 run = "uv sync --all-extras --dev"
 
+[tasks."_install:test"]
+description = "Install test dependencies"
+hide = true
+run = "uv sync --all-extras --only-group test"
+
 [tasks."_install:geo"]
 description = "Install dependencies with geo extras"
 hide = true
@@ -147,6 +152,12 @@ run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -s integration
 description = "Run snapshot-based tests and update snapshots"
 depends = "_install"
 run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update"
+
+[tasks."test:benchmarks"]
+description = "Run benchmarks"
+depends = "_install:test"
+run = "uv run pytest --codspeed tests/benchmarks"
+
 
 # ###############
 # CI
