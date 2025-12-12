@@ -13,10 +13,10 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Optional, TypeVar, Union, overload
 
 from msgspec import convert
-
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.nodes import FragmentSpread, InlineFragment, SelectedField, Selection
+
 from strawchemy.constants import JSON_PATH_KEY, ORDER_BY_KEY
 from strawchemy.dto.base import ModelT
 from strawchemy.exceptions import StrawchemyError
@@ -36,8 +36,9 @@ from strawchemy.utils import camel_to_snake, snake_keys
 from ._node import StrawberryQueryNode
 
 if TYPE_CHECKING:
-    from strawberry import Info
     from strawberry.types.field import StrawberryField
+
+    from strawberry import Info
     from strawchemy.sqlalchemy._executor import QueryResult
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.strawberry.typing import QueryNodeType, StrawchemyTypeWithStrawberryObjectDefinition
@@ -190,7 +191,7 @@ class StrawchemyRepository(Generic[T]):
 
     @classmethod
     def _get_field_hooks(cls, field: StrawberryField) -> Optional[Union[QueryHook[Any], Sequence[QueryHook[Any]]]]:
-        from strawchemy.strawberry._field import StrawchemyField
+        from strawchemy.strawberry._field import StrawchemyField  # noqa: PLC0415
 
         return field.query_hook if isinstance(field, StrawchemyField) else None
 

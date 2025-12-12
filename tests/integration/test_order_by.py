@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING, Literal, Union
 
 import pytest
 
-from syrupy.assertion import SnapshotAssertion
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
@@ -16,6 +15,7 @@ if TYPE_CHECKING:
     from decimal import Decimal
 
     from strawchemy.config.databases import DatabaseFeatures
+    from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]
 

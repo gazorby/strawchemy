@@ -239,7 +239,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
     ) -> dict[str, Any]:
         assert relationship.local_remote_pairs
         if relationship.secondary is None:
-            return {column.key: getattr(model, column.key) for column in model.__mapper__.primary_key} | {
+            return {column.key: getattr(model, column.key) for column in model.__mapper__.primary_key if column.key} | {
                 remote.key: getattr(parent, local.key)
                 for local, remote in relationship.local_remote_pairs
                 if local.key and remote.key
@@ -299,6 +299,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                     {
                         column.key: getattr(relation_model, column.key)
                         for column in relation_model.__mapper__.primary_key
+                        if column.key
                     }
                     | {remote.key: None for local, remote in prop.local_remote_pairs if local.key and remote.key}
                     for relation_model in relation.remove

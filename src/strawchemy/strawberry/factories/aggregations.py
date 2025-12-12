@@ -5,9 +5,9 @@ from decimal import Decimal
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, Optional, TypeVar, cast
 
+from sqlalchemy.orm import DeclarativeBase
 from typing_extensions import override
 
-from sqlalchemy.orm import DeclarativeBase
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.exceptions import DTOError
 from strawchemy.strawberry.dto import (
@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from collections.abc import Generator
 
     from sqlalchemy.orm import QueryableAttribute
+
     from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelT, Relation
     from strawchemy.dto.types import DTOConfig
     from strawchemy.graph import Node

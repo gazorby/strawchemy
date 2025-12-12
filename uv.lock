@@ -360,14 +360,14 @@ wheels = [
 
 [[package]]
 name = "basedpyright"
-version = "1.34.0"
+version = "1.36.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nodejs-wheel-binaries" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/a3/77/ded02ba2b400807b291fa2b9d29ac7f473e86a45d1f5212d8276e9029107/basedpyright-1.34.0.tar.gz", hash = "sha256:7ae3b06f644fac15fdd14a00d0d1f12f92a8205ae1609aabd5a0799b1a68be1d", size = 22803348, upload-time = "2025-11-19T14:48:16.38Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/46/08/534eb9491274905d7a73e78868569f07afca7006bc80f9f655c0bd19c777/basedpyright-1.36.0.tar.gz", hash = "sha256:f0318ec12ff86c459232308d82e88552338ad86cf8bbadf02e0810d867094ca0", size = 22835187, upload-time = "2025-12-09T14:25:31.77Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/2a/9e/ced31964ed49f06be6197bd530958b6ddca9a079a8d7ee0ee7429cae9e27/basedpyright-1.34.0-py3-none-any.whl", hash = "sha256:e76015c1ebb671d2c6d7fef8a12bc0f1b9d15d74e17847b7b95a3a66e187c70f", size = 11865958, upload-time = "2025-11-19T14:48:13.724Z" },
+    { url = "https://files.pythonhosted.org/packages/9e/91/4e19de9130ccc9158d34f51ba78c0b6c8c31207e22198506888e26173fa5/basedpyright-1.36.0-py3-none-any.whl", hash = "sha256:3eb47ab341fae509b8ac6649ab11dd75624607ef63333a7bf8e7b1891f24e437", size = 11881725, upload-time = "2025-12-09T14:25:27.563Z" },
 ]
 
 [[package]]
@@ -1028,8 +1028,8 @@ wheels = [
 
 [package.optional-dependencies]
 toml = [
-    { name = "tomli", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.10' and python_full_version <= '3.11' and extra == 'group-10-strawchemy-build') or (python_full_version >= '3.10' and python_full_version <= '3.11' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.10' and extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (python_full_version < '3.10' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (python_full_version > '3.11' and extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (python_full_version > '3.11' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
-    { name = "tomli", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.10' and python_full_version <= '3.11' and extra == 'group-10-strawchemy-codeflash') or (python_full_version >= '3.10' and python_full_version <= '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-dev') or (python_full_version < '3.10' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (python_full_version > '3.11' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash')" },
+    { name = "tomli", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version == '3.10.*' and extra == 'group-10-strawchemy-build') or (python_full_version == '3.10.*' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
+    { name = "tomli", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11' or (python_full_version == '3.10.*' and extra == 'group-10-strawchemy-codeflash') or (python_full_version < '3.10' and extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (python_full_version < '3.10' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (python_full_version > '3.11' and extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (python_full_version > '3.11' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (python_full_version == '3.10.*' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-dev')" },
 ]
 
 [[package]]
@@ -1280,7 +1280,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -1761,7 +1761,7 @@ resolution-markers = [
     "python_full_version < '3.10'",
 ]
 dependencies = [
-    { name = "zipp", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev'" },
+    { name = "zipp", marker = "(python_full_version < '3.10' and extra == 'group-10-strawchemy-build') or (python_full_version < '3.10' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/20/ff/bd28f70283b9cca0cbf0c2a6082acbecd822d1962ae7b2a904861b9965f8/importlib_metadata-8.0.0.tar.gz", hash = "sha256:188bd24e4c346d3f0a933f275c2fec67050326a856b9a359881d7c2a697e8812", size = 52667, upload-time = "2024-06-25T18:38:04.538Z" }
 wheels = [
@@ -4658,7 +4658,6 @@ name = "tomli"
 version = "2.0.2"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.11' and python_full_version < '3.13'",
     "python_full_version == '3.10.*'",
     "python_full_version < '3.10'",
 ]
@@ -4676,6 +4675,9 @@ resolution-markers = [
     "python_full_version == '3.10.*' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev'",
     "python_full_version >= '3.9.2' and python_full_version < '3.10' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev'",
     "python_full_version < '3.9.2' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev'",
+    "python_full_version >= '3.11' and python_full_version < '3.13' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev'",
+    "python_full_version >= '3.11' and python_full_version < '3.13' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev'",
+    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev'",
     "python_full_version >= '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev'",
     "python_full_version == '3.10.*' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev'",
     "python_full_version < '3.10' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev'",

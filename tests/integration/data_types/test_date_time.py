@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 from sqlalchemy import Insert, MetaData, insert
-from syrupy.assertion import SnapshotAssertion
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import DateTimeModel, date_time_metadata
 from tests.integration.types import mysql as mysql_types
@@ -17,6 +16,7 @@ from tests.utils import maybe_async
 
 if TYPE_CHECKING:
     from strawchemy.typing import SupportedDialect
+    from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]
 

@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-
 from strawberry.types import get_object_definition
+
 from tests.unit.models import User
 
 if TYPE_CHECKING:

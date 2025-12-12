@@ -11,7 +11,7 @@ from typing_extensions import Self, TypeAlias, override
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Hashable
 
-__all__ = ("GraphMetadata", "IterationMode", "MatchOn", "Node", "NodeMetadataT", "NodeValueT")
+__all__ = ("GraphMetadata", "IterationMode", "MatchOn", "Node", "NodeMetadataT", "NodeValueT", "merge_trees")
 
 T = TypeVar("T")
 NodeValueT = TypeVar("NodeValueT", bound="Any")

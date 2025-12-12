@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Annotated, Any, Optional, Union, cast
+from collections.abc import Awaitable
+from typing import TYPE_CHECKING, Annotated, Any, Callable, Optional, Union, cast
 
 from pydantic import AfterValidator
+from strawberry.extensions.field_extension import FieldExtension
 from strawchemy import (
     Input,
     InputValidationError,
@@ -15,14 +17,10 @@ from strawchemy import (
 )
 from strawchemy.types import DefaultOffsetPagination
 from strawchemy.validation.pydantic import PydanticValidation
-from typing_extensions import override
+from typing_extensions import TypeAlias, override
 
 import strawberry
 from sqlalchemy import Select, select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
-from sqlalchemy.orm.util import AliasedClass
-from strawberry.extensions.field_extension import AsyncExtensionResolver, FieldExtension, SyncExtensionResolver
 from tests.integration.models import (
     ArrayModel,
     Color,
@@ -38,7 +36,13 @@ from tests.integration.models import (
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from sqlalchemy.ext.asyncio import AsyncSession
+    from sqlalchemy.orm import Session
+    from sqlalchemy.orm.util import AliasedClass
     from strawchemy.sqlalchemy.hook import LoadType
+
+SyncExtensionResolver: TypeAlias = Callable[..., Any]
+AsyncExtensionResolver: TypeAlias = Callable[..., Awaitable[Any]]
 
 strawchemy = Strawchemy("postgresql")
 

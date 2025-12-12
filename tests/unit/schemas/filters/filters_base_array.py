@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from sqlalchemy.orm import Mapped, mapped_column
 from strawchemy import Strawchemy
 
 import strawberry
 from sqlalchemy import ARRAY, Text
-from sqlalchemy.orm import Mapped, mapped_column
 from tests.unit.models import UUIDBase
 
 

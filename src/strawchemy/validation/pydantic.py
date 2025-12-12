@@ -6,9 +6,9 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
 from pydantic import ValidationError
+from sqlalchemy.orm import DeclarativeBase
 from typing_extensions import override
 
-from sqlalchemy.orm import DeclarativeBase
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
 from strawchemy.dto.base import ModelT
 from strawchemy.dto.utils import read_partial
@@ -23,8 +23,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
     from pydantic_core import ErrorDetails
-
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, Relation
     from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose

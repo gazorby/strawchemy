@@ -5,9 +5,9 @@ from functools import partial
 from typing import NewType, TypeVar, Union
 
 from msgspec import json
+from strawberry.schema.types.base_scalars import wrap_parser
 
 from strawberry import scalar
-from strawberry.schema.types.base_scalars import wrap_parser
 
 __all__ = ("Date", "DateTime", "Interval", "Time")
 

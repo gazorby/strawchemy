@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import textwrap
 from datetime import timedelta
 from importlib import import_module
@@ -7,26 +8,25 @@ from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from strawberry.types import get_object_definition
+from strawberry.types.object_type import StrawberryObjectDefinition
 from strawchemy.dto.exceptions import EmptyDTOError
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.sqlalchemy.exceptions import QueryHookError
 from strawchemy.strawberry.exceptions import StrawchemyFieldError
 from strawchemy.strawberry.scalars import Interval
 from strawchemy.testing.pytest_plugin import MockContext
+from syrupy.assertion import SnapshotAssertion
 
 import strawberry
 from strawberry import auto
 from strawberry.scalars import JSON
-from strawberry.types import get_object_definition
-from strawberry.types.object_type import StrawberryObjectDefinition
-from syrupy.assertion import SnapshotAssertion
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
 from tests.unit.models import User
 
 if TYPE_CHECKING:
     from strawchemy.mapper import Strawchemy
-
     from syrupy.assertion import SnapshotAssertion
 
 
@@ -102,7 +102,7 @@ def test_type_resolution_with_resolvers() -> None:
 def test_multiple_types_error(path: str) -> None:
     with pytest.raises(
         StrawchemyError,
-        match=(
+        match=re.escape(
             """Type `FruitType` cannot be auto generated because it's already declared."""
             """ You may want to set `override=True` on the existing type to use it everywhere."""
         ),
@@ -113,7 +113,7 @@ def test_multiple_types_error(path: str) -> None:
 def test_aggregation_type_mismatch() -> None:
     with pytest.raises(
         StrawchemyFieldError,
-        match=(
+        match=re.escape(
             """The `color_aggregations` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."""
         ),
     ):
@@ -122,7 +122,7 @@ def test_aggregation_type_mismatch() -> None:
 
 def test_query_hooks_wrong_relationship_load_spec() -> None:
     with pytest.raises(
-        QueryHookError, match=("Keys of mappings passed in `load` param must be relationship attributes: ")
+        QueryHookError, match=re.escape("Keys of mappings passed in `load` param must be relationship attributes: ")
     ):
         import_module("tests.unit.schemas.query_hooks")
 
@@ -130,7 +130,9 @@ def test_query_hooks_wrong_relationship_load_spec() -> None:
 def test_excluding_pk_from_update_input_fail() -> None:
     with pytest.raises(
         StrawchemyError,
-        match=("""You cannot exclude primary key columns from an input type intended for create or update mutations"""),
+        match=re.escape(
+            "You cannot exclude primary key columns from an input type intended for create or update mutations"
+        ),
     ):
         import_module("tests.unit.schemas.mutations.invalid_pk_update_input")
 
@@ -138,7 +140,7 @@ def test_excluding_pk_from_update_input_fail() -> None:
 def test_read_only_pk_on_update_input_fail() -> None:
     with pytest.raises(
         EmptyDTOError,
-        match=(
+        match=re.escape(
             "Cannot generate `NewGroupUsersIdFieldsInput` input type from `NewUser` model because primary key columns are disabled for write purpose"
         ),
     ):
@@ -148,7 +150,7 @@ def test_read_only_pk_on_update_input_fail() -> None:
 def test_delete_mutation_type_not_list_fail() -> None:
     with pytest.raises(
         StrawchemyFieldError,
-        match=("Type of delete mutation must be a list: delete_group"),
+        match=re.escape("Type of delete mutation must be a list: delete_group"),
     ):
         import_module("tests.unit.schemas.mutations.delete_mutation_type_not_list")
 
@@ -156,7 +158,7 @@ def test_delete_mutation_type_not_list_fail() -> None:
 def test_update_mutation_by_filter_type_not_list_fail() -> None:
     with pytest.raises(
         StrawchemyFieldError,
-        match=("Type of update mutation by filter must be a list: update_groups"),
+        match=re.escape("Type of update mutation by filter must be a list: update_groups"),
     ):
         import_module("tests.unit.schemas.mutations.invalid_filter_update_field")
 

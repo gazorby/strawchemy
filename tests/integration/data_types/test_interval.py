@@ -7,7 +7,6 @@ import msgspec
 import pytest
 
 from sqlalchemy import Insert, MetaData, insert
-from syrupy.assertion import SnapshotAssertion
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import IntervalModel, interval_metadata
 from tests.integration.types import mysql as mysql_types
@@ -19,6 +18,7 @@ from tests.utils import maybe_async
 
 if TYPE_CHECKING:
     from strawchemy.typing import SupportedDialect
+    from syrupy.assertion import SnapshotAssertion
 
 
 seconds_in_year = 60 * 60 * 24 * 365.25

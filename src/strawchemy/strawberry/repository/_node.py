@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar, Union, cast
 
 from strawberry.types import get_object_definition
 from strawberry.utils.typing import type_has_annotation
+
 from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.dto.types import DTOMissing
 from strawchemy.graph import GraphError

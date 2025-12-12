@@ -3,9 +3,9 @@ from __future__ import annotations
 from collections.abc import Generator, Sequence
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
+from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from typing_extensions import override
 
-from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import UNSET
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, Relation
@@ -35,6 +35,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Mapping, Sequence
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, Relation
     from strawchemy.dto.types import ExcludeFields, IncludeFields

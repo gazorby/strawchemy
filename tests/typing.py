@@ -5,11 +5,10 @@ from typing import TYPE_CHECKING, Any, Optional, Protocol
 from typing_extensions import TypeAlias
 
 if TYPE_CHECKING:
-    from strawchemy.dto.backend.pydantic import MappedPydanticDTO
-    from strawchemy.dto.base import DTOFactory
-
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawberry.types.execution import ExecutionResult
+    from strawchemy.dto.backend.pydantic import MappedPydanticDTO
+    from strawchemy.dto.base import DTOFactory
 
 
 MappedPydanticFactory: TypeAlias = "DTOFactory[DeclarativeBase, QueryableAttribute[Any], MappedPydanticDTO[Any]]"

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, ClassVar, Optional
-
-from typing_extensions import override
+from typing import TYPE_CHECKING, Optional
 
 from syrupy.exceptions import TaintedSnapshotError
 from syrupy.extensions.amber.serializer import AmberDataSerializer
 from syrupy.extensions.single_file import SingleFileSnapshotExtension, WriteMode
+from typing_extensions import override
 
 if TYPE_CHECKING:
     from syrupy.data import SnapshotCollection
@@ -18,7 +17,6 @@ __all__ = ("GraphQLFileExtension", "SQLFileExtension", "SingleAmberFileExtension
 
 class SingleAmberFileExtension(SingleFileSnapshotExtension):
     _write_mode = WriteMode.TEXT
-    _file_extension: ClassVar[str]
     serializer_class: type[AmberDataSerializer] = AmberDataSerializer
 
     @override
@@ -32,7 +30,6 @@ class SingleAmberFileExtension(SingleFileSnapshotExtension):
     ) -> SerializedData:
         return self.serializer_class.serialize(data, exclude=exclude, include=include, matcher=matcher)
 
-    @override
     def _read_snapshot_collection(self, *, snapshot_location: str) -> SnapshotCollection:
         return self.serializer_class.read_file(snapshot_location)
 
@@ -41,7 +38,6 @@ class SingleAmberFileExtension(SingleFileSnapshotExtension):
     def __cacheable_read_snapshot(cls, snapshot_location: str, cache_key: str) -> SnapshotCollection:  # noqa: ARG003
         return cls.serializer_class.read_file(snapshot_location)
 
-    @override
     def _read_snapshot_data_from_location(
         self, *, snapshot_location: str, snapshot_name: str, session_id: str
     ) -> Optional[SerializableData]:
@@ -53,15 +49,14 @@ class SingleAmberFileExtension(SingleFileSnapshotExtension):
             raise TaintedSnapshotError(snapshot_data=data)
         return data
 
-    @override
     @classmethod
     def _write_snapshot_collection(cls, *, snapshot_collection: SnapshotCollection) -> None:
         cls.serializer_class.write_file(snapshot_collection, merge=True)
 
 
 class GraphQLFileExtension(SingleAmberFileExtension):
-    _file_extension = "gql"
+    file_extension = "gql"
 
 
 class SQLFileExtension(SingleAmberFileExtension):
-    _file_extension = "sql"
+    file_extension = "sql"

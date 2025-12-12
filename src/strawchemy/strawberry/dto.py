@@ -43,10 +43,10 @@ from typing import (
 )
 
 from msgspec import Struct, field, json
+from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from typing_extensions import Self, override
 
 import strawberry
-from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.dto.backend.strawberry import MappedStrawberryDTO, StrawberryDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOMissing, Purpose
@@ -196,7 +196,7 @@ class DTOKey(_Key[type[Any]]):
 
 
 class OrderByRelationFilterDTO(RelationFilterDTO, Generic[OrderByDTOT], frozen=True):
-    order_by: tuple[OrderByDTOT] = field(default_factory=tuple)
+    order_by: tuple[OrderByDTOT, ...] = field(default_factory=tuple)
 
     @override
     def __bool__(self) -> bool:

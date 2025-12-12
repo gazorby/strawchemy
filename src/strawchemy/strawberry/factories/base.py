@@ -19,12 +19,12 @@ from collections.abc import Generator, Sequence
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union, get_type_hints
 
-from typing_extensions import TypeAlias, dataclass_transform, override
-
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from strawberry import UNSET
 from strawberry.types.auto import StrawberryAuto
 from strawberry.utils.typing import type_has_annotation
+from typing_extensions import TypeAlias, dataclass_transform, override
+
+from strawberry import UNSET
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.types import DTOAuto, DTOConfig, DTOScope, Purpose
 from strawchemy.dto.utils import config
@@ -310,7 +310,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
 
     @cached_property
     def _namespace(self) -> dict[str, Any]:
-        from strawchemy.sqlalchemy import hook
+        from strawchemy.sqlalchemy import hook  # noqa: PLC0415
 
         return vars(strawchemy_typing) | vars(hook)
 
