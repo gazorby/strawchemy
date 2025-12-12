@@ -5,6 +5,7 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from pydantic import ValidationError
+from sqlalchemy.orm import DeclarativeBase
 from typing_extensions import override
 
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
