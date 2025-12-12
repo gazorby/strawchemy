@@ -191,9 +191,14 @@ class StrawchemyRepository(Generic[T]):
 
     @classmethod
     def _get_field_hooks(cls, field: StrawberryField) -> Optional[Union[QueryHook[Any], Sequence[QueryHook[Any]]]]:
-        from strawchemy.strawberry._field import StrawchemyField  # noqa: PLC0415
+        # Hoist import to function attribute for performance, ensuring module is imported only once.
+        try:
+            StrawchemyField = cls._StrawchemyField
+        except AttributeError:
+            from strawchemy.strawberry._field import StrawchemyField  # noqa: PLC0415
 
-        return field.query_hook if isinstance(field, StrawchemyField) else None
+            cls._StrawchemyField = StrawchemyField
+        return field.query_hook if isinstance(field, cls._StrawchemyField) else None
 
     def _add_query_hooks(
         self, query_hooks: Union[QueryHook[Any], Sequence[QueryHook[Any]]], node: QueryNodeType
