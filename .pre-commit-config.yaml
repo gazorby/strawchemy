@@ -45,6 +45,12 @@ repos:
     hooks:
       - id: commitizen
 
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.21.2
+    hooks:
+      - id: pyupgrade
+        args: [ "--py310-plus" ]
+
   - repo: https://github.com/provinzkraut/unasyncd
     rev: v0.9.0
     hooks:
