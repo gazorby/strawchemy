@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Union
-
 from strawchemy import ValidationErrorType  # noqa: TC002
 from strawchemy.validation.pydantic import PydanticValidation
 
@@ -39,7 +37,7 @@ class Query:
 
 @strawberry.type
 class Mutation:
-    create_ticket: Union[TicketType, ValidationErrorType] = strawchemy.create(
+    create_ticket: TicketType | ValidationErrorType = strawchemy.create(
         TicketCreate, validation=PydanticValidation(TicketCreateValidation)
     )
     create_tickets: list[TicketType] = strawchemy.create(TicketCreate)

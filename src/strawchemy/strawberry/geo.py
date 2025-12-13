@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Optional, Union
+from typing import Any
 
 import shapely
 from geoalchemy2 import WKBElement, WKTElement
@@ -55,13 +55,13 @@ _PYDANTIC_GEO_ADAPTER_MAP = {
 }
 
 
-def _serialize_geojson(val: Union[Union[Geometry, WKTElement], WKBElement]) -> dict[str, Any]:
+def _serialize_geojson(val: Geometry | WKTElement | WKBElement) -> dict[str, Any]:
     if isinstance(val, (WKBElement, WKTElement)):
         val = to_shape(val)
     return json.loads(to_geojson(val))
 
 
-def _parse_geojson(val: dict[str, Any], geometry: Optional[type[PydanticGeometry]] = None) -> _GeometryHolder:
+def _parse_geojson(val: dict[str, Any], geometry: type[PydanticGeometry] | None = None) -> _GeometryHolder:
     if geometry is None:
         return _GeometryHolder(_PydanticGeometryType.validate_python(val))
     return _GeometryHolder(_PYDANTIC_GEO_ADAPTER_MAP[geometry].validate_python(val))

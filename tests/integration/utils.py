@@ -5,11 +5,10 @@ import re
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from statistics import mean, pstdev, pvariance, stdev, variance
-from typing import TYPE_CHECKING, Any, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from uuid import UUID
 
 from pydantic import TypeAdapter
-from typing_extensions import TypeAlias
 
 from sqlalchemy import inspect
 from tests.integration.types import postgres as pg_types
@@ -97,8 +96,8 @@ def python_type(model: type[DeclarativeBase], col_name: str) -> type[Any]:
 
 def compute_aggregation(
     graphql_aggregation: Literal["max", "min", "sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
-    iterable: Iterable[Union[int, float]],
-) -> Union[float, Decimal]:
+    iterable: Iterable[int | float],
+) -> float | Decimal:
     if graphql_aggregation == "max":
         value = max(iterable)
     elif graphql_aggregation == "min":

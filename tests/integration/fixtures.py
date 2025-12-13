@@ -7,7 +7,7 @@ import platform
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
-from typing import TYPE_CHECKING, Any, Literal, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, cast
 
 import pytest
 import sqlparse
@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.strawberry.scalars import Date, DateTime, Interval, Time
-from typing_extensions import Self, TypeAlias
+from typing_extensions import Self
 
 from sqlalchemy import (
     URL,
@@ -419,7 +419,7 @@ def postgis_service(
     postgres_password: str,
     postgres_host: str,
     postgis_image: str,
-) -> Generator[PostgresService, None, None]:
+) -> Generator[PostgresService]:
     with _provide_postgres_service(
         docker_service,
         image=postgis_image,
@@ -441,7 +441,7 @@ def postgres_database_service(postgres_service: PostgresService) -> PostgresServ
 
 
 @pytest.fixture
-def psycopg_engine(postgres_database_service: PostgresService) -> Generator[Engine, None, None]:
+def psycopg_engine(postgres_database_service: PostgresService) -> Generator[Engine]:
     """Postgresql instance for end-to-end testing."""
     engine = create_engine(
         URL(
@@ -463,7 +463,7 @@ def psycopg_engine(postgres_database_service: PostgresService) -> Generator[Engi
 
 
 @pytest.fixture
-def sqlite_engine(tmp_path: Path) -> Generator[Engine, None, None]:
+def sqlite_engine(tmp_path: Path) -> Generator[Engine]:
     db_path = tmp_path / "test.db"
     db_path.unlink(missing_ok=True)
     engine = create_engine(f"sqlite:///{db_path}", poolclass=NullPool)
@@ -499,7 +499,7 @@ def engine(request: FixtureRequest) -> Engine:
 
 
 @pytest.fixture
-def session(engine: Engine) -> Generator[Session, None, None]:
+def session(engine: Engine) -> Generator[Session]:
     session = sessionmaker(bind=engine, expire_on_commit=False)()
     try:
         yield session
@@ -512,7 +512,7 @@ def session(engine: Engine) -> Generator[Session, None, None]:
 
 
 @pytest.fixture
-async def asyncmy_engine(mysql_service: MySQLService) -> AsyncGenerator[AsyncEngine, None]:
+async def asyncmy_engine(mysql_service: MySQLService) -> AsyncGenerator[AsyncEngine]:
     engine = create_async_engine(
         URL(
             drivername="mysql+asyncmy",
@@ -533,7 +533,7 @@ async def asyncmy_engine(mysql_service: MySQLService) -> AsyncGenerator[AsyncEng
 
 
 @pytest.fixture
-async def aiosqlite_engine(tmp_path: Path) -> AsyncGenerator[AsyncEngine, None]:
+async def aiosqlite_engine(tmp_path: Path) -> AsyncGenerator[AsyncEngine]:
     engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path}/test.db", poolclass=NullPool)
     try:
         yield engine
@@ -542,7 +542,7 @@ async def aiosqlite_engine(tmp_path: Path) -> AsyncGenerator[AsyncEngine, None]:
 
 
 @pytest.fixture
-async def asyncpg_engine(postgres_database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
+async def asyncpg_engine(postgres_database_service: PostgresService) -> AsyncGenerator[AsyncEngine]:
     """Postgresql instance for end-to-end testing."""
     engine = create_async_engine(
         URL(
@@ -564,7 +564,7 @@ async def asyncpg_engine(postgres_database_service: PostgresService) -> AsyncGen
 
 
 @pytest.fixture
-async def psycopg_async_engine(postgres_database_service: PostgresService) -> AsyncGenerator[AsyncEngine, None]:
+async def psycopg_async_engine(postgres_database_service: PostgresService) -> AsyncGenerator[AsyncEngine]:
     """Postgresql instance for end-to-end testing."""
     engine = create_async_engine(
         URL(
@@ -627,7 +627,7 @@ def async_engine(request: FixtureRequest) -> AsyncEngine:
 
 
 @pytest.fixture
-async def async_session(async_engine: AsyncEngine) -> AsyncGenerator[AsyncSession, None]:
+async def async_session(async_engine: AsyncEngine) -> AsyncGenerator[AsyncSession]:
     session = async_sessionmaker(bind=async_engine, expire_on_commit=False)()
     try:
         yield session
@@ -738,7 +738,7 @@ def config(mapper: Strawchemy) -> Generator[StrawchemyConfig]:
 
 
 @pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Union[AnyAsyncQueryType, DefaultQuery]]:
+def async_query(dialect: SupportedDialect) -> type[AnyAsyncQueryType | DefaultQuery]:
     if dialect == "postgresql":
         return postgres_types.AsyncQuery
     if dialect == "mysql":
@@ -749,7 +749,7 @@ def async_query(dialect: SupportedDialect) -> type[Union[AnyAsyncQueryType, Defa
 
 
 @pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Union[AnySyncQueryType, DefaultQuery]]:
+def sync_query(dialect: SupportedDialect) -> type[AnySyncQueryType | DefaultQuery]:
     if dialect == "postgresql":
         return postgres_types.SyncQuery
     if dialect == "mysql":
@@ -760,7 +760,7 @@ def sync_query(dialect: SupportedDialect) -> type[Union[AnySyncQueryType, Defaul
 
 
 @pytest.fixture
-def async_mutation(dialect: SupportedDialect) -> Optional[type[AnyAsyncMutationType]]:
+def async_mutation(dialect: SupportedDialect) -> type[AnyAsyncMutationType] | None:
     if dialect == "postgresql":
         return postgres_types.AsyncMutation
     if dialect == "mysql":
@@ -771,7 +771,7 @@ def async_mutation(dialect: SupportedDialect) -> Optional[type[AnyAsyncMutationT
 
 
 @pytest.fixture
-def sync_mutation(dialect: SupportedDialect) -> Optional[type[Any]]:
+def sync_mutation(dialect: SupportedDialect) -> type[Any] | None:
     if dialect == "postgresql":
         return postgres_types.SyncMutation
     if dialect == "mysql":
@@ -795,8 +795,8 @@ def query_tracker(request: FixtureRequest) -> QueryTracker:
 def any_query(
     sync_query: type[Any],
     async_query: type[Any],
-    async_mutation: Optional[type[Any]],
-    sync_mutation: Optional[type[Any]],
+    async_mutation: type[Any] | None,
+    sync_mutation: type[Any] | None,
     request: FixtureRequest,
 ) -> AnyQueryExecutor:
     if isinstance(request.param, AsyncSession):
@@ -818,7 +818,7 @@ def no_session_query(sync_query: type[Any]) -> SyncQueryExecutor:
 
 @dataclass
 class QueryInspector:
-    clause_element: Union[Union[Compiled, str], ClauseElement]
+    clause_element: Compiled | str | ClauseElement
     dialect: Dialect
     multiparams: list[dict[str, Any]] = dataclasses.field(default_factory=list)
     params: dict[str, Any] = dataclasses.field(default_factory=dict)
@@ -850,8 +850,8 @@ class QueryTracker:
 
     def _event_listener(
         self,
-        conn: Union[Connection, AsyncConnection],
-        clauseelement: Union[Union[Compiled, str], ClauseElement],
+        conn: Connection | AsyncConnection,
+        clauseelement: Compiled | str | ClauseElement,
         multiparams: list[dict[str, Any]],
         params: dict[str, Any],
         execution_options: dict[str, Any],
@@ -888,8 +888,8 @@ class QueryTracker:
     def assert_statements(
         self,
         count: int,
-        statement_type: Optional[FilterableStatement] = None,
-        snapshot: Optional[SnapshotAssertion] = None,
+        statement_type: FilterableStatement | None = None,
+        snapshot: SnapshotAssertion | None = None,
     ) -> None:
         filtered = self.filter(statement_type) if statement_type is not None else self
         assert filtered.query_count == count

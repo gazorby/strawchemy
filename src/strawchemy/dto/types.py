@@ -5,9 +5,9 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, Optional, Union, final, get_type_hints
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, Union, final, get_type_hints
 
-from typing_extensions import TypeAlias, override
+from typing_extensions import override
 
 from strawchemy.utils import get_annotations
 
@@ -81,12 +81,12 @@ class Purpose(str, Enum):
 class PurposeConfig:
     """Mark the field as read-only, or private."""
 
-    type_override: Optional[Any] = DTOMissing
-    validator: Optional[Callable[[Any], Any]] = None
+    type_override: Any | None = DTOMissing
+    validator: Callable[[Any], Any] | None = None
     """Single argument callables that are defined on the DTO as validators for the field."""
-    alias: Optional[str] = None
+    alias: str | None = None
     """Customize name of generated DTO field."""
-    partial: Optional[bool] = None
+    partial: bool | None = None
 
 
 @dataclass
@@ -152,7 +152,7 @@ class DTOConfig:
     """Explicitly include fields from the generated DTO."""
     exclude: ExcludeFields = field(default_factory=set)
     """Explicitly exclude fields from the generated DTO. Implies `include="all"`."""
-    partial: Optional[bool] = None
+    partial: bool | None = None
     """Make all field optional."""
     partial_default: Any = None
     unset_sentinel: Any = DTOUnset
@@ -160,8 +160,8 @@ class DTOConfig:
     annotation_overrides: dict[str, Any] = field(default_factory=dict)
     aliases: Mapping[str, str] = field(default_factory=dict)
     exclude_defaults: bool = False
-    alias_generator: Optional[Callable[[str], str]] = None
-    scope: Optional[DTOScope] = None
+    alias_generator: Callable[[str], str] | None = None
+    scope: DTOScope | None = None
     exclude_from_scope: bool = False
     tags: set[str] = field(default_factory=set)
 
@@ -177,20 +177,20 @@ class DTOConfig:
 
     def copy_with(
         self,
-        purpose: Union[Purpose, type[DTOUnset]] = DTOUnset,
-        include: Optional[IncludeFields] = None,
-        exclude: Optional[ExcludeFields] = None,
-        partial: Union[bool, None, type[DTOUnset]] = DTOUnset,
-        unset_sentinel: Union[Any, type[DTOUnset]] = DTOUnset,
-        type_overrides: Union[Mapping[Any, Any], type[DTOUnset]] = DTOUnset,
-        annotation_overrides: Union[dict[str, Any], type[DTOUnset]] = DTOUnset,
-        aliases: Union[Mapping[str, str], type[DTOUnset]] = DTOUnset,
-        exclude_defaults: Union[bool, type[DTOUnset]] = DTOUnset,
-        alias_generator: Union[Callable[[str], str], type[DTOUnset]] = DTOUnset,
-        partial_default: Union[Any, type[DTOUnset]] = DTOUnset,
-        scope: Union[DTOScope, type[DTOUnset]] = DTOUnset,
-        exclude_from_scope: Union[bool, type[DTOUnset]] = DTOUnset,
-        tags: Union[set[str], type[DTOUnset]] = DTOUnset,
+        purpose: Purpose | type[DTOUnset] = DTOUnset,
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool | None | type[DTOUnset] = DTOUnset,
+        unset_sentinel: Any | type[DTOUnset] = DTOUnset,
+        type_overrides: Mapping[Any, Any] | type[DTOUnset] = DTOUnset,
+        annotation_overrides: dict[str, Any] | type[DTOUnset] = DTOUnset,
+        aliases: Mapping[str, str] | type[DTOUnset] = DTOUnset,
+        exclude_defaults: bool | type[DTOUnset] = DTOUnset,
+        alias_generator: Callable[[str], str] | type[DTOUnset] = DTOUnset,
+        partial_default: Any | type[DTOUnset] = DTOUnset,
+        scope: DTOScope | type[DTOUnset] = DTOUnset,
+        exclude_from_scope: bool | type[DTOUnset] = DTOUnset,
+        tags: set[str] | type[DTOUnset] = DTOUnset,
     ) -> DTOConfig:
         """Create a copy of the DTOConfig with the specified changes."""
         if include is None and exclude is None:
@@ -249,7 +249,7 @@ class DTOConfig:
             annotation_overrides=annotation_overrides,
         )
 
-    def alias(self, name: str) -> Optional[str]:
+    def alias(self, name: str) -> str | None:
         if self.aliases:
             return self.aliases.get(name)
         if self.alias_generator is not None:

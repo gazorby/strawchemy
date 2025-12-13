@@ -3,11 +3,10 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, TypeAlias, TypeVar, Union, cast
 
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.orm import RelationshipProperty
-from typing_extensions import TypeAlias
 
 from sqlalchemy import Column, Function, Insert, Row, Table, func, insert, inspect
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
@@ -65,7 +64,7 @@ class QueryParams:
 class InsertData:
     model_type: type[DeclarativeBase] | Table
     values: list[dict[str, Any]]
-    upsert_data: Optional[UpsertData] = None
+    upsert_data: UpsertData | None = None
 
     @property
     def pks(self) -> tuple[Column[Any], ...]:
@@ -93,7 +92,7 @@ class InsertData:
 
     def upsert_set(
         self, dialect: SupportedDialect, columns: ReadOnlyColumnCollection[str, KeyedColumnElement[Any]]
-    ) -> Mapping[Column[Any], Union[KeyedColumnElement[Any], Function[Any]]]:
+    ) -> Mapping[Column[Any], KeyedColumnElement[Any] | Function[Any]]:
         update_fields_set = {
             dto_field.field_definition.model_field_name for dto_field in self.upsert_data_or_raise.update_fields
         } or {name for value_dict in self.values for name in value_dict}
@@ -116,9 +115,9 @@ class InsertData:
 class MutationData(Generic[DeclarativeT]):
     mode: InsertOrUpdate
     input: Input[DeclarativeT]
-    dto_filter: Optional[BooleanFilterDTO] = None
-    upsert_update_fields: Optional[list[EnumDTO]] = None
-    upsert_conflict_fields: Optional[EnumDTO] = None
+    dto_filter: BooleanFilterDTO | None = None
+    upsert_update_fields: list[EnumDTO] | None = None
+    upsert_conflict_fields: EnumDTO | None = None
 
 
 class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
@@ -126,8 +125,8 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         self,
         model: type[DeclarativeT],
         session: SessionT,
-        statement: Optional[Select[tuple[DeclarativeT]]] = None,
-        execution_options: Optional[dict[str, Any]] = None,
+        statement: Select[tuple[DeclarativeT]] | None = None,
+        execution_options: dict[str, Any] | None = None,
         deterministic_ordering: bool = False,
     ) -> None:
         self.model = model
@@ -141,15 +140,15 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
     def _get_query_executor(
         self,
         executor_type: type[QueryExecutorT],
-        selection: Optional[QueryNodeType] = None,
-        dto_filter: Optional[BooleanFilterDTO] = None,
-        order_by: Optional[list[OrderByDTO]] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        distinct_on: Optional[list[EnumDTO]] = None,
+        selection: QueryNodeType | None = None,
+        dto_filter: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: Optional[defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]]] = None,
-        execution_options: Optional[dict[str, Any]] = None,
+        query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
+        execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
         transpiler = QueryTranspiler(
             self.model,
@@ -225,7 +224,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         return filter_dict
 
     def _m2m_values(
-        self, model: DeclarativeBase, parent: Union[RowLike, DeclarativeBase], relationship: RelationshipProperty[Any]
+        self, model: DeclarativeBase, parent: RowLike | DeclarativeBase, relationship: RelationshipProperty[Any]
     ) -> dict[str, Any]:
         assert relationship.local_remote_pairs
         return {
@@ -235,7 +234,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         }
 
     def _update_values(
-        self, model: DeclarativeBase, parent: Union[RowLike, DeclarativeBase], relationship: RelationshipProperty[Any]
+        self, model: DeclarativeBase, parent: RowLike | DeclarativeBase, relationship: RelationshipProperty[Any]
     ) -> dict[str, Any]:
         assert relationship.local_remote_pairs
         if relationship.secondary is None:

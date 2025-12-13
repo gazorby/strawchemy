@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
 from uuid import UUID, uuid4
 
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -21,8 +20,8 @@ class FruitDataclass(UUIDBase):
     __tablename__ = "fruit_dc"
 
     name: Mapped[str]
-    color_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("color_dataclass.id"))
-    color: Mapped[Optional[ColorDataclass]] = relationship("ColorDataclass", back_populates="fruits")
+    color_id: Mapped[UUID | None] = mapped_column(ForeignKey("color_dataclass.id"))
+    color: Mapped[ColorDataclass | None] = relationship("ColorDataclass", back_populates="fruits")
     sweetness: Mapped[int]
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
 
@@ -62,10 +61,8 @@ class SponsoredUserDataclass(UUIDBase):
     __tablename__ = "sponsored_user_dataclass"
 
     name: Mapped[str]
-    sponsor_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("sponsored_user_dataclass.id"))
-    sponsor: Mapped[Optional[SponsoredUserDataclass]] = relationship(
-        "SponsoredUserDataclass", back_populates="sponsored"
-    )
+    sponsor_id: Mapped[UUID | None] = mapped_column(ForeignKey("sponsored_user_dataclass.id"))
+    sponsor: Mapped[SponsoredUserDataclass | None] = relationship("SponsoredUserDataclass", back_populates="sponsored")
     sponsored: Mapped[list[SponsoredUserDataclass]] = relationship(
         "SponsoredUserDataclass",
         back_populates="sponsor",

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Union
+from typing import TYPE_CHECKING, Any
 
 from strawberry.types.base import StrawberryContainer, StrawberryType
 from strawberry.types.lazy_type import LazyType
@@ -39,7 +39,7 @@ def dto_model_from_type(type_: Any) -> Any:
     return type_.__dto_model__
 
 
-def strawberry_contained_types(type_: Union[StrawberryType, Any]) -> tuple[Any, ...]:
+def strawberry_contained_types(type_: StrawberryType | Any) -> tuple[Any, ...]:
     if isinstance(type_, LazyType):
         return strawberry_contained_types(type_.resolve_type())
     if isinstance(type_, StrawberryContainer):
@@ -52,7 +52,7 @@ def strawberry_contained_types(type_: Union[StrawberryType, Any]) -> tuple[Any, 
     return (type_,)
 
 
-def strawberry_contained_user_type(type_: Union[StrawberryType, Any]) -> Any:
+def strawberry_contained_user_type(type_: StrawberryType | Any) -> Any:
     inner_types = [
         inner_type for inner_type in strawberry_contained_types(type_) if inner_type not in ErrorType.__error_types__
     ]

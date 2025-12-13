@@ -59,15 +59,15 @@ class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLD
         self,
         model: type[DeclarativeT],
         *,
-        include: Optional[IncludeFields] = None,
-        exclude: Optional[ExcludeFields] = None,
-        partial: Optional[bool] = None,
-        type_map: Optional[Mapping[Any, Any]] = None,
-        aliases: Optional[Mapping[str, str]] = None,
-        alias_generator: Optional[Callable[[str], str]] = None,
-        name: Optional[str] = None,
-        description: Optional[str] = None,
-        directives: Optional[Sequence[object]] = (),
+        include: IncludeFields | None = None,
+        exclude: ExcludeFields | None = None,
+        partial: bool | None = None,
+        type_map: Mapping[Any, Any] | None = None,
+        aliases: Mapping[str, str] | None = None,
+        alias_generator: Callable[[str], str] | None = None,
+        name: str | None = None,
+        description: str | None = None,
+        directives: Sequence[object] | None = (),
         override: bool = False,
         purpose: Purpose = Purpose.READ,
         mode: GraphQLPurpose = "filter",
@@ -97,8 +97,8 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         mapper: Strawchemy,
         backend: DTOBackend[GraphQLFilterDTOT],
         handle_cycles: bool = True,
-        type_map: Optional[dict[Any, Any]] = None,
-        aggregation_filter_factory: Optional[AggregateFilterDTOFactory] = None,
+        type_map: dict[Any, Any] | None = None,
+        aggregation_filter_factory: AggregateFilterDTOFactory | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
@@ -133,14 +133,14 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         name: str,
         model: type[DeclarativeT],
         dto_config: DTOConfig,
-        base: Optional[type[DTOBase[DeclarativeBase]]],
+        base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, GraphQLFilterDTOT], None],
         raise_if_no_fields: bool = False,
         *,
         aggregate_filters: bool = False,
-        field_map: Optional[dict[DTOKey, GraphQLFieldDefinition]] = None,
+        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
-    ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], None, None]:
+    ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         field_map = field_map if field_map is not None else {}
         for field in super().iter_field_definitions(
             name, model, dto_config, base, node, raise_if_no_fields, field_map=field_map, **kwargs
@@ -164,7 +164,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
 
     @override
     def dto_name(
-        self, base_name: str, dto_config: DTOConfig, node: Optional[Node[Relation[Any, GraphQLFilterDTOT], None]] = None
+        self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, GraphQLFilterDTOT], None] | None = None
     ) -> str:
         return f"{base_name}BoolExp"
 
@@ -173,13 +173,13 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         self,
         model: type[DeclarativeT],
         dto_config: DTOConfig,
-        base: Optional[type[Any]] = None,
-        name: Optional[str] = None,
-        parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
-        current_node: Optional[Node[Relation[Any, GraphQLFilterDTOT], None]] = None,
+        base: type[Any] | None = None,
+        name: str | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
+        current_node: Node[Relation[Any, GraphQLFilterDTOT], None] | None = None,
         raise_if_no_fields: bool = False,
-        tags: Optional[set[str]] = None,
-        backend_kwargs: Optional[dict[str, Any]] = None,
+        tags: set[str] | None = None,
+        backend_kwargs: dict[str, Any] | None = None,
         *,
         aggregate_filters: bool = True,
         **kwargs: Any,
@@ -203,10 +203,10 @@ class BooleanFilterDTOFactory(_FilterDTOFactory[BooleanFilterDTO]):
     def __init__(
         self,
         mapper: Strawchemy,
-        backend: Optional[DTOBackend[BooleanFilterDTO]] = None,
+        backend: DTOBackend[BooleanFilterDTO] | None = None,
         handle_cycles: bool = True,
-        type_map: Optional[dict[Any, Any]] = None,
-        aggregate_filter_factory: Optional[AggregateFilterDTOFactory] = None,
+        type_map: dict[Any, Any] | None = None,
+        aggregate_filter_factory: AggregateFilterDTOFactory | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(
@@ -223,10 +223,10 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
     def __init__(
         self,
         mapper: Strawchemy,
-        backend: Optional[DTOBackend[AggregateFilterDTO]] = None,
+        backend: DTOBackend[AggregateFilterDTO] | None = None,
         handle_cycles: bool = True,
-        type_map: Optional[dict[Any, Any]] = None,
-        aggregation_builder: Optional[AggregationInspector] = None,
+        type_map: dict[Any, Any] | None = None,
+        aggregation_builder: AggregationInspector | None = None,
     ) -> None:
         super().__init__(mapper, backend or StrawberrryDTOBackend(AggregateFilterDTO), handle_cycles, type_map)
         self.aggregation_builder = aggregation_builder or AggregationInspector(mapper)
@@ -241,7 +241,7 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Optional[Node[Relation[Any, AggregateFilterDTO], None]] = None,
+        node: Node[Relation[Any, AggregateFilterDTO], None] | None = None,
     ) -> str:
         return f"{base_name}AggregateBoolExp"
 
@@ -251,8 +251,8 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
         dto_config: DTOConfig,
         dto_name: str,
         aggregation: FilterFunctionInfo,
-        model_field: Union[type[DTOMissing], QueryableAttribute[Any]],
-        parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]],
+        model_field: type[DTOMissing] | QueryableAttribute[Any],
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None,
     ) -> type[AggregationFunctionFilterDTO]:
         dto_config = DTOConfig(Purpose.WRITE)
         dto = self._filter_function_builder.build(
@@ -309,10 +309,10 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
         model: type[DeclarativeT],
         dto_config: DTOConfig,
         node: Node[Relation[Any, AggregateFilterDTO], None],
-        base: Optional[type[Any]] = None,
-        parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
+        base: type[Any] | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         raise_if_no_fields: bool = False,
-        backend_kwargs: Optional[dict[str, Any]] = None,
+        backend_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> type[AggregateFilterDTO]:
         function_aliases: dict[str, AggregationFunction] = {}
@@ -353,10 +353,10 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
     def __init__(
         self,
         mapper: Strawchemy,
-        backend: Optional[DTOBackend[OrderByDTO]] = None,
+        backend: DTOBackend[OrderByDTO] | None = None,
         handle_cycles: bool = True,
-        type_map: Optional[dict[Any, Any]] = None,
-        aggregation_filter_factory: Optional[AggregateFilterDTOFactory] = None,
+        type_map: dict[Any, Any] | None = None,
+        aggregation_filter_factory: AggregateFilterDTOFactory | None = None,
     ) -> None:
         super().__init__(
             mapper,
@@ -444,7 +444,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         self,
         base_name: str,
         dto_config: DTOConfig,
-        node: Optional[Node[Relation[Any, OrderByDTO], None]] = None,
+        node: Node[Relation[Any, OrderByDTO], None] | None = None,
     ) -> str:
         return f"{base_name}OrderBy"
 
@@ -453,13 +453,13 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         self,
         model: type[DeclarativeT],
         dto_config: DTOConfig,
-        base: Optional[type[Any]] = None,
-        name: Optional[str] = None,
-        parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
-        current_node: Optional[Node[Relation[Any, OrderByDTO], None]] = None,
+        base: type[Any] | None = None,
+        name: str | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
+        current_node: Node[Relation[Any, OrderByDTO], None] | None = None,
         raise_if_no_fields: bool = False,
-        tags: Optional[set[str]] = None,
-        backend_kwargs: Optional[dict[str, Any]] = None,
+        tags: set[str] | None = None,
+        backend_kwargs: dict[str, Any] | None = None,
         *,
         aggregate_filters: bool = True,
         **kwargs: Any,

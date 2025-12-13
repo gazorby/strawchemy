@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal
 
 import pytest
 from strawchemy.types import DefaultOffsetPagination
@@ -273,7 +273,7 @@ async def test_root_aggregation(
     agg_type: Literal["sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
     field_name: str,
     raw_field_name: str,
-    pagination: Optional[DefaultOffsetPagination],
+    pagination: DefaultOffsetPagination | None,
     any_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,

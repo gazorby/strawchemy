@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any, ClassVar, Optional
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pydantic import ValidationError
 from sqlalchemy.orm import DeclarativeBase
@@ -59,8 +59,8 @@ class PydanticValidation(ValidationProtocol[T]):
 
 
 class MappedPydanticGraphQLDTO(StrawchemyDTOAttributes, MappedPydanticDTO[ModelT]):
-    __strawchemy_filter__: ClassVar[Optional[type[Any]]] = None
-    __strawchemy_order_by__: ClassVar[Optional[type[Any]]] = None
+    __strawchemy_filter__: ClassVar[type[Any] | None] = None
+    __strawchemy_order_by__: ClassVar[type[Any] | None] = None
 
 
 class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any]]):
@@ -86,15 +86,15 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
             model: type[DeclarativeT],
             *,
             mode: GraphQLPurpose,
-            include: Optional[IncludeFields] = None,
-            exclude: Optional[ExcludeFields] = None,
-            partial: Optional[bool] = None,
-            type_map: Optional[Mapping[Any, Any]] = None,
-            aliases: Optional[Mapping[str, str]] = None,
-            alias_generator: Optional[Callable[[str], str]] = None,
-            name: Optional[str] = None,
-            description: Optional[str] = None,
-            directives: Optional[Sequence[object]] = (),
+            include: IncludeFields | None = None,
+            exclude: ExcludeFields | None = None,
+            partial: bool | None = None,
+            type_map: Mapping[Any, Any] | None = None,
+            aliases: Mapping[str, str] | None = None,
+            alias_generator: Callable[[str], str] | None = None,
+            name: str | None = None,
+            description: str | None = None,
+            directives: Sequence[object] | None = (),
             override: bool = False,
             purpose: Purpose = Purpose.WRITE,
             **kwargs: Any,
@@ -105,15 +105,15 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
         self,
         model: type[DeclarativeT],
         dto_config: DTOConfig = read_partial,
-        base: Optional[type[Any]] = None,
-        name: Optional[str] = None,
-        parent_field_def: Optional[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]] = None,
-        current_node: Optional[Node[Relation[Any, MappedPydanticGraphQLDTO[T]], None]] = None,
+        base: type[Any] | None = None,
+        name: str | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
+        current_node: Node[Relation[Any, MappedPydanticGraphQLDTO[T]], None] | None = None,
         raise_if_no_fields: bool = False,
-        tags: Optional[set[str]] = None,
-        backend_kwargs: Optional[dict[str, Any]] = None,
+        tags: set[str] | None = None,
+        backend_kwargs: dict[str, Any] | None = None,
         *,
-        description: Optional[str] = None,
+        description: str | None = None,
         mode: GraphQLPurpose,
         **kwargs: Any,
     ) -> type[MappedPydanticGraphQLDTO[DeclarativeT]]:

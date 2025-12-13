@@ -10,7 +10,7 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, Union
+from typing import TYPE_CHECKING, Any, Generic, Literal
 
 from typing_extensions import Self
 
@@ -154,7 +154,7 @@ class QueryResult(Generic[ModelT]):
             raise QueryResultError(msg)
         return NodeResult(self.nodes[0], self.node_computed_values[0], self.node_key)
 
-    def one_or_none(self) -> Optional[NodeResult[ModelT]]:
+    def one_or_none(self) -> NodeResult[ModelT] | None:
         """Returns the single result node, or None if there isn't exactly one result.
 
         Returns:
@@ -179,7 +179,7 @@ class QueryExecutor(Generic[DeclarativeT]):
     scope: QueryScope[Any]
     apply_unique: bool = False
     root_aggregation_functions: list[Label[Any]] = dataclasses.field(default_factory=list)
-    execution_options: Optional[dict[str, Any]] = None
+    execution_options: dict[str, Any] | None = None
 
     def _to_query_result(
         self, result: Result[tuple[DeclarativeT, Any]], fetch: Literal["one_or_none", "all"]
@@ -219,7 +219,7 @@ class QueryExecutor(Generic[DeclarativeT]):
             node_key=self.scope.key,
         )
 
-    def statement(self) -> Union[Select[tuple[DeclarativeT]], StatementLambdaElement]:
+    def statement(self) -> Select[tuple[DeclarativeT]] | StatementLambdaElement:
         """Returns the SQLAlchemy statement to be executed.
 
         Returns:

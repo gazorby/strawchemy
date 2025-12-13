@@ -10,7 +10,7 @@ import dataclasses
 from collections import defaultdict
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Optional, TypeVar, Union, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
 
 from msgspec import convert
 from strawberry.types import get_object_definition, has_object_definition
@@ -75,7 +75,7 @@ class GraphQLResult(Generic[ModelT, T]):
         """
         return self.tree.node_result_to_strawberry_type(self.query_result.one())
 
-    def graphql_type_or_none(self) -> Optional[T]:
+    def graphql_type_or_none(self) -> T | None:
         """Convert the query result to a single GraphQL type or None.
 
         Returns:
@@ -93,7 +93,7 @@ class GraphQLResult(Generic[ModelT, T]):
     @overload
     def graphql_list(self) -> list[T]: ...
 
-    def graphql_list(self, root_aggregations: bool = False) -> Union[list[T], T]:
+    def graphql_list(self, root_aggregations: bool = False) -> list[T] | T:
         """Convert the query result to a list of GraphQL types or aggregated result.
 
         Args:
@@ -190,14 +190,12 @@ class StrawchemyRepository(Generic[T]):
         return convert(arguments, type=RelationFilterDTO, strict=False)
 
     @classmethod
-    def _get_field_hooks(cls, field: StrawberryField) -> Optional[Union[QueryHook[Any], Sequence[QueryHook[Any]]]]:
+    def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]] | None:
         from strawchemy.strawberry._field import StrawchemyField  # noqa: PLC0415
 
         return field.query_hook if isinstance(field, StrawchemyField) else None
 
-    def _add_query_hooks(
-        self, query_hooks: Union[QueryHook[Any], Sequence[QueryHook[Any]]], node: QueryNodeType
-    ) -> None:
+    def _add_query_hooks(self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: QueryNodeType) -> None:
         hooks = query_hooks if isinstance(query_hooks, Collection) else [query_hooks]
         for hook in hooks:
             hook.info_var.set(self.info)

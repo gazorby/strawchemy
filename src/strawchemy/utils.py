@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import inspect
 import re
-import sys
 from typing import TYPE_CHECKING, Any, Optional, Union, get_args, get_origin
 
 from strawchemy.typing import UNION_TYPES
@@ -100,6 +99,4 @@ def is_type_hint_optional(type_hint: Any) -> bool:
 
 def get_annotations(obj: Any) -> dict[str, Any]:
     """Get the annotations of the given object."""
-    if sys.version_info >= (3, 10):
-        return inspect.get_annotations(obj)
-    return obj.__dict__.get("__annotations__", {}) if isinstance(obj, type) else getattr(obj, "__annotations__", {})
+    return inspect.get_annotations(obj)

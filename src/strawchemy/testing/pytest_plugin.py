@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 from unittest.mock import MagicMock
 
 import pytest
-from typing_extensions import TypeAlias
 
 from sqlalchemy import Result
 from strawchemy.sqlalchemy import _executor as executor
