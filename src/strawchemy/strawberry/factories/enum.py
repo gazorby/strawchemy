@@ -6,9 +6,9 @@ from inspect import getmodule
 from types import new_class
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 
+from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from typing_extensions import override
 
-from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
 from strawchemy.strawberry.dto import EnumDTO, GraphQLFieldDefinition

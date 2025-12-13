@@ -7,24 +7,23 @@ from enum import Enum, auto
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, Optional, Protocol, TypeVar, Union, cast, overload
 
+from sqlalchemy.ext.asyncio import AsyncSession
 from strawchemy.dto.base import DTOFactory
 from strawchemy.sqlalchemy.inspector import SQLAlchemyInspector
 from strawchemy.utils import get_annotations
 from typing_extensions import TypeIs, override
 
 import strawberry
-from sqlalchemy.ext.asyncio import AsyncSession
-from strawberry.types.execution import ExecutionResult
 from tests.typing import AnyFactory, MappedPydanticFactory
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Generator
 
     from pydantic import BaseModel
+    from sqlalchemy.orm import Session
+    from strawberry.types.execution import ExecutionResult
     from strawchemy.sqlalchemy.typing import AnySession
     from strawchemy.typing import DataclassProtocol
-
-    from sqlalchemy.orm import Session
 
     from .typing import AnyQueryExecutor, AsyncQueryExecutor, SyncQueryExecutor
 

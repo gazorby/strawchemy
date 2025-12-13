@@ -97,15 +97,12 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         if model_module := getmodule(self.dto_base):
             module = model_module.__name__
 
-        dto = create_model(
+        dto = create_model(  # pyright: ignore[reportCallIssue]
             name,
             __base__=(self.dto_base,),
-            __config__=None,
             __module__=module,
-            __validators__=None,
             __doc__=f"Pydantic generated DTO for {model.__name__} model" if docstring else None,
-            __cls_kwargs__=None,
-            **fields,
+            **fields,  # pyright: ignore[reportArgumentType]
         )
 
         if config_dict:

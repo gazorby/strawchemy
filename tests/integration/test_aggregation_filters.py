@@ -1,16 +1,18 @@
 from __future__ import annotations
 
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
 
 import pytest
 
-from syrupy.assertion import SnapshotAssertion
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 from .fixtures import QueryTracker
 from .typing import RawRecordData
+
+if TYPE_CHECKING:
+    from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]
 

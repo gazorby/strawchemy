@@ -1,4 +1,4 @@
-# ruff: noqa: DTZ005, PLC0415
+# ruff: noqa: DTZ005
 
 from __future__ import annotations
 
@@ -100,7 +100,6 @@ if GEO_INSTALLED:
     engine_plugins = ["geoalchemy2"]
     scalar_overrides |= GEO_SCALAR_OVERRIDES
 
-
 # Mock data
 
 
@@ -135,10 +134,13 @@ GEO_DATA = [
         "point_required": "POINT(-122.6 45.5)",  # Real-world coordinates (Portland, OR)
         "point": "POINT(-74.0060 40.7128)",  # New York City
         "line_string": "LINESTRING(-122.4194 37.7749, -118.2437 34.0522, -74.0060 40.7128)",  # SF to LA to NYC
-        "polygon": "POLYGON((-122.4194 37.7749, -122.4194 37.8, -122.4 37.8, -122.4 37.7749, -122.4194 37.7749))",  # Area in SF
+        "polygon": "POLYGON((-122.4194 37.7749, -122.4194 37.8, -122.4 37.8, -122.4 37.7749, -122.4194 37.7749))",
+        # Area in SF
         "multi_point": "MULTIPOINT((-122.4194 37.7749), (-118.2437 34.0522), (-74.0060 40.7128))",  # Major US cities
-        "multi_line_string": "MULTILINESTRING((-122.4194 37.7749, -118.2437 34.0522), (-118.2437 34.0522, -74.0060 40.7128))",  # Route segments
-        "multi_polygon": "MULTIPOLYGON(((-122.42 37.78, -122.42 37.8, -122.4 37.8, -122.4 37.78, -122.42 37.78)), ((-118.25 34.05, -118.25 34.06, -118.24 34.06, -118.24 34.05, -118.25 34.05)))",  # Areas in SF and LA
+        "multi_line_string": "MULTILINESTRING((-122.4194 37.7749, -118.2437 34.0522), (-118.2437 34.0522, -74.0060 40.7128))",
+        # Route segments
+        "multi_polygon": "MULTIPOLYGON(((-122.42 37.78, -122.42 37.8, -122.4 37.8, -122.4 37.78, -122.42 37.78)), ((-118.25 34.05, -118.25 34.06, -118.24 34.06, -118.24 34.05, -118.25 34.05)))",
+        # Areas in SF and LA
         "geometry": "LINESTRING(-122.4194 37.7749, -74.0060 40.7128)",  # Direct SF to NYC
     },
 ]
@@ -403,21 +405,29 @@ def raw_geo(dialect: SupportedDialect, raw_geo_flipped: RawRecordData) -> RawRec
     return GEO_DATA
 
 
+@pytest.fixture(autouse=False, scope="session")
+def postgis_image() -> str:
+    repo = "imresamu/postgis-arm64" if "arm" in platform.processor().lower() else "postgis/postgis"
+    return f"{repo}:17-3.5"
+
+
 @pytest.fixture(scope="session")
 def postgis_service(
     docker_service: DockerService,
     xdist_postgres_isolation_level: XdistIsolationLevel,
     postgres_user: str,
     postgres_password: str,
+    postgres_host: str,
+    postgis_image: str,
 ) -> Generator[PostgresService, None, None]:
-    repo = "imresamu/postgis-arm64" if "arm" in platform.processor().lower() else "postgis/postgis"
     with _provide_postgres_service(
         docker_service,
-        image=f"{repo}:17-3.5",
+        image=postgis_image,
         name="postgis-17",
-        xdist_postgres_isolate=xdist_postgres_isolation_level,
+        host=postgres_host,
         user=postgres_user,
         password=postgres_password,
+        xdist_postgres_isolate=xdist_postgres_isolation_level,
     ) as service:
         yield service
 

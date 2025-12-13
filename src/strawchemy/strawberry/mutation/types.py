@@ -3,11 +3,11 @@ from __future__ import annotations
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Optional, TypeVar, Union
 
+from strawberry.types import get_object_definition
 from typing_extensions import override
 
 import strawberry
 from strawberry import UNSET
-from strawberry.types import get_object_definition
 from strawchemy.dto.base import MappedDTO, ToMappedProtocol, VisitorProtocol
 from strawchemy.dto.types import DTOUnset
 

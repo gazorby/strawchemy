@@ -99,7 +99,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         execution_options: Optional[dict[str, Any]] = None,
     ) -> Sequence[Row[Any]]:
         alias_insp = inspect(alias)
-        model_pks = [getattr(alias, pk.key) for pk in alias_insp.mapper.primary_key]
+        model_pks = [getattr(alias, pk.key) for pk in alias_insp.mapper.primary_key if pk.key]
         if self._dialect.delete_returning:
             statement = delete(alias_insp).returning(*model_pks)
             if where:
@@ -122,7 +122,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         execution_options: Optional[dict[str, Any]] = None,
     ) -> Sequence[Row[Any]]:
         alias_insp = inspect(alias)
-        model_pks = [getattr(alias, pk.key) for pk in alias_insp.mapper.primary_key]
+        model_pks = [getattr(alias, pk.key) for pk in alias_insp.mapper.primary_key if pk.key]
         if self._dialect.update_returning:
             statement = update(alias_insp).values(**values).returning(*model_pks)
             if where:
@@ -240,7 +240,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 )
             )
 
-        pks = [column.key for column in self.model.__mapper__.primary_key]
+        pks = [column.key for column in self.model.__mapper__.primary_key if column.key]
         pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
 
         if data.mode == "update_by_pks":

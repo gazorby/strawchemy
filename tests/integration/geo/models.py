@@ -1,14 +1,12 @@
-# ruff: noqa: TC003
-
 from __future__ import annotations
 
 from typing import Optional
 
 from geoalchemy2 import Geometry, WKBElement
-
-from sqlalchemy import MetaData
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.orm import registry as Registry  # noqa: N812
+
+from sqlalchemy import MetaData
 from tests.integration.models import BaseColumns
 
 metadata, geo_metadata = MetaData(), MetaData()

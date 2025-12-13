@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from syrupy.assertion import SnapshotAssertion
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
@@ -12,6 +11,7 @@ from .fixtures import QueryTracker
 
 if TYPE_CHECKING:
     from strawchemy.typing import SupportedDialect
+    from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]
 

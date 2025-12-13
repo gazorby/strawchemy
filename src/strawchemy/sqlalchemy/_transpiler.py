@@ -14,6 +14,8 @@ from collections import defaultdict
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generic, Optional, Union, cast
 
+from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
+from sqlalchemy.sql.elements import ColumnElement
 from typing_extensions import Self, override
 
 from sqlalchemy import (
@@ -32,8 +34,6 @@ from sqlalchemy import (
     text,
     true,
 )
-from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
-from sqlalchemy.sql.elements import ColumnElement
 from strawchemy.constants import AGGREGATIONS_KEY
 from strawchemy.strawberry.dto import (
     AggregationFilter,
@@ -72,6 +72,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
     from sqlalchemy.sql.elements import NamedColumn
+
     from strawchemy.strawberry.typing import QueryNodeType
     from strawchemy.typing import SupportedDialect
 

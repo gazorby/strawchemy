@@ -3,12 +3,12 @@ from __future__ import annotations
 from collections.abc import Generator
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
-from typing_extensions import Self, override
-
-from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types.arguments import StrawberryArgument
+from typing_extensions import Self, override
+
+from sqlalchemy import JSON
 from strawchemy.constants import AGGREGATIONS_KEY, JSON_PATH_KEY, NODES_KEY
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import DTOFactory, MappedDTO

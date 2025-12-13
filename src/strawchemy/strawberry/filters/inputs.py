@@ -7,7 +7,7 @@ and geometries. These classes allow for building boolean expressions to
 compare fields of DTOs in GraphQL queries.
 """
 
-# ruff: noqa: TC003, TC002, TC001
+# ruff: noqa: TC001
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
@@ -35,8 +35,9 @@ from .base import (
 )
 
 if TYPE_CHECKING:
-    from sqlalchemy import ColumnElement
     from sqlalchemy.orm import QueryableAttribute
+
+    from sqlalchemy import ColumnElement
     from strawchemy.strawberry.dto import OrderByEnum
 
 __all__ = (

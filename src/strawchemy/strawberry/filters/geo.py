@@ -1,15 +1,15 @@
-# ruff: noqa: TC003, TC002, TC001
+# ruff: noqa: TC002, TC001
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any, Optional, TypeVar, Union
 
 from geoalchemy2 import functions as geo_func
+from sqlalchemy.orm import QueryableAttribute
 from typing_extensions import override
 
 import strawberry
 from sqlalchemy import ColumnElement, Dialect, null
-from sqlalchemy.orm import QueryableAttribute
 from strawberry import UNSET
 from strawchemy.strawberry.geo import GeoJSON
 

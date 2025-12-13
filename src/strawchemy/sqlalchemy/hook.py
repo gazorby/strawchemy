@@ -12,11 +12,10 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, Optional
 
-from typing_extensions import TypeAlias
-
 from sqlalchemy.orm import ColumnProperty, RelationshipProperty, joinedload, selectinload, undefer
 from sqlalchemy.orm.strategy_options import _AbstractLoad
 from sqlalchemy.orm.util import AliasedClass
+from typing_extensions import TypeAlias
 
 from .exceptions import QueryHookError
 from .typing import DeclarativeT
@@ -24,10 +23,11 @@ from .typing import DeclarativeT
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from sqlalchemy import Select
     from sqlalchemy.orm import InstrumentedAttribute
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.orm.util import AliasedClass
+
+    from sqlalchemy import Select
     from strawberry import Info
 
 

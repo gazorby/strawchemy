@@ -7,20 +7,6 @@ from dataclasses import Field, fields
 from inspect import getmodule, signature
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, cast, get_args, get_origin, get_type_hints
 
-from typing_extensions import TypeIs, override
-
-from sqlalchemy import (
-    Column,
-    PrimaryKeyConstraint,
-    Sequence,
-    SQLColumnExpression,
-    Table,
-    UniqueConstraint,
-    event,
-    inspect,
-    orm,
-    sql,
-)
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import (
     NO_VALUE,
@@ -35,6 +21,21 @@ from sqlalchemy.orm import (
     RelationshipProperty,
     registry,
 )
+from typing_extensions import TypeIs, override
+
+from sqlalchemy import (
+    Column,
+    ColumnElement,
+    PrimaryKeyConstraint,
+    Sequence,
+    SQLColumnExpression,
+    Table,
+    UniqueConstraint,
+    event,
+    inspect,
+    orm,
+    sql,
+)
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, ModelInspector, Relation
 from strawchemy.dto.constants import DTO_INFO_KEY
@@ -47,9 +48,9 @@ if TYPE_CHECKING:
     from types import ModuleType
 
     from shapely import Geometry
-
     from sqlalchemy.orm import MapperProperty
     from sqlalchemy.sql.schema import ColumnCollectionConstraint
+
     from strawchemy.graph import Node
 
 
@@ -247,7 +248,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         return False
 
     def _field_definitions_from_columns(
-        self, model: type[DeclarativeBase], columns: Iterable[Column[Any]], dto_config: DTOConfig
+        self, model: type[DeclarativeBase], columns: Iterable[ColumnElement[Any]], dto_config: DTOConfig
     ) -> list[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
         mapper = inspect(model)
         type_hints = self.get_type_hints(model)
@@ -262,11 +263,12 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                 ),
             )
             for column in columns
+            if column.key
         ]
 
     @classmethod
     def pk_attributes(cls, mapper: Mapper[Any]) -> list[QueryableAttribute[Any]]:
-        return [mapper.attrs[column.key].class_attribute for column in mapper.primary_key]
+        return [mapper.attrs[column.key].class_attribute for column in mapper.primary_key if column.key]
 
     @classmethod
     def loaded_attributes(cls, model: DeclarativeBase) -> set[str]:
@@ -315,7 +317,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
 
         # If column type is a geoalchemy geometry type, override type hint with the corresponding shapely type
         if GEO_INSTALLED and (column_prop := mapper.columns.get(model_field.key)) is not None:
-            from geoalchemy2 import Geometry
+            from geoalchemy2 import Geometry  # noqa: PLC0415
 
             if (
                 isinstance(column_prop.type, Geometry)

@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from syrupy.assertion import SnapshotAssertion
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
@@ -13,6 +12,7 @@ from .typing import RawRecordData
 
 if TYPE_CHECKING:
     from strawchemy import StrawchemyConfig
+    from syrupy.assertion import SnapshotAssertion
 
 
 @pytest.fixture

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import Optional, Union
 from uuid import UUID, uuid4
 
@@ -181,7 +182,7 @@ def test_model_field_config(
 def test_field_validator(factory: AnyFactory, model: type[Union[Tomato, TomatoDataclass]]) -> None:
     tomato_dto = factory.factory(model, write_all_config)
 
-    with pytest.raises(ValueError, match="We do not allow rotten tomato."):
+    with pytest.raises(ValueError, match=re.escape("We do not allow rotten tomato.")):
         tomato_dto(name="rotten", weight=1, sugarness=1, popularity=1)  # pyright: ignore[reportCallIssue]
 
 

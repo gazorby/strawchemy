@@ -13,7 +13,6 @@ from .fixtures import QueryTracker
 
 if TYPE_CHECKING:
     from strawchemy.typing import SupportedDialect
-
     from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]

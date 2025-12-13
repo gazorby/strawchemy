@@ -6,6 +6,16 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Generic, Optional, Union, cast
 
+from sqlalchemy.orm import (
+    QueryableAttribute,
+    RelationshipDirection,
+    RelationshipProperty,
+    aliased,
+    class_mapper,
+    raiseload,
+)
+from sqlalchemy.orm.util import AliasedClass
+from sqlalchemy.sql.elements import NamedColumn
 from typing_extensions import Self
 
 from sqlalchemy import (
@@ -22,17 +32,6 @@ from sqlalchemy import (
     null,
     select,
 )
-from sqlalchemy.orm import (
-    QueryableAttribute,
-    RelationshipDirection,
-    RelationshipProperty,
-    aliased,
-    class_mapper,
-    raiseload,
-)
-from sqlalchemy.orm.util import AliasedClass
-from sqlalchemy.sql import ColumnElement, SQLColumnExpression
-from sqlalchemy.sql.elements import NamedColumn
 from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.graph import merge_trees
 from strawchemy.strawberry.dto import (
@@ -52,8 +51,10 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from sqlalchemy.orm.strategy_options import _AbstractLoad
+    from sqlalchemy.sql import ColumnElement, SQLColumnExpression
     from sqlalchemy.sql._typing import _OnClauseArgument
     from sqlalchemy.sql.selectable import NamedFromClause
+
     from strawchemy.config.databases import DatabaseFeatures
     from strawchemy.strawberry.typing import QueryNodeType
 
@@ -657,8 +658,7 @@ class Query:
                 *[
                     expression.element
                     for expression in order_by_expressions
-                    if isinstance(expression.element, ColumnElement)
-                    and not any(elem.compare(expression.element) for elem in statement.selected_columns)
+                    if not any(elem.compare(expression.element) for elem in statement.selected_columns)
                 ]
             )
             statement = statement.distinct(*distinct_expressions)

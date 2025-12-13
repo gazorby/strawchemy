@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from litestar import Litestar
 from litestar.plugins.sqlalchemy import EngineConfig, SQLAlchemyAsyncConfig, SQLAlchemyPlugin
-
 from strawberry.litestar import BaseContext, make_graphql_controller
 
 from .models import Base

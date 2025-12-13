@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.schema.config import StrawberryConfig
+
 from strawchemy.strawberry.factories.aggregations import EnumDTOFactory
 from strawchemy.strawberry.factories.enum import EnumDTOBackend, UpsertConflictFieldsEnumDTOBackend
 
@@ -37,10 +38,10 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
-    from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.arguments import StrawberryArgument
-    from strawberry.types.field import _RESOLVER_TYPE
+
+    from strawberry import BasePermission
     from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.validation.pydantic import PydanticMapper
 
@@ -157,14 +158,14 @@ class Strawchemy:
         Returns:
             An instance of PydanticMapper.
         """
-        from .validation.pydantic import PydanticMapper
+        from .validation.pydantic import PydanticMapper  # noqa: PLC0415
 
         return PydanticMapper(self)
 
     @overload
     def field(
         self,
-        resolver: _RESOLVER_TYPE[Any],
+        resolver: Any,
         *,
         filter_input: Optional[type[BooleanFilterDTO]] = None,
         order_by: Optional[type[OrderByDTO]] = None,
@@ -220,7 +221,7 @@ class Strawchemy:
 
     def field(
         self,
-        resolver: Optional[_RESOLVER_TYPE[Any]] = None,
+        resolver: Optional[Any] = None,
         *,
         filter_input: Optional[type[BooleanFilterDTO]] = None,
         order_by: Optional[type[OrderByDTO]] = None,
@@ -325,7 +326,7 @@ class Strawchemy:
     def create(
         self,
         input_type: type[MappedGraphQLDTO[T]],
-        resolver: Optional[_RESOLVER_TYPE[Any]] = None,
+        resolver: Optional[Any] = None,
         *,
         repository_type: Optional[AnyRepository] = None,
         name: Optional[str] = None,
@@ -403,7 +404,7 @@ class Strawchemy:
         input_type: type[MappedGraphQLDTO[T]],
         update_fields: type[EnumDTO],
         conflict_fields: type[EnumDTO],
-        resolver: Optional[_RESOLVER_TYPE[Any]] = None,
+        resolver: Optional[Any] = None,
         *,
         repository_type: Optional[AnyRepository] = None,
         name: Optional[str] = None,
@@ -487,7 +488,7 @@ class Strawchemy:
         self,
         input_type: type[MappedGraphQLDTO[T]],
         filter_input: type[BooleanFilterDTO],
-        resolver: Optional[_RESOLVER_TYPE[Any]] = None,
+        resolver: Optional[Any] = None,
         *,
         repository_type: Optional[AnyRepository] = None,
         name: Optional[str] = None,
@@ -568,7 +569,7 @@ class Strawchemy:
     def update_by_ids(
         self,
         input_type: type[MappedGraphQLDTO[T]],
-        resolver: Optional[_RESOLVER_TYPE[Any]] = None,
+        resolver: Optional[Any] = None,
         *,
         repository_type: Optional[AnyRepository] = None,
         name: Optional[str] = None,
@@ -647,7 +648,7 @@ class Strawchemy:
     def delete(
         self,
         filter_input: Optional[type[BooleanFilterDTO]] = None,
-        resolver: Optional[_RESOLVER_TYPE[Any]] = None,
+        resolver: Optional[Any] = None,
         *,
         repository_type: Optional[AnyRepository] = None,
         name: Optional[str] = None,

@@ -8,10 +8,11 @@ if TYPE_CHECKING:
     from collections import OrderedDict
     from collections.abc import Callable
 
-    from sqlalchemy import Function
     from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
     from sqlalchemy.orm import DeclarativeBase, Session, scoped_session
     from sqlalchemy.sql import SQLColumnExpression
+
+    from sqlalchemy import Function
     from strawchemy.strawberry.dto import OrderByEnum
     from strawchemy.strawberry.filters.base import GraphQLComparison
 

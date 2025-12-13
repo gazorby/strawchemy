@@ -15,9 +15,10 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict, Optional, TypeVar  # noqa: UP035
 
-from sqlalchemy import inspect
 from sqlalchemy.orm import NO_VALUE, DeclarativeBase, QueryableAttribute, registry
 from sqlalchemy.types import ARRAY
+
+from sqlalchemy import inspect
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
@@ -127,10 +128,10 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
         filters_map = _DEFAULT_FILTERS_MAP
 
         if GEO_INSTALLED:
-            from geoalchemy2 import WKBElement, WKTElement
-            from shapely import Geometry
+            from geoalchemy2 import WKBElement, WKTElement  # noqa: PLC0415
+            from shapely import Geometry  # noqa: PLC0415
 
-            from strawchemy.strawberry.filters.geo import GeoComparison
+            from strawchemy.strawberry.filters.geo import GeoComparison  # noqa: PLC0415
 
             filters_map |= {(Geometry, WKBElement, WKTElement): GeoComparison}
         if self.db_features.dialect == "sqlite":

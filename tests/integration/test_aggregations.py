@@ -15,7 +15,6 @@ from .utils import compute_aggregation, from_graphql_representation, python_type
 
 if TYPE_CHECKING:
     from strawchemy.config.databases import DatabaseFeatures
-
     from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]

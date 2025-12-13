@@ -6,13 +6,13 @@ from functools import cached_property
 from inspect import isclass
 from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union, cast, get_args, get_origin
 
-from typing_extensions import Self, TypeAlias, TypeIs, override
-
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.base import StrawberryList, StrawberryOptional, StrawberryType, WithStrawberryObjectDefinition
 from strawberry.types.field import UNRESOLVED, StrawberryField
+from typing_extensions import Self, TypeAlias, TypeIs, override
+
 from strawchemy.constants import (
     DATA_KEY,
     DISTINCT_ON_KEY,
@@ -46,12 +46,13 @@ from .repository import StrawchemyAsyncRepository
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Coroutine, Mapping
 
-    from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase
-    from strawberry import BasePermission, Info
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.base import StrawberryObjectDefinition, StrawberryType, WithStrawberryObjectDefinition
     from strawberry.types.fields.resolver import StrawberryResolver
+
+    from sqlalchemy import Select
+    from strawberry import BasePermission, Info
     from strawchemy import StrawchemyConfig
     from strawchemy.sqlalchemy.typing import QueryHookCallable
     from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO

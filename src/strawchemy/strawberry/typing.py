@@ -7,9 +7,10 @@ from typing_extensions import TypeAlias
 if TYPE_CHECKING:
     from collections.abc import Callable
 
+    from strawberry.types.base import WithStrawberryObjectDefinition
+
     from sqlalchemy import Select
     from strawberry import Info
-    from strawberry.types.base import WithStrawberryObjectDefinition
     from strawchemy.graph import Node
     from strawchemy.sqlalchemy.typing import AnyAsyncSession, AnySyncSession
     from strawchemy.strawberry.dto import GraphQLFieldDefinition, QueryNodeMetadata, StrawchemyDTOAttributes

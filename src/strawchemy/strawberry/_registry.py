@@ -19,11 +19,12 @@ from typing import (
     overload,
 )
 
-import strawberry
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
+
+import strawberry
 
 from ._utils import strawberry_contained_types
 
@@ -42,6 +43,7 @@ if TYPE_CHECKING:
     from strawberry.schema.config import StrawberryConfig
     from strawberry.types.arguments import StrawberryArgument
     from strawberry.types.base import WithStrawberryObjectDefinition
+
     from strawchemy.dto.types import DTOScope
     from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
     from strawchemy.types import DefaultOffsetPagination

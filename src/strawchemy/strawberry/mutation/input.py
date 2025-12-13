@@ -5,10 +5,10 @@ from collections.abc import Hashable, Iterator, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, Union, cast, final
 
+from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
 from typing_extensions import Self, TypeAlias, override
 
 from sqlalchemy import event, inspect
-from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
 from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from enum import Enum
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+
     from strawchemy.strawberry.dto import EnumDTO
     from strawchemy.strawberry.typing import MappedGraphQLDTO
     from strawchemy.validation.base import ValidationProtocol

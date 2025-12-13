@@ -4,7 +4,7 @@
   SELECT ST_AsBinary(geos_fields.geometry) AS geometry,
          geos_fields.id
     FROM geos_fields AS geos_fields
-   WHERE ST_Contains(geos_fields.geometry, ST_GeomFromGeoJSON(%s))
+   WHERE ST_Contains(geos_fields.geometry, ST_GeomFromGeoJSON(%s)) = 1
    ORDER BY geos_fields.id ASC
   '''
 # ---
@@ -47,7 +47,7 @@
   SELECT ST_AsBinary(geos_fields.multi_polygon) AS multi_polygon,
          geos_fields.id
     FROM geos_fields AS geos_fields
-   WHERE ST_Contains(geos_fields.multi_polygon, ST_GeomFromGeoJSON(%s))
+   WHERE ST_Contains(geos_fields.multi_polygon, ST_GeomFromGeoJSON(%s)) = 1
    ORDER BY geos_fields.id ASC
   '''
 # ---
@@ -75,7 +75,7 @@
   POLYGON,
          geos_fields.id
     FROM geos_fields AS geos_fields
-   WHERE ST_Contains(geos_fields.polygon, ST_GeomFromGeoJSON(%s))
+   WHERE ST_Contains(geos_fields.polygon, ST_GeomFromGeoJSON(%s)) = 1
    ORDER BY geos_fields.id ASC
   '''
 # ---
@@ -204,7 +204,7 @@
   SELECT ST_AsBinary(geos_fields.line_string) AS line_string,
          geos_fields.id
     FROM geos_fields AS geos_fields
-   WHERE ST_Within(geos_fields.line_string, ST_GeomFromGeoJSON(%s))
+   WHERE ST_Within(geos_fields.line_string, ST_GeomFromGeoJSON(%s)) = 1
    ORDER BY geos_fields.id ASC
   '''
 # ---
@@ -231,7 +231,7 @@
   SELECT ST_AsBinary(geos_fields.multi_point) AS multi_point,
          geos_fields.id
     FROM geos_fields AS geos_fields
-   WHERE ST_Within(geos_fields.multi_point, ST_GeomFromGeoJSON(%s))
+   WHERE ST_Within(geos_fields.multi_point, ST_GeomFromGeoJSON(%s)) = 1
    ORDER BY geos_fields.id ASC
   '''
 # ---
@@ -258,7 +258,7 @@
   SELECT ST_AsBinary(geos_fields.point) AS POINT,
          geos_fields.id
     FROM geos_fields AS geos_fields
-   WHERE ST_Within(geos_fields.point, ST_GeomFromGeoJSON(%s))
+   WHERE ST_Within(geos_fields.point, ST_GeomFromGeoJSON(%s)) = 1
    ORDER BY geos_fields.id ASC
   '''
 # ---
