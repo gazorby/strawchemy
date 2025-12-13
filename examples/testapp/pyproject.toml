@@ -3,13 +3,13 @@ name = "testapp"
 version = "0.1.0"
 description = "Basic test app"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-  "aiosqlite",
-  "litestar[sqlalchemy,standard]",
-  "pydantic",
-  "sqlalchemy",
-  "strawberry-graphql",
+    "aiosqlite",
+    "litestar[sqlalchemy,standard]",
+    "pydantic",
+    "sqlalchemy",
+    "strawberry-graphql",
 ]
 
 [build-system]

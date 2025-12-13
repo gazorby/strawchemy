@@ -4,14 +4,14 @@ import dataclasses
 from collections.abc import Sequence
 from functools import cached_property
 from inspect import isclass
-from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union, cast, get_args, get_origin
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypeAlias, TypeVar, cast, get_args, get_origin
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.base import StrawberryList, StrawberryOptional, StrawberryType, WithStrawberryObjectDefinition
 from strawberry.types.field import UNRESOLVED, StrawberryField
-from typing_extensions import Self, TypeAlias, TypeIs, override
+from typing_extensions import Self, TypeIs, override
 
 from strawchemy.constants import (
     DATA_KEY,
@@ -86,8 +86,8 @@ _OPTIONAL_UNION_ARG_SIZE: int = 2
 
 
 def _is_list(
-    type_: Union[Union[Union[StrawberryType, type[WithStrawberryObjectDefinition]], object], str],
-) -> TypeIs[Union[type[list[Any]], StrawberryList]]:
+    type_: StrawberryType | type[WithStrawberryObjectDefinition] | object | str,
+) -> TypeIs[type[list[Any]] | StrawberryList]:
     if isinstance(type_, StrawberryOptional):
         type_ = type_.of_type
     if origin := get_origin(type_):
@@ -119,32 +119,30 @@ class StrawchemyField(StrawberryField):
         self,
         config: StrawchemyConfig,
         repository_type: AnyRepository,
-        filter_type: Optional[type[BooleanFilterDTO]] = None,
-        order_by: Optional[type[OrderByDTO]] = None,
-        distinct_on: Optional[type[EnumDTO]] = None,
-        pagination: Union[bool, DefaultOffsetPagination] = False,
+        filter_type: type[BooleanFilterDTO] | None = None,
+        order_by: type[OrderByDTO] | None = None,
+        distinct_on: type[EnumDTO] | None = None,
+        pagination: bool | DefaultOffsetPagination = False,
         root_aggregations: bool = False,
-        registry_namespace: Optional[dict[str, Any]] = None,
-        filter_statement: Optional[FilterStatementCallable] = None,
-        query_hook: Optional[Union[QueryHookCallable[Any], Sequence[QueryHookCallable[Any]]]] = None,
-        execution_options: Optional[dict[str, Any]] = None,
+        registry_namespace: dict[str, Any] | None = None,
+        filter_statement: FilterStatementCallable | None = None,
+        query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
+        execution_options: dict[str, Any] | None = None,
         id_field_name: str = "id",
-        arguments: Optional[list[StrawberryArgument]] = None,
+        arguments: list[StrawberryArgument] | None = None,
         # Original StrawberryField args
-        python_name: Optional[str] = None,
-        graphql_name: Optional[str] = None,
-        type_annotation: Optional[StrawberryAnnotation] = None,
-        origin: Optional[
-            Union[Union[Union[type, Callable[..., Any]], staticmethod[Any, Any]], classmethod[Any, Any, Any]]
-        ] = None,
+        python_name: str | None = None,
+        graphql_name: str | None = None,
+        type_annotation: StrawberryAnnotation | None = None,
+        origin: None | (type | Callable[..., Any] | staticmethod[Any, Any] | classmethod[Any, Any, Any]) = None,
         is_subscription: bool = False,
-        description: Optional[str] = None,
-        base_resolver: Optional[StrawberryResolver[Any]] = None,
+        description: str | None = None,
+        base_resolver: StrawberryResolver[Any] | None = None,
         permission_classes: list[type[BasePermission]] = (),  # pyright: ignore[reportArgumentType]
         default: object = dataclasses.MISSING,
-        default_factory: Union[Callable[[], Any], object] = dataclasses.MISSING,
-        metadata: Optional[Mapping[Any, Any]] = None,
-        deprecation_reason: Optional[str] = None,
+        default_factory: Callable[[], Any] | object = dataclasses.MISSING,
+        metadata: Mapping[Any, Any] | None = None,
+        deprecation_reason: str | None = None,
         directives: Sequence[object] = (),
         extensions: list[FieldExtension] = (),  # pyright: ignore[reportArgumentType]
         root_field: bool = False,
@@ -155,7 +153,7 @@ class StrawchemyField(StrawberryField):
         self.root_aggregations = root_aggregations
         self.distinct_on = distinct_on
         self.query_hook = query_hook
-        self.pagination: Union[DefaultOffsetPagination, Literal[False]] = (
+        self.pagination: DefaultOffsetPagination | Literal[False] = (
             DefaultOffsetPagination() if pagination is True else pagination
         )
         self.id_field_name = id_field_name
@@ -189,7 +187,7 @@ class StrawchemyField(StrawberryField):
 
     def _type_or_annotation(
         self,
-    ) -> Union[Union[Union[StrawberryType, type[WithStrawberryObjectDefinition]], object], str]:
+    ) -> StrawberryType | type[WithStrawberryObjectDefinition] | object | str:
         type_ = self.type
         if type_ is UNRESOLVED and self.type_annotation:
             type_ = self.type_annotation.annotation
@@ -199,9 +197,7 @@ class StrawchemyField(StrawberryField):
     def _strawchemy_type(self) -> type[StrawchemyTypeWithStrawberryObjectDefinition]:
         return cast("type[StrawchemyTypeWithStrawberryObjectDefinition]", self.type)
 
-    def _get_repository(
-        self, info: Info[Any, Any]
-    ) -> Union[StrawchemySyncRepository[Any], StrawchemyAsyncRepository[Any]]:
+    def _get_repository(self, info: Info[Any, Any]) -> StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]:
         return self._repository_type(
             self._strawchemy_type,
             session=self._config.session_getter(info),  # pyright: ignore[reportArgumentType]
@@ -230,7 +226,7 @@ class StrawchemyField(StrawberryField):
 
     def _get_by_id_resolver(
         self, info: Info, **kwargs: Any
-    ) -> Union[_GetByIdResolverResult, Coroutine[_GetByIdResolverResult, Any, Any]]:
+    ) -> _GetByIdResolverResult | Coroutine[_GetByIdResolverResult, Any, Any]:
         repository = self._get_repository(info)
         if isinstance(repository, StrawchemyAsyncRepository):
             return self._get_by_id_result_async(repository.get_by_id(**kwargs))
@@ -239,18 +235,18 @@ class StrawchemyField(StrawberryField):
     def _list_resolver(
         self,
         info: Info,
-        filter_input: Optional[BooleanFilterDTO] = None,
-        order_by: Optional[list[OrderByDTO]] = None,
-        distinct_on: Optional[list[EnumDTO]] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-    ) -> Union[_ListResolverResult, Coroutine[_ListResolverResult, Any, Any]]:
+        filter_input: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
+        distinct_on: list[EnumDTO] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> _ListResolverResult | Coroutine[_ListResolverResult, Any, Any]:
         repository = self._get_repository(info)
         if isinstance(repository, StrawchemyAsyncRepository):
             return self._list_result_async(repository.list(filter_input, order_by, distinct_on, limit, offset))
         return self._list_result_sync(repository.list(filter_input, order_by, distinct_on, limit, offset))
 
-    def _validate_type(self, type_: Union[Union[StrawberryType, type[WithStrawberryObjectDefinition]], Any]) -> None:
+    def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
         for inner_type in strawberry_contained_types(type_):
             if (
                 self.root_aggregations
@@ -263,20 +259,20 @@ class StrawchemyField(StrawberryField):
     @classmethod
     def _is_strawchemy_type(
         cls, type_: Any
-    ) -> TypeIs[Union[MappedStrawberryGraphQLDTO[Any], type[MappedStrawberryGraphQLDTO[Any]]]]:
+    ) -> TypeIs[MappedStrawberryGraphQLDTO[Any] | type[MappedStrawberryGraphQLDTO[Any]]]:
         return isinstance(type_, MappedStrawberryGraphQLDTO) or (
             isclass(type_) and issubclass(type_, MappedStrawberryGraphQLDTO)
         )
 
     @cached_property
-    def filter(self) -> Optional[type[BooleanFilterDTO]]:
+    def filter(self) -> type[BooleanFilterDTO] | None:
         inner_type = strawberry_contained_user_type(self.type)
         if self._filter is None and self._is_strawchemy_type(inner_type):
             return inner_type.__strawchemy_filter__
         return self._filter
 
     @cached_property
-    def order_by(self) -> Optional[type[OrderByDTO]]:
+    def order_by(self) -> type[OrderByDTO] | None:
         inner_type = strawberry_contained_user_type(self.type)
         if self._order_by is None and self._is_strawchemy_type(inner_type):
             return inner_type.__strawchemy_order_by__
@@ -348,7 +344,7 @@ class StrawchemyField(StrawberryField):
                 )
         return arguments
 
-    def filter_statement(self, info: Info[Any, Any]) -> Optional[Select[tuple[DeclarativeBase]]]:
+    def filter_statement(self, info: Info[Any, Any]) -> Select[tuple[DeclarativeBase]] | None:
         return self._filter_statement(info) if self._filter_statement else None
 
     @cached_property
@@ -405,7 +401,7 @@ class StrawchemyField(StrawberryField):
 
     @property
     @override
-    def type(self) -> Union[Union[StrawberryType, type[WithStrawberryObjectDefinition]], Literal[UNRESOLVED]]:  # pyright: ignore[reportInvalidTypeForm, reportUnknownParameterType]
+    def type(self) -> StrawberryType | type[WithStrawberryObjectDefinition] | Literal[UNRESOLVED]:  # pyright: ignore[reportInvalidTypeForm, reportUnknownParameterType]
         return super().type
 
     @type.setter
@@ -418,7 +414,7 @@ class StrawchemyField(StrawberryField):
 
     @property
     @override
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         if self._description is not None:
             return self._description
         definition = get_object_definition(strawberry_contained_user_type(self.type), strict=False)
@@ -454,32 +450,29 @@ class StrawchemyField(StrawberryField):
 
     @override
     def resolve_type(
-        self, *, type_definition: Optional[StrawberryObjectDefinition] = None
-    ) -> Union[Union[StrawberryType, type[WithStrawberryObjectDefinition]], Any]:
+        self, *, type_definition: StrawberryObjectDefinition | None = None
+    ) -> StrawberryType | type[WithStrawberryObjectDefinition] | Any:
         type_ = super().resolve_type(type_definition=type_definition)
         self._validate_type(type_)
         return type_
 
-    def resolver(
-        self, info: Info[Any, Any], *args: Any, **kwargs: Any
-    ) -> Union[
-        Union[
-            Union[
-                Union[Union[_ListResolverResult, Coroutine[_ListResolverResult, Any, Any]], _GetByIdResolverResult],
-                Coroutine[_GetByIdResolverResult, Any, Any],
-            ],
-            _CreateOrUpdateResolverResult,
-        ],
-        Coroutine[_CreateOrUpdateResolverResult, Any, Any],
-    ]:
+    def resolver(self, info: Info[Any, Any], *args: Any, **kwargs: Any) -> (
+        (
+            _ListResolverResult
+            | Coroutine[_ListResolverResult, Any, Any]
+            | _GetByIdResolverResult
+            | Coroutine[_GetByIdResolverResult, Any, Any]
+        )
+        | _CreateOrUpdateResolverResult
+    ) | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         if self.is_list:
             return self._list_resolver(info, *args, **kwargs)
         return self._get_by_id_resolver(info, *args, **kwargs)
 
     @override
     def get_result(
-        self, source: Any, info: Optional[Info[Any, Any]], args: list[Any], kwargs: dict[str, Any]
-    ) -> Union[Awaitable[Any], Any]:
+        self, source: Any, info: Info[Any, Any] | None, args: list[Any], kwargs: dict[str, Any]
+    ) -> Awaitable[Any] | Any:
         if self.is_root_field and self.base_resolver is None:
             assert info
             return self.resolver(info, *args, **kwargs)
@@ -491,7 +484,7 @@ class _StrawchemyInputMutationField(StrawchemyField):
         self,
         input_type: type[MappedGraphQLDTO[T]],
         *args: Any,
-        validation: Optional[ValidationProtocol[T]] = None,
+        validation: ValidationProtocol[T] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
@@ -515,8 +508,8 @@ class _StrawchemyMutationField:
 
 class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMutationField):
     def _create_resolver(
-        self, info: Info, data: Union[AnyMappedDTO, Sequence[AnyMappedDTO]]
-    ) -> Union[_CreateOrUpdateResolverResult, Coroutine[_CreateOrUpdateResolverResult, Any, Any]]:
+        self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
             input_data = Input(data, self._validation)
@@ -535,7 +528,7 @@ class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     @override
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
-    ) -> Union[_CreateOrUpdateResolverResult, Coroutine[_CreateOrUpdateResolverResult, Any, Any]]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         return self._create_resolver(info, *args, **kwargs)
 
 
@@ -555,11 +548,11 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     def _upsert_resolver(
         self,
         info: Info,
-        data: Union[AnyMappedDTO, Sequence[AnyMappedDTO]],
-        filter_input: Optional[BooleanFilterDTO] = None,
-        update_fields: Optional[list[EnumDTO]] = None,
-        conflict_fields: Optional[EnumDTO] = None,
-    ) -> Union[_CreateOrUpdateResolverResult, Coroutine[_CreateOrUpdateResolverResult, Any, Any]]:
+        data: AnyMappedDTO | Sequence[AnyMappedDTO],
+        filter_input: BooleanFilterDTO | None = None,
+        update_fields: list[EnumDTO] | None = None,
+        conflict_fields: EnumDTO | None = None,
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
             input_data = Input(data, self._validation)
@@ -600,20 +593,20 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     @override
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
-    ) -> Union[_CreateOrUpdateResolverResult, Coroutine[_CreateOrUpdateResolverResult, Any, Any]]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         return self._upsert_resolver(info, *args, **kwargs)
 
 
 class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMutationField):
     @override
-    def _validate_type(self, type_: Union[Union[StrawberryType, type[WithStrawberryObjectDefinition]], Any]) -> None:
+    def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
         if self._filter is not None and not _is_list(type_):
             msg = f"Type of update mutation by filter must be a list: {self.name}"
             raise StrawchemyFieldError(msg)
 
     def _update_by_ids_resolver(
-        self, info: Info, data: Union[AnyMappedDTO, Sequence[AnyMappedDTO]], **_: Any
-    ) -> Union[_CreateOrUpdateResolverResult, Coroutine[_CreateOrUpdateResolverResult, Any, Any]]:
+        self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO], **_: Any
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
             input_data = Input(data, self._validation)
@@ -627,7 +620,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
 
     def _update_by_filter_resolver(
         self, info: Info, data: AnyMappedDTO, filter_input: BooleanFilterDTO
-    ) -> Union[_CreateOrUpdateResolverResult, Coroutine[_CreateOrUpdateResolverResult, Any, Any]]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
             input_data = Input(data, self._validation)
@@ -656,7 +649,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     @override
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
-    ) -> Union[_CreateOrUpdateResolverResult, Coroutine[_CreateOrUpdateResolverResult, Any, Any]]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         if self._filter is None:
             return self._update_by_ids_resolver(info, *args, **kwargs)
         return self._update_by_filter_resolver(info, *args, **kwargs)
@@ -665,7 +658,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
 class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
     def __init__(
         self,
-        input_type: Optional[type[BooleanFilterDTO]] = None,
+        input_type: type[BooleanFilterDTO] | None = None,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -676,15 +669,15 @@ class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
     def _delete_resolver(
         self,
         info: Info,
-        filter_input: Optional[BooleanFilterDTO] = None,
-    ) -> Union[_CreateOrUpdateResolverResult, Coroutine[_CreateOrUpdateResolverResult, Any, Any]]:
+        filter_input: BooleanFilterDTO | None = None,
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         if isinstance(repository, StrawchemyAsyncRepository):
             return self._list_result_async(repository.delete(filter_input))
         return self._list_result_sync(repository.delete(filter_input))
 
     @override
-    def _validate_type(self, type_: Union[Union[StrawberryType, type[WithStrawberryObjectDefinition]], Any]) -> None:
+    def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
         # Calling self.is_list cause a recursion loop
         if not _is_list(type_):
             msg = f"Type of delete mutation must be a list: {self.name}"
@@ -706,5 +699,5 @@ class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
     @override
     def resolver(
         self, info: Info[Any, Any], *args: Any, **kwargs: Any
-    ) -> Union[_CreateOrUpdateResolverResult, Coroutine[_CreateOrUpdateResolverResult, Any, Any]]:
+    ) -> _CreateOrUpdateResolverResult | Coroutine[_CreateOrUpdateResolverResult, Any, Any]:
         return self._delete_resolver(info, *args, **kwargs)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Optional, Union
+from typing import Optional
 from uuid import UUID, uuid4
 
 import pytest
@@ -35,7 +35,7 @@ def test_default_field_config() -> None:
 
 @pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_base_annotations_include(factory: AnyFactory, model: type[Union[Tomato, TomatoDataclass]]) -> None:
+def test_base_annotations_include(factory: AnyFactory, model: type[Tomato | TomatoDataclass]) -> None:
     class Base:
         name: str
 
@@ -47,7 +47,7 @@ def test_base_annotations_include(factory: AnyFactory, model: type[Union[Tomato,
 
 @pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_base_annotations_include_override(factory: AnyFactory, model: type[Union[Tomato, TomatoDataclass]]) -> None:
+def test_base_annotations_include_override(factory: AnyFactory, model: type[Tomato | TomatoDataclass]) -> None:
     class Base:
         name: int
 
@@ -59,7 +59,7 @@ def test_base_annotations_include_override(factory: AnyFactory, model: type[Unio
 
 @pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_base_annotations_exclude_override(factory: AnyFactory, model: type[Union[Tomato, TomatoDataclass]]) -> None:
+def test_base_annotations_exclude_override(factory: AnyFactory, model: type[Tomato | TomatoDataclass]) -> None:
     class Base:
         name: str
 
@@ -78,7 +78,7 @@ def test_base_annotations_exclude_override(factory: AnyFactory, model: type[Unio
 @pytest.mark.parametrize("models", [(Fruit, Color), (FruitDataclass, ColorDataclass)])
 @pytest.mark.parametrize("factory", factory_iterator())
 def test_to_mapped(
-    factory: AnyFactory, models: tuple[type[Union[Fruit, FruitDataclass]], type[Union[Color, ColorDataclass]]]
+    factory: AnyFactory, models: tuple[type[Fruit | FruitDataclass], type[Color | ColorDataclass]]
 ) -> None:
     fruit_model, color_model = models
     fruit_dto = factory.factory(fruit_model, read_all_config)
@@ -106,7 +106,7 @@ def test_to_mapped(
 
 @pytest.mark.parametrize("model", [Color, ColorDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_to_mapped_override(factory: AnyFactory, model: type[Union[Color, ColorDataclass]]) -> None:
+def test_to_mapped_override(factory: AnyFactory, model: type[Color | ColorDataclass]) -> None:
     fruit_dto = factory.factory(model, read_all_config)
     uuid = uuid4()
     dto_instance = fruit_dto(**{"id": uuid, "name": "Green", "fruits": []})  # noqa: PIE804
@@ -116,7 +116,7 @@ def test_to_mapped_override(factory: AnyFactory, model: type[Union[Color, ColorD
 
 @pytest.mark.parametrize("model", [Color, ColorDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_to_mapped_override_excluded(factory: AnyFactory, model: type[Union[Color, ColorDataclass]]) -> None:
+def test_to_mapped_override_excluded(factory: AnyFactory, model: type[Color | ColorDataclass]) -> None:
     fruit_dto = factory.factory(model, DTOConfig(Purpose.READ, exclude={"name"}))
     uuid = uuid4()
     dto_instance = fruit_dto(**{"id": uuid, "fruits": []})  # noqa: PIE804
@@ -126,7 +126,7 @@ def test_to_mapped_override_excluded(factory: AnyFactory, model: type[Union[Colo
 
 @pytest.mark.parametrize("model", [Admin, AdminDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_default_read_write(factory: AnyFactory, model: type[Union[Admin, AdminDataclass]]) -> None:
+def test_default_read_write(factory: AnyFactory, model: type[Admin | AdminDataclass]) -> None:
     write_dto = factory.factory(model, write_all_config)
     read_dto = factory.factory(model, read_all_config)
     assert DTOInspect(write_dto).has_init_field("name")
@@ -135,7 +135,7 @@ def test_default_read_write(factory: AnyFactory, model: type[Union[Admin, AdminD
 
 @pytest.mark.parametrize("model", [Admin, AdminDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_write_only_field(factory: AnyFactory, model: type[Union[Admin, AdminDataclass]]) -> None:
+def test_write_only_field(factory: AnyFactory, model: type[Admin | AdminDataclass]) -> None:
     write_dto = factory.factory(model, write_all_config)
     read_dto = factory.factory(model, read_all_config)
     assert DTOInspect(write_dto).has_init_field("password")
@@ -152,7 +152,7 @@ def test_read_only_field(factory: AnyFactory) -> None:
 
 @pytest.mark.parametrize("model", [Admin, AdminDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_private_field(factory: AnyFactory, model: type[Union[Admin, AdminDataclass]]) -> None:
+def test_private_field(factory: AnyFactory, model: type[Admin | AdminDataclass]) -> None:
     read_dto = factory.factory(model, read_all_config)
     write_dto = factory.factory(model, write_all_config)
     assert not DTOInspect(read_dto).has_init_field("private")
@@ -162,9 +162,7 @@ def test_private_field(factory: AnyFactory, model: type[Union[Admin, AdminDatacl
 @pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
 @pytest.mark.parametrize("config", [write_all_config, read_all_config])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_model_field_config(
-    factory: AnyFactory, config: DTOConfig, model: type[Union[Tomato, TomatoDataclass]]
-) -> None:
+def test_model_field_config(factory: AnyFactory, config: DTOConfig, model: type[Tomato | TomatoDataclass]) -> None:
     tomato_dto = factory.factory(model, config)
 
     if config.purpose is Purpose.WRITE:
@@ -179,7 +177,7 @@ def test_model_field_config(
 
 @pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_field_validator(factory: AnyFactory, model: type[Union[Tomato, TomatoDataclass]]) -> None:
+def test_field_validator(factory: AnyFactory, model: type[Tomato | TomatoDataclass]) -> None:
     tomato_dto = factory.factory(model, write_all_config)
 
     with pytest.raises(ValueError, match=re.escape("We do not allow rotten tomato.")):
@@ -188,7 +186,7 @@ def test_field_validator(factory: AnyFactory, model: type[Union[Tomato, TomatoDa
 
 @pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_field_alias(factory: AnyFactory, model: type[Union[Tomato, TomatoDataclass]]) -> None:
+def test_field_alias(factory: AnyFactory, model: type[Tomato | TomatoDataclass]) -> None:
     tomato_dto = factory.factory(model, write_all_config)
 
     tomato = tomato_dto(name="good", weight=1, sugarness=1.25, popularity=1)  # pyright: ignore[reportCallIssue]
@@ -200,7 +198,7 @@ def test_field_alias(factory: AnyFactory, model: type[Union[Tomato, TomatoDatacl
 @pytest.mark.parametrize("model", [UserWithGreeting, UserWithGreetingDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
 def test_hybrid_property_excluded(
-    factory: AnyFactory, model: type[Union[UserWithGreeting, UserWithGreetingDataclass]]
+    factory: AnyFactory, model: type[UserWithGreeting | UserWithGreetingDataclass]
 ) -> None:
     user_dto = factory.factory(model, DTOConfig(Purpose.READ, include={"name", "greeting_hybrid_property"}))
     assert DTOInspect(user_dto).has_init_field("name")
@@ -209,14 +207,14 @@ def test_hybrid_property_excluded(
 
 @pytest.mark.parametrize("model", [UserWithGreeting, UserWithGreetingDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_column_property(factory: AnyFactory, model: type[Union[UserWithGreeting, UserWithGreetingDataclass]]) -> None:
+def test_column_property(factory: AnyFactory, model: type[UserWithGreeting | UserWithGreetingDataclass]) -> None:
     user_dto = factory.factory(model, DTOConfig(Purpose.READ, include={"greeting_column_property"}))
     assert DTOInspect(user_dto).has_init_field("greeting_column_property")
 
 
 @pytest.mark.parametrize("model", [SponsoredUser, SponsoredUserDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_self_reference(factory: AnyFactory, model: type[Union[SponsoredUser, SponsoredUserDataclass]]) -> None:
+def test_self_reference(factory: AnyFactory, model: type[SponsoredUser | SponsoredUserDataclass]) -> None:
     user_dto = factory.factory(model, read_all_config)
     assert DTOInspect(user_dto).field_type("sponsor") == Optional[Self]  # pyright: ignore[reportGeneralTypeIssues]
     assert DTOInspect(user_dto).field_type("sponsored") == list[Self]  # pyright: ignore[reportGeneralTypeIssues]

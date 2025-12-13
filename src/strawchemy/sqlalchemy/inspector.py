@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Dict, Optional, TypeVar  # noqa: UP035
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from sqlalchemy.orm import NO_VALUE, DeclarativeBase, QueryableAttribute, registry
 from sqlalchemy.types import ARRAY
@@ -95,8 +95,8 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
     def __init__(
         self,
         dialect: SupportedDialect,
-        registries: Optional[list[registry]] = None,
-        filter_overrides: Optional[FilterMap] = None,
+        registries: list[registry] | None = None,
+        filter_overrides: FilterMap | None = None,
     ) -> None:
         """Initializes the SQLAlchemyGraphQLInspector.
 
@@ -135,9 +135,9 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
 
             filters_map |= {(Geometry, WKBElement, WKTElement): GeoComparison}
         if self.db_features.dialect == "sqlite":
-            filters_map[(dict, Dict)] = make_sqlite_json_comparison_input()  # noqa: UP006
+            filters_map[(dict, dict)] = make_sqlite_json_comparison_input()
         else:
-            filters_map[(dict, Dict)] = make_full_json_comparison_input()  # noqa: UP006
+            filters_map[(dict, dict)] = make_full_json_comparison_input()
         return filters_map
 
     @classmethod

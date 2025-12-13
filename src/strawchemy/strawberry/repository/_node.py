@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, Optional, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from strawberry.types import get_object_definition
 from strawberry.utils.typing import type_has_annotation
@@ -35,7 +35,7 @@ class StrawberryQueryNode(QueryNode, Generic[T]):
             raise GraphError
         return self.metadata.data.strawberry_type
 
-    def _model_instance_attribute(self) -> Optional[str]:
+    def _model_instance_attribute(self) -> str | None:
         return next(
             (
                 field.name
@@ -50,7 +50,7 @@ class StrawberryQueryNode(QueryNode, Generic[T]):
         strawberry_definition = get_object_definition(node.strawberry_type, strict=True)
         return {field.name: DTOMissing for field in strawberry_definition.fields if field.init}
 
-    def computed_value(self, node: QueryNodeType, result: Union[NodeResult[Any], QueryResult[Any]]) -> T:
+    def computed_value(self, node: QueryNodeType, result: NodeResult[Any] | QueryResult[Any]) -> T:
         strawberry_definition = get_object_definition(node.metadata.data.strawberry_type)
         if strawberry_definition is None or node.metadata.data.strawberry_type is None:
             return result.value(node)

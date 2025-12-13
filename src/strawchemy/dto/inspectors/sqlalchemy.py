@@ -5,7 +5,7 @@ import contextlib
 from dataclasses import MISSING as DATACLASS_MISSING
 from dataclasses import Field, fields
 from inspect import getmodule, signature
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, cast, get_args, get_origin, get_type_hints
+from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast, get_args, get_origin, get_type_hints
 
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import (
@@ -92,7 +92,7 @@ _SQLA_NS = {**vars(orm), **vars(sql)}
 
 
 class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any]]):
-    def __init__(self, registries: Optional[list[registry]] = None) -> None:
+    def __init__(self, registries: list[registry] | None = None) -> None:
         """Initialize internal state to keep track of generated DTOs."""
         self._mapped_classes_map: dict[str, type[DeclarativeBase]] = {}
         self._registries: list[registry] = registries or []
@@ -159,18 +159,18 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
 
     @classmethod
     def _is_relationship(
-        cls, elem: Union[Union[MapperProperty[Any], Column[Any]], RelationshipProperty[Any]]
+        cls, elem: MapperProperty[Any] | Column[Any] | RelationshipProperty[Any]
     ) -> TypeIs[RelationshipProperty[Any]]:
         return isinstance(elem, RelationshipProperty)
 
     @classmethod
-    def _is_column(cls, elem: Any) -> TypeIs[Union[ColumnProperty[Any], Column[Any]]]:
+    def _is_column(cls, elem: Any) -> TypeIs[ColumnProperty[Any] | Column[Any]]:
         return isinstance(elem, (ColumnProperty, Column))
 
     @classmethod
     def _column_or_relationship(
         cls, attribute: MapperProperty[Any]
-    ) -> Union[Union[Column[Any], RelationshipProperty[Any]], SQLColumnExpression[Any]]:
+    ) -> Column[Any] | RelationshipProperty[Any] | SQLColumnExpression[Any]:
         try:
             return attribute.parent.mapper.columns[attribute.key]
         except KeyError:
@@ -179,7 +179,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     @classmethod
     def _defaults(
         cls, attribute: MapperProperty[Any]
-    ) -> tuple[Union[Any, type[DTOMissing]], Union[Callable[..., Any], type[DTOMissing]]]:
+    ) -> tuple[Any | type[DTOMissing], Callable[..., Any] | type[DTOMissing]]:
         default, default_factory = DTOMissing, DTOMissing
         model = attribute.parent.class_
         element = cls._column_or_relationship(attribute)

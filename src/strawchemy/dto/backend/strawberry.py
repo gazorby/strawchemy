@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from inspect import getmodule
 from types import new_class
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union, get_origin
+from typing import TYPE_CHECKING, Any, TypeVar, get_origin
 
 from strawberry.types.field import StrawberryField
 from typing_extensions import override
@@ -33,7 +33,7 @@ class MappedStrawberryDTO(MappedDTO[ModelT]): ...
 class FieldInfo:
     name: str
     type: Any
-    field: Union[StrawberryField, type[DTOMissing]] = DTOMissing
+    field: StrawberryField | type[DTOMissing] = DTOMissing
 
 
 class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
@@ -45,7 +45,7 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         }
 
     def _construct_field_info(self, field_def: DTOFieldDefinition[ModelT, ModelFieldT]) -> FieldInfo:
-        strawberry_field: Optional[StrawberryField] = None
+        strawberry_field: StrawberryField | None = None
         if field_def.default_factory is not DTOMissing:
             if isinstance(field_def.default_factory(), (list, tuple)):
                 strawberry_field = strawberry.field(default_factory=list)
@@ -85,7 +85,7 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         name: str,
         model: type[Any],
         field_definitions: Iterable[DTOFieldDefinition[Any, ModelFieldT]],
-        base: Optional[type[Any]] = None,
+        base: type[Any] | None = None,
         **kwargs: Any,
     ) -> type[AnnotatedDTOT]:
         fields: list[FieldInfo] = []

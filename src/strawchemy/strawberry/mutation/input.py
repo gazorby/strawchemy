@@ -3,10 +3,10 @@ from __future__ import annotations
 import dataclasses
 from collections.abc import Hashable, Iterator, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Generic, Literal, Optional, TypeVar, Union, cast, final
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeAlias, TypeVar, cast, final
 
 from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
-from typing_extensions import Self, TypeAlias, override
+from typing_extensions import Self, override
 
 from sqlalchemy import event, inspect
 from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
@@ -46,11 +46,11 @@ def _has_record(model: DeclarativeBase) -> bool:
 @dataclass(frozen=True)
 class UpsertData:
     instances: list[DeclarativeBase] = dataclasses.field(default_factory=list)
-    conflict_constraint: Optional[Enum] = None
+    conflict_constraint: Enum | None = None
     update_fields: list[EnumDTO] = dataclasses.field(default_factory=list)
 
     @classmethod
-    def from_upsert_input(cls, data: Union[ToOneUpsertInput[Any, Any, Any], ToManyUpsertInput[Any, Any, Any]]) -> Self:
+    def from_upsert_input(cls, data: ToOneUpsertInput[Any, Any, Any] | ToManyUpsertInput[Any, Any, Any]) -> Self:
         instances = data.to_mapped()
         return cls(
             instances=instances if isinstance(instances, list) else [instances],
@@ -68,18 +68,18 @@ class _UnboundRelationInput:
         attribute: MapperProperty[Any],
         related: type[DeclarativeBase],
         relation_type: RelationType,
-        set_: Union[list[DeclarativeBase], None, type[_Unset]] = _Unset,
-        add: Optional[list[DeclarativeBase]] = None,
-        remove: Optional[list[DeclarativeBase]] = None,
-        create: Optional[list[DeclarativeBase]] = None,
-        upsert: Optional[UpsertData] = None,
+        set_: list[DeclarativeBase] | None | type[_Unset] = _Unset,
+        add: list[DeclarativeBase] | None = None,
+        remove: list[DeclarativeBase] | None = None,
+        create: list[DeclarativeBase] | None = None,
+        upsert: UpsertData | None = None,
         input_index: int = -1,
         level: int = 0,
     ) -> None:
         self.attribute = attribute
         self.related = related
         self.relation_type = relation_type
-        self.set: Optional[list[DeclarativeBase]] = set_ if set_ is not _Unset else []
+        self.set: list[DeclarativeBase] | None = set_ if set_ is not _Unset else []
         self.add = add if add is not None else []
         self.remove = remove if remove is not None else []
         self.create = create if create is not None else []
@@ -109,11 +109,11 @@ class RelationInput(_UnboundRelationInput):
         related: type[DeclarativeBase],
         parent: DeclarativeBase,
         relation_type: RelationType,
-        set_: Union[list[DeclarativeBase], None, type[_Unset]] = _Unset,
-        add: Optional[list[DeclarativeBase]] = None,
-        remove: Optional[list[DeclarativeBase]] = None,
-        create: Optional[list[DeclarativeBase]] = None,
-        upsert: Optional[UpsertData] = None,
+        set_: list[DeclarativeBase] | None | type[_Unset] = _Unset,
+        add: list[DeclarativeBase] | None = None,
+        remove: list[DeclarativeBase] | None = None,
+        create: list[DeclarativeBase] | None = None,
+        upsert: UpsertData | None = None,
         input_index: int = -1,
         level: int = 0,
     ) -> None:
@@ -153,7 +153,7 @@ class RelationInput(_UnboundRelationInput):
             upsert=unbound.upsert,
         )
 
-    def _set_event(self, target: DeclarativeBase, value: Optional[DeclarativeBase], *_: Any, **__: Any) -> None:
+    def _set_event(self, target: DeclarativeBase, value: DeclarativeBase | None, *_: Any, **__: Any) -> None:
         if value is None:
             return
         if _has_record(value):
@@ -191,8 +191,8 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
     ) -> Any:
         field_value = getattr(parent, field.model_field_name)
         add, remove, create = [], [], []
-        set_: Optional[list[Any]] = []
-        upsert: Optional[UpsertData] = None
+        set_: list[Any] | None = []
+        upsert: UpsertData | None = None
         relation_type = RelationType.TO_MANY
         if isinstance(field_value, ToOneInput):
             relation_type = RelationType.TO_ONE
@@ -270,8 +270,8 @@ class LevelInput:
 class Input(Generic[InputModel]):
     def __init__(
         self,
-        dtos: Union[MappedGraphQLDTO[InputModel], Sequence[MappedGraphQLDTO[InputModel]]],
-        _validation_: Optional[ValidationProtocol[InputModel]] = None,
+        dtos: MappedGraphQLDTO[InputModel] | Sequence[MappedGraphQLDTO[InputModel]],
+        _validation_: ValidationProtocol[InputModel] | None = None,
         **override: Any,
     ) -> None:
         self.max_level = 0
@@ -300,7 +300,7 @@ class Input(Generic[InputModel]):
         return inspect(model)
 
     def _add_non_input_relations(
-        self, model: DeclarativeBase, input_index: int, _level: int = 0, _seen: Optional[set[Hashable]] = None
+        self, model: DeclarativeBase, input_index: int, _level: int = 0, _seen: set[Hashable] | None = None
     ) -> None:
         seen = _seen or set()
         _level += 1

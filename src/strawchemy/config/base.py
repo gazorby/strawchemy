@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from strawchemy.sqlalchemy.inspector import SQLAlchemyGraphQLInspector
 from strawchemy.strawberry import default_session_getter
 from strawchemy.strawberry.repository import StrawchemySyncRepository
 
 if TYPE_CHECKING:
-    from typing import Any, Optional
+    from typing import Any
 
     from strawchemy.sqlalchemy.typing import FilterMap
     from strawchemy.strawberry.typing import AnySessionGetter
@@ -42,9 +42,9 @@ class StrawchemyConfig:
     """Automatically convert snake cased names to camel case"""
     repository_type: AnyRepository = StrawchemySyncRepository
     """Repository class to use for auto resolvers."""
-    filter_overrides: Optional[FilterMap] = None
+    filter_overrides: FilterMap | None = None
     """Override default filters with custom filters."""
-    execution_options: Optional[dict[str, Any]] = None
+    execution_options: dict[str, Any] | None = None
     """SQLAlchemy execution options for repository operations."""
     pagination_default_limit: int = 100
     """Default pagination limit when `pagination=True`."""

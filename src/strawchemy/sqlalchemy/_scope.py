@@ -22,12 +22,12 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Optional, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeAlias
 
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
 from sqlalchemy.orm.util import AliasedClass
-from typing_extensions import Self, TypeAlias, override
+from typing_extensions import Self, override
 
 from sqlalchemy import ColumnElement, FromClause, Function, Label, Select, func, inspect
 from sqlalchemy import cast as sqla_cast
@@ -85,10 +85,10 @@ class AggregationFunctionInfo:
     }
     sqla_function: FunctionGenerator
     apply_on_column: bool
-    visitor: Optional[_FunctionVisitor] = None
+    visitor: _FunctionVisitor | None = None
 
     @classmethod
-    def from_name(cls, name: str, visitor: Optional[_FunctionVisitor] = None) -> Self:
+    def from_name(cls, name: str, visitor: _FunctionVisitor | None = None) -> Self:
         """Creates an AggregationFunctionInfo instance from a function name.
 
         Looks up the provided `name` in the `cls.functions_map` to find the
@@ -113,7 +113,7 @@ class AggregationFunctionInfo:
         apply_on_column = name != "count"
         return cls(sqla_function=cls.functions_map[name], apply_on_column=apply_on_column, visitor=visitor)
 
-    def apply(self, *args: Union[QueryableAttribute[Any], ColumnElement[Any]]) -> ColumnElement[Any]:
+    def apply(self, *args: QueryableAttribute[Any] | ColumnElement[Any]) -> ColumnElement[Any]:
         """Applies the configured SQLAlchemy function to the given arguments.
 
         Constructs a SQLAlchemy function call using `self.sqla_function` and
@@ -155,7 +155,7 @@ class ColumnTransform:
 
     @classmethod
     def _new(
-        cls, attribute: Union[Function[Any], QueryableAttribute[Any]], node: QueryNodeType, scope: QueryScope[Any]
+        cls, attribute: Function[Any] | QueryableAttribute[Any], node: QueryNodeType, scope: QueryScope[Any]
     ) -> Self:
         """Creates a ColumnTransform by labeling an attribute or function.
 
@@ -250,7 +250,7 @@ class NodeInspect:
         self.node = node
         self.scope = scope
 
-    def _foreign_keys_selection(self, alias: Optional[AliasedClass[Any]] = None) -> list[QueryableAttribute[Any]]:
+    def _foreign_keys_selection(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
         """Selects local foreign key columns for child relationships of the current node.
 
         Iterates through the children of the current `self.node`. If a child
@@ -289,7 +289,7 @@ class NodeInspect:
 
     def _transform_column(
         self, node: QueryNodeType, attribute: QueryableAttribute[Any]
-    ) -> Union[QueryableAttribute[Any], ColumnTransform]:
+    ) -> QueryableAttribute[Any] | ColumnTransform:
         """Applies transformations to a column attribute if necessary.
 
         Currently, this method checks if the `node.metadata.data.json_path` is set.
@@ -305,7 +305,7 @@ class NodeInspect:
             The transformed attribute (as a `ColumnTransform` instance) if a
             transformation was applied, or the original `QueryableAttribute` otherwise.
         """
-        transform: Optional[ColumnTransform] = None
+        transform: ColumnTransform | None = None
         if node.metadata.data.json_path:
             transform = ColumnTransform.extract_json(attribute, node, self.scope)
         return attribute if transform is None else transform
@@ -454,7 +454,7 @@ class NodeInspect:
         return functions
 
     def filter_function(
-        self, alias: AliasedClass[Any], distinct: Optional[bool] = None
+        self, alias: AliasedClass[Any], distinct: bool | None = None
     ) -> tuple[QueryNodeType, Label[Any]]:
         """Generates a labeled SQLAlchemy function expression for use in filters.
 
@@ -495,7 +495,7 @@ class NodeInspect:
         return function_node, function_info.apply(*function_args).label(label_name)
 
     def columns(
-        self, alias: Optional[AliasedClass[Any]] = None
+        self, alias: AliasedClass[Any] | None = None
     ) -> tuple[list[QueryableAttribute[Any]], list[ColumnTransform]]:
         """Extracts regular columns and transformed columns for the current node.
 
@@ -539,7 +539,7 @@ class NodeInspect:
         return columns, transforms
 
     def foreign_key_columns(
-        self, side: RelationshipSide, alias: Optional[AliasedClass[Any]] = None
+        self, side: RelationshipSide, alias: AliasedClass[Any] | None = None
     ) -> list[QueryableAttribute[Any]]:
         """Retrieves foreign key columns for the current node's relationship.
 
@@ -575,7 +575,7 @@ class NodeInspect:
             if column.key is not None
         ]
 
-    def selection(self, alias: Optional[AliasedClass[Any]] = None) -> list[QueryableAttribute[Any]]:
+    def selection(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
         """Computes the full list of attributes to select for the current node.
 
         This combines the regular columns (and transformed columns, though only
@@ -634,10 +634,10 @@ class QueryScope(Generic[DeclarativeT]):
         self,
         model: type[DeclarativeT],
         dialect: SupportedDialect,
-        root_alias: Optional[AliasedClass[DeclarativeBase]] = None,
-        parent: Optional[QueryScope[Any]] = None,
-        alias_map: Optional[dict[tuple[QueryNodeType, RelationshipSide], AliasedClass[Any]]] = None,
-        inspector: Optional[SQLAlchemyInspector] = None,
+        root_alias: AliasedClass[DeclarativeBase] | None = None,
+        parent: QueryScope[Any] | None = None,
+        alias_map: dict[tuple[QueryNodeType, RelationshipSide], AliasedClass[Any]] | None = None,
+        inspector: SQLAlchemyInspector | None = None,
     ) -> None:
         """Initializes the QueryScope.
 
@@ -656,7 +656,7 @@ class QueryScope(Generic[DeclarativeT]):
             inspector: An optional `SQLAlchemyInspector` instance. If None, a new
                 one is created using the model's registry.
         """
-        self._parent: Optional[QueryScope[Any]] = parent
+        self._parent: QueryScope[Any] | None = parent
         self._root_alias = (
             root_alias if root_alias is not None else aliased(model.__mapper__, name=model.__tablename__, flat=True)
         )
@@ -742,9 +742,7 @@ class QueryScope(Generic[DeclarativeT]):
         self.set_relation_alias(node, side, alias)
         return alias
 
-    def aliased_attribute(
-        self, node: QueryNodeType, alias: Optional[AliasedClass[Any]] = None
-    ) -> QueryableAttribute[Any]:
+    def aliased_attribute(self, node: QueryNodeType, alias: AliasedClass[Any] | None = None) -> QueryableAttribute[Any]:
         """Adapts a model field to an aliased entity for query building.
 
         This method is a core component of the GraphQL to SQL transpilation process,
@@ -798,7 +796,7 @@ class QueryScope(Generic[DeclarativeT]):
         return model_field.of_type(child_alias)
 
     def aliased_id_attributes(
-        self, node: QueryNodeType, alias: Optional[AliasedClass[Any]] = None
+        self, node: QueryNodeType, alias: AliasedClass[Any] | None = None
     ) -> list[QueryableAttribute[Any]]:
         """Retrieves aliased primary key (ID) attributes for a given node.
 
@@ -850,7 +848,7 @@ class QueryScope(Generic[DeclarativeT]):
 
         return columns
 
-    def scoped_column(self, clause: Union[Select[Any], FromClause], column_name: str) -> Label[Any]:
+    def scoped_column(self, clause: Select[Any] | FromClause, column_name: str) -> Label[Any]:
         """Retrieves a column from a SELECT or FROM clause and labels it with a scope-specific ID.
 
         This is used to ensure that columns selected from subqueries or CTEs
@@ -906,7 +904,7 @@ class QueryScope(Generic[DeclarativeT]):
             for pk in self.aliased_id_attributes(root)
         ]
 
-    def key(self, element: Union[str, QueryNodeType]) -> str:
+    def key(self, element: str | QueryNodeType) -> str:
         """Generates a unique key for a query element or node.
 
         The key is used to uniquely identify elements within the query scope, ensuring
@@ -944,8 +942,8 @@ class QueryScope(Generic[DeclarativeT]):
 
     def replace(
         self,
-        model: Optional[type[DeclarativeT]] = None,
-        alias: Optional[AliasedClass[Any]] = None,
+        model: type[DeclarativeT] | None = None,
+        alias: AliasedClass[Any] | None = None,
     ) -> None:
         if model is not None:
             self.model = model

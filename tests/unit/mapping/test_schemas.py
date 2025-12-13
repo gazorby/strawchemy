@@ -47,8 +47,8 @@ def test_type_instance(strawchemy: Strawchemy) -> None:
 def test_type_instance_auto_as_str(strawchemy: Strawchemy) -> None:
     @strawchemy.type(User)
     class UserType:
-        id: "auto"
-        name: "auto"
+        id: auto
+        name: auto
 
     user = UserType(id=1, name="user")
     assert user.id == 1

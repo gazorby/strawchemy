@@ -1,16 +1,9 @@
 from __future__ import annotations
 
-import sys
-from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, Union
+from types import UnionType
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, TypeAlias, Union
 
-from typing_extensions import TypeAlias
-
-if sys.version_info >= (3, 10):
-    from types import UnionType
-
-    UNION_TYPES = (Union, UnionType)
-else:
-    UNION_TYPES = (Union,)
+UNION_TYPES = (Union, UnionType)
 
 
 if TYPE_CHECKING:

@@ -12,7 +12,7 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Generic, Optional, Union, cast
+from typing import TYPE_CHECKING, Any, Generic, cast
 
 from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
 from sqlalchemy.sql.elements import ColumnElement
@@ -88,9 +88,9 @@ class QueryTranspiler(Generic[DeclarativeT]):
         self,
         model: type[DeclarativeT],
         dialect: Dialect,
-        statement: Optional[Select[tuple[DeclarativeT]]] = None,
-        scope: Optional[QueryScope[DeclarativeT]] = None,
-        query_hooks: Optional[defaultdict[QueryNodeType, list[QueryHook[Any]]]] = None,
+        statement: Select[tuple[DeclarativeT]] | None = None,
+        scope: QueryScope[DeclarativeT] | None = None,
+        query_hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] | None = None,
         deterministic_ordering: bool = False,
     ) -> None:
         """Initializes the QueryTranspiler.
@@ -177,7 +177,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
     def _filter_to_expressions(
         self,
         dto_filter: GraphQLComparison,
-        override: Optional[ColumnElement[Any]] = None,
+        override: ColumnElement[Any] | None = None,
         not_null_check: bool = False,
     ) -> list[ColumnElement[bool]]:
         """Converts a DTO filter to a list of SQLAlchemy expressions.
@@ -216,7 +216,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
 
     def _gather_conjonctions(
         self,
-        query: Sequence[Union[Union[Filter, AggregationFilter], GraphQLComparison]],
+        query: Sequence[Filter | AggregationFilter | GraphQLComparison],
         not_null_check: bool = False,
     ) -> Conjunction:
         """Gathers all conjunctions from a sequence of filters.
@@ -291,7 +291,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             bool_expressions.append(or_expression)
         return Conjunction(bool_expressions, joins, common_path)
 
-    def _aggregation_filter(self, aggregation: AggregationFilter) -> tuple[Optional[Join], list[ColumnElement[bool]]]:
+    def _aggregation_filter(self, aggregation: AggregationFilter) -> tuple[Join | None, list[ColumnElement[bool]]]:
         """Creates a join and filter expressions for an aggregation filter.
 
         Args:
@@ -364,7 +364,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
 
     def _upsert_aggregations(
         self, aggregation_node: QueryNodeType, existing_joins: list[Join]
-    ) -> tuple[list[NamedColumn[Any]], Optional[Join]]:
+    ) -> tuple[list[NamedColumn[Any]], Join | None]:
         """Upserts aggregations.
 
         Args:
@@ -377,7 +377,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         node_inspect = self.scope.inspect(aggregation_node)
         functions: dict[QueryNodeType, ColumnElement[Any]] = {}
         function_columns: list[NamedColumn[Any]] = []
-        new_join: Optional[Join] = None
+        new_join: Join | None = None
         existing_join = next(
             (join for join in existing_joins if isinstance(join, AggregationJoin) and join.node == aggregation_node),
             None,
@@ -537,7 +537,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         """
         aliased_attribute = self.scope.aliased_attribute(node)
         remote_fks = self.scope.inspect(node).foreign_key_columns("target", target_alias)
-        rank_column: Optional[Label[int]] = None
+        rank_column: Label[int] | None = None
         if query.order_by or query.limit is not None or query.offset is not None:
             rank_column = (
                 func.dense_rank()
@@ -793,8 +793,8 @@ class QueryTranspiler(Generic[DeclarativeT]):
     def _build_query(
         self,
         query_graph: QueryGraph[DeclarativeT],
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
+        limit: int | None = None,
+        offset: int | None = None,
         allow_null: bool = False,
     ) -> Query:
         """Constructs the final SQLAlchemy Query object from a QueryGraph.
@@ -876,15 +876,15 @@ class QueryTranspiler(Generic[DeclarativeT]):
 
     def select_executor(
         self,
-        selection_tree: Optional[QueryNodeType] = None,
-        dto_filter: Optional[BooleanFilterDTO] = None,
-        order_by: Optional[list[OrderByDTO]] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        distinct_on: Optional[list[EnumDTO]] = None,
+        selection_tree: QueryNodeType | None = None,
+        dto_filter: BooleanFilterDTO | None = None,
+        order_by: list[OrderByDTO] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
         executor_cls: type[QueryExecutorT] = SyncQueryExecutor,
-        execution_options: Optional[dict[str, Any]] = None,
+        execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
         """Creates a QueryExecutor that executes a SQLAlchemy query based on a selection tree.
 
