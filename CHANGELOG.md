@@ -2,7 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.19.0](https://github.com/gazorby/strawchemy/compare/v0.18.0..v0.19.0) - 2025-09-06
+## [0.20.0](https://github.com/gazorby/strawchemy/compare/v0.19.0..v0.20.0) - 2025-12-14
+
+### 🚀 Features
+
+- Add secondary table support (#106) - ([819ee39](https://github.com/gazorby/strawchemy/commit/819ee3976519fc7f797d7572aaad353ecd926deb))
+
+### 🐛 Bug Fixes
+
+- Add override=True to PostType, PostFilter, and PostOrderBy to prevent automatic generation (#98) - ([36c75b8](https://github.com/gazorby/strawchemy/commit/36c75b89d7bf92e2ecece014157858c7ce4a5fc9))
+
+### 💼 Other
+
+- *(deps)* Pin dependencies (#119) - ([ae5bd8d](https://github.com/gazorby/strawchemy/commit/ae5bd8dc89fc311b9eaf6f9b3c4eac764ad40a2a))
+- *(deps)* Update github artifact actions (#122) - ([15edeaf](https://github.com/gazorby/strawchemy/commit/15edeaff71ba1db02f1ede04f497f1e3670b2526))
+- *(deps)* Update actions/checkout action to v6 (#121) - ([2293922](https://github.com/gazorby/strawchemy/commit/2293922cf88ae33f8c0a921ae3fc32029970f1df))
+- *(deps)* Lock file maintenance (#120) - ([32e63ce](https://github.com/gazorby/strawchemy/commit/32e63ceada64fee140861b2026952aaba4b5ed97))
+- *(deps)* Update softprops/action-gh-release digest to a06a81a (#131) - ([c29a50f](https://github.com/gazorby/strawchemy/commit/c29a50ffa85594d0071945f4b1122448afb5a2ab))
+- *(deps)* Update github/codeql-action digest to 1b168cd (#130) - ([5d0ebc8](https://github.com/gazorby/strawchemy/commit/5d0ebc81f123bdb208c58317f3fb6b1e2c79ebcf))
+- *(deps)* Update astral-sh/setup-uv digest to 681c641 (#128) - ([8110105](https://github.com/gazorby/strawchemy/commit/8110105b7e7230ca458c48db064fbb41507329e1))
+- *(deps)* Update actions/checkout digest to 8e8c483 (#127) - ([90c0960](https://github.com/gazorby/strawchemy/commit/90c0960a9b31ab8ad39135bacd4fe06be68779cb))
+- *(deps)* Update codecov/codecov-action digest to 671740a (#129) - ([943d84f](https://github.com/gazorby/strawchemy/commit/943d84f3167d2101d1543930ca479f9d63534aae))
+- *(deps)* Update actions/cache action to v5 (#132) - ([9a9339c](https://github.com/gazorby/strawchemy/commit/9a9339c9a4d11320de5cc3cdc1e0dd352783036d))
+- *(deps)* Update github artifact actions (#133) - ([3005351](https://github.com/gazorby/strawchemy/commit/30053516ca73dea37b00f16ec9e5989e74d6d1d9))
+- Improve session getter (#103) - ([dae8768](https://github.com/gazorby/strawchemy/commit/dae876831ab9835accc19409311f25edbc66c626))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(pre-commit)* Autoupdate (#102) - ([26eb9df](https://github.com/gazorby/strawchemy/commit/26eb9df87b336ed2944ae35c92c086d5960c95f5))
+- *(python)* Add 3.14 to test matrix (#126) - ([8d097e4](https://github.com/gazorby/strawchemy/commit/8d097e432ca9cd8f4c9c4f10a3ce193a1edde947))
+- *(release)* Bump to v0.20.0 - ([2113d64](https://github.com/gazorby/strawchemy/commit/2113d6456237998354863108dc22d0b8313764f3))
+- Move coderabbit (#105) - ([806d0c1](https://github.com/gazorby/strawchemy/commit/806d0c1ad06147b57028492296827d034541fafd))
+- Untrack ruff from mise.toml (#113) - ([9539972](https://github.com/gazorby/strawchemy/commit/953997280f85b2c8a65acb350cee894eb9c4d43e))
+- Update renovate config (#115) - ([98c9f40](https://github.com/gazorby/strawchemy/commit/98c9f402e7a60a1dcb7c238fc45877f684a663e9))
+
+## New Contributors ❤️
+
+* @Ckk3 made their first contribution in [#98](https://github.com/gazorby/strawchemy/pull/98)## [0.19.0](https://github.com/gazorby/strawchemy/compare/v0.18.0..v0.19.0) - 2025-09-06
 
 ### 🚀 Features
 
