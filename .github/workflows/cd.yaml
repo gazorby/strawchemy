@@ -1,5 +1,8 @@
 name: 🚀 Continuous Deployment
 
+env:
+  GIT_USERNAME: github-actions[bot]
+
 on:
   workflow_dispatch:
     inputs:
@@ -18,6 +21,7 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0
+          persist-credentials: 'false'
 
       - name: Generate documentation changelog
         uses: orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51 # v4
@@ -44,12 +48,12 @@ jobs:
       - name: Commit
         run: |
           git checkout main
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config user.name '${{ env.GIT_USERNAME }}'
+          git config user.email '${{ env.GIT_USERNAME }}@users.noreply.github.com'
           set +e
           git add CHANGELOG.md
           git commit -m "build(doc) update changelog"
-          git push https://${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git main
+          git push https://${{ env.GIT_USERNAME }}:${{ secrets.PAT }}@github.com/${GITHUB_REPOSITORY}.git main
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2
