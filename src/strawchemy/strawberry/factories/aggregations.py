@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from functools import cached_property
@@ -35,6 +36,19 @@ if TYPE_CHECKING:
     from strawchemy.strawberry.typing import AggregationFunction, AggregationType, FunctionInfo
 
 T = TypeVar("T")
+
+
+@dataclass(frozen=True, slots=True)
+class _TypeFilterConfig:
+    """Configuration for type-filtered DTO factories.
+
+    Attributes:
+        types: Set of Python types to filter fields by.
+        suffix: Suffix to append to the base name for DTO naming.
+    """
+
+    suffix: str
+    types: frozenset[type[Any]] = field(default_factory=frozenset)
 
 
 class _CountFieldsDTOFactory(EnumDTOFactory):
@@ -88,10 +102,14 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         function: FunctionInfo | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
-        for field in super().iter_field_definitions(
+        for field_def in super().iter_field_definitions(
             name, model, dto_config, base, node, raise_if_no_fields, field_map=field_map, **kwargs
         ):
-            yield (FunctionArgFieldDefinition.from_field(field, function=function) if function is not None else field)
+            yield (
+                FunctionArgFieldDefinition.from_field(field_def, function=function)
+                if function is not None
+                else field_def
+            )
 
     @override
     def factory(
@@ -146,8 +164,36 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         return self._enum_backend.build(name, model, list(field_defs), base)
 
 
-class _NumericFieldsDTOFactory(_FunctionArgDTOFactory):
-    types: ClassVar[set[type[Any]]] = {int, float, Decimal}
+class _TypeFilteredFunctionArgDTOFactory(_FunctionArgDTOFactory):
+    """Generic factory for type-filtered aggregation field DTOs.
+
+    This factory replaces multiple nearly-identical factory classes by using
+    a configuration object to specify the types and naming suffix.
+    """
+
+    def __init__(
+        self,
+        mapper: Strawchemy,
+        filter_config: _TypeFilterConfig,
+        backend: DTOBackend[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None = None,
+    ) -> None:
+        super().__init__(mapper, backend)
+        self._filter_types = set(filter_config.types)
+        self._suffix = filter_config.suffix
+
+    @override
+    def should_exclude_field(
+        self,
+        field: DTOFieldDefinition[Any, QueryableAttribute[Any]],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None],
+        has_override: bool = False,
+    ) -> bool:
+        return (
+            super(_FunctionArgDTOFactory, self).should_exclude_field(field, dto_config, node, has_override)
+            or field.is_relation
+            or self.inspector.model_field_type(field) not in self._filter_types
+        )
 
     @override
     def dto_name(
@@ -156,112 +202,30 @@ class _NumericFieldsDTOFactory(_FunctionArgDTOFactory):
         dto_config: DTOConfig,
         node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
     ) -> str:
-        return f"{base_name}NumericFields"
-
-
-class _MinMaxFieldsDTOFactory(_FunctionArgDTOFactory):
-    types: ClassVar[set[type[Any]]] = {int, float, str, Decimal, date, datetime, time}
-
-    @override
-    def dto_name(
-        self,
-        base_name: str,
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
-    ) -> str:
-        return f"{base_name}MinMaxFields"
-
-
-class _MinMaxDateFieldsDTOFactory(_FunctionArgDTOFactory):
-    types: ClassVar[set[type[Any]]] = {date}
-
-    @override
-    def dto_name(
-        self,
-        base_name: str,
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
-    ) -> str:
-        return f"{base_name}MinMaxDateFields"
-
-
-class _MinMaxDateTimeFieldsDTOFactory(_FunctionArgDTOFactory):
-    types: ClassVar[set[type[Any]]] = {datetime}
-
-    @override
-    def dto_name(
-        self,
-        base_name: str,
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
-    ) -> str:
-        return f"{base_name}MinMaxDateTimeFields"
-
-
-class _MinMaxNumericFieldsDTOFactory(_FunctionArgDTOFactory):
-    types: ClassVar[set[type[Any]]] = {int, float, Decimal}
-
-    @override
-    def dto_name(
-        self,
-        base_name: str,
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
-    ) -> str:
-        return f"{base_name}MinMaxNumericFields"
-
-
-class _MinMaxStringFieldsDTOFactory(_FunctionArgDTOFactory):
-    types: ClassVar[set[type[Any]]] = {str}
-
-    @override
-    def dto_name(
-        self,
-        base_name: str,
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
-    ) -> str:
-        return f"{base_name}MinMaxStringFields"
-
-
-class _MinMaxTimeFieldsDTOFactory(_FunctionArgDTOFactory):
-    types: ClassVar[set[type[Any]]] = {time}
-
-    @override
-    def dto_name(
-        self,
-        base_name: str,
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
-    ) -> str:
-        return f"{base_name}MinMaxTimeFields"
-
-
-class _SumFieldsDTOFactory(_FunctionArgDTOFactory):
-    types: ClassVar[set[type[Any]]] = {int, float, str, Decimal, timedelta}
-
-    @override
-    def dto_name(
-        self,
-        base_name: str,
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[ModelT]], None] | None = None,
-    ) -> str:
-        return f"{base_name}SumFields"
+        return f"{base_name}{self._suffix}"
 
 
 class AggregationInspector:
+    _aggregation_type_filters: ClassVar[dict[str, _TypeFilterConfig]] = {
+        "numeric": _TypeFilterConfig("NumericFields", frozenset({int, float, Decimal})),
+        "sum": _TypeFilterConfig("SumFields", frozenset({int, float, str, Decimal, timedelta})),
+        "min_max": _TypeFilterConfig("MinMaxFields", frozenset({int, float, str, Decimal, date, datetime, time})),
+        "min_max_numeric": _TypeFilterConfig("MinMaxNumericFields", frozenset({int, float, Decimal})),
+        "min_max_datetime": _TypeFilterConfig("MinMaxDateTimeFields", frozenset({datetime})),
+        "min_max_date": _TypeFilterConfig("MinMaxDateFields", frozenset({date})),
+        "min_max_string": _TypeFilterConfig("MinMaxStringFields", frozenset({str})),
+        "min_max_time": _TypeFilterConfig("MinMaxTimeFields", frozenset({time})),
+    }
+
     def __init__(self, mapper: Strawchemy) -> None:
         self._inspector = mapper.config.inspector
         self._count_fields_factory = _CountFieldsDTOFactory(self._inspector)
-        self._numeric_fields_factory = _NumericFieldsDTOFactory(mapper)
-        self._sum_fields_factory = _SumFieldsDTOFactory(mapper)
-        self._min_max_numeric_fields_factory = _MinMaxNumericFieldsDTOFactory(mapper)
-        self._min_max_datetime_fields_factory = _MinMaxDateTimeFieldsDTOFactory(mapper)
-        self._min_max_date_fields_factory = _MinMaxDateFieldsDTOFactory(mapper)
-        self._min_max_string_fields_factory = _MinMaxStringFieldsDTOFactory(mapper)
-        self._min_max_time_fields_factory = _MinMaxTimeFieldsDTOFactory(mapper)
-        self._min_max_fields_factory = _MinMaxFieldsDTOFactory(mapper)
+
+        # Create type-filtered factories from configuration
+        self._type_filtered_factories: dict[str, _TypeFilteredFunctionArgDTOFactory] = {
+            key: _TypeFilteredFunctionArgDTOFactory(mapper, config)
+            for key, config in self._aggregation_type_filters.items()
+        }
 
     def _supports_aggregations(self, *function: AggregationFunction) -> bool:
         return set(function).issubset(self._inspector.db_features.aggregation_functions)
@@ -273,7 +237,7 @@ class AggregationInspector:
             - cast("set[AggregationFunction]", {"min", "max", "sum", "count"})
         )
 
-    def _min_max_filters(self, model: type[Any], dto_config: DTOConfig) -> list[FilterFunctionInfo]:
+    def _min_max_filters(self, model: type[DeclarativeBase], dto_config: DTOConfig) -> list[FilterFunctionInfo]:
         aggregations: list[FilterFunctionInfo] = []
 
         if min_max_numeric_fields := self.arguments_type(model, dto_config, "min_max_numeric"):
@@ -375,20 +339,10 @@ class AggregationInspector:
         self, model: type[DeclarativeBase], dto_config: DTOConfig, aggregation: AggregationType
     ) -> type[EnumDTO] | None:
         try:
-            if aggregation == "numeric":
-                dto = self._numeric_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "sum":
-                dto = self._sum_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "min_max_date":
-                dto = self._min_max_date_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "min_max_datetime":
-                dto = self._min_max_datetime_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "min_max_string":
-                dto = self._min_max_string_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "min_max_numeric":
-                dto = self._min_max_numeric_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
-            elif aggregation == "min_max_time":
-                dto = self._min_max_time_fields_factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+            factory = self._type_filtered_factories.get(aggregation)
+            if factory is None:
+                return None
+            dto = factory.enum_factory(model, dto_config, raise_if_no_fields=True)
         except DTOError:
             return None
         return dto
@@ -397,7 +351,8 @@ class AggregationInspector:
         self, model: type[DeclarativeBase], dto_config: DTOConfig
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
-            dto = self._numeric_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+            factory = self._type_filtered_factories["numeric"]
+            dto = factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
         except DTOError:
             return None
         return dto
@@ -406,7 +361,8 @@ class AggregationInspector:
         self, model: type[DeclarativeBase], dto_config: DTOConfig
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
-            dto = self._min_max_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+            factory = self._type_filtered_factories["min_max"]
+            dto = factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
         except DTOError:
             return None
         return dto
@@ -415,12 +371,13 @@ class AggregationInspector:
         self, model: type[DeclarativeBase], dto_config: DTOConfig
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
-            dto = self._sum_fields_factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+            factory = self._type_filtered_factories["sum"]
+            dto = factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
         except DTOError:
             return None
         return dto
 
-    def output_functions(self, model: type[Any], dto_config: DTOConfig) -> list[OutputFunctionInfo]:
+    def output_functions(self, model: type[DeclarativeBase], dto_config: DTOConfig) -> list[OutputFunctionInfo]:
         int_as_float_config = dto_config.copy_with(
             type_overrides={int: Optional[float], Optional[int]: Optional[float]}
         )
@@ -454,7 +411,7 @@ class AggregationInspector:
             )
         return sorted(aggregations, key=lambda aggregation: aggregation.function)
 
-    def filter_functions(self, model: type[Any], dto_config: DTOConfig) -> list[FilterFunctionInfo]:
+    def filter_functions(self, model: type[DeclarativeBase], dto_config: DTOConfig) -> list[FilterFunctionInfo]:
         count_fields = self._count_fields_factory.factory(model=model, dto_config=dto_config)
         numeric_arg_fields = self.arguments_type(model, dto_config, "numeric")
         sum_arg_fields = self.arguments_type(model, dto_config, "sum")

@@ -1,37 +1,27 @@
 from __future__ import annotations
 
 import dataclasses
-from functools import cached_property, partial
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.schema.config import StrawberryConfig
 
-from strawchemy.config.base import StrawchemyConfig
-from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
-from strawchemy.dto.base import TYPING_NS
-from strawchemy.strawberry._field import (
+from .config.base import StrawchemyConfig
+from .dto.base import TYPING_NS
+from .factories import StrawchemyFactories
+from .strawberry._field import (
     StrawchemyCreateMutationField,
     StrawchemyDeleteMutationField,
     StrawchemyField,
     StrawchemyUpdateMutationField,
     StrawchemyUpsertMutationField,
 )
-from strawchemy.strawberry._registry import StrawberryRegistry
-from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
-from strawchemy.strawberry.factories.aggregations import EnumDTOFactory
-from strawchemy.strawberry.factories.enum import EnumDTOBackend, UpsertConflictFieldsEnumDTOBackend
-from strawchemy.strawberry.factories.inputs import AggregateFilterDTOFactory, BooleanFilterDTOFactory
-from strawchemy.strawberry.factories.types import (
-    DistinctOnFieldsDTOFactory,
-    InputFactory,
-    OrderByDTOFactory,
-    RootAggregateTypeDTOFactory,
-    TypeDTOFactory,
-    UpsertConflictFieldsDTOFactory,
-)
-from strawchemy.strawberry.mutation import types
-from strawchemy.types import DefaultOffsetPagination
+from .strawberry._registry import StrawberryRegistry
+from .strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO, OrderByEnum
+from .strawberry.mutation import types
+from .strawberry.mutation.builder import MutationFieldBuilder
+from .types import DefaultOffsetPagination
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
@@ -100,38 +90,37 @@ class Strawchemy:
         self.config = StrawchemyConfig(config) if isinstance(config, str) else config
         self.registry = StrawberryRegistry(strawberry_config or StrawberryConfig())
 
-        strawberry_backend = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO)
-        enum_backend = EnumDTOBackend(self.config.auto_snake_case)
-        upsert_conflict_fields_enum_backend = UpsertConflictFieldsEnumDTOBackend(
-            self.config.inspector, self.config.auto_snake_case
-        )
+        # Initialize all factories through the container
+        factories = StrawchemyFactories.create(self)
 
-        self._aggregate_filter_factory = AggregateFilterDTOFactory(self)
-        self._order_by_factory = OrderByDTOFactory(self)
-        self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.config.inspector)
-        self._type_factory = TypeDTOFactory(self, strawberry_backend, order_by_factory=self._order_by_factory)
-        self._input_factory = InputFactory(self, strawberry_backend)
-        self._aggregation_factory = RootAggregateTypeDTOFactory(
-            self, strawberry_backend, type_factory=self._type_factory
-        )
-        self._enum_factory = EnumDTOFactory(self.config.inspector, enum_backend)
-        self._filter_factory = BooleanFilterDTOFactory(self, aggregate_filter_factory=self._aggregate_filter_factory)
-        self._upsert_conflict_factory = UpsertConflictFieldsDTOFactory(
-            self.config.inspector, upsert_conflict_fields_enum_backend
-        )
+        # Store factory references for internal use
+        self._aggregate_filter_factory = factories.aggregate_filter
+        self._order_by_factory = factories.order_by
+        self._distinct_on_enum_factory = factories.distinct_on_enum
+        self._type_factory = factories.type_factory
+        self._input_factory = factories.input_factory
+        self._aggregation_factory = factories.aggregation
+        self._enum_factory = factories.enum_factory
+        self._filter_factory = factories.filter_factory
+        self._upsert_conflict_factory = factories.upsert_conflict
 
-        self.filter = self._filter_factory.input
-        self.aggregate_filter = partial(self._aggregate_filter_factory.input, mode="aggregate_filter")
-        self.distinct_on = self._distinct_on_enum_factory.decorator
-        self.input = self._input_factory.input
-        self.create_input = partial(self._input_factory.input, mode="create_input")
-        self.pk_update_input = partial(self._input_factory.input, mode="update_by_pk_input")
-        self.filter_update_input = partial(self._input_factory.input, mode="update_by_filter_input")
-        self.order = partial(self._order_by_factory.input, mode="order_by")
-        self.type = self._type_factory.type
-        self.aggregate = partial(self._aggregation_factory.type, mode="aggregate_type")
-        self.upsert_update_fields = self._enum_factory.input
-        self.upsert_conflict_fields = self._upsert_conflict_factory.input
+        # Expose public factory API
+        public_api = factories.create_public_api()
+        self.filter = public_api["filter"]
+        self.aggregate_filter = public_api["aggregate_filter"]
+        self.distinct_on = public_api["distinct_on"]
+        self.input = public_api["input"]
+        self.create_input = public_api["create_input"]
+        self.pk_update_input = public_api["pk_update_input"]
+        self.filter_update_input = public_api["filter_update_input"]
+        self.order = public_api["order"]
+        self.type = public_api["type"]
+        self.aggregate = public_api["aggregate"]
+        self.upsert_update_fields = public_api["upsert_update_fields"]
+        self.upsert_conflict_fields = public_api["upsert_conflict_fields"]
+
+        # Initialize mutation field builder
+        self._mutation_builder = MutationFieldBuilder(self.config, self._annotation_namespace)
 
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
@@ -372,30 +361,23 @@ class Strawchemy:
             A `StrawchemyCreateMutationField` instance, which is a specialized
             StrawberryField configured for create mutations.
         """
-        namespace = self._annotation_namespace()
-        type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
-
-        field = StrawchemyCreateMutationField(
-            input_type,
-            config=self.config,
-            repository_type=repository_type_,
-            python_name=None,
-            graphql_name=name,
-            type_annotation=type_annotation,
-            is_subscription=False,
-            permission_classes=permission_classes or [],
+        return self._mutation_builder.build(
+            StrawchemyCreateMutationField,
+            resolver,
+            repository_type=repository_type,
+            graphql_type=graphql_type,
+            name=name,
+            description=description,
+            permission_classes=permission_classes,
             deprecation_reason=deprecation_reason,
             default=default,
             default_factory=default_factory,
             metadata=metadata,
             directives=directives,
-            extensions=extensions or [],
-            registry_namespace=namespace,
-            description=description,
+            extensions=extensions,
+            input_type=input_type,
             validation=validation,
         )
-        return field(resolver) if resolver else field
 
     def upsert(
         self,
@@ -455,32 +437,25 @@ class Strawchemy:
             A `StrawchemyUpsertMutationField` instance, which is a specialized
             StrawberryField configured for upsert mutations.
         """
-        namespace = self._annotation_namespace()
-        type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
-
-        field = StrawchemyUpsertMutationField(
-            input_type,
-            update_fields_enum=update_fields,
-            conflict_fields_enum=conflict_fields,
-            config=self.config,
-            repository_type=repository_type_,
-            python_name=None,
-            graphql_name=name,
-            type_annotation=type_annotation,
-            is_subscription=False,
-            permission_classes=permission_classes or [],
+        return self._mutation_builder.build(
+            StrawchemyUpsertMutationField,
+            resolver,
+            repository_type=repository_type,
+            graphql_type=graphql_type,
+            name=name,
+            description=description,
+            permission_classes=permission_classes,
             deprecation_reason=deprecation_reason,
             default=default,
             default_factory=default_factory,
             metadata=metadata,
             directives=directives,
-            extensions=extensions or [],
-            registry_namespace=namespace,
-            description=description,
+            extensions=extensions,
+            input_type=input_type,
+            update_fields_enum=update_fields,
+            conflict_fields_enum=conflict_fields,
             validation=validation,
         )
-        return field(resolver) if resolver else field
 
     def update(
         self,
@@ -538,31 +513,24 @@ class Strawchemy:
             A `StrawchemyUpdateMutationField` instance, which is a specialized
             StrawberryField configured for update mutations.
         """
-        namespace = self._annotation_namespace()
-        type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
-
-        field = StrawchemyUpdateMutationField(
-            config=self.config,
-            input_type=input_type,
-            filter_type=filter_input,
-            repository_type=repository_type_,
-            python_name=None,
-            graphql_name=name,
-            type_annotation=type_annotation,
-            is_subscription=False,
-            permission_classes=permission_classes or [],
+        return self._mutation_builder.build(
+            StrawchemyUpdateMutationField,
+            resolver,
+            repository_type=repository_type,
+            graphql_type=graphql_type,
+            name=name,
+            description=description,
+            permission_classes=permission_classes,
             deprecation_reason=deprecation_reason,
             default=default,
             default_factory=default_factory,
             metadata=metadata,
             directives=directives,
-            extensions=extensions or [],
-            registry_namespace=namespace,
-            description=description,
+            extensions=extensions,
+            input_type=input_type,
+            filter_type=filter_input,
             validation=validation,
         )
-        return field(resolver) if resolver else field
 
     def update_by_ids(
         self,
@@ -618,30 +586,23 @@ class Strawchemy:
             A `StrawchemyUpdateMutationField` instance, specialized for updates
             by ID.
         """
-        namespace = self._annotation_namespace()
-        type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
-
-        field = StrawchemyUpdateMutationField(
-            config=self.config,
-            input_type=input_type,
-            repository_type=repository_type_,
-            python_name=None,
-            graphql_name=name,
-            type_annotation=type_annotation,
-            is_subscription=False,
-            permission_classes=permission_classes or [],
+        return self._mutation_builder.build(
+            StrawchemyUpdateMutationField,
+            resolver,
+            repository_type=repository_type,
+            graphql_type=graphql_type,
+            name=name,
+            description=description,
+            permission_classes=permission_classes,
             deprecation_reason=deprecation_reason,
             default=default,
             default_factory=default_factory,
             metadata=metadata,
             directives=directives,
-            extensions=extensions or [],
-            registry_namespace=namespace,
-            description=description,
+            extensions=extensions,
+            input_type=input_type,
             validation=validation,
         )
-        return field(resolver) if resolver else field
 
     def delete(
         self,
@@ -696,26 +657,19 @@ class Strawchemy:
             A `StrawchemyDeleteMutationField` instance, which is a specialized
             StrawberryField configured for delete mutations.
         """
-        namespace = self._annotation_namespace()
-        type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
-
-        field = StrawchemyDeleteMutationField(
-            filter_input,
-            config=self.config,
-            repository_type=repository_type_,
-            python_name=None,
-            graphql_name=name,
-            type_annotation=type_annotation,
-            is_subscription=False,
-            permission_classes=permission_classes or [],
+        return self._mutation_builder.build(
+            StrawchemyDeleteMutationField,
+            resolver,
+            repository_type=repository_type,
+            graphql_type=graphql_type,
+            name=name,
+            description=description,
+            permission_classes=permission_classes,
             deprecation_reason=deprecation_reason,
             default=default,
             default_factory=default_factory,
             metadata=metadata,
             directives=directives,
-            extensions=extensions or [],
-            registry_namespace=namespace,
-            description=description,
+            extensions=extensions,
+            input_type=filter_input,
         )
-        return field(resolver) if resolver else field

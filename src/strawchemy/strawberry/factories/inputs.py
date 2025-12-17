@@ -394,7 +394,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             dto, RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config))
         )
 
-    def _order_by_aggregation(self, model: type[Any], dto_config: DTOConfig) -> type[OrderByDTO]:
+    def _order_by_aggregation(self, model: type[DeclarativeBase], dto_config: DTOConfig) -> type[OrderByDTO]:
         field_definitions: list[GraphQLFieldDefinition] = []
         for aggregation in self._aggregation_filter_factory.aggregation_builder.filter_functions(model, dto_config):
             if aggregation.require_arguments:
