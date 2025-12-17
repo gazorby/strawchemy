@@ -596,8 +596,8 @@ class AsyncMutation:
         color_input = Input(data)
         color_input.instances[0].fruits.extend(
             [
-                Fruit(name="New Apple", sweetness=1, water_percent=0.5),
-                Fruit(name="New Strawberry", sweetness=1, water_percent=0.5),
+                Fruit(name="New Apple", sweetness=1, water_percent=0.4),
+                Fruit(name="New Strawberry", sweetness=1, water_percent=0.3),
             ]
         )
         return (await StrawchemyAsyncRepository(ColorType, info).create(color_input)).graphql_type()
@@ -607,8 +607,8 @@ class AsyncMutation:
         color_input = Input(data)
         session = cast("AsyncSession", info.context.session)
         apple, strawberry = (
-            Fruit(name="New Apple", sweetness=1, water_percent=0.5),
-            Fruit(name="New Strawberry", sweetness=1, water_percent=0.5),
+            Fruit(name="New Apple", sweetness=1, water_percent=0.4),
+            Fruit(name="New Strawberry", sweetness=1, water_percent=0.3),
         )
         session.add_all([apple, strawberry])
         await session.commit()
@@ -721,8 +721,8 @@ class SyncMutation:
         color_input = Input(data)
         color_input.instances[0].fruits.extend(
             [
-                Fruit(name="New Apple", sweetness=1, water_percent=0.5),
-                Fruit(name="New Strawberry", sweetness=1, water_percent=0.5),
+                Fruit(name="New Apple", sweetness=1, water_percent=0.4),
+                Fruit(name="New Strawberry", sweetness=1, water_percent=0.3),
             ]
         )
         return StrawchemySyncRepository(ColorType, info).create(color_input).graphql_type()
@@ -732,8 +732,8 @@ class SyncMutation:
         color_input = Input(data)
         session = cast("Session", info.context.session)
         apple, strawberry = (
-            Fruit(name="New Apple", sweetness=1, water_percent=0.5),
-            Fruit(name="New Strawberry", sweetness=1, water_percent=0.5),
+            Fruit(name="New Apple", sweetness=1, water_percent=0.4),
+            Fruit(name="New Strawberry", sweetness=1, water_percent=0.3),
         )
         session.add_all([apple, strawberry])
         session.commit()

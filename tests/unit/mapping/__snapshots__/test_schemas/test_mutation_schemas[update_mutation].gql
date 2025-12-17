@@ -518,6 +518,7 @@ input GroupFruitInput {
 """Conflict fields enum"""
 enum GroupFruitsConflictFields {
   id
+  nameAndColorId
 }
 
 """Identifier input"""
@@ -908,6 +909,7 @@ input TagFruitInput {
 """Conflict fields enum"""
 enum TagFruitsConflictFields {
   id
+  nameAndColorId
 }
 
 """Identifier input"""

@@ -58,7 +58,7 @@ async def test_upsert_one_new(
 
 
 @pytest.mark.parametrize(
-    ("query", "name"),
+    ("query", "name", "sweetness", "water_percent"),
     [
         pytest.param(
             """
@@ -79,7 +79,32 @@ async def test_upsert_one_new(
             }
             """,
             "Apple",
+            0,
+            0,
             id="unique-constraint",
+        ),
+        pytest.param(
+            """
+            mutation {
+                upsertFruit(
+                    data: {
+                        name: "Almost Apple",
+                        sweetness: 4,
+                        waterPercent: 0.84
+                    },
+                    conflictFields: sweetnessAndWaterPercent
+                ) {
+                    id
+                    name
+                    sweetness
+                    waterPercent
+                }
+            }
+            """,
+            "Almost Apple",
+            4,
+            0.84,
+            id="unique-constraint-multi-columns",
         ),
         pytest.param(
             """
@@ -101,13 +126,46 @@ async def test_upsert_one_new(
             }
             """,
             "Blueberries",
+            0,
+            0,
             id="pk-constraint",
+        ),
+        pytest.param(
+            """
+            mutation {
+                upsertFruit(
+                    data: {
+                        id: 1
+                        name: "Blueberries",
+                        sweetness: 0,
+                        waterPercent: 0
+                    },
+                    conflictFields: id
+                    updateFields: [ name ]
+                ) {
+                    id
+                    name
+                    sweetness
+                    waterPercent
+                }
+            }
+            """,
+            "Blueberries",
+            4,
+            0.84,
+            id="pk-constraint-update-fields",
         ),
     ],
 )
 @pytest.mark.snapshot
 async def test_upsert_one_existing(
-    query: str, name: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query: str,
+    name: str,
+    sweetness: int,
+    water_percent: float,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test upserting a single existing fruit record with conflict resolution.
 
@@ -122,7 +180,7 @@ async def test_upsert_one_existing(
     result = await maybe_async(any_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["upsertFruit"] == {"id": 1, "name": name, "sweetness": 0, "waterPercent": 0}
+    assert result.data["upsertFruit"] == {"id": 1, "name": name, "sweetness": sweetness, "waterPercent": water_percent}
 
     assert query_tracker.query_count == 2
     query_tracker.assert_statements(1, "insert", sql_snapshot)

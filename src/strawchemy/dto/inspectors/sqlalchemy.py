@@ -425,8 +425,9 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     def unique_constraints(cls, model: type[DeclarativeBase]) -> list[ColumnCollectionConstraint]:
         if not isinstance(model.__table__, Table):
             return []
-        return [
+        constraints = [
             constraint
             for constraint in model.__table__.constraints
             if isinstance(constraint, (PrimaryKeyConstraint, UniqueConstraint, postgresql.ExcludeConstraint))
         ]
+        return sorted(constraints, key=lambda cons: "_".join(col.key for col in cons.columns))

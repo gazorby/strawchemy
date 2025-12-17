@@ -15,7 +15,7 @@ from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.types import Purpose, PurposeConfig
 from strawchemy.dto.utils import PRIVATE, READ_ONLY, WRITE_ONLY, field
 
-from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Table, Text
+from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Table, Text, UniqueConstraint
 
 
 def validate_tomato_type(value: str) -> str:
@@ -56,10 +56,12 @@ class Vegetable(UUIDBase, NameDescriptionMixin):
 class Fruit(UUIDBase):
     __tablename__ = "fruit"
 
-    name: Mapped[str]
+    name: Mapped[str] = mapped_column()
     color_id: Mapped[UUID | None] = mapped_column(ForeignKey("color.id"))
     color: Mapped[Color] = relationship("Color", back_populates="fruits")
     sweetness: Mapped[int]
+
+    __table_args__ = (UniqueConstraint(name, color_id, name="uq_name_color_id"),)
 
 
 class Tomato(UUIDBase):
