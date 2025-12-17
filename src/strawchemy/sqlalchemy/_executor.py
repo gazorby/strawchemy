@@ -104,7 +104,7 @@ class QueryResult(Generic[ModelT]):
         Yields:
             NodeResult[ModelT]: An individual result node.
         """
-        for model, computed_values in zip(self.nodes, self.node_computed_values):
+        for model, computed_values in zip(self.nodes, self.node_computed_values, strict=False):
             yield NodeResult(model, computed_values, self.node_key)
 
     def filter_in(self, **kwargs: Sequence[Any]) -> Self:
@@ -122,10 +122,10 @@ class QueryResult(Generic[ModelT]):
         """
         filtered = [
             (model, computed_values)
-            for model, computed_values in zip(self.nodes, self.node_computed_values)
+            for model, computed_values in zip(self.nodes, self.node_computed_values, strict=False)
             if all(getattr(model, key) in value for key, value in kwargs.items())
         ]
-        nodes, computed_values = list(map(list, zip(*filtered))) if filtered else ([], [])
+        nodes, computed_values = list(map(list, zip(*filtered, strict=False))) if filtered else ([], [])
         return dataclasses.replace(self, nodes=nodes, node_computed_values=computed_values)
 
     def value(self, key: QueryNodeType) -> Any:
@@ -206,7 +206,7 @@ class QueryExecutor(Generic[DeclarativeT]):
             (obj, *computed_values) = row
             (_, *computed_fields) = row._fields
             nodes.append(obj)
-            computed.append(dict(zip(computed_fields, computed_values)))
+            computed.append(dict(zip(computed_fields, computed_values, strict=False)))
 
         root_aggregations_set = {function.name for function in self.root_aggregation_functions}
         first_computed = computed[0] if computed else {}

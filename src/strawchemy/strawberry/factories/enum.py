@@ -55,7 +55,7 @@ class EnumDTOBackend(DTOBackend[EnumDTO]):
             module = model_module.__name__
         return cast(
             "type[EnumDTO]",
-            EnumDTO(value=name, names=list(zip(list(field_map), values)), type=base, module=module),
+            EnumDTO(value=name, names=list(zip(list(field_map), values, strict=False)), type=base, module=module),
         )
 
     @override

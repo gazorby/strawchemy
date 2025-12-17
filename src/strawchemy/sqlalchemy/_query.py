@@ -194,7 +194,7 @@ class AggregationJoin(Join):
             new_base_columns = new_column.base_columns
             if len(base_columns) != len(new_base_columns):
                 continue
-            for first, other in zip(base_columns, new_base_columns):
+            for first, other in zip(base_columns, new_base_columns, strict=False):
                 if not first.compare(other):
                     break
             else:
