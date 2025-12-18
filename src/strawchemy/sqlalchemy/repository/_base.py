@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, TypeAlias, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, TypeAlias, TypeVar, cast
 
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.orm import RelationshipProperty
@@ -37,7 +37,7 @@ T = TypeVar("T", bound=Any)
 
 InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where", "upsert"]
 RowLike: TypeAlias = "Row[Any] | NamedTuple"
-_ModelOrTable: TypeAlias = "Union[type[DeclarativeBase], Table]"
+_ModelOrTable: TypeAlias = "type[DeclarativeBase] | Table"
 
 
 @dataclass

@@ -5,7 +5,7 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, Union, final, get_type_hints
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, final, get_type_hints
 
 from typing_extensions import override
 
@@ -20,8 +20,8 @@ __all__ = ("DTOAuto", "DTOConfig", "DTOFieldConfig", "DTOMissing", "ExcludeField
 DTOScope: TypeAlias = Literal["global", "dto"]
 
 
-IncludeFields: TypeAlias = Union[list[str], set[str], Literal["all"]]
-ExcludeFields: TypeAlias = Union[list[str], set[str]]
+IncludeFields: TypeAlias = "list[str] | set[str] | Literal['all']"
+ExcludeFields: TypeAlias = "list[str] | set[str]"
 
 
 @final
