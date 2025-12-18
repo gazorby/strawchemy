@@ -5,6 +5,10 @@ from typing import TYPE_CHECKING, Annotated, Any, TypeAlias, cast
 
 from pydantic import AfterValidator
 from strawberry.extensions.field_extension import FieldExtension
+from typing_extensions import override
+
+import strawberry
+from sqlalchemy import Select, select
 from strawchemy import (
     Input,
     InputValidationError,
@@ -17,10 +21,6 @@ from strawchemy import (
 )
 from strawchemy.types import DefaultOffsetPagination
 from strawchemy.validation.pydantic import PydanticValidation
-from typing_extensions import override
-
-import strawberry
-from sqlalchemy import Select, select
 from tests.integration.models import (
     ArrayModel,
     Color,
@@ -39,6 +39,7 @@ if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
     from sqlalchemy.orm import Session
     from sqlalchemy.orm.util import AliasedClass
+
     from strawchemy.sqlalchemy.hook import LoadType
 
 SyncExtensionResolver: TypeAlias = Callable[..., Any]

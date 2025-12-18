@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from strawchemy import QueryHook, Strawchemy
-
 import strawberry
+from strawchemy import QueryHook, Strawchemy
 from tests.unit.models import Fruit
 
 strawchemy = Strawchemy("postgresql")

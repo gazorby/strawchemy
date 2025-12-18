@@ -12,8 +12,9 @@ from .fixtures import QueryTracker
 from .typing import RawRecordData
 
 if TYPE_CHECKING:
-    from strawchemy.typing import SupportedDialect
     from syrupy.assertion import SnapshotAssertion
+
+    from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
 

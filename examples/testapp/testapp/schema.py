@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from strawchemy import ValidationErrorType  # noqa: TC002
-from strawchemy.validation.pydantic import PydanticValidation
+from typing import TYPE_CHECKING
 
 import strawberry
+from strawchemy.validation.pydantic import PydanticValidation
 
 from .types import (
     CustomerCreate,
@@ -22,6 +22,9 @@ from .types import (
     TicketUpsertFields,
     strawchemy,
 )
+
+if TYPE_CHECKING:
+    from strawchemy import ValidationErrorType
 
 
 @strawberry.type

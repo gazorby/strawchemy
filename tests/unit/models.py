@@ -11,11 +11,11 @@ from uuid import UUID, uuid4
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
+
+from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Table, Text, UniqueConstraint
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.types import Purpose, PurposeConfig
 from strawchemy.dto.utils import PRIVATE, READ_ONLY, WRITE_ONLY, field
-
-from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Table, Text, UniqueConstraint
 
 
 def validate_tomato_type(value: str) -> str:

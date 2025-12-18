@@ -19,9 +19,9 @@ from .models import GeoModel, geo_metadata
 
 if TYPE_CHECKING:
     from pytest_databases.docker.postgres import PostgresService
-    from strawchemy.typing import SupportedDialect
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy.typing import SupportedDialect
     from tests.integration.typing import RawRecordData
 
 

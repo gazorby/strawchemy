@@ -10,7 +10,6 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
 from sqlalchemy.orm import registry as Registry  # noqa: N812
-from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
 from sqlalchemy import (
     ARRAY,
@@ -30,6 +29,7 @@ from sqlalchemy import (
     Time,
     UniqueConstraint,
 )
+from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
 metadata = MetaData()
 geo_metadata = MetaData()

@@ -10,8 +10,9 @@ from tests.utils import maybe_async
 from .fixtures import QueryTracker
 
 if TYPE_CHECKING:
-    from strawchemy.typing import SupportedDialect
     from syrupy.assertion import SnapshotAssertion
+
+    from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
 

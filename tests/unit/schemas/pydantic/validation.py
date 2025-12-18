@@ -3,10 +3,10 @@ from __future__ import annotations
 from typing import Annotated
 
 from pydantic import AfterValidator
-from strawchemy import Input, InputValidationError, Strawchemy, StrawchemySyncRepository, ValidationErrorType
-from strawchemy.validation.pydantic import PydanticValidation
 
 import strawberry
+from strawchemy import Input, InputValidationError, Strawchemy, StrawchemySyncRepository, ValidationErrorType
+from strawchemy.validation.pydantic import PydanticValidation
 from tests.unit.models import Group, User
 
 strawchemy = Strawchemy("postgresql")

@@ -4,10 +4,10 @@ from uuid import UUID, uuid4
 
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
-from strawchemy.dto import Purpose, PurposeConfig, field
-from strawchemy.dto.utils import WRITE_ONLY
 
 from sqlalchemy import ForeignKey
+from strawchemy.dto import Purpose, PurposeConfig, field
+from strawchemy.dto.utils import WRITE_ONLY
 
 from .models import validate_tomato_type
 
