@@ -15,17 +15,15 @@ from typing import TYPE_CHECKING, Any, Generic, Literal
 from typing_extensions import Self
 
 from strawchemy.dto import ModelT
-
-from .exceptions import QueryResultError
-from .typing import AnyAsyncSession, AnySyncSession, DeclarativeT
+from strawchemy.sqlalchemy.exceptions import QueryResultError
+from strawchemy.sqlalchemy.typing import AnyAsyncSession, AnySyncSession, DeclarativeT
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
 
     from sqlalchemy import Label, Result, Select, StatementLambdaElement
+    from strawchemy.sqlalchemy._scope import QueryScope
     from strawchemy.strawberry.typing import QueryNodeType
-
-    from ._scope import QueryScope
 
 
 __all__ = ("AsyncQueryExecutor", "NodeResult", "QueryExecutor", "SyncQueryExecutor")

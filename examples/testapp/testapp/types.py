@@ -5,8 +5,7 @@ from typing import Annotated
 from pydantic import AfterValidator
 
 from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemyConfig
-
-from .models import Customer, Milestone, Project, Ticket
+from testapp.models import Customer, Milestone, Project, Ticket
 
 strawchemy = Strawchemy(StrawchemyConfig("sqlite", repository_type=StrawchemyAsyncRepository))
 

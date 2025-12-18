@@ -37,9 +37,8 @@ from strawchemy.strawberry.filters.inputs import make_full_json_comparison_input
 
 if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition
+    from strawchemy.sqlalchemy.typing import FilterMap
     from strawchemy.typing import SupportedDialect
-
-    from .typing import FilterMap
 
 
 __all__ = ("SQLAlchemyGraphQLInspector", "loaded_attributes")

@@ -4,8 +4,7 @@ from typing import TYPE_CHECKING
 
 import strawberry
 from strawchemy.validation.pydantic import PydanticValidation
-
-from .types import (
+from testapp.types import (
     CustomerCreate,
     CustomerType,
     MilestoneCreate,

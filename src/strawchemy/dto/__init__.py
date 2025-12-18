@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from .base import DTOFieldDefinition, ModelFieldT, ModelInspector, ModelT
-from .types import DTOConfig, Purpose, PurposeConfig
-from .utils import config, field
+from strawchemy.dto.base import DTOFieldDefinition, ModelFieldT, ModelInspector, ModelT
+from strawchemy.dto.types import DTOConfig, Purpose, PurposeConfig
+from strawchemy.dto.utils import config, field
 
 __all__ = (
     "DTOConfig",

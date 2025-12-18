@@ -11,8 +11,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from strawchemy.sqlalchemy.repository import SQLAlchemyGraphQLAsyncRepository
 from strawchemy.strawberry._utils import default_session_getter, dto_model_from_type, strawberry_contained_user_type
-
-from ._base import GraphQLResult, StrawchemyRepository
+from strawchemy.strawberry.repository._base import GraphQLResult, StrawchemyRepository
 
 if TYPE_CHECKING:
     from sqlalchemy import Select

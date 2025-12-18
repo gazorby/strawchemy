@@ -11,8 +11,14 @@ from typing_extensions import Self, override
 from sqlalchemy import event, inspect
 from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
-
-from .types import RelationType, ToManyCreateInput, ToManyUpdateInput, ToManyUpsertInput, ToOneInput, ToOneUpsertInput
+from strawchemy.strawberry.mutation.types import (
+    RelationType,
+    ToManyCreateInput,
+    ToManyUpdateInput,
+    ToManyUpsertInput,
+    ToOneInput,
+    ToOneUpsertInput,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

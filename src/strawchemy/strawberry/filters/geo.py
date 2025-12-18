@@ -11,10 +11,9 @@ from typing_extensions import override
 import strawberry
 from sqlalchemy import ColumnElement, Dialect, null
 from strawberry import UNSET
+from strawchemy.strawberry.filters.base import FilterProtocol
+from strawchemy.strawberry.filters.inputs import GraphQLComparison
 from strawchemy.strawberry.geo import GeoJSON
-
-from .base import FilterProtocol
-from .inputs import GraphQLComparison
 
 __all__ = ("GeoComparison",)
 

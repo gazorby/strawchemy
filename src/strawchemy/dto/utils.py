@@ -14,8 +14,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from .constants import DTO_INFO_KEY
-from .types import DTOConfig, DTOFieldConfig, DTOScope, ExcludeFields, IncludeFields, Purpose, PurposeConfig
+from strawchemy.dto.constants import DTO_INFO_KEY
+from strawchemy.dto.types import (
+    DTOConfig,
+    DTOFieldConfig,
+    DTOScope,
+    ExcludeFields,
+    IncludeFields,
+    Purpose,
+    PurposeConfig,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping

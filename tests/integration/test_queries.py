@@ -6,16 +6,15 @@ import pytest
 from graphql import GraphQLError
 from strawberry.types import get_object_definition
 
+from tests.integration.types.postgres import UserType
+from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import maybe_async
-
-from .types.postgres import UserType
-from .typing import RawRecordData
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
-    from .fixtures import QueryTracker
+    from tests.integration.fixtures import QueryTracker
 
 pytestmark = [pytest.mark.integration]
 

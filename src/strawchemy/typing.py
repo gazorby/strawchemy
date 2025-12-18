@@ -7,7 +7,7 @@ UNION_TYPES = (Union, UnionType)
 
 
 if TYPE_CHECKING:
-    from . import StrawchemyAsyncRepository, StrawchemySyncRepository
+    from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository
 
 __all__ = ("UNION_TYPES", "AnyRepository", "DataclassProtocol", "SupportedDialect")
 

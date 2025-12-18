@@ -6,9 +6,8 @@ import pytest
 
 from strawchemy import Strawchemy
 from strawchemy.strawberry.mutation.input import Input
-
-from .dc_models import ColorDataclass, FruitDataclass
-from .models import Color, Fruit
+from tests.unit.dc_models import ColorDataclass, FruitDataclass
+from tests.unit.models import Color, Fruit
 
 
 @pytest.mark.parametrize(("color_model", "fruit_model"), [(Color, Fruit), (ColorDataclass, FruitDataclass)])

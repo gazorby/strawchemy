@@ -25,8 +25,7 @@ if TYPE_CHECKING:
 
     from strawchemy.sqlalchemy.typing import AnySession
     from strawchemy.typing import DataclassProtocol
-
-    from .typing import AnyQueryExecutor, AsyncQueryExecutor, SyncQueryExecutor
+    from tests.typing import AnyQueryExecutor, AsyncQueryExecutor, SyncQueryExecutor
 
 __all__ = ("DTOInspect", "generate_query", "sqlalchemy_pydantic_factory")
 

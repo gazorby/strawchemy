@@ -17,9 +17,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar
 import strawberry
 from sqlalchemy import Dialect
 from strawberry import UNSET, Private
-from strawchemy.strawberry.typing import QueryNodeType
-
-from .base import (
+from strawchemy.strawberry.filters.base import (
     ArrayFilter,
     DateFilter,
     DateTimeFilter,
@@ -31,6 +29,7 @@ from .base import (
     TimeDeltaFilter,
     TimeFilter,
 )
+from strawchemy.strawberry.typing import QueryNodeType
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import QueryableAttribute

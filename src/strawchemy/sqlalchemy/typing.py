@@ -11,11 +11,10 @@ if TYPE_CHECKING:
     from sqlalchemy.sql import SQLColumnExpression
 
     from sqlalchemy import Function
+    from strawchemy.sqlalchemy._executor import QueryExecutor
+    from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.strawberry.dto import OrderByEnum
     from strawchemy.strawberry.filters.base import GraphQLComparison
-
-    from ._executor import QueryExecutor
-    from .hook import QueryHook
 
 
 __all__ = (

@@ -31,9 +31,8 @@ from strawchemy.strawberry.dto import (
     StrawchemyDTOAttributes,
 )
 from strawchemy.strawberry.mutation.types import error_type_names
+from strawchemy.strawberry.repository._node import StrawberryQueryNode
 from strawchemy.utils import camel_to_snake, snake_keys
-
-from ._node import StrawberryQueryNode
 
 if TYPE_CHECKING:
     from strawberry.types.field import StrawberryField

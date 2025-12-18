@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .inputs import (
+from strawchemy.strawberry.filters.inputs import (
     ArrayComparison,
     DateComparison,
     DateTimeComparison,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TypeAlias, Union
 
-from . import mysql, postgres, sqlite
+from tests.integration.types import mysql, postgres, sqlite
 
 __all__ = ("AnyAsyncMutationType", "AnyAsyncQueryType", "AnySyncMutationType", "AnySyncQueryType")
 

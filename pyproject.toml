@@ -29,7 +29,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "msgspec",
+    "msgspec>=0.4.2",
     "sqlalchemy>=2.0.10",
     "strawberry-graphql",
     "typing-extensions"
@@ -374,6 +374,8 @@ convention = "google"
 [tool.ruff.lint.isort]
 known-first-party = ["strawchemy", "tests"]
 
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
 
 [tool.unasyncd]
 add_editors_note = true

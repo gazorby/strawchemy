@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .fixtures import (
+from tests.integration.fixtures import (
     aiosqlite_engine,
     any_query,
     any_session,

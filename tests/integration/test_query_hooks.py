@@ -4,15 +4,14 @@ from typing import TYPE_CHECKING
 
 import pytest
 
+from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
-
-from .typing import RawRecordData
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
-    from .fixtures import QueryTracker
+    from tests.integration.fixtures import QueryTracker
 
 pytestmark = [pytest.mark.integration]
 

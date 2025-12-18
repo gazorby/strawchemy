@@ -19,9 +19,8 @@ from strawchemy.strawberry.dto import (
     OutputFunctionInfo,
     UnmappedStrawberryGraphQLDTO,
 )
-
-from .base import GraphQLDTOFactory
-from .enum import EnumDTOBackend, EnumDTOFactory
+from strawchemy.strawberry.factories.base import GraphQLDTOFactory
+from strawchemy.strawberry.factories.enum import EnumDTOBackend, EnumDTOFactory
 
 if TYPE_CHECKING:
     from collections.abc import Generator
