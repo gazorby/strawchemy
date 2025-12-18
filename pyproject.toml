@@ -63,7 +63,7 @@ dev = [
 ]
 codeflash = ["codeflash"]
 doc = ["git-cliff>=2.6.1"]
-lint = ["basedpyright", "ruff", "vulture"]
+lint = ["basedpyright", "ruff", "vulture", "slotscheck>=0.16.5"]
 mysql = ["asyncmy", "cryptography"]
 postgres = ["asyncpg>=0.29.0", "psycopg[binary,pool]>=3.2.3"]
 test = [
@@ -309,7 +309,6 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 120
-fix = true
 target-version = "py310"
 exclude = [
     ".bzr",
@@ -377,6 +376,24 @@ known-first-party = ["strawchemy", "tests"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.slotscheck]
+exclude-modules = '''
+(
+  (^|\.)test_
+  |^tests\.*
+  |^tools\.*
+  |^docs\.*
+  |^examples\.*
+  |^sqlalchemy\.(
+    testing
+    |ext\.mypy  # see slotscheck/issues/178
+  )
+)
+'''
+include-modules = "strawchemy.*"
+require-superclass = false
+strict-imports = true
 
 [tool.unasyncd]
 add_editors_note = true
