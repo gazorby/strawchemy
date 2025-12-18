@@ -16,8 +16,7 @@ from strawchemy.strawberry.dto import StrawchemyDTOAttributes
 from strawchemy.strawberry.factories.types import InputFactory
 from strawchemy.strawberry.mutation.types import LocalizedErrorType, ValidationErrorType
 from strawchemy.utils import snake_to_lower_camel_case
-
-from .base import InputValidationError, T, ValidationProtocol
+from strawchemy.validation.base import InputValidationError, T, ValidationProtocol
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence

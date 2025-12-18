@@ -16,8 +16,8 @@ from sqlalchemy.orm import ColumnProperty, RelationshipProperty, joinedload, sel
 from sqlalchemy.orm.strategy_options import _AbstractLoad
 from sqlalchemy.orm.util import AliasedClass
 
-from .exceptions import QueryHookError
-from .typing import DeclarativeT
+from strawchemy.sqlalchemy.exceptions import QueryHookError
+from strawchemy.sqlalchemy.typing import DeclarativeT
 
 if TYPE_CHECKING:
     from collections.abc import Sequence

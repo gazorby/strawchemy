@@ -35,6 +35,23 @@ from sqlalchemy import (
     true,
 )
 from strawchemy.constants import AGGREGATIONS_KEY
+from strawchemy.sqlalchemy._executor import SyncQueryExecutor
+from strawchemy.sqlalchemy._query import (
+    AggregationJoin,
+    Conjunction,
+    DistinctOn,
+    HookApplier,
+    Join,
+    OrderBy,
+    Query,
+    QueryGraph,
+    SubqueryBuilder,
+    Where,
+)
+from strawchemy.sqlalchemy._scope import QueryScope
+from strawchemy.sqlalchemy.exceptions import TranspilingError
+from strawchemy.sqlalchemy.inspector import SQLAlchemyGraphQLInspector
+from strawchemy.sqlalchemy.typing import DeclarativeT, OrderBySpec, QueryExecutorT
 from strawchemy.strawberry.dto import (
     AggregationFilter,
     BooleanFilterDTO,
@@ -47,24 +64,6 @@ from strawchemy.strawberry.dto import (
 )
 from strawchemy.strawberry.filters import GraphQLComparison
 
-from ._executor import SyncQueryExecutor
-from ._query import (
-    AggregationJoin,
-    Conjunction,
-    DistinctOn,
-    HookApplier,
-    Join,
-    OrderBy,
-    Query,
-    QueryGraph,
-    SubqueryBuilder,
-    Where,
-)
-from ._scope import QueryScope
-from .exceptions import TranspilingError
-from .inspector import SQLAlchemyGraphQLInspector
-from .typing import DeclarativeT, OrderBySpec, QueryExecutorT
-
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator, Sequence
 
@@ -73,10 +72,9 @@ if TYPE_CHECKING:
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
     from sqlalchemy.sql.elements import NamedColumn
 
+    from strawchemy.sqlalchemy.hook import QueryHook
     from strawchemy.strawberry.typing import QueryNodeType
     from strawchemy.typing import SupportedDialect
-
-    from .hook import QueryHook
 
 __all__ = ("QueryTranspiler",)
 

@@ -9,11 +9,10 @@ from sqlalchemy.orm import RelationshipProperty
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
 from strawchemy.sqlalchemy._executor import AsyncQueryExecutor, QueryResult
 from strawchemy.sqlalchemy._transpiler import QueryTranspiler
+from strawchemy.sqlalchemy.repository._base import InsertData, MutationData, SQLAlchemyGraphQLRepository
 from strawchemy.sqlalchemy.typing import AnyAsyncSession, DeclarativeT
 from strawchemy.strawberry.mutation.input import UpsertData
 from strawchemy.strawberry.mutation.types import RelationType
-
-from ._base import InsertData, MutationData, SQLAlchemyGraphQLRepository
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -22,11 +21,10 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
 
     from strawchemy.sqlalchemy.hook import QueryHook
+    from strawchemy.sqlalchemy.repository._base import InsertOrUpdate, RowLike
     from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.strawberry.mutation.input import Input, LevelInput
     from strawchemy.strawberry.typing import QueryNodeType
-
-    from ._base import InsertOrUpdate, RowLike
 
 __all__ = ("SQLAlchemyGraphQLAsyncRepository",)
 

@@ -24,6 +24,15 @@ from strawchemy.strawberry.dto import (
     GraphQLFieldDefinition,
     MappedStrawberryGraphQLDTO,
 )
+from strawchemy.strawberry.factories.aggregations import AggregationInspector
+from strawchemy.strawberry.factories.base import (
+    GraphQLDTOFactory,
+    MappedGraphQLDTOT,
+    StrawchemyMappedFactory,
+    _ChildOptions,
+)
+from strawchemy.strawberry.factories.enum import EnumDTOFactory, UpsertConflictFieldsEnumDTOBackend
+from strawchemy.strawberry.factories.inputs import OrderByDTOFactory
 from strawchemy.strawberry.mutation.types import (
     RequiredToManyUpdateInput,
     RequiredToOneInput,
@@ -33,11 +42,6 @@ from strawchemy.strawberry.mutation.types import (
 )
 from strawchemy.strawberry.typing import AggregateDTOT, GraphQLDTOT, GraphQLPurpose
 from strawchemy.utils import get_annotations, non_optional_type_hint, snake_to_camel
-
-from .aggregations import AggregationInspector
-from .base import GraphQLDTOFactory, MappedGraphQLDTOT, StrawchemyMappedFactory, _ChildOptions
-from .enum import EnumDTOFactory, UpsertConflictFieldsEnumDTOBackend
-from .inputs import OrderByDTOFactory
 
 if TYPE_CHECKING:
     from collections.abc import Generator, Hashable, Sequence

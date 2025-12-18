@@ -34,6 +34,8 @@ from sqlalchemy import (
 )
 from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.graph import merge_trees
+from strawchemy.sqlalchemy.exceptions import TranspilingError
+from strawchemy.sqlalchemy.typing import DeclarativeT, OrderBySpec
 from strawchemy.strawberry.dto import (
     BooleanFilterDTO,
     EnumDTO,
@@ -44,9 +46,6 @@ from strawchemy.strawberry.dto import (
     QueryNode,
 )
 
-from .exceptions import TranspilingError
-from .typing import DeclarativeT, OrderBySpec
-
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -56,10 +55,9 @@ if TYPE_CHECKING:
     from sqlalchemy.sql.selectable import NamedFromClause
 
     from strawchemy.config.databases import DatabaseFeatures
+    from strawchemy.sqlalchemy._scope import QueryScope
+    from strawchemy.sqlalchemy.hook import ColumnLoadingMode, QueryHook
     from strawchemy.strawberry.typing import QueryNodeType
-
-    from ._scope import QueryScope
-    from .hook import ColumnLoadingMode, QueryHook
 
 __all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
 

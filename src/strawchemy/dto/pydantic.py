@@ -4,9 +4,9 @@ from typing import Any
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 
-from .backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
-from .base import DTOFactory
-from .inspectors.sqlalchemy import SQLAlchemyInspector
+from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
+from strawchemy.dto.base import DTOFactory
+from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 
 __all__ = ("factory", "pydantic_dto")
 

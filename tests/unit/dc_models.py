@@ -8,8 +8,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_pr
 from sqlalchemy import ForeignKey
 from strawchemy.dto import Purpose, PurposeConfig, field
 from strawchemy.dto.utils import WRITE_ONLY
-
-from .models import validate_tomato_type
+from tests.unit.models import validate_tomato_type
 
 
 class UUIDBase(MappedAsDataclass, DeclarativeBase):

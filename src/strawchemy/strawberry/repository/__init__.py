@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ._async import StrawchemyAsyncRepository
-from ._sync import StrawchemySyncRepository
+from strawchemy.strawberry.repository._async import StrawchemyAsyncRepository
+from strawchemy.strawberry.repository._sync import StrawchemySyncRepository
 
 __all__ = ("StrawchemyAsyncRepository", "StrawchemySyncRepository")

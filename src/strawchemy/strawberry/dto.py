@@ -50,15 +50,14 @@ from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOMissing, Purpose
 from strawchemy.graph import AnyNode, GraphMetadata, MatchOn, Node, NodeMetadata, NodeT
 from strawchemy.sqlalchemy.hook import QueryHook  # noqa: TC001
+from strawchemy.strawberry.typing import GraphQLPurpose, OrderByDTOT, QueryNodeType
 from strawchemy.utils import camel_to_snake
-
-from .typing import GraphQLPurpose, OrderByDTOT, QueryNodeType
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
 
-    from .filters import EqualityComparison, GraphQLComparison
-    from .typing import AggregationFunction, AggregationType, FunctionInfo
+    from strawchemy.strawberry.filters import EqualityComparison, GraphQLComparison
+    from strawchemy.strawberry.typing import AggregationFunction, AggregationType, FunctionInfo
 
 T = TypeVar("T")
 

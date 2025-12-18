@@ -35,11 +35,10 @@ from sqlalchemy import distinct as sqla_distinct
 from strawchemy.constants import NODES_KEY
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.graph import Node
+from strawchemy.sqlalchemy.exceptions import TranspilingError
+from strawchemy.sqlalchemy.inspector import SQLAlchemyInspector
+from strawchemy.sqlalchemy.typing import DeclarativeT
 from strawchemy.strawberry.dto import GraphQLFieldDefinition, QueryNode
-
-from .exceptions import TranspilingError
-from .inspector import SQLAlchemyInspector
-from .typing import DeclarativeT
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -47,10 +46,9 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql.elements import NamedColumn
 
+    from strawchemy.sqlalchemy.typing import DeclarativeSubT, FunctionGenerator, RelationshipSide
     from strawchemy.strawberry.typing import QueryNodeType
     from strawchemy.typing import SupportedDialect
-
-    from .typing import DeclarativeSubT, FunctionGenerator, RelationshipSide
 
 __all__ = ("NodeInspect", "QueryScope")
 

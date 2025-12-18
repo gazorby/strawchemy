@@ -11,18 +11,19 @@ if TYPE_CHECKING:
     from strawberry import Info
     from strawchemy.graph import Node
     from strawchemy.sqlalchemy.typing import AnyAsyncSession, AnySyncSession
-    from strawchemy.strawberry.dto import GraphQLFieldDefinition, QueryNodeMetadata, StrawchemyDTOAttributes
-    from strawchemy.validation.pydantic import MappedPydanticGraphQLDTO
-
-    from .dto import (
+    from strawchemy.strawberry.dto import (
         AggregateDTO,
         FilterFunctionInfo,
+        GraphQLFieldDefinition,
         GraphQLFilterDTO,
         MappedStrawberryGraphQLDTO,
         OrderByDTO,
         OutputFunctionInfo,
+        QueryNodeMetadata,
+        StrawchemyDTOAttributes,
         UnmappedStrawberryGraphQLDTO,
     )
+    from strawchemy.validation.pydantic import MappedPydanticGraphQLDTO
 
 __all__ = (
     "AnySessionGetter",

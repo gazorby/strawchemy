@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import pytest
 
+from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
-
-from .typing import RawRecordData
 
 pytestmark = [pytest.mark.integration]
 

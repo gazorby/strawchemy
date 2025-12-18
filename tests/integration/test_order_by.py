@@ -4,12 +4,11 @@ from typing import TYPE_CHECKING, Literal
 
 import pytest
 
+from tests.integration.fixtures import QueryTracker
+from tests.integration.typing import RawRecordData
+from tests.integration.utils import compute_aggregation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
-
-from .fixtures import QueryTracker
-from .typing import RawRecordData
-from .utils import compute_aggregation
 
 if TYPE_CHECKING:
     from decimal import Decimal

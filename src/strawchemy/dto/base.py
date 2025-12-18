@@ -29,10 +29,7 @@ from typing import (
 from typing_extensions import Self, override
 
 from strawchemy.dto.exceptions import DTOError, EmptyDTOError
-from strawchemy.graph import Node
-from strawchemy.utils import is_type_hint_optional, non_optional_type_hint
-
-from .types import (
+from strawchemy.dto.types import (
     DTOAuto,
     DTOConfig,
     DTOFieldConfig,
@@ -44,7 +41,9 @@ from .types import (
     Purpose,
     PurposeConfig,
 )
-from .utils import config
+from strawchemy.dto.utils import config
+from strawchemy.graph import Node
+from strawchemy.utils import is_type_hint_optional, non_optional_type_hint
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Hashable, Iterable, Mapping

@@ -41,14 +41,23 @@ from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.strawberry.scalars import Date, DateTime, Interval, Time
 from tests.fixtures import DefaultQuery
+from tests.integration.models import (
+    Color,
+    Department,
+    Fruit,
+    FruitFarm,
+    Group,
+    Topic,
+    User,
+    UserDepartmentJoinTable,
+    metadata,
+)
 from tests.integration.types import AnyAsyncMutationType, AnyAsyncQueryType, AnySyncQueryType
 from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types
 from tests.integration.types import sqlite as sqlite_types
 from tests.typing import AnyQueryExecutor, SyncQueryExecutor
 from tests.utils import generate_query
-
-from .models import Color, Department, Fruit, FruitFarm, Group, Topic, User, UserDepartmentJoinTable, metadata
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator, Generator, Iterator
@@ -64,8 +73,7 @@ if TYPE_CHECKING:
     from strawchemy import Strawchemy, StrawchemyConfig
     from strawchemy.sqlalchemy.typing import AnySession
     from strawchemy.typing import SupportedDialect
-
-    from .typing import RawRecordData
+    from tests.integration.typing import RawRecordData
 
 __all__ = (
     "QueryTracker",

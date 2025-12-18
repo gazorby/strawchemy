@@ -25,11 +25,10 @@ from strawchemy.strawberry.dto import (
     OrderByDTO,
     OrderByEnum,
 )
+from strawchemy.strawberry.factories.aggregations import AggregationInspector
+from strawchemy.strawberry.factories.base import StrawchemyUnMappedDTOFactory, UnmappedGraphQLDTOT
 from strawchemy.strawberry.typing import AggregationFunction, GraphQLFilterDTOT, GraphQLPurpose
 from strawchemy.utils import snake_to_camel
-
-from .aggregations import AggregationInspector
-from .base import StrawchemyUnMappedDTOFactory, UnmappedGraphQLDTOT
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Mapping, Sequence

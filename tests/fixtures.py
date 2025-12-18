@@ -9,9 +9,8 @@ from syrupy.extensions.amber import AmberSnapshotExtension
 
 import strawberry
 from strawchemy import Strawchemy, StrawchemyConfig
+from tests.syrupy import GraphQLFileExtension
 from tests.utils import sqlalchemy_pydantic_factory
-
-from .syrupy import GraphQLFileExtension
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion

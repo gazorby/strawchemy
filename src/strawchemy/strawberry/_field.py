@@ -26,6 +26,7 @@ from strawchemy.constants import (
 )
 from strawchemy.dto.base import MappedDTO
 from strawchemy.dto.types import DTOConfig, Purpose
+from strawchemy.strawberry._utils import dto_model_from_type, strawberry_contained_types, strawberry_contained_user_type
 from strawchemy.strawberry.dto import (
     BooleanFilterDTO,
     EnumDTO,
@@ -33,15 +34,13 @@ from strawchemy.strawberry.dto import (
     OrderByDTO,
     StrawchemyDTOAttributes,
 )
+from strawchemy.strawberry.exceptions import StrawchemyFieldError
 from strawchemy.strawberry.mutation.input import Input
+from strawchemy.strawberry.repository import StrawchemyAsyncRepository
 from strawchemy.types import DefaultOffsetPagination
 from strawchemy.typing import UNION_TYPES
 from strawchemy.utils import is_type_hint_optional
 from strawchemy.validation.base import InputValidationError
-
-from ._utils import dto_model_from_type, strawberry_contained_types, strawberry_contained_user_type
-from .exceptions import StrawchemyFieldError
-from .repository import StrawchemyAsyncRepository
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Coroutine, Mapping
@@ -56,18 +55,17 @@ if TYPE_CHECKING:
     from strawchemy import StrawchemyConfig
     from strawchemy.sqlalchemy.typing import QueryHookCallable
     from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.typing import AnyRepository
-    from strawchemy.validation.base import ValidationProtocol
-
-    from .mutation.types import ValidationErrorType
-    from .repository import StrawchemySyncRepository
-    from .repository._base import GraphQLResult
-    from .typing import (
+    from strawchemy.strawberry.mutation.types import ValidationErrorType
+    from strawchemy.strawberry.repository import StrawchemySyncRepository
+    from strawchemy.strawberry.repository._base import GraphQLResult
+    from strawchemy.strawberry.typing import (
         AnyMappedDTO,
         FilterStatementCallable,
         MappedGraphQLDTO,
         StrawchemyTypeWithStrawberryObjectDefinition,
     )
+    from strawchemy.typing import AnyRepository
+    from strawchemy.validation.base import ValidationProtocol
 
 
 __all__ = ("StrawchemyCreateMutationField", "StrawchemyDeleteMutationField", "StrawchemyField")

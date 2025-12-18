@@ -23,8 +23,7 @@ from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
 
 import strawberry
-
-from ._utils import strawberry_contained_types
+from strawchemy.strawberry._utils import strawberry_contained_types
 
 try:
     from strawchemy.strawberry.filters.geo import GeoComparison
@@ -43,10 +42,8 @@ if TYPE_CHECKING:
     from strawberry.types.base import WithStrawberryObjectDefinition
 
     from strawchemy.dto.types import DTOScope
-    from strawchemy.strawberry.typing import StrawchemyTypeWithStrawberryObjectDefinition
+    from strawchemy.strawberry.typing import GraphQLType, StrawchemyTypeWithStrawberryObjectDefinition
     from strawchemy.types import DefaultOffsetPagination
-
-    from .typing import GraphQLType
 
 
 __all__ = ("RegistryTypeInfo", "StrawberryRegistry")

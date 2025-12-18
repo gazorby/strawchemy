@@ -7,23 +7,22 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.schema.config import StrawberryConfig
 
-from strawchemy.strawberry.factories.aggregations import EnumDTOFactory
-from strawchemy.strawberry.factories.enum import EnumDTOBackend, UpsertConflictFieldsEnumDTOBackend
-
-from .config.base import StrawchemyConfig
-from .dto.backend.strawberry import StrawberrryDTOBackend
-from .dto.base import TYPING_NS
-from .strawberry._field import (
+from strawchemy.config.base import StrawchemyConfig
+from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
+from strawchemy.dto.base import TYPING_NS
+from strawchemy.strawberry._field import (
     StrawchemyCreateMutationField,
     StrawchemyDeleteMutationField,
     StrawchemyField,
     StrawchemyUpdateMutationField,
     StrawchemyUpsertMutationField,
 )
-from .strawberry._registry import StrawberryRegistry
-from .strawberry.dto import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
-from .strawberry.factories.inputs import AggregateFilterDTOFactory, BooleanFilterDTOFactory
-from .strawberry.factories.types import (
+from strawchemy.strawberry._registry import StrawberryRegistry
+from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
+from strawchemy.strawberry.factories.aggregations import EnumDTOFactory
+from strawchemy.strawberry.factories.enum import EnumDTOBackend, UpsertConflictFieldsEnumDTOBackend
+from strawchemy.strawberry.factories.inputs import AggregateFilterDTOFactory, BooleanFilterDTOFactory
+from strawchemy.strawberry.factories.types import (
     DistinctOnFieldsDTOFactory,
     InputFactory,
     OrderByDTOFactory,
@@ -31,8 +30,8 @@ from .strawberry.factories.types import (
     TypeDTOFactory,
     UpsertConflictFieldsDTOFactory,
 )
-from .strawberry.mutation import types
-from .types import DefaultOffsetPagination
+from strawchemy.strawberry.mutation import types
+from strawchemy.types import DefaultOffsetPagination
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
@@ -43,12 +42,11 @@ if TYPE_CHECKING:
 
     from strawberry import BasePermission
     from strawchemy.sqlalchemy.hook import QueryHook
+    from strawchemy.sqlalchemy.typing import QueryHookCallable
+    from strawchemy.strawberry.typing import FilterStatementCallable, MappedGraphQLDTO
+    from strawchemy.typing import AnyRepository, SupportedDialect
+    from strawchemy.validation.base import ValidationProtocol
     from strawchemy.validation.pydantic import PydanticMapper
-
-    from .sqlalchemy.typing import QueryHookCallable
-    from .strawberry.typing import FilterStatementCallable, MappedGraphQLDTO
-    from .typing import AnyRepository, SupportedDialect
-    from .validation.base import ValidationProtocol
 
 
 T = TypeVar("T", bound="DeclarativeBase")
@@ -158,7 +156,7 @@ class Strawchemy:
         Returns:
             An instance of PydanticMapper.
         """
-        from .validation.pydantic import PydanticMapper  # noqa: PLC0415
+        from strawchemy.validation.pydantic import PydanticMapper  # noqa: PLC0415
 
         return PydanticMapper(self)
 

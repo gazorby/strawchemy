@@ -7,8 +7,7 @@ from strawberry.types.lazy_type import LazyType
 from strawberry.types.union import StrawberryUnion
 
 from strawchemy.exceptions import SessionNotFoundError
-
-from .mutation.types import ErrorType
+from strawchemy.strawberry.mutation.types import ErrorType
 
 if TYPE_CHECKING:
     from strawberry import Info
