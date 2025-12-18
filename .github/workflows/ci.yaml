@@ -197,7 +197,7 @@ jobs:
           log_level: debug
 
       - name: Install dependencies
-        run: mise run install
+        run: mise run uv:install
 
       - name: Run linting
         run: mise run lint

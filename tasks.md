@@ -1,6 +1,6 @@
 ## `auto-bump`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `auto-bump`
 
@@ -55,7 +55,7 @@ Clean working directory
 
 ## `install`
 
-- Depends: install:pre-commit, _install
+- Depends: install:pre-commit, uv:install
 
 - **Usage**: `install`
 - **Aliases**: `i`
@@ -137,7 +137,7 @@ Run slotscheck
 
 ## `test`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test [test]`
 - **Aliases**: `t`
@@ -152,7 +152,7 @@ Run tests
 
 ## `test:coverage`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:coverage [test]`
 - **Aliases**: `tc`
@@ -167,7 +167,7 @@ Run tests with coverage
 
 ## `test:integration`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:integration [--python [python]] <test>…`
 - **Aliases**: `ti`
@@ -188,7 +188,7 @@ Run integration tests
 
 ## `test:integration-all`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:integration-all [--python [python]] [test]`
 - **Aliases**: `tia`
@@ -209,7 +209,7 @@ Run integration tests on all supported python versions
 
 ## `test:integration-mysql`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:integration-mysql [--python [python]] <test>…`
 - **Aliases**: `ti-mysql`
@@ -230,7 +230,7 @@ Run integration tests
 
 ## `test:integration-postgres`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:integration-postgres [--python [python]] <test>…`
 - **Aliases**: `ti-postgres`
@@ -251,7 +251,7 @@ Run integration tests
 
 ## `test:integration-sqlite`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:integration-sqlite [--python [python]] <test>…`
 - **Aliases**: `ti-sqlite`
@@ -272,7 +272,7 @@ Run integration tests
 
 ## `test:integration:coverage`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:integration:coverage [--python [python]] [test]`
 - **Aliases**: `tic`
@@ -293,7 +293,7 @@ Run integration tests with coverage
 
 ## `test:unit`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:unit [--python [python]] [test]`
 - **Aliases**: `tu`
@@ -314,7 +314,7 @@ Run unit tests
 
 ## `test:unit-all`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:unit-all [--python [python]] [test]`
 - **Aliases**: `tua`
@@ -335,7 +335,7 @@ Run unit tests on all supported python versions
 
 ## `test:unit:coverage`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:unit:coverage [--python [python]] [test]`
 - **Aliases**: `tuc`
@@ -356,7 +356,7 @@ Run unit tests with coverage
 
 ## `test:unit:no-extras`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:unit:no-extras [--python [python]] <test>…`
 - **Aliases**: `tug`
@@ -377,11 +377,17 @@ Run unit tests without extras dependencies
 
 ## `test:update-snapshots`
 
-- Depends: _install
+- Depends: uv:install
 
 - **Usage**: `test:update-snapshots`
 
 Run snapshot-based tests and update snapshots
+
+## `uv:install`
+
+- **Usage**: `uv:install`
+
+Install dependencies
 
 ## `vulture`
 

@@ -41,16 +41,15 @@ cleanable_paths = '''{{
 # Dependencies
 # ###############
 
-[tasks._install]
+[tasks."uv:install"]
 description = "Install dependencies"
-hide = true
 run = "uv sync --all-extras --dev"
 
 
 [tasks.install]
 description = "Install dependencies and pre-commit hooks"
 alias = "i"
-depends = ["install:pre-commit", "_install"]
+depends = ["install:pre-commit", "uv:install"]
 
 [tasks."install:pre-commit"]
 description = "Install pre-commit hooks"
@@ -62,86 +61,86 @@ run = "pre-commit install --install-hooks 2>&1"
 
 [tasks.test]
 description = "Run tests"
-depends = "_install"
+depends = "uv:install"
 alias = "t"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:coverage"]
 description = "Run tests with coverage"
-depends = "_install"
+depends = "uv:install"
 alias = "tc"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit"]
 description = "Run unit tests"
-depends = "_install"
+depends = "uv:install"
 alias = "tu"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t unit -- tests/unit {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit:no-extras"]
 description = "Run unit tests without extras dependencies"
-depends = "_install"
+depends = "uv:install"
 alias = "tug"
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -s unit-no-extras -- tests/unit {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit:coverage"]
 description = "Run unit tests with coverage"
-depends = "_install"
+depends = "uv:install"
 alias = "tuc"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t unit -- tests/unit {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration"]
 description = "Run integration tests"
-depends = "_install"
+depends = "uv:install"
 alias = "ti"
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -s integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration-postgres"]
 description = "Run integration tests"
-depends = "_install"
+depends = "uv:install"
 alias = "ti-postgres"
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t postgres -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration-mysql"]
 description = "Run integration tests"
-depends = "_install"
+depends = "uv:install"
 alias = "ti-mysql"
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t mysql -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration-sqlite"]
 description = "Run integration tests"
-depends = "_install"
+depends = "uv:install"
 alias = "ti-sqlite"
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t sqlite -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration:coverage"]
 description = "Run integration tests with coverage"
-depends = "_install"
+depends = "uv:install"
 alias = "tic"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -s integration -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit-all"]
 description = "Run unit tests on all supported python versions"
-depends = "_install"
+depends = "uv:install"
 alias = "tua"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t unit -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration-all"]
 description = "Run integration tests on all supported python versions"
-depends = "_install"
+depends = "uv:install"
 alias = "tia"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -s integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:update-snapshots"]
 description = "Run snapshot-based tests and update snapshots"
-depends = "_install"
+depends = "uv:install"
 run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update"
 
 # ###############
@@ -237,7 +236,7 @@ run = "uv run slotscheck src/strawchemy"
 [tasks.auto-bump]
 description = "Auto bump the version"
 confirm = "Are you sure you want to auto bump the version?"
-depends = "_install"
+depends = "uv:install"
 run = "uv run bump-my-version bump --new-version $(uv run git cliff --unreleased --bumped-version)"
 
 [tasks.clean]
