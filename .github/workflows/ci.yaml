@@ -6,11 +6,11 @@ env:
 
 on:
   push:
-    branches: [main, ci/*, dependabot/*, renovate/*]
+    branches: [ main, ci/*, dependabot/*, renovate/* ]
     tags:
       - "v*.*.*"
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -57,7 +57,7 @@ jobs:
 
   tests:
     name: 🔬 ${{ matrix.session.job_name }}
-    needs: [pre, generate-jobs-tests]
+    needs: [ pre, generate-jobs-tests ]
     if: github.ref_type == 'tag' || needs.pre.outputs.should_skip != 'true'
     runs-on: ubuntu-latest
     strategy:
@@ -121,7 +121,7 @@ jobs:
 
   upload-coverage:
     name: 🆙 Upload Coverage
-    needs: [tests, generate-jobs-tests]
+    needs: [ tests, generate-jobs-tests ]
     runs-on: ubuntu-latest
 
     steps:
@@ -155,7 +155,7 @@ jobs:
 
   upload-test-results:
     name: 📊 Upload test results
-    needs: [tests, generate-jobs-tests]
+    needs: [ tests, generate-jobs-tests ]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -195,6 +195,9 @@ jobs:
         with:
           cache: true
           log_level: debug
+
+      - name: Install dependencies
+        run: mise run install
 
       - name: Run linting
         run: mise run lint
