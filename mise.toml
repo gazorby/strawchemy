@@ -46,10 +46,6 @@ description = "Install dependencies"
 hide = true
 run = "uv sync --all-extras --dev"
 
-[tasks."_install:geo"]
-description = "Install dependencies with geo extras"
-hide = true
-run = "uv sync --extra=geo --dev"
 
 [tasks.install]
 description = "Install dependencies and pre-commit hooks"
@@ -194,7 +190,6 @@ run = "uv run nox --json -t tests -l | jq 'map(.name) | unique'"
 
 [tasks."ruff:check"]
 description = "Check ruff formatting"
-depends = "_install"
 run = "uv run ruff check"
 
 [tasks."ruff:fix"]
@@ -211,7 +206,6 @@ run = "uv run ruff format --check"
 
 [tasks.pyright]
 description = "Run basedpyright"
-depends = "_install"
 run = "uv run basedpyright"
 
 [tasks.vulture]
@@ -221,7 +215,7 @@ run = "uv run --only-group lint vulture"
 [tasks.lint]
 description = "Lint the code"
 alias = "l"
-depends = ["vulture", "pyright", "ruff:check", "ruff:format:check"]
+depends = ["vulture", "pyright", "ruff:check", "ruff:format:check", "slotscheck"]
 
 [tasks."lint:pre-commit"]
 description = "Lint the code in pre-commit hook"
@@ -231,6 +225,10 @@ depends = ["vulture", "pyright"]
 description = "Run pre-commit checks"
 depends = "install:pre-commit"
 run = "pre-commit run --color=always --all-files"
+
+[tasks.slotscheck]
+description = "Run slotscheck"
+run = "uv run slotscheck src/strawchemy"
 
 # ###############
 # Tools
@@ -247,14 +245,14 @@ description = "Clean working directory"
 alias = "c"
 confirm = "Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files."
 run = [
-  "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
-  "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
-  "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
-  "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
+    "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
+    "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
+    "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
+    "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
 ]
 
 [tasks."render:usage"]

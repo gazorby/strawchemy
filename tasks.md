@@ -70,7 +70,7 @@ Install pre-commit hooks
 
 ## `lint`
 
-- Depends: vulture, pyright, ruff:check, ruff:format:check
+- Depends: vulture, pyright, ruff:check, ruff:format:check, slotscheck
 
 - **Usage**: `lint`
 - **Aliases**: `l`
@@ -95,8 +95,6 @@ Run pre-commit checks
 
 ## `pyright`
 
-- Depends: _install
-
 - **Usage**: `pyright`
 
 Run basedpyright
@@ -108,8 +106,6 @@ Run basedpyright
 Generate tasks documentation
 
 ## `ruff:check`
-
-- Depends: _install
 
 - **Usage**: `ruff:check`
 
@@ -133,6 +129,12 @@ Format code
 
 Format code
 
+## `slotscheck`
+
+- **Usage**: `slotscheck`
+
+Run slotscheck
+
 ## `test`
 
 - Depends: _install
@@ -145,6 +147,8 @@ Run tests
 ### Arguments
 
 #### `[test]`
+
+**Default:** ``
 
 ## `test:coverage`
 
@@ -159,6 +163,8 @@ Run tests with coverage
 
 #### `[test]`
 
+**Default:** ``
+
 ## `test:integration`
 
 - Depends: _install
@@ -171,6 +177,8 @@ Run integration tests
 ### Arguments
 
 #### `<test>…`
+
+**Default:** ``
 
 ### Flags
 
@@ -191,6 +199,8 @@ Run integration tests on all supported python versions
 
 #### `[test]`
 
+**Default:** ``
+
 ### Flags
 
 #### `--python [python]`
@@ -209,6 +219,8 @@ Run integration tests
 ### Arguments
 
 #### `<test>…`
+
+**Default:** ``
 
 ### Flags
 
@@ -229,6 +241,8 @@ Run integration tests
 
 #### `<test>…`
 
+**Default:** ``
+
 ### Flags
 
 #### `--python [python]`
@@ -247,6 +261,8 @@ Run integration tests
 ### Arguments
 
 #### `<test>…`
+
+**Default:** ``
 
 ### Flags
 
@@ -267,6 +283,8 @@ Run integration tests with coverage
 
 #### `[test]`
 
+**Default:** ``
+
 ### Flags
 
 #### `--python [python]`
@@ -285,6 +303,8 @@ Run unit tests
 ### Arguments
 
 #### `[test]`
+
+**Default:** ``
 
 ### Flags
 
@@ -305,6 +325,8 @@ Run unit tests on all supported python versions
 
 #### `[test]`
 
+**Default:** ``
+
 ### Flags
 
 #### `--python [python]`
@@ -324,6 +346,8 @@ Run unit tests with coverage
 
 #### `[test]`
 
+**Default:** ``
+
 ### Flags
 
 #### `--python [python]`
@@ -342,6 +366,8 @@ Run unit tests without extras dependencies
 ### Arguments
 
 #### `<test>…`
+
+**Default:** ``
 
 ### Flags
 

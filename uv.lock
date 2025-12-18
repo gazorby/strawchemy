@@ -3125,6 +3125,21 @@ wheels = [
 ]
 
 [[package]]
+name = "slotscheck"
+version = "0.19.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "click", version = "8.1.8", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev'" },
+    { name = "click", version = "8.3.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-codeflash' or (extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-dev')" },
+    { name = "tomli", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-build') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
+    { name = "tomli", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-codeflash') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4b/57/6fcb8df11e7c76eb87b23bfa931408e47f051c6161749c531b4060a45516/slotscheck-0.19.1.tar.gz", hash = "sha256:6146b7747f8db335a00a66b782f86011b74b995f61746dc5b36a9e77d5326013", size = 16050, upload-time = "2024-10-19T13:30:53.369Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/da/32/bd569256267f80b76b87d21a09795741a175778b954bee1d7b1a89852b6f/slotscheck-0.19.1-py3-none-any.whl", hash = "sha256:bff9926f8d6408ea21b6c6bbaa4389cea1682962e73ee4f30084b6d2b89260ee", size = 16995, upload-time = "2024-10-19T13:30:51.23Z" },
+]
+
+[[package]]
 name = "smmap"
 version = "5.0.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3266,6 +3281,7 @@ dev = [
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
     { name = "ruff" },
+    { name = "slotscheck" },
     { name = "sqlparse" },
     { name = "syrupy" },
     { name = "testapp" },
@@ -3278,6 +3294,7 @@ doc = [
 lint = [
     { name = "basedpyright" },
     { name = "ruff" },
+    { name = "slotscheck" },
     { name = "vulture" },
 ]
 mysql = [
@@ -3352,6 +3369,7 @@ dev = [
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
     { name = "ruff" },
+    { name = "slotscheck", specifier = ">=0.16.5" },
     { name = "sqlparse" },
     { name = "syrupy" },
     { name = "testapp", editable = "examples/testapp" },
@@ -3362,6 +3380,7 @@ doc = [{ name = "git-cliff", specifier = ">=2.6.1" }]
 lint = [
     { name = "basedpyright" },
     { name = "ruff" },
+    { name = "slotscheck", specifier = ">=0.16.5" },
     { name = "vulture" },
 ]
 mysql = [
