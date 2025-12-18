@@ -7,21 +7,21 @@ from typing import TYPE_CHECKING, Any, TypeVar, overload
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.schema.config import StrawberryConfig
 
-from .config.base import StrawchemyConfig
-from .dto.base import TYPING_NS
-from .factories import StrawchemyFactories
-from .strawberry._field import (
+from strawchemy.config.base import StrawchemyConfig
+from strawchemy.dto.base import TYPING_NS
+from strawchemy.factories import StrawchemyFactories
+from strawchemy.strawberry._field import (
     StrawchemyCreateMutationField,
     StrawchemyDeleteMutationField,
     StrawchemyField,
     StrawchemyUpdateMutationField,
     StrawchemyUpsertMutationField,
 )
-from .strawberry._registry import StrawberryRegistry
-from .strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO, OrderByEnum
-from .strawberry.mutation import types
-from .strawberry.mutation.builder import MutationFieldBuilder
-from .types import DefaultOffsetPagination
+from strawchemy.strawberry._registry import StrawberryRegistry
+from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, OrderByDTO, OrderByEnum
+from strawchemy.strawberry.mutation import types
+from strawchemy.strawberry.mutation.builder import MutationFieldBuilder
+from strawchemy.types import DefaultOffsetPagination
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
