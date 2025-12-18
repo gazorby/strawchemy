@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.21.0](https://github.com/gazorby/strawchemy/compare/v0.20.0..v0.21.0) - 2025-12-18
+
+### 🚀 Features
+
+- Support multiple columns unique constraints (#135) - ([19d8bb6](https://github.com/gazorby/strawchemy/commit/19d8bb6d5869c2b3d9afb51cfdce736bd4148aa2))
+
+### 💼 Other
+
+- Small refactors (#138) - ([0be5a15](https://github.com/gazorby/strawchemy/commit/0be5a1511c108e3d4f779fab9a467ea3c687a967))
+
+### 🚜 Refactor
+
+- *(ruff)* Disallow relative imports (#136) - ([f7ac6df](https://github.com/gazorby/strawchemy/commit/f7ac6df3500c0261a0bff44997a48811b1958d2d))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(cd)* Use pat to commit changelog - ([f137678](https://github.com/gazorby/strawchemy/commit/f137678ff018462ffc31bc6c414268605e6ea9d6))
+- *(release)* Bump to v0.21.0 - ([e5819e4](https://github.com/gazorby/strawchemy/commit/e5819e4756db269d62773f3202cd965f6ecfdd59))
 ## [0.20.0](https://github.com/gazorby/strawchemy/compare/v0.19.0..v0.20.0) - 2025-12-14
 
 ### 🚀 Features
