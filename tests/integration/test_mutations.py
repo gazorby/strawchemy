@@ -12,8 +12,9 @@ from .fixtures import QueryTracker
 from .typing import RawRecordData
 
 if TYPE_CHECKING:
-    from strawchemy.typing import SupportedDialect
     from syrupy.assertion import SnapshotAssertion
+
+    from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
 
@@ -478,7 +479,7 @@ async def test_create_with_nested_mixed_relations_create(
                             {
                                 name: "Lychee",
                                 sweetness: 1,
-                                waterPercent: 0.8,
+                                waterPercent: 0.7,
                                 farms: { create: [ { name: "Bio farm" } ] }
                             },
                         ]
@@ -1121,8 +1122,8 @@ async def test_update_with_to_many_create(
                     name: "updated color name 2",
                     fruits: {{
                         create: [
-                            {{ name: "new fruit 3 during update", sweetness: 1, waterPercent: 0.8 }},
-                            {{ name: "new fruit 4 during update", sweetness: 1, waterPercent: 0.8 }}
+                            {{ name: "new fruit 3 during update", sweetness: 1, waterPercent: 0.7 }},
+                            {{ name: "new fruit 4 during update", sweetness: 1, waterPercent: 0.6 }}
                         ]
                     }}
                 }}
@@ -1455,7 +1456,7 @@ async def test_update_with_nested_mixed_relations_create(
                             {{
                                 name: "New Lychee 2",
                                 sweetness: 1,
-                                waterPercent: 0.8,
+                                waterPercent: 0.7,
                                 farms: {{ create: [ {{ name: "Organic farm" }} ] }}
                             }},
                         ]

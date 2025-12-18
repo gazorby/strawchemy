@@ -4,11 +4,11 @@ from importlib.util import find_spec
 from typing import TYPE_CHECKING
 
 import pytest
-from strawchemy import Strawchemy, StrawchemyConfig
 from syrupy.assertion import SnapshotAssertion
 from syrupy.extensions.amber import AmberSnapshotExtension
 
 import strawberry
+from strawchemy import Strawchemy, StrawchemyConfig
 from tests.utils import sqlalchemy_pydantic_factory
 
 from .syrupy import GraphQLFileExtension

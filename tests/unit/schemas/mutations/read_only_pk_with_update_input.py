@@ -3,10 +3,10 @@ from __future__ import annotations
 from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from strawchemy import Strawchemy
-from strawchemy.dto.utils import READ_ONLY
 
 from sqlalchemy import ForeignKey
+from strawchemy import Strawchemy
+from strawchemy.dto.utils import READ_ONLY
 from tests.unit.models import UUIDBase
 
 strawchemy = Strawchemy("postgresql")

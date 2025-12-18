@@ -14,8 +14,9 @@ from .utils import compute_aggregation
 if TYPE_CHECKING:
     from decimal import Decimal
 
-    from strawchemy.config.databases import DatabaseFeatures
     from syrupy.assertion import SnapshotAssertion
+
+    from strawchemy.config.databases import DatabaseFeatures
 
 pytestmark = [pytest.mark.integration]
 

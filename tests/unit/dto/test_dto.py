@@ -5,11 +5,11 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 import pytest
+from typing_extensions import Self
+
 from strawchemy.dto import DTOConfig, Purpose, PurposeConfig, config, field
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.utils import DTOFieldConfig, read_all_config, write_all_config
-from typing_extensions import Self
-
 from tests.typing import AnyFactory, MappedPydanticFactory
 from tests.unit.dc_models import (
     AdminDataclass,

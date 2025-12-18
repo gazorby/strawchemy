@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from strawchemy import Strawchemy
-
 import strawberry
 from strawberry import auto
+from strawchemy import Strawchemy
 from tests.unit.models import Color, Fruit
 
 strawchemy = Strawchemy("postgresql")

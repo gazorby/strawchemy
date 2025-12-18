@@ -11,11 +11,10 @@ from typing_extensions import Self, override
 from sqlalchemy import JSON
 from strawchemy.constants import AGGREGATIONS_KEY, JSON_PATH_KEY, NODES_KEY
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
-from strawchemy.dto.base import DTOFactory, MappedDTO
+from strawchemy.dto.base import DTOFactory, DTOFieldDefinition, MappedDTO
 from strawchemy.dto.exceptions import EmptyDTOError
 from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
 from strawchemy.dto.utils import read_all_partial_config, read_partial, write_all_config
-from strawchemy.graph import Node
 from strawchemy.strawberry.dto import (
     AggregateDTO,
     AggregateFieldDefinition,
@@ -45,7 +44,7 @@ if TYPE_CHECKING:
     from enum import Enum
 
     from strawchemy import Strawchemy
-    from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, Relation
+    from strawchemy.dto.base import DTOBackend, DTOBase, Relation
     from strawchemy.graph import Node
     from strawchemy.sqlalchemy.inspector import SQLAlchemyGraphQLInspector
     from strawchemy.sqlalchemy.typing import DeclarativeT
@@ -415,6 +414,34 @@ class UpsertConflictFieldsDTOFactory(EnumDTOFactory):
         self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None
     ) -> str:
         return f"{base_name}ConflictFields"
+
+    @override
+    def iter_field_definitions(
+        self,
+        name: str,
+        model: type[DeclarativeBase],
+        dto_config: DTOConfig,
+        base: type[DTOBase[DeclarativeBase]] | None,
+        node: Node[Relation[DeclarativeBase, EnumDTO], None],
+        raise_if_no_fields: bool = False,
+        **kwargs: Any,
+    ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
+        constraints = self.inspector.unique_constraints(model)
+        fields = dict(
+            self.inspector.field_definitions(
+                model,
+                dto_config.copy_with(include=[col.key for constraint in constraints for col in constraint.columns]),
+            )
+        )
+        for constraint in constraints:
+            field = DTOFieldDefinition(
+                dto_config=dto_config,
+                model=model,
+                model_field_name="_and_".join(fields[column.key].name for column in constraint.columns),
+                type_hint=DTOMissing,
+                metadata={"constraint": constraint},
+            )
+            yield GraphQLFieldDefinition.from_field(field)
 
     @override
     def should_exclude_field(

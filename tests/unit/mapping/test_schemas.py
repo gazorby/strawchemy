@@ -10,24 +10,25 @@ from typing import TYPE_CHECKING, Any
 import pytest
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
+from syrupy.assertion import SnapshotAssertion
+
+import strawberry
+from strawberry import auto
+from strawberry.scalars import JSON
 from strawchemy.dto.exceptions import EmptyDTOError
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.sqlalchemy.exceptions import QueryHookError
 from strawchemy.strawberry.exceptions import StrawchemyFieldError
 from strawchemy.strawberry.scalars import Interval
 from strawchemy.testing.pytest_plugin import MockContext
-from syrupy.assertion import SnapshotAssertion
-
-import strawberry
-from strawberry import auto
-from strawberry.scalars import JSON
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
 from tests.unit.models import User
 
 if TYPE_CHECKING:
-    from strawchemy.mapper import Strawchemy
     from syrupy.assertion import SnapshotAssertion
+
+    from strawchemy.mapper import Strawchemy
 
 
 SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval}
@@ -235,6 +236,7 @@ def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
         pytest.param("update.Mutation", id="update_mutation"),
         pytest.param("delete.Mutation", id="delete_mutation"),
         pytest.param("create_no_id.Mutation", id="create_no_id"),
+        pytest.param("upsert.Mutation", id="upsert"),
     ],
 )
 @pytest.mark.snapshot

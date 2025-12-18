@@ -10,7 +10,6 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
 from sqlalchemy.orm import registry as Registry  # noqa: N812
-from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
 from sqlalchemy import (
     ARRAY,
@@ -30,6 +29,7 @@ from sqlalchemy import (
     Time,
     UniqueConstraint,
 )
+from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
 metadata = MetaData()
 geo_metadata = MetaData()
@@ -139,7 +139,7 @@ class Fruit(Base):
     water_percent: Mapped[float] = mapped_column(Double)
     best_time_to_pick: Mapped[time] = mapped_column(TimeType, default=time(hour=9))
 
-    __table_args__ = (UniqueConstraint(name),)
+    __table_args__ = (UniqueConstraint(name), UniqueConstraint(sweetness, water_percent))
 
     @hybrid_property
     def description(self) -> str:

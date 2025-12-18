@@ -142,7 +142,7 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         return tuple(parent.value for parent in node.path_from_root())
 
     def _hash_identity(self) -> Hashable:
-        return (self._node_hash_identity(self.root), self._node_hash_identity(self))
+        return self._node_hash_identity(self.root), self._node_hash_identity(self)
 
     def _hash(self) -> int:
         # Ensure positive

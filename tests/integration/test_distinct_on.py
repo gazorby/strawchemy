@@ -11,8 +11,9 @@ from .fixtures import QueryTracker
 from .typing import RawRecordData
 
 if TYPE_CHECKING:
-    from strawchemy import StrawchemyConfig
     from syrupy.assertion import SnapshotAssertion
+
+    from strawchemy import StrawchemyConfig
 
 
 @pytest.fixture

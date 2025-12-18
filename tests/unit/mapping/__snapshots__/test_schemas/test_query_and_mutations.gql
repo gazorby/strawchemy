@@ -9,6 +9,7 @@ input ColorFruitInput {
 """Conflict fields enum"""
 enum ColorFruitsConflictFields {
   id
+  nameAndColorId
 }
 
 """Identifier input"""

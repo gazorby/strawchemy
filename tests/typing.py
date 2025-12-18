@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, Protocol, TypeAlias
 if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
     from strawberry.types.execution import ExecutionResult
+
     from strawchemy.dto.backend.pydantic import MappedPydanticDTO
     from strawchemy.dto.base import DTOFactory
 

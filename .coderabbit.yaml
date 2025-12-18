@@ -17,19 +17,18 @@ reviews:
     ignore_title_keywords:
       - "wip"
       - "draft"
+  tools:
+    ruff:
+      enabled: true
+    gitleaks:
+      enabled: true
+    hadolint:
+      enabled: true
+    yamllint:
+      enabled: true
+    actionlint:
+      enabled: true
 
-
-tools:
-  ruff:
-    enabled: true
-  gitleaks:
-    enabled: true
-  hadolint:
-    enabled: true
-  yamllint:
-    enabled: true
-  actionlint:
-    enabled: true
 chat:
   auto_reply: true
 

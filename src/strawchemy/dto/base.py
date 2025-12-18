@@ -267,7 +267,7 @@ class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
     def reverse_relation_required(self, model_field: ModelFieldT) -> bool: ...
 
 
-@dataclass
+@dataclass(slots=True)
 class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
     dto_config: DTOConfig
 
@@ -279,7 +279,6 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
     type_hint: Any
     is_relation: bool = False
     config: DTOFieldConfig = field(default_factory=DTOFieldConfig)
-    _model_field: ModelFieldT | type[DTOMissing] = DTOMissing
     related_model: type[ModelT] | None = None
     related_dto: type[DTOBase[ModelT]] | ForwardRef | None = None
     self_reference: bool = False
@@ -290,7 +289,9 @@ class DTOFieldDefinition(Generic[ModelT, ModelFieldT]):
     alias: str | None = None
     default: Any = DTOMissing
     default_factory: Callable[..., Any] | type[DTOMissing] = DTOMissing
+    metadata: dict[str, Any] = field(default_factory=dict)
 
+    _model_field: ModelFieldT | type[DTOMissing] = DTOMissing
     _type: Any = DTOMissing
 
     def __post_init__(self) -> None:

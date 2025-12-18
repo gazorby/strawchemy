@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
 from enum import Enum
 from inspect import getmodule
 from types import new_class
@@ -56,7 +55,7 @@ class EnumDTOBackend(DTOBackend[EnumDTO]):
             module = model_module.__name__
         return cast(
             "type[EnumDTO]",
-            EnumDTO(value=name, names=list(zip(list(field_map), values)), type=base, module=module),
+            EnumDTO(value=name, names=list(zip(list(field_map), values, strict=False)), type=base, module=module),
         )
 
     @override
@@ -83,15 +82,13 @@ class UpsertConflictFieldsEnumDTOBackend(EnumDTOBackend):
         values: Iterable[Any] | None = None,
         **kwargs: Any,
     ) -> type[EnumDTO]:
-        constraint_columns = self._inspector.unique_constraints(model)
-        constraint_map = {column.key: constraint for constraint in constraint_columns for column in constraint.columns}
         field_definitions = list(field_definitions)
         return super().build(
             name,
             model,
             field_definitions,
             base,
-            [constraint_map[field.model_field_name] for field in field_definitions],
+            [field.metadata["constraint"] for field in field_definitions],
             **kwargs,
         )
 

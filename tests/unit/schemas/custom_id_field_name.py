@@ -2,10 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from strawchemy import Strawchemy, StrawchemyConfig
-
 import strawberry
 from strawberry import Info, auto
+from strawchemy import Strawchemy, StrawchemyConfig
 from tests.unit.models import Color, Fruit
 
 strawchemy = Strawchemy(StrawchemyConfig("postgresql", default_id_field_name="pk"))

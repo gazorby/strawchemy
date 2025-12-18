@@ -13,10 +13,10 @@ from tests.integration.utils import to_graphql_representation
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
-    from strawchemy.config.databases import DatabaseFeatures
-    from strawchemy.typing import SupportedDialect
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy.config.databases import DatabaseFeatures
+    from strawchemy.typing import SupportedDialect
     from tests.integration.fixtures import QueryTracker
     from tests.integration.typing import RawRecordData
     from tests.typing import AnyQueryExecutor

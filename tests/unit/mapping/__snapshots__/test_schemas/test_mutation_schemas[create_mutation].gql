@@ -177,6 +177,7 @@ input GroupFruitInput {
 """Conflict fields enum"""
 enum GroupFruitsConflictFields {
   id
+  nameAndColorId
 }
 
 """Identifier input"""

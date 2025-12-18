@@ -310,7 +310,7 @@ asyncio_default_fixture_loop_scope = "function"
 [tool.ruff]
 line-length = 120
 fix = true
-target-version = "py39"
+target-version = "py310"
 exclude = [
     ".bzr",
     ".direnv",
@@ -370,6 +370,10 @@ convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["TC001", "UP037", "PLR2004", "PLC0415"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["strawchemy", "tests"]
+
 
 [tool.unasyncd]
 add_editors_note = true
