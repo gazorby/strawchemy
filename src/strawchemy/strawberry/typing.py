@@ -29,6 +29,7 @@ __all__ = (
     "AnySessionGetter",
     "AsyncSessionGetter",
     "FilterStatementCallable",
+    "MappedGraphQLDTO",
     "StrawchemyTypeWithStrawberryObjectDefinition",
     "SyncSessionGetter",
 )

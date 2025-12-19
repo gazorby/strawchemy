@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     "camel_to_snake",
+    "get_annotations",
     "is_type_hint_optional",
     "non_optional_type_hint",
     "snake_keys",

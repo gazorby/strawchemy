@@ -50,7 +50,7 @@ if TYPE_CHECKING:
     from typing import Any
 
 
-__all__ = ("DTOFactory", "DTOFieldDefinition", "MappedDTO", "ModelInspector")
+__all__ = ("DTOFactory", "DTOFieldDefinition", "MappedDTO", "ModelInspector", "ToMappedProtocol", "VisitorProtocol")
 
 T = TypeVar("T")
 DTOBaseT = TypeVar("DTOBaseT", bound="DTOBase[Any]")

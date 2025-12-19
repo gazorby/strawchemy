@@ -14,7 +14,20 @@ from strawchemy.dto.types import DTOUnset
 if TYPE_CHECKING:
     from strawchemy.strawberry.dto import EnumDTO
 
-__all__ = ("RelationType",)
+__all__ = (
+    "ErrorType",
+    "LocalizedErrorType",
+    "RelationType",
+    "RequiredToManyUpdateInput",
+    "RequiredToOneInput",
+    "ToManyCreateInput",
+    "ToManyUpdateInput",
+    "ToManyUpsertInput",
+    "ToOneInput",
+    "ToOneUpsertInput",
+    "ValidationErrorType",
+    "error_type_names",
+)
 
 T = TypeVar("T", bound="MappedDTO[Any]")
 UpdateFieldsT = TypeVar("UpdateFieldsT", bound="EnumDTO")

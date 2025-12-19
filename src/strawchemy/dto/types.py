@@ -15,7 +15,16 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
 
-__all__ = ("DTOAuto", "DTOConfig", "DTOFieldConfig", "DTOMissing", "ExcludeFields", "IncludeFields", "Purpose")
+__all__ = (
+    "DTOAuto",
+    "DTOConfig",
+    "DTOFieldConfig",
+    "DTOMissing",
+    "DTOUnset",
+    "ExcludeFields",
+    "IncludeFields",
+    "Purpose",
+)
 
 DTOScope: TypeAlias = Literal["global", "dto"]
 
