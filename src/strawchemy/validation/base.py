@@ -8,14 +8,16 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Generic, Protocol, TypeVar
 
+from strawchemy.exceptions import StrawchemyError
+
 if TYPE_CHECKING:
     from strawchemy.dto.base import MappedDTO
-    from strawchemy.strawberry.mutation.types import ValidationErrorType
+    from strawchemy.mutation import ValidationErrorType
 
 T = TypeVar("T")
 
 
-class InputValidationError(Exception):
+class InputValidationError(StrawchemyError):
     """Exception raised when input validation fails.
 
     This exception wraps the original validation error and provides a method to convert

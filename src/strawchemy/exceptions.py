@@ -7,7 +7,18 @@ from typing_extensions import override
 if TYPE_CHECKING:
     from typing import Any
 
-__all__ = ("SessionNotFoundError", "StrawchemyError")
+__all__ = (
+    "DTOError",
+    "EmptyDTOError",
+    "GraphError",
+    "ModelInspectorError",
+    "QueryHookError",
+    "QueryResultError",
+    "SessionNotFoundError",
+    "StrawchemyError",
+    "StrawchemyFieldError",
+    "TranspilingError",
+)
 
 
 class StrawchemyError(Exception):
@@ -41,3 +52,30 @@ class StrawchemyError(Exception):
 
 
 class SessionNotFoundError(StrawchemyError): ...
+
+
+class StrawchemyFieldError(StrawchemyError): ...
+
+
+class DTOError(StrawchemyError): ...
+
+
+class EmptyDTOError(DTOError): ...
+
+
+class ModelInspectorError(DTOError): ...
+
+
+class TranspilingError(StrawchemyError):
+    """Raised when an error occurs during transpiling."""
+
+
+class QueryResultError(StrawchemyError):
+    """Raised when an error occurs during query result processing or mapping."""
+
+
+class QueryHookError(StrawchemyError):
+    """Raised when an error occurs within a query hook's execution."""
+
+
+class GraphError(StrawchemyError): ...

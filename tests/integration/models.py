@@ -5,12 +5,6 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta
 from typing import Any
 
-from sqlalchemy.dialects import mysql, postgresql, sqlite
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
-from sqlalchemy.orm import registry as Registry  # noqa: N812
-
 from sqlalchemy import (
     ARRAY,
     JSON,
@@ -29,6 +23,12 @@ from sqlalchemy import (
     Time,
     UniqueConstraint,
 )
+from sqlalchemy.dialects import mysql, postgresql, sqlite
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
+from sqlalchemy.orm import registry as Registry  # noqa: N812
+
 from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
 metadata = MetaData()

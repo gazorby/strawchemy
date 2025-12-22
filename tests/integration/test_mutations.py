@@ -1776,7 +1776,6 @@ async def test_read_only_column_override(query_name: str, query: str, any_query:
         ),
     ],
 )
-@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
 async def test_relationship_to_many_override(query_name: str, query: str, any_query: AnyQueryExecutor) -> None:
     result = await maybe_async(any_query(query))
     assert not result.errors
@@ -1820,7 +1819,6 @@ async def test_relationship_to_many_override(query_name: str, query: str, any_qu
         ),
     ],
 )
-@pytest.mark.filterwarnings("ignore::sqlalchemy.exc.SAWarning")
 async def test_relationship_to_one_override(query_name: str, query: str, any_query: AnyQueryExecutor) -> None:
     result = await maybe_async(any_query(query))
     assert not result.errors

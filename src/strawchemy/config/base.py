@@ -3,17 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from strawchemy.sqlalchemy.inspector import SQLAlchemyGraphQLInspector
-from strawchemy.strawberry import default_session_getter
-from strawchemy.strawberry.repository import StrawchemySyncRepository
+from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
+from strawchemy.repository.strawberry import StrawchemySyncRepository
+from strawchemy.utils.strawberry import default_session_getter
 
 if TYPE_CHECKING:
-    from typing import Any
-
-    from strawchemy.sqlalchemy.typing import FilterMap
-    from strawchemy.strawberry.typing import AnySessionGetter
+    from strawchemy.repository.typing import AnySessionGetter, FilterMap
     from strawchemy.typing import AnyRepository, SupportedDialect
 
 
@@ -27,7 +24,7 @@ class StrawchemyConfig:
         auto_snake_case: Automatically convert snake cased names to camel case.
         repository_type: Repository class to use for auto resolvers.
         filter_overrides: Override default filters with custom filters.
-        execution_options: SQLAlchemy execution options for repository operations.
+        execution_options: SQLAlchemy execution options for strawberry operations.
         pagination_default_limit: Default pagination limit when `pagination=True`.
         pagination: Enable/disable pagination on list resolvers.
         default_id_field_name: Name for primary key fields arguments on primary key resolvers.
@@ -45,7 +42,7 @@ class StrawchemyConfig:
     filter_overrides: FilterMap | None = None
     """Override default filters with custom filters."""
     execution_options: dict[str, Any] | None = None
-    """SQLAlchemy execution options for repository operations."""
+    """SQLAlchemy execution options for strawberry operations."""
     pagination_default_limit: int = 100
     """Default pagination limit when `pagination=True`."""
     pagination: bool = False

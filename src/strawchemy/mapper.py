@@ -10,40 +10,43 @@ from strawberry.schema.config import StrawberryConfig
 from strawchemy.config.base import StrawchemyConfig
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import TYPING_NS
-from strawchemy.strawberry._field import (
-    StrawchemyCreateMutationField,
-    StrawchemyDeleteMutationField,
-    StrawchemyField,
-    StrawchemyUpdateMutationField,
-    StrawchemyUpsertMutationField,
-)
-from strawchemy.strawberry._registry import StrawberryRegistry
-from strawchemy.strawberry.dto import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
-from strawchemy.strawberry.factories.enum import EnumDTOBackend, EnumDTOFactory, UpsertConflictFieldsEnumDTOBackend
-from strawchemy.strawberry.factories.inputs import AggregateFilterDTOFactory, BooleanFilterDTOFactory, OrderByDTOFactory
-from strawchemy.strawberry.factories.types import (
+from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
+from strawchemy.factories import (
+    AggregateFilterDTOFactory,
+    BooleanFilterDTOFactory,
     DistinctOnFieldsDTOFactory,
+    EnumDTOBackend,
+    EnumDTOFactory,
     InputFactory,
+    OrderByDTOFactory,
     RootAggregateTypeDTOFactory,
     TypeDTOFactory,
     UpsertConflictFieldsDTOFactory,
+    UpsertConflictFieldsEnumDTOBackend,
 )
-from strawchemy.strawberry.mutation import types
-from strawchemy.strawberry.mutation._builder import MutationFieldBuilder
-from strawchemy.types import DefaultOffsetPagination
+from strawchemy.field import StrawchemyField
+from strawchemy.mutation import types
+from strawchemy.mutation.field_builder import MutationFieldBuilder
+from strawchemy.mutation.fields import (
+    StrawchemyCreateMutationField,
+    StrawchemyDeleteMutationField,
+    StrawchemyUpdateMutationField,
+    StrawchemyUpsertMutationField,
+)
+from strawchemy.pagination import DefaultOffsetPagination
+from strawchemy.utils.registry import StrawberryRegistry
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
+    from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.arguments import StrawberryArgument
 
-    from strawberry import BasePermission
-    from strawchemy.sqlalchemy.hook import QueryHook
-    from strawchemy.sqlalchemy.typing import QueryHookCallable
-    from strawchemy.strawberry.typing import FilterStatementCallable, MappedGraphQLDTO
-    from strawchemy.typing import AnyRepository, SupportedDialect
+    from strawchemy.repository.typing import QueryHookCallable
+    from strawchemy.transpiler.hook import QueryHook
+    from strawchemy.typing import AnyRepository, FilterStatementCallable, MappedGraphQLDTO, SupportedDialect
     from strawchemy.validation.base import ValidationProtocol
     from strawchemy.validation.pydantic import PydanticMapper
 
@@ -264,7 +267,7 @@ class Strawchemy:
             filter_statement: A callable to generate a filter statement for the query.
             execution_options: SQLAlchemy execution options for the query.
             query_hook: A callable or sequence of callables to modify the SQLAlchemy query.
-            repository_type: A custom repository class for data fetching logic.
+            repository_type: A custom strawberry class for data fetching logic.
             name: The name of the GraphQL field.
             description: The description of the GraphQL field.
             permission_classes: A list of permission classes for the field.
@@ -343,7 +346,7 @@ class Strawchemy:
 
         This method generates a mutation field that handles the creation of
         SQLAlchemy model instances based on the provided input type. It integrates
-        with Strawchemy's repository system for data persistence and allows for
+        with Strawchemy's strawberry system for data persistence and allows for
         custom validation.
 
         Args:
@@ -351,8 +354,8 @@ class Strawchemy:
                 a new model instance. This should be a `MappedGraphQLDTO`.
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            repository_type: An optional custom repository class for data fetching
-                and persistence logic. Defaults to the repository configured in
+            repository_type: An optional custom strawberry class for data fetching
+                and persistence logic. Defaults to the strawberry configured in
                 `StrawchemyConfig`.
             name: The name of the GraphQL mutation field.
             description: The description of the GraphQL mutation field.
@@ -415,7 +418,7 @@ class Strawchemy:
         This method generates a mutation field that handles the "upsert"
         (update or insert) of SQLAlchemy model instances. It uses the provided
         input type, update fields enum, and conflict fields enum to determine
-        the behavior on conflict. It integrates with Strawchemy's repository
+        the behavior on conflict. It integrates with Strawchemy's strawberry
         system and allows for custom validation.
 
         Args:
@@ -427,8 +430,8 @@ class Strawchemy:
                 conflict detection (e.g., primary key or unique constraints).
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            repository_type: An optional custom repository class for data fetching
-                and persistence logic. Defaults to the repository configured in
+            repository_type: An optional custom strawberry class for data fetching
+                and persistence logic. Defaults to the strawberry configured in
                 `StrawchemyConfig`.
             name: The name of the GraphQL mutation field.
             description: The description of the GraphQL mutation field.
@@ -492,7 +495,7 @@ class Strawchemy:
         This method generates a mutation field that handles updating existing
         SQLAlchemy model instances based on filter criteria. It uses the provided
         input type for the update data and a filter input type to specify which
-        records to update. It integrates with Strawchemy's repository system and
+        records to update. It integrates with Strawchemy's strawberry system and
         allows for custom validation.
 
         Args:
@@ -502,8 +505,8 @@ class Strawchemy:
                 instances should be updated. This should be a `BooleanFilterDTO`.
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            repository_type: An optional custom repository class for data fetching
-                and persistence logic. Defaults to the repository configured in
+            repository_type: An optional custom strawberry class for data fetching
+                and persistence logic. Defaults to the strawberry configured in
                 `StrawchemyConfig`.
             name: The name of the GraphQL mutation field.
             description: The description of the GraphQL mutation field.
@@ -566,7 +569,7 @@ class Strawchemy:
         This method generates a mutation field that handles updating existing
         SQLAlchemy model instances based on their primary key(s). The input type
         should typically include the ID(s) of the record(s) to update and the
-        data to apply. It integrates with Strawchemy's repository system and
+        data to apply. It integrates with Strawchemy's strawberry system and
         allows for custom validation.
 
         Args:
@@ -575,8 +578,8 @@ class Strawchemy:
                 generated by `pk_update_input`, which includes primary key fields.
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            repository_type: An optional custom repository class for data fetching
-                and persistence logic. Defaults to the repository configured in
+            repository_type: An optional custom strawberry class for data fetching
+                and persistence logic. Defaults to the strawberry configured in
                 `StrawchemyConfig`.
             name: The name of the GraphQL mutation field.
             description: The description of the GraphQL mutation field.
@@ -637,7 +640,7 @@ class Strawchemy:
         This method generates a mutation field that handles the deletion of
         SQLAlchemy model instances. Deletion can be based on filter criteria
         provided via `filter_input` or by ID if the `filter_input` is structured
-        to accept primary key(s). It integrates with Strawchemy's repository
+        to accept primary key(s). It integrates with Strawchemy's strawberry
         system for data persistence.
 
         Args:
@@ -648,8 +651,8 @@ class Strawchemy:
                 record based on an ID passed directly (implementation dependent).
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            repository_type: An optional custom repository class for data fetching
-                and persistence logic. Defaults to the repository configured in
+            repository_type: An optional custom strawberry class for data fetching
+                and persistence logic. Defaults to the strawberry configured in
                 `StrawchemyConfig`.
             name: The name of the GraphQL mutation field.
             description: The description of the GraphQL mutation field.

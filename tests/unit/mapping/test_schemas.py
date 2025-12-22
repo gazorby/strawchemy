@@ -8,18 +8,15 @@ from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
+from strawberry import auto
+from strawberry.scalars import JSON
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 from syrupy.assertion import SnapshotAssertion
 
-import strawberry
-from strawberry import auto
-from strawberry.scalars import JSON
-from strawchemy.dto.exceptions import EmptyDTOError
-from strawchemy.exceptions import StrawchemyError
-from strawchemy.sqlalchemy.exceptions import QueryHookError
-from strawchemy.strawberry.exceptions import StrawchemyFieldError
-from strawchemy.strawberry.scalars import Interval
+from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
+from strawchemy.scalars import Interval
 from strawchemy.testing.pytest_plugin import MockContext
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
@@ -220,7 +217,7 @@ def test_query_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
 @pytest.mark.snapshot
 @pytest.mark.skipif(not find_spec("geoalchemy2"), reason="geoalchemy2 is not installed")
 def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
-    from strawchemy.strawberry.geo import GEO_SCALAR_OVERRIDES
+    from strawchemy.scalars.geo import GEO_SCALAR_OVERRIDES
 
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)

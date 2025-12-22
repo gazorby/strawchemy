@@ -3,9 +3,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
+from sqlalchemy import Column, DateTime, ForeignKey, MetaData, Table
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from sqlalchemy import Column, DateTime, ForeignKey, MetaData, Table
 from strawchemy.dto.utils import READ_ONLY
 
 UTC = timezone.utc

@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 from uuid import UUID
 
 from pydantic import TypeAdapter
-
 from sqlalchemy import inspect
+
 from tests.integration.types import postgres as pg_types
 
 if TYPE_CHECKING:

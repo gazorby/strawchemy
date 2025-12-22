@@ -7,13 +7,13 @@ from enum import Enum, auto
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
 
+import strawberry
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import TypeIs, override
 
-import strawberry
 from strawchemy.dto.base import DTOFactory
-from strawchemy.sqlalchemy.inspector import SQLAlchemyInspector
-from strawchemy.utils import get_annotations
+from strawchemy.dto.inspectors import SQLAlchemyInspector
+from strawchemy.utils.annotation import get_annotations
 from tests.typing import AnyFactory, MappedPydanticFactory
 
 if TYPE_CHECKING:
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import Session
     from strawberry.types.execution import ExecutionResult
 
-    from strawchemy.sqlalchemy.typing import AnySession
+    from strawchemy.repository.typing import AnySession
     from strawchemy.typing import DataclassProtocol
     from tests.typing import AnyQueryExecutor, AsyncQueryExecutor, SyncQueryExecutor
 

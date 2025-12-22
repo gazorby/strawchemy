@@ -233,7 +233,7 @@ footer = """
 trim = true
 # postprocessors
 postprocessors = [
-    # { pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" }, # replace repository URL
+    # { pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" }, # replace strawberry URL
 ]
 
 # render body even when there are no releases to process
@@ -403,18 +403,18 @@ update_docstrings = true
 cache = true
 
 [tool.unasyncd.files]
-"src/strawchemy/sqlalchemy/repository/_async.py" = "src/strawchemy/sqlalchemy/repository/_sync.py"
-"src/strawchemy/strawberry/repository/_async.py" = "src/strawchemy/strawberry/repository/_sync.py"
+"src/strawchemy/repository/sqlalchemy/_async.py" = "src/strawchemy/repository/sqlalchemy/_sync.py"
+"src/strawchemy/repository/strawberry/_async.py" = "src/strawchemy/repository/strawberry/_sync.py"
 
-[tool.unasyncd.per_file_add_replacements."src/strawchemy/sqlalchemy/repository/_async.py"]
-"strawchemy.sqlalchemy._executor.AsyncQueryExecutor" = "strawchemy.sqlalchemy._executor.SyncQueryExecutor"
+[tool.unasyncd.per_file_add_replacements."src/strawchemy/repository/sqlalchemy/_async.py"]
+"strawchemy.transpiler.AsyncQueryExecutor" = "strawchemy.transpiler.SyncQueryExecutor"
 SQLAlchemyGraphQLAsyncRepository = "SQLAlchemyGraphQLSyncRepository"
-"strawchemy.sqlalchemy.typing.AnyAsyncSession" = "strawchemy.sqlalchemy.typing.AnySyncSession"
+"strawchemy.repository.typing.AnyAsyncSession" = "strawchemy.repository.typing.AnySyncSession"
 
-[tool.unasyncd.per_file_add_replacements."src/strawchemy/strawberry/repository/_async.py"]
-"strawchemy.sqlalchemy.repository.SQLAlchemyGraphQLAsyncRepository" = "strawchemy.sqlalchemy.repository.SQLAlchemyGraphQLSyncRepository"
-"strawchemy.sqlalchemy.typing.AnyAsyncSession" = "strawchemy.sqlalchemy.typing.AnySyncSession"
-"strawchemy.strawberry.typing.AsyncSessionGetter" = "strawchemy.strawberry.typing.SyncSessionGetter"
+[tool.unasyncd.per_file_add_replacements."src/strawchemy/repository/strawberry/_async.py"]
+"strawchemy.repository.sqlalchemy.SQLAlchemyGraphQLAsyncRepository" = "strawchemy.repository.sqlalchemy.SQLAlchemyGraphQLSyncRepository"
+"strawchemy.repository.typing.AnyAsyncSession" = "strawchemy.repository.typing.AnySyncSession"
+"strawchemy.repository.typing.AsyncSessionGetter" = "strawchemy.repository.typing.SyncSessionGetter"
 StrawchemyAsyncRepository = "StrawchemySyncRepository"
 
 [tool.uv]

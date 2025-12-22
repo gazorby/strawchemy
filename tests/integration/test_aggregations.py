@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Literal
 
 import pytest
 
-from strawchemy.types import DefaultOffsetPagination
+from strawchemy.pagination import DefaultOffsetPagination
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import Fruit
 from tests.integration.typing import RawRecordData

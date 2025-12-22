@@ -6,7 +6,7 @@ from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
 from strawchemy.dto.base import DTOFactory
-from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
+from strawchemy.dto.inspectors import SQLAlchemyInspector
 
 __all__ = ("factory", "pydantic_dto")
 
