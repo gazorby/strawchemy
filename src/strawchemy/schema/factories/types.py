@@ -23,7 +23,7 @@ from strawchemy.dto.strawberry import (
 from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
 from strawchemy.dto.utils import read_all_partial_config, read_partial, write_all_config
 from strawchemy.exceptions import EmptyDTOError
-from strawchemy.factories import (
+from strawchemy.schema.factories import (
     AggregationInspector,
     ChildOptions,
     EnumDTOFactory,
@@ -33,7 +33,7 @@ from strawchemy.factories import (
     StrawchemyMappedFactory,
     UpsertConflictFieldsEnumDTOBackend,
 )
-from strawchemy.mutation import (
+from strawchemy.schema.mutation import (
     RequiredToManyUpdateInput,
     RequiredToOneInput,
     ToManyCreateInput,
@@ -51,8 +51,8 @@ if TYPE_CHECKING:
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOBackend, DTOBase, Relation
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
-    from strawchemy.pagination import DefaultOffsetPagination
     from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.utils.graph import Node
 
 

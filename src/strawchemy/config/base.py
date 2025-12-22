@@ -11,7 +11,7 @@ from strawchemy.utils.strawberry import default_session_getter
 
 if TYPE_CHECKING:
     from strawchemy.repository.typing import AnySessionGetter, FilterMap
-    from strawchemy.typing import AnyRepository, SupportedDialect
+    from strawchemy.typing import AnyRepositoryType, SupportedDialect
 
 
 @dataclass
@@ -37,7 +37,7 @@ class StrawchemyConfig:
     """Function to retrieve SQLAlchemy session from strawberry `Info` object."""
     auto_snake_case: bool = True
     """Automatically convert snake cased names to camel case"""
-    repository_type: AnyRepository = StrawchemySyncRepository
+    repository_type: AnyRepositoryType = StrawchemySyncRepository
     """Repository class to use for auto resolvers."""
     filter_overrides: FilterMap | None = None
     """Override default filters with custom filters."""

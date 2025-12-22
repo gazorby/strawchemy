@@ -11,9 +11,9 @@ from sqlalchemy.orm import RelationshipProperty
 
 from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.exceptions import StrawchemyError
-from strawchemy.mutation import RelationType
 from strawchemy.repository.typing import DeclarativeT, QueryExecutorT, SessionT
-from strawchemy.transpiler._transpiler import QueryTranspiler
+from strawchemy.schema.mutation.types import RelationType
+from strawchemy.transpiler import QueryTranspiler
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -24,12 +24,12 @@ if TYPE_CHECKING:
     from sqlalchemy.sql.elements import KeyedColumnElement
 
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.mutation.input import Input, LevelInput, UpsertData
+    from strawchemy.schema.mutation import Input, LevelInput, UpsertData
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import QueryNodeType, SupportedDialect
 
 
-__all__ = ("InsertOrUpdate", "RowLike", "SQLAlchemyGraphQLRepository")
+__all__ = ("InsertData", "InsertOrUpdate", "MutationData", "RowLike", "SQLAlchemyGraphQLRepository")
 
 
 T = TypeVar("T", bound=Any)

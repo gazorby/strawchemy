@@ -572,7 +572,7 @@ Strawchemy supports offset-based pagination out of the box.
 Enable pagination on fields:
 
 ```python
-from strawchemy.pagination import DefaultOffsetPagination
+from strawchemy.schema.pagination import DefaultOffsetPagination
 
 
 @strawberry.type

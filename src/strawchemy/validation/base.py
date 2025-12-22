@@ -12,7 +12,7 @@ from strawchemy.exceptions import StrawchemyError
 
 if TYPE_CHECKING:
     from strawchemy.dto.base import MappedDTO
-    from strawchemy.mutation import ValidationErrorType
+    from strawchemy.schema.mutation import ValidationErrorType
 
 T = TypeVar("T")
 

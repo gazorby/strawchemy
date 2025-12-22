@@ -33,6 +33,7 @@ __all__ = (
     "AggregationType",
     "AnyMappedDTO",
     "AnyRepository",
+    "AnyRepositoryType",
     "CreateOrUpdateResolverResult",
     "DataclassProtocol",
     "FilterStatementCallable",
@@ -74,7 +75,8 @@ AggregationType = Literal[
 ]
 GraphQLType = Literal["input", "object", "interface", "enum"]
 
-AnyRepository: TypeAlias = "type[StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]]"
+AnyRepository: TypeAlias = "StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]"
+AnyRepositoryType: TypeAlias = "type[AnyRepository]"
 FilterStatementCallable: TypeAlias = "Callable[[Info[Any, Any]], Select[tuple[Any]]]"
 GraphQLPurpose: TypeAlias = Literal[
     "type",

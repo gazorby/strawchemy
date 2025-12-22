@@ -5,7 +5,7 @@ from uuid import uuid4
 import pytest
 
 from strawchemy import Strawchemy
-from strawchemy.mutation.input import Input
+from strawchemy.schema.mutation import Input
 from tests.unit.dc_models import ColorDataclass, FruitDataclass
 from tests.unit.models import Color, Fruit
 

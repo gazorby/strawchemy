@@ -11,8 +11,8 @@ from sqlalchemy.orm import QueryableAttribute
 from strawberry import UNSET
 from typing_extensions import override
 
-from strawchemy.filters import FilterProtocol, GraphQLComparison
-from strawchemy.scalars.geo import GeoJSON
+from strawchemy.schema.filters import FilterProtocol, GraphQLComparison
+from strawchemy.schema.scalars.geo import GeoJSON
 
 __all__ = ("GeoComparison",)
 

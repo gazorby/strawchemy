@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from strawchemy.factories.aggregations import AggregationInspector
-from strawchemy.factories.base import (
+from strawchemy.schema.factories.aggregations import AggregationInspector
+from strawchemy.schema.factories.base import (
     ChildOptions,
     GraphQLDTOFactory,
     MappedGraphQLDTOT,
@@ -9,9 +9,9 @@ from strawchemy.factories.base import (
     StrawchemyUnMappedDTOFactory,
     UnmappedGraphQLDTOT,
 )
-from strawchemy.factories.enum import EnumDTOBackend, EnumDTOFactory, UpsertConflictFieldsEnumDTOBackend
-from strawchemy.factories.inputs import AggregateFilterDTOFactory, BooleanFilterDTOFactory, OrderByDTOFactory
-from strawchemy.factories.types import (
+from strawchemy.schema.factories.enum import EnumDTOBackend, EnumDTOFactory, UpsertConflictFieldsEnumDTOBackend
+from strawchemy.schema.factories.inputs import AggregateFilterDTOFactory, BooleanFilterDTOFactory, OrderByDTOFactory
+from strawchemy.schema.factories.types import (
     AggregateDTOFactory,
     DistinctOnFieldsDTOFactory,
     InputFactory,

@@ -20,8 +20,8 @@ from strawchemy.dto.strawberry import (
     UnmappedStrawberryGraphQLDTO,
 )
 from strawchemy.exceptions import DTOError
-from strawchemy.factories.base import GraphQLDTOFactory
-from strawchemy.factories.enum import EnumDTOBackend, EnumDTOFactory
+from strawchemy.schema.factories.base import GraphQLDTOFactory
+from strawchemy.schema.factories.enum import EnumDTOBackend, EnumDTOFactory
 
 if TYPE_CHECKING:
     from collections.abc import Generator

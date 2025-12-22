@@ -39,7 +39,7 @@ from strawchemy.dto.types import DTOAuto, DTOScope, Purpose
 from strawchemy.dto.utils import config
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.instance import MapperModelInstance
-from strawchemy.pagination import DefaultOffsetPagination
+from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.transpiler import hook
 from strawchemy.typing import GraphQLDTOT, GraphQLPurpose, GraphQLType, MappedGraphQLDTO
 from strawchemy.utils.annotation import get_annotations

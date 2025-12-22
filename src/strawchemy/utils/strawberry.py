@@ -13,7 +13,7 @@ from strawberry.types.base import (
 from strawberry.types.union import StrawberryUnion
 
 from strawchemy.exceptions import SessionNotFoundError
-from strawchemy.mutation import ErrorType
+from strawchemy.schema.interfaces import ErrorType
 from strawchemy.typing import UNION_TYPES
 
 if TYPE_CHECKING:

@@ -40,7 +40,9 @@ from typing_extensions import Self, override
 from strawchemy.dto.backend.strawberry import MappedStrawberryDTO, StrawberryDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOMissing, Purpose
-from strawchemy.transpiler.hook import QueryHook  # noqa: TC001
+from strawchemy.transpiler.hook import (
+    QueryHook,  # noqa: TC001 msgspec does not support resolving references dynamically
+)
 from strawchemy.typing import (
     AggregationFunction,
     AggregationType,
@@ -55,7 +57,7 @@ from strawchemy.utils.text import camel_to_snake
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Sequence
 
-    from strawchemy.filters import EqualityComparison, GraphQLComparison
+    from strawchemy.schema.filters import EqualityComparison, GraphQLComparison
 
 T = TypeVar("T")
 

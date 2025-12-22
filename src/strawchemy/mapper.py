@@ -11,7 +11,7 @@ from strawchemy.config.base import StrawchemyConfig
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import TYPING_NS
 from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
-from strawchemy.factories import (
+from strawchemy.schema.factories import (
     AggregateFilterDTOFactory,
     BooleanFilterDTOFactory,
     DistinctOnFieldsDTOFactory,
@@ -24,16 +24,16 @@ from strawchemy.factories import (
     UpsertConflictFieldsDTOFactory,
     UpsertConflictFieldsEnumDTOBackend,
 )
-from strawchemy.field import StrawchemyField
-from strawchemy.mutation import types
-from strawchemy.mutation.field_builder import MutationFieldBuilder
-from strawchemy.mutation.fields import (
+from strawchemy.schema.field import StrawchemyField
+from strawchemy.schema.mutation import types
+from strawchemy.schema.mutation.field_builder import MutationFieldBuilder
+from strawchemy.schema.mutation.fields import (
     StrawchemyCreateMutationField,
     StrawchemyDeleteMutationField,
     StrawchemyUpdateMutationField,
     StrawchemyUpsertMutationField,
 )
-from strawchemy.pagination import DefaultOffsetPagination
+from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.utils.registry import StrawberryRegistry
 
 if TYPE_CHECKING:
@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 
     from strawchemy.repository.typing import QueryHookCallable
     from strawchemy.transpiler.hook import QueryHook
-    from strawchemy.typing import AnyRepository, FilterStatementCallable, MappedGraphQLDTO, SupportedDialect
+    from strawchemy.typing import AnyRepositoryType, FilterStatementCallable, MappedGraphQLDTO, SupportedDialect
     from strawchemy.validation.base import ValidationProtocol
     from strawchemy.validation.pydantic import PydanticMapper
 
@@ -178,7 +178,7 @@ class Strawchemy:
         filter_statement: FilterStatementCallable | None = None,
         execution_options: dict[str, Any] | None = None,
         query_hook: QueryHook[Any] | Sequence[QueryHook[Any]] | None = None,
-        repository_type: AnyRepository | None = None,
+        repository_type: AnyRepositoryType | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,
@@ -206,7 +206,7 @@ class Strawchemy:
         filter_statement: FilterStatementCallable | None = None,
         execution_options: dict[str, Any] | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
-        repository_type: AnyRepository | None = None,
+        repository_type: AnyRepositoryType | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,
@@ -234,7 +234,7 @@ class Strawchemy:
         filter_statement: FilterStatementCallable | None = None,
         execution_options: dict[str, Any] | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
-        repository_type: AnyRepository | None = None,
+        repository_type: AnyRepositoryType | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,
@@ -329,7 +329,7 @@ class Strawchemy:
         input_type: type[MappedGraphQLDTO[T]],
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepository | None = None,
+        repository_type: AnyRepositoryType | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,
@@ -400,7 +400,7 @@ class Strawchemy:
         conflict_fields: type[EnumDTO],
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepository | None = None,
+        repository_type: AnyRepositoryType | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,
@@ -477,7 +477,7 @@ class Strawchemy:
         filter_input: type[BooleanFilterDTO],
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepository | None = None,
+        repository_type: AnyRepositoryType | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,
@@ -551,7 +551,7 @@ class Strawchemy:
         input_type: type[MappedGraphQLDTO[T]],
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepository | None = None,
+        repository_type: AnyRepositoryType | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,
@@ -623,7 +623,7 @@ class Strawchemy:
         filter_input: type[BooleanFilterDTO] | None = None,
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepository | None = None,
+        repository_type: AnyRepositoryType | None = None,
         name: str | None = None,
         description: str | None = None,
         permission_classes: list[type[BasePermission]] | None = None,

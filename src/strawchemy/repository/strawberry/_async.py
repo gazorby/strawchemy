@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from strawchemy.repository.sqlalchemy import SQLAlchemyGraphQLAsyncRepository
-from strawchemy.repository.strawberry.base import GraphQLResult, StrawchemyRepository
+from strawchemy.repository.strawberry.base import IS_ASYNC_REPOSITORY, GraphQLResult, StrawchemyRepository
 from strawchemy.utils.strawberry import default_session_getter, dto_model_from_type, strawberry_contained_user_type
 
 if TYPE_CHECKING:
@@ -18,8 +18,8 @@ if TYPE_CHECKING:
     from strawberry import Info
 
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.mutation.input import Input, InputModel
     from strawchemy.repository.typing import AnyAsyncSession, AsyncSessionGetter
+    from strawchemy.schema.mutation import Input, InputModel
 
 __all__ = ("StrawchemyAsyncRepository",)
 
@@ -42,6 +42,8 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         execution_options: Optional execution options for SQLAlchemy
         deterministic_ordering: Whether to ensure deterministic ordering of results
     """
+
+    is_async = IS_ASYNC_REPOSITORY
 
     type: type[T]
     info: Info[Any, Any]

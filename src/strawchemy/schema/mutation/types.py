@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeVar
 
 import strawberry
 from strawberry import UNSET
@@ -10,12 +10,12 @@ from typing_extensions import override
 
 from strawchemy.dto import MappedDTO, ToMappedProtocol, VisitorProtocol
 from strawchemy.dto.types import DTOUnset
+from strawchemy.schema.interfaces import ErrorId, ErrorType
 
 if TYPE_CHECKING:
     from strawchemy.dto.strawberry import EnumDTO
 
 __all__ = (
-    "ErrorType",
     "LocalizedErrorType",
     "RelationType",
     "RequiredToManyUpdateInput",
@@ -41,12 +41,6 @@ _TO_MANY_UPDATE_DESCRIPTION = "Add new objects or update existing ones"
 
 def error_type_names() -> set[str]:
     return {get_object_definition(type_, strict=True).name for type_ in ErrorType.__error_types__}
-
-
-class ErrorId(Enum):
-    ERROR = "ERROR"
-    VALIDATION_ERROR = "VALIDATION_ERROR"
-    LOCALIZED_VALIDATION_ERROR = "LOCALIZED_VALIDATION_ERROR"
 
 
 class RelationType(Enum):
@@ -192,20 +186,6 @@ class ToManyUpdateInput(RequiredToManyUpdateInput[T, RelationInputT, UpdateField
             msg = "You cannot use `set` with `create`, `upsert`, `add` or `remove` in a -to-many relation input"
             raise ValueError(msg)
         return super().to_mapped(visitor, level=level, override=override)
-
-
-@strawberry.interface(description="Base interface for expected errors", name="ErrorType")
-class ErrorType:
-    """Base class for GraphQL errors."""
-
-    __error_types__: ClassVar[set[type[Any]]] = set()
-
-    id: str = ErrorId.ERROR.value
-
-    def __init_subclass__(cls) -> None:
-        if not cls.__error_types__:
-            cls.__error_types__.add(ErrorType)
-        cls.__error_types__.add(cls)
 
 
 @strawberry.type(description="Indicate validation error type and location.", name="LocalizedErrorType")

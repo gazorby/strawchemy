@@ -47,7 +47,7 @@ from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.inspectors import ModelInspector
 from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOMissing, DTOUnset, Purpose
 from strawchemy.exceptions import ModelInspectorError
-from strawchemy.filters import (
+from strawchemy.schema.filters import (
     ArrayComparison,
     DateComparison,
     DateTimeComparison,
@@ -535,7 +535,7 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
             from geoalchemy2 import WKBElement, WKTElement  # noqa: PLC0415
             from shapely import Geometry  # noqa: PLC0415
 
-            from strawchemy.filters.geo import GeoComparison  # noqa: PLC0415
+            from strawchemy.schema.filters.geo import GeoComparison  # noqa: PLC0415
 
             filters_map |= {(Geometry, WKBElement, WKTElement): GeoComparison}
         if self.db_features.dialect == "sqlite":

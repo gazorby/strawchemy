@@ -15,7 +15,7 @@ from strawberry.types.field import StrawberryField
 from strawchemy.utils.strawberry import strawberry_contained_types
 
 try:
-    from strawchemy.filters.geo import GeoComparison
+    from strawchemy.schema.filters.geo import GeoComparison
 
     geo_comparison = GeoComparison
 except ModuleNotFoundError:  # pragma: no cover
@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from strawberry.types.base import WithStrawberryObjectDefinition
 
     from strawchemy.dto.types import DTOScope
-    from strawchemy.pagination import DefaultOffsetPagination
+    from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.typing import GraphQLType, StrawchemyTypeWithStrawberryObjectDefinition
 
 __all__ = ("RegistryTypeInfo", "StrawberryRegistry")

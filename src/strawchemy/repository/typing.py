@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias, TypeVar
 
 if TYPE_CHECKING:
@@ -14,7 +13,7 @@ if TYPE_CHECKING:
     from strawberry import Info
 
     from strawchemy.dto.strawberry import OrderByEnum
-    from strawchemy.filters.base import GraphQLComparison
+    from strawchemy.schema.filters import GraphQLComparison
     from strawchemy.transpiler import QueryExecutor, QueryHook
 
 

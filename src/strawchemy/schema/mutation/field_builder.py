@@ -15,13 +15,13 @@ if TYPE_CHECKING:
     from strawberry.extensions.field_extension import FieldExtension
 
     from strawchemy.config.base import StrawchemyConfig
-    from strawchemy.mutation.fields import (
+    from strawchemy.schema.mutation.fields import (
         StrawchemyCreateMutationField,
         StrawchemyDeleteMutationField,
         StrawchemyUpdateMutationField,
         StrawchemyUpsertMutationField,
     )
-    from strawchemy.typing import AnyRepository
+    from strawchemy.typing import AnyRepositoryType
 
 
 @dataclass
@@ -46,7 +46,7 @@ class MutationFieldBuilder:
         ],
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepository | None = None,
+        repository_type: AnyRepositoryType | None = None,
         graphql_type: Any | None = None,
         name: str | None = None,
         description: str | None = None,

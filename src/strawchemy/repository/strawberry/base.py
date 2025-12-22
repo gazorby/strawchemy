@@ -28,8 +28,8 @@ from strawchemy.dto.strawberry import (
     StrawchemyDTOAttributes,
 )
 from strawchemy.exceptions import StrawchemyError
-from strawchemy.mutation import error_type_names
 from strawchemy.repository.strawberry._node import StrawberryQueryNode
+from strawchemy.schema.mutation import error_type_names
 from strawchemy.utils.graph import NodeMetadata
 from strawchemy.utils.strawberry import dto_model_from_type, strawberry_contained_user_type
 from strawchemy.utils.text import camel_to_snake, snake_keys
@@ -41,9 +41,12 @@ if TYPE_CHECKING:
     from strawchemy.transpiler import QueryHook, QueryResult
     from strawchemy.typing import QueryNodeType, StrawchemyTypeWithStrawberryObjectDefinition
 
-__all__ = ("GraphQLResult", "StrawchemyRepository")
+__all__ = ("IS_ASYNC_REPOSITORY", "IS_SYNC_REPOSITORY", "GraphQLResult", "StrawchemyRepository")
 
 T = TypeVar("T")
+
+IS_ASYNC_REPOSITORY: bool = True
+IS_SYNC_REPOSITORY: bool = not IS_ASYNC_REPOSITORY
 
 
 @dataclass
@@ -150,6 +153,8 @@ class StrawchemyRepository(Generic[T]):
 
     _ignored_field_names: ClassVar[frozenset[str]] = frozenset({"__typename"})
 
+    is_async: ClassVar[bool]
+
     type: type[T]
     info: Info[Any, Any]
     root_aggregations: bool = False
@@ -189,7 +194,7 @@ class StrawchemyRepository(Generic[T]):
 
     @classmethod
     def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]] | None:
-        from strawchemy.field import StrawchemyField  # noqa: PLC0415
+        from strawchemy.schema.field import StrawchemyField  # noqa: PLC0415
 
         return field.query_hook if isinstance(field, StrawchemyField) else None
 

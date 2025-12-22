@@ -412,6 +412,7 @@ SQLAlchemyGraphQLAsyncRepository = "SQLAlchemyGraphQLSyncRepository"
 "strawchemy.repository.typing.AnyAsyncSession" = "strawchemy.repository.typing.AnySyncSession"
 
 [tool.unasyncd.per_file_add_replacements."src/strawchemy/repository/strawberry/_async.py"]
+"strawchemy.repository.strawberry.base.IS_ASYNC_REPOSITORY" = "strawchemy.repository.strawberry.base.IS_SYNC_REPOSITORY"
 "strawchemy.repository.sqlalchemy.SQLAlchemyGraphQLAsyncRepository" = "strawchemy.repository.sqlalchemy.SQLAlchemyGraphQLSyncRepository"
 "strawchemy.repository.typing.AnyAsyncSession" = "strawchemy.repository.typing.AnySyncSession"
 "strawchemy.repository.typing.AsyncSessionGetter" = "strawchemy.repository.typing.SyncSessionGetter"

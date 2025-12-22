@@ -36,7 +36,7 @@ def test_patch_query_fixture(query: str, pytester: pytest.Pytester) -> None:
         from strawberry.scalars import JSON
         from typing import Any
         from datetime import timedelta
-        from strawchemy.scalars import Interval
+        from strawchemy.schema.scalars import Interval
 
         SCALAR_OVERRIDES: dict[object, Any] = {{dict[str, Any]: JSON, timedelta: Interval}}
         pytest_plugins = ["strawchemy.testing.pytest_plugin", "pytest_asyncio"]

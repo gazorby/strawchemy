@@ -11,7 +11,7 @@ from typing_extensions import Self, override
 
 from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
 from strawchemy.dto.inspectors import SQLAlchemyInspector
-from strawchemy.mutation.types import (
+from strawchemy.schema.mutation.types import (
     RelationType,
     ToManyCreateInput,
     ToManyUpdateInput,

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-from strawchemy.mutation.input import Input
-from strawchemy.mutation.types import (
-    ErrorType,
+from strawchemy.schema.mutation.input import Input, InputModel, LevelInput, UpsertData
+from strawchemy.schema.mutation.types import (
     LocalizedErrorType,
     RelationType,
     RequiredToManyUpdateInput,
@@ -17,8 +16,9 @@ from strawchemy.mutation.types import (
 )
 
 __all__ = (
-    "ErrorType",
     "Input",
+    "InputModel",
+    "LevelInput",
     "LocalizedErrorType",
     "RelationType",
     "RequiredToManyUpdateInput",
@@ -28,6 +28,7 @@ __all__ = (
     "ToManyUpsertInput",
     "ToOneInput",
     "ToOneUpsertInput",
+    "UpsertData",
     "ValidationErrorType",
     "error_type_names",
 )

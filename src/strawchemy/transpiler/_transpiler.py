@@ -46,8 +46,8 @@ from strawchemy.dto.strawberry import (
     QueryNode,
 )
 from strawchemy.exceptions import TranspilingError
-from strawchemy.filters import GraphQLComparison
 from strawchemy.repository.typing import DeclarativeT, OrderBySpec, QueryExecutorT
+from strawchemy.schema.filters import GraphQLComparison
 from strawchemy.transpiler._executor import SyncQueryExecutor
 from strawchemy.transpiler._query import (
     AggregationJoin,

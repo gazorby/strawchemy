@@ -16,7 +16,7 @@ from strawberry.types.object_type import StrawberryObjectDefinition
 from syrupy.assertion import SnapshotAssertion
 
 from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
-from strawchemy.scalars import Interval
+from strawchemy.schema.scalars import Interval
 from strawchemy.testing.pytest_plugin import MockContext
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
@@ -217,7 +217,7 @@ def test_query_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
 @pytest.mark.snapshot
 @pytest.mark.skipif(not find_spec("geoalchemy2"), reason="geoalchemy2 is not installed")
 def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
-    from strawchemy.scalars.geo import GEO_SCALAR_OVERRIDES
+    from strawchemy.schema.scalars.geo import GEO_SCALAR_OVERRIDES
 
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)

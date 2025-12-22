@@ -11,8 +11,8 @@ from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBacken
 from strawchemy.dto.base import ModelT
 from strawchemy.dto.strawberry import StrawchemyDTOAttributes
 from strawchemy.dto.utils import read_partial
-from strawchemy.factories import InputFactory
-from strawchemy.mutation import LocalizedErrorType, ValidationErrorType
+from strawchemy.schema.factories import InputFactory
+from strawchemy.schema.mutation import LocalizedErrorType, ValidationErrorType
 from strawchemy.utils.text import snake_to_lower_camel_case
 from strawchemy.validation.base import InputValidationError, T, ValidationProtocol
 

@@ -9,9 +9,8 @@ from typing_extensions import override
 
 from strawchemy.constants import DATA_KEY, FILTER_KEY, UPSERT_CONFLICT_FIELDS, UPSERT_UPDATE_FIELDS
 from strawchemy.exceptions import StrawchemyFieldError
-from strawchemy.field import StrawchemyField
-from strawchemy.mutation import Input
-from strawchemy.repository.strawberry import StrawchemyAsyncRepository
+from strawchemy.schema.field import StrawchemyField
+from strawchemy.schema.mutation.input import Input
 from strawchemy.utils.strawberry import is_list
 from strawchemy.validation import InputValidationError
 
@@ -72,7 +71,7 @@ class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
             input_data = Input(data, self._validation)
         except InputValidationError as error:
             return error.graphql_type()
-        if isinstance(repository, StrawchemyAsyncRepository):
+        if self._is_repo_async(repository):
             return self._input_result_async(repository.create(input_data), input_data)
         return self._input_result_sync(repository.create(input_data), input_data)
 
@@ -115,7 +114,7 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
             input_data = Input(data, self._validation)
         except InputValidationError as error:
             return error.graphql_type()
-        if isinstance(repository, StrawchemyAsyncRepository):
+        if self._is_repo_async(repository):
             return self._input_result_async(
                 repository.upsert(input_data, filter_input, update_fields, conflict_fields), input_data
             )
@@ -171,7 +170,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
             error_result = error.graphql_type()
             return [error_result] if isinstance(data, Sequence) else error_result
 
-        if isinstance(repository, StrawchemyAsyncRepository):
+        if self._is_repo_async(repository):
             return self._input_result_async(repository.update_by_id(input_data), input_data)
         return self._input_result_sync(repository.update_by_id(input_data), input_data)
 
@@ -183,7 +182,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
             input_data = Input(data, self._validation)
         except InputValidationError as error:
             return [error.graphql_type()]
-        if isinstance(repository, StrawchemyAsyncRepository):
+        if self._is_repo_async(repository):
             return self._list_result_async(repository.update_by_filter(input_data, filter_input))
         return self._list_result_sync(repository.update_by_filter(input_data, filter_input))
 
@@ -229,7 +228,7 @@ class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
         filter_input: BooleanFilterDTO | None = None,
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        if isinstance(repository, StrawchemyAsyncRepository):
+        if self._is_repo_async(repository):
             return self._list_result_async(repository.delete(filter_input))
         return self._list_result_sync(repository.delete(filter_input))
 

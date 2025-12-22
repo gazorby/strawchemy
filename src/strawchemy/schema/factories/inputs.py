@@ -20,7 +20,7 @@ from strawchemy.dto.strawberry import (
     OrderByEnum,
 )
 from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
-from strawchemy.factories import AggregationInspector, StrawchemyUnMappedDTOFactory, UnmappedGraphQLDTOT
+from strawchemy.schema.factories import AggregationInspector, StrawchemyUnMappedDTOFactory, UnmappedGraphQLDTOT
 from strawchemy.typing import AggregationFunction, GraphQLFilterDTOT, GraphQLPurpose, GraphQLType
 from strawchemy.utils.registry import RegistryTypeInfo
 from strawchemy.utils.text import snake_to_camel
@@ -33,8 +33,8 @@ if TYPE_CHECKING:
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, Relation
     from strawchemy.dto.types import ExcludeFields, IncludeFields
-    from strawchemy.filters import GraphQLFilter
     from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.schema.filters import GraphQLFilter
     from strawchemy.utils.graph import Node
 
 T = TypeVar("T")

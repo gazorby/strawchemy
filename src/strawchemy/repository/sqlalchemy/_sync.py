@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
 from sqlalchemy.orm import RelationshipProperty
 
-from strawchemy.mutation.input import RelationType, UpsertData
 from strawchemy.repository.sqlalchemy._base import InsertData, MutationData, SQLAlchemyGraphQLRepository
 from strawchemy.repository.typing import AnySyncSession, DeclarativeT
+from strawchemy.schema.mutation import RelationType, UpsertData
 from strawchemy.transpiler import QueryResult, QueryTranspiler, SyncQueryExecutor
 
 if TYPE_CHECKING:
@@ -21,8 +21,8 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
 
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.mutation.input import Input, LevelInput
     from strawchemy.repository.sqlalchemy._base import InsertOrUpdate, RowLike
+    from strawchemy.schema.mutation import Input, LevelInput
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import QueryNodeType
 

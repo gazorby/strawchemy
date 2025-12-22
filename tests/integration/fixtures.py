@@ -39,7 +39,7 @@ from typing_extensions import Self
 
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
-from strawchemy.scalars import Date, DateTime, Interval, Time
+from strawchemy.schema.scalars import Date, DateTime, Interval, Time
 from tests.fixtures import DefaultQuery
 from tests.integration.models import (
     Color,
@@ -104,7 +104,7 @@ scalar_overrides: dict[object, Any] = {
 engine_plugins: list[str] = []
 
 if GEO_INSTALLED:
-    from strawchemy.scalars.geo import GEO_SCALAR_OVERRIDES
+    from strawchemy.schema.scalars.geo import GEO_SCALAR_OVERRIDES
 
     engine_plugins = ["geoalchemy2"]
     scalar_overrides |= GEO_SCALAR_OVERRIDES

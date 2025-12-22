@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar
 import strawberry
 from strawberry import UNSET, Private
 
-from strawchemy.filters.base import (
+from strawchemy.schema.filters import (
     ArrayFilter,
     DateFilter,
     DateTimeFilter,

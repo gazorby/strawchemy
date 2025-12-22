@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
     from sqlalchemy.orm import QueryableAttribute
 
-    from strawchemy.filters import (
+    from strawchemy.schema.filters import (
         ArrayComparison,
         DateComparison,
         DateTimeComparison,

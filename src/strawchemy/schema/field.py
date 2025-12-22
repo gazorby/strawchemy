@@ -17,8 +17,7 @@ from strawchemy.dto.base import MappedDTO
 from strawchemy.dto.strawberry import MappedStrawberryGraphQLDTO, StrawchemyDTOAttributes
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.exceptions import StrawchemyFieldError
-from strawchemy.pagination import DefaultOffsetPagination
-from strawchemy.repository.strawberry import StrawchemyAsyncRepository
+from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.utils.annotation import is_type_hint_optional
 from strawchemy.utils.strawberry import (
     dto_model_from_type,
@@ -39,11 +38,12 @@ if TYPE_CHECKING:
 
     from strawchemy import StrawchemyConfig
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
-    from strawchemy.repository.strawberry import StrawchemySyncRepository
+    from strawchemy.repository.strawberry import StrawchemyAsyncRepository, StrawchemySyncRepository
     from strawchemy.repository.strawberry.base import GraphQLResult
     from strawchemy.repository.typing import QueryHookCallable
     from strawchemy.typing import (
         AnyRepository,
+        AnyRepositoryType,
         CreateOrUpdateResolverResult,
         FilterStatementCallable,
         GetByIdResolverResult,
@@ -74,7 +74,7 @@ class StrawchemyField(StrawberryField):
     def __init__(
         self,
         config: StrawchemyConfig,
-        repository_type: AnyRepository,
+        repository_type: AnyRepositoryType,
         filter_type: type[BooleanFilterDTO] | None = None,
         order_by: type[OrderByDTO] | None = None,
         distinct_on: type[EnumDTO] | None = None,
@@ -165,6 +165,9 @@ class StrawchemyField(StrawberryField):
             deterministic_ordering=self._config.deterministic_ordering,
         )
 
+    def _is_repo_async(self, repository: AnyRepository | type[AnyRepository]) -> TypeIs[StrawchemyAsyncRepository[Any]]:
+        return repository.is_async
+
     async def _list_result_async(self, repository_call: Awaitable[GraphQLResult[Any, Any]]) -> ListResolverResult:
         return (await repository_call).graphql_list(root_aggregations=self.root_aggregations)
 
@@ -184,7 +187,7 @@ class StrawchemyField(StrawberryField):
         self, info: Info, **kwargs: Any
     ) -> GetByIdResolverResult | Coroutine[GetByIdResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        if isinstance(repository, StrawchemyAsyncRepository):
+        if self._is_repo_async(repository):
             return self._get_by_id_result_async(repository.get_by_id(**kwargs))
         return self._get_by_id_result_sync(repository.get_by_id(**kwargs))
 
@@ -198,7 +201,7 @@ class StrawchemyField(StrawberryField):
         offset: int | None = None,
     ) -> ListResolverResult | Coroutine[ListResolverResult, Any, Any]:
         repository = self._get_repository(info)
-        if isinstance(repository, StrawchemyAsyncRepository):
+        if self._is_repo_async(repository):
             return self._list_result_async(repository.list(filter_input, order_by, distinct_on, limit, offset))
         return self._list_result_sync(repository.list(filter_input, order_by, distinct_on, limit, offset))
 
@@ -320,7 +323,7 @@ class StrawchemyField(StrawberryField):
     @cached_property
     @override
     def is_async(self) -> bool:
-        return issubclass(self._repository_type, StrawchemyAsyncRepository)
+        return self._is_repo_async(self._repository_type)
 
     @override
     def __copy__(self) -> Self:

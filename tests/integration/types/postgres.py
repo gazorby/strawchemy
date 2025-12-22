@@ -19,7 +19,7 @@ from strawchemy import (
     StrawchemySyncRepository,
     ValidationErrorType,
 )
-from strawchemy.pagination import DefaultOffsetPagination
+from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.validation.pydantic import PydanticValidation
 from tests.integration.models import (
     ArrayModel,
