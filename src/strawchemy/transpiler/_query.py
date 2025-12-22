@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Generic, cast
 
@@ -62,6 +62,7 @@ if TYPE_CHECKING:
 __all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
 
 
+@dataclass
 class Join:
     """Represents a join to be applied to a SQLAlchemy query.
 
@@ -77,19 +78,11 @@ class Join:
             particularly relevant for ordered relationships.
     """
 
-    def __init__(
-        self,
-        target: QueryableAttribute[Any] | NamedFromClause | AliasedClass[Any],
-        node: QueryNodeType,
-        onclause: _OnClauseArgument | None = None,
-        is_outer: bool = False,
-        order_nodes: list[QueryNodeType] | None = None,
-    ) -> None:
-        self.target = target
-        self.node = node
-        self.onclause = onclause
-        self.is_outer = is_outer
-        self.order_nodes = order_nodes if order_nodes is not None else []
+    target: QueryableAttribute[Any] | NamedFromClause | AliasedClass[Any]
+    node: QueryNodeType
+    onclause: _OnClauseArgument | None = None
+    is_outer: bool = False
+    order_nodes: list[QueryNodeType] = dataclasses.field(default_factory=list)
 
     @property
     def _relationship(self) -> RelationshipProperty[Any]:
@@ -138,6 +131,7 @@ class Join:
         return self.order >= other.order
 
 
+@dataclass(kw_only=True)
 class AggregationJoin(Join):
     """Represents a join specifically for aggregation purposes, often involving a subquery.
 
@@ -150,19 +144,10 @@ class AggregationJoin(Join):
         _column_names: Internal tracking of column names within the subquery to ensure uniqueness.
     """
 
-    def __init__(
-        self,
-        target: QueryableAttribute[Any] | NamedFromClause | AliasedClass[Any],
-        node: QueryNodeType,
-        subquery_alias: AliasedClass[Any],
-        onclause: _OnClauseArgument | None = None,
-        is_outer: bool = False,
-        order_nodes: list[QueryNodeType] | None = None,
-    ) -> None:
-        super().__init__(target, node, onclause, is_outer, order_nodes)
-        self.subquery_alias = subquery_alias
-        self._column_names: defaultdict[str, int] = defaultdict(int)
+    subquery_alias: AliasedClass[Any]
+    _column_names: defaultdict[str, int] = field(default_factory=lambda: defaultdict(int))
 
+    def __post_init__(self) -> None:
         # Initialize the _column_names mapping from the subquery's selected columns
         for column in self._inner_select.selected_columns:
             if isinstance(column, NamedColumn):

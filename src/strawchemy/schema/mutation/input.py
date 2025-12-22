@@ -68,30 +68,22 @@ class UpsertData:
         return iter(self.instances)
 
 
+@dataclass
 class _UnboundRelationInput:
-    def __init__(
-        self,
-        attribute: MapperProperty[Any],
-        related: type[DeclarativeBase],
-        relation_type: RelationType,
-        set_: list[DeclarativeBase] | None | type[_Unset] = _Unset,
-        add: list[DeclarativeBase] | None = None,
-        remove: list[DeclarativeBase] | None = None,
-        create: list[DeclarativeBase] | None = None,
-        upsert: UpsertData | None = None,
-        input_index: int = -1,
-        level: int = 0,
-    ) -> None:
-        self.attribute = attribute
-        self.related = related
-        self.relation_type = relation_type
-        self.set: list[DeclarativeBase] | None = set_ if set_ is not _Unset else []
-        self.add = add if add is not None else []
-        self.remove = remove if remove is not None else []
-        self.create = create if create is not None else []
-        self.upsert = upsert
-        self.input_index = input_index
-        self.level = level
+    attribute: MapperProperty[Any]
+    related: type[DeclarativeBase]
+    relation_type: RelationType
+    set_: list[DeclarativeBase] | None | type[_Unset] = _Unset
+    add: list[DeclarativeBase] = field(default_factory=list)
+    remove: list[DeclarativeBase] = field(default_factory=list)
+    create: list[DeclarativeBase] = field(default_factory=list)
+    upsert: UpsertData | None = None
+    input_index: int = -1
+    level: int = 0
+    set: list[DeclarativeBase] | None = field(init=False)
+
+    def __post_init__(self) -> None:
+        self.set = self.set_ if self.set_ is not _Unset else []
 
     def add_instance(self, model: DeclarativeBase) -> None:
         if not _has_record(model):
@@ -108,34 +100,12 @@ class _UnboundRelationInput:
         return bool(self.set or self.add or self.remove or self.create or self.upsert) or self.set is None
 
 
+@dataclass
 class RelationInput(_UnboundRelationInput):
-    def __init__(
-        self,
-        attribute: MapperProperty[Any],
-        related: type[DeclarativeBase],
-        parent: DeclarativeBase,
-        relation_type: RelationType,
-        set_: list[DeclarativeBase] | None | type[_Unset] = _Unset,
-        add: list[DeclarativeBase] | None = None,
-        remove: list[DeclarativeBase] | None = None,
-        create: list[DeclarativeBase] | None = None,
-        upsert: UpsertData | None = None,
-        input_index: int = -1,
-        level: int = 0,
-    ) -> None:
-        super().__init__(
-            attribute=attribute,
-            related=related,
-            relation_type=relation_type,
-            set_=set_,
-            add=add,
-            remove=remove,
-            create=create,
-            upsert=upsert,
-            input_index=input_index,
-            level=level,
-        )
-        self.parent = parent
+    parent: DeclarativeBase = field(kw_only=True)
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
 
         if self.relation_type is RelationType.TO_ONE:
             event.listens_for(self.attribute, "set")(self._set_event)
