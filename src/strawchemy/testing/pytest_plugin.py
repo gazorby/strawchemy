@@ -5,17 +5,17 @@ from typing import TYPE_CHECKING, Any, TypeAlias
 from unittest.mock import MagicMock
 
 import pytest
-
 from sqlalchemy import Result
-from strawchemy.sqlalchemy import _executor as executor
-from strawchemy.sqlalchemy._scope import AggregationFunctionInfo
+
+from strawchemy.transpiler import _executor as executor
+from strawchemy.transpiler._scope import AggregationFunctionInfo
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
 
     from strawchemy.dto import ModelT
-    from strawchemy.sqlalchemy.typing import AnySession, DeclarativeT
-    from strawchemy.strawberry.dto import QueryNode
+    from strawchemy.dto.strawberry import QueryNode
+    from strawchemy.repository.typing import AnySession, DeclarativeT
     from strawchemy.typing import SupportedDialect
 
 

@@ -1,21 +1,19 @@
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from pydantic import ValidationError
-from sqlalchemy.orm import DeclarativeBase
 from typing_extensions import override
 
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
 from strawchemy.dto.base import ModelT
+from strawchemy.dto.strawberry import StrawchemyDTOAttributes
 from strawchemy.dto.utils import read_partial
-from strawchemy.strawberry.dto import StrawchemyDTOAttributes
-from strawchemy.strawberry.factories.types import InputFactory
-from strawchemy.strawberry.mutation.types import LocalizedErrorType, ValidationErrorType
-from strawchemy.utils import snake_to_lower_camel_case
+from strawchemy.schema.factories import InputFactory
+from strawchemy.schema.mutation import LocalizedErrorType, ValidationErrorType
+from strawchemy.utils.text import snake_to_lower_camel_case
 from strawchemy.validation.base import InputValidationError, T, ValidationProtocol
 
 if TYPE_CHECKING:
@@ -27,9 +25,9 @@ if TYPE_CHECKING:
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, Relation
     from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
-    from strawchemy.graph import Node
-    from strawchemy.sqlalchemy.typing import DeclarativeT
-    from strawchemy.strawberry.typing import GraphQLPurpose
+    from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.typing import GraphQLPurpose
+    from strawchemy.utils.graph import Node
 
 
 @dataclass

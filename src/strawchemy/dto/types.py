@@ -9,17 +9,27 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias, final, get_type_hints
 
 from typing_extensions import override
 
-from strawchemy.utils import get_annotations
+from strawchemy.utils.annotation import get_annotations
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
 
-__all__ = ("DTOAuto", "DTOConfig", "DTOFieldConfig", "DTOMissing", "ExcludeFields", "IncludeFields", "Purpose")
+__all__ = (
+    "DTOAuto",
+    "DTOConfig",
+    "DTOFieldConfig",
+    "DTOMissing",
+    "DTOScope",
+    "DTOSkip",
+    "DTOUnset",
+    "ExcludeFields",
+    "IncludeFields",
+    "Purpose",
+    "PurposeConfig",
+)
 
 DTOScope: TypeAlias = Literal["global", "dto"]
-
-
 IncludeFields: TypeAlias = "list[str] | set[str] | Literal['all']"
 ExcludeFields: TypeAlias = "list[str] | set[str]"
 

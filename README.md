@@ -23,13 +23,17 @@ Generates GraphQL types, inputs, queries and resolvers directly from SQLAlchemy 
 - ⚡ **Sync/Async**: Works with both sync and async SQLAlchemy sessions
 
 - 🛢 **Supported databases**:
-  - PostgreSQL (using [asyncpg](https://github.com/MagicStack/asyncpg) or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
-  - MySQL (using [asyncmy](https://github.com/long2ice/asyncmy))
-  - SQLite (using [aiosqlite](https://aiosqlite.omnilib.dev/en/stable/) or [sqlite](https://docs.python.org/3/library/sqlite3.html))
+    - PostgreSQL (using [asyncpg](https://github.com/MagicStack/asyncpg)
+      or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
+    - MySQL (using [asyncmy](https://github.com/long2ice/asyncmy))
+    - SQLite (using [aiosqlite](https://aiosqlite.omnilib.dev/en/stable/)
+      or [sqlite](https://docs.python.org/3/library/sqlite3.html))
 
 > [!Warning]
 >
-> Please note that strawchemy is currently in a pre-release stage of development. This means that the library is still under active development and the initial API is subject to change. We encourage you to experiment with strawchemy and provide feedback, but be sure to pin and update carefully until a stable release is available.
+> Please note that strawchemy is currently in a pre-release stage of development. This means that the library is still
+> under active development and the initial API is subject to change. We encourage you to experiment with strawchemy and
+> provide feedback, but be sure to pin and update carefully until a stable release is available.
 
 ## Table of Contents
 
@@ -142,44 +146,46 @@ class Query:
     users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by=UserOrderBy, pagination=True)
     posts: list[PostType] = strawchemy.field(filter_input=PostFilter, order_by=PostOrderBy, pagination=True)
 
+
 # Create schema
 schema = strawberry.Schema(query=Query)
 ```
 
 ```graphql
 {
-  # Users with pagination, filtering, and ordering
-  users(
-    offset: 0
-    limit: 10
-    filter: { name: { contains: "John" } }
-    orderBy: { name: ASC }
-  ) {
-    id
-    name
-    posts {
-      id
-      title
-      content
+    # Users with pagination, filtering, and ordering
+    users(
+        offset: 0
+        limit: 10
+        filter: { name: { contains: "John" } }
+        orderBy: { name: ASC }
+    ) {
+        id
+        name
+        posts {
+            id
+            title
+            content
+        }
     }
-  }
 
-  # Posts with exact title match
-  posts(filter: { title: { eq: "Introduction to GraphQL" } }) {
-    id
-    title
-    content
-    author {
-      id
-      name
+    # Posts with exact title match
+    posts(filter: { title: { eq: "Introduction to GraphQL" } }) {
+        id
+        title
+        content
+        author {
+            id
+            name
+        }
     }
-  }
 }
 ```
 
 ## Mapping SQLAlchemy Models
 
-Strawchemy provides an easy way to map SQLAlchemy models to GraphQL types using the `@strawchemy.type` decorator. You can include/exclude specific fields or have strawchemy map all columns/relationships of the model and it's children.
+Strawchemy provides an easy way to map SQLAlchemy models to GraphQL types using the `@strawchemy.type` decorator. You
+can include/exclude specific fields or have strawchemy map all columns/relationships of the model and it's children.
 
 <details>
 <summary>Mapping example</summary>
@@ -199,6 +205,7 @@ strawchemy = Strawchemy("postgresql")
 
 class Base(DeclarativeBase):
     pass
+
 
 class User(Base):
     __tablename__ = "user"
@@ -246,6 +253,7 @@ Add a custom fields
 ```python
 from strawchemy import ModelInstance
 
+
 class User(Base):
     __tablename__ = "user"
 
@@ -269,7 +277,8 @@ See the [custom resolvers](#custom-resolvers) for more details
 
 ### Type Override
 
-When generating types for relationships, Strawchemy creates default names (e.g., `<ModelName>Type`). If you have already defined a Python class with that same name, it will cause a name collision.
+When generating types for relationships, Strawchemy creates default names (e.g., `<ModelName>Type`). If you have already
+defined a Python class with that same name, it will cause a name collision.
 
 The `override=True` parameter tells Strawchemy that your definition should be used, resolving the conflict.
 
@@ -284,6 +293,7 @@ class Author(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
 
+
 class Book(Base):
     __tablename__ = "book"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -292,13 +302,16 @@ class Book(Base):
     author: Mapped[Author] = relationship()
 ```
 
-If you define a type for `Book`, Strawchemy will inspect the `author` relationship and attempt to auto-generate a type for the `Author` model, naming it `AuthorType` by default. If you have already defined a class with that name, it will cause a name collision.
+If you define a type for `Book`, Strawchemy will inspect the `author` relationship and attempt to auto-generate a type
+for the `Author` model, naming it `AuthorType` by default. If you have already defined a class with that name, it will
+cause a name collision.
 
 ```python
 # Let's say you've already defined this class
 @strawchemy.type(Book, include="all")
 class BookType:
     pass
+
 
 # This will cause an error because Strawchemy has already created `AuthorType` when generating `BookType`
 @strawchemy.type(Book, include="all")
@@ -308,12 +321,14 @@ class AuthorType:
 
 You would see an error like: `Type 'AuthorType' cannot be auto generated because it's already declared.`
 
-To solve this, you can create a single, definitive `AuthorType` and mark it with `override=True`. This tells Strawchemy to use your version instead of generating a new one.
+To solve this, you can create a single, definitive `AuthorType` and mark it with `override=True`. This tells Strawchemy
+to use your version instead of generating a new one.
 
 ```python
 @strawchemy.type(Author, include="all", override=True)
 class AuthorType:
     pass
+
 
 # Now this works, because Strawchemy knows to use your `AuthorType`
 @strawchemy.type(Book, include="all")
@@ -327,18 +342,22 @@ class BookType:
 
 While `override=True` solves name collisions, `scope="global"` is used to promote consistency and reuse.
 
-By defining a type with `scope="global"`, you register it as the canonical type for a given SQLAlchemy model and purpose (e.g. a strawberry `type`, `filter`, or `input`). Strawchemy will then automatically use this globally-scoped type everywhere it's needed in your schema, rather than generating new ones.
+By defining a type with `scope="global"`, you register it as the canonical type for a given SQLAlchemy model and
+purpose (e.g. a strawberry `type`, `filter`, or `input`). Strawchemy will then automatically use this globally-scoped
+type everywhere it's needed in your schema, rather than generating new ones.
 
 <details>
 <summary>Using `scope="global"`</summary>
 
-Let's define a global type for the `Color` model. This type will now be the default for the `Color` model across the entire schema.
+Let's define a global type for the `Color` model. This type will now be the default for the `Color` model across the
+entire schema.
 
 ```python
 # This becomes the canonical type for the `Color` model
 @strawchemy.type(Color, include={"id", "name"}, scope="global")
 class ColorType:
     pass
+
 
 # Another type that references the Color model
 @strawchemy.type(Fruit, include="all")
@@ -348,13 +367,15 @@ class FruitType:
     # without needing an explicit annotation.
 ```
 
-This ensures that the `Color` model is represented consistently as `ColorType` in all parts of your GraphQL schema, such as in the `FruitType`'s `color` field, without needing to manually specify it every time.
+This ensures that the `Color` model is represented consistently as `ColorType` in all parts of your GraphQL schema, such
+as in the `FruitType`'s `color` field, without needing to manually specify it every time.
 
 </details>
 
 ## Resolver Generation
 
-Strawchemy automatically generates resolvers for your GraphQL fields. You can use the `strawchemy.field()` function to generate fields that query your database
+Strawchemy automatically generates resolvers for your GraphQL fields. You can use the `strawchemy.field()` function to
+generate fields that query your database
 
 <details>
 <summary>Resolvers example</summary>
@@ -372,12 +393,15 @@ class Query:
 
 </details>
 
-While Strawchemy automatically generates resolvers for most use cases, you can also create custom resolvers for more complex scenarios. There are two main approaches to creating custom resolvers:
+While Strawchemy automatically generates resolvers for most use cases, you can also create custom resolvers for more
+complex scenarios. There are two main approaches to creating custom resolvers:
 
 ### Using Repository Directly
 
-When using `strawchemy.field()` as a function, strawchemy creates a resolver that delegates data fetching to the `StrawchemySyncRepository` or `StrawchemyAsyncRepository` classes depending on the SQLAlchemy session type.
-You can create custom resolvers by using the `@strawchemy.field` as a decorator and working directly with the repository:
+When using `strawchemy.field()` as a function, strawchemy creates a resolver that delegates data fetching to the
+`StrawchemySyncRepository` or `StrawchemyAsyncRepository` classes depending on the SQLAlchemy session type.
+You can create custom resolvers by using the `@strawchemy.field` as a decorator and working directly with the
+repository:
 
 <details>
 <summary>Custom resolvers using repository</summary>
@@ -386,18 +410,19 @@ You can create custom resolvers by using the `@strawchemy.field` as a decorator 
 from sqlalchemy import select, true
 from strawchemy import StrawchemySyncRepository
 
+
 @strawberry.type
 class Query:
     @strawchemy.field
     def red_color(self, info: strawberry.Info) -> ColorType:
-        # Create a repository with a predefined filter
+        # Create a strawberry with a predefined filter
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == "Red"))
         # Return a single result (will raise an exception if not found)
         return repo.get_one().graphql_type()
 
     @strawchemy.field
     def get_color_by_name(self, info: strawberry.Info, color: str) -> ColorType | None:
-        # Create a repository with a custom filter statement
+        # Create a strawberry with a custom filter statement
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
         # Return a single result or None if not found
         return repo.get_one_or_none().graphql_type_or_none()
@@ -420,6 +445,7 @@ For async resolvers, use `StrawchemyAsyncRepository` which is the async variant 
 ```python
 from strawchemy import StrawchemyAsyncRepository
 
+
 @strawberry.type
 class Query:
     @strawchemy.field
@@ -439,7 +465,8 @@ The repository provides several methods for fetching data:
 
 ### Query Hooks
 
-Strawchemy provides query hooks that allow you to customize query behavior. Query hooks give you fine-grained control over how SQL queries are constructed and executed.
+Strawchemy provides query hooks that allow you to customize query behavior. Query hooks give you fine-grained control
+over how SQL queries are constructed and executed.
 
 <details>
 <summary>Using query hooks</summary>
@@ -448,12 +475,15 @@ The `QueryHook` base class provides several methods that you can override to cus
 
 #### Modifying the statement
 
-You can subclass `QueryHook` and override the `apply_hook` method apply changes to the statement. By default, it returns it unchanged. This method is only for filtering or ordering customizations, if you want to explicitly load columns or relationships, use the `load` parameter instead.
+You can subclass `QueryHook` and override the `apply_hook` method apply changes to the statement. By default, it returns
+it unchanged. This method is only for filtering or ordering customizations, if you want to explicitly load columns or
+relationships, use the `load` parameter instead.
 
 ```python
 from strawchemy import ModelInstance, QueryHook
 from sqlalchemy import Select, select
 from sqlalchemy.orm.util import AliasedClass
+
 
 # Define a model and type
 class Fruit(Base):
@@ -461,6 +491,7 @@ class Fruit(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     adjectives: Mapped[list[str]] = mapped_column(ARRAY(String))
+
 
 # Apply the hook at the field level
 @strawchemy.type(Fruit, exclude={"color"})
@@ -472,11 +503,13 @@ class FruitTypeWithDescription:
     def description(self) -> str:
         return f"The {self.instance.name} is {', '.join(self.instance.adjectives)}"
 
+
 # Create a custom query hook for filtering
 class FilterFruitHook(QueryHook[Fruit]):
     def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
         # Add a custom WHERE clause
         return statement.where(alias.name == "Apple")
+
 
 # Apply the hook at the type level
 @strawchemy.type(Fruit, exclude={"color"}, query_hook=FilterFruitHook())
@@ -486,14 +519,16 @@ class FilteredFruitType:
 
 Important notes when implementing `apply_hooks`:
 
-- You must use the provided `alias` parameter to refer to columns of the model on which the hook is applied. Otherwise, the statement may fail.
+- You must use the provided `alias` parameter to refer to columns of the model on which the hook is applied. Otherwise,
+  the statement may fail.
 - The GraphQL context is available through `self.info` within hook methods.
 - You must set a `ModelInstance` typed attribute if you want to access the model instance values.
   The `instance` attribute is matched by the `ModelInstance[Fruit]` type hint, so you can give it any name you want.
 
 #### Load specific columns/relationships
 
-The `load` parameter specify columns and relationships that should always be loaded, even if not directly requested in the GraphQL query. This is useful for:
+The `load` parameter specify columns and relationships that should always be loaded, even if not directly requested in
+the GraphQL query. This is useful for:
 
 - Ensuring data needed for computed properties is available
 - Loading columns or relationships required for custom resolvers
@@ -506,15 +541,18 @@ Examples of using the `load` parameter:
 def description(self) -> str:
     return f"The {self.instance.name} is {', '.join(self.instance.adjectives)}"
 
+
 # Load a relationship without specifying columns
 @strawchemy.field(query_hook=QueryHook(load=[Fruit.farms]))
 def pretty_farms(self) -> str:
     return f"Farms are: {', '.join(farm.name for farm in self.instance.farms)}"
 
+
 # Load a relationship with specific columns
 @strawchemy.field(query_hook=QueryHook(load=[(Fruit.color, [Color.name, Color.created_at])]))
 def pretty_color(self) -> str:
     return f"Color is {self.instance.color.name}" if self.instance.color else "No color!"
+
 
 # Load nested relationships
 @strawchemy.field(query_hook=QueryHook(load=[(Color.fruits, [(Fruit.farms, [FruitFarm.name])])]))
@@ -534,7 +572,8 @@ Strawchemy supports offset-based pagination out of the box.
 Enable pagination on fields:
 
 ```python
-from strawchemy.types import DefaultOffsetPagination
+from strawchemy.schema.pagination import DefaultOffsetPagination
+
 
 @strawberry.type
 class Query:
@@ -548,10 +587,10 @@ In your GraphQL queries, you can use the `offset` and `limit` parameters:
 
 ```graphql
 {
-  users(offset: 0, limit: 10) {
-    id
-    name
-  }
+    users(offset: 0, limit: 10) {
+        id
+        name
+    }
 }
 ```
 
@@ -567,14 +606,14 @@ Then in your GraphQL queries:
 
 ```graphql
 {
-  users {
-    id
-    name
-    posts(offset: 0, limit: 5) {
-      id
-      title
+    users {
+        id
+        name
+        posts(offset: 0, limit: 5) {
+            id
+            title
+        }
     }
-  }
 }
 ```
 
@@ -607,53 +646,53 @@ Now you can use various filter operations in your GraphQL queries:
 
 ```graphql
 {
-  # Equality filter
-  users(filter: { name: { eq: "John" } }) {
-    id
-    name
-  }
-
-  # Comparison filters
-  users(filter: { age: { gt: 18, lte: 30 } }) {
-    id
-    name
-    age
-  }
-
-  # String filters
-  users(filter: { name: { contains: "oh", ilike: "%OHN%" } }) {
-    id
-    name
-  }
-
-  # Logical operators
-  users(filter: { _or: [{ name: { eq: "John" } }, { name: { eq: "Jane" } }] }) {
-    id
-    name
-  }
-  # Nested filters
-  users(filter: { posts: { title: { contains: "GraphQL" } } }) {
-    id
-    name
-    posts {
-      id
-      title
+    # Equality filter
+    users(filter: { name: { eq: "John" } }) {
+        id
+        name
     }
-  }
 
-  # Compare interval component
-  tasks(filter: { duration: { days: { gt: 2 } } }) {
-    id
-    name
-    duration
-  }
+    # Comparison filters
+    users(filter: { age: { gt: 18, lte: 30 } }) {
+        id
+        name
+        age
+    }
 
-  # Direct interval comparison
-  tasks(filter: { duration: { gt: "P2DT5H" } }) {
-    id
-    name
-    duration
-  }
+    # String filters
+    users(filter: { name: { contains: "oh", ilike: "%OHN%" } }) {
+        id
+        name
+    }
+
+    # Logical operators
+    users(filter: { _or: [{ name: { eq: "John" } }, { name: { eq: "Jane" } }] }) {
+        id
+        name
+    }
+    # Nested filters
+    users(filter: { posts: { title: { contains: "GraphQL" } } }) {
+        id
+        name
+        posts {
+            id
+            title
+        }
+    }
+
+    # Compare interval component
+    tasks(filter: { duration: { days: { gt: 2 } } }) {
+        id
+        name
+        duration
+    }
+
+    # Direct interval comparison
+    tasks(filter: { duration: { gt: "P2DT5H" } }) {
+        id
+        name
+        duration
+    }
 }
 ```
 
@@ -662,7 +701,7 @@ Now you can use various filter operations in your GraphQL queries:
 Strawchemy supports a wide range of filter operations:
 
 | Data Type/Category                      | Filter Operations                                                                                                                                                                |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|-----------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Common to most types**                | `eq`, `neq`, `isNull`, `in`, `nin`                                                                                                                                               |
 | **Numeric types (Int, Float, Decimal)** | `gt`, `gte`, `lt`, `lte`                                                                                                                                                         |
 | **String**                              | order filter, plus `like`, `nlike`, `ilike`, `nilike`, `regexp`, `iregexp`, `nregexp`, `inregexp`, `startswith`, `endswith`, `contains`, `istartswith`, `iendswith`, `icontains` |
@@ -676,7 +715,9 @@ Strawchemy supports a wide range of filter operations:
 
 ### Geo Filters
 
-Strawchemy supports spatial filtering capabilities for geometry fields using [GeoJSON](https://datatracker.ietf.org/doc/html/rfc7946). To use geo filters, you need to have PostGIS installed and enabled in your PostgreSQL database.
+Strawchemy supports spatial filtering capabilities for geometry fields
+using [GeoJSON](https://datatracker.ietf.org/doc/html/rfc7946). To use geo filters, you need to have PostGIS installed
+and enabled in your PostgreSQL database.
 
 <details>
 <summary>Geo filters example</summary>
@@ -692,15 +733,18 @@ class GeoModel(Base):
     point: Mapped[WKBElement | None] = mapped_column(Geometry("POINT", srid=4326), nullable=True)
     polygon: Mapped[WKBElement | None] = mapped_column(Geometry("POLYGON", srid=4326), nullable=True)
 
+
 @strawchemy.type(GeoModel, include="all")
 class GeoType: ...
+
 
 @strawchemy.filter(GeoModel, include="all")
 class GeoFieldsFilter: ...
 
+
 @strawberry.type
 class Query:
-geo: list[GeoType] = strawchemy.field(filter_input=GeoFieldsFilter)
+    geo: list[GeoType] = strawchemy.field(filter_input=GeoFieldsFilter)
 
 ```
 
@@ -708,35 +752,35 @@ Then you can use the following geo filter operations in your GraphQL queries:
 
 ```graphql
 {
-  # Find geometries that contain a point
-  geo(
-    filter: {
-      polygon: { containsGeometry: { type: "Point", coordinates: [0.5, 0.5] } }
-    }
-  ) {
-    id
-    polygon
-  }
-
-  # Find geometries that are within a polygon
-  geo(
-    filter: {
-      point: {
-        withinGeometry: {
-          type: "Polygon"
-          coordinates: [[[0, 0], [0, 2], [2, 2], [2, 0], [0, 0]]]
+    # Find geometries that contain a point
+    geo(
+        filter: {
+            polygon: { containsGeometry: { type: "Point", coordinates: [0.5, 0.5] } }
         }
-      }
+    ) {
+        id
+        polygon
     }
-  ) {
-    id
-    point
-  }
 
-  # Find records with null geometry
-  geo(filter: { point: { isNull: true } }) {
-    id
-  }
+    # Find geometries that are within a polygon
+    geo(
+        filter: {
+            point: {
+                withinGeometry: {
+                    type: "Polygon"
+                    coordinates: [[[0, 0], [0, 2], [2, 2], [2, 0], [0, 0]]]
+                }
+            }
+        }
+    ) {
+        id
+        point
+    }
+
+    # Find records with null geometry
+    geo(filter: { point: { isNull: true } }) {
+        id
+    }
 }
 ```
 
@@ -762,7 +806,8 @@ These filters work with all geometry types supported by PostGIS, including:
 
 Strawchemy automatically exposes aggregation fields for list relationships.
 
-When you define a model with a list relationship, the corresponding GraphQL type will include an aggregation field for that relationship, named `<field_name>Aggregate`.
+When you define a model with a list relationship, the corresponding GraphQL type will include an aggregation field for
+that relationship, named `<field_name>Aggregate`.
 
 <details>
 <summary> Basic aggregation example:</summary>
@@ -803,20 +848,20 @@ You can query aggregations on the `posts` relationship:
 
 ```graphql
 {
-  users {
-    id
-    name
-    postsAggregate {
-      count
-      min {
-        title
-      }
-      max {
-        title
-      }
-      # Other aggregation functions are also available
+    users {
+        id
+        name
+        postsAggregate {
+            count
+            min {
+                title
+            }
+            max {
+                title
+            }
+            # Other aggregation functions are also available
+        }
     }
-  }
 }
 ```
 
@@ -846,17 +891,17 @@ For example, to find users who have more than 5 posts:
 
 ```graphql
 {
-  users(
-    filter: {
-      postsAggregate: { count: { arguments: [id], predicate: { gt: 5 } } }
+    users(
+        filter: {
+            postsAggregate: { count: { arguments: [id], predicate: { gt: 5 } } }
+        }
+    ) {
+        id
+        name
+        postsAggregate {
+            count
+        }
     }
-  ) {
-    id
-    name
-    postsAggregate {
-      count
-    }
-  }
 }
 ```
 
@@ -865,32 +910,32 @@ You can use various predicates for filtering:
 ```graphql
 # Users with exactly 3 posts
 users(filter: {
-  postsAggregate: {
-    count: {
-      arguments: [id]
-      predicate: { eq: 3 }
-    }
-  }
+postsAggregate: {
+count: {
+arguments: [id]
+predicate: { eq: 3 }
+}
+}
 })
 
 # Users with posts containing "GraphQL" in the title
 users(filter: {
-  postsAggregate: {
-    maxString: {
-      arguments: [title]
-      predicate: { contains: "GraphQL" }
-    }
-  }
+postsAggregate: {
+maxString: {
+arguments: [title]
+predicate: { contains: "GraphQL" }
+}
+}
 })
 
 # Users with an average post length greater than 1000 characters
 users(filter: {
-  postsAggregate: {
-    avg: {
-      arguments: [contentLength]
-      predicate: { gt: 1000 }
-    }
-  }
+postsAggregate: {
+avg: {
+arguments: [contentLength]
+predicate: { gt: 1000 }
+}
+}
 })
 ```
 
@@ -905,16 +950,16 @@ You can also use the `distinct` parameter to count only distinct values:
 
 ```graphql
 {
-  users(
-    filter: {
-      postsAggregate: {
-        count: { arguments: [category], predicate: { gt: 2 }, distinct: true }
-      }
+    users(
+        filter: {
+            postsAggregate: {
+                count: { arguments: [category], predicate: { gt: 2 }, distinct: true }
+            }
+        }
+    ) {
+        id
+        name
     }
-  ) {
-    id
-    name
-  }
 }
 ```
 
@@ -949,43 +994,43 @@ Now you can use aggregation functions on the result of your query:
 
 ```graphql
 {
-  usersAggregations {
-    aggregations {
-      # Basic aggregations
-      count
+    usersAggregations {
+        aggregations {
+            # Basic aggregations
+            count
 
-      sum {
-        age
-      }
+            sum {
+                age
+            }
 
-      avg {
-        age
-      }
+            avg {
+                age
+            }
 
-      min {
-        age
-        createdAt
-      }
-      max {
-        age
-        createdAt
-      }
+            min {
+                age
+                createdAt
+            }
+            max {
+                age
+                createdAt
+            }
 
-      # Statistical aggregations
-      stddev {
-        age
-      }
-      variance {
-        age
-      }
+            # Statistical aggregations
+            stddev {
+                age
+            }
+            variance {
+                age
+            }
+        }
+        # Access the actual data
+        nodes {
+            id
+            name
+            age
+        }
     }
-    # Access the actual data
-    nodes {
-      id
-      name
-      age
-    }
-  }
 }
 ```
 
@@ -993,7 +1038,8 @@ Now you can use aggregation functions on the result of your query:
 
 ## Mutations
 
-Strawchemy provides a powerful way to create GraphQL mutations for your SQLAlchemy models. These mutations allow you to create, update, and delete data through your GraphQL API.
+Strawchemy provides a powerful way to create GraphQL mutations for your SQLAlchemy models. These mutations allow you to
+create, update, and delete data through your GraphQL API.
 
 <details>
 <summary>Mutations example</summary>
@@ -1005,18 +1051,22 @@ from strawchemy import Strawchemy, StrawchemySyncRepository, StrawchemyAsyncRepo
 # Initialize the strawchemy mapper
 strawchemy = Strawchemy("postgresql")
 
+
 # Define input types for mutations
 @strawchemy.input(User, include=["name", "email"])
 class UserCreateInput:
     pass
 
+
 @strawchemy.input(User, include=["id", "name", "email"])
 class UserUpdateInput:
     pass
 
+
 @strawchemy.filter(User, include="all")
 class UserFilter:
     pass
+
 
 # Define GraphQL mutation fields
 @strawberry.type
@@ -1033,6 +1083,7 @@ class Mutation:
     # Delete mutations
     delete_users: list[UserType] = strawchemy.delete()  # Delete all
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter)  # Delete with filter
+
 
 # Create schema with mutations
 schema = strawberry.Schema(query=Query, mutation=Mutation)
@@ -1058,6 +1109,7 @@ Create mutations allow you to insert new records into your database. Strawchemy 
 class ColorCreateInput:
     pass
 
+
 @strawberry.type
 class Mutation:
     # Single entity creation
@@ -1072,18 +1124,18 @@ GraphQL usage:
 ```graphql
 # Create a single color
 mutation {
-  createColor(data: { name: "Purple" }) {
-    id
-    name
-  }
+    createColor(data: { name: "Purple" }) {
+        id
+        name
+    }
 }
 
 # Create multiple colors in one operation
 mutation {
-  createColors(data: [{ name: "Teal" }, { name: "Magenta" }]) {
-    id
-    name
-  }
+    createColors(data: [{ name: "Teal" }, { name: "Magenta" }]) {
+        id
+        name
+    }
 }
 ```
 
@@ -1114,55 +1166,55 @@ GraphQL usage:
 ```graphql
 # Set an existing relationship
 mutation {
-  createFruit(
-    data: {
-      name: "Apple"
-      adjectives: ["sweet", "crunchy"]
-      color: { set: { id: "123e4567-e89b-12d3-a456-426614174000" } }
+    createFruit(
+        data: {
+            name: "Apple"
+            adjectives: ["sweet", "crunchy"]
+            color: { set: { id: "123e4567-e89b-12d3-a456-426614174000" } }
+        }
+    ) {
+        id
+        name
+        color {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    color {
-      id
-      name
-    }
-  }
 }
 
 # Create a new related entity
 mutation {
-  createFruit(
-    data: {
-      name: "Banana"
-      adjectives: ["yellow", "soft"]
-      color: { create: { name: "Yellow" } }
+    createFruit(
+        data: {
+            name: "Banana"
+            adjectives: ["yellow", "soft"]
+            color: { create: { name: "Yellow" } }
+        }
+    ) {
+        id
+        name
+        color {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    color {
-      id
-      name
-    }
-  }
 }
 
 # Set relationship to null
 mutation {
-  createFruit(
-    data: {
-      name: "Strawberry"
-      adjectives: ["red", "sweet"]
-      color: { set: null }
+    createFruit(
+        data: {
+            name: "Strawberry"
+            adjectives: ["red", "sweet"]
+            color: { set: null }
+        }
+    ) {
+        id
+        name
+        color {
+            id
+        }
     }
-  ) {
-    id
-    name
-    color {
-      id
-    }
-  }
 }
 ```
 
@@ -1180,58 +1232,58 @@ GraphQL usage:
 ```graphql
 # Set existing to-many relationships
 mutation {
-  createColor(
-    data: {
-      name: "Red"
-      fruits: { set: [{ id: "123e4567-e89b-12d3-a456-426614174000" }] }
+    createColor(
+        data: {
+            name: "Red"
+            fruits: { set: [{ id: "123e4567-e89b-12d3-a456-426614174000" }] }
+        }
+    ) {
+        id
+        name
+        fruits {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    fruits {
-      id
-      name
-    }
-  }
 }
 
 # Add to existing to-many relationships
 mutation {
-  createColor(
-    data: {
-      name: "Green"
-      fruits: { add: [{ id: "123e4567-e89b-12d3-a456-426614174000" }] }
+    createColor(
+        data: {
+            name: "Green"
+            fruits: { add: [{ id: "123e4567-e89b-12d3-a456-426614174000" }] }
+        }
+    ) {
+        id
+        name
+        fruits {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    fruits {
-      id
-      name
-    }
-  }
 }
 
 # Create new related entities
 mutation {
-  createColor(
-    data: {
-      name: "Blue"
-      fruits: {
-        create: [
-          { name: "Blueberry", adjectives: ["small", "blue"] }
-          { name: "Plum", adjectives: ["juicy", "purple"] }
-        ]
-      }
+    createColor(
+        data: {
+            name: "Blue"
+            fruits: {
+                create: [
+                    { name: "Blueberry", adjectives: ["small", "blue"] }
+                    { name: "Plum", adjectives: ["juicy", "purple"] }
+                ]
+            }
+        }
+    ) {
+        id
+        name
+        fruits {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    fruits {
-      id
-      name
-    }
-  }
 }
 ```
 
@@ -1241,28 +1293,28 @@ You can create deeply nested relationships:
 
 ```graphql
 mutation {
-  createColor(
-    data: {
-      name: "White"
-      fruits: {
-        create: [
-          {
-            name: "Grape"
-            adjectives: ["tangy", "juicy"]
-            farms: { create: [{ name: "Bio farm" }] }
-          }
-        ]
-      }
-    }
-  ) {
-    name
-    fruits {
-      name
-      farms {
+    createColor(
+        data: {
+            name: "White"
+            fruits: {
+                create: [
+                    {
+                        name: "Grape"
+                        adjectives: ["tangy", "juicy"]
+                        farms: { create: [{ name: "Bio farm" }] }
+                    }
+                ]
+            }
+        }
+    ) {
         name
-      }
+        fruits {
+            name
+            farms {
+                name
+            }
+        }
     }
-  }
 }
 ```
 
@@ -1287,9 +1339,11 @@ Update mutations allow you to modify existing records. Strawchemy provides sever
 class ColorUpdateInput:
     pass
 
+
 @strawchemy.filter(Color, include="all")
 class ColorFilter:
     pass
+
 
 @strawberry.type
 class Mutation:
@@ -1308,36 +1362,36 @@ GraphQL usage:
 ```graphql
 # Update by ID
 mutation {
-  updateColor(
-    data: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Crimson" }
-  ) {
-    id
-    name
-  }
+    updateColor(
+        data: { id: "123e4567-e89b-12d3-a456-426614174000", name: "Crimson" }
+    ) {
+        id
+        name
+    }
 }
 
 # Batch update by IDs
 mutation {
-  updateColors(
-    data: [
-      { id: "123e4567-e89b-12d3-a456-426614174000", name: "Crimson" }
-      { id: "223e4567-e89b-12d3-a456-426614174000", name: "Navy" }
-    ]
-  ) {
-    id
-    name
-  }
+    updateColors(
+        data: [
+            { id: "123e4567-e89b-12d3-a456-426614174000", name: "Crimson" }
+            { id: "223e4567-e89b-12d3-a456-426614174000", name: "Navy" }
+        ]
+    ) {
+        id
+        name
+    }
 }
 
 # Update with filter
 mutation {
-  updateColorsFilter(
-    data: { name: "Bright Red" }
-    filter: { name: { eq: "Red" } }
-  ) {
-    id
-    name
-  }
+    updateColorsFilter(
+        data: { name: "Bright Red" }
+        filter: { name: { eq: "Red" } }
+    ) {
+        id
+        name
+    }
 }
 ```
 
@@ -1364,55 +1418,55 @@ GraphQL usage:
 ```graphql
 # Set an existing relationship
 mutation {
-  updateFruit(
-    data: {
-      id: "123e4567-e89b-12d3-a456-426614174000"
-      name: "Red Apple"
-      color: { set: { id: "223e4567-e89b-12d3-a456-426614174000" } }
+    updateFruit(
+        data: {
+            id: "123e4567-e89b-12d3-a456-426614174000"
+            name: "Red Apple"
+            color: { set: { id: "223e4567-e89b-12d3-a456-426614174000" } }
+        }
+    ) {
+        id
+        name
+        color {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    color {
-      id
-      name
-    }
-  }
 }
 
 # Create a new related entity
 mutation {
-  updateFruit(
-    data: {
-      id: "123e4567-e89b-12d3-a456-426614174000"
-      name: "Green Apple"
-      color: { create: { name: "Green" } }
+    updateFruit(
+        data: {
+            id: "123e4567-e89b-12d3-a456-426614174000"
+            name: "Green Apple"
+            color: { create: { name: "Green" } }
+        }
+    ) {
+        id
+        name
+        color {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    color {
-      id
-      name
-    }
-  }
 }
 
 # Set relationship to null
 mutation {
-  updateFruit(
-    data: {
-      id: "123e4567-e89b-12d3-a456-426614174000"
-      name: "Plain Apple"
-      color: { set: null }
+    updateFruit(
+        data: {
+            id: "123e4567-e89b-12d3-a456-426614174000"
+            name: "Plain Apple"
+            color: { set: null }
+        }
+    ) {
+        id
+        name
+        color {
+            id
+        }
     }
-  ) {
-    id
-    name
-    color {
-      id
-    }
-  }
 }
 ```
 
@@ -1430,79 +1484,79 @@ GraphQL usage:
 ```graphql
 # Set (replace) to-many relationships
 mutation {
-  updateColor(
-    data: {
-      id: "123e4567-e89b-12d3-a456-426614174000"
-      name: "Red"
-      fruits: { set: [{ id: "223e4567-e89b-12d3-a456-426614174000" }] }
+    updateColor(
+        data: {
+            id: "123e4567-e89b-12d3-a456-426614174000"
+            name: "Red"
+            fruits: { set: [{ id: "223e4567-e89b-12d3-a456-426614174000" }] }
+        }
+    ) {
+        id
+        name
+        fruits {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    fruits {
-      id
-      name
-    }
-  }
 }
 
 # Add to existing to-many relationships
 mutation {
-  updateColor(
-    data: {
-      id: "123e4567-e89b-12d3-a456-426614174000"
-      name: "Red"
-      fruits: { add: [{ id: "223e4567-e89b-12d3-a456-426614174000" }] }
+    updateColor(
+        data: {
+            id: "123e4567-e89b-12d3-a456-426614174000"
+            name: "Red"
+            fruits: { add: [{ id: "223e4567-e89b-12d3-a456-426614174000" }] }
+        }
+    ) {
+        id
+        name
+        fruits {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    fruits {
-      id
-      name
-    }
-  }
 }
 
 # Remove from to-many relationships
 mutation {
-  updateColor(
-    data: {
-      id: "123e4567-e89b-12d3-a456-426614174000"
-      name: "Red"
-      fruits: { remove: [{ id: "223e4567-e89b-12d3-a456-426614174000" }] }
+    updateColor(
+        data: {
+            id: "123e4567-e89b-12d3-a456-426614174000"
+            name: "Red"
+            fruits: { remove: [{ id: "223e4567-e89b-12d3-a456-426614174000" }] }
+        }
+    ) {
+        id
+        name
+        fruits {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    fruits {
-      id
-      name
-    }
-  }
 }
 
 # Create new related entities
 mutation {
-  updateColor(
-    data: {
-      id: "123e4567-e89b-12d3-a456-426614174000"
-      name: "Red"
-      fruits: {
-        create: [
-          { name: "Cherry", adjectives: ["small", "red"] }
-          { name: "Strawberry", adjectives: ["sweet", "red"] }
-        ]
-      }
+    updateColor(
+        data: {
+            id: "123e4567-e89b-12d3-a456-426614174000"
+            name: "Red"
+            fruits: {
+                create: [
+                    { name: "Cherry", adjectives: ["small", "red"] }
+                    { name: "Strawberry", adjectives: ["sweet", "red"] }
+                ]
+            }
+        }
+    ) {
+        id
+        name
+        fruits {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    fruits {
-      id
-      name
-    }
-  }
 }
 ```
 
@@ -1512,23 +1566,23 @@ You can combine `add` and `create` operations in a single update:
 
 ```graphql
 mutation {
-  updateColor(
-    data: {
-      id: "123e4567-e89b-12d3-a456-426614174000"
-      name: "Red"
-      fruits: {
-        add: [{ id: "223e4567-e89b-12d3-a456-426614174000" }]
-        create: [{ name: "Raspberry", adjectives: ["tart", "red"] }]
-      }
+    updateColor(
+        data: {
+            id: "123e4567-e89b-12d3-a456-426614174000"
+            name: "Red"
+            fruits: {
+                add: [{ id: "223e4567-e89b-12d3-a456-426614174000" }]
+                create: [{ name: "Raspberry", adjectives: ["tart", "red"] }]
+            }
+        }
+    ) {
+        id
+        name
+        fruits {
+            id
+            name
+        }
     }
-  ) {
-    id
-    name
-    fruits {
-      id
-      name
-    }
-  }
 }
 ```
 
@@ -1551,6 +1605,7 @@ Delete mutations allow you to remove records from your database. Strawchemy prov
 class UserFilter:
     pass
 
+
 @strawberry.type
 class Mutation:
     # Delete all users
@@ -1565,18 +1620,18 @@ GraphQL usage:
 ```graphql
 # Delete all users
 mutation {
-  deleteUsers {
-    id
-    name
-  }
+    deleteUsers {
+        id
+        name
+    }
 }
 
 # Delete users that match a filter
 mutation {
-  deleteUsersFilter(filter: { name: { eq: "Alice" } }) {
-    id
-    name
-  }
+    deleteUsersFilter(filter: { name: { eq: "Alice" } }) {
+        id
+        name
+    }
 }
 ```
 
@@ -1586,7 +1641,9 @@ The returned data contains the records that were deleted.
 
 ### Upsert Mutations
 
-Upsert mutations provide "insert or update" functionality, allowing you to create new records or update existing ones based on conflict resolution. This is particularly useful when you want to ensure data exists without worrying about whether it's already in the database.
+Upsert mutations provide "insert or update" functionality, allowing you to create new records or update existing ones
+based on conflict resolution. This is particularly useful when you want to ensure data exists without worrying about
+whether it's already in the database.
 
 Strawchemy supports upsert operations for:
 
@@ -1606,15 +1663,18 @@ First, define the necessary input types and enums:
 class FruitCreateInput:
     pass
 
+
 # Define which fields can be updated during upsert
 @strawchemy.upsert_update_fields(Fruit, include=["sweetness", "waterPercent"])
 class FruitUpsertFields:
     pass
 
+
 # Define which fields are used for conflict detection
 @strawchemy.upsert_conflict_fields(Fruit)
 class FruitUpsertConflictFields:
     pass
+
 
 @strawberry.type
 class Mutation:
@@ -1638,42 +1698,43 @@ class Mutation:
 ```graphql
 # Upsert a single fruit (will create if name doesn't exist, update if it does)
 mutation {
-  upsertFruit(
-    data: { name: "Apple", sweetness: 8, waterPercent: 0.85 }
-    conflictFields: name
-  ) {
-    id
-    name
-    sweetness
-    waterPercent
-  }
+    upsertFruit(
+        data: { name: "Apple", sweetness: 8, waterPercent: 0.85 }
+        conflictFields: name
+    ) {
+        id
+        name
+        sweetness
+        waterPercent
+    }
 }
 
 # Batch upsert multiple fruits
 mutation {
-  upsertFruits(
-    data: [
-      { name: "Apple", sweetness: 8, waterPercent: 0.85 }
-      { name: "Orange", sweetness: 6, waterPercent: 0.87 }
-    ]
-    conflictFields: name
-  ) {
-    id
-    name
-    sweetness
-    waterPercent
-  }
+    upsertFruits(
+        data: [
+            { name: "Apple", sweetness: 8, waterPercent: 0.85 }
+            { name: "Orange", sweetness: 6, waterPercent: 0.87 }
+        ]
+        conflictFields: name
+    ) {
+        id
+        name
+        sweetness
+        waterPercent
+    }
 }
 ```
 
 #### How Upsert Works
 
 1. **Conflict Detection**: The `conflictFields` parameter specifies which field(s) to check for existing records
-2. **Update Fields**: The `updateFields` parameter (optional) specifies which fields should be updated if a conflict is found
+2. **Update Fields**: The `updateFields` parameter (optional) specifies which fields should be updated if a conflict is
+   found
 3. **Database Support**:
-   - **PostgreSQL**: Uses `ON CONFLICT DO UPDATE`
-   - **MySQL**: Uses `ON DUPLICATE KEY UPDATE`
-   - **SQLite**: Uses `ON CONFLICT DO UPDATE`
+    - **PostgreSQL**: Uses `ON CONFLICT DO UPDATE`
+    - **MySQL**: Uses `ON DUPLICATE KEY UPDATE`
+    - **SQLite**: Uses `ON CONFLICT DO UPDATE`
 
 #### Upsert in Relationships
 
@@ -1688,29 +1749,29 @@ class ColorUpdateInput:
 ```graphql
 # Update a color and upsert related fruits
 mutation {
-  updateColor(
-    data: {
-      id: 1
-      name: "Bright Red"
-      fruits: {
-        upsert: {
-          create: [
-            { name: "Cherry", sweetness: 7, waterPercent: 0.87 }
-            { name: "Strawberry", sweetness: 8, waterPercent: 0.91 }
-          ]
-          conflictFields: name
+    updateColor(
+        data: {
+            id: 1
+            name: "Bright Red"
+            fruits: {
+                upsert: {
+                    create: [
+                        { name: "Cherry", sweetness: 7, waterPercent: 0.87 }
+                        { name: "Strawberry", sweetness: 8, waterPercent: 0.91 }
+                    ]
+                    conflictFields: name
+                }
+            }
         }
-      }
+    ) {
+        id
+        name
+        fruits {
+            id
+            name
+            sweetness
+        }
     }
-  ) {
-    id
-    name
-    fruits {
-      id
-      name
-      sweetness
-    }
-  }
 }
 ```
 
@@ -1725,9 +1786,11 @@ mutation {
 
 ### Input Validation
 
-Strawchemy supports input validation using Pydantic models. You can define validation schemas and apply them to mutations to ensure data meets specific requirements before being processed.
+Strawchemy supports input validation using Pydantic models. You can define validation schemas and apply them to
+mutations to ensure data meets specific requirements before being processed.
 
-Create Pydantic models for the input type where you want the validation, and set the `validation` parameter on `strawchemy.field`:
+Create Pydantic models for the input type where you want the validation, and set the `validation` parameter on
+`strawchemy.field`:
 
 <details>
 <summary>Validation example</summary>
@@ -1738,6 +1801,7 @@ from typing import Annotated
 from pydantic import AfterValidator
 from strawchemy import InputValidationError, ValidationErrorType
 from strawchemy.validation.pydantic import PydanticValidation
+
 
 def _check_lower_case(value: str) -> str:
     if not value.islower():
@@ -1758,30 +1822,32 @@ class UserCreateValidation:
 
 @strawberry.type
 class Mutation:
-    create_user: UserType | ValidationErrorType = strawchemy.create(UserCreate, validation=PydanticValidation(UserCreateValidation))
+    create_user: UserType | ValidationErrorType = strawchemy.create(UserCreate,
+                                                                    validation=PydanticValidation(UserCreateValidation))
 ```
 
 > To get the validation errors exposed in the schema, you need to add `ValidationErrorType` in the field union type
 
-When validation fails, the query will returns a `ValidationErrorType` with detailed error information from pydantic validation:
+When validation fails, the query will returns a `ValidationErrorType` with detailed error information from pydantic
+validation:
 
 ```graphql
 mutation {
-  createUser(data: { name: "Bob" }) {
-    __typename
-    ... on UserType {
-      name
+    createUser(data: { name: "Bob" }) {
+        __typename
+        ... on UserType {
+            name
+        }
+        ... on ValidationErrorType {
+            id
+            errors {
+                id
+                loc
+                message
+                type
+            }
+        }
     }
-    ... on ValidationErrorType {
-      id
-      errors {
-        id
-        loc
-        message
-        type
-      }
-    }
-  }
 }
 ```
 
@@ -1794,7 +1860,9 @@ mutation {
       "errors": [
         {
           "id": "ERROR",
-          "loc": ["name"],
+          "loc": [
+            "name"
+          ],
           "message": "Value error, Name must be lower cased",
           "type": "value_error"
         }
@@ -1808,25 +1876,25 @@ Validation also works with nested relationships:
 
 ```graphql
 mutation {
-  createUser(
-    data: {
-      name: "bob"
-      group: {
-        create: {
-          name: "Group" # This will be validated
-          tag: { set: { id: "..." } }
+    createUser(
+        data: {
+            name: "bob"
+            group: {
+                create: {
+                    name: "Group" # This will be validated
+                    tag: { set: { id: "..." } }
+                }
+            }
         }
-      }
+    ) {
+        __typename
+        ... on ValidationErrorType {
+            errors {
+                loc
+                message
+            }
+        }
     }
-  ) {
-    __typename
-    ... on ValidationErrorType {
-      errors {
-        loc
-        message
-      }
-    }
-  }
 }
 ```
 
@@ -1834,10 +1902,12 @@ mutation {
 
 ## Async Support
 
-Strawchemy supports both synchronous and asynchronous operations. You can use either `StrawchemySyncRepository` or `StrawchemyAsyncRepository` depending on your needs:
+Strawchemy supports both synchronous and asynchronous operations. You can use either `StrawchemySyncRepository` or
+`StrawchemyAsyncRepository` depending on your needs:
 
 ```python
 from strawchemy import StrawchemySyncRepository, StrawchemyAsyncRepository
+
 
 # Synchronous resolver
 @strawchemy.field
@@ -1845,11 +1915,13 @@ def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
     repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
     return repo.get_one_or_none().graphql_type_or_none()
 
+
 # Asynchronous resolver
 @strawchemy.field
 async def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
     repo = StrawchemyAsyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
     return await repo.get_one_or_none().graphql_type_or_none()
+
 
 # Synchronous mutation
 @strawberry.type
@@ -1858,6 +1930,7 @@ class Mutation:
         UserCreateInput,
         repository_type=StrawchemySyncRepository
     )
+
 
 # Asynchronous mutation
 @strawberry.type
@@ -1868,7 +1941,8 @@ class AsyncMutation:
     )
 ```
 
-By default, Strawchemy uses the StrawchemySyncRepository as its repository type. You can override this behavior by specifying a different repository using the `repository_type` configuration option.
+By default, Strawchemy uses the StrawchemySyncRepository as its repository type. You can override this behavior by
+specifying a different repository using the `repository_type` configuration option.
 
 ## Configuration
 
@@ -1877,7 +1951,7 @@ Configuration is made by passing a `StrawchemyConfig` to the `Strawchemy` instan
 ### Configuration Options
 
 | Option                     | Type                                                        | Default                    | Description                                                                                                                              |
-| -------------------------- | ----------------------------------------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+|----------------------------|-------------------------------------------------------------|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
 | `dialect`                  | `SupportedDialect`                                          |                            | Database dialect to use. Supported dialects are "postgresql", "mysql", "sqlite".                                                         |
 | `session_getter`           | `Callable[[Info], Session]`                                 | `default_session_getter`   | Function to retrieve SQLAlchemy session from strawberry `Info` object. By default, it retrieves the session from `info.context.session`. |
 | `auto_snake_case`          | `bool`                                                      | `True`                     | Automatically convert snake cased names to camel case in GraphQL schema.                                                                 |
@@ -1894,26 +1968,29 @@ Configuration is made by passing a `StrawchemyConfig` to the `Strawchemy` instan
 ```python
 from strawchemy import Strawchemy, StrawchemyConfig
 
+
 # Custom session getter function
 def get_session_from_context(info):
     return info.context.db_session
 
+
 # Initialize with custom configuration
 strawchemy = Strawchemy(
     StrawchemyConfig(
-      "postgresql",
-      session_getter=get_session_from_context,
-      auto_snake_case=True,
-      pagination=True,
-      pagination_default_limit=50,
-      default_id_field_name="pk",
+        "postgresql",
+        session_getter=get_session_from_context,
+        auto_snake_case=True,
+        pagination=True,
+        pagination_default_limit=50,
+        default_id_field_name="pk",
     )
 )
 ```
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to this project.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to this
+project.
 
 ## License
 

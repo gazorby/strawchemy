@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any
 
 import msgspec
 import pytest
-
 from sqlalchemy import Insert, MetaData, insert
+
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import IntervalModel, interval_metadata
 from tests.integration.types import mysql as mysql_types

@@ -11,7 +11,6 @@ from dataclasses import dataclass, field
 from types import new_class
 from typing import (
     TYPE_CHECKING,
-    Annotated,
     ClassVar,
     ForwardRef,
     Generic,
@@ -20,15 +19,12 @@ from typing import (
     TypeAlias,
     TypeVar,
     cast,
-    get_args,
-    get_origin,
     get_type_hints,
     runtime_checkable,
 )
 
 from typing_extensions import Self, override
 
-from strawchemy.dto.exceptions import DTOError, EmptyDTOError
 from strawchemy.dto.types import (
     DTOAuto,
     DTOConfig,
@@ -42,17 +38,32 @@ from strawchemy.dto.types import (
     PurposeConfig,
 )
 from strawchemy.dto.utils import config
-from strawchemy.graph import Node
-from strawchemy.utils import is_type_hint_optional, non_optional_type_hint
+from strawchemy.exceptions import DTOError, EmptyDTOError
+from strawchemy.utils.annotation import is_type_hint_optional, non_optional_type_hint
+from strawchemy.utils.graph import Node
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Hashable, Iterable, Mapping
     from typing import Any
 
+    from strawchemy.dto.inspectors import ModelInspector
 
-__all__ = ("DTOFactory", "DTOFieldDefinition", "MappedDTO", "ModelInspector")
 
-T = TypeVar("T")
+__all__ = (
+    "DTOBackend",
+    "DTOBase",
+    "DTOFactory",
+    "DTOFieldDefinition",
+    "MappedDTO",
+    "ModelFieldT",
+    "ModelT",
+    "Relation",
+    "ToMappedProtocol",
+    "ToMappedProtocolT",
+    "VisitorProtocol",
+)
+
+T = TypeVar("T", bound="Any")
 DTOBaseT = TypeVar("DTOBaseT", bound="DTOBase[Any]")
 ModelT = TypeVar("ModelT")
 ToMappedProtocolT = TypeVar("ToMappedProtocolT", bound="ToMappedProtocol[Any]")
@@ -224,46 +235,6 @@ class Relation(Generic[T, DTOBaseT]):
     @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.model.__name__})"
-
-
-class ModelInspector(Protocol, Generic[ModelT, ModelFieldT]):
-    def field_definitions(
-        self, model: type[Any], dto_config: DTOConfig
-    ) -> Iterable[tuple[str, DTOFieldDefinition[ModelT, ModelFieldT]]]: ...
-
-    def id_field_definitions(
-        self, model: type[Any], dto_config: DTOConfig
-    ) -> list[tuple[str, DTOFieldDefinition[ModelT, ModelFieldT]]]: ...
-
-    def field_definition(
-        self, model_field: ModelFieldT, dto_config: DTOConfig
-    ) -> DTOFieldDefinition[ModelT, ModelFieldT]: ...
-
-    def get_type_hints(self, type_: type[Any], include_extras: bool = True) -> dict[str, Any]: ...
-
-    def relation_model(self, model_field: ModelFieldT) -> type[Any]: ...
-
-    def model_field_type(self, field_definition: DTOFieldDefinition[ModelT, ModelFieldT]) -> Any:
-        type_hint = (
-            field_definition.type_hint_override if field_definition.has_type_override else field_definition.type_hint
-        )
-        if get_origin(type_hint) is Annotated:
-            return get_args(type_hint)[0]
-        return non_optional_type_hint(type_hint)
-
-    def relation_cycle(
-        self, field: DTOFieldDefinition[Any, ModelFieldT], node: Node[Relation[ModelT, Any], None]
-    ) -> bool: ...
-
-    def has_default(self, model_field: ModelFieldT) -> bool: ...
-
-    def required(self, model_field: ModelFieldT) -> bool: ...
-
-    def is_foreign_key(self, model_field: ModelFieldT) -> bool: ...
-
-    def is_primary_key(self, model_field: ModelFieldT) -> bool: ...
-
-    def reverse_relation_required(self, model_field: ModelFieldT) -> bool: ...
 
 
 @dataclass(slots=True)

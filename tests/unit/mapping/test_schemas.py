@@ -8,18 +8,15 @@ from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
+from strawberry import auto
+from strawberry.scalars import JSON
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 from syrupy.assertion import SnapshotAssertion
 
-import strawberry
-from strawberry import auto
-from strawberry.scalars import JSON
-from strawchemy.dto.exceptions import EmptyDTOError
-from strawchemy.exceptions import StrawchemyError
-from strawchemy.sqlalchemy.exceptions import QueryHookError
-from strawchemy.strawberry.exceptions import StrawchemyFieldError
-from strawchemy.strawberry.scalars import Interval
+from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
+from strawchemy.schema.scalars import Interval
 from strawchemy.testing.pytest_plugin import MockContext
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
@@ -62,9 +59,9 @@ def test_input_instance(strawchemy: Strawchemy) -> None:
         id: auto
         name: auto
 
-    user = InputType(id=1, name="user")
-    assert user.id == 1
-    assert user.name == "user"
+    user = InputType(id=1, name="user")  # pyright: ignore[reportCallIssue]
+    assert user.id == 1  # pyright: ignore[reportAttributeAccessIssue]
+    assert user.name == "user"  # pyright: ignore[reportAttributeAccessIssue]
 
 
 def test_field_metadata_default(strawchemy: Strawchemy) -> None:
@@ -220,7 +217,7 @@ def test_query_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
 @pytest.mark.snapshot
 @pytest.mark.skipif(not find_spec("geoalchemy2"), reason="geoalchemy2 is not installed")
 def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
-    from strawchemy.strawberry.geo import GEO_SCALAR_OVERRIDES
+    from strawchemy.schema.scalars.geo import GEO_SCALAR_OVERRIDES
 
     module, query_name = f"tests.unit.schemas.{path}".rsplit(".", maxsplit=1)
     query_class = getattr(import_module(module), query_name)

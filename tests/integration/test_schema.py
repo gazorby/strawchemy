@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from strawberry import Schema
+
 from tests.integration.fixtures import scalar_overrides
 from tests.integration.types import mysql, postgres
 

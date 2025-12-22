@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from strawchemy.config.base import StrawchemyConfig
+from strawchemy.instance import ModelInstance
 from strawchemy.mapper import Strawchemy
-from strawchemy.sqlalchemy.hook import QueryHook
-from strawchemy.strawberry import ModelInstance
-from strawchemy.strawberry.mutation.input import Input
-from strawchemy.strawberry.mutation.types import (
-    ErrorType,
+from strawchemy.repository.strawberry import StrawchemyAsyncRepository, StrawchemySyncRepository
+from strawchemy.schema.interfaces import ErrorType
+from strawchemy.schema.mutation import (
+    Input,
     RequiredToManyUpdateInput,
     RequiredToOneInput,
     ToManyCreateInput,
@@ -16,8 +16,8 @@ from strawchemy.strawberry.mutation.types import (
     ToOneInput,
     ValidationErrorType,
 )
-from strawchemy.strawberry.repository import StrawchemyAsyncRepository, StrawchemySyncRepository
-from strawchemy.validation.base import InputValidationError
+from strawchemy.transpiler.hook import QueryHook
+from strawchemy.validation import InputValidationError
 
 __all__ = (
     "ErrorType",

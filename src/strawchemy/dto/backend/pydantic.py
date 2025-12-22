@@ -16,7 +16,7 @@ from typing_extensions import override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOMissing
-from strawchemy.utils import get_annotations
+from strawchemy.utils.annotation import get_annotations
 
 if TYPE_CHECKING:
     from collections.abc import Iterable

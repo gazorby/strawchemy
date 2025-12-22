@@ -13,11 +13,6 @@ import pytest
 import sqlparse
 from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
-from sqlalchemy.event import listens_for
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import Session, sessionmaker
-from typing_extensions import Self
-
 from sqlalchemy import (
     URL,
     ClauseElement,
@@ -36,10 +31,15 @@ from sqlalchemy import (
     create_engine,
     insert,
 )
+from sqlalchemy.event import listens_for
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session, sessionmaker
 from strawberry.scalars import JSON
+from typing_extensions import Self
+
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
-from strawchemy.strawberry.scalars import Date, DateTime, Interval, Time
+from strawchemy.schema.scalars import Date, DateTime, Interval, Time
 from tests.fixtures import DefaultQuery
 from tests.integration.models import (
     Color,
@@ -71,7 +71,7 @@ if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
     from strawchemy import Strawchemy, StrawchemyConfig
-    from strawchemy.sqlalchemy.typing import AnySession
+    from strawchemy.repository.typing import AnySession
     from strawchemy.typing import SupportedDialect
     from tests.integration.typing import RawRecordData
 
@@ -104,7 +104,7 @@ scalar_overrides: dict[object, Any] = {
 engine_plugins: list[str] = []
 
 if GEO_INSTALLED:
-    from strawchemy.strawberry.geo import GEO_SCALAR_OVERRIDES
+    from strawchemy.schema.scalars.geo import GEO_SCALAR_OVERRIDES
 
     engine_plugins = ["geoalchemy2"]
     scalar_overrides |= GEO_SCALAR_OVERRIDES
