@@ -426,7 +426,7 @@ conflicts = [[{ group = "build" }, { group = "codeflash" }]]
 [tool.uv.sources]
 testapp = { workspace = true }
 # Temporary pin to allow msgspec 0.19.0+ on python 3.13
-unasyncd = { git = "https://github.com/provinzkraut/unasyncd", rev = "6d630bd7f411d6052c429b7fb4481fd17f18b0a6" }
+unasyncd = { git = "https://github.com/provinzkraut/unasyncd", rev = "a08ab73793d91d5af80ba9b65922be90f990ff41" }
 
 [tool.uv.workspace]
 members = ["examples/*"]
