@@ -24,7 +24,7 @@ jobs:
           persist-credentials: 'false'
 
       - name: Generate documentation changelog
-        uses: orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51 # v4
+        uses: orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772 # v4
         id: git-cliff-repo
         with:
           config: pyproject.toml
@@ -35,7 +35,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate release changelog
-        uses: orhun/git-cliff-action@d77b37db2e3f7398432d34b72a12aa3e2ba87e51 # v4
+        uses: orhun/git-cliff-action@e16f179f0be49ecdfe63753837f20b9531642772 # v4
         id: git-cliff-release
         with:
           config: pyproject.toml
