@@ -597,7 +597,7 @@ In your GraphQL queries, you can use the `offset` and `limit` parameters:
 You can also enable pagination for nested relationships:
 
 ```python
-@strawchemy.type(User, include="all", child_pagination=True)
+@strawchemy.type(User, include="all", paginate="all")
 class UserType:
     pass
 ```

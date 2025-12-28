@@ -1,10 +1,10 @@
 '''
 input ColorAggregateMinMaxStringFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input ColorAggregateNumericFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input ColorAggregateOrderBy {
@@ -48,11 +48,11 @@ type FruitAggregate {
 }
 
 input FruitAggregateMinMaxStringFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input FruitAggregateNumericFieldsOrderBy {
-  sweetness: OrderByEnum!
+  sweetness: OrderByEnum
 }
 
 input FruitAggregateOrderBy {

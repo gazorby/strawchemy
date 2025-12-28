@@ -39,7 +39,6 @@ from strawchemy.dto.types import DTOAuto, DTOScope, Purpose
 from strawchemy.dto.utils import config
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.instance import MapperModelInstance
-from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.transpiler import hook
 from strawchemy.typing import GraphQLDTOT, GraphQLPurpose, GraphQLType, MappedGraphQLDTO
 from strawchemy.utils.annotation import get_annotations
@@ -51,6 +50,7 @@ if TYPE_CHECKING:
     from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
     from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields
+    from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.utils.graph import Node
     from strawchemy.validation.pydantic import MappedPydanticGraphQLDTO
@@ -97,9 +97,10 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         current_node: Node[Relation[Any, GraphQLDTOT], None] | None,
         override: bool = False,
         user_defined: bool = False,
-        child_options: ChildOptions | None = None,
+        order: IncludeFields | None = None,
+        paginate: IncludeFields | None = None,
+        default_pagination: None | DefaultOffsetPagination = None,
     ) -> RegistryTypeInfo:
-        child_options = child_options or ChildOptions()
         graphql_type = self.graphql_type(dto_config)
         model: type[DeclarativeBase] | None = dto.__dto_model__ if issubclass(dto, MappedStrawberryGraphQLDTO) else None  # type: ignore[reportGeneralTypeIssues]
         default_name = self.root_dto_name(model, dto_config, current_node) if model else dto.__name__
@@ -109,8 +110,9 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
             graphql_type=graphql_type,
             override=override,
             user_defined=user_defined,
-            pagination=DefaultOffsetPagination() if child_options.pagination is True else child_options.pagination,
-            order_by=child_options.order_by,
+            pagination=default_pagination,
+            order=frozenset() if order is None else frozenset(order),
+            paginate=frozenset() if paginate is None else frozenset(paginate),
             scope=dto_config.scope,
             model=model,
             exclude_from_scope=dto_config.exclude_from_scope,
@@ -130,14 +132,18 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         directives: Sequence[object] | None = (),
         override: bool = False,
         user_defined: bool = False,
-        child_options: ChildOptions | None = None,
+        order: IncludeFields | None = None,
+        paginate: IncludeFields | None = None,
+        default_pagination: None | DefaultOffsetPagination = None,
     ) -> type[StrawchemyDTOT]:
         type_info = self._type_info(
             dto,
             dto_config,
             override=override,
             user_defined=user_defined,
-            child_options=child_options,
+            order=order,
+            paginate=paginate,
+            default_pagination=default_pagination,
             current_node=current_node,
         )
         self._raise_if_type_conflicts(type_info)
@@ -212,8 +218,9 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
         alias_generator: Callable[[str], str] | None = None,
-        child_pagination: bool | DefaultOffsetPagination = False,
-        child_order_by: bool = False,
+        paginate: IncludeFields | None = None,
+        order: IncludeFields | None = None,
+        default_pagination: None | DefaultOffsetPagination = None,
         filter_input: type[BooleanFilterDTO] | None = None,
         order_by: type[OrderByDTO] | None = None,
         name: str | None = None,
@@ -247,7 +254,9 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 override=override,
                 user_defined=True,
                 mode=mode,
-                child_options=ChildOptions(pagination=child_pagination, order_by=child_order_by),
+                paginate=paginate,
+                order=order,
+                default_pagination=default_pagination,
             )
             dto.__strawchemy_query_hook__ = query_hook
             if issubclass(dto, MappedStrawberryGraphQLDTO):
@@ -436,8 +445,9 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
         alias_generator: Callable[[str], str] | None = None,
-        child_pagination: bool | DefaultOffsetPagination = False,
-        child_order_by: bool = False,
+        paginate: IncludeFields | None = None,
+        order: IncludeFields | None = None,
+        default_pagination: None | DefaultOffsetPagination = None,
         filter_input: type[BooleanFilterDTO] | None = None,
         order_by: type[OrderByDTO] | None = None,
         name: str | None = None,
@@ -457,8 +467,9 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
             type_map=type_map,
             aliases=aliases,
             alias_generator=alias_generator,
-            child_pagination=child_pagination,
-            child_order_by=child_order_by,
+            paginate=paginate,
+            order=order,
+            default_pagination=default_pagination,
             filter_input=filter_input,
             order_by=order_by,
             name=name,
@@ -587,8 +598,9 @@ class StrawchemyUnMappedDTOFactory(GraphQLDTOFactory[UnmappedGraphQLDTOT]):
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
         alias_generator: Callable[[str], str] | None = None,
-        child_pagination: bool | DefaultOffsetPagination = False,
-        child_order_by: bool = False,
+        order: IncludeFields | None = None,
+        paginate: IncludeFields | None = None,
+        default_pagination: None | DefaultOffsetPagination = None,
         filter_input: type[BooleanFilterDTO] | None = None,
         order_by: type[OrderByDTO] | None = None,
         name: str | None = None,
@@ -607,8 +619,9 @@ class StrawchemyUnMappedDTOFactory(GraphQLDTOFactory[UnmappedGraphQLDTOT]):
             type_map=type_map,
             aliases=aliases,
             alias_generator=alias_generator,
-            child_pagination=child_pagination,
-            child_order_by=child_order_by,
+            paginate=paginate,
+            order=order,
+            default_pagination=default_pagination,
             filter_input=filter_input,
             order_by=order_by,
             name=name,

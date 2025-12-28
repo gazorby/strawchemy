@@ -151,7 +151,7 @@ class OrderedFruitType: ...
 class FruitAggregationType: ...
 
 
-@strawchemy.type(Fruit, include="all", child_pagination=True, child_order_by=True)
+@strawchemy.type(Fruit, include="all", paginate="all", order="all")
 class FruitTypeWithPaginationAndOrderBy: ...
 
 
@@ -182,7 +182,7 @@ class FruitUpsertConflictFields: ...
 # Color
 
 
-@strawchemy.type(Color, include="all", override=True, child_order_by=True)
+@strawchemy.type(Color, include="all", override=True, order="all")
 class ColorType: ...
 
 
@@ -194,7 +194,7 @@ class ColorOrder: ...
 class ColorDistinctOn: ...
 
 
-@strawchemy.type(Color, include="all", child_pagination=True)
+@strawchemy.type(Color, include="all", paginate="all")
 class ColorTypeWithPagination: ...
 
 

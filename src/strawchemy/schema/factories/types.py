@@ -20,12 +20,11 @@ from strawchemy.dto.strawberry import (
     GraphQLFieldDefinition,
     MappedStrawberryGraphQLDTO,
 )
-from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
+from strawchemy.dto.types import DTOConfig, DTOMissing, IncludeFields, Purpose
 from strawchemy.dto.utils import read_all_partial_config, read_partial, write_all_config
 from strawchemy.exceptions import EmptyDTOError
 from strawchemy.schema.factories import (
     AggregationInspector,
-    ChildOptions,
     EnumDTOFactory,
     GraphQLDTOFactory,
     MappedGraphQLDTOT,
@@ -104,27 +103,34 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             related_dto=dto,
         )
 
-    def _update_fields(
+    def _add_fields_arguments(
         self,
         dto: type[GraphQLDTOT],
         base: type[Any] | None,
-        pagination: bool | DefaultOffsetPagination = False,
-        order_by: bool = False,
+        order: IncludeFields | None = None,
+        paginate: IncludeFields | None = None,
+        default_pagination: None | DefaultOffsetPagination = None,
     ) -> type[GraphQLDTOT]:
         attributes: dict[str, Any] = {}
         annotations: dict[str, Any] = {}
+        order_config = DTOConfig.from_include(order)
+        paginate_config = DTOConfig.from_include(paginate)
 
         for field in dto.__strawchemy_field_map__.values():
+            # Add pagination and ordering arguments for relations
             if field.is_relation and field.uselist:
                 related = Self if field.related_dto is dto else field.related_dto
                 type_annotation = list[related] if related is not None else field.type_
                 assert field.related_model
-                order_by_input = None
-                if order_by:
+                order_by_input, pagination = None, False
+                if order_config.is_field_included(field.model_field_name):
                     order_by_input = self._order_by_factory.factory(field.related_model, read_all_partial_config)
+                if paginate_config.is_field_included(field.model_field_name):
+                    pagination = default_pagination or True
                 strawberry_field = self._mapper.field(pagination=pagination, order_by=order_by_input, root_field=False)
                 attributes[field.name] = strawberry_field
                 annotations[field.name] = type_annotation
+            # Add path filtering argument for JSON fields
             elif (
                 not field.is_relation
                 and field.has_model_field
@@ -151,18 +157,6 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                     continue
                 setattr(dto, name, value)
         return dto
-
-    @override
-    def _cache_key(
-        self,
-        model: type[Any],
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, MappedGraphQLDTOT], None],
-        *,
-        child_options: ChildOptions,
-        **factory_kwargs: Any,
-    ) -> Hashable:
-        return (super()._cache_key(model, dto_config, node, **factory_kwargs), child_options)
 
     @override
     def dto_name(
@@ -208,7 +202,9 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
         *,
-        child_options: ChildOptions | None = None,
+        default_pagination: None | DefaultOffsetPagination = None,
+        order: IncludeFields | None = None,
+        paginate: IncludeFields | None = None,
         aggregations: bool = True,
         description: str | None = None,
         directives: Sequence[object] | None = (),
@@ -230,12 +226,15 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             aggregations=aggregations if dto_config.purpose is Purpose.READ else False,
             register_type=False,
             override=override,
-            child_options=child_options,
+            paginate=paginate if paginate == "all" else None,
+            order=order if order == "all" else None,
+            default_pagination=default_pagination,
             **kwargs,
         )
-        child_options = child_options or ChildOptions()
         if self.graphql_type(dto_config) == "object":
-            dto = self._update_fields(dto, base, pagination=child_options.pagination, order_by=child_options.order_by)
+            dto = self._add_fields_arguments(
+                dto, base, default_pagination=default_pagination, order=order, paginate=paginate
+            )
         if register_type:
             return self._register_type(
                 dto,
@@ -244,7 +243,9 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 directives=directives,
                 override=override,
                 user_defined=user_defined,
-                child_options=child_options,
+                default_pagination=default_pagination,
+                order=order,
+                paginate=paginate,
                 current_node=current_node,
             )
         return dto
@@ -558,12 +559,11 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         node: Node[Relation[Any, MappedGraphQLDTOT], None],
         *,
-        child_options: ChildOptions,
         mode: GraphQLPurpose,
         **factory_kwargs: Any,
     ) -> Hashable:
         return (
-            super()._cache_key(model, dto_config, node, child_options=child_options, **factory_kwargs),
+            super()._cache_key(model, dto_config, node, **factory_kwargs),
             node.root.value.model,
             mode,
         )

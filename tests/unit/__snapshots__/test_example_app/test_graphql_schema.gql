@@ -62,16 +62,16 @@ input CustomerAggregateBoolExpSum {
 }
 
 input CustomerAggregateMinMaxDatetimeFieldsOrderBy {
-  createdAt: OrderByEnum!
-  updatedAt: OrderByEnum!
+  createdAt: OrderByEnum
+  updatedAt: OrderByEnum
 }
 
 input CustomerAggregateMinMaxStringFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input CustomerAggregateNumericFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input CustomerAggregateOrderBy {
@@ -328,16 +328,16 @@ input MilestoneAggregateBoolExpSum {
 }
 
 input MilestoneAggregateMinMaxDatetimeFieldsOrderBy {
-  createdAt: OrderByEnum!
-  updatedAt: OrderByEnum!
+  createdAt: OrderByEnum
+  updatedAt: OrderByEnum
 }
 
 input MilestoneAggregateMinMaxStringFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input MilestoneAggregateNumericFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input MilestoneAggregateOrderBy {
@@ -563,16 +563,16 @@ input ProjectAggregateBoolExpSum {
 }
 
 input ProjectAggregateMinMaxDatetimeFieldsOrderBy {
-  createdAt: OrderByEnum!
-  updatedAt: OrderByEnum!
+  createdAt: OrderByEnum
+  updatedAt: OrderByEnum
 }
 
 input ProjectAggregateMinMaxStringFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input ProjectAggregateNumericFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input ProjectAggregateOrderBy {
@@ -798,16 +798,16 @@ input TagAggregateBoolExpSum {
 }
 
 input TagAggregateMinMaxDatetimeFieldsOrderBy {
-  createdAt: OrderByEnum!
-  updatedAt: OrderByEnum!
+  createdAt: OrderByEnum
+  updatedAt: OrderByEnum
 }
 
 input TagAggregateMinMaxStringFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input TagAggregateNumericFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input TagAggregateOrderBy {
@@ -962,16 +962,16 @@ input TicketAggregateBoolExpSum {
 }
 
 input TicketAggregateMinMaxDatetimeFieldsOrderBy {
-  createdAt: OrderByEnum!
-  updatedAt: OrderByEnum!
+  createdAt: OrderByEnum
+  updatedAt: OrderByEnum
 }
 
 input TicketAggregateMinMaxStringFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input TicketAggregateNumericFieldsOrderBy {
-  name: OrderByEnum!
+  name: OrderByEnum
 }
 
 input TicketAggregateOrderBy {

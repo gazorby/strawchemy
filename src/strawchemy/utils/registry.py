@@ -101,8 +101,9 @@ class RegistryTypeInfo:
     default_name: str | None = None
     user_defined: bool = False
     override: bool = False
-    pagination: DefaultOffsetPagination | Literal[False] = False
-    order_by: bool = False
+    pagination: DefaultOffsetPagination | None = None
+    order: frozenset[str] | Literal["all"] = dataclasses.field(default_factory=frozenset)
+    paginate: frozenset[str] | Literal["all"] = dataclasses.field(default_factory=frozenset)
     scope: DTOScope | None = None
     model: type[DeclarativeBase] | None = None
     tags: frozenset[str] = dataclasses.field(default_factory=frozenset)
@@ -110,7 +111,7 @@ class RegistryTypeInfo:
 
     @property
     def scoped_id(self) -> Hashable:
-        return (self.model, self.graphql_type, self.tags)
+        return self.model, self.graphql_type, self.tags
 
 
 class StrawberryRegistry:

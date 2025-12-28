@@ -112,6 +112,7 @@ class StrawchemyField(StrawberryField):
         self.pagination: DefaultOffsetPagination | Literal[False] = (
             DefaultOffsetPagination() if pagination is True else pagination
         )
+
         self.id_field_name = id_field_name
 
         self._filter = filter_type

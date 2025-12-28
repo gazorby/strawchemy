@@ -143,7 +143,9 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
                 if field.uselist and field.related_dto:
                     field.type_ = Union[field.related_dto, None]
                 if aggregate_filters:
-                    aggregation_field = self._aggregation_field(field, dto_config.copy_with(partial_default=UNSET))
+                    aggregation_field = self._aggregation_field(
+                        field, dto_config.copy_with(partial_default=UNSET, partial=True)
+                    )
                     field_map[key + aggregation_field.name] = aggregation_field
                     yield aggregation_field
             else:

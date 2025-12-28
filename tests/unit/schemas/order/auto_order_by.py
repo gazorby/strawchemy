@@ -8,7 +8,7 @@ from tests.unit.models import Group
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.type(Group, include="all", child_order_by=True)
+@strawchemy.type(Group, include="all", order="all")
 class GroupType: ...
 
 

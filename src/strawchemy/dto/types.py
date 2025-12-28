@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias, final, get_type_hints
 
-from typing_extensions import override
+from typing_extensions import Self, override
 
 from strawchemy.utils.annotation import get_annotations
 
@@ -185,6 +185,10 @@ class DTOConfig:
         if self.exclude:
             self.include = "all"
 
+    @classmethod
+    def from_include(cls, include: IncludeFields | None = None, purpose: Purpose = Purpose.READ) -> Self:
+        return cls(purpose, include=set() if include is None else include)
+
     def copy_with(
         self,
         purpose: Purpose | type[DTOUnset] = DTOUnset,
@@ -265,3 +269,8 @@ class DTOConfig:
         if self.alias_generator is not None:
             return self.alias_generator(name)
         return None
+
+    def is_field_included(self, name: str) -> bool:
+        if self.include == "all":
+            return True
+        return name in self.include and name not in self.exclude
