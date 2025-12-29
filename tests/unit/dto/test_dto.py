@@ -266,3 +266,63 @@ def test_forward_refs_resolved(name: str, sqlalchemy_pydantic_factory: MappedPyd
             ],
         }
     )
+
+
+# Tests for DTOConfig.from_include() and is_field_included()
+
+
+def test_from_include_with_none() -> None:
+    """Test that from_include(None) creates a config with empty include set."""
+    config = DTOConfig.from_include(None)
+    assert config.include == set()
+    assert config.purpose == Purpose.READ
+
+
+def test_from_include_with_all() -> None:
+    """Test that from_include('all') creates a config with include='all'."""
+    config = DTOConfig.from_include("all")
+    assert config.include == "all"
+    assert config.purpose == Purpose.READ
+
+
+def test_from_include_with_list() -> None:
+    """Test that from_include() accepts a list and converts it to the include parameter."""
+    config = DTOConfig.from_include(["field1", "field2"])
+    assert config.include == ["field1", "field2"]
+    assert config.purpose == Purpose.READ
+
+
+def test_from_include_with_set() -> None:
+    """Test that from_include() accepts a set for the include parameter."""
+    config = DTOConfig.from_include({"field1", "field2"})
+    assert config.include == {"field1", "field2"}
+    assert config.purpose == Purpose.READ
+
+
+def test_from_include_with_custom_purpose() -> None:
+    """Test that from_include() accepts a custom purpose."""
+    config = DTOConfig.from_include(["field1"], purpose=Purpose.WRITE)
+    assert config.include == ["field1"]
+    assert config.purpose == Purpose.WRITE
+
+
+def test_is_field_included_with_all() -> None:
+    """Test that is_field_included() returns True for any field when include='all'."""
+    config = DTOConfig.from_include("all")
+    assert config.is_field_included("any_field") is True
+    assert config.is_field_included("another_field") is True
+
+
+def test_is_field_included_with_specific_list() -> None:
+    """Test that is_field_included() returns True only for listed fields."""
+    config = DTOConfig.from_include(["field1", "field2"])
+    assert config.is_field_included("field1") is True
+    assert config.is_field_included("field2") is True
+    assert config.is_field_included("field3") is False
+
+
+def test_is_field_included_with_empty_include() -> None:
+    """Test that is_field_included() returns False for all fields when include is empty."""
+    config = DTOConfig.from_include(None)
+    assert config.is_field_included("field1") is False
+    assert config.is_field_included("any_field") is False
