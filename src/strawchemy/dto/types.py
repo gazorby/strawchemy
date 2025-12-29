@@ -271,6 +271,4 @@ class DTOConfig:
         return None
 
     def is_field_included(self, name: str) -> bool:
-        if self.include == "all":
-            return True
-        return name in self.include and name not in self.exclude
+        return (name in self.include or self.include == "all") and name not in self.exclude
