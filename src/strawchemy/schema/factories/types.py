@@ -89,6 +89,16 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
     def _aggregation_field(
         self, field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
     ) -> GraphQLFieldDefinition:
+        """
+        Create an aggregation field definition for a to-many relation field.
+        
+        Parameters:
+            field_def (DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]): Field definition for the relation to aggregate.
+            dto_config (DTOConfig): DTO configuration used for the aggregation field (inherits base config with no annotation overrides).
+        
+        Returns:
+            GraphQLFieldDefinition: An AggregateFieldDefinition describing the related model's aggregation DTO and linking it to the original relation field.
+        """
         related_model = self.inspector.relation_model(field_def.model_field)
         aggregate_dto_config = dto_config.copy_with(annotation_overrides={})
         dto = self._aggregation_factory.factory(
@@ -111,6 +121,24 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         paginate: IncludeFields | None = None,
         default_pagination: None | DefaultOffsetPagination = None,
     ) -> type[GraphQLDTOT]:
+        """
+        Augments a generated DTO type by adding per-field pagination, ordering, and JSON-path filter arguments.
+        
+        This mutates the provided DTO class by adding Strawberry field attributes and updating its __annotations__:
+        - For to-many relation fields, adds ordering and/or pagination arguments when included according to the provided IncludeFields values; `order` controls whether an order-by input is attached, `paginate` controls whether pagination is enabled, and `default_pagination` supplies a default pagination configuration when pagination is enabled.
+        - For non-relation JSON/dict-backed model fields, adds a `JSON_PATH_KEY` string argument to support path-based filtering.
+        - If `base` is provided, copies annotations and any attributes present on `base` onto the DTO.
+        
+        Parameters:
+            dto: The GraphQL DTO class to augment.
+            base: Optional base DTO class whose annotations and attributes should be merged onto `dto`.
+            order: IncludeFields controlling which relation fields receive an order-by argument.
+            paginate: IncludeFields controlling which relation fields receive pagination.
+            default_pagination: Optional default pagination configuration to apply when pagination is enabled for a field.
+        
+        Returns:
+            The same DTO class passed in, after augmentation.
+        """
         attributes: dict[str, Any] = {}
         annotations: dict[str, Any] = {}
         order_config = DTOConfig.from_include(order)
@@ -162,6 +190,17 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
     def dto_name(
         self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None
     ) -> str:
+        """
+        Builds a GraphQL DTO type name, appending "Input" for write-purpose DTOs.
+        
+        Parameters:
+            base_name (str): Base name for the DTO (e.g., model or field base).
+            dto_config (DTOConfig): Controls the DTO purpose; if its purpose is Purpose.WRITE the returned name will include "Input" before the "Type" suffix.
+            node (optional): Optional node context; not used to determine the name.
+        
+        Returns:
+            str: The constructed DTO type name (for example "UserInputType" or "UserType").
+        """
         return f"{base_name}{'Input' if dto_config.purpose is Purpose.WRITE else ''}Type"
 
     @override
@@ -213,6 +252,33 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         register_type: bool = True,
         **kwargs: Any,
     ) -> type[MappedGraphQLDTOT]:
+        """
+        Create or retrieve a GraphQL DTO type for the given SQLAlchemy model with optional relation argument augmentation.
+        
+        Parameters:
+            model (type[DeclarativeT]): The SQLAlchemy mapped model to build the DTO for.
+            dto_config (DTOConfig): Configuration that controls how the DTO is built (purpose, included fields, etc.).
+            base (type | None): An optional base DTO type to inherit fields from.
+            name (str | None): Explicit name to use for the generated DTO type.
+            parent_field_def (DTOFieldDefinition | None): Field definition from a parent used when generating nested types.
+            current_node (Node | None): Relation graph node representing the current position in relation traversal.
+            raise_if_no_fields (bool): If true, raise an error when no fields are produced for the DTO.
+            tags (set[str] | None): Optional tags to attach to the created DTO.
+            backend_kwargs (dict | None): Backend-specific keyword arguments forwarded to the underlying builder.
+            default_pagination (DefaultOffsetPagination | None): Default pagination configuration to apply to relation fields when applicable.
+            order (IncludeFields | None): Controls whether ordering inputs are included for relation fields; typically "all" to enable.
+            paginate (IncludeFields | None): Controls whether pagination inputs are included for relation fields; typically "all" to enable.
+            aggregations (bool): Whether aggregation fields should be generated for to-many relations (only applied for READ purpose).
+            description (str | None): Optional description to register with the GraphQL type.
+            directives (Sequence[object] | None): Optional GraphQL directives to register with the type.
+            override (bool): If true, allow overriding an existing registered type with the same name.
+            user_defined (bool): Marks the registered type as user-defined when True.
+            register_type (bool): If true, register the resulting GraphQL type with the backend/registry before returning it.
+            **kwargs: Additional options forwarded to the underlying factory.
+        
+        Returns:
+            type[MappedGraphQLDTOT]: A GraphQL DTO type class for the provided model; if register_type is True, the returned type is registered with the system.
+        """
         dto = super().factory(
             model,
             dto_config,
@@ -562,6 +628,15 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         mode: GraphQLPurpose,
         **factory_kwargs: Any,
     ) -> Hashable:
+        """
+        Compose a cache key that uniquely identifies this factory configuration.
+        
+        Parameters:
+            mode (GraphQLPurpose): The GraphQL purpose (e.g., READ, WRITE) influencing the key.
+        
+        Returns:
+            hashable: A hashable value combining the base factory cache key, the root model from `node`, and `mode`.
+        """
         return (
             super()._cache_key(model, dto_config, node, **factory_kwargs),
             node.root.value.model,

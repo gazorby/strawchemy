@@ -133,6 +133,25 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
+        """
+        Yield field definitions for the DTO being built, adjusting types for relational fields, adding aggregation sub-fields when requested, and marking fields as unset/missing by default.
+        
+        If a field is a relation, its type is widened to allow None; if it is a scalar field, its type is set to Optional of the appropriate comparison/order type. When `aggregate_filters` is True, an additional aggregation field is created for relation fields, registered into `field_map` under a key composed from the current DTO node plus the aggregation field name, and yielded before the original relation field. Each yielded field has its default set to `UNSET` and its `default_factory` set to `DTOMissing`.
+        
+        Parameters:
+            name: The DTO name being constructed.
+            model: The ORM model class the DTO is derived from.
+            dto_config: Configuration used to build nested DTOs; for aggregation fields this function copies the config with `partial=True` and `partial_default=UNSET`.
+            base: Optional base DTO class for inheritance.
+            node: The current DTO construction node, used to derive DTOKey entries.
+            raise_if_no_fields: If True, raises when no fields are produced (propagated to super).
+            aggregate_filters: If True, produce and yield aggregation sub-fields for relation fields.
+            field_map: Mutable mapping where newly created aggregation fields will be registered; if None, an internal map is used.
+            **kwargs: Forwarded to the superclass implementation.
+        
+        @returns:
+            Generator that yields DTOFieldDefinition objects for each field in the DTO, including any generated aggregation fields when `aggregate_filters` is True.
+        """
         field_map = field_map if field_map is not None else {}
         for field in super().iter_field_definitions(
             name, model, dto_config, base, node, raise_if_no_fields, field_map=field_map, **kwargs

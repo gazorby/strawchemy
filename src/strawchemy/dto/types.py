@@ -176,6 +176,14 @@ class DTOConfig:
     tags: set[str] = field(default_factory=set)
 
     def __post_init__(self) -> None:
+        """
+        Validate and normalize DTOConfig after initialization.
+        
+        Performs consistency checks and normalizes dependent fields:
+        - Raises ValueError if both `aliases` and `alias_generator` are provided.
+        - Raises ValueError if `exclude` is non-empty while `include` is a specific collection (not `"all"` or empty).
+        - If `exclude` is non-empty, sets `include` to `"all"`.
+        """
         if self.aliases and self.alias_generator is not None:
             msg = "You must set `aliases` or `alias_generator`, not both"
             raise ValueError(msg)
@@ -187,6 +195,16 @@ class DTOConfig:
 
     @classmethod
     def from_include(cls, include: IncludeFields | None = None, purpose: Purpose = Purpose.READ) -> Self:
+        """
+        Create a DTOConfig initialized with the given inclusion set and purpose.
+        
+        Parameters:
+        	include (IncludeFields | None): Fields to include for the DTO. If None, the include set will be an empty set.
+        	purpose (Purpose): The purpose that the resulting DTOConfig will use.
+        
+        Returns:
+        	A DTOConfig instance with `purpose` set to the provided value and `include` normalized to the provided collection or an empty set when `include` is None.
+        """
         return cls(purpose, include=set() if include is None else include)
 
     def copy_with(
@@ -206,7 +224,30 @@ class DTOConfig:
         exclude_from_scope: bool | type[DTOUnset] = DTOUnset,
         tags: set[str] | type[DTOUnset] = DTOUnset,
     ) -> DTOConfig:
-        """Create a copy of the DTOConfig with the specified changes."""
+        """
+        Return a new DTOConfig with the provided fields replaced.
+        
+        If a parameter is passed as the DTOUnset sentinel (the default for most parameters), the corresponding value from the original DTOConfig is retained. If both `include` and `exclude` are None, their values are copied from the original config; otherwise `include`/`exclude` are normalized to empty collections when falsy.
+        
+        Parameters:
+            purpose: The purpose to set on the new config or DTOUnset to keep the original.
+            include: Field names to include, the literal "all", or None to use original include behavior.
+            exclude: Field names to exclude, or None to use original exclude behavior.
+            partial: Whether the DTO is partial, or DTOUnset to keep original.
+            unset_sentinel: Sentinel value used to represent unset fields, or DTOUnset to keep original.
+            type_overrides: Mapping of type overrides or DTOUnset to keep original.
+            annotation_overrides: Mapping of annotation overrides or DTOUnset to keep original.
+            aliases: Mapping of field name -> alias or DTOUnset to keep original.
+            exclude_defaults: Whether to exclude default-valued fields or DTOUnset to keep original.
+            alias_generator: Callable to generate aliases or DTOUnset to keep original.
+            partial_default: Default value for partial fields or DTOUnset to keep original.
+            scope: DTO scope ("global" or "dto") or DTOUnset to keep original.
+            exclude_from_scope: Whether to exclude fields from scope or DTOUnset to keep original.
+            tags: Set of tags to apply or DTOUnset to keep original.
+        
+        Returns:
+            DTOConfig: A new configuration object reflecting the specified overrides.
+        """
         if include is None and exclude is None:
             include, exclude = self.include, self.exclude
         else:
@@ -264,6 +305,15 @@ class DTOConfig:
         )
 
     def alias(self, name: str) -> str | None:
+        """
+        Resolve the configured external name (alias) for a DTO field.
+        
+        Parameters:
+            name (str): The DTO field name to resolve.
+        
+        Returns:
+            str | None: The alias for `name` if configured; prefers an explicit entry in `aliases` over `alias_generator`. Returns `None` if no alias is configured.
+        """
         if self.aliases:
             return self.aliases.get(name)
         if self.alias_generator is not None:
@@ -271,4 +321,13 @@ class DTOConfig:
         return None
 
     def is_field_included(self, name: str) -> bool:
+        """
+        Determine whether a given field name is selected by the config's include/exclude rules.
+        
+        Parameters:
+            name (str): The field name to check.
+        
+        Returns:
+            `true` if the field is included (explicitly or because `include` is `"all"`) and not excluded, `false` otherwise.
+        """
         return (name in self.include or self.include == "all") and name not in self.exclude

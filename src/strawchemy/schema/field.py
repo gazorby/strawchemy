@@ -103,6 +103,39 @@ class StrawchemyField(StrawberryField):
         extensions: list[FieldExtension] = (),  # pyright: ignore[reportArgumentType]
         root_field: bool = False,
     ) -> None:
+        """
+        Create a StrawchemyField configured for integrating a Strawchemy repository and DTOs with Strawberry GraphQL.
+        
+        Parameters:
+            config (StrawchemyConfig): Application-wide Strawchemy configuration (inspector, session factory, etc.).
+            repository_type (AnyRepositoryType): Repository class or factory used to perform queries for the field's DTO type.
+            filter_type (type[BooleanFilterDTO] | None): GraphQL input type used for filtering list queries; if None, may be inferred from the DTO.
+            order_by (type[OrderByDTO] | None): GraphQL input type used for ordering list queries; if None, may be inferred from the DTO.
+            distinct_on (type[EnumDTO] | None): Enum type listing fields available for distinct selection on list queries.
+            pagination (bool | DefaultOffsetPagination): If True, enables default offset pagination; can supply a DefaultOffsetPagination instance to customize.
+            root_aggregations (bool): When True, treat the field as a root aggregation (returns aggregation-shaped results rather than single DTOs).
+            registry_namespace (dict[str, Any] | None): Namespace used when resolving nested Strawberry annotations.
+            filter_statement (FilterStatementCallable | None): Callable that returns a statement to apply additional filtering based on the GraphQL context.
+            query_hook (QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None): Hook(s) invoked to modify repository queries before execution.
+            execution_options (dict[str, Any] | None): Options passed to the repository when executing queries.
+            id_field_name (str): Name for the generated id argument when resolving a single-entity field (default "id").
+            arguments (list[StrawberryArgument] | None): Explicit list of StrawberryArgument objects to use instead of auto-generated arguments.
+            python_name (str | None): Backing Python attribute name (forwarded to StrawberryField).
+            graphql_name (str | None): GraphQL field name (forwarded to StrawberryField).
+            type_annotation (StrawberryAnnotation | None): Strawberry type annotation for the field.
+            origin (type | Callable | staticmethod | classmethod | None): Origin for type resolution (forwarded).
+            is_subscription (bool): Whether the field is a subscription (forwarded).
+            description (str | None): Explicit description for the field; if omitted, a description may be derived from the DTO.
+            base_resolver (StrawberryResolver[Any] | None): If provided, used as the field's resolver instead of repository-backed behavior.
+            permission_classes (list[type[BasePermission]]): Permission classes applied to the field (forwarded).
+            default (object): Default value forwarded to StrawberryField.
+            default_factory (Callable[[], Any] | object): Default factory forwarded to StrawberryField.
+            metadata (Mapping[Any, Any] | None): Field metadata forwarded to StrawberryField.
+            deprecation_reason (str | None): Deprecation reason forwarded to StrawberryField.
+            directives (Sequence[object]): GraphQL directives forwarded to StrawberryField.
+            extensions (list[FieldExtension]): Field extensions forwarded to StrawberryField.
+            root_field (bool): Marks the field as a GraphQL root field, affecting resolver dispatch and description generation.
+        """
         self.type_annotation = type_annotation
         self.registry_namespace = registry_namespace
         self.is_root_field = root_field
