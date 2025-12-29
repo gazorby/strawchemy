@@ -111,6 +111,12 @@ class RegistryTypeInfo:
 
     @property
     def scoped_id(self) -> Hashable:
+        """
+        Return a composite identifier used for scoping registry entries.
+        
+        Returns:
+            Hashable: A tuple (model, graphql_type, tags) representing the scoped identifier for this type.
+        """
         return self.model, self.graphql_type, self.tags
 
 

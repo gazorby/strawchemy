@@ -101,6 +101,25 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         paginate: IncludeFields | None = None,
         default_pagination: None | DefaultOffsetPagination = None,
     ) -> RegistryTypeInfo:
+        """
+        Builds a RegistryTypeInfo describing how a DTO should be registered with the mapper.
+        
+        Parameters:
+            dto: The DTO class to describe.
+            dto_config: Configuration for the DTO (scope, exclude_from_scope, purpose, etc.).
+            current_node: Optional registry node representing the DTO's position in a relationship graph; used to disambiguate names on conflicts.
+            override: If True, marks the resulting type as allowed to override existing registrations.
+            user_defined: If True, marks the type as provided by the user (affects conflict handling).
+            order: Optional set of child field names that should be treated as orderable for this type.
+            paginate: Optional set of child field names that should be treated as paginable for this type.
+            default_pagination: Optional pagination configuration to apply as the type's default pagination behavior.
+        
+        Returns:
+            A RegistryTypeInfo populated with the DTO's registration metadata (name, default_name, graphql_type, scope,
+            model if mapped, pagination/order/paginate sets, override/user_defined flags, and exclude_from_scope).
+            If the mapper registry reports a name clash and `current_node` is provided, the returned `name` is replaced
+            with a path-derived unique name.
+        """
         graphql_type = self.graphql_type(dto_config)
         model: type[DeclarativeBase] | None = dto.__dto_model__ if issubclass(dto, MappedStrawberryGraphQLDTO) else None  # type: ignore[reportGeneralTypeIssues]
         default_name = self.root_dto_name(model, dto_config, current_node) if model else dto.__name__
@@ -136,6 +155,24 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         paginate: IncludeFields | None = None,
         default_pagination: None | DefaultOffsetPagination = None,
     ) -> type[StrawchemyDTOT]:
+        """
+        Register a DTO type in the mapper registry with GraphQL-related metadata.
+        
+        Parameters:
+            dto (type[StrawchemyDTOT]): The DTO class to register.
+            dto_config (DTOConfig): Configuration used to build the registry type info.
+            current_node (Node[Relation[Any, GraphQLDTOT], None] | None): Optional registry node representing the DTO's position in relation graphs; used when constructing type metadata.
+            description (str | None): Optional schema description to store for the type; if omitted the DTO's internal description is used.
+            directives (Sequence[object] | None): Optional GraphQL directives to attach to the registered type.
+            override (bool): If True, allow replacing an existing overridable type in the registry.
+            user_defined (bool): If True, mark the registered type as provided by user code.
+            order (IncludeFields | None): Optional set/list of child field names to expose for ordering; when None no order-by fields are added.
+            paginate (IncludeFields | None): Optional set/list of child field names to expose for pagination; when None pagination is not enabled for children.
+            default_pagination (DefaultOffsetPagination | None): Optional default pagination strategy to apply when pagination is enabled.
+        
+        Returns:
+            type[StrawchemyDTOT]: The DTO class that was registered.
+        """
         type_info = self._type_info(
             dto,
             dto_config,
@@ -231,6 +268,36 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         purpose: Purpose = Purpose.READ,
         scope: DTOScope | None = None,
     ) -> Callable[[type[Any]], type[GraphQLDTOT]]:
+        """
+        Create a decorator that builds and registers a GraphQL DTO class for the given model and GraphQL purpose.
+        
+        The returned decorator accepts a user-defined base class and produces a Strawberry-compatible DTO configured with the provided include/exclude rules, mapping aliases, pagination and ordering settings, hooks, and GraphQL metadata.
+        
+        Parameters:
+            model: The mapped domain model type the DTO represents.
+            mode: GraphQL purpose tag for the DTO (e.g., "type", "input", "create", "update"); used as the DTO's purpose and tag.
+            include: Fields to explicitly include from the model.
+            exclude: Fields to explicitly exclude from the model.
+            partial: If True, make fields optional to represent partial inputs.
+            type_map: Custom type mappings for field types.
+            aliases: Explicit field name aliases.
+            alias_generator: Callable to generate field aliases from names.
+            paginate: Fields eligible for pagination on child relations.
+            order: Fields eligible for ordering on child relations.
+            default_pagination: Default pagination strategy to attach to the type when pagination is enabled.
+            filter_input: DTO class used for filtering when the created DTO is mapped.
+            order_by: DTO class used for ordering when the created DTO is mapped.
+            name: Explicit GraphQL name for the generated type.
+            description: GraphQL description text for the generated type.
+            directives: Sequence of GraphQL directives to attach to the type.
+            query_hook: Single or list of query hooks to be attached to the created DTO to modify query behavior.
+            override: If True, allow registering a type that overrides an existing non-user-defined registered type.
+            purpose: Higher-level purpose enum guiding DTO creation (defaults to read).
+            scope: DTO scope to register the type under (e.g., "global" or "dto").
+        
+        Returns:
+            A decorator that accepts a user base class and returns the constructed GraphQL DTO type.
+        """
         def wrapper(class_: type[Any]) -> type[GraphQLDTOT]:
             dto_config = config(
                 purpose,
@@ -459,6 +526,34 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         scope: TypeScope | None = None,
         mode: GraphQLPurpose = "type",
     ) -> Callable[[type[Any]], type[MappedGraphQLDTO[T]]]:
+        """
+        Create a decorator that builds a mapped GraphQL DTO for the given SQLAlchemy model with GraphQL-specific options.
+        
+        Parameters:
+            model: The mapped SQLAlchemy model type to base the DTO on.
+            include: Fields to include in the DTO; defaults to None (use model defaults).
+            exclude: Fields to exclude from the DTO; defaults to None.
+            partial: If True, make fields optional for partial updates; defaults to None.
+            type_map: Custom type mapping for field types.
+            aliases: Explicit field name aliases.
+            alias_generator: Callable to generate field aliases from attribute names.
+            paginate: Fields that should support pagination when exposed as child relations.
+            order: Fields that should expose ordering controls when exposed as child relations.
+            default_pagination: Default pagination strategy to apply for paginated child fields.
+            filter_input: DTO class used for boolean/filter input generation.
+            order_by: DTO class used for order-by input generation.
+            name: Explicit GraphQL type name override.
+            description: GraphQL type description.
+            directives: GraphQL directives to attach to the type.
+            query_hook: Hook or list of hooks to modify queries for this DTO.
+            override: If True, allow overriding an existing registered type with the same name.
+            purpose: Purpose of the DTO (read/write); defaults to read.
+            scope: TypeScope to convert into a DTOScope for registration.
+            mode: GraphQL purpose mode ("type", "input", etc.) controlling DTO shape.
+        
+        Returns:
+            A decorator that, when applied to a class, returns the constructed mapped GraphQL DTO type.
+        """
         return self._type_wrapper(
             model=model,
             include=include,
@@ -611,6 +706,20 @@ class StrawchemyUnMappedDTOFactory(GraphQLDTOFactory[UnmappedGraphQLDTOT]):
         purpose: Purpose = Purpose.READ,
         mode: GraphQLPurpose = "type",
     ) -> Callable[[type[Any]], type[UnmappedStrawberryGraphQLDTO[T]]]:
+        """
+        Create a decorator that builds an unmapped Strawberry GraphQL DTO for the given model.
+        
+        Parameters:
+            paginate (IncludeFields | None): Fields eligible for per-child pagination; if `None`, no per-field pagination is configured.
+            order (IncludeFields | None): Fields eligible for per-child ordering; if `None`, no per-field ordering is configured.
+            default_pagination (DefaultOffsetPagination | None): Default pagination strategy to attach to the created DTO when pagination is enabled.
+            mode (GraphQLPurpose): GraphQL role for the generated type (e.g., `"type"` for object types or input modes for write operations).
+            purpose (Purpose): Overall DTO purpose (read vs write) which influences GraphQL kind and available behaviors.
+            query_hook (QueryHook[T] | list[QueryHook[T]] | None): Optional hook(s) applied to queries produced for the DTO.
+        
+        Returns:
+            decorator: A class decorator that, when applied, produces an unmapped Strawberry-based GraphQL DTO configured with the provided options.
+        """
         return self._type_wrapper(
             model=model,
             include=include,
