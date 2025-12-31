@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, Relation
-    from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
+    from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields, Purpose
     from strawchemy.repository.typing import DeclarativeT
     from strawchemy.typing import GraphQLPurpose
     from strawchemy.utils.graph import Node
@@ -84,7 +84,7 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
             *,
             mode: GraphQLPurpose,
             include: IncludeFields | None = None,
-            exclude: ExcludeFields | None = None,
+            exclude: FieldIterable | None = None,
             partial: bool | None = None,
             type_map: Mapping[Any, Any] | None = None,
             aliases: Mapping[str, str] | None = None,

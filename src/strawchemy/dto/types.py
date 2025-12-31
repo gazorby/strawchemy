@@ -23,15 +23,15 @@ __all__ = (
     "DTOScope",
     "DTOSkip",
     "DTOUnset",
-    "ExcludeFields",
+    "FieldIterable",
     "IncludeFields",
     "Purpose",
     "PurposeConfig",
 )
 
 DTOScope: TypeAlias = Literal["global", "dto"]
-IncludeFields: TypeAlias = "list[str] | set[str] | Literal['all']"
-ExcludeFields: TypeAlias = "list[str] | set[str]"
+FieldIterable: TypeAlias = "list[str] | set[str] | frozenset[str] | tuple[str, ...]"
+IncludeFields: TypeAlias = "FieldIterable | Literal['all']"
 
 
 @final
@@ -160,7 +160,7 @@ class DTOConfig:
     """Configure the DTO for "read" or "write" operations."""
     include: IncludeFields = field(default_factory=set)
     """Explicitly include fields from the generated DTO."""
-    exclude: ExcludeFields = field(default_factory=set)
+    exclude: FieldIterable = field(default_factory=set)
     """Explicitly exclude fields from the generated DTO. Implies `include="all"`."""
     partial: bool | None = None
     """Make all field optional."""
@@ -186,14 +186,40 @@ class DTOConfig:
             self.include = "all"
 
     @classmethod
-    def from_include(cls, include: IncludeFields | None = None, purpose: Purpose = Purpose.READ) -> Self:
-        return cls(purpose, include=set() if include is None else include)
+    def from_include(cls, include: IncludeFields | bool | None = None, purpose: Purpose = Purpose.READ) -> Self:
+        """Create a DTOConfig from an include specification.
+
+        Factory method for creating a DTOConfig with a simplified interface, converting
+        an `IncludeFields` specification into a complete configuration object. This is
+        useful for building configs when only the include/exclude specification matters.
+
+        Args:
+            include: The field inclusion specification. Can be:
+                - None: Include no fields (converted to empty set)
+                - "all": Include all fields
+                - list or set of field names: Include only these specific fields
+                Defaults to None.
+            purpose: The purpose of the DTO being configured (READ, WRITE, or COMPLETE).
+                Defaults to Purpose.READ.
+
+        Returns:
+            A new DTOConfig instance with the specified include and purpose settings.
+            All other configuration parameters use their defaults.
+        """
+        match include:
+            case True:
+                include_ = "all"
+            case False | None:
+                include_ = set()
+            case _:
+                include_ = include
+        return cls(purpose, include=include_)
 
     def copy_with(
         self,
         purpose: Purpose | type[DTOUnset] = DTOUnset,
         include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
+        exclude: FieldIterable | None = None,
         partial: bool | None | type[DTOUnset] = DTOUnset,
         unset_sentinel: Any | type[DTOUnset] = DTOUnset,
         type_overrides: Mapping[Any, Any] | type[DTOUnset] = DTOUnset,
@@ -271,4 +297,41 @@ class DTOConfig:
         return None
 
     def is_field_included(self, name: str) -> bool:
+        """Check if a field should be included based on this configuration.
+
+        Evaluates field inclusion using the following rules:
+        1. If include="all": the field is included unless explicitly excluded
+        2. If include is a specific list/set: the field is included only if named
+        3. If include is empty: the field is never included
+        4. Regardless of include, the field is excluded if it's in the exclude set
+
+        This method is used during DTO factory operations to determine which fields
+        from the source model should be included in the generated DTO.
+
+        Args:
+            name: The field name to check for inclusion.
+
+        Returns:
+            True if the field should be included based on the include/exclude rules,
+            False otherwise.
+
+        Examples:
+            # include="all" case
+            config = DTOConfig.from_include("all")
+            config.is_field_included("any_field")  # Returns: True
+
+            # Specific fields case
+            config = DTOConfig.from_include(["field1", "field2"])
+            config.is_field_included("field1")  # Returns: True
+            config.is_field_included("field3")  # Returns: False
+
+            # Empty include case
+            config = DTOConfig.from_include(None)
+            config.is_field_included("any_field")  # Returns: False
+
+            # With exclude
+            config = DTOConfig(Purpose.READ, exclude={"password"})  # include="all"
+            config.is_field_included("name")  # Returns: True
+            config.is_field_included("password")  # Returns: False
+        """
         return (name in self.include or self.include == "all") and name not in self.exclude

@@ -288,7 +288,11 @@ class Strawchemy:
         repository_type_ = repository_type if repository_type is not None else self.config.repository_type
         execution_options_ = execution_options if execution_options is not None else self.config.execution_options
         pagination = (
-            DefaultOffsetPagination(limit=self.config.pagination_default_limit) if pagination is True else pagination
+            DefaultOffsetPagination(
+                limit=self.config.pagination_default_limit, offset=self.config.pagination_default_offset
+            )
+            if pagination is True
+            else pagination
         )
         if pagination is None:
             pagination = self.config.pagination

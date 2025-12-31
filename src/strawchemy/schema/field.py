@@ -234,6 +234,7 @@ class StrawchemyField(StrawberryField):
     @cached_property
     def order_by(self) -> type[OrderByDTO] | None:
         inner_type = strawberry_contained_user_type(self.type)
+
         if self._order_by is None and self._is_strawchemy_type(inner_type):
             return inner_type.__strawchemy_order_by__
         return self._order_by

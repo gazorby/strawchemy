@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, Relation
-    from strawchemy.dto.types import ExcludeFields, IncludeFields
+    from strawchemy.dto.types import FieldIterable, IncludeFields
     from strawchemy.repository.typing import DeclarativeT
     from strawchemy.schema.filters import GraphQLFilter
     from strawchemy.utils.graph import Node
@@ -52,7 +52,7 @@ class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLD
         model: type[DeclarativeT],
         *,
         include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
+        exclude: FieldIterable | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,

@@ -102,8 +102,8 @@ class RegistryTypeInfo:
     user_defined: bool = False
     override: bool = False
     pagination: DefaultOffsetPagination | None = None
-    order: frozenset[str] | Literal["all"] = dataclasses.field(default_factory=frozenset)
-    paginate: frozenset[str] | Literal["all"] = dataclasses.field(default_factory=frozenset)
+    order: frozenset[str] | Literal["all"] | bool = dataclasses.field(default_factory=frozenset)
+    paginate: frozenset[str] | bool = dataclasses.field(default_factory=frozenset)
     scope: DTOScope | None = None
     model: type[DeclarativeBase] | None = None
     tags: frozenset[str] = dataclasses.field(default_factory=frozenset)

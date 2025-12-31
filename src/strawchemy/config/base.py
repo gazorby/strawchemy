@@ -43,14 +43,18 @@ class StrawchemyConfig:
     """Override default filters with custom filters."""
     execution_options: dict[str, Any] | None = None
     """SQLAlchemy execution options for strawberry operations."""
-    pagination_default_limit: int = 100
-    """Default pagination limit when `pagination=True`."""
-    pagination: bool = False
-    """Enable/disable pagination on list resolvers."""
     default_id_field_name: str = "id"
     """Name for primary key fields arguments on primary key resolvers."""
     deterministic_ordering: bool = True
     """Force deterministic ordering for list resolvers."""
+    pagination: bool = False
+    """Enable/disable pagination on list resolvers."""
+    order_by: bool = False
+    """Enable/disable order by on list resolvers."""
+    pagination_default_limit: int = 100
+    """Default pagination limit when `pagination=True`."""
+    pagination_default_offset: int = 0
+    """Default pagination offset when `pagination=True`."""
 
     inspector: SQLAlchemyGraphQLInspector = field(init=False)
 

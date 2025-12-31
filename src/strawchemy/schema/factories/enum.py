@@ -10,7 +10,7 @@ from typing_extensions import override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.strawberry import EnumDTO, GraphQLFieldDefinition
-from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
+from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields, Purpose
 from strawchemy.utils.text import snake_to_lower_camel_case
 
 if TYPE_CHECKING:
@@ -141,7 +141,7 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
         model: type[DeclarativeBase],
         purpose: Purpose = Purpose.READ,
         include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
+        exclude: FieldIterable | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
@@ -164,7 +164,7 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
         self,
         model: type[DeclarativeBase],
         include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
+        exclude: FieldIterable | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,

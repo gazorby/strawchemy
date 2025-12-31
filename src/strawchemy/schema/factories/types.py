@@ -111,6 +111,39 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         paginate: IncludeFields | None = None,
         default_pagination: None | DefaultOffsetPagination = None,
     ) -> type[GraphQLDTOT]:
+        """Add pagination and ordering arguments to a GraphQL DTO type.
+
+        Enhances a GraphQL Data Transfer Object (DTO) type with pagination and ordering
+        arguments for relation fields and path filtering for JSON fields. This is a
+        post-processing step that modifies the DTO type after initial generation to
+        add query capabilities.
+
+        For each relation field with `uselist=True` (one-to-many relationships):
+        - If included in the `order` specification: adds an order_by argument
+        - If included in the `paginate` specification: adds pagination configuration
+
+        For each JSON field:
+        - Adds a `json_path` argument for path-based filtering
+
+        Args:
+            dto: The GraphQL DTO type to enhance. Must be a generated strawberry type.
+            base: Optional base class whose annotations should be merged into the DTO.
+                If provided, annotations from the base class are added to the final DTO.
+            order: Field inclusion specification for ordering arguments. Can be:
+                - None: No ordering arguments added (default)
+                - "all": Add order_by arguments to all relation fields
+                - list/set of field names: Add order_by arguments only to named relations
+            paginate: Field inclusion specification for pagination arguments. Can be:
+                - None: No pagination arguments added (default)
+                - "all": Add pagination to all relation fields
+                - list/set of field names: Add pagination only to named relations
+            default_pagination: Default pagination configuration to apply when
+                paginate is enabled. If None, uses default pagination (True).
+
+        Returns:
+            The modified DTO type with updated __annotations__ and attributes
+            containing the new pagination and ordering arguments.
+        """
         attributes: dict[str, Any] = {}
         annotations: dict[str, Any] = {}
         order_config = DTOConfig.from_include(order)
