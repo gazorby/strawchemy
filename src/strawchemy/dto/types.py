@@ -186,7 +186,7 @@ class DTOConfig:
             self.include = "all"
 
     @classmethod
-    def from_include(cls, include: IncludeFields | bool | None = None, purpose: Purpose = Purpose.READ) -> Self:
+    def from_include(cls, include: IncludeFields | None = None, purpose: Purpose = Purpose.READ) -> Self:
         """Create a DTOConfig from an include specification.
 
         Factory method for creating a DTOConfig with a simplified interface, converting
@@ -206,14 +206,7 @@ class DTOConfig:
             A new DTOConfig instance with the specified include and purpose settings.
             All other configuration parameters use their defaults.
         """
-        match include:
-            case True:
-                include_ = "all"
-            case False | None:
-                include_ = set()
-            case _:
-                include_ = include
-        return cls(purpose, include=include_)
+        return cls(purpose, include=set() if include is None else include)
 
     def copy_with(
         self,
@@ -314,24 +307,5 @@ class DTOConfig:
         Returns:
             True if the field should be included based on the include/exclude rules,
             False otherwise.
-
-        Examples:
-            # include="all" case
-            config = DTOConfig.from_include("all")
-            config.is_field_included("any_field")  # Returns: True
-
-            # Specific fields case
-            config = DTOConfig.from_include(["field1", "field2"])
-            config.is_field_included("field1")  # Returns: True
-            config.is_field_included("field3")  # Returns: False
-
-            # Empty include case
-            config = DTOConfig.from_include(None)
-            config.is_field_included("any_field")  # Returns: False
-
-            # With exclude
-            config = DTOConfig(Purpose.READ, exclude={"password"})  # include="all"
-            config.is_field_included("name")  # Returns: True
-            config.is_field_included("password")  # Returns: False
         """
         return (name in self.include or self.include == "all") and name not in self.exclude
