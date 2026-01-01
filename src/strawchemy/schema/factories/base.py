@@ -45,7 +45,7 @@ from strawchemy.utils.annotation import get_annotations
 from strawchemy.utils.registry import RegistryTypeInfo
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
+    from collections.abc import Callable, Generator, Mapping, Sequence
 
     from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
@@ -66,11 +66,11 @@ StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyDTOAttributes")
 TypeScope: TypeAlias = Literal["schema"]
 
 
-def _to_frozenset_or_bool(value: Iterable[Any] | bool | None) -> frozenset[Any] | bool:
+def _include_fields_to_set_or_bool(value: IncludeFields | None) -> frozenset[Any] | bool:
     match value:
-        case None | False:
+        case None:
             return frozenset()
-        case True:
+        case "all":
             return True
         case _:
             return frozenset(value)
@@ -121,8 +121,8 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
             override=override,
             user_defined=user_defined,
             pagination=default_pagination,
-            order=_to_frozenset_or_bool(order),
-            paginate=_to_frozenset_or_bool(paginate),
+            order=_include_fields_to_set_or_bool(order),
+            paginate=_include_fields_to_set_or_bool(paginate),
             scope=dto_config.scope,
             model=model,
             exclude_from_scope=dto_config.exclude_from_scope,
