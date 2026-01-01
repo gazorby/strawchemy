@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from strawchemy.repository.strawberry import StrawchemyAsyncRepository, StrawchemySyncRepository
     from strawchemy.repository.strawberry.base import GraphQLResult
     from strawchemy.repository.typing import QueryHookCallable
+    from strawchemy.schema.factories.inputs import OrderByDTOFactory
     from strawchemy.typing import (
         AnyRepository,
         AnyRepositoryType,
@@ -75,8 +76,9 @@ class StrawchemyField(StrawberryField):
         self,
         config: StrawchemyConfig,
         repository_type: AnyRepositoryType,
+        order_by_factory: OrderByDTOFactory,
         filter_type: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
+        order_by: type[OrderByDTO] | bool | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination = False,
         root_aggregations: bool = False,
@@ -122,6 +124,7 @@ class StrawchemyField(StrawberryField):
         self._execution_options = execution_options
         self._config = config
         self._repository_type = repository_type
+        self._order_by_factory = order_by_factory
 
         super().__init__(
             python_name,
@@ -235,9 +238,13 @@ class StrawchemyField(StrawberryField):
     def order_by(self) -> type[OrderByDTO] | None:
         inner_type = strawberry_contained_user_type(self.type)
 
-        if self._order_by is None and self._is_strawchemy_type(inner_type):
-            return inner_type.__strawchemy_order_by__
-        return self._order_by
+        if self._is_strawchemy_type(inner_type):
+            if self._order_by is True or (self._order_by is None and self._config.order_by):
+                return self._order_by_factory.make_input(inner_type.__dto_model__, mode="order_by")  # type: ignore[reportGeneralTypeIssues]
+            if self._order_by is None:
+                return inner_type.__strawchemy_order_by__
+
+        return self._order_by if self._order_by not in (True, False, None) else None
 
     def auto_arguments(self) -> list[StrawberryArgument]:
         arguments: list[StrawberryArgument] = []
@@ -356,6 +363,7 @@ class StrawchemyField(StrawberryField):
             registry_namespace=self.registry_namespace,
             execution_options=self._execution_options,
             config=self._config,
+            order_by_factory=self._order_by_factory,
         )
         new_field._arguments = self._arguments[:] if self._arguments is not None else None  # noqa: SLF001
         return new_field

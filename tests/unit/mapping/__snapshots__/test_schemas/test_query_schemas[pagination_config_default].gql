@@ -4,7 +4,7 @@ type ColorType {
   fruitsAggregate: FruitAggregate!
 
   """Fetch objects from the FruitType collection"""
-  fruits: [FruitType!]!
+  fruits(limit: Int = 100, offset: Int! = 0): [FruitType!]!
   name: String!
   id: UUID!
 }

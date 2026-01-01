@@ -135,7 +135,11 @@ class Strawchemy:
         self.upsert_update_fields = self._enum_factory.input
         self.upsert_conflict_fields = self._upsert_conflict_factory.input
         # Initialize mutation field builder
-        self._mutation_builder = MutationFieldBuilder(self.config, self._annotation_namespace)
+        self._mutation_builder = MutationFieldBuilder(
+            config=self.config,
+            registry_namespace_getter=self._annotation_namespace,
+            order_by_factory=self._order_by_factory,
+        )
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
 
@@ -169,7 +173,7 @@ class Strawchemy:
         resolver: Any,
         *,
         filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
+        order_by: type[OrderByDTO] | bool | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         arguments: list[StrawberryArgument] | None = None,
@@ -197,7 +201,7 @@ class Strawchemy:
         self,
         *,
         filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
+        order_by: type[OrderByDTO] | bool | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         arguments: list[StrawberryArgument] | None = None,
@@ -225,7 +229,7 @@ class Strawchemy:
         resolver: Any | None = None,
         *,
         filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
+        order_by: type[OrderByDTO] | bool | None = None,
         distinct_on: type[EnumDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         arguments: list[StrawberryArgument] | None = None,
@@ -295,7 +299,7 @@ class Strawchemy:
             else pagination
         )
         if pagination is None:
-            pagination = self.config.pagination
+            pagination = self.config.pagination == "all"
         id_field_name = id_field_name or self.config.default_id_field_name
 
         field = StrawchemyField(
@@ -325,6 +329,7 @@ class Strawchemy:
             registry_namespace=namespace,
             description=description,
             arguments=arguments,
+            order_by_factory=self._order_by_factory,
         )
         return field(resolver) if resolver else field
 

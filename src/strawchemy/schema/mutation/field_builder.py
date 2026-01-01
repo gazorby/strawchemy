@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from strawberry.extensions.field_extension import FieldExtension
 
     from strawchemy.config.base import StrawchemyConfig
+    from strawchemy.schema.factories.inputs import OrderByDTOFactory
     from strawchemy.schema.mutation.fields import (
         StrawchemyCreateMutationField,
         StrawchemyDeleteMutationField,
@@ -35,6 +36,7 @@ class MutationFieldBuilder:
 
     config: StrawchemyConfig
     registry_namespace_getter: Callable[[], dict[str, Any]]
+    order_by_factory: OrderByDTOFactory
 
     def build(
         self,
@@ -104,6 +106,7 @@ class MutationFieldBuilder:
             extensions=extensions or [],
             registry_namespace=namespace,
             description=description,
+            order_by_factory=self.order_by_factory,
             **field_specific_kwargs,
         )
         return field(resolver) if resolver else field

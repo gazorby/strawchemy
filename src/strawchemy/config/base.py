@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
 from strawchemy.repository.strawberry import StrawchemySyncRepository
@@ -47,9 +47,9 @@ class StrawchemyConfig:
     """Name for primary key fields arguments on primary key resolvers."""
     deterministic_ordering: bool = True
     """Force deterministic ordering for list resolvers."""
-    pagination: bool = False
+    pagination: Literal["all"] | None = None
     """Enable/disable pagination on list resolvers."""
-    order_by: bool = False
+    order_by: Literal["all"] | None = None
     """Enable/disable order by on list resolvers."""
     pagination_default_limit: int = 100
     """Default pagination limit when `pagination=True`."""

@@ -199,6 +199,7 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("order.type_order_by.Query", id="type_order_by"),
         pytest.param("order.field_order_by.Query", id="field_order_by"),
         pytest.param("order.auto_order_by.Query", id="auto_order_by"),
+        pytest.param("order.order_config_default.Query", id="order_config_default"),
         pytest.param("order.order_specific_fields.Query", id="order_specific_fields"),
         pytest.param("order.order_empty_list.Query", id="order_empty_list"),
         pytest.param("aggregations.root_aggregations.Query", id="root_aggregations"),
