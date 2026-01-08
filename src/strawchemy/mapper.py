@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from functools import cached_property, partial
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.schema.config import StrawberryConfig
@@ -25,7 +25,7 @@ from strawchemy.schema.factories import (
     UpsertConflictFieldsEnumDTOBackend,
 )
 from strawchemy.schema.field import StrawchemyField
-from strawchemy.schema.mutation import types
+from strawchemy.schema.mutation import types as mutation_types
 from strawchemy.schema.mutation.field_builder import MutationFieldBuilder
 from strawchemy.schema.mutation.fields import (
     StrawchemyCreateMutationField,
@@ -33,7 +33,6 @@ from strawchemy.schema.mutation.fields import (
     StrawchemyUpdateMutationField,
     StrawchemyUpsertMutationField,
 )
-from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.utils.registry import StrawberryRegistry
 
 if TYPE_CHECKING:
@@ -44,7 +43,9 @@ if TYPE_CHECKING:
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.arguments import StrawberryArgument
 
+    from strawchemy.dto.types import IncludeFields
     from strawchemy.repository.typing import QueryHookCallable
+    from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import AnyRepositoryType, FilterStatementCallable, MappedGraphQLDTO, SupportedDialect
     from strawchemy.validation.base import ValidationProtocol
@@ -53,7 +54,6 @@ if TYPE_CHECKING:
 
 T = TypeVar("T", bound="DeclarativeBase")
 
-_TYPES_NS = TYPING_NS | vars(types)
 
 __all__ = ("Strawchemy",)
 
@@ -82,6 +82,8 @@ class Strawchemy:
         upsert_conflict_fields: Factory for creating enum DTOs for upsert conflict fields.
         pydantic (PydanticMapper): A mapper for generating Pydantic models.
     """
+
+    _types_namespace: ClassVar[dict[str, Any]] = TYPING_NS | vars(mutation_types)
 
     def __init__(
         self,
@@ -134,11 +136,12 @@ class Strawchemy:
         self.aggregate = partial(self._aggregation_factory.type, mode="aggregate_type")
         self.upsert_update_fields = self._enum_factory.input
         self.upsert_conflict_fields = self._upsert_conflict_factory.input
-        # Initialize mutation field builder
         self._mutation_builder = MutationFieldBuilder(
             config=self.config,
             registry_namespace_getter=self._annotation_namespace,
             order_by_factory=self._order_by_factory,
+            filter_factory=self._filter_factory,
+            distinct_on_factory=self._distinct_on_enum_factory,
         )
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
@@ -151,7 +154,7 @@ class Strawchemy:
         Returns:
             A dictionary representing the annotation namespace.
         """
-        return self.registry.namespace("object") | _TYPES_NS
+        return self.registry.namespace("object") | self._types_namespace
 
     @cached_property
     def pydantic(self) -> PydanticMapper:
@@ -172,10 +175,10 @@ class Strawchemy:
         self,
         resolver: Any,
         *,
-        filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | bool | None = None,
-        distinct_on: type[EnumDTO] | None = None,
+        filter_input: type[BooleanFilterDTO] | bool | None = None,
+        order_by: IncludeFields | type[OrderByDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
+        distinct_on: IncludeFields | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
@@ -200,10 +203,10 @@ class Strawchemy:
     def field(
         self,
         *,
-        filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | bool | None = None,
-        distinct_on: type[EnumDTO] | None = None,
+        filter_input: type[BooleanFilterDTO] | bool | None = None,
+        order_by: IncludeFields | type[OrderByDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
+        distinct_on: IncludeFields | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
@@ -228,10 +231,10 @@ class Strawchemy:
         self,
         resolver: Any | None = None,
         *,
-        filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | bool | None = None,
-        distinct_on: type[EnumDTO] | None = None,
+        filter_input: type[BooleanFilterDTO] | bool | None = None,
+        order_by: IncludeFields | type[OrderByDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
+        distinct_on: IncludeFields | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
@@ -289,25 +292,13 @@ class Strawchemy:
         """
         namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
-        execution_options_ = execution_options if execution_options is not None else self.config.execution_options
-        pagination = (
-            DefaultOffsetPagination(
-                limit=self.config.pagination_default_limit, offset=self.config.pagination_default_offset
-            )
-            if pagination is True
-            else pagination
-        )
-        if pagination is None:
-            pagination = self.config.pagination == "all"
-        id_field_name = id_field_name or self.config.default_id_field_name
 
         field = StrawchemyField(
             config=self.config,
-            repository_type=repository_type_,
+            repository_type=repository_type,
             root_field=root_field,
             filter_statement=filter_statement,
-            execution_options=execution_options_,
+            execution_options=execution_options,
             filter_type=filter_input,
             order_by=order_by,
             pagination=pagination,
@@ -330,6 +321,8 @@ class Strawchemy:
             description=description,
             arguments=arguments,
             order_by_factory=self._order_by_factory,
+            filter_factory=self._filter_factory,
+            distinct_on_factory=self._distinct_on_enum_factory,
         )
         return field(resolver) if resolver else field
 

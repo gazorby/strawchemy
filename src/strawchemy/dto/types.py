@@ -5,9 +5,9 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, final, get_type_hints
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, final, get_type_hints, overload
 
-from typing_extensions import Self, override
+from typing_extensions import Self, TypeIs, override
 
 from strawchemy.utils.annotation import get_annotations
 
@@ -27,6 +27,8 @@ __all__ = (
     "IncludeFields",
     "Purpose",
     "PurposeConfig",
+    "cast_include_fields",
+    "is_fields_iterable",
 )
 
 DTOScope: TypeAlias = Literal["global", "dto"]
@@ -309,3 +311,30 @@ class DTOConfig:
             False otherwise.
         """
         return (name in self.include or self.include == "all") and name not in self.exclude
+
+
+@overload
+def cast_include_fields(value: Literal["all"]) -> Literal["all"]: ...
+
+
+@overload
+def cast_include_fields(value: frozenset[str] | set[str] | list[str] | tuple[str, ...] | None) -> frozenset[str]: ...
+
+
+def cast_include_fields(value: IncludeFields | None) -> frozenset[str] | Literal["all"]:
+    match value:
+        case None:
+            return frozenset()
+        case "all":
+            return "all"
+        case _:
+            return frozenset(value)
+
+
+def is_fields_iterable(value: Any) -> TypeIs[IncludeFields | FieldIterable | None]:
+    """Test the given value is suitable to be used as either `include` or `exclude` in a DTOConfig."""
+    if value == "all" or value is None:
+        return True
+    if isinstance(value, str):
+        return False
+    return isinstance(value, (frozenset, set, list, tuple))

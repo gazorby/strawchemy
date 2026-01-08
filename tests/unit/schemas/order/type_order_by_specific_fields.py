@@ -8,11 +8,7 @@ from tests.unit.models import SQLDataTypes
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.order(SQLDataTypes, include="all")
-class SQLDataTypesOrderBy: ...
-
-
-@strawchemy.type(SQLDataTypes, include="all", order=SQLDataTypesOrderBy)
+@strawchemy.type(SQLDataTypes, include="all", order=["str_col", "int_col"])
 class SQLDataTypesType: ...
 
 

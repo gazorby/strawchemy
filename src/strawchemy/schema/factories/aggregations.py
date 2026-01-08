@@ -123,6 +123,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         raise_if_no_fields: bool = False,
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
+        no_cache: bool = False,
         *,
         function: FunctionInfo | None = None,
         **kwargs: Any,
@@ -137,6 +138,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
             raise_if_no_fields,
             tags,
             backend_kwargs,
+            no_cache,
             function=function,
             **kwargs,
         )

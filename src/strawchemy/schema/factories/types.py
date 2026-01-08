@@ -19,8 +19,9 @@ from strawchemy.dto.strawberry import (
     FunctionFieldDefinition,
     GraphQLFieldDefinition,
     MappedStrawberryGraphQLDTO,
+    OrderByDTO,
 )
-from strawchemy.dto.types import DTOConfig, DTOMissing, IncludeFields, Purpose
+from strawchemy.dto.types import DTOConfig, DTOMissing, IncludeFields, Purpose, is_fields_iterable
 from strawchemy.dto.utils import read_all_partial_config, read_partial, write_all_config
 from strawchemy.exceptions import EmptyDTOError
 from strawchemy.schema.factories import (
@@ -234,9 +235,10 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         raise_if_no_fields: bool = False,
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
+        no_cache: bool = False,
         *,
         default_pagination: None | DefaultOffsetPagination = None,
-        order: IncludeFields | None = None,
+        order: IncludeFields | type[OrderByDTO] | None = None,
         paginate: IncludeFields | None = None,
         aggregations: bool = True,
         description: str | None = None,
@@ -266,7 +268,11 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         )
         if self.graphql_type(dto_config) == "object":
             dto = self._add_fields_arguments(
-                dto, base, default_pagination=default_pagination, order=order, paginate=paginate
+                dto,
+                base,
+                default_pagination=default_pagination,
+                order=order if is_fields_iterable(order) else None,
+                paginate=paginate,
             )
         if register_type:
             return self._register_type(
@@ -356,6 +362,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         raise_if_no_fields: bool = False,
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
+        no_cache: bool = False,
         *,
         aggregations: bool = True,
         **kwargs: Any,
@@ -699,6 +706,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         raise_if_no_fields: bool = False,
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
+        no_cache: bool = False,
         *,
         description: str | None = None,
         mode: GraphQLPurpose,
@@ -716,5 +724,6 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
             backend_kwargs=backend_kwargs,
             description=description or self._description(mode),
             mode=mode,
+            no_cache=no_cache,
             **kwargs,
         )

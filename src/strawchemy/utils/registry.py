@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from strawberry.types.arguments import StrawberryArgument
     from strawberry.types.base import WithStrawberryObjectDefinition
 
+    from strawchemy.dto.strawberry import EnumDTO, OrderByDTO
     from strawchemy.dto.types import DTOScope
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.typing import GraphQLType, StrawchemyTypeWithStrawberryObjectDefinition
@@ -102,8 +103,9 @@ class RegistryTypeInfo:
     user_defined: bool = False
     override: bool = False
     pagination: DefaultOffsetPagination | None = None
-    order: frozenset[str] | Literal["all"] | bool = dataclasses.field(default_factory=frozenset)
-    paginate: frozenset[str] | bool = dataclasses.field(default_factory=frozenset)
+    order: frozenset[str] | Literal["all"] | type[OrderByDTO] = dataclasses.field(default_factory=frozenset)
+    distinct_on: frozenset[str] | Literal["all"] | type[EnumDTO] = dataclasses.field(default_factory=frozenset)
+    paginate: frozenset[str] | Literal["all"] = dataclasses.field(default_factory=frozenset)
     scope: DTOScope | None = None
     model: type[DeclarativeBase] | None = None
     tags: frozenset[str] = dataclasses.field(default_factory=frozenset)
@@ -128,6 +130,7 @@ class StrawberryRegistry:
         self._type_map: dict[RegistryTypeInfo, type[Any]] = {}
         self._names_map: defaultdict[GraphQLType, dict[str, RegistryTypeInfo]] = defaultdict(dict)
         self._tracked_type_names: defaultdict[GraphQLType, set[str]] = defaultdict(set)
+        self._unique_names: defaultdict[str, int] = defaultdict(int)
 
     def _get_field_type_name(
         self,
@@ -303,6 +306,13 @@ class StrawberryRegistry:
             and not existing.override
             and not type_info.override
         )
+
+    def uniquify_name(self, graphql_type: GraphQLType, name: str) -> str:
+        """Return a type name guaranteed to be unique within the registry."""
+        while self.get(graphql_type, name, None):
+            self._unique_names[name] += 1
+            name = f"{name}{self._unique_names[name]}"
+        return name
 
     @overload
     def get(self, graphql_type: GraphQLType, name: str, default: _RegistryMissing) -> RegistryTypeInfo: ...

@@ -92,6 +92,13 @@ input FruitOrderBy {
   id: OrderByEnum
 }
 
+"""
+Boolean expression to compare fields. All fields are combined with logical 'AND'.
+"""
+input FruitOrderBy1 {
+  name: OrderByEnum
+}
+
 """GraphQL type"""
 type FruitSumFields {
   name: String
@@ -118,7 +125,7 @@ enum OrderByEnum {
 
 type Query {
   """Fetch objects from the FruitType collection"""
-  fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
+  fruits(orderBy: [FruitOrderBy1!] = null): [FruitType!]!
 }
 
 scalar UUID

@@ -15,7 +15,8 @@ if TYPE_CHECKING:
     from strawberry.extensions.field_extension import FieldExtension
 
     from strawchemy.config.base import StrawchemyConfig
-    from strawchemy.schema.factories.inputs import OrderByDTOFactory
+    from strawchemy.schema.factories import DistinctOnFieldsDTOFactory
+    from strawchemy.schema.factories.inputs import BooleanFilterDTOFactory, OrderByDTOFactory
     from strawchemy.schema.mutation.fields import (
         StrawchemyCreateMutationField,
         StrawchemyDeleteMutationField,
@@ -37,6 +38,8 @@ class MutationFieldBuilder:
     config: StrawchemyConfig
     registry_namespace_getter: Callable[[], dict[str, Any]]
     order_by_factory: OrderByDTOFactory
+    filter_factory: BooleanFilterDTOFactory
+    distinct_on_factory: DistinctOnFieldsDTOFactory
 
     def build(
         self,
@@ -88,11 +91,10 @@ class MutationFieldBuilder:
         """
         namespace = self.registry_namespace_getter()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
 
         field = field_class(
             config=self.config,
-            repository_type=repository_type_,
+            repository_type=repository_type,
             python_name=None,
             graphql_name=name,
             type_annotation=type_annotation,
@@ -107,6 +109,8 @@ class MutationFieldBuilder:
             registry_namespace=namespace,
             description=description,
             order_by_factory=self.order_by_factory,
+            filter_factory=self.filter_factory,
+            distinct_on_factory=self.distinct_on_factory,
             **field_specific_kwargs,
         )
         return field(resolver) if resolver else field

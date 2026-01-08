@@ -51,6 +51,8 @@ class StrawchemyConfig:
     """Enable/disable pagination on list resolvers."""
     order_by: Literal["all"] | None = None
     """Enable/disable order by on list resolvers."""
+    distinct_on: Literal["all"] | None = None
+    """Enable/disable order by onelist resolvers."""
     pagination_default_limit: int = 100
     """Default pagination limit when `pagination=True`."""
     pagination_default_offset: int = 0

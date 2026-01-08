@@ -14,8 +14,14 @@ from typing_extensions import Self, TypeIs, override
 
 from strawchemy.constants import DISTINCT_ON_KEY, FILTER_KEY, LIMIT_KEY, NODES_KEY, OFFSET_KEY, ORDER_BY_KEY
 from strawchemy.dto.base import MappedDTO
-from strawchemy.dto.strawberry import MappedStrawberryGraphQLDTO, StrawchemyDTOAttributes
-from strawchemy.dto.types import DTOConfig, Purpose
+from strawchemy.dto.strawberry import (
+    BooleanFilterDTO,
+    EnumDTO,
+    MappedStrawberryGraphQLDTO,
+    OrderByDTO,
+    StrawchemyDTOAttributes,
+)
+from strawchemy.dto.types import DTOConfig, IncludeFields, Purpose
 from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.utils.annotation import is_type_hint_optional
@@ -37,11 +43,11 @@ if TYPE_CHECKING:
     from strawberry.types.fields.resolver import StrawberryResolver
 
     from strawchemy import StrawchemyConfig
-    from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.repository.strawberry import StrawchemyAsyncRepository, StrawchemySyncRepository
     from strawchemy.repository.strawberry.base import GraphQLResult
     from strawchemy.repository.typing import QueryHookCallable
-    from strawchemy.schema.factories.inputs import OrderByDTOFactory
+    from strawchemy.schema.factories import DistinctOnFieldsDTOFactory
+    from strawchemy.schema.factories.inputs import BooleanFilterDTOFactory, OrderByDTOFactory
     from strawchemy.typing import (
         AnyRepository,
         AnyRepositoryType,
@@ -75,18 +81,20 @@ class StrawchemyField(StrawberryField):
     def __init__(
         self,
         config: StrawchemyConfig,
-        repository_type: AnyRepositoryType,
         order_by_factory: OrderByDTOFactory,
-        filter_type: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | bool | None = None,
-        distinct_on: type[EnumDTO] | None = None,
-        pagination: bool | DefaultOffsetPagination = False,
+        filter_factory: BooleanFilterDTOFactory,
+        distinct_on_factory: DistinctOnFieldsDTOFactory,
+        filter_type: type[BooleanFilterDTO] | bool | None = None,
+        order_by: IncludeFields | type[OrderByDTO] | Literal[False] | None = None,
+        distinct_on: IncludeFields | type[EnumDTO] | Literal[False] | None = None,
+        pagination: DefaultOffsetPagination | bool | None = False,
+        repository_type: AnyRepositoryType | None = None,
         root_aggregations: bool = False,
         registry_namespace: dict[str, Any] | None = None,
         filter_statement: FilterStatementCallable | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
         execution_options: dict[str, Any] | None = None,
-        id_field_name: str = "id",
+        id_field_name: str | None = None,
         arguments: list[StrawberryArgument] | None = None,
         # Original StrawberryField args
         python_name: str | None = None,
@@ -109,22 +117,22 @@ class StrawchemyField(StrawberryField):
         self.registry_namespace = registry_namespace
         self.is_root_field = root_field
         self.root_aggregations = root_aggregations
-        self.distinct_on = distinct_on
         self.query_hook = query_hook
-        self.pagination: DefaultOffsetPagination | Literal[False] = (
-            DefaultOffsetPagination() if pagination is True else pagination
-        )
 
-        self.id_field_name = id_field_name
+        self.id_field_name = config.default_id_field_name if id_field_name is None else id_field_name
 
+        self._pagination = pagination
+        self._distinct_on = distinct_on
         self._filter = filter_type
         self._order_by = order_by
         self._description = description
         self._filter_statement = filter_statement
-        self._execution_options = execution_options
+        self._execution_options = config.execution_options if execution_options is None else execution_options
         self._config = config
-        self._repository_type = repository_type
+        self._repository_type = config.repository_type if repository_type is None else repository_type
         self._order_by_factory = order_by_factory
+        self._filter_factory = filter_factory
+        self._distinct_on_factory = distinct_on_factory
 
         super().__init__(
             python_name,
@@ -228,23 +236,97 @@ class StrawchemyField(StrawberryField):
         )
 
     @cached_property
-    def filter(self) -> type[BooleanFilterDTO] | None:
+    def pagination(self) -> DefaultOffsetPagination | None:
+        if self._pagination is True or (self._pagination is None and self._config.pagination == "all"):
+            return DefaultOffsetPagination(
+                limit=self._config.pagination_default_limit, offset=self._config.pagination_default_offset
+            )
+
+        return None if not self._pagination else self._pagination
+
+    @cached_property
+    def distinct_on(self) -> type[EnumDTO] | None:
+        if isclass(self._distinct_on) and issubclass(self._distinct_on, EnumDTO):  # pyright: ignore[reportUnnecessaryIsInstance]
+            return self._distinct_on
+
         inner_type = strawberry_contained_user_type(self.type)
-        if self._filter is None and self._is_strawchemy_type(inner_type):
-            return inner_type.__strawchemy_filter__
-        return self._filter
+        distinct_on = self._config.distinct_on if self._distinct_on is None else self._distinct_on
+
+        if self._is_strawchemy_type(inner_type) and distinct_on:
+            config = inner_type.__dto_config__.copy_with(
+                include=inner_type.__dto_config__.include if distinct_on == "all" else distinct_on
+            )
+
+            return self._distinct_on_factory.make_input(
+                inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
+                include=config.include,
+                exclude=config.exclude,
+                aliases=config.aliases,
+                alias_generator=config.alias_generator,
+                type_map=config.type_overrides,
+            )
+
+        return None
 
     @cached_property
     def order_by(self) -> type[OrderByDTO] | None:
+        if isclass(self._order_by) and issubclass(self._order_by, OrderByDTO):  # pyright: ignore[reportUnnecessaryIsInstance]
+            return self._order_by
+
+        inner_type = strawberry_contained_user_type(self.type)
+        order_by = self._config.order_by if self._order_by is None else self._order_by
+
+        if self._is_strawchemy_type(inner_type) and order_by:
+            config = inner_type.__dto_config__.copy_with(
+                include=inner_type.__dto_config__.include if order_by == "all" else order_by
+            )
+
+            return self._order_by_factory.make_input(
+                inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
+                mode="order_by",
+                include=config.include if order_by == "all" else order_by,
+                exclude=config.exclude,
+                aliases=config.aliases,
+                alias_generator=config.alias_generator,
+                type_map=config.type_overrides,
+                no_cache=True,
+            )
+        if (
+            self._order_by is None
+            and self._is_strawchemy_type(inner_type)
+            and inner_type.__strawchemy_order_by__ is not None
+        ):
+            return inner_type.__strawchemy_order_by__
+
+        return None
+
+    @cached_property
+    def filter(self) -> type[BooleanFilterDTO] | None:
+        if isclass(self._filter) and issubclass(self._filter, BooleanFilterDTO):  # pyright: ignore[reportUnnecessaryIsInstance]
+            return self._filter
+
         inner_type = strawberry_contained_user_type(self.type)
 
-        if self._is_strawchemy_type(inner_type):
-            if self._order_by is True or (self._order_by is None and self._config.order_by):
-                return self._order_by_factory.make_input(inner_type.__dto_model__, mode="order_by")  # type: ignore[reportGeneralTypeIssues]
-            if self._order_by is None:
-                return inner_type.__strawchemy_order_by__
+        if self._is_strawchemy_type(inner_type) and self._filter is True:
+            config = inner_type.__dto_config__
+            return self._filter_factory.make_input(
+                inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
+                mode="filter",
+                include=config.include,
+                exclude=config.exclude,
+                aliases=config.aliases,
+                alias_generator=config.alias_generator,
+                type_map=config.type_overrides,
+                no_cache=True,
+            )
+        if (
+            self._filter is None
+            and self._is_strawchemy_type(inner_type)
+            and inner_type.__strawchemy_filter__ is not None
+        ):
+            return inner_type.__strawchemy_filter__
 
-        return self._order_by if self._order_by not in (True, False, None) else None
+        return None
 
     def auto_arguments(self) -> list[StrawberryArgument]:
         arguments: list[StrawberryArgument] = []
@@ -358,12 +440,14 @@ class StrawchemyField(StrawberryField):
             root_aggregations=self.root_aggregations,
             filter_type=self._filter,
             order_by=self._order_by,
-            distinct_on=self.distinct_on,
+            distinct_on=self._distinct_on,
             pagination=self.pagination,
             registry_namespace=self.registry_namespace,
             execution_options=self._execution_options,
             config=self._config,
             order_by_factory=self._order_by_factory,
+            filter_factory=self._filter_factory,
+            distinct_on_factory=self._distinct_on_factory,
         )
         new_field._arguments = self._arguments[:] if self._arguments is not None else None  # noqa: SLF001
         return new_field

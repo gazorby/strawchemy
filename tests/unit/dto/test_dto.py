@@ -326,3 +326,12 @@ def test_is_field_included_with_empty_include() -> None:
     config = DTOConfig.from_include(None)
     assert config.is_field_included("field1") is False
     assert config.is_field_included("any_field") is False
+
+
+def test_is_field_included_with_exclude() -> None:
+    """Test that excluded fields are properly excluded even when include='all'."""
+    config = DTOConfig(Purpose.READ, include="all", exclude={"field2", "field3"})
+    assert config.is_field_included("field1") is True
+    assert config.is_field_included("field2") is False
+    assert config.is_field_included("field3") is False
+    assert config.is_field_included("field4") is True

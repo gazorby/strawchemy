@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from typing_extensions import override
 
+from strawchemy.dto import config
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.strawberry import EnumDTO, GraphQLFieldDefinition
 from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields, Purpose
@@ -157,6 +158,37 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
             aliases=aliases,
             alias_generator=alias_generator,
             type_map=type_map,
+            **kwargs,
+        )
+
+    def make_input(
+        self,
+        model: type[DeclarativeBase],
+        include: IncludeFields | None = None,
+        exclude: FieldIterable | None = None,
+        partial: bool | None = None,
+        type_map: Mapping[Any, Any] | None = None,
+        aliases: Mapping[str, str] | None = None,
+        alias_generator: Callable[[str], str] | None = None,
+        base: type[Any] | None = None,
+        name: str | None = None,
+        no_cache: bool = False,
+        **kwargs: Any,
+    ) -> type[EnumDTO]:
+        return self.factory(
+            model=model,
+            dto_config=config(
+                purpose=Purpose.WRITE,
+                include=include,
+                exclude=exclude,
+                partial=partial,
+                type_map=type_map,
+                aliases=aliases,
+                alias_generator=alias_generator,
+            ),
+            base=base,
+            name=name,
+            no_cache=no_cache,
             **kwargs,
         )
 

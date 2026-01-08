@@ -129,7 +129,9 @@ class _Key(Generic[T]):
     string.
     """
 
-    separator: str = ":"
+    __slots__ = ("_key",)
+
+    separator: ClassVar[str] = ":"
 
     def __init__(self, components: Sequence[T | str] | str | None = None) -> None:
         self._key: str = ""

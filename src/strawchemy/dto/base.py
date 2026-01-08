@@ -626,6 +626,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         raise_if_no_fields: bool = False,
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
+        no_cache: bool = False,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
         """Build a Data transfer object (DTO) from an SQAlchemy model."""
@@ -640,7 +641,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         if dto_config.scope == "global":
             self._scoped_dto_names[self._scoped_cache_key(model, dto_config)] = name
 
-        if (dto := self._dto_cache.get(cache_key)) or (dto := self._dto_cache.get(scoped_cache_key)):
+        if not no_cache and ((dto := self._dto_cache.get(cache_key)) or (dto := self._dto_cache.get(scoped_cache_key))):
             return self.backend.copy(dto, name) if node.is_root else dto
 
         dto = self._factory(

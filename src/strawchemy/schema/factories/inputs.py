@@ -174,6 +174,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         raise_if_no_fields: bool = False,
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
+        no_cache: bool = False,
         *,
         aggregate_filters: bool = True,
         **kwargs: Any,
@@ -454,6 +455,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         raise_if_no_fields: bool = False,
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
+        no_cache: bool = False,
         *,
         aggregate_filters: bool = True,
         **kwargs: Any,
@@ -468,6 +470,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             raise_if_no_fields,
             tags,
             backend_kwargs,
+            no_cache,
             aggregate_filters=aggregate_filters,
             **kwargs,
         )
