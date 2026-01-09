@@ -188,7 +188,12 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("pagination.pagination_default_limit.Query", id="pagination_default_limit"),
         pytest.param("pagination.pagination_default_offset.Query", id="pagination_default_offset"),
         pytest.param("pagination.paginate_specific_fields.Query", id="paginate_specific_fields"),
-        pytest.param("pagination.paginate_empty_list.Query", id="paginate_empty_list"),
+        pytest.param("pagination.paginate_empty.Query", id="paginate_empty"),
+        pytest.param("pagination.pagination_config_empty.Query", id="pagination_config_empty"),
+        pytest.param("pagination.pagination_config_specific_fields.Query", id="pagination_config_specific_fields"),
+        pytest.param(
+            "pagination.pagination_config_with_type_override.Query", id="pagination_config_with_type_override"
+        ),
         pytest.param("pagination.paginate_and_order_combined.Query", id="paginate_and_order_combined"),
         pytest.param("pagination.paginate_all_with_default.Query", id="paginate_all_with_default"),
         pytest.param("custom_id_field_name.Query", id="custom_id_field_name"),
@@ -202,8 +207,16 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("order.field_order_by_all.Query", id="field_order_by_all"),
         pytest.param("order.field_order_by_specific_fields.Query", id="field_order_by_specific_fields"),
         pytest.param("order.order_config_all.Query", id="order_config_all"),
+        pytest.param(
+            "order.order_config_specific_fields_with_type_override.Query",
+            id="order_config_specific_fields_with_type_override",
+        ),
+        pytest.param(
+            "order.order_config_empty_with_empty_type_override.Query", id="order_config_empty_with_empty_type_override"
+        ),
+        pytest.param("order.order_config_all_with_field_override.Query", id="order_config_all_with_field_override"),
         pytest.param("order.order_config_specific_fields.Query", id="order_config_specific_fields"),
-        pytest.param("order.order_config_empty_list.Query", id="order_config_empty_list"),
+        pytest.param("order.order_config_empty.Query", id="order_config_empty"),
         pytest.param("order.order_config_with_field_override.Query", id="order_config_with_field_override"),
         pytest.param("order.type_order_by_specific_fields.Query", id="type_order_by_specific_fields"),
         pytest.param("aggregations.root_aggregations.Query", id="root_aggregations"),
@@ -212,6 +225,8 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("distinct.field_distinct_all.Query", id="field_distinct_all"),
         pytest.param("distinct.field_distinct_specific_fields.Query", id="field_distinct_specific_fields"),
         pytest.param("distinct.distinct_config_with_field_override.Query", id="distinct_config_with_field_override"),
+        pytest.param("distinct.distinct_config_specific_fields.Query", id="distinct_config_specific_fields"),
+        pytest.param("distinct.distinct_config_empty.Query", id="distinct_config_empty"),
         pytest.param("scope.schema_before.Query", id="scope_schema_before"),
         pytest.param("scope.schema_after.Query", id="scope_schema_after"),
         pytest.param("scope.schema_in_the_middle.Query", id="scope_schema_in_the_middle"),

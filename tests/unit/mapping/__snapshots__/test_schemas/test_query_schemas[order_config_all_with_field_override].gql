@@ -1,4 +1,29 @@
 '''
+input ColorAggregateMinMaxStringFieldsOrderBy {
+  name: OrderByEnum
+}
+
+input ColorAggregateNumericFieldsOrderBy {
+  name: OrderByEnum
+}
+
+input ColorAggregateOrderBy {
+  count: OrderByEnum
+  maxString: ColorAggregateMinMaxStringFieldsOrderBy
+  minString: ColorAggregateMinMaxStringFieldsOrderBy
+  sum: ColorAggregateNumericFieldsOrderBy
+}
+
+"""
+Boolean expression to compare fields. All fields are combined with logical 'AND'.
+"""
+input ColorOrderBy {
+  fruitsAggregate: FruitAggregateOrderBy
+  fruits: FruitOrderBy
+  name: OrderByEnum
+  id: OrderByEnum
+}
+
 """GraphQL type"""
 type ColorType {
   fruitsAggregate: FruitAggregate!
@@ -22,6 +47,28 @@ type FruitAggregate {
   varSamp: FruitNumericFields!
 }
 
+input FruitAggregateMinMaxStringFieldsOrderBy {
+  name: OrderByEnum
+}
+
+input FruitAggregateNumericFieldsOrderBy {
+  sweetness: OrderByEnum
+}
+
+input FruitAggregateOrderBy {
+  avg: FruitAggregateNumericFieldsOrderBy
+  count: OrderByEnum
+  max: FruitAggregateNumericFieldsOrderBy
+  maxString: FruitAggregateMinMaxStringFieldsOrderBy
+  min: FruitAggregateNumericFieldsOrderBy
+  minString: FruitAggregateMinMaxStringFieldsOrderBy
+  stddevPop: FruitAggregateNumericFieldsOrderBy
+  stddevSamp: FruitAggregateNumericFieldsOrderBy
+  sum: FruitAggregateNumericFieldsOrderBy
+  varPop: FruitAggregateNumericFieldsOrderBy
+  varSamp: FruitAggregateNumericFieldsOrderBy
+}
+
 """GraphQL type"""
 type FruitMinMaxFields {
   name: String
@@ -37,8 +84,12 @@ type FruitNumericFields {
 Boolean expression to compare fields. All fields are combined with logical 'AND'.
 """
 input FruitOrderBy {
+  colorAggregate: ColorAggregateOrderBy
+  color: ColorOrderBy
   name: OrderByEnum
+  colorId: OrderByEnum
   sweetness: OrderByEnum
+  id: OrderByEnum
 }
 
 """
@@ -46,7 +97,6 @@ Boolean expression to compare fields. All fields are combined with logical 'AND'
 """
 input FruitOrderBy1 {
   name: OrderByEnum
-  sweetness: OrderByEnum
 }
 
 """GraphQL type"""

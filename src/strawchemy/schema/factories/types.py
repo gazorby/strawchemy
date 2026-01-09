@@ -22,7 +22,7 @@ from strawchemy.dto.strawberry import (
     OrderByDTO,
 )
 from strawchemy.dto.types import DTOConfig, DTOMissing, IncludeFields, Purpose, is_fields_iterable
-from strawchemy.dto.utils import read_all_partial_config, read_partial, write_all_config
+from strawchemy.dto.utils import read_partial, write_all_config
 from strawchemy.exceptions import EmptyDTOError
 from strawchemy.schema.factories import (
     AggregationInspector,
@@ -157,8 +157,20 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 type_annotation = list[related] if related is not None else field.type_
                 assert field.related_model
                 order_by_input, pagination = None, False
-                if order_config.is_field_included(field.model_field_name):
-                    order_by_input = self._order_by_factory.factory(field.related_model, read_all_partial_config)
+                if order_config.is_field_included(field.model_field_name) or self._mapper.config.order_by:
+                    try:
+                        order_by_input = self._order_by_factory.factory(
+                            field.related_model,
+                            DTOConfig(
+                                Purpose.READ,
+                                partial=True,
+                                include=self._mapper.config.order_by or "all",
+                                global_include=self._mapper.config.order_by or "all",
+                            ),
+                            raise_if_no_fields=True,
+                        )
+                    except EmptyDTOError:
+                        order_by_input = None
                 if paginate_config.is_field_included(field.model_field_name):
                     pagination = default_pagination or True
                 strawberry_field = self._mapper.field(pagination=pagination, order_by=order_by_input, root_field=False)
@@ -261,8 +273,8 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             aggregations=aggregations if dto_config.purpose is Purpose.READ else False,
             register_type=False,
             override=override,
-            paginate=paginate if paginate == "all" else None,
-            order=order if order == "all" else None,
+            paginate=paginate if paginate == "all" else self._mapper.config.pagination,
+            order=order if order == "all" else self._mapper.config.order_by,
             default_pagination=default_pagination,
             **kwargs,
         )

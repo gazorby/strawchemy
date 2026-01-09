@@ -162,8 +162,12 @@ class DTOConfig:
     """Configure the DTO for "read" or "write" operations."""
     include: IncludeFields = field(default_factory=set)
     """Explicitly include fields from the generated DTO."""
+    global_include: IncludeFields = field(default_factory=set)
+    """Explicitly include fields from the generated DTO and all its children."""
     exclude: FieldIterable = field(default_factory=set)
     """Explicitly exclude fields from the generated DTO. Implies `include="all"`."""
+    global_exclude: FieldIterable = field(default_factory=set)
+    """Explicitly exclude fields from the generated DTO and all its children. Implies `global_include="all"`."""
     partial: bool | None = None
     """Make all field optional."""
     partial_default: Any = None
@@ -184,6 +188,11 @@ class DTOConfig:
         if self.include and self.include != "all" and self.exclude:
             msg = "When using `exclude` you must set `include='all' or leave it unset`"
             raise ValueError(msg)
+        if self.global_include and self.global_include != "all" and self.global_exclude:
+            msg = "When using `global_exclude` you must set `global_include='all' or leave it unset`"
+            raise ValueError(msg)
+        if self.global_exclude:
+            self.global_include = "all"
         if self.exclude:
             self.include = "all"
 
@@ -214,7 +223,9 @@ class DTOConfig:
         self,
         purpose: Purpose | type[DTOUnset] = DTOUnset,
         include: IncludeFields | None = None,
+        global_include: IncludeFields | None = None,
         exclude: FieldIterable | None = None,
+        global_exclude: FieldIterable | None = None,
         partial: bool | None | type[DTOUnset] = DTOUnset,
         unset_sentinel: Any | type[DTOUnset] = DTOUnset,
         type_overrides: Mapping[Any, Any] | type[DTOUnset] = DTOUnset,
@@ -231,11 +242,18 @@ class DTOConfig:
         if include is None and exclude is None:
             include, exclude = self.include, self.exclude
         else:
-            include = include or []
-            exclude = exclude or []
+            include = include or set()
+            exclude = exclude or set()
+        if global_include is None and global_exclude is None:
+            global_include, global_exclude = self.global_include, self.global_exclude
+        else:
+            global_include = global_include or set()
+            global_exclude = global_exclude or set()
         return DTOConfig(
             include=include,
             exclude=exclude,
+            global_include=global_include,
+            global_exclude=global_exclude,
             purpose=self.purpose if purpose is DTOUnset else purpose,
             partial=self.partial if partial is DTOUnset else partial,
             unset_sentinel=self.unset_sentinel if unset_sentinel is DTOUnset else unset_sentinel,
@@ -294,12 +312,6 @@ class DTOConfig:
     def is_field_included(self, name: str) -> bool:
         """Check if a field should be included based on this configuration.
 
-        Evaluates field inclusion using the following rules:
-        1. If include="all": the field is included unless explicitly excluded
-        2. If include is a specific list/set: the field is included only if named
-        3. If include is empty: the field is never included
-        4. Regardless of include, the field is excluded if it's in the exclude set
-
         This method is used during DTO factory operations to determine which fields
         from the source model should be included in the generated DTO.
 
@@ -310,7 +322,14 @@ class DTOConfig:
             True if the field should be included based on the include/exclude rules,
             False otherwise.
         """
-        return (name in self.include or self.include == "all") and name not in self.exclude
+        if self.include == "all":
+            return name not in self.exclude
+        if self.global_include == "all":
+            return name not in self.global_exclude
+
+        included = set(self.include) | set(self.global_include)
+        excluded = set(self.exclude) | set(self.global_exclude)
+        return name in included and name not in excluded
 
 
 @overload

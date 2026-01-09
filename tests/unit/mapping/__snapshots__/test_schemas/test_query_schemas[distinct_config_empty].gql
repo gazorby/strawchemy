@@ -4,7 +4,7 @@ type ColorType {
   fruitsAggregate: FruitAggregate!
 
   """Fetch objects from the FruitType collection"""
-  fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
+  fruits: [FruitType!]!
   name: String!
   id: UUID!
 }
@@ -33,22 +33,6 @@ type FruitNumericFields {
   sweetness: Float
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
-input FruitOrderBy {
-  name: OrderByEnum
-  sweetness: OrderByEnum
-}
-
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
-input FruitOrderBy1 {
-  name: OrderByEnum
-  sweetness: OrderByEnum
-}
-
 """GraphQL type"""
 type FruitSumFields {
   name: String
@@ -64,18 +48,9 @@ type FruitType {
   id: UUID!
 }
 
-enum OrderByEnum {
-  ASC
-  ASC_NULLS_FIRST
-  ASC_NULLS_LAST
-  DESC
-  DESC_NULLS_FIRST
-  DESC_NULLS_LAST
-}
-
 type Query {
-  """Fetch objects from the FruitType collection"""
-  fruits(orderBy: [FruitOrderBy1!] = null): [FruitType!]!
+  """Fetch objects from the ColorType collection"""
+  colors: [ColorType!]!
 }
 
 scalar UUID

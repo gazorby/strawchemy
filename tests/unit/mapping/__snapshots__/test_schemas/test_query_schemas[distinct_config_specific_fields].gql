@@ -1,10 +1,14 @@
 '''
+enum ColorDistinctOnFields {
+  name
+}
+
 """GraphQL type"""
 type ColorType {
   fruitsAggregate: FruitAggregate!
 
   """Fetch objects from the FruitType collection"""
-  fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
+  fruits(distinctOn: [FruitDistinctOnFields!] = null): [FruitType!]!
   name: String!
   id: UUID!
 }
@@ -22,6 +26,10 @@ type FruitAggregate {
   varSamp: FruitNumericFields!
 }
 
+enum FruitDistinctOnFields {
+  name
+}
+
 """GraphQL type"""
 type FruitMinMaxFields {
   name: String
@@ -31,22 +39,6 @@ type FruitMinMaxFields {
 """GraphQL type"""
 type FruitNumericFields {
   sweetness: Float
-}
-
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
-input FruitOrderBy {
-  name: OrderByEnum
-  sweetness: OrderByEnum
-}
-
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
-input FruitOrderBy1 {
-  name: OrderByEnum
-  sweetness: OrderByEnum
 }
 
 """GraphQL type"""
@@ -64,18 +56,9 @@ type FruitType {
   id: UUID!
 }
 
-enum OrderByEnum {
-  ASC
-  ASC_NULLS_FIRST
-  ASC_NULLS_LAST
-  DESC
-  DESC_NULLS_FIRST
-  DESC_NULLS_LAST
-}
-
 type Query {
-  """Fetch objects from the FruitType collection"""
-  fruits(orderBy: [FruitOrderBy1!] = null): [FruitType!]!
+  """Fetch objects from the ColorType collection"""
+  colors(distinctOn: [ColorDistinctOnFields!] = null): [ColorType!]!
 }
 
 scalar UUID

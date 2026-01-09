@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
 from strawchemy.repository.strawberry import StrawchemySyncRepository
 from strawchemy.utils.strawberry import default_session_getter
 
 if TYPE_CHECKING:
+    from strawchemy.dto.types import FieldIterable, IncludeFields
     from strawchemy.repository.typing import AnySessionGetter, FilterMap
     from strawchemy.typing import AnyRepositoryType, SupportedDialect
 
@@ -47,11 +48,15 @@ class StrawchemyConfig:
     """Name for primary key fields arguments on primary key resolvers."""
     deterministic_ordering: bool = True
     """Force deterministic ordering for list resolvers."""
-    pagination: Literal["all"] | None = None
+    include: IncludeFields = "all"
+    """Globally included fields."""
+    exclude: FieldIterable | None = None
+    """Globally included fields."""
+    pagination: IncludeFields | None = None
     """Enable/disable pagination on list resolvers."""
-    order_by: Literal["all"] | None = None
+    order_by: IncludeFields | None = None
     """Enable/disable order by on list resolvers."""
-    distinct_on: Literal["all"] | None = None
+    distinct_on: IncludeFields | None = None
     """Enable/disable order by onelist resolvers."""
     pagination_default_limit: int = 100
     """Default pagination limit when `pagination=True`."""
