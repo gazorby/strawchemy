@@ -14,11 +14,23 @@ from tests.unit.dc_models import (
     AdminDataclass,
     ColorDataclass,
     FruitDataclass,
+    NullableTestModelDataclass,
     SponsoredUserDataclass,
     TomatoDataclass,
     UserWithGreetingDataclass,
 )
-from tests.unit.models import Admin, Book, Color, Fruit, SponsoredUser, Tag, Tomato, UserWithGreeting
+from tests.unit.models import (
+    Admin,
+    Book,
+    Color,
+    Department,
+    Fruit,
+    NullableTestModel,
+    SponsoredUser,
+    Tag,
+    Tomato,
+    UserWithGreeting,
+)
 from tests.utils import DTOInspect, factory_iterator
 
 
@@ -267,3 +279,39 @@ def test_forward_refs_resolved(name: str, sqlalchemy_pydantic_factory: MappedPyd
             ],
         }
     )
+
+
+@pytest.mark.parametrize("model", [NullableTestModel, NullableTestModelDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_nullable_declaration_styles(
+    factory: AnyFactory, model: type[Union[NullableTestModel, NullableTestModelDataclass]]
+) -> None:
+    dto = factory.factory(model, read_all_config)
+
+    # Style 1: Mapped[Optional[str]] + nullable=True (both agree)
+    # DB nullable=True -> Expected: Optional[str]
+    assert DTOInspect(dto).field_type("optional_nullable_true") == Optional[str]
+
+    # Style 2: Mapped[str] + nullable=True (MISMATCH - type hint says required, DB says nullable)
+    # DB nullable=True -> Expected: Optional[str]
+    assert DTOInspect(dto).field_type("non_optional_nullable_true") is str
+    # IMO we should look to the sqlalchemy declaration and be Optional[str], like the commented assert below does
+    # assert DTOInspect(dto).field_type("non_optional_nullable_true") == Optional[str]
+
+    # Style 3: Mapped[str] (infers nullable=False)
+    # DB nullable=False -> Expected: str
+    assert DTOInspect(dto).field_type("non_optional_nullable_not_set") is str
+
+    # Style 4: Mapped[Optional[str]] (infers nullable=True)
+    # DB nullable=True -> Expected: Optional[str]
+    assert DTOInspect(dto).field_type("optional_nullable_not_set") == Optional[str]
+
+    # Style 5: Mapped[Optional[str]] + nullable=False (MISMATCH - type hint says optional, DB says required)
+    # DB nullable=False -> Expected: str
+    assert DTOInspect(dto).field_type("optional_nullable_false") == Optional[str]
+    # IMO we should look to the sqlalchemy declaration and be str, like the commented assert below does
+    # assert DTOInspect(dto).field_type("optional_nullable_false") is str
+
+    # Style 6: Mapped[str] + nullable=False (both agree)
+    # DB nullable=False -> Expected: str
+    assert DTOInspect(dto).field_type("non_optional_nullable_false") is str
