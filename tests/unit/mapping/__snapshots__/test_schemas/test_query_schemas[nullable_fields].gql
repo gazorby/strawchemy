@@ -1,0 +1,18 @@
+'''
+"""GraphQL type"""
+type NullableTestModelType {
+  optionalNullableTrue: String
+  nonOptionalNullableTrue: String!
+  nonOptionalNullableNotSet: String!
+  optionalNullableNotSet: String
+  optionalNullableFalse: String
+  nonOptionalNullableFalse: String!
+  id: UUID!
+}
+
+type Query {
+  nullableTest: NullableTestModelType!
+}
+
+scalar UUID
+'''

@@ -197,6 +197,28 @@ class SQLDataTypes(UUIDBase):
     array_str_col: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
 
 
+class NullableTestModel(UUIDBase):
+    __tablename__ = "nullable_test"
+
+    # Style 1: Type hint optional + explicit nullable=True (both agree)
+    optional_nullable_true: Mapped[str | None] = mapped_column(VARCHAR(255), nullable=True)
+
+    # Style 2: Type hint NOT optional + explicit nullable=True (MISMATCH)
+    non_optional_nullable_true: Mapped[str] = mapped_column(VARCHAR(255), nullable=True)
+
+    # Style 3: Type hint NOT optional, no explicit nullable (infers nullable=False)
+    non_optional_nullable_not_set: Mapped[str] = mapped_column(VARCHAR(255))
+
+    # Style 4: Type hint optional, no explicit nullable (infers nullable=True)
+    optional_nullable_not_set: Mapped[str | None] = mapped_column(VARCHAR(255))
+
+    # Style 5: Type hint optional + explicit nullable=False (MISMATCH opposite)
+    optional_nullable_false: Mapped[str | None] = mapped_column(VARCHAR(255), nullable=False)
+
+    # Style 6: Type hint NOT optional + explicit nullable=False (both agree)
+    non_optional_nullable_false: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
+
+
 # Geo
 
 if GEO_INSTALLED:

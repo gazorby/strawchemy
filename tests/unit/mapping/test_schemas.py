@@ -199,6 +199,7 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("scope.schema_before.Query", id="scope_schema_before"),
         pytest.param("scope.schema_after.Query", id="scope_schema_after"),
         pytest.param("scope.schema_in_the_middle.Query", id="scope_schema_in_the_middle"),
+        pytest.param("nullable_fields.Query", id="nullable_fields"),
     ],
 )
 @pytest.mark.snapshot

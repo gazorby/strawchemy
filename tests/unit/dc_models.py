@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import VARCHAR, ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
 
@@ -82,3 +82,27 @@ class UserWithGreetingDataclass(UUIDBase):
     @hybrid_property
     def greeting_hybrid_property(self) -> str:
         return f"Hello, {self.name}"
+
+
+class NullableTestModelDataclass(UUIDBase):
+    __tablename__ = "nullable_test_dataclass"
+
+    # Style 3: Type hint NOT optional, no explicit nullable (infers nullable=False, both agree)
+    non_optional_nullable_not_set: Mapped[str] = mapped_column(VARCHAR(255))
+
+    # Style 6: Type hint NOT optional + explicit nullable=False (both agree)
+    non_optional_nullable_false: Mapped[str] = mapped_column(VARCHAR(255), nullable=False)
+
+    # Style 1: Type hint optional + explicit nullable=True (both agree)
+    optional_nullable_true: Mapped[str | None] = mapped_column(VARCHAR(255), nullable=True, default=None)
+
+    # Style 2: Type hint NOT optional + explicit nullable=True (MISMATCH)
+    non_optional_nullable_true: Mapped[str] = mapped_column(VARCHAR(255), nullable=True, default="")
+
+    # Style 4: Type hint optional, no explicit nullable (infers nullable=True)
+    optional_nullable_not_set: Mapped[str | None] = mapped_column(VARCHAR(255), default=None)
+
+    # Style 5: Type hint optional + explicit nullable=False (MISMATCH opposite)
+    optional_nullable_false: Mapped[str | None] = mapped_column(VARCHAR(255), nullable=False, default="")
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
