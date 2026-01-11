@@ -1,21 +1,18 @@
-# serializer version: 1
-# name: test_query_schemas[nullable_fields]
-  '''
-  """GraphQL type"""
-  type NullableTestModelType {
-    optionalNullableTrue: String
-    nonOptionalNullableTrue: String!
-    nonOptionalNullableNotSet: String!
-    optionalNullableNotSet: String
-    optionalNullableFalse: String
-    nonOptionalNullableFalse: String!
-    id: UUID!
-  }
-  
-  type Query {
-    nullableTest: NullableTestModelType!
-  }
-  
-  scalar UUID
-  '''
-# ---
+'''
+"""GraphQL type"""
+type NullableTestModelType {
+  optionalNullableTrue: String
+  nonOptionalNullableTrue: String!
+  nonOptionalNullableNotSet: String!
+  optionalNullableNotSet: String
+  optionalNullableFalse: String
+  nonOptionalNullableFalse: String!
+  id: UUID!
+}
+
+type Query {
+  nullableTest: NullableTestModelType!
+}
+
+scalar UUID
+'''
