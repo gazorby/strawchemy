@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from strawchemy import Strawchemy
-from strawchemy.types import DefaultOffsetPagination
-
 import strawberry
+
+from strawchemy import Strawchemy
+from strawchemy.schema.pagination import DefaultOffsetPagination
 from tests.unit.models import Fruit
 
 strawchemy = Strawchemy("postgresql")

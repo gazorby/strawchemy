@@ -3,14 +3,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
-from typing import Any, Optional
-
-from sqlalchemy.dialects import mysql, postgresql, sqlite
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
-from sqlalchemy.orm import registry as Registry  # noqa: N812
-from strawchemy.dto.utils import PRIVATE, READ_ONLY
+from typing import Any
 
 from sqlalchemy import (
     ARRAY,
@@ -30,6 +23,13 @@ from sqlalchemy import (
     Time,
     UniqueConstraint,
 )
+from sqlalchemy.dialects import mysql, postgresql, sqlite
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
+from sqlalchemy.orm import registry as Registry  # noqa: N812
+
+from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
 metadata = MetaData()
 geo_metadata = MetaData()
@@ -128,18 +128,18 @@ class Fruit(Base):
     __tablename__ = "fruit"
 
     name: Mapped[str] = mapped_column(VARCHAR(255))
-    color_id: Mapped[Optional[int]] = mapped_column(ForeignKey("color.id"), nullable=True, default=None)
-    color: Mapped[Optional[Color]] = relationship("Color", back_populates="fruits")
+    color_id: Mapped[int | None] = mapped_column(ForeignKey("color.id"), nullable=True, default=None)
+    color: Mapped[Color | None] = relationship("Color", back_populates="fruits")
     farms: Mapped[list[FruitFarm]] = relationship(FruitFarm)
-    derived_product_id: Mapped[Optional[int]] = mapped_column(
+    derived_product_id: Mapped[int | None] = mapped_column(
         ForeignKey("derived_product.id"), nullable=True, default=None
     )
-    product: Mapped[Optional[DerivedProduct]] = relationship(DerivedProduct)
+    product: Mapped[DerivedProduct | None] = relationship(DerivedProduct)
     sweetness: Mapped[int] = mapped_column(Integer)
     water_percent: Mapped[float] = mapped_column(Double)
     best_time_to_pick: Mapped[time] = mapped_column(TimeType, default=time(hour=9))
 
-    __table_args__ = (UniqueConstraint(name),)
+    __table_args__ = (UniqueConstraint(name), UniqueConstraint(sweetness, water_percent))
 
     @hybrid_property
     def description(self) -> str:
@@ -159,7 +159,7 @@ class Group(Base):
     __tablename__ = "group"
 
     name: Mapped[str] = mapped_column(Text)
-    topics: Mapped[list["Topic"]] = relationship("Topic")
+    topics: Mapped[list[Topic]] = relationship("Topic")
 
 
 class Topic(Base):
@@ -174,10 +174,10 @@ class User(Base):
 
     name: Mapped[str] = mapped_column(Text)
     greeting: Mapped[str] = column_property("Hello, " + name)
-    group_id: Mapped[Optional[int]] = mapped_column(ForeignKey("group.id"))
-    group: Mapped[Optional[Group]] = relationship(Group)
-    bio: Mapped[Optional[str]] = mapped_column(Text, default=None)
-    departments: Mapped[list["Department"]] = relationship(
+    group_id: Mapped[int | None] = mapped_column(ForeignKey("group.id"))
+    group: Mapped[Group | None] = relationship(Group)
+    bio: Mapped[str | None] = mapped_column(Text, default=None)
+    departments: Mapped[list[Department]] = relationship(
         "Department",
         secondary="user_department_join_table",
         back_populates="users",

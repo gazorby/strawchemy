@@ -41,20 +41,15 @@ cleanable_paths = '''{{
 # Dependencies
 # ###############
 
-[tasks._install]
+[tasks."uv:install"]
 description = "Install dependencies"
-hide = true
 run = "uv sync --all-extras --dev"
 
-[tasks."_install:geo"]
-description = "Install dependencies with geo extras"
-hide = true
-run = "uv sync --extra=geo --dev"
 
 [tasks.install]
 description = "Install dependencies and pre-commit hooks"
 alias = "i"
-depends = ["install:pre-commit", "_install"]
+depends = ["install:pre-commit", "uv:install"]
 
 [tasks."install:pre-commit"]
 description = "Install pre-commit hooks"
@@ -66,86 +61,86 @@ run = "pre-commit install --install-hooks 2>&1"
 
 [tasks.test]
 description = "Run tests"
-depends = "_install"
+depends = "uv:install"
 alias = "t"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:coverage"]
 description = "Run tests with coverage"
-depends = "_install"
+depends = "uv:install"
 alias = "tc"
 usage = 'arg "<test>" default=""'
 run = 'uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit"]
 description = "Run unit tests"
-depends = "_install"
+depends = "uv:install"
 alias = "tu"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t unit -- tests/unit {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit:no-extras"]
 description = "Run unit tests without extras dependencies"
-depends = "_install"
+depends = "uv:install"
 alias = "tug"
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -s unit-no-extras -- tests/unit {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit:coverage"]
 description = "Run unit tests with coverage"
-depends = "_install"
+depends = "uv:install"
 alias = "tuc"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t unit -- tests/unit {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration"]
 description = "Run integration tests"
-depends = "_install"
+depends = "uv:install"
 alias = "ti"
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -s integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration-postgres"]
 description = "Run integration tests"
-depends = "_install"
+depends = "uv:install"
 alias = "ti-postgres"
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t postgres -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration-mysql"]
 description = "Run integration tests"
-depends = "_install"
+depends = "uv:install"
 alias = "ti-mysql"
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t mysql -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration-sqlite"]
 description = "Run integration tests"
-depends = "_install"
+depends = "uv:install"
 alias = "ti-sqlite"
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t sqlite -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration:coverage"]
 description = "Run integration tests with coverage"
-depends = "_install"
+depends = "uv:install"
 alias = "tic"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -s integration -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:unit-all"]
 description = "Run unit tests on all supported python versions"
-depends = "_install"
+depends = "uv:install"
 alias = "tua"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -t unit -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:integration-all"]
 description = "Run integration tests on all supported python versions"
-depends = "_install"
+depends = "uv:install"
 alias = "tia"
 usage = 'arg "<test>" default=""'
 run = 'uv run nox -r -P {{option(name="python", default="3.13")}} -s integration -- {{vars.local_pytest_options}} {{arg(name="test", var=true, default="")}}'
 
 [tasks."test:update-snapshots"]
 description = "Run snapshot-based tests and update snapshots"
-depends = "_install"
+depends = "uv:install"
 run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update"
 
 # ###############
@@ -194,7 +189,6 @@ run = "uv run nox --json -t tests -l | jq 'map(.name) | unique'"
 
 [tasks."ruff:check"]
 description = "Check ruff formatting"
-depends = "_install"
 run = "uv run ruff check"
 
 [tasks."ruff:fix"]
@@ -211,7 +205,6 @@ run = "uv run ruff format --check"
 
 [tasks.pyright]
 description = "Run basedpyright"
-depends = "_install"
 run = "uv run basedpyright"
 
 [tasks.vulture]
@@ -221,7 +214,7 @@ run = "uv run --only-group lint vulture"
 [tasks.lint]
 description = "Lint the code"
 alias = "l"
-depends = ["vulture", "pyright", "ruff:check", "ruff:format:check"]
+depends = ["vulture", "pyright", "ruff:check", "ruff:format:check", "slotscheck"]
 
 [tasks."lint:pre-commit"]
 description = "Lint the code in pre-commit hook"
@@ -232,6 +225,10 @@ description = "Run pre-commit checks"
 depends = "install:pre-commit"
 run = "pre-commit run --color=always --all-files"
 
+[tasks.slotscheck]
+description = "Run slotscheck"
+run = "uv run slotscheck src/strawchemy"
+
 # ###############
 # Tools
 # ###############
@@ -239,7 +236,7 @@ run = "pre-commit run --color=always --all-files"
 [tasks.auto-bump]
 description = "Auto bump the version"
 confirm = "Are you sure you want to auto bump the version?"
-depends = "_install"
+depends = "uv:install"
 run = "uv run bump-my-version bump --new-version $(uv run git cliff --unreleased --bumped-version)"
 
 [tasks.clean]
@@ -247,14 +244,14 @@ description = "Clean working directory"
 alias = "c"
 confirm = "Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files."
 run = [
-  "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
-  "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
-  "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
-  "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
+    "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
+    "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
+    "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
+    "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
 ]
 
 [tasks."render:usage"]

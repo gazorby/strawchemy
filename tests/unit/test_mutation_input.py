@@ -1,19 +1,18 @@
 from __future__ import annotations
 
-from typing import Union
 from uuid import uuid4
 
 import pytest
-from strawchemy import Strawchemy
-from strawchemy.strawberry.mutation.input import Input
 
-from .dc_models import ColorDataclass, FruitDataclass
-from .models import Color, Fruit
+from strawchemy import Strawchemy
+from strawchemy.schema.mutation import Input
+from tests.unit.dc_models import ColorDataclass, FruitDataclass
+from tests.unit.models import Color, Fruit
 
 
 @pytest.mark.parametrize(("color_model", "fruit_model"), [(Color, Fruit), (ColorDataclass, FruitDataclass)])
 def test_add_non_input_relationships(
-    color_model: type[Union[Color, ColorDataclass]], fruit_model: type[Union[Fruit, FruitDataclass]]
+    color_model: type[Color | ColorDataclass], fruit_model: type[Fruit | FruitDataclass]
 ) -> None:
     strawchemy = Strawchemy("postgresql")
 

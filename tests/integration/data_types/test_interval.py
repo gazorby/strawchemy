@@ -5,9 +5,8 @@ from typing import TYPE_CHECKING, Any
 
 import msgspec
 import pytest
-
 from sqlalchemy import Insert, MetaData, insert
-from syrupy.assertion import SnapshotAssertion
+
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import IntervalModel, interval_metadata
 from tests.integration.types import mysql as mysql_types
@@ -18,6 +17,8 @@ from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from syrupy.assertion import SnapshotAssertion
+
     from strawchemy.typing import SupportedDialect
 
 

@@ -5,17 +5,17 @@ from __future__ import annotations
 import enum
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
+from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Table, Text, UniqueConstraint
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
+
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.types import Purpose, PurposeConfig
 from strawchemy.dto.utils import PRIVATE, READ_ONLY, WRITE_ONLY, field
-
-from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Table, Text
 
 
 def validate_tomato_type(value: str) -> str:
@@ -56,10 +56,12 @@ class Vegetable(UUIDBase, NameDescriptionMixin):
 class Fruit(UUIDBase):
     __tablename__ = "fruit"
 
-    name: Mapped[str]
-    color_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("color.id"))
+    name: Mapped[str] = mapped_column()
+    color_id: Mapped[UUID | None] = mapped_column(ForeignKey("color.id"))
     color: Mapped[Color] = relationship("Color", back_populates="fruits")
     sweetness: Mapped[int]
+
+    __table_args__ = (UniqueConstraint(name, color_id, name="uq_name_color_id"),)
 
 
 class Tomato(UUIDBase):
@@ -87,21 +89,21 @@ class User(UUIDBase):
     __tablename__ = "user"
 
     name: Mapped[str]
-    group_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("group.id"))
+    group_id: Mapped[UUID | None] = mapped_column(ForeignKey("group.id"))
     group: Mapped[Group] = relationship("Group", back_populates="users")
-    tag_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("tag.id"))
+    tag_id: Mapped[UUID | None] = mapped_column(ForeignKey("tag.id"))
     tag: Mapped[Tag] = relationship("Tag", uselist=False)
-    departments: Mapped[list["Department"]] = relationship(
+    departments: Mapped[list[Department]] = relationship(
         "Department",
         secondary="user_department_join_table",
         back_populates="users",
     )
 
     @property
-    def group_prop(self) -> Optional[Group]:
+    def group_prop(self) -> Group | None:
         return self.group
 
-    def get_group(self) -> Optional[Group]:
+    def get_group(self) -> Group | None:
         return self.group
 
 
@@ -116,7 +118,7 @@ UserDepartmentJoinTable = Table(
 class Department(UUIDBase):
     __tablename__ = "department"
 
-    name: Mapped[Optional[str]] = mapped_column(VARCHAR(255), nullable=True)
+    name: Mapped[str | None] = mapped_column(VARCHAR(255), nullable=True)
     users: Mapped[list[User]] = relationship(
         User,
         secondary="user_department_join_table",
@@ -128,8 +130,8 @@ class SponsoredUser(UUIDBase):
     __tablename__ = "sponsored_user"
 
     name: Mapped[str]
-    sponsor_id: Mapped[Optional[UUID]] = mapped_column(ForeignKey("sponsored_user.id"))
-    sponsor: Mapped[Optional[SponsoredUser]] = relationship("SponsoredUser", back_populates="sponsored")
+    sponsor_id: Mapped[UUID | None] = mapped_column(ForeignKey("sponsored_user.id"))
+    sponsor: Mapped[SponsoredUser | None] = relationship("SponsoredUser", back_populates="sponsored")
     sponsored: Mapped[list[SponsoredUser]] = relationship(
         "SponsoredUser", back_populates="sponsor", remote_side="SponsoredUser.id", uselist=True
     )
@@ -226,10 +228,10 @@ if GEO_INSTALLED:
         __tablename__ = "geos_fields"
 
         point_required: Mapped[WKBElement] = mapped_column(Geometry("POINT"))
-        point: Mapped[Optional[WKBElement]] = mapped_column(Geometry("POINT"), nullable=True)
-        line_string: Mapped[Optional[WKBElement]] = mapped_column(Geometry("LINESTRING"), nullable=True)
-        polygon: Mapped[Optional[WKBElement]] = mapped_column(Geometry("POLYGON"), nullable=True)
-        multi_point: Mapped[Optional[WKBElement]] = mapped_column(Geometry("MULTIPOINT"), nullable=True)
-        multi_line_string: Mapped[Optional[WKBElement]] = mapped_column(Geometry("MULTILINESTRING"), nullable=True)
-        multi_polygon: Mapped[Optional[WKBElement]] = mapped_column(Geometry("MULTIPOLYGON"), nullable=True)
-        geometry: Mapped[Optional[WKBElement]] = mapped_column(Geometry("GEOMETRY"), nullable=True)
+        point: Mapped[WKBElement | None] = mapped_column(Geometry("POINT"), nullable=True)
+        line_string: Mapped[WKBElement | None] = mapped_column(Geometry("LINESTRING"), nullable=True)
+        polygon: Mapped[WKBElement | None] = mapped_column(Geometry("POLYGON"), nullable=True)
+        multi_point: Mapped[WKBElement | None] = mapped_column(Geometry("MULTIPOINT"), nullable=True)
+        multi_line_string: Mapped[WKBElement | None] = mapped_column(Geometry("MULTILINESTRING"), nullable=True)
+        multi_polygon: Mapped[WKBElement | None] = mapped_column(Geometry("MULTIPOLYGON"), nullable=True)
+        geometry: Mapped[WKBElement | None] = mapped_column(Geometry("GEOMETRY"), nullable=True)

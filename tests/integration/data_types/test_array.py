@@ -3,9 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pytest
-
 from sqlalchemy import Insert, MetaData, insert
-from syrupy.assertion import SnapshotAssertion
+
 from tests.integration.fixtures import QueryTracker
 from tests.integration.models import ArrayModel, array_metadata
 from tests.integration.types import postgres as postgres_types
@@ -15,6 +14,8 @@ from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from syrupy.assertion import SnapshotAssertion
+
     from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]

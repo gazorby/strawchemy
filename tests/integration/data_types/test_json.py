@@ -3,9 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pytest
-
 from sqlalchemy import Insert, MetaData, insert
-from syrupy.assertion import SnapshotAssertion
+
 from tests.integration.models import JSONModel, json_metadata
 from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types
@@ -14,9 +13,10 @@ from tests.integration.utils import to_graphql_representation
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from syrupy.assertion import SnapshotAssertion
+
     from strawchemy.config.databases import DatabaseFeatures
     from strawchemy.typing import SupportedDialect
-
     from tests.integration.fixtures import QueryTracker
     from tests.integration.typing import RawRecordData
     from tests.typing import AnyQueryExecutor

@@ -1,22 +1,21 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Literal
 
 import pytest
-from strawchemy.types import DefaultOffsetPagination
 
+from strawchemy.schema.pagination import DefaultOffsetPagination
+from tests.integration.fixtures import QueryTracker
 from tests.integration.models import Fruit
+from tests.integration.typing import RawRecordData
+from tests.integration.utils import compute_aggregation, from_graphql_representation, python_type
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-from .fixtures import QueryTracker
-from .typing import RawRecordData
-from .utils import compute_aggregation, from_graphql_representation, python_type
-
 if TYPE_CHECKING:
-    from strawchemy.config.databases import DatabaseFeatures
-
     from syrupy.assertion import SnapshotAssertion
+
+    from strawchemy.config.databases import DatabaseFeatures
 
 pytestmark = [pytest.mark.integration]
 
@@ -274,7 +273,7 @@ async def test_root_aggregation(
     agg_type: Literal["sum", "avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
     field_name: str,
     raw_field_name: str,
-    pagination: Optional[DefaultOffsetPagination],
+    pagination: DefaultOffsetPagination | None,
     any_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,

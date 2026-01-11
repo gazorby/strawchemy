@@ -1,5 +1,5 @@
 default_language_version:
-  python: "3.9"
+  python: "3.10"
 
 default_stages:
   - pre-commit
@@ -19,6 +19,7 @@ repos:
       - id: detect-private-key
       - id: debug-statements
       - id: end-of-file-fixer
+        exclude: "^.*__snapshots__/.*$"
       - id: trailing-whitespace
         exclude: "^.*__snapshots__/.*$"
 
@@ -36,7 +37,7 @@ repos:
     rev: v1.7.7
     hooks:
       - id: actionlint
-        args: ["-shellcheck", ""]
+        args: [ "-shellcheck", "" ]
 
   # Commitizen
   - repo: https://github.com/commitizen-tools/commitizen
@@ -44,20 +45,27 @@ repos:
     hooks:
       - id: commitizen
 
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.21.2
+    hooks:
+      - id: pyupgrade
+        types: [ python ]
+        args: [ "--py310-plus" ]
+
   - repo: https://github.com/provinzkraut/unasyncd
     rev: v0.9.0
     hooks:
       - id: unasyncd
-        additional_dependencies: ["ruff"]
+        additional_dependencies: [ "ruff" ]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.13.0
     hooks:
       - id: ruff-check
-        types_or: [python, pyi]
-        args: [--fix]
+        types_or: [ python, pyi ]
+        args: [ --fix ]
       - id: ruff-format
-        types_or: [python, pyi]
+        types_or: [ python, pyi ]
 
   - repo: local
     hooks:
@@ -65,7 +73,7 @@ repos:
         name: lint
         entry: mise run lint:pre-commit
         language: python
-        types: [python]
+        types: [ python ]
         require_serial: true
 
   - repo: local

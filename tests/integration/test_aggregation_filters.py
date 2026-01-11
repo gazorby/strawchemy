@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-from typing import Optional, Union
+from typing import TYPE_CHECKING
 
 import pytest
 
-from syrupy.assertion import SnapshotAssertion
+from tests.integration.fixtures import QueryTracker
+from tests.integration.typing import RawRecordData
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-from .fixtures import QueryTracker
-from .typing import RawRecordData
+if TYPE_CHECKING:
+    from syrupy.assertion import SnapshotAssertion
 
 pytestmark = [pytest.mark.integration]
 
@@ -31,7 +32,7 @@ pytestmark = [pytest.mark.integration]
 @pytest.mark.snapshot
 async def test_count_aggregation_filter(
     predicate: str,
-    value: Union[int, list[int]],
+    value: int | list[int],
     expected_indices: list[int],
     any_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
@@ -309,7 +310,7 @@ async def test_avg_aggregation_filter(
 )
 @pytest.mark.snapshot
 async def test_count_aggregation_filter_with_distinct(
-    distinct: Optional[bool],
+    distinct: bool | None,
     expected_count: int,
     expected_color_indices: list[int],
     any_query: AnyQueryExecutor,

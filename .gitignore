@@ -178,6 +178,12 @@ cython_debug/
 
 .vscode/launch.json
 
+# Macos
+**/.DS_Store
+__MACOSX/
+.AppleDouble
+.LSOverride
+
 # Mise
 mise.local.toml
 .env.json
@@ -192,3 +198,5 @@ mise.local.toml
 .windsurf
 
 CLAUDE.md
+
+.serena

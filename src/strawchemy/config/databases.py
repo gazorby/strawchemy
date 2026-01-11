@@ -8,8 +8,7 @@ from typing import TYPE_CHECKING, Protocol
 from strawchemy.exceptions import StrawchemyError
 
 if TYPE_CHECKING:
-    from strawchemy.strawberry.typing import AggregationFunction
-    from strawchemy.typing import SupportedDialect
+    from strawchemy.typing import AggregationFunction, SupportedDialect
 
 
 @dataclass(frozen=True)

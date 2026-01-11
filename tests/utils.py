@@ -5,28 +5,27 @@ import inspect
 from dataclasses import dataclass
 from enum import Enum, auto
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Any, Optional, Protocol, TypeVar, Union, cast, overload
-
-from strawchemy.dto.base import DTOFactory
-from strawchemy.sqlalchemy.inspector import SQLAlchemyInspector
-from strawchemy.utils import get_annotations
-from typing_extensions import TypeIs, override
+from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
 
 import strawberry
 from sqlalchemy.ext.asyncio import AsyncSession
-from strawberry.types.execution import ExecutionResult
+from typing_extensions import TypeIs, override
+
+from strawchemy.dto.base import DTOFactory
+from strawchemy.dto.inspectors import SQLAlchemyInspector
+from strawchemy.utils.annotation import get_annotations
 from tests.typing import AnyFactory, MappedPydanticFactory
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Generator
 
     from pydantic import BaseModel
-    from strawchemy.sqlalchemy.typing import AnySession
-    from strawchemy.typing import DataclassProtocol
-
     from sqlalchemy.orm import Session
+    from strawberry.types.execution import ExecutionResult
 
-    from .typing import AnyQueryExecutor, AsyncQueryExecutor, SyncQueryExecutor
+    from strawchemy.repository.typing import AnySession
+    from strawchemy.typing import DataclassProtocol
+    from tests.typing import AnyQueryExecutor, AsyncQueryExecutor, SyncQueryExecutor
 
 __all__ = ("DTOInspect", "generate_query", "sqlalchemy_pydantic_factory")
 
@@ -51,35 +50,35 @@ def factory_iterator() -> Generator[AnyFactory]:
 @overload
 def generate_query(
     session: Session,
-    query: Optional[type[Any]] = None,
-    mutation: Optional[type[Any]] = None,
-    scalar_overrides: Optional[dict[object, Any]] = None,
+    query: type[Any] | None = None,
+    mutation: type[Any] | None = None,
+    scalar_overrides: dict[object, Any] | None = None,
 ) -> SyncQueryExecutor: ...
 
 
 @overload
 def generate_query(
     session: AsyncSession,
-    query: Optional[type[Any]] = None,
-    mutation: Optional[type[Any]] = None,
-    scalar_overrides: Optional[dict[object, Any]] = None,
+    query: type[Any] | None = None,
+    mutation: type[Any] | None = None,
+    scalar_overrides: dict[object, Any] | None = None,
 ) -> AsyncQueryExecutor: ...
 
 
 @overload
 def generate_query(
-    session: Optional[Session] = None,
-    query: Optional[type[Any]] = None,
-    mutation: Optional[type[Any]] = None,
-    scalar_overrides: Optional[dict[object, Any]] = None,
+    session: Session | None = None,
+    query: type[Any] | None = None,
+    mutation: type[Any] | None = None,
+    scalar_overrides: dict[object, Any] | None = None,
 ) -> SyncQueryExecutor: ...
 
 
 def generate_query(
-    session: Optional[AnySession] = None,
-    query: Optional[type[Any]] = None,
-    mutation: Optional[type[Any]] = None,
-    scalar_overrides: Optional[dict[object, Any]] = None,
+    session: AnySession | None = None,
+    query: type[Any] | None = None,
+    mutation: type[Any] | None = None,
+    scalar_overrides: dict[object, Any] | None = None,
 ) -> AnyQueryExecutor:
     append_mutation = mutation and not query
     if query is None:
@@ -96,13 +95,13 @@ def generate_query(
     def process_result(result: ExecutionResult) -> ExecutionResult:
         return result
 
-    async def query_async(query: str, variable_values: Optional[dict[str, Any]] = None) -> ExecutionResult:
+    async def query_async(query: str, variable_values: dict[str, Any] | None = None) -> ExecutionResult:
         if append_mutation and not query.startswith("mutation"):
             query = f"mutation {query}"
         result = await schema.execute(query, variable_values=variable_values, context_value=context)
         return process_result(result)
 
-    def query_sync(query: str, variable_values: Optional[dict[str, Any]] = None) -> ExecutionResult:
+    def query_sync(query: str, variable_values: dict[str, Any] | None = None) -> ExecutionResult:
         if append_mutation and not query.startswith("mutation"):
             query = f"mutation {query}"
 
@@ -116,7 +115,7 @@ def generate_query(
 
 
 @overload
-async def maybe_async(obj: Union[Awaitable[T], T]) -> T: ...
+async def maybe_async(obj: Awaitable[T] | T) -> T: ...
 
 
 @overload
@@ -127,7 +126,7 @@ async def maybe_async(obj: Awaitable[T]) -> T: ...
 async def maybe_async(obj: T) -> T: ...
 
 
-async def maybe_async(obj: Union[Awaitable[T], T]) -> T:
+async def maybe_async(obj: Awaitable[T] | T) -> T:
     return cast("T", await obj) if inspect.isawaitable(obj) else cast("T", obj)
 
 

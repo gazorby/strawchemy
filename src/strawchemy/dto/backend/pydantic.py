@@ -8,7 +8,7 @@ for generating DTOs from models, and support for mapping DTOs to SQLAlchemy mode
 from __future__ import annotations
 
 from inspect import getmodule
-from typing import TYPE_CHECKING, Annotated, Any, Optional, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, TypeVar
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, create_model
 from pydantic.fields import Field, FieldInfo
@@ -16,7 +16,7 @@ from typing_extensions import override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOMissing
-from strawchemy.utils import get_annotations
+from strawchemy.utils.annotation import get_annotations
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -58,7 +58,7 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         return Field(**kwargs)
 
     @override
-    def update_forward_refs(self, dto: type[PydanticDTOT], namespace: dict[str, type[PydanticDTOT]]) -> Optional[bool]:
+    def update_forward_refs(self, dto: type[PydanticDTOT], namespace: dict[str, type[PydanticDTOT]]) -> bool | None:
         dto.model_rebuild(_types_namespace=namespace, raise_errors=False)
 
     @override
@@ -67,8 +67,8 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         name: str,
         model: type[ModelT],
         field_definitions: Iterable[DTOFieldDefinition[ModelT, ModelFieldT]],
-        base: Optional[type[Any]] = None,
-        config_dict: Optional[ConfigDict] = None,
+        base: type[Any] | None = None,
+        config_dict: ConfigDict | None = None,
         docstring: bool = True,
         **kwargs: Any,
     ) -> type[PydanticDTOT]:
@@ -77,7 +77,7 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
 
         for field_def in field_definitions:
             field_type = field_def.type_
-            validator: Optional[BeforeValidator] = None
+            validator: BeforeValidator | None = None
             if field_def.purpose_config.validator:
                 validator = BeforeValidator(field_def.purpose_config.validator)
             if validator:
@@ -97,15 +97,12 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         if model_module := getmodule(self.dto_base):
             module = model_module.__name__
 
-        dto = create_model(
+        dto = create_model(  # pyright: ignore[reportCallIssue]
             name,
             __base__=(self.dto_base,),
-            __config__=None,
             __module__=module,
-            __validators__=None,
             __doc__=f"Pydantic generated DTO for {model.__name__} model" if docstring else None,
-            __cls_kwargs__=None,
-            **fields,
+            **fields,  # pyright: ignore[reportArgumentType]
         )
 
         if config_dict:

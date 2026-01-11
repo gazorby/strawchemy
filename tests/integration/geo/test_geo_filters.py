@@ -8,20 +8,20 @@ pytest.importorskip("geoalchemy2", reason="geoalchemy2 is not installed")
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Executable, Insert, MetaData, insert, text
+
 from tests.integration.fixtures import QueryTracker
+from tests.integration.geo.models import GeoModel, geo_metadata
 from tests.integration.geo.types import mysql as mysql_types
 from tests.integration.geo.types import postgres as postgres_types
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
-from .models import GeoModel, geo_metadata
-
 if TYPE_CHECKING:
     from pytest_databases.docker.postgres import PostgresService
-    from strawchemy.typing import SupportedDialect
-
     from syrupy.assertion import SnapshotAssertion
+
+    from strawchemy.typing import SupportedDialect
     from tests.integration.typing import RawRecordData
 
 

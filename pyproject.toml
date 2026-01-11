@@ -1,9 +1,9 @@
 [project]
 name = "strawchemy"
-version = "0.19.0"
+version = "0.21.0"
 description = "Generate GraphQL API from SQLAlchemy models"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "gazorby", email = "gazorby@pm.me" }]
 keywords = ["API", "SQL", "graphql", "sqlalchemy", "strawberry"]
@@ -15,11 +15,11 @@ classifiers = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Database",
     "Topic :: Database :: Database Engines/Servers",
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
@@ -29,7 +29,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "msgspec",
+    "msgspec>=0.4.2",
     "sqlalchemy>=2.0.10",
     "strawberry-graphql",
     "typing-extensions"
@@ -63,7 +63,7 @@ dev = [
 ]
 codeflash = ["codeflash"]
 doc = ["git-cliff>=2.6.1"]
-lint = ["basedpyright", "ruff", "vulture"]
+lint = ["basedpyright", "ruff", "vulture", "slotscheck>=0.16.5"]
 mysql = ["asyncmy", "cryptography"]
 postgres = ["asyncpg>=0.29.0", "psycopg[binary,pool]>=3.2.3"]
 test = [
@@ -107,7 +107,7 @@ exclude = [
     "**/alembic/versions",
 ]
 verboseOutput = true
-pythonVersion = "3.9"
+pythonVersion = "3.10"
 typeCheckingMode = "strict"
 reportUnknownMemberType = false
 reportMissingTypeStubs = false
@@ -117,14 +117,13 @@ reportPrivateUsage = false
 reportUnnecessaryTypeIgnoreComment = true
 reportImplicitOverride = true
 reportPropertyTypeMismatch = true
-reportShadowedImports = true
 strictGenericNarrowing = true
 
 [tool.bumpversion]
 allow_dirty = true
 commit = true
 commit_args = "--no-verify"
-current_version = "0.19.0"
+current_version = "0.21.0"
 ignore_missing_files = false
 ignore_missing_version = false
 message = "build(release): bump to v{new_version}"
@@ -234,7 +233,7 @@ footer = """
 trim = true
 # postprocessors
 postprocessors = [
-    # { pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" }, # replace repository URL
+    # { pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" }, # replace strawberry URL
 ]
 
 # render body even when there are no releases to process
@@ -310,8 +309,7 @@ asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 120
-fix = true
-target-version = "py39"
+target-version = "py310"
 exclude = [
     ".bzr",
     ".direnv",
@@ -370,7 +368,32 @@ max-complexity = 12
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["TC001", "UP037", "PLR2004"]
+"tests/*" = ["TC001", "UP037", "PLR2004", "PLC0415"]
+"src/strawchemy/strawberry/factories/*" = ["UP007", "UP045"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["strawchemy", "tests"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.slotscheck]
+exclude-modules = '''
+(
+  (^|\.)test_
+  |^tests\.*
+  |^tools\.*
+  |^docs\.*
+  |^examples\.*
+  |^sqlalchemy\.(
+    testing
+    |ext\.mypy  # see slotscheck/issues/178
+  )
+)
+'''
+include-modules = "strawchemy.*"
+require-superclass = false
+strict-imports = true
 
 [tool.unasyncd]
 add_editors_note = true
@@ -380,18 +403,19 @@ update_docstrings = true
 cache = true
 
 [tool.unasyncd.files]
-"src/strawchemy/sqlalchemy/repository/_async.py" = "src/strawchemy/sqlalchemy/repository/_sync.py"
-"src/strawchemy/strawberry/repository/_async.py" = "src/strawchemy/strawberry/repository/_sync.py"
+"src/strawchemy/repository/sqlalchemy/_async.py" = "src/strawchemy/repository/sqlalchemy/_sync.py"
+"src/strawchemy/repository/strawberry/_async.py" = "src/strawchemy/repository/strawberry/_sync.py"
 
-[tool.unasyncd.per_file_add_replacements."src/strawchemy/sqlalchemy/repository/_async.py"]
-"strawchemy.sqlalchemy._executor.AsyncQueryExecutor" = "strawchemy.sqlalchemy._executor.SyncQueryExecutor"
+[tool.unasyncd.per_file_add_replacements."src/strawchemy/repository/sqlalchemy/_async.py"]
+"strawchemy.transpiler.AsyncQueryExecutor" = "strawchemy.transpiler.SyncQueryExecutor"
 SQLAlchemyGraphQLAsyncRepository = "SQLAlchemyGraphQLSyncRepository"
-"strawchemy.sqlalchemy.typing.AnyAsyncSession" = "strawchemy.sqlalchemy.typing.AnySyncSession"
+"strawchemy.repository.typing.AnyAsyncSession" = "strawchemy.repository.typing.AnySyncSession"
 
-[tool.unasyncd.per_file_add_replacements."src/strawchemy/strawberry/repository/_async.py"]
-"strawchemy.sqlalchemy.repository.SQLAlchemyGraphQLAsyncRepository" = "strawchemy.sqlalchemy.repository.SQLAlchemyGraphQLSyncRepository"
-"strawchemy.sqlalchemy.typing.AnyAsyncSession" = "strawchemy.sqlalchemy.typing.AnySyncSession"
-"strawchemy.strawberry.typing.AsyncSessionGetter" = "strawchemy.strawberry.typing.SyncSessionGetter"
+[tool.unasyncd.per_file_add_replacements."src/strawchemy/repository/strawberry/_async.py"]
+"strawchemy.repository.strawberry.base.IS_ASYNC_REPOSITORY" = "strawchemy.repository.strawberry.base.IS_SYNC_REPOSITORY"
+"strawchemy.repository.sqlalchemy.SQLAlchemyGraphQLAsyncRepository" = "strawchemy.repository.sqlalchemy.SQLAlchemyGraphQLSyncRepository"
+"strawchemy.repository.typing.AnyAsyncSession" = "strawchemy.repository.typing.AnySyncSession"
+"strawchemy.repository.typing.AsyncSessionGetter" = "strawchemy.repository.typing.SyncSessionGetter"
 StrawchemyAsyncRepository = "StrawchemySyncRepository"
 
 [tool.uv]
@@ -402,7 +426,7 @@ conflicts = [[{ group = "build" }, { group = "codeflash" }]]
 [tool.uv.sources]
 testapp = { workspace = true }
 # Temporary pin to allow msgspec 0.19.0+ on python 3.13
-unasyncd = { git = "https://github.com/provinzkraut/unasyncd", rev = "6d630bd7f411d6052c429b7fb4481fd17f18b0a6" }
+unasyncd = { git = "https://github.com/provinzkraut/unasyncd", rev = "a08ab73793d91d5af80ba9b65922be90f990ff41" }
 
 [tool.uv.workspace]
 members = ["examples/*"]

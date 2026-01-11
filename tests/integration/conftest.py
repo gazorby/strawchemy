@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .fixtures import (
+from tests.integration.fixtures import (
     aiosqlite_engine,
     any_query,
     any_session,
@@ -18,6 +18,7 @@ from .fixtures import (
     fx_metadata,
     mapper,
     no_session_query,
+    postgis_image,
     postgis_service,
     postgres_database_service,
     psycopg_async_engine,
@@ -64,6 +65,7 @@ __all__ = (
     "fx_metadata",
     "mapper",
     "no_session_query",
+    "postgis_image",
     "postgis_service",
     "postgres_database_service",
     "psycopg_async_engine",
