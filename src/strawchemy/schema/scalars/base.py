@@ -5,15 +5,15 @@ from functools import partial
 from typing import TYPE_CHECKING, TypeVar
 
 from msgspec import json
-from strawberry import scalar
 from strawberry.schema.types.base_scalars import wrap_parser
 
+from strawberry import scalar
 from strawchemy.utils.annotation import new_type
 
 if TYPE_CHECKING:
     from typing import Any
 
-__all__ = ("Date", "DateTime", "Interval", "Time")
+__all__ = ("Date", "DateTime", "HStore", "Interval", "Time")
 
 
 UTC = timezone.utc
@@ -57,4 +57,11 @@ DateTime = scalar(
     new_type("DateTime", datetime),
     serialize=_serialize_date,
     parse_value=wrap_parser(datetime.fromisoformat, "DateTime"),
+)
+
+HStore = scalar(
+    new_type("HStore", dict),
+    description="The `HStore` scalar type represents a PostgreSQL hstore value, a flat mapping of string keys to string values.",
+    serialize=lambda val: val,
+    parse_value=lambda val: {str(k): str(v) for k, v in val.items()} if isinstance(val, dict) else val,
 )

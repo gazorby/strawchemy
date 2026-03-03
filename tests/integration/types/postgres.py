@@ -3,12 +3,12 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Annotated, Any, TypeAlias, cast
 
-import strawberry
 from pydantic import AfterValidator
-from sqlalchemy import Select, select
 from strawberry.extensions.field_extension import FieldExtension
 from typing_extensions import override
 
+import strawberry
+from sqlalchemy import Select, select
 from strawchemy import (
     Input,
     InputValidationError,
@@ -27,6 +27,7 @@ from tests.integration.models import (
     DateTimeModel,
     Fruit,
     FruitFarm,
+    HStoreModel,
     IntervalModel,
     JSONModel,
     RankedUser,
@@ -298,6 +299,17 @@ class JSONFilter: ...
 class JSONType: ...
 
 
+# HStore type
+
+
+@strawchemy.filter(HStoreModel, include="all")
+class HStoreFilter: ...
+
+
+@strawchemy.type(HStoreModel, include="all")
+class HStoreType: ...
+
+
 # Date/Time
 
 
@@ -505,6 +517,16 @@ class JSONAsyncQuery:
 @strawberry.type
 class JSONSyncQuery:
     json: list[JSONType] = strawchemy.field(filter_input=JSONFilter, repository_type=StrawchemySyncRepository)
+
+
+@strawberry.type
+class HStoreAsyncQuery:
+    hstore: list[HStoreType] = strawchemy.field(filter_input=HStoreFilter, repository_type=StrawchemyAsyncRepository)
+
+
+@strawberry.type
+class HStoreSyncQuery:
+    hstore: list[HStoreType] = strawchemy.field(filter_input=HStoreFilter, repository_type=StrawchemySyncRepository)
 
 
 @strawberry.type

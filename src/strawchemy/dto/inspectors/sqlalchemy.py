@@ -10,20 +10,6 @@ from decimal import Decimal
 from inspect import getmodule, signature
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast, get_args, get_origin, get_type_hints
 
-from sqlalchemy import (
-    ARRAY,
-    Column,
-    ColumnElement,
-    PrimaryKeyConstraint,
-    Sequence,
-    SQLColumnExpression,
-    Table,
-    UniqueConstraint,
-    event,
-    inspect,
-    orm,
-    sql,
-)
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import (
     NO_VALUE,
@@ -40,6 +26,20 @@ from sqlalchemy.orm import (
 )
 from typing_extensions import TypeIs, override
 
+from sqlalchemy import (
+    ARRAY,
+    Column,
+    ColumnElement,
+    PrimaryKeyConstraint,
+    Sequence,
+    SQLColumnExpression,
+    Table,
+    UniqueConstraint,
+    event,
+    inspect,
+    orm,
+    sql,
+)
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, Relation
@@ -58,6 +58,7 @@ from strawchemy.schema.filters import (
     TimeComparison,
     TimeDeltaComparison,
     make_full_json_comparison_input,
+    make_hstore_comparison_input,
     make_sqlite_json_comparison_input,
 )
 from strawchemy.utils.annotation import is_type_hint_optional
@@ -599,6 +600,8 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
         field_type = field_definition.model_field.type
         if isinstance(field_type, ARRAY) and self.db_features.dialect == "postgresql":
             return ArrayComparison[field_type.item_type.python_type]
+        if isinstance(field_type, postgresql.HSTORE) and self.db_features.dialect == "postgresql":
+            return make_hstore_comparison_input()
         return self.get_type_comparison(self.model_field_type(field_definition))
 
     def get_type_comparison(self, type_: type[Any]) -> type[GraphQLComparison]:

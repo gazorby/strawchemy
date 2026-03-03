@@ -16,13 +16,13 @@ from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar
 
 import strawberry
 from strawberry import UNSET, Private
-
 from strawchemy.schema.filters import (
     ArrayFilter,
     DateFilter,
     DateTimeFilter,
     EqualityFilter,
     FilterProtocol,
+    HStoreFilter,
     JSONFilter,
     OrderFilter,
     TextFilter,
@@ -32,9 +32,9 @@ from strawchemy.schema.filters import (
 from strawchemy.typing import QueryNodeType
 
 if TYPE_CHECKING:
-    from sqlalchemy import ColumnElement, Dialect
     from sqlalchemy.orm import QueryableAttribute
 
+    from sqlalchemy import ColumnElement, Dialect
     from strawchemy.dto.strawberry import OrderByEnum
 
 __all__ = (
@@ -46,15 +46,17 @@ __all__ = (
     "TextComparison",
     "TimeComparison",
     "TimeDeltaComparison",
+    "_HStoreComparison",
     "_JSONComparison",
     "make_full_json_comparison_input",
+    "make_hstore_comparison_input",
     "make_sqlite_json_comparison_input",
 )
 
 T = TypeVar("T")
 GraphQLComparisonT = TypeVar("GraphQLComparisonT", bound="GraphQLComparison")
 GraphQLFilter: TypeAlias = "GraphQLComparison | OrderByEnum"
-AnyGraphQLComparison: TypeAlias = "EqualityComparison[Any] | OrderComparison[Any] | TextComparison | DateComparison | TimeComparison | DateTimeComparison | TimeDeltaComparison | ArrayComparison[Any] | _JSONComparison | _SQLiteJSONComparison"
+AnyGraphQLComparison: TypeAlias = "EqualityComparison[Any] | OrderComparison[Any] | TextComparison | DateComparison | TimeComparison | DateTimeComparison | TimeDeltaComparison | ArrayComparison[Any] | _JSONComparison | _SQLiteJSONComparison | _HStoreComparison"
 AnyOrderGraphQLComparison: TypeAlias = (
     "OrderComparison[Any] | TextComparison | DateComparison | TimeComparison | DateTimeComparison | TimeDeltaComparison"
 )
@@ -306,6 +308,30 @@ class _JSONComparison(EqualityComparison[dict[str, Any]]):
     has_key_any: list[str] | None = UNSET
 
 
+class _HStoreComparison(EqualityComparison[dict[str, str]]):
+    """HStore comparison class for GraphQL filters.
+
+    This class provides a set of HStore comparison operators that can be
+    used to filter data based on containment, key existence, and other
+    HStore-specific properties. PostgreSQL only.
+
+    Attributes:
+        contains: Filters for HStore values that contain this key-value pair.
+        contained_in: Filters for HStore values that are contained in this dict.
+        has_key: Filters for HStore values that have this key.
+        has_key_all: Filters for HStore values that have all of these keys.
+        has_key_any: Filters for HStore values that have any of these keys.
+    """
+
+    __strawchemy_filter__ = HStoreFilter
+
+    contains: dict[str, str] | None = UNSET
+    contained_in: dict[str, str] | None = UNSET
+    has_key: str | None = UNSET
+    has_key_all: list[str] | None = UNSET
+    has_key_any: list[str] | None = UNSET
+
+
 class _SQLiteJSONComparison(EqualityComparison[dict[str, Any]]):
     """JSON comparison class for GraphQL filters.
 
@@ -339,4 +365,11 @@ def make_full_json_comparison_input() -> type[_JSONComparison]:
 def make_sqlite_json_comparison_input() -> type[_SQLiteJSONComparison]:
     return strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))(
         _SQLiteJSONComparison
+    )
+
+
+@cache
+def make_hstore_comparison_input() -> type[_HStoreComparison]:
+    return strawberry.input(name="HStoreComparison", description=_DESCRIPTION.format(field="HStore fields"))(
+        _HStoreComparison
     )
