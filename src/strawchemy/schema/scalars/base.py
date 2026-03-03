@@ -59,9 +59,18 @@ DateTime = scalar(
     parse_value=wrap_parser(datetime.fromisoformat, "DateTime"),
 )
 
+
+def _serialize_hstore(value: dict[str, str]) -> dict[str, str]:
+    return dict(value)
+
+
+def _parse_hstore(value: Any) -> dict[str, str]:
+    return {str(k): str(v) for k, v in value.items()} if isinstance(value, dict) else value
+
+
 HStore = scalar(
     new_type("HStore", dict),
     description="The `HStore` scalar type represents a PostgreSQL hstore value, a flat mapping of string keys to string values.",
-    serialize=lambda val: val,
-    parse_value=lambda val: {str(k): str(v) for k, v in val.items()} if isinstance(val, dict) else val,
+    serialize=_serialize_hstore,
+    parse_value=_parse_hstore,
 )
