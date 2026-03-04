@@ -23,9 +23,9 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import InstrumentedAttribute
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.orm.util import AliasedClass
+    from strawberry import Info
 
     from sqlalchemy import Select
-    from strawberry import Info
 
 
 ColumnLoadingMode: TypeAlias = Literal["undefer", "add"]

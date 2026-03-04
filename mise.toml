@@ -256,4 +256,4 @@ run = [
 
 [tasks."render:usage"]
 description = "Generate tasks documentation"
-run = ["mise generate task-docs > tasks.md"]
+run = ["tools/mise generate task-docs > tasks.md"]

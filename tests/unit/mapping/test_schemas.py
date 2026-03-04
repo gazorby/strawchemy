@@ -8,13 +8,13 @@ from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
+from strawberry import auto
 from strawberry.scalars import JSON
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 from syrupy.assertion import SnapshotAssertion
 
-import strawberry
-from strawberry import auto
 from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
 from strawchemy.schema.scalars import Interval
 from strawchemy.testing.pytest_plugin import MockContext

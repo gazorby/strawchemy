@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, TypeAlias, T
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
+    from strawberry import Info
     from strawberry.types.base import WithStrawberryObjectDefinition
 
     from sqlalchemy import Select
-    from strawberry import Info
     from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository, ValidationErrorType
     from strawchemy.dto.strawberry import (
         AggregateDTO,

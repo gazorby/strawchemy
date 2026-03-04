@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Annotated
 
+import strawberry
 from pydantic import AfterValidator
 
-import strawberry
 from strawchemy import Input, InputValidationError, Strawchemy, StrawchemySyncRepository, ValidationErrorType
 from strawchemy.validation.pydantic import PydanticValidation
 from tests.unit.models import Group, User

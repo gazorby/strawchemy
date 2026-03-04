@@ -32,11 +32,11 @@ from enum import Enum
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
 
+import strawberry
 from msgspec import Struct, field, json
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from typing_extensions import Self, override
 
-import strawberry
 from strawchemy.dto.backend.strawberry import MappedStrawberryDTO, StrawberryDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOMissing, Purpose

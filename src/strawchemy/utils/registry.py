@@ -6,12 +6,12 @@ from copy import copy
 from enum import Enum
 from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, cast, get_args, get_origin, overload
 
+import strawberry
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
 
-import strawberry
 from strawchemy.utils.strawberry import strawberry_contained_types
 
 try:

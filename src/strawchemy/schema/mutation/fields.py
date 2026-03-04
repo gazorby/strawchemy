@@ -16,9 +16,9 @@ from strawchemy.validation import InputValidationError
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase
+    from strawberry import Info
     from strawberry.types.base import StrawberryType, WithStrawberryObjectDefinition
 
-    from strawberry import Info
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO
     from strawchemy.repository.strawberry.base import GraphQLResult
     from strawchemy.typing import AnyMappedDTO, CreateOrUpdateResolverResult, ListResolverResult, MappedGraphQLDTO

@@ -5,9 +5,9 @@ from functools import partial
 from typing import TYPE_CHECKING, TypeVar
 
 from msgspec import json
+from strawberry import scalar
 from strawberry.schema.types.base_scalars import wrap_parser
 
-from strawberry import scalar
 from strawchemy.utils.annotation import new_type
 
 if TYPE_CHECKING:

@@ -5,10 +5,10 @@ from inspect import getmodule
 from types import new_class
 from typing import TYPE_CHECKING, Any, TypeVar, get_origin
 
+import strawberry
 from strawberry.types.field import StrawberryField
 from typing_extensions import override
 
-import strawberry
 from strawchemy.dto.base import DTOBackend, DTOBase, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOMissing
 from strawchemy.utils.annotation import get_annotations

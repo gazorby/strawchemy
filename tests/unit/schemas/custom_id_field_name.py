@@ -4,6 +4,7 @@ from typing import Any
 
 import strawberry
 from strawberry import Info, auto
+
 from strawchemy import Strawchemy, StrawchemyConfig
 from tests.unit.models import Color, Fruit
 

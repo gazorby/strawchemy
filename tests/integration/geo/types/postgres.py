@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import strawberry
+
 from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository
 from tests.integration.geo.models import GeoModel
 

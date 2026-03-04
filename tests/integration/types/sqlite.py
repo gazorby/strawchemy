@@ -3,11 +3,11 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, Annotated, Any, TypeAlias, cast
 
+import strawberry
 from pydantic import AfterValidator
 from strawberry.extensions.field_extension import FieldExtension
 from typing_extensions import override
 
-import strawberry
 from sqlalchemy import Select, select
 from strawchemy import (
     Input,

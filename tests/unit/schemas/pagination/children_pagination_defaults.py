@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import strawberry
+
 from strawchemy import Strawchemy
 from strawchemy.schema.pagination import DefaultOffsetPagination
 from tests.unit.models import Fruit

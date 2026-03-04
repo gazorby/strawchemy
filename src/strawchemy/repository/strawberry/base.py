@@ -35,9 +35,9 @@ from strawchemy.utils.strawberry import dto_model_from_type, strawberry_containe
 from strawchemy.utils.text import camel_to_snake, snake_keys
 
 if TYPE_CHECKING:
+    from strawberry import Info
     from strawberry.types.field import StrawberryField
 
-    from strawberry import Info
     from strawchemy.transpiler import QueryHook, QueryResult
     from strawchemy.typing import QueryNodeType, StrawchemyTypeWithStrawberryObjectDefinition
 
