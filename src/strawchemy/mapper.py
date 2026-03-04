@@ -40,10 +40,10 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
-    from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.arguments import StrawberryArgument
 
+    from strawberry import BasePermission
     from strawchemy.repository.typing import QueryHookCallable
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import AnyRepositoryType, FilterStatementCallable, MappedGraphQLDTO, SupportedDialect

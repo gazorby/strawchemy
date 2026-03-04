@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import strawberry
-from sqlalchemy import ARRAY, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
+import strawberry
+from sqlalchemy import ARRAY, Text
 from strawchemy import Strawchemy
 from tests.unit.models import UUIDBase
 

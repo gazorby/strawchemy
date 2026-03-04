@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import strawberry
 from strawberry import auto
-
 from strawchemy import Strawchemy
 from tests.unit.models import Vegetable
 

@@ -22,7 +22,6 @@ from strawchemy.utils.strawberry import default_session_getter, dto_model_from_t
 if TYPE_CHECKING:
     from sqlalchemy import Select
     from strawberry import Info
-
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.repository.typing import AnySyncSession, SyncSessionGetter
     from strawchemy.schema.mutation import Input, InputModel

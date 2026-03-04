@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar
 
 import strawberry
 from strawberry import UNSET, Private
-
 from strawchemy.schema.filters import (
     ArrayFilter,
     DateFilter,
@@ -32,9 +31,9 @@ from strawchemy.schema.filters import (
 from strawchemy.typing import QueryNodeType
 
 if TYPE_CHECKING:
-    from sqlalchemy import ColumnElement, Dialect
     from sqlalchemy.orm import QueryableAttribute
 
+    from sqlalchemy import ColumnElement, Dialect
     from strawchemy.dto.strawberry import OrderByEnum
 
 __all__ = (

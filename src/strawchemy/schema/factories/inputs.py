@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
 
-from strawberry import UNSET
 from typing_extensions import override
 
+from strawberry import UNSET
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.strawberry import (
     AggregateFieldDefinition,

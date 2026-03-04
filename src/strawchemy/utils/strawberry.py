@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Optional, get_args, get_origin
 
-from strawberry import Info, LazyType
 from strawberry.types.base import (
     StrawberryContainer,
     StrawberryList,
@@ -12,6 +11,7 @@ from strawberry.types.base import (
 )
 from strawberry.types.union import StrawberryUnion
 
+from strawberry import Info, LazyType
 from strawchemy.exceptions import SessionNotFoundError
 from strawchemy.schema.interfaces import ErrorType
 from strawchemy.typing import UNION_TYPES

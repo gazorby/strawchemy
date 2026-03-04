@@ -24,13 +24,13 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeAlias
 
-from sqlalchemy import ColumnElement, FromClause, Function, Label, Select, func, inspect
-from sqlalchemy import cast as sqla_cast
-from sqlalchemy import distinct as sqla_distinct
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
 from typing_extensions import Self, override
 
+from sqlalchemy import ColumnElement, FromClause, Function, Label, Select, func, inspect
+from sqlalchemy import cast as sqla_cast
+from sqlalchemy import distinct as sqla_distinct
 from strawchemy.constants import NODES_KEY
 from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.dto.strawberry import GraphQLFieldDefinition, QueryNode

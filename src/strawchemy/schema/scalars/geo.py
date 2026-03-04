@@ -6,7 +6,6 @@ from functools import partial
 from typing import Any
 
 import shapely
-import strawberry
 from geoalchemy2 import WKBElement, WKTElement
 from geoalchemy2.shape import to_shape
 from geojson_pydantic.geometries import Geometry as PydanticGeometry
@@ -22,6 +21,7 @@ from geojson_pydantic.geometries import (
 from pydantic import TypeAdapter
 from shapely import Geometry, to_geojson
 
+import strawberry
 from strawchemy.utils.annotation import new_type
 
 __all__ = (

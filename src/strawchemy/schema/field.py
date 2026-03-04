@@ -29,13 +29,13 @@ from strawchemy.utils.strawberry import (
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Coroutine, Mapping, Sequence
 
-    from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase
-    from strawberry import BasePermission, Info
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.base import StrawberryObjectDefinition, StrawberryType, WithStrawberryObjectDefinition
     from strawberry.types.fields.resolver import StrawberryResolver
 
+    from sqlalchemy import Select
+    from strawberry import BasePermission, Info
     from strawchemy import StrawchemyConfig
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.repository.strawberry import StrawchemyAsyncRepository, StrawchemySyncRepository

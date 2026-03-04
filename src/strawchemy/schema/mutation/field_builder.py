@@ -11,9 +11,9 @@ from strawberry.annotation import StrawberryAnnotation
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
-    from strawberry import BasePermission
     from strawberry.extensions.field_extension import FieldExtension
 
+    from strawberry import BasePermission
     from strawchemy.config.base import StrawchemyConfig
     from strawchemy.schema.mutation.fields import (
         StrawchemyCreateMutationField,

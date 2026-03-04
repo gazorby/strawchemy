@@ -7,10 +7,10 @@ from enum import Enum, auto
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
 
-import strawberry
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import TypeIs, override
 
+import strawberry
 from strawchemy.dto.base import DTOFactory
 from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.utils.annotation import get_annotations

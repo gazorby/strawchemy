@@ -19,11 +19,11 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, Literal, Optional, TypeAlias, TypeVar, get_type_hints
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from strawberry import UNSET
 from strawberry.types.auto import StrawberryAuto
 from strawberry.utils.typing import type_has_annotation
 from typing_extensions import dataclass_transform, override
 
+from strawberry import UNSET
 from strawchemy import typing as strawchemy_typing
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.strawberry import (

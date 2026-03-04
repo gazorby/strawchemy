@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import strawberry
-
 from strawchemy import QueryHook, Strawchemy
 from tests.unit.models import Fruit
 

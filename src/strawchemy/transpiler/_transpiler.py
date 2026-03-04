@@ -14,6 +14,9 @@ from collections import defaultdict
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generic, cast
 
+from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
+from typing_extensions import Self, override
+
 from sqlalchemy import (
     Dialect,
     Label,
@@ -30,9 +33,6 @@ from sqlalchemy import (
     text,
     true,
 )
-from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
-from typing_extensions import Self, override
-
 from strawchemy.constants import AGGREGATIONS_KEY
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
 from strawchemy.dto.strawberry import (
