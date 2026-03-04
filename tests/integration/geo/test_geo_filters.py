@@ -8,6 +8,7 @@ pytest.importorskip("geoalchemy2", reason="geoalchemy2 is not installed")
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import Executable, Insert, MetaData, insert, text
+
 from tests.integration.fixtures import QueryTracker
 from tests.integration.geo.models import GeoModel, geo_metadata
 from tests.integration.geo.types import mysql as mysql_types

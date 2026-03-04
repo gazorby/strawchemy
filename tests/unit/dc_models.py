@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from uuid import UUID, uuid4
 
+from sqlalchemy import ForeignKey
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
 
-from sqlalchemy import ForeignKey
 from strawchemy.dto import Purpose, PurposeConfig, field
 from strawchemy.dto.utils import WRITE_ONLY
 from tests.unit.models import validate_tomato_type

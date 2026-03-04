@@ -6,18 +6,6 @@ from dataclasses import dataclass, field
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Generic, cast
 
-from sqlalchemy.orm import (
-    QueryableAttribute,
-    RelationshipDirection,
-    RelationshipProperty,
-    aliased,
-    class_mapper,
-    raiseload,
-)
-from sqlalchemy.orm.util import AliasedClass
-from sqlalchemy.sql.elements import NamedColumn
-from typing_extensions import Self
-
 from sqlalchemy import (
     CTE,
     AliasedReturnsRows,
@@ -32,6 +20,18 @@ from sqlalchemy import (
     null,
     select,
 )
+from sqlalchemy.orm import (
+    QueryableAttribute,
+    RelationshipDirection,
+    RelationshipProperty,
+    aliased,
+    class_mapper,
+    raiseload,
+)
+from sqlalchemy.orm.util import AliasedClass
+from sqlalchemy.sql.elements import NamedColumn
+from typing_extensions import Self
+
 from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.dto.strawberry import (
     BooleanFilterDTO,

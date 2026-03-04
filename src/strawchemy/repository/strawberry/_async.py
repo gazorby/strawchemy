@@ -14,9 +14,9 @@ from strawchemy.repository.strawberry.base import IS_ASYNC_REPOSITORY, GraphQLRe
 from strawchemy.utils.strawberry import default_session_getter, dto_model_from_type, strawberry_contained_user_type
 
 if TYPE_CHECKING:
+    from sqlalchemy import Select
     from strawberry import Info
 
-    from sqlalchemy import Select
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.repository.typing import AnyAsyncSession, AsyncSessionGetter
     from strawchemy.schema.mutation import Input, InputModel

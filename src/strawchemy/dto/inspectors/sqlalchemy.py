@@ -10,6 +10,20 @@ from decimal import Decimal
 from inspect import getmodule, signature
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast, get_args, get_origin, get_type_hints
 
+from sqlalchemy import (
+    ARRAY,
+    Column,
+    ColumnElement,
+    PrimaryKeyConstraint,
+    Sequence,
+    SQLColumnExpression,
+    Table,
+    UniqueConstraint,
+    event,
+    inspect,
+    orm,
+    sql,
+)
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import (
     NO_VALUE,
@@ -26,20 +40,6 @@ from sqlalchemy.orm import (
 )
 from typing_extensions import TypeIs, override
 
-from sqlalchemy import (
-    ARRAY,
-    Column,
-    ColumnElement,
-    PrimaryKeyConstraint,
-    Sequence,
-    SQLColumnExpression,
-    Table,
-    UniqueConstraint,
-    event,
-    inspect,
-    orm,
-    sql,
-)
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, Relation

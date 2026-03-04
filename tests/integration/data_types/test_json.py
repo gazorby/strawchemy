@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pytest
-
 from sqlalchemy import Insert, MetaData, insert
+
 from tests.integration.models import JSONModel, json_metadata
 from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types

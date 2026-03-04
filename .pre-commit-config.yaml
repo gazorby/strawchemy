@@ -56,7 +56,7 @@ repos:
     rev: v0.9.0
     hooks:
       - id: unasyncd
-        additional_dependencies: [ "ruff" ]
+        additional_dependencies: [ "ruff>=0.14.10,<0.15" ]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
     rev: v0.14.10

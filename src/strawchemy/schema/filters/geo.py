@@ -6,11 +6,11 @@ from typing import Any, TypeVar
 
 import strawberry
 from geoalchemy2 import functions as geo_func
+from sqlalchemy import ColumnElement, Dialect, null
 from sqlalchemy.orm import QueryableAttribute
 from strawberry import UNSET
 from typing_extensions import override
 
-from sqlalchemy import ColumnElement, Dialect, null
 from strawchemy.schema.filters import FilterProtocol, GraphQLComparison
 from strawchemy.schema.scalars.geo import GeoJSON
 

@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Sequence
 
     from sqlalchemy import Label, Result, Select, StatementLambdaElement
+
     from strawchemy.transpiler._scope import QueryScope
     from strawchemy.typing import QueryNodeType
 

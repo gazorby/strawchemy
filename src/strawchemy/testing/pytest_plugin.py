@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, TypeAlias
 from unittest.mock import MagicMock
 
 import pytest
-
 from sqlalchemy import Result
+
 from strawchemy.transpiler import _executor as executor
 from strawchemy.transpiler._scope import AggregationFunctionInfo
 

@@ -5,10 +5,10 @@ from typing import TYPE_CHECKING, Annotated, Any, TypeAlias, cast
 
 import strawberry
 from pydantic import AfterValidator
+from sqlalchemy import Select, select
 from strawberry.extensions.field_extension import FieldExtension
 from typing_extensions import override
 
-from sqlalchemy import Select, select
 from strawchemy import (
     Input,
     InputValidationError,

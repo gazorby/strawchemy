@@ -6,9 +6,9 @@ from collections import defaultdict, namedtuple
 from inspect import isclass
 from typing import TYPE_CHECKING, Any, TypeVar
 
+from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
 from sqlalchemy.orm import RelationshipProperty
 
-from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
 from strawchemy.repository.sqlalchemy._base import InsertData, MutationData, SQLAlchemyGraphQLRepository
 from strawchemy.repository.typing import AnySyncSession, DeclarativeT
 from strawchemy.schema.mutation import RelationType, UpsertData

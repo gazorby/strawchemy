@@ -5,10 +5,10 @@ from collections.abc import Hashable, Iterator, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeAlias, TypeVar, cast, final
 
+from sqlalchemy import event, inspect
 from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
 from typing_extensions import Self, override
 
-from sqlalchemy import event, inspect
 from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, ToMappedProtocol, VisitorProtocol
 from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.schema.mutation.types import (

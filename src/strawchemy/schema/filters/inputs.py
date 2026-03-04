@@ -32,9 +32,9 @@ from strawchemy.schema.filters import (
 from strawchemy.typing import QueryNodeType
 
 if TYPE_CHECKING:
+    from sqlalchemy import ColumnElement, Dialect
     from sqlalchemy.orm import QueryableAttribute
 
-    from sqlalchemy import ColumnElement, Dialect
     from strawchemy.dto.strawberry import OrderByEnum
 
 __all__ = (

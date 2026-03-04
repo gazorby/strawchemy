@@ -5,10 +5,10 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, TypeAlias, TypeVar, cast
 
+from sqlalchemy import Column, Function, Insert, Row, Table, func, insert, inspect
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.orm import RelationshipProperty
 
-from sqlalchemy import Column, Function, Insert, Row, Table, func, insert, inspect
 from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.repository.typing import DeclarativeT, QueryExecutorT, SessionT
@@ -18,11 +18,11 @@ from strawchemy.transpiler import QueryTranspiler
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.sql.base import ReadOnlyColumnCollection
     from sqlalchemy.sql.elements import KeyedColumnElement
 
-    from sqlalchemy import Select
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.schema.mutation import Input, LevelInput, UpsertData
     from strawchemy.transpiler.hook import QueryHook

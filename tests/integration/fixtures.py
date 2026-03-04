@@ -13,12 +13,6 @@ import pytest
 import sqlparse
 from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
-from sqlalchemy.event import listens_for
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import Session, sessionmaker
-from strawberry.scalars import JSON
-from typing_extensions import Self
-
 from sqlalchemy import (
     URL,
     ClauseElement,
@@ -37,6 +31,12 @@ from sqlalchemy import (
     create_engine,
     insert,
 )
+from sqlalchemy.event import listens_for
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session, sessionmaker
+from strawberry.scalars import JSON
+from typing_extensions import Self
+
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.schema.scalars import Date, DateTime, Interval, Time
