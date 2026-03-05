@@ -46,7 +46,6 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         with:
-          version: "2025.12.12"
           cache: true
           log_level: debug
 
@@ -92,7 +91,6 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         with:
-          version: "2025.12.12"
           cache: true
           log_level: debug
 
@@ -195,7 +193,6 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
         with:
-          version: "2025.12.12"
           cache: true
           log_level: debug
 
