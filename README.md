@@ -807,7 +807,7 @@ Strawchemy supports the following HStore filter operations:
 - **contains**: Filters for HStore values that contain the given key-value pairs
 - **containedIn**: Filters for HStore values that are contained within the given dict
 - **hasKey**: Filters for HStore values that have the given key
-- **hasKeyAll**: Filters for HStore values that have all of the given keys
+- **hasKeyAll**: Filters for HStore values that have all the given keys
 - **hasKeyAny**: Filters for HStore values that have any of the given keys
 
 ### Geo Filters

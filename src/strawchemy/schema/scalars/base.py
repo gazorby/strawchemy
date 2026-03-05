@@ -5,9 +5,9 @@ from functools import partial
 from typing import TYPE_CHECKING, TypeVar
 
 from msgspec import json
+from strawberry import scalar
 from strawberry.schema.types.base_scalars import wrap_parser
 
-from strawberry import scalar
 from strawchemy.utils.annotation import new_type
 
 if TYPE_CHECKING:
@@ -64,8 +64,11 @@ def _serialize_hstore(value: dict[str, str]) -> dict[str, str]:
     return dict(value)
 
 
-def _parse_hstore(value: Any) -> dict[str, str]:
-    return {str(k): str(v) for k, v in value.items()} if isinstance(value, dict) else value
+def _parse_hstore(value: object) -> dict[str, str]:
+    if not isinstance(value, dict):
+        msg = f"HStore value must be a dict, got {type(value).__name__}"
+        raise TypeError(msg)
+    return {str(k): str(v) for k, v in value.items()}
 
 
 HStore = scalar(
