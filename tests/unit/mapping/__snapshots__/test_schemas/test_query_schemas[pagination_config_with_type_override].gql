@@ -32,7 +32,7 @@ type ContainerType {
   fruitsAggregate: FruitAggregate!
 
   """Fetch objects from the FruitType collection"""
-  fruits: [FruitType!]!
+  fruits(limit: Int = 100, offset: Int! = 0): [FruitType!]!
   vegetablesAggregate: VegetableAggregate!
 
   """Fetch objects from the VegetableType collection"""

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 from pydantic import ValidationError
 from typing_extensions import override
@@ -106,7 +106,7 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, MappedPydanticGraphQLDTO[T]], None] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
         no_cache: bool = False,
@@ -122,10 +122,10 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
             name,
             parent_field_def,
             current_node,
-            raise_if_no_fields,
+            if_no_fields,
             tags,
+            backend_kwargs,
             no_cache=no_cache,
-            backend_kwargs=backend_kwargs,
             description=description or f"{mode.capitalize()} validation type",
             mode=mode,
             register_type=False,

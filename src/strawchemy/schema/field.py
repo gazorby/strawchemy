@@ -22,7 +22,7 @@ from strawchemy.dto.strawberry import (
     StrawchemyDTOAttributes,
 )
 from strawchemy.dto.types import DTOConfig, IncludeFields, Purpose
-from strawchemy.exceptions import StrawchemyFieldError
+from strawchemy.exceptions import EmptyDTOError, StrawchemyFieldError
 from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.utils.annotation import is_type_hint_optional
 from strawchemy.utils.strawberry import (
@@ -235,7 +235,7 @@ class StrawchemyField(StrawberryField):
             isclass(type_) and issubclass(type_, MappedStrawberryGraphQLDTO)
         )
 
-    @cached_property
+    @property
     def pagination(self) -> DefaultOffsetPagination | None:
         if self._pagination is True or (self._pagination is None and self._config.pagination == "all"):
             return DefaultOffsetPagination(
@@ -244,7 +244,7 @@ class StrawchemyField(StrawberryField):
 
         return None if not self._pagination else self._pagination
 
-    @cached_property
+    @property
     def distinct_on(self) -> type[EnumDTO] | None:
         if isclass(self._distinct_on) and issubclass(self._distinct_on, EnumDTO):  # pyright: ignore[reportUnnecessaryIsInstance]
             return self._distinct_on
@@ -253,22 +253,28 @@ class StrawchemyField(StrawberryField):
         distinct_on = self._config.distinct_on if self._distinct_on is None else self._distinct_on
 
         if self._is_strawchemy_type(inner_type) and distinct_on:
-            config = inner_type.__dto_config__.copy_with(
-                include=inner_type.__dto_config__.include if distinct_on == "all" else distinct_on
-            )
+            try:
+                return self._distinct_on_factory.factory(
+                    inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
+                    dto_config=inner_type.__dto_config__.copy_with(
+                        include=inner_type.__dto_config__.include if distinct_on == "all" else distinct_on
+                    ),
+                    no_cache=True,
+                    if_no_fields="raise",
+                )
+            except EmptyDTOError:
+                return None
 
-            return self._distinct_on_factory.make_input(
-                inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
-                include=config.include,
-                exclude=config.exclude,
-                aliases=config.aliases,
-                alias_generator=config.alias_generator,
-                type_map=config.type_overrides,
-            )
+        if (
+            self._distinct_on is None
+            and self._is_strawchemy_type(inner_type)
+            and inner_type.__strawchemy_distinct_on__ is not None
+        ):
+            return inner_type.__strawchemy_distinct_on__
 
         return None
 
-    @cached_property
+    @property
     def order_by(self) -> type[OrderByDTO] | None:
         if isclass(self._order_by) and issubclass(self._order_by, OrderByDTO):  # pyright: ignore[reportUnnecessaryIsInstance]
             return self._order_by
@@ -277,20 +283,18 @@ class StrawchemyField(StrawberryField):
         order_by = self._config.order_by if self._order_by is None else self._order_by
 
         if self._is_strawchemy_type(inner_type) and order_by:
-            config = inner_type.__dto_config__.copy_with(
-                include=inner_type.__dto_config__.include if order_by == "all" else order_by
-            )
-
-            return self._order_by_factory.make_input(
-                inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
-                mode="order_by",
-                include=config.include if order_by == "all" else order_by,
-                exclude=config.exclude,
-                aliases=config.aliases,
-                alias_generator=config.alias_generator,
-                type_map=config.type_overrides,
-                no_cache=True,
-            )
+            try:
+                return self._order_by_factory.make_input(
+                    inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
+                    mode="order_by",
+                    dto_config=inner_type.__dto_config__.copy_with(
+                        include=inner_type.__dto_config__.include if order_by == "all" else order_by
+                    ),
+                    no_cache=True,
+                    if_no_fields="raise",
+                )
+            except EmptyDTOError:
+                return None
         if (
             self._order_by is None
             and self._is_strawchemy_type(inner_type)
@@ -308,15 +312,10 @@ class StrawchemyField(StrawberryField):
         inner_type = strawberry_contained_user_type(self.type)
 
         if self._is_strawchemy_type(inner_type) and self._filter is True:
-            config = inner_type.__dto_config__
             return self._filter_factory.make_input(
                 inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
                 mode="filter",
-                include=config.include,
-                exclude=config.exclude,
-                aliases=config.aliases,
-                alias_generator=config.alias_generator,
-                type_map=config.type_overrides,
+                dto_config=inner_type.__dto_config__,
                 no_cache=True,
             )
         if (

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union
 
 from strawberry import UNSET
 from typing_extensions import override
@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, Relation
     from strawchemy.dto.types import FieldIterable, IncludeFields
     from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.schema.factories.base import TypeScope
     from strawchemy.schema.filters import GraphQLFilter
     from strawchemy.utils.graph import Node
 
@@ -62,6 +63,7 @@ class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLD
         directives: Sequence[object] | None = (),
         override: bool = False,
         purpose: Purpose = Purpose.READ,
+        scope: TypeScope | None = None,
         mode: GraphQLPurpose = "filter",
         **kwargs: Any,
     ) -> Callable[[type[Any]], type[UnmappedGraphQLDTOT]]:
@@ -127,7 +129,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, GraphQLFilterDTOT], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         *,
         aggregate_filters: bool = False,
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
@@ -135,7 +137,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         field_map = field_map if field_map is not None else {}
         for field in super().iter_field_definitions(
-            name, model, dto_config, base, node, raise_if_no_fields, field_map=field_map, **kwargs
+            name, model, dto_config, base, node, if_no_fields, field_map=field_map, **kwargs
         ):
             key = DTOKey.from_dto_node(node)
             if field.is_relation:
@@ -171,7 +173,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, GraphQLFilterDTOT], None] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
         no_cache: bool = False,
@@ -186,9 +188,10 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
             name,
             parent_field_def,
             current_node,
-            raise_if_no_fields,
+            if_no_fields,
             tags,
             backend_kwargs,
+            no_cache,
             aggregate_filters=aggregate_filters,
             **kwargs,
         )
@@ -306,7 +309,7 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
         node: Node[Relation[Any, AggregateFilterDTO], None],
         base: type[Any] | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         backend_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> type[AggregateFilterDTO]:
@@ -435,6 +438,16 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         )
 
     @override
+    def _resolve_relation_type(
+        self,
+        field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, OrderByDTO], None],
+        **factory_kwargs: Any,
+    ) -> Any:
+        return super()._resolve_relation_type(field, dto_config.copy_with(include="all"), node, **factory_kwargs)
+
+    @override
     def dto_name(
         self,
         base_name: str,
@@ -452,7 +465,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, OrderByDTO], None] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
         no_cache: bool = False,
@@ -467,7 +480,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             name,
             parent_field_def,
             current_node,
-            raise_if_no_fields,
+            if_no_fields,
             tags,
             backend_kwargs,
             no_cache,

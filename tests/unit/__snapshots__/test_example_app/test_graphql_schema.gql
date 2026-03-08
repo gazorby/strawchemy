@@ -451,12 +451,7 @@ enum MilestoneSumFieldsEnum {
 
 """GraphQL type"""
 type MilestoneType {
-  project: ProjectType
   name: String!
-  projectId: UUID
-  id: UUID!
-  createdAt: DateTime!
-  updatedAt: DateTime!
 }
 
 type Mutation {

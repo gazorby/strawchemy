@@ -110,38 +110,41 @@ class Strawchemy:
             self.config.inspector, self.config.auto_snake_case
         )
 
-        self._aggregate_filter_factory = AggregateFilterDTOFactory(self)
-        self._order_by_factory = OrderByDTOFactory(self)
-        self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.config.inspector)
-        self._type_factory = TypeDTOFactory(self, strawberry_backend, order_by_factory=self._order_by_factory)
-        self._input_factory = InputFactory(self, strawberry_backend)
-        self._aggregation_factory = RootAggregateTypeDTOFactory(
-            self, strawberry_backend, type_factory=self._type_factory
+        self.aggregate_filter_factory = AggregateFilterDTOFactory(self)
+        self.order_by_factory = OrderByDTOFactory(self)
+        self.distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.config.inspector)
+        self.type_factory = TypeDTOFactory(
+            self,
+            strawberry_backend,
+            order_by_factory=self.order_by_factory,
+            distinct_on_factory=self.distinct_on_enum_factory,
         )
-        self._enum_factory = EnumDTOFactory(self.config.inspector, enum_backend)
-        self._filter_factory = BooleanFilterDTOFactory(self, aggregate_filter_factory=self._aggregate_filter_factory)
-        self._upsert_conflict_factory = UpsertConflictFieldsDTOFactory(
+        self.input_factory = InputFactory(self, strawberry_backend)
+        self.aggregation_factory = RootAggregateTypeDTOFactory(self, strawberry_backend, type_factory=self.type_factory)
+        self.enum_factory = EnumDTOFactory(self.config.inspector, enum_backend)
+        self.filter_factory = BooleanFilterDTOFactory(self, aggregate_filter_factory=self.aggregate_filter_factory)
+        self.upsert_conflict_factory = UpsertConflictFieldsDTOFactory(
             self.config.inspector, upsert_conflict_fields_enum_backend
         )
 
-        self.filter = self._filter_factory.input
-        self.aggregate_filter = partial(self._aggregate_filter_factory.input, mode="aggregate_filter")
-        self.distinct_on = self._distinct_on_enum_factory.decorator
-        self.input = self._input_factory.input
-        self.create_input = partial(self._input_factory.input, mode="create_input")
-        self.pk_update_input = partial(self._input_factory.input, mode="update_by_pk_input")
-        self.filter_update_input = partial(self._input_factory.input, mode="update_by_filter_input")
-        self.order = partial(self._order_by_factory.input, mode="order_by")
-        self.type = self._type_factory.type
-        self.aggregate = partial(self._aggregation_factory.type, mode="aggregate_type")
-        self.upsert_update_fields = self._enum_factory.input
-        self.upsert_conflict_fields = self._upsert_conflict_factory.input
+        self.filter = self.filter_factory.input
+        self.aggregate_filter = partial(self.aggregate_filter_factory.input, mode="aggregate_filter")
+        self.distinct_on = self.distinct_on_enum_factory.decorator
+        self.input = self.input_factory.input
+        self.create_input = partial(self.input_factory.input, mode="create_input")
+        self.pk_update_input = partial(self.input_factory.input, mode="update_by_pk_input")
+        self.filter_update_input = partial(self.input_factory.input, mode="update_by_filter_input")
+        self.order = partial(self.order_by_factory.input, mode="order_by")
+        self.type = self.type_factory.type
+        self.aggregate = partial(self.aggregation_factory.type, mode="aggregate_type")
+        self.upsert_update_fields = self.enum_factory.input
+        self.upsert_conflict_fields = self.upsert_conflict_factory.input
         self._mutation_builder = MutationFieldBuilder(
             config=self.config,
             registry_namespace_getter=self._annotation_namespace,
-            order_by_factory=self._order_by_factory,
-            filter_factory=self._filter_factory,
-            distinct_on_factory=self._distinct_on_enum_factory,
+            order_by_factory=self.order_by_factory,
+            filter_factory=self.filter_factory,
+            distinct_on_factory=self.distinct_on_enum_factory,
         )
         # Register common types
         self.registry.register_enum(OrderByEnum, "OrderByEnum")
@@ -320,9 +323,9 @@ class Strawchemy:
             registry_namespace=namespace,
             description=description,
             arguments=arguments,
-            order_by_factory=self._order_by_factory,
-            filter_factory=self._filter_factory,
-            distinct_on_factory=self._distinct_on_enum_factory,
+            order_by_factory=self.order_by_factory,
+            filter_factory=self.filter_factory,
+            distinct_on_factory=self.distinct_on_enum_factory,
         )
         return field(resolver) if resolver else field
 

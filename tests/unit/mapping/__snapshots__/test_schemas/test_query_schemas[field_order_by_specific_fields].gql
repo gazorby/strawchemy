@@ -7,8 +7,19 @@ type ColorAggregate {
   sum: ColorSumFields!
 }
 
+input ColorAggregateMinMaxStringFieldsOrderBy {
+  name: OrderByEnum
+}
+
+input ColorAggregateNumericFieldsOrderBy {
+  name: OrderByEnum
+}
+
 input ColorAggregateOrderBy {
   count: OrderByEnum
+  maxString: ColorAggregateMinMaxStringFieldsOrderBy
+  minString: ColorAggregateMinMaxStringFieldsOrderBy
+  sum: ColorAggregateNumericFieldsOrderBy
 }
 
 """GraphQL type"""
@@ -44,7 +55,7 @@ type ColorType {
 """
 Boolean expression to compare fields. All fields are combined with logical 'AND'.
 """
-input ContainerOrderBy {
+input ContainerOrderBy1 {
   fruitsAggregate: FruitAggregateOrderBy
   fruits: FruitOrderBy
   vegetablesAggregate: VegetableAggregateOrderBy
@@ -82,8 +93,26 @@ type FruitAggregate {
   varSamp: FruitNumericFields!
 }
 
+input FruitAggregateMinMaxStringFieldsOrderBy {
+  name: OrderByEnum
+}
+
+input FruitAggregateNumericFieldsOrderBy {
+  sweetness: OrderByEnum
+}
+
 input FruitAggregateOrderBy {
+  avg: FruitAggregateNumericFieldsOrderBy
   count: OrderByEnum
+  max: FruitAggregateNumericFieldsOrderBy
+  maxString: FruitAggregateMinMaxStringFieldsOrderBy
+  min: FruitAggregateNumericFieldsOrderBy
+  minString: FruitAggregateMinMaxStringFieldsOrderBy
+  stddevPop: FruitAggregateNumericFieldsOrderBy
+  stddevSamp: FruitAggregateNumericFieldsOrderBy
+  sum: FruitAggregateNumericFieldsOrderBy
+  varPop: FruitAggregateNumericFieldsOrderBy
+  varSamp: FruitAggregateNumericFieldsOrderBy
 }
 
 """GraphQL type"""
@@ -135,7 +164,7 @@ enum OrderByEnum {
 
 type Query {
   """Fetch objects from the ContainerType collection"""
-  containers(orderBy: [ContainerOrderBy!] = null): [ContainerType!]!
+  containers(orderBy: [ContainerOrderBy1!] = null): [ContainerType!]!
 }
 
 scalar UUID

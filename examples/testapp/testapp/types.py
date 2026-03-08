@@ -7,7 +7,7 @@ from pydantic import AfterValidator
 from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemyConfig
 from testapp.models import Customer, Milestone, Project, Ticket
 
-strawchemy = Strawchemy(StrawchemyConfig("sqlite", repository_type=StrawchemyAsyncRepository))
+strawchemy = Strawchemy(StrawchemyConfig("sqlite", repository_type=StrawchemyAsyncRepository, include=["name"]))
 
 # Ticket
 
@@ -66,7 +66,7 @@ class ProjectCreate: ...
 # Milestone
 
 
-@strawchemy.type(Milestone, include="all", override=True)
+@strawchemy.type(Milestone, include={"name"}, override=True, distinct_on=["age"], paginate=["projects"])
 class MilestoneType: ...
 
 

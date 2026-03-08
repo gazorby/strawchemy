@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union
 
 from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -48,6 +48,8 @@ if TYPE_CHECKING:
     from collections.abc import Generator, Hashable, Sequence
     from enum import Enum
 
+    from strawberry.types.field import StrawberryField
+
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOBackend, DTOBase, Relation
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
@@ -77,6 +79,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         type_map: dict[Any, Any] | None = None,
         aggregation_factory: AggregateDTOFactory[AggregateDTOT] | None = None,
         order_by_factory: OrderByDTOFactory | None = None,
+        distinct_on_factory: DistinctOnFieldsDTOFactory | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
@@ -85,6 +88,9 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         )
         self._order_by_factory = order_by_factory or OrderByDTOFactory(
             mapper, handle_cycles=handle_cycles, type_map=type_map
+        )
+        self._distinct_on_factory = distinct_on_factory or DistinctOnFieldsDTOFactory(
+            self.inspector, handle_cycles=handle_cycles, type_map=type_map
         )
 
     def _aggregation_field(
@@ -104,12 +110,43 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             related_dto=dto,
         )
 
+    def _order_by_input_for_field(self, field: GraphQLFieldDefinition) -> type[OrderByDTO] | None:
+        if field.related_model is None:
+            return None
+        try:
+            order_by_input = self._order_by_factory.factory(
+                field.related_model, DTOConfig(Purpose.READ, partial=True, include="all"), if_no_fields="raise"
+            )
+        except EmptyDTOError:
+            order_by_input = None
+        return order_by_input
+
+    def _distinct_on_input_for_field(self, field: GraphQLFieldDefinition) -> type[EnumDTO] | None:
+        if field.related_model is None:
+            return None
+        try:
+            distinct_on_input = self._distinct_on_factory.factory(
+                field.related_model, DTOConfig(Purpose.READ, partial=True, include="all"), if_no_fields="raise"
+            )
+        except EmptyDTOError:
+            distinct_on_input = None
+        return distinct_on_input
+
+    def _json_field(self) -> StrawberryField:
+        return self._mapper.field(
+            root_field=False,
+            arguments=[
+                StrawberryArgument(JSON_PATH_KEY, None, type_annotation=StrawberryAnnotation(annotation=Optional[str]))
+            ],
+        )
+
     def _add_fields_arguments(
         self,
         dto: type[GraphQLDTOT],
         base: type[Any] | None,
         order: IncludeFields | None = None,
         paginate: IncludeFields | None = None,
+        distinct_on: IncludeFields | None = None,
         default_pagination: None | DefaultOffsetPagination = None,
     ) -> type[GraphQLDTOT]:
         """Add pagination and ordering arguments to a GraphQL DTO type.
@@ -134,6 +171,10 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 - None: No ordering arguments added (default)
                 - "all": Add order_by arguments to all relation fields
                 - list/set of field names: Add order_by arguments only to named relations
+            distinct_on: Field inclusion specification for distinct_on arguments. Can be:
+                - None: No distinct_on arguments added (default)
+                - "all": Add distinct_on arguments to all relation fields
+                - list/set of field names: Add distinct_on arguments only to named relations
             paginate: Field inclusion specification for pagination arguments. Can be:
                 - None: No pagination arguments added (default)
                 - "all": Add pagination to all relation fields
@@ -148,32 +189,33 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         attributes: dict[str, Any] = {}
         annotations: dict[str, Any] = {}
         order_config = DTOConfig.from_include(order)
-        paginate_config = DTOConfig.from_include(paginate)
+        pagination_config = DTOConfig.from_include(paginate)
+        distinct_on_config = DTOConfig.from_include(distinct_on)
 
         for field in dto.__strawchemy_field_map__.values():
-            # Add pagination and ordering arguments for relations
+            # Add pagination, distinct_on and ordering arguments for relations
             if field.is_relation and field.uselist:
                 related = Self if field.related_dto is dto else field.related_dto
                 type_annotation = list[related] if related is not None else field.type_
                 assert field.related_model
-                order_by_input, pagination = None, False
-                if order_config.is_field_included(field.model_field_name) or self._mapper.config.order_by:
-                    try:
-                        order_by_input = self._order_by_factory.factory(
-                            field.related_model,
-                            DTOConfig(
-                                Purpose.READ,
-                                partial=True,
-                                include=self._mapper.config.order_by or "all",
-                                global_include=self._mapper.config.order_by or "all",
-                            ),
-                            raise_if_no_fields=True,
-                        )
-                    except EmptyDTOError:
-                        order_by_input = None
-                if paginate_config.is_field_included(field.model_field_name):
+                field_name = field.model_field_name
+                order_by_input, distinct_on_input, pagination = None, None, False
+                if order_config.is_field_included(field_name) or self._mapper.config.order_config.is_field_included(
+                    field_name
+                ):
+                    order_by_input = self._order_by_input_for_field(field)
+                if pagination_config.is_field_included(
+                    field_name
+                ) or self._mapper.config.pagination_config.is_field_included(field_name):
                     pagination = default_pagination or True
-                strawberry_field = self._mapper.field(pagination=pagination, order_by=order_by_input, root_field=False)
+                if distinct_on_config.is_field_included(
+                    field_name
+                ) or self._mapper.config.distinct_on_config.is_field_included(field_name):
+                    distinct_on_input = self._distinct_on_input_for_field(field)
+
+                strawberry_field = self._mapper.field(
+                    pagination=pagination, order_by=order_by_input, distinct_on=distinct_on_input, root_field=False
+                )
                 attributes[field.name] = strawberry_field
                 annotations[field.name] = type_annotation
             # Add path filtering argument for JSON fields
@@ -182,14 +224,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 and field.has_model_field
                 and self.inspector.model_field_type(field) in {JSON, dict}
             ):
-                attributes[field.name] = self._mapper.field(
-                    root_field=False,
-                    arguments=[
-                        StrawberryArgument(
-                            JSON_PATH_KEY, None, type_annotation=StrawberryAnnotation(annotation=Optional[str])
-                        )
-                    ],
-                )
+                attributes[field.name] = self._json_field()
                 annotations[field.name] = Union[field.type_, None]
 
         dto.__annotations__ |= annotations
@@ -218,7 +253,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         *,
         aggregations: bool = False,
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
@@ -226,7 +261,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         field_map = field_map if field_map is not None else {}
         for field in super().iter_field_definitions(
-            name, model, dto_config, base, node, raise_if_no_fields, field_map=field_map, **kwargs
+            name, model, dto_config, base, node, if_no_fields, field_map=field_map, **kwargs
         ):
             key = DTOKey.from_dto_node(node)
             if field.is_relation and field.uselist and aggregations:
@@ -244,13 +279,14 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
         no_cache: bool = False,
         *,
         default_pagination: None | DefaultOffsetPagination = None,
         order: IncludeFields | type[OrderByDTO] | None = None,
+        distinct_on: IncludeFields | None = None,
         paginate: IncludeFields | None = None,
         aggregations: bool = True,
         description: str | None = None,
@@ -267,14 +303,16 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             name,
             parent_field_def,
             current_node,
-            raise_if_no_fields,
+            if_no_fields,
             tags,
             backend_kwargs,
+            no_cache,
             aggregations=aggregations if dto_config.purpose is Purpose.READ else False,
             register_type=False,
             override=override,
             paginate=paginate if paginate == "all" else self._mapper.config.pagination,
             order=order if order == "all" else self._mapper.config.order_by,
+            distinct_on=distinct_on if distinct_on == "all" else self._mapper.config.distinct_on,
             default_pagination=default_pagination,
             **kwargs,
         )
@@ -282,9 +320,10 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             dto = self._add_fields_arguments(
                 dto,
                 base,
-                default_pagination=default_pagination,
                 order=order if is_fields_iterable(order) else None,
+                distinct_on=distinct_on,
                 paginate=paginate,
+                default_pagination=default_pagination,
             )
         if register_type:
             return self._register_type(
@@ -296,6 +335,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 user_defined=user_defined,
                 default_pagination=default_pagination,
                 order=order,
+                distinct_on=distinct_on,
                 paginate=paginate,
                 current_node=current_node,
             )
@@ -333,7 +373,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         aggregations: bool = False,
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
@@ -371,7 +411,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
         no_cache: bool = False,
@@ -386,9 +426,10 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
             name,
             parent_field_def,
             current_node,
-            raise_if_no_fields,
+            if_no_fields,
             tags,
             backend_kwargs,
+            no_cache,
             aggregations=aggregations,
             **kwargs,
         )
@@ -428,7 +469,7 @@ class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
         node: Node[Relation[Any, AggregateDTOT], None],
         base: type[Any] | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         backend_kwargs: dict[str, Any] | None = None,
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
@@ -461,6 +502,16 @@ class DistinctOnFieldsDTOFactory(EnumDTOFactory):
     ) -> str:
         return f"{base_name}DistinctOnFields"
 
+    @override
+    def _resolve_relation_type(
+        self,
+        field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, EnumDTO], None],
+        **factory_kwargs: Any,
+    ) -> Any:
+        return super()._resolve_relation_type(field, dto_config.copy_with(include="all"), node, **factory_kwargs)
+
 
 class UpsertConflictFieldsDTOFactory(EnumDTOFactory):
     inspector: SQLAlchemyGraphQLInspector
@@ -488,7 +539,7 @@ class UpsertConflictFieldsDTOFactory(EnumDTOFactory):
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, EnumDTO], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         constraints = self.inspector.unique_constraints(model)
@@ -556,7 +607,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         if base is None:
             try:
                 base = self._identifier_input_dto_factory.factory(
-                    related_model, dto_config, name=name, raise_if_no_fields=True
+                    related_model, dto_config, name=name, if_no_fields="raise"
                 )
             except EmptyDTOError as error:
                 msg = (
@@ -694,13 +745,13 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         *,
         mode: GraphQLPurpose,
         **factory_kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         for field in super().iter_field_definitions(
-            name, model, dto_config, base, node, raise_if_no_fields, mode=mode, **factory_kwargs
+            name, model, dto_config, base, node, if_no_fields, mode=mode, **factory_kwargs
         ):
             if mode == "update_by_pk_input" and self.inspector.is_primary_key(field.model_field):
                 field.type_ = non_optional_type_hint(field.type_)
@@ -715,7 +766,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
         no_cache: bool = False,
@@ -731,7 +782,7 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
             name,
             parent_field_def,
             current_node,
-            raise_if_no_fields,
+            if_no_fields,
             tags=tags or set() | {mode},
             backend_kwargs=backend_kwargs,
             description=description or self._description(mode),

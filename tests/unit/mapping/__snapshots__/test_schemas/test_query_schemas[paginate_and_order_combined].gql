@@ -52,6 +52,30 @@ type ColorType {
   id: UUID!
 }
 
+"""
+Boolean expression to compare fields. All fields are combined with logical 'AND'.
+"""
+input ContainerOrderBy {
+  vegetablesAggregate: VegetableAggregateOrderBy
+  vegetables: VegetableOrderBy
+}
+
+"""
+Boolean expression to compare fields. All fields are combined with logical 'AND'.
+"""
+input ContainerOrderBy1 {
+  fruitsAggregate: FruitAggregateOrderBy
+  fruits: FruitOrderBy
+}
+
+"""
+Boolean expression to compare fields. All fields are combined with logical 'AND'.
+"""
+input ContainerOrderBy2 {
+  fruitsAggregate: FruitAggregateOrderBy
+  fruits: FruitOrderBy
+}
+
 """GraphQL type"""
 type ContainerType1 {
   fruitsAggregate: FruitAggregate!
@@ -190,13 +214,13 @@ enum OrderByEnum {
 
 type Query {
   """Fetch objects from the ContainerType1 collection"""
-  container1: [ContainerType1!]!
+  container1(orderBy: [ContainerOrderBy!] = null): [ContainerType1!]!
 
   """Fetch objects from the ContainerType2 collection"""
-  container2: [ContainerType2!]!
+  container2(orderBy: [ContainerOrderBy1!] = null): [ContainerType2!]!
 
   """Fetch objects from the ContainerType3 collection"""
-  container3: [ContainerType3!]!
+  container3(orderBy: [ContainerOrderBy2!] = null): [ContainerType3!]!
 }
 
 scalar UUID
@@ -207,6 +231,10 @@ type VegetableAggregate {
   max: VegetableMinMaxFields!
   min: VegetableMinMaxFields!
   sum: VegetableSumFields!
+}
+
+input VegetableAggregateOrderBy {
+  count: OrderByEnum
 }
 
 enum VegetableFamily {

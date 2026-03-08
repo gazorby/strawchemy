@@ -108,6 +108,7 @@ class StrawchemyDTOAttributes:
     __strawchemy_query_hook__: ClassVar[QueryHook[Any] | list[QueryHook[Any]] | None] = None
     __strawchemy_filter__: ClassVar[type[Any] | None] = None
     __strawchemy_order_by__: ClassVar[type[Any] | None] = None
+    __strawchemy_distinct_on__: ClassVar[type[Any] | None] = None
     __strawchemy_purpose__: ClassVar[GraphQLPurpose | None] = None
 
 

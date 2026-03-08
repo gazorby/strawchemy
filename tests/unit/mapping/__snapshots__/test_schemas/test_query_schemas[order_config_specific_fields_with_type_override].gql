@@ -37,6 +37,14 @@ input ColorOrderBy {
   id: OrderByEnum
 }
 
+"""
+Boolean expression to compare fields. All fields are combined with logical 'AND'.
+"""
+input ColorOrderBy2 {
+  fruitsAggregate: FruitAggregateOrderBy
+  fruits: FruitOrderBy
+}
+
 """GraphQL type"""
 type ColorSumFields {
   name: String
@@ -47,9 +55,17 @@ type ColorType {
   fruitsAggregate: FruitAggregate!
 
   """Fetch objects from the FruitType collection"""
-  fruits: [FruitType!]!
+  fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
   name: String!
   id: UUID!
+}
+
+"""
+Boolean expression to compare fields. All fields are combined with logical 'AND'.
+"""
+input ContainerOrderBy2 {
+  fruitsAggregate: FruitAggregateOrderBy
+  fruits: FruitOrderBy
 }
 
 """GraphQL type"""
@@ -65,7 +81,7 @@ type ContainerType {
   colorsAggregate: ColorAggregate!
 
   """Fetch objects from the ColorType collection"""
-  colors: [ColorType!]!
+  colors(orderBy: [ColorOrderBy2!] = null): [ColorType!]!
   name: String!
   id: UUID!
 }
@@ -154,7 +170,7 @@ enum OrderByEnum {
 
 type Query {
   """Fetch objects from the ContainerType collection"""
-  container: [ContainerType!]!
+  container(orderBy: [ContainerOrderBy2!] = null): [ContainerType!]!
 }
 
 scalar UUID

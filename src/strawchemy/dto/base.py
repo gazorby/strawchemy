@@ -14,6 +14,7 @@ from typing import (
     ClassVar,
     ForwardRef,
     Generic,
+    Literal,
     Optional,
     Protocol,
     TypeAlias,
@@ -533,7 +534,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         node: Node[Relation[Any, DTOBaseT], None],
         base: type[Any] | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         backend_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
@@ -547,7 +548,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
                 dto_config=dto_config,
                 base=base,
                 node=node,
-                raise_if_no_fields=raise_if_no_fields,
+                if_no_fields=if_no_fields,
                 **kwargs,
             )
             for field_def in iterable:
@@ -588,7 +589,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         dto_config: DTOConfig,
         base: type[DTOBase[ModelT]] | None,
         node: Node[Relation[ModelT, DTOBaseT], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         **factory_kwargs: Any,
     ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT]]:
         no_fields = True
@@ -620,7 +621,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         if no_fields:
             msg = f"{name} DTO generated from {model.__qualname__} have no fields"
-            if raise_if_no_fields:
+            if if_no_fields == "raise":
                 raise EmptyDTOError(msg)
             warnings.warn(msg, stacklevel=2)
 
@@ -632,7 +633,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
         current_node: Node[Relation[Any, DTOBaseT], None] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
         no_cache: bool = False,
@@ -660,7 +661,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             node,
             base,
             parent_field_def,
-            raise_if_no_fields,
+            if_no_fields,
             backend_kwargs,
             **kwargs,
         )

@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import strawberry
 
-from strawchemy import Strawchemy
+from strawchemy import Strawchemy, StrawchemyConfig
 from tests.unit.models import Container
 
-strawchemy = Strawchemy("postgresql")
+strawchemy = Strawchemy(StrawchemyConfig("postgresql", order_by=["fruits"]))
 
 
 @strawchemy.type(Container, include="all", order=["fruits", "vegetables"])

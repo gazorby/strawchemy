@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
+from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields
 from strawchemy.repository.strawberry import StrawchemySyncRepository
 from strawchemy.utils.strawberry import default_session_getter
 
 if TYPE_CHECKING:
-    from strawchemy.dto.types import FieldIterable, IncludeFields
     from strawchemy.repository.typing import AnySessionGetter, FilterMap
     from strawchemy.typing import AnyRepositoryType, SupportedDialect
 
@@ -68,3 +69,15 @@ class StrawchemyConfig:
     def __post_init__(self) -> None:
         """Initializes the SQLAlchemyGraphQLInspector after the dataclass is created."""
         self.inspector = SQLAlchemyGraphQLInspector(self.dialect, filter_overrides=self.filter_overrides)
+
+    @cached_property
+    def order_config(self) -> DTOConfig:
+        return DTOConfig.from_include(self.order_by)
+
+    @cached_property
+    def distinct_on_config(self) -> DTOConfig:
+        return DTOConfig.from_include(self.distinct_on)
+
+    @cached_property
+    def pagination_config(self) -> DTOConfig:
+        return DTOConfig.from_include(self.pagination)

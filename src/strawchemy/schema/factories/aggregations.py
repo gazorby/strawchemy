@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Optional, TypeVar, cast
 
 from sqlalchemy.orm import DeclarativeBase
 from typing_extensions import override
@@ -96,14 +96,14 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         *,
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         function: FunctionInfo | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         for field_def in super().iter_field_definitions(
-            name, model, dto_config, base, node, raise_if_no_fields, field_map=field_map, **kwargs
+            name, model, dto_config, base, node, if_no_fields, field_map=field_map, **kwargs
         ):
             yield (
                 FunctionArgFieldDefinition.from_field(field_def, function=function)
@@ -120,7 +120,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         name: str | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
         no_cache: bool = False,
@@ -135,7 +135,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
             name,
             parent_field_def,
             current_node,
-            raise_if_no_fields,
+            if_no_fields,
             tags,
             backend_kwargs,
             no_cache,
@@ -149,7 +149,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         dto_config: DTOConfig,
         name: str | None = None,
         base: type[Any] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         **kwargs: Any,
     ) -> type[EnumDTO]:
         if not name:
@@ -160,7 +160,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
             dto_config=dto_config,
             base=base,
             node=self._node_or_root(model, name, None),
-            raise_if_no_fields=raise_if_no_fields,
+            if_no_fields=if_no_fields,
             **kwargs,
         )
         return self._enum_backend.build(name, model, list(field_defs), base)
@@ -344,7 +344,7 @@ class AggregationInspector:
             factory = self._type_filtered_factories.get(aggregation)
             if factory is None:
                 return None
-            dto = factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+            dto = factory.enum_factory(model, dto_config, if_no_fields="raise")
         except DTOError:
             return None
         return dto
@@ -354,7 +354,7 @@ class AggregationInspector:
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
             factory = self._type_filtered_factories["numeric"]
-            dto = factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+            dto = factory.factory(model=model, dto_config=dto_config, if_no_fields="raise")
         except DTOError:
             return None
         return dto
@@ -364,7 +364,7 @@ class AggregationInspector:
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
             factory = self._type_filtered_factories["min_max"]
-            dto = factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+            dto = factory.factory(model=model, dto_config=dto_config, if_no_fields="raise")
         except DTOError:
             return None
         return dto
@@ -374,7 +374,7 @@ class AggregationInspector:
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
             factory = self._type_filtered_factories["sum"]
-            dto = factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+            dto = factory.factory(model=model, dto_config=dto_config, if_no_fields="raise")
         except DTOError:
             return None
         return dto
