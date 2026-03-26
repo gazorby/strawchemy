@@ -39,7 +39,7 @@ from sqlalchemy import (
 )
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
-from strawchemy.schema.scalars import HSTORE_SCALAR_OVERRIDES, Date, DateTime, Interval, Time
+from strawchemy.schema.scalars import Date, DateTime, HStore, Interval, Time
 from tests.fixtures import DefaultQuery
 from tests.integration.models import (
     Color,
@@ -96,13 +96,13 @@ __all__ = (
 FilterableStatement: TypeAlias = Literal["insert", "update", "select", "delete"]
 scalar_overrides: dict[object, Any] = {
     dict[str, Any]: JSON,
+    dict[str, str]: HStore,
     timedelta: Interval,
     time: Time,
     date: Date,
     datetime: DateTime,
 }
 engine_plugins: list[str] = []
-scalar_overrides |= HSTORE_SCALAR_OVERRIDES
 
 if GEO_INSTALLED:
     from strawchemy.schema.scalars.geo import GEO_SCALAR_OVERRIDES

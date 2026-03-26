@@ -60,20 +60,9 @@ DateTime = scalar(
 )
 
 
-def _serialize_hstore(value: dict[str, str]) -> dict[str, str]:
-    return dict(value)
-
-
-def _parse_hstore(value: object) -> dict[str, str]:
-    if not isinstance(value, dict):
-        msg = f"HStore value must be a dict, got {type(value).__name__}"
-        raise TypeError(msg)
-    return {str(k): str(v) for k, v in value.items()}
-
-
 HStore = scalar(
     new_type("HStore", dict),
     description="The `HStore` scalar type represents a PostgreSQL hstore value, a flat mapping of string keys to string values.",
-    serialize=_serialize_hstore,
-    parse_value=_parse_hstore,
+    serialize=lambda x: x,  # pyright: ignore[reportUnknownLambdaType]
+    parse_value=partial(json.decode, type=dict[str, str]),
 )

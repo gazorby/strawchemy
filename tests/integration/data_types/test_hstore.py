@@ -66,7 +66,7 @@ def sync_query(dialect: SupportedDialect) -> type[Any]:
 @pytest.mark.snapshot
 async def test_hstore_filters(
     filter_name: str,
-    value: Any,
+    value: dict[str, str] | list[str] | str,
     expected_ids: list[int],
     any_query: AnyQueryExecutor,
     raw_hstore: RawRecordData,
