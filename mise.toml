@@ -191,6 +191,10 @@ run = "uv run nox --json -t tests -l | jq 'map(.name) | unique'"
 description = "Check ruff formatting"
 run = "uv run ruff check"
 
+[tasks."ruff:pre-commit"]
+description = "Fix ruff errors and format (for pre-commit)"
+run = ["uv run ruff check --fix", "uv run ruff format"]
+
 [tasks."ruff:fix"]
 description = "Fix ruff errors"
 run = "uv run ruff check --fix --unsafe-fixes"
