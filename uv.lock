@@ -3369,7 +3369,7 @@ dev = [
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
     { name = "pytest-xdist" },
-    { name = "ruff" },
+    { name = "ruff", specifier = ">=0.14.10,<0.15" },
     { name = "slotscheck", specifier = ">=0.16.5" },
     { name = "sqlparse" },
     { name = "syrupy" },
@@ -3380,7 +3380,7 @@ dev = [
 doc = [{ name = "git-cliff", specifier = ">=2.6.1" }]
 lint = [
     { name = "basedpyright" },
-    { name = "ruff" },
+    { name = "ruff", specifier = ">=0.14.10,<0.15" },
     { name = "slotscheck", specifier = ">=0.16.5" },
     { name = "vulture" },
 ]

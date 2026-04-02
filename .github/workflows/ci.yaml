@@ -83,10 +83,10 @@ jobs:
             ~/.nox
             .nox
           key:
-            ${{ runner.os }}-nox-${{ matrix.session.session }}-${{ env.pythonLocation }}-${{
+            ${{ runner.os }}-nox-v2-${{ matrix.session.session }}-${{ env.pythonLocation }}-${{
             hashFiles('**/uv.lock') }}-${{ hashFiles('**/noxfile.py') }}
           restore-keys: |
-            ${{ runner.os }}-nox-${{ matrix.session.session }}-${{ env.pythonLocation }}
+            ${{ runner.os }}-nox-v2-${{ matrix.session.session }}-${{ env.pythonLocation }}
 
       - name: Setup mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3

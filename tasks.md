@@ -129,6 +129,12 @@ Format code
 
 Format code
 
+## `ruff:pre-commit`
+
+- **Usage**: `ruff:pre-commit`
+
+Fix ruff errors and format (for pre-commit)
+
 ## `slotscheck`
 
 - **Usage**: `slotscheck`

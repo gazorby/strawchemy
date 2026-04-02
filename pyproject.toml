@@ -63,7 +63,7 @@ dev = [
 ]
 codeflash = ["codeflash"]
 doc = ["git-cliff>=2.6.1"]
-lint = ["basedpyright", "ruff", "vulture", "slotscheck>=0.16.5"]
+lint = ["basedpyright", "ruff>=0.14.10,<0.15", "vulture", "slotscheck>=0.16.5"]
 mysql = ["asyncmy", "cryptography"]
 postgres = ["asyncpg>=0.29.0", "psycopg[binary,pool]>=3.2.3"]
 test = [
@@ -323,6 +323,7 @@ exclude = [
     ".ruff_cache",
     ".svn",
     ".venv",
+    "__pycache__",
     "__pypackages__",
     "_build",
     "buck-out",
@@ -333,7 +334,7 @@ exclude = [
     "tests/codegen/snapshots",
     "alembic/*  ",
 ]
-src = ["src/strawchemy", "tests"]
+src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["ALL"]

@@ -52,35 +52,41 @@ repos:
         types: [ python ]
         args: [ "--py310-plus" ]
 
-  - repo: https://github.com/provinzkraut/unasyncd
-    rev: v0.9.0
+  - repo: local
     hooks:
       - id: unasyncd
-        additional_dependencies: [ "ruff" ]
+        name: unasyncd
+        entry: uv run unasyncd
+        language: system
+        types: [ python ]
+        pass_filenames: false
+        require_serial: true
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.13.0
+  - repo: local
     hooks:
-      - id: ruff-check
-        types_or: [ python, pyi ]
-        args: [ --fix ]
-      - id: ruff-format
-        types_or: [ python, pyi ]
+      - id: ruff
+        name: ruff
+        entry: tools/mise run ruff:pre-commit
+        language: system
+        types: [ python ]
+        pass_filenames: false
+        require_serial: true
 
   - repo: local
     hooks:
       - id: lint
         name: lint
-        entry: mise run lint:pre-commit
-        language: python
+        entry: tools/mise run lint:pre-commit
+        language: system
         types: [ python ]
+        pass_filenames: false
         require_serial: true
 
   - repo: local
     hooks:
       - id: task-docs
         name: Tasks documentation
-        entry: mise run render:usage
+        entry: tools/mise run render:usage
         language: system
         files: ^mise.toml$
         pass_filenames: false
