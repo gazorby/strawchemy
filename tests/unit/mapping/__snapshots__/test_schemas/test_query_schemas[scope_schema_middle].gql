@@ -132,20 +132,6 @@ type GroupSumFields {
   name: String
 }
 
-"""GraphQL type"""
-type GroupType {
-  tag: TagType!
-  usersAggregate: UserAggregate!
-
-  """Fetch objects from the GraphQLUser collection"""
-  users: [GraphQLUser!]!
-  color: ColorType!
-  name: String!
-  tagId: UUID!
-  colorId: UUID!
-  id: UUID!
-}
-
 type Query {
   """Fetch object from the GraphQLUser collection by id"""
   user(id: UUID!): GraphQLUser!
@@ -158,8 +144,8 @@ type Query {
 type TagType {
   groupsAggregate: GroupAggregate!
 
-  """Fetch objects from the GroupType collection"""
-  groups: [GroupType!]!
+  """Fetch objects from the GraphQLGroup collection"""
+  groups: [GraphQLGroup!]!
   name: String!
   id: UUID!
 }

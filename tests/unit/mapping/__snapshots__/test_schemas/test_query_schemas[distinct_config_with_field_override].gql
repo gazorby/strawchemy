@@ -1,6 +1,7 @@
 '''
 enum ColorDistinctOnFields {
   name
+  id
 }
 
 """GraphQL type"""

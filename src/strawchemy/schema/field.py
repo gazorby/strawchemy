@@ -237,7 +237,9 @@ class StrawchemyField(StrawberryField):
 
     @property
     def pagination(self) -> DefaultOffsetPagination | None:
-        if self._pagination is True or (self._pagination is None and self._config.pagination == "all"):
+        if self._pagination is True or (
+            self._pagination is None and self._config.pagination_config.is_field_included(self.python_name)
+        ):
             return DefaultOffsetPagination(
                 limit=self._config.pagination_default_limit, offset=self._config.pagination_default_offset
             )

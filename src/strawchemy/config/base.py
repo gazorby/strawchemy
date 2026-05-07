@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import cached_property
 from typing import TYPE_CHECKING, Any
 
+from strawchemy.dto import Purpose
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
 from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields
 from strawchemy.repository.strawberry import StrawchemySyncRepository
@@ -58,7 +58,7 @@ class StrawchemyConfig:
     order_by: IncludeFields | None = None
     """Enable/disable order by on list resolvers."""
     distinct_on: IncludeFields | None = None
-    """Enable/disable order by onelist resolvers."""
+    """Enable/disable order by on list resolvers."""
     pagination_default_limit: int = 100
     """Default pagination limit when `pagination=True`."""
     pagination_default_offset: int = 0
@@ -70,14 +70,18 @@ class StrawchemyConfig:
         """Initializes the SQLAlchemyGraphQLInspector after the dataclass is created."""
         self.inspector = SQLAlchemyGraphQLInspector(self.dialect, filter_overrides=self.filter_overrides)
 
-    @cached_property
+    @property
+    def field_config(self) -> DTOConfig:
+        return DTOConfig(purpose=Purpose.READ, global_include=self.include, global_exclude=self.exclude or set())
+
+    @property
     def order_config(self) -> DTOConfig:
         return DTOConfig.from_include(self.order_by)
 
-    @cached_property
+    @property
     def distinct_on_config(self) -> DTOConfig:
         return DTOConfig.from_include(self.distinct_on)
 
-    @cached_property
+    @property
     def pagination_config(self) -> DTOConfig:
         return DTOConfig.from_include(self.pagination)

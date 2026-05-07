@@ -14,8 +14,9 @@ from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields, Purpos
 from strawchemy.utils.text import snake_to_lower_camel_case
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable, Mapping
+    from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 
+    from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
     from strawchemy.utils.graph import Node
 
@@ -98,12 +99,13 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
 
     def __init__(
         self,
-        inspector: SQLAlchemyGraphQLInspector,
+        mapper: Strawchemy,
         backend: DTOBackend[EnumDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
-        super().__init__(inspector, backend or EnumDTOBackend(), handle_cycles, type_map)
+        self._mapper = mapper
+        super().__init__(mapper.config.inspector, backend or EnumDTOBackend(), handle_cycles, type_map)
 
     @override
     def dto_name(
@@ -199,3 +201,53 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
                 ],
             ),
         )
+
+    @override
+    def factory(
+        self,
+        model: type[DeclarativeBase],
+        dto_config: DTOConfig,
+        base: type[Any] | None = None,
+        name: str | None = None,
+        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[EnumDTO]] | None = None,
+        current_node: Node[Relation[Any, EnumDTO], None] | None = None,
+        if_no_fields: Literal["raise", "skip"] = "skip",
+        tags: set[str] | None = None,
+        backend_kwargs: dict[str, Any] | None = None,
+        no_cache: bool = False,
+        *,
+        description: str | None = None,
+        directives: Sequence[object] = (),
+        override: bool = False,
+        register_type: bool = True,
+        user_defined: bool = False,
+        **kwargs: Any,
+    ) -> type[EnumDTO]:
+        dto = super().factory(
+            model=model,
+            dto_config=dto_config,
+            base=base,
+            name=name,
+            parent_field_def=parent_field_def,
+            current_node=current_node,
+            if_no_fields=if_no_fields,
+            tags=tags,
+            backend_kwargs=backend_kwargs,
+            no_cache=no_cache,
+            description=description,
+            directives=directives,
+            override=override,
+            register_type=register_type,
+            user_defined=user_defined,
+            **kwargs,
+        )
+        if register_type:
+            return self._mapper.registry.register_enum(
+                dto,
+                dto_config=dto_config,
+                description=description,
+                directives=directives,
+                override=override,
+                user_defined=user_defined,
+            )
+        return dto

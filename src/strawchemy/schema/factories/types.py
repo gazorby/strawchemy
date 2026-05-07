@@ -90,7 +90,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             mapper, handle_cycles=handle_cycles, type_map=type_map
         )
         self._distinct_on_factory = distinct_on_factory or DistinctOnFieldsDTOFactory(
-            self.inspector, handle_cycles=handle_cycles, type_map=type_map
+            self._mapper, handle_cycles=handle_cycles, type_map=type_map
         )
 
     def _aggregation_field(
@@ -326,8 +326,9 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 default_pagination=default_pagination,
             )
         if register_type:
-            return self._register_type(
+            return self._mapper.registry.register_type(
                 dto,
+                graphql_type=self.graphql_type(dto_config),
                 dto_config=dto_config,
                 description=description,
                 directives=directives,
@@ -338,6 +339,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 distinct_on=distinct_on,
                 paginate=paginate,
                 current_node=current_node,
+                default_name=self.root_dto_name(model, dto_config),
             )
         return dto
 
@@ -518,12 +520,14 @@ class UpsertConflictFieldsDTOFactory(EnumDTOFactory):
 
     def __init__(
         self,
-        inspector: SQLAlchemyGraphQLInspector,
+        mapper: Strawchemy,
         backend: UpsertConflictFieldsEnumDTOBackend | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
-        super().__init__(inspector, backend or UpsertConflictFieldsEnumDTOBackend(inspector), handle_cycles, type_map)
+        super().__init__(
+            mapper, backend or UpsertConflictFieldsEnumDTOBackend(mapper.config.inspector), handle_cycles, type_map
+        )
 
     @override
     def dto_name(
@@ -590,8 +594,8 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
         self._identifier_input_dto_builder = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO[DeclarativeBase])
         self._identifier_input_dto_factory = DTOFactory(self.inspector, self.backend)
-        self._upsert_update_fields_enum_factory = EnumDTOFactory(self.inspector)
-        self._upsert_conflict_fields_enum_factory = UpsertConflictFieldsDTOFactory(self.inspector)
+        self._upsert_update_fields_enum_factory = EnumDTOFactory(self._mapper)
+        self._upsert_conflict_fields_enum_factory = UpsertConflictFieldsDTOFactory(self._mapper)
 
     def _identifier_input(
         self,
@@ -616,7 +620,9 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
                 )
                 raise EmptyDTOError(msg) from error
 
-        return self._register_type(base, dto_config, node, description="Identifier input", user_defined=False)
+        return self._mapper.registry.register_type(
+            base, graphql_type="input", dto_config=dto_config, description="Identifier input", user_defined=False
+        )
 
     def _upsert_udpate_fields(
         self,
@@ -627,10 +633,12 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         name = f"{node.root.value.model.__name__}{snake_to_camel(field.name)}UpdateFields"
         related_model = field.related_model
         assert related_model
-        update_fields = self._upsert_update_fields_enum_factory.factory(
-            related_model, dto_config.copy_with(purpose=Purpose.WRITE, include="all"), name=name
+        return self._upsert_update_fields_enum_factory.factory(
+            related_model,
+            dto_config.copy_with(purpose=Purpose.WRITE, include="all"),
+            name=name,
+            description="Update fields enum",
         )
-        return self._mapper.registry.register_enum(update_fields, name=name, description="Update fields enum")
 
     def _upsert_conflict_fields(
         self,
@@ -641,10 +649,12 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         name = f"{node.root.value.model.__name__}{snake_to_camel(field.name)}ConflictFields"
         related_model = field.related_model
         assert related_model
-        conflict_fields = self._upsert_conflict_fields_enum_factory.factory(
-            related_model, dto_config.copy_with(purpose=Purpose.WRITE, include="all"), name=name
+        return self._upsert_conflict_fields_enum_factory.factory(
+            related_model,
+            dto_config.copy_with(purpose=Purpose.WRITE, include="all"),
+            name=name,
+            description="Conflict fields enum",
         )
-        return self._mapper.registry.register_enum(conflict_fields, name=name, description="Conflict fields enum")
 
     def _description(self, mode: GraphQLPurpose) -> str:
         if mode == "create_input":

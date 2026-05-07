@@ -33,17 +33,13 @@ type FruitNumericFields {
   sweetness: Float
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input FruitOrderBy2 {
   name: OrderByEnum
   sweetness: OrderByEnum
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input FruitOrderBy4 {
   name: OrderByEnum
   sweetness: OrderByEnum

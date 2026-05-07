@@ -22,7 +22,6 @@ from strawchemy.dto.strawberry import (
 from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
 from strawchemy.schema.factories import AggregationInspector, StrawchemyUnMappedDTOFactory, UnmappedGraphQLDTOT
 from strawchemy.typing import AggregationFunction, GraphQLFilterDTOT, GraphQLPurpose, GraphQLType
-from strawchemy.utils.registry import RegistryTypeInfo
 from strawchemy.utils.text import snake_to_camel
 
 if TYPE_CHECKING:
@@ -46,6 +45,10 @@ class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLD
     @override
     def graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
         return "input"
+
+    @override
+    def type_description(self) -> str:
+        return "GraphQL Filter Input"
 
     @override
     def input(
@@ -116,10 +119,6 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
             type_hint=Optional[type_hint],
             default=UNSET,
         )
-
-    @override
-    def type_description(self) -> str:
-        return "Boolean expression to compare fields. All fields are combined with logical 'AND'."
 
     @override
     def iter_field_definitions(
@@ -216,6 +215,10 @@ class BooleanFilterDTOFactory(_FilterDTOFactory[BooleanFilterDTO]):
             **kwargs,
         )
 
+    @override
+    def type_description(self) -> str:
+        return "Boolean expression to compare fields. All fields are combined with logical 'AND'."
+
 
 class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]):
     def __init__(
@@ -296,7 +299,9 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
         dto.__dto_function_info__ = aggregation
         return self._mapper.registry.register_type(
             dto,
-            RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config)),
+            dto_config=dto_config,
+            graphql_type="input",
+            default_name=self.root_dto_name(model, dto_config),
             description=f"Boolean expression to compare {aggregation.function} aggregation.",
         )
 
@@ -365,6 +370,10 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         )
 
     @override
+    def type_description(self) -> str:
+        return "Ordering input."
+
+    @override
     def _filter_type(self, field: DTOFieldDefinition[T, ModelFieldT]) -> type[OrderByEnum]:
         return OrderByEnum
 
@@ -390,7 +399,10 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             for name, field in self.inspector.field_definitions(model, dto_config)
         }
         return self._mapper.registry.register_type(
-            dto, RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config))
+            dto,
+            dto_config=dto_config,
+            graphql_type="input",
+            default_name=self.root_dto_name(model, dto_config),
         )
 
     def _order_by_aggregation(self, model: type[DeclarativeBase], dto_config: DTOConfig) -> type[OrderByDTO]:
@@ -420,7 +432,10 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         dto = self.backend.build(f"{model.__name__}AggregateOrderBy", model, field_definitions)
         dto.__strawchemy_field_map__ = {DTOKey([model, field.name]): field for field in field_definitions}
         return self._mapper.registry.register_type(
-            dto, RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config))
+            dto,
+            dto_config=dto_config,
+            graphql_type="input",
+            default_name=self.root_dto_name(model, dto_config),
         )
 
     @override

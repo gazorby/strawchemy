@@ -98,13 +98,7 @@ def test_type_resolution_with_resolvers() -> None:
     [pytest.param("tests.unit.schemas.override.auto_type_existing", id="auto_type_existing")],
 )
 def test_multiple_types_error(path: str) -> None:
-    with pytest.raises(
-        StrawchemyError,
-        match=re.escape(
-            """Type `FruitType` cannot be auto generated because it's already declared."""
-            """ You may want to set `override=True` on the existing type to use it everywhere."""
-        ),
-    ):
+    with pytest.raises(StrawchemyError, match=re.escape("Type `FruitType` is already registered")):
         import_module(path)
 
 
@@ -229,7 +223,7 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("distinct.distinct_config_empty.Query", id="distinct_config_empty"),
         pytest.param("scope.schema_before.Query", id="scope_schema_before"),
         pytest.param("scope.schema_after.Query", id="scope_schema_after"),
-        pytest.param("scope.schema_in_the_middle.Query", id="scope_schema_in_the_middle"),
+        pytest.param("scope.schema_middle.Query", id="scope_schema_middle"),
     ],
 )
 @pytest.mark.snapshot
@@ -536,19 +530,20 @@ def test_pydantic_validation_nested() -> None:
     ]
 
 
-def test_schema_scope_override() -> None:
-    from tests.unit.schemas.scope.schema_after import Query as QueryAfter
-    from tests.unit.schemas.scope.schema_before import Query as QueryBefore
-    from tests.unit.schemas.scope.schema_in_the_middle import Query as QueryInTheMiddle
+@pytest.mark.parametrize(
+    "module_name",
+    [
+        pytest.param("schema_after", id="scope-after"),
+        pytest.param("schema_before", id="scope-before"),
+        pytest.param("schema_middle", id="scope-middle"),
+    ],
+)
+def test_schema_scope_override(module_name: str) -> None:
+    """Test schema scope is working properly no matter where the override is declared."""
+    query_class = import_module(f"tests.unit.schemas.scope.{module_name}").Query
 
-    schema_in_the_middle = strawberry.Schema(query=QueryInTheMiddle, scalar_overrides=SCALAR_OVERRIDES)
-    schema_after = strawberry.Schema(query=QueryAfter, scalar_overrides=SCALAR_OVERRIDES)
-    schema_before = strawberry.Schema(query=QueryBefore, scalar_overrides=SCALAR_OVERRIDES)
+    schema = strawberry.Schema(query=query_class, scalar_overrides=SCALAR_OVERRIDES)
+    schemas_str = textwrap.dedent(str(schema)).strip()
 
-    schemas_str = [
-        textwrap.dedent(str(schema)).strip() for schema in [schema_in_the_middle, schema_after, schema_before]
-    ]
-
-    for schema in schemas_str:
-        assert "GroupType" not in schema
-        assert "GraphQLGroup" in schema
+    assert "GroupType" not in schemas_str
+    assert "GraphQLGroup" in schemas_str

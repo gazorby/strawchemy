@@ -11,6 +11,7 @@ from strawchemy.config.base import StrawchemyConfig
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import TYPING_NS
 from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
+from strawchemy.dto.utils import read_all_config
 from strawchemy.schema.factories import (
     AggregateFilterDTOFactory,
     BooleanFilterDTOFactory,
@@ -112,7 +113,7 @@ class Strawchemy:
 
         self.aggregate_filter_factory = AggregateFilterDTOFactory(self)
         self.order_by_factory = OrderByDTOFactory(self)
-        self.distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.config.inspector)
+        self.distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self)
         self.type_factory = TypeDTOFactory(
             self,
             strawberry_backend,
@@ -121,11 +122,9 @@ class Strawchemy:
         )
         self.input_factory = InputFactory(self, strawberry_backend)
         self.aggregation_factory = RootAggregateTypeDTOFactory(self, strawberry_backend, type_factory=self.type_factory)
-        self.enum_factory = EnumDTOFactory(self.config.inspector, enum_backend)
+        self.enum_factory = EnumDTOFactory(self, enum_backend)
         self.filter_factory = BooleanFilterDTOFactory(self, aggregate_filter_factory=self.aggregate_filter_factory)
-        self.upsert_conflict_factory = UpsertConflictFieldsDTOFactory(
-            self.config.inspector, upsert_conflict_fields_enum_backend
-        )
+        self.upsert_conflict_factory = UpsertConflictFieldsDTOFactory(self, upsert_conflict_fields_enum_backend)
 
         self.filter = self.filter_factory.input
         self.aggregate_filter = partial(self.aggregate_filter_factory.input, mode="aggregate_filter")
@@ -147,7 +146,7 @@ class Strawchemy:
             distinct_on_factory=self.distinct_on_enum_factory,
         )
         # Register common types
-        self.registry.register_enum(OrderByEnum, "OrderByEnum")
+        self.registry.register_enum(OrderByEnum, dto_config=read_all_config)
 
     def _annotation_namespace(self) -> dict[str, Any]:
         """Provides the namespace for Strawberry annotations.

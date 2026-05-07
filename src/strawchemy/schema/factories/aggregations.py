@@ -221,7 +221,7 @@ class AggregationInspector:
 
     def __init__(self, mapper: Strawchemy) -> None:
         self._inspector = mapper.config.inspector
-        self._count_fields_factory = _CountFieldsDTOFactory(self._inspector)
+        self._count_fields_factory = _CountFieldsDTOFactory(mapper)
 
         # Create type-filtered factories from configuration
         self._type_filtered_factories: dict[str, _TypeFilteredFunctionArgDTOFactory] = {

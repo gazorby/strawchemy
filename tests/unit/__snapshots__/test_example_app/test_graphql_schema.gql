@@ -61,19 +61,23 @@ input CustomerAggregateBoolExpSum {
   distinct: Boolean = false
 }
 
+"""GraphQL type"""
 input CustomerAggregateMinMaxDatetimeFieldsOrderBy {
   createdAt: OrderByEnum
   updatedAt: OrderByEnum
 }
 
+"""GraphQL type"""
 input CustomerAggregateMinMaxStringFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input CustomerAggregateNumericFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input CustomerAggregateOrderBy {
   count: OrderByEnum
   maxDatetime: CustomerAggregateMinMaxDatetimeFieldsOrderBy
@@ -128,9 +132,7 @@ enum CustomerMinMaxStringFieldsEnum {
   name
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input CustomerOrderBy {
   projectsAggregate: ProjectAggregateOrderBy
   projects: ProjectOrderBy
@@ -327,19 +329,23 @@ input MilestoneAggregateBoolExpSum {
   distinct: Boolean = false
 }
 
+"""GraphQL type"""
 input MilestoneAggregateMinMaxDatetimeFieldsOrderBy {
   createdAt: OrderByEnum
   updatedAt: OrderByEnum
 }
 
+"""GraphQL type"""
 input MilestoneAggregateMinMaxStringFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input MilestoneAggregateNumericFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input MilestoneAggregateOrderBy {
   count: OrderByEnum
   maxDatetime: MilestoneAggregateMinMaxDatetimeFieldsOrderBy
@@ -396,9 +402,7 @@ enum MilestoneMinMaxStringFieldsEnum {
   name
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input MilestoneOrderBy {
   projectAggregate: ProjectAggregateOrderBy
   project: ProjectOrderBy
@@ -557,19 +561,23 @@ input ProjectAggregateBoolExpSum {
   distinct: Boolean = false
 }
 
+"""GraphQL type"""
 input ProjectAggregateMinMaxDatetimeFieldsOrderBy {
   createdAt: OrderByEnum
   updatedAt: OrderByEnum
 }
 
+"""GraphQL type"""
 input ProjectAggregateMinMaxStringFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input ProjectAggregateNumericFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input ProjectAggregateOrderBy {
   count: OrderByEnum
   maxDatetime: ProjectAggregateMinMaxDatetimeFieldsOrderBy
@@ -652,9 +660,7 @@ enum ProjectMinMaxStringFieldsEnum {
   name
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input ProjectOrder {
   ticketsAggregate: TicketAggregateOrderBy
   tickets: TicketOrder
@@ -671,9 +677,7 @@ input ProjectOrder {
   updatedAt: OrderByEnum
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input ProjectOrderBy {
   ticketsAggregate: TicketAggregateOrderBy
   tickets: TicketOrder
@@ -792,19 +796,23 @@ input TagAggregateBoolExpSum {
   distinct: Boolean = false
 }
 
+"""GraphQL type"""
 input TagAggregateMinMaxDatetimeFieldsOrderBy {
   createdAt: OrderByEnum
   updatedAt: OrderByEnum
 }
 
+"""GraphQL type"""
 input TagAggregateMinMaxStringFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input TagAggregateNumericFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input TagAggregateOrderBy {
   count: OrderByEnum
   maxDatetime: TagAggregateMinMaxDatetimeFieldsOrderBy
@@ -843,9 +851,7 @@ enum TagMinMaxStringFieldsEnum {
   name
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input TagOrderBy {
   name: OrderByEnum
   id: OrderByEnum
@@ -956,19 +962,23 @@ input TicketAggregateBoolExpSum {
   distinct: Boolean = false
 }
 
+"""GraphQL type"""
 input TicketAggregateMinMaxDatetimeFieldsOrderBy {
   createdAt: OrderByEnum
   updatedAt: OrderByEnum
 }
 
+"""GraphQL type"""
 input TicketAggregateMinMaxStringFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input TicketAggregateNumericFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input TicketAggregateOrderBy {
   count: OrderByEnum
   maxDatetime: TicketAggregateMinMaxDatetimeFieldsOrderBy
@@ -1025,9 +1035,7 @@ enum TicketMinMaxStringFieldsEnum {
   name
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input TicketOrder {
   projectAggregate: ProjectAggregateOrderBy
   project: ProjectOrderBy

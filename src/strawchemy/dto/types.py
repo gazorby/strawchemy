@@ -196,8 +196,43 @@ class DTOConfig:
         if self.exclude:
             self.include = "all"
 
+    @overload
     @classmethod
-    def from_include(cls, include: IncludeFields | None = None, purpose: Purpose = Purpose.READ) -> Self:
+    def _merge_field_iterables(cls, *iterables: FieldIterable) -> FieldIterable: ...
+
+    @overload
+    @classmethod
+    def _merge_field_iterables(cls, *iterables: IncludeFields) -> IncludeFields: ...
+
+    @classmethod
+    def _merge_field_iterables(cls, *iterables: IncludeFields | FieldIterable) -> IncludeFields | FieldIterable:
+        if any(iterable == "all" for iterable in iterables):
+            return "all"
+        return set().union(*iterables)
+
+    def union(self, other: DTOConfig) -> DTOConfig:
+        include = self._merge_field_iterables(self.include, other.include)
+        exclude = self._merge_field_iterables(self.exclude, other.exclude)
+        global_include = self._merge_field_iterables(self.global_include, other.global_include)
+        global_exclude = self._merge_field_iterables(self.global_exclude, other.global_exclude)
+        type_overrides = dict(self.type_overrides) | dict(other.type_overrides)
+        annotation_overrides = self.annotation_overrides | other.annotation_overrides
+        tags = self.tags | other.tags
+
+        return self.copy_with(
+            include=include,
+            global_include=global_include,
+            exclude=exclude,
+            global_exclude=global_exclude,
+            type_overrides=type_overrides,
+            annotation_overrides=annotation_overrides,
+            tags=tags,
+        )
+
+    @classmethod
+    def from_include(
+        cls, include: IncludeFields | Literal[False] | None = None, purpose: Purpose = Purpose.READ
+    ) -> Self:
         """Create a DTOConfig from an include specification.
 
         Factory method for creating a DTOConfig with a simplified interface, converting
@@ -217,7 +252,7 @@ class DTOConfig:
             A new DTOConfig instance with the specified include and purpose settings.
             All other configuration parameters use their defaults.
         """
-        return cls(purpose, include=set() if include is None else include)
+        return cls(purpose, include=include if include else set())
 
     def copy_with(
         self,
@@ -330,6 +365,9 @@ class DTOConfig:
         included = set(self.include) | set(self.global_include)
         excluded = set(self.exclude) | set(self.global_exclude)
         return name in included and name not in excluded
+
+    def __or__(self, other: DTOConfig) -> DTOConfig:
+        return self.union(other)
 
 
 @overload

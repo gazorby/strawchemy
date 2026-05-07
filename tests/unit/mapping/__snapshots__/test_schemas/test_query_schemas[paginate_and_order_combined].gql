@@ -7,14 +7,17 @@ type ColorAggregate {
   sum: ColorSumFields!
 }
 
+"""GraphQL type"""
 input ColorAggregateMinMaxStringFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input ColorAggregateNumericFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input ColorAggregateOrderBy {
   count: OrderByEnum
   maxString: ColorAggregateMinMaxStringFieldsOrderBy
@@ -27,9 +30,7 @@ type ColorMinMaxFields {
   name: String
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input ColorOrderBy {
   fruitsAggregate: FruitAggregateOrderBy
   fruits: FruitOrderBy
@@ -52,25 +53,19 @@ type ColorType {
   id: UUID!
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input ContainerOrderBy {
   vegetablesAggregate: VegetableAggregateOrderBy
   vegetables: VegetableOrderBy
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input ContainerOrderBy1 {
   fruitsAggregate: FruitAggregateOrderBy
   fruits: FruitOrderBy
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input ContainerOrderBy2 {
   fruitsAggregate: FruitAggregateOrderBy
   fruits: FruitOrderBy
@@ -143,14 +138,17 @@ type FruitAggregate {
   varSamp: FruitNumericFields!
 }
 
+"""GraphQL type"""
 input FruitAggregateMinMaxStringFieldsOrderBy {
   name: OrderByEnum
 }
 
+"""GraphQL type"""
 input FruitAggregateNumericFieldsOrderBy {
   sweetness: OrderByEnum
 }
 
+"""GraphQL type"""
 input FruitAggregateOrderBy {
   avg: FruitAggregateNumericFieldsOrderBy
   count: OrderByEnum
@@ -176,9 +174,7 @@ type FruitNumericFields {
   sweetness: Float
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input FruitOrderBy {
   colorAggregate: ColorAggregateOrderBy
   color: ColorOrderBy
@@ -233,6 +229,7 @@ type VegetableAggregate {
   sum: VegetableSumFields!
 }
 
+"""GraphQL type"""
 input VegetableAggregateOrderBy {
   count: OrderByEnum
 }
@@ -251,9 +248,7 @@ type VegetableMinMaxFields {
   description: String
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input VegetableOrderBy {
   family: OrderByEnum
   id: OrderByEnum
