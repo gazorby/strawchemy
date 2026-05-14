@@ -19,7 +19,7 @@ from strawchemy.dto.strawberry import (
     EnumDTO,
     MappedStrawberryGraphQLDTO,
     OrderByDTO,
-    StrawchemyDTOAttributes,
+    StrawchemyObject,
 )
 from strawchemy.dto.types import DTOConfig, IncludeFields, Purpose
 from strawchemy.exceptions import EmptyDTOError, StrawchemyFieldError
@@ -221,8 +221,8 @@ class StrawchemyField(StrawberryField):
         for inner_type in strawberry_contained_types(type_):
             if (
                 self.root_aggregations
-                and issubclass(inner_type, StrawchemyDTOAttributes)
-                and not inner_type.__strawchemy_is_root_aggregation_type__
+                and issubclass(inner_type, StrawchemyObject)
+                and not inner_type.__strawchemy_definition__.is_root_aggregation_type
             ):
                 msg = f"The `{self.name}` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."
                 raise StrawchemyFieldError(msg)
@@ -270,9 +270,9 @@ class StrawchemyField(StrawberryField):
         if (
             self._distinct_on is None
             and self._is_strawchemy_type(inner_type)
-            and inner_type.__strawchemy_distinct_on__ is not None
+            and inner_type.__strawchemy_definition__.distinct_on is not None
         ):
-            return inner_type.__strawchemy_distinct_on__
+            return inner_type.__strawchemy_definition__.distinct_on
 
         return None
 
@@ -300,9 +300,9 @@ class StrawchemyField(StrawberryField):
         if (
             self._order_by is None
             and self._is_strawchemy_type(inner_type)
-            and inner_type.__strawchemy_order_by__ is not None
+            and inner_type.__strawchemy_definition__.order_by is not None
         ):
-            return inner_type.__strawchemy_order_by__
+            return inner_type.__strawchemy_definition__.order_by
 
         return None
 
@@ -323,9 +323,9 @@ class StrawchemyField(StrawberryField):
         if (
             self._filter is None
             and self._is_strawchemy_type(inner_type)
-            and inner_type.__strawchemy_filter__ is not None
+            and inner_type.__strawchemy_definition__.filter is not None
         ):
-            return inner_type.__strawchemy_filter__
+            return inner_type.__strawchemy_definition__.filter
 
         return None
 

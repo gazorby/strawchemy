@@ -33,7 +33,7 @@ from strawchemy.dto.strawberry import (
     GraphQLFieldDefinition,
     MappedStrawberryGraphQLDTO,
     OrderByDTO,
-    StrawchemyDTOAttributes,
+    StrawchemyObject,
     UnmappedStrawberryGraphQLDTO,
 )
 from strawchemy.dto.types import DTOAuto, DTOConfig, DTOScope, Purpose, is_fields_iterable
@@ -61,13 +61,9 @@ T = TypeVar("T", bound="DeclarativeBase")
 PydanticGraphQLDTOT = TypeVar("PydanticGraphQLDTOT", bound="MappedPydanticGraphQLDTO[Any]")
 MappedGraphQLDTOT = TypeVar("MappedGraphQLDTOT", bound="MappedGraphQLDTO[Any]")
 UnmappedGraphQLDTOT = TypeVar("UnmappedGraphQLDTOT", bound="UnmappedStrawberryGraphQLDTO[Any]")
-StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyDTOAttributes")
+StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyObject")
 
 TypeScope: TypeAlias = Literal["schema"]
-
-
-def type_scope_to_dto_scope(scope: TypeScope) -> DTOScope:
-    return "global" if scope == "schema" else "dto"
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
@@ -247,15 +243,15 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 distinct_on=self._mapper.config.distinct_on if distinct_on is None else distinct_on,
                 default_pagination=default_pagination,
             )
-            dto.__strawchemy_query_hook__ = query_hook
+            dto.__strawchemy_definition__.query_hook = query_hook
             if issubclass(dto, MappedStrawberryGraphQLDTO):
                 if order_by_input is not None:
-                    dto.__strawchemy_order_by__ = order_by_input
+                    dto.__strawchemy_definition__.order_by = order_by_input
                 if distinct_on_input is not None:
-                    dto.__strawchemy_distinct_on__ = distinct_on_input
+                    dto.__strawchemy_definition__.distinct_on = distinct_on_input
                 if filter_input is not None:
-                    dto.__strawchemy_filter__ = filter_input
-            dto.__strawchemy_purpose__ = mode
+                    dto.__strawchemy_definition__.filter = filter_input
+            dto.__strawchemy_definition__.purpose = mode
             return dto
 
         return wrapper
@@ -307,6 +303,10 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
 
         return wrapper
 
+    @classmethod
+    def _type_scope_to_dto_scope(cls, scope: TypeScope) -> DTOScope:
+        return "global" if scope == "schema" else "dto"
+
     def make_input(
         self,
         model: type[T],
@@ -335,7 +335,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
             no_cache=no_cache,
             **kwargs,
         )
-        dto.__strawchemy_purpose__ = mode
+        dto.__strawchemy_definition__.purpose = mode
         return dto
 
     @cached_property
@@ -402,7 +402,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
             self._check_model_instance_attribute(base)
             dto_config = self._resolve_config(dto_config, base)
 
-        dto = super().factory(
+        dto: type[GraphQLDTOT] = super().factory(
             model,
             dto_config,
             base,
@@ -416,9 +416,9 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
             field_map=field_map,
             **kwargs,
         )
-        if not dto.__strawchemy_field_map__:
-            dto.__strawchemy_field_map__ = field_map
-        dto.__strawchemy_description__ = self.type_description()
+        if not dto.__strawchemy_definition__.field_map:
+            dto.__strawchemy_definition__.field_map = field_map
+        dto.__strawchemy_definition__.description = self.type_description()
 
         if register_type:
             return self._mapper.registry.register_type(
@@ -510,7 +510,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
             query_hook=query_hook,
             override=override,
             purpose=purpose,
-            scope=type_scope_to_dto_scope(scope) if scope else None,
+            scope=self._type_scope_to_dto_scope(scope) if scope else None,
             mode=mode,
         )
 
@@ -548,7 +548,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
             override=override,
             purpose=purpose,
             mode=mode,
-            scope=type_scope_to_dto_scope(scope) if scope else None,
+            scope=self._type_scope_to_dto_scope(scope) if scope else None,
             **kwargs,
         )
 

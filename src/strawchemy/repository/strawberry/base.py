@@ -25,7 +25,7 @@ from strawchemy.dto.strawberry import (
     QueryNode,
     QueryNodeMetadata,
     RelationFilterDTO,
-    StrawchemyDTOAttributes,
+    StrawchemyObject,
 )
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.repository.strawberry._node import StrawberryQueryNode
@@ -215,8 +215,8 @@ class StrawchemyRepository(Generic[T]):
             selection_type = selection_type.resolve_type()
         strawberry_definition = get_object_definition(selection_type, strict=True)
 
-        if selection_type.__strawchemy_query_hook__:
-            self._add_query_hooks(selection_type.__strawchemy_query_hook__, node)
+        if selection_type.__strawchemy_definition__.query_hook:
+            self._add_query_hooks(selection_type.__strawchemy_definition__.query_hook, node)
 
         for selection in selected_fields:
             if (
@@ -241,12 +241,12 @@ class StrawchemyRepository(Generic[T]):
             else:
                 msg = f"Unsupported type: {selection_type}"
                 raise StrawchemyError(msg)
-            assert issubclass(dto, StrawchemyDTOAttributes)
+            assert issubclass(dto, StrawchemyObject)
 
             key = DTOKey.from_query_node(QueryNode.root_node(dto_model)) + strawberry_field.name
 
             try:
-                field_definition = dto.__strawchemy_field_map__[key]
+                field_definition = dto.__strawchemy_definition__.field_map[key]
             except KeyError:
                 continue
 

@@ -35,7 +35,7 @@ if TYPE_CHECKING:
 
     from strawchemy.dto import DTOConfig
     from strawchemy.dto.base import Node, Relation
-    from strawchemy.dto.strawberry import EnumDTO, OrderByDTO, StrawchemyDTOAttributes
+    from strawchemy.dto.strawberry import EnumDTO, OrderByDTO, StrawchemyObject
     from strawchemy.dto.types import DTOScope, IncludeFields
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.typing import GraphQLType, StrawchemyTypeWithStrawberryObjectDefinition
@@ -44,7 +44,7 @@ __all__ = ("RegistryTypeInfo", "StrawberryRegistry")
 
 T = TypeVar("T")
 EnumT = TypeVar("EnumT", bound=Enum)
-StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyDTOAttributes")
+StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyObject")
 
 _RegistryMissing = NewType("_RegistryMissing", object)
 
@@ -316,7 +316,7 @@ class StrawberryRegistry:
 
     def _get_type_info(
         self,
-        dto: type[StrawchemyDTOAttributes | Enum],
+        dto: type[StrawchemyObject | Enum],
         graphql_type: GraphQLType,
         dto_config: DTOConfig,
         current_node: Node[Relation[Any, Any], None] | None,
@@ -421,7 +421,7 @@ class StrawberryRegistry:
             name=type_info.name,
             is_input=type_info.graphql_type == "input",
             is_interface=type_info.graphql_type == "interface",
-            description=description or dto.__strawchemy_description__,
+            description=description or dto.__strawchemy_definition__.description,
             directives=directives,
         )
         self._register(type_info, strawberry_type)

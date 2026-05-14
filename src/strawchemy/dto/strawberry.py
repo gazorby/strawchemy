@@ -27,6 +27,7 @@ adapted to different GraphQL schemas.
 from __future__ import annotations
 
 import dataclasses
+from copy import copy
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
@@ -101,15 +102,31 @@ class QueryNodeMetadata:
         return bool(self.json_path)
 
 
-class StrawchemyDTOAttributes:
-    __strawchemy_description__: ClassVar[str] = "GraphQL type"
-    __strawchemy_is_root_aggregation_type__: ClassVar[bool] = False
-    __strawchemy_field_map__: ClassVar[dict[DTOKey, GraphQLFieldDefinition]] = {}
-    __strawchemy_query_hook__: ClassVar[QueryHook[Any] | list[QueryHook[Any]] | None] = None
-    __strawchemy_filter__: ClassVar[type[Any] | None] = None
-    __strawchemy_order_by__: ClassVar[type[Any] | None] = None
-    __strawchemy_distinct_on__: ClassVar[type[Any] | None] = None
-    __strawchemy_purpose__: ClassVar[GraphQLPurpose | None] = None
+@dataclass
+class StrawchemyDefinition:
+    description: str = "GraphQL type"
+    is_root_aggregation_type: bool = False
+    field_map: dict[DTOKey, GraphQLFieldDefinition] = dataclasses.field(default_factory=dict)
+    query_hook: QueryHook[Any] | list[QueryHook[Any]] | None = None
+    filter: type[Any] | None = None
+    order_by: type[Any] | None = None
+    distinct_on: type[Any] | None = None
+    purpose: GraphQLPurpose | None = None
+
+    def __copy__(self) -> StrawchemyDefinition:
+        return dataclasses.replace(self, field_map=dict(self.field_map))
+
+
+class StrawchemyObject:
+    __strawchemy_definition__: ClassVar[StrawchemyDefinition]
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        existing = cls.__dict__.get("__strawchemy_definition__")
+        if existing is None:
+            cls.__strawchemy_definition__ = StrawchemyDefinition()
+        else:
+            cls.__strawchemy_definition__ = copy(existing)
 
 
 class _Key(Generic[T]):
@@ -428,10 +445,10 @@ class EnumDTO(DTOBase[Any], Enum):
     def field_definition(self) -> GraphQLFieldDefinition: ...
 
 
-class MappedStrawberryGraphQLDTO(StrawchemyDTOAttributes, MappedStrawberryDTO[ModelT]): ...
+class MappedStrawberryGraphQLDTO(StrawchemyObject, MappedStrawberryDTO[ModelT]): ...
 
 
-class UnmappedStrawberryGraphQLDTO(StrawchemyDTOAttributes, StrawberryDTO[ModelT]): ...
+class UnmappedStrawberryGraphQLDTO(StrawchemyObject, StrawberryDTO[ModelT]): ...
 
 
 class GraphQLFilterDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]):
@@ -458,7 +475,7 @@ class OrderByDTO(GraphQLFilterDTO):
 
         for name in self.dto_set_fields:
             value: OrderByDTO | OrderByEnum = getattr(self, name)
-            field = self.__strawchemy_field_map__[key + name]
+            field = self.__strawchemy_definition__.field_map[key + name]
             if isinstance(field, FunctionFieldDefinition) and not field.has_model_field:
                 field.model_field = node.value.model_field
             if isinstance(value, OrderByDTO):
@@ -485,7 +502,7 @@ class BooleanFilterDTO(GraphQLFilterDTO):
         )
         for name in self.dto_set_fields:
             value: EqualityComparison[Any] | BooleanFilterDTO | AggregateFilterDTO = getattr(self, name)
-            field = self.__strawchemy_field_map__[key + name]
+            field = self.__strawchemy_definition__.field_map[key + name]
             if isinstance(value, BooleanFilterDTO):
                 child, _ = node.upsert_child(field, match_on="value_equality")
                 _, sub_query = value.filters_tree(child)

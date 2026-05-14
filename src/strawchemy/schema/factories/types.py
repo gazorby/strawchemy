@@ -192,7 +192,7 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         pagination_config = DTOConfig.from_include(paginate)
         distinct_on_config = DTOConfig.from_include(distinct_on)
 
-        for field in dto.__strawchemy_field_map__.values():
+        for field in dto.__strawchemy_definition__.field_map.values():
             # Add pagination, distinct_on and ordering arguments for relations
             if field.is_relation and field.uselist:
                 related = Self if field.related_dto is dto else field.related_dto
@@ -421,7 +421,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         aggregations: bool = True,
         **kwargs: Any,
     ) -> type[MappedGraphQLDTOT]:
-        dto = super().factory(
+        dto: type[MappedGraphQLDTOT] = super().factory(
             model,
             dto_config,
             base,
@@ -435,7 +435,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
             aggregations=aggregations,
             **kwargs,
         )
-        dto.__strawchemy_is_root_aggregation_type__ = True
+        dto.__strawchemy_definition__.is_root_aggregation_type = True
         return dto
 
 

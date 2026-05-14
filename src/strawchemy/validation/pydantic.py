@@ -9,7 +9,7 @@ from typing_extensions import override
 
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
 from strawchemy.dto.base import ModelT
-from strawchemy.dto.strawberry import StrawchemyDTOAttributes
+from strawchemy.dto.strawberry import StrawchemyObject
 from strawchemy.dto.utils import read_partial
 from strawchemy.schema.factories import InputFactory
 from strawchemy.schema.mutation import LocalizedErrorType, ValidationErrorType
@@ -55,7 +55,7 @@ class PydanticValidation(ValidationProtocol[T]):
         return ValidationErrorType(errors=[self._to_localized_error(err, self.to_camel) for err in exception.errors()])
 
 
-class MappedPydanticGraphQLDTO(StrawchemyDTOAttributes, MappedPydanticDTO[ModelT]):
+class MappedPydanticGraphQLDTO(StrawchemyObject, MappedPydanticDTO[ModelT]):
     __strawchemy_filter__: ClassVar[type[Any] | None] = None
     __strawchemy_order_by__: ClassVar[type[Any] | None] = None
 

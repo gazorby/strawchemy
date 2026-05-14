@@ -20,7 +20,7 @@ if TYPE_CHECKING:
         OrderByDTO,
         OutputFunctionInfo,
         QueryNodeMetadata,
-        StrawchemyDTOAttributes,
+        StrawchemyObject,
         UnmappedStrawberryGraphQLDTO,
     )
     from strawchemy.utils.graph import Node
@@ -109,4 +109,4 @@ if TYPE_CHECKING:
     class DataclassProtocol(Protocol):
         __dataclass_fields__: ClassVar[dict[str, Any]]
 
-    class StrawchemyTypeWithStrawberryObjectDefinition(StrawchemyDTOAttributes, WithStrawberryObjectDefinition): ...
+    class StrawchemyTypeWithStrawberryObjectDefinition(StrawchemyObject, WithStrawberryObjectDefinition): ...

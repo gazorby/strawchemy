@@ -291,11 +291,11 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
             ],
         )
         key = DTOKey([model])
-        dto.__strawchemy_field_map__ = {
+        dto.__strawchemy_definition__.field_map = {
             key + name: FunctionArgFieldDefinition.from_field(field, function=aggregation)
             for name, field in self.inspector.field_definitions(model, dto_config)
         }
-        dto.__strawchemy_description__ = "Field filtering information"
+        dto.__strawchemy_definition__.description = "Field filtering information"
         dto.__dto_function_info__ = aggregation
         return self._mapper.registry.register_type(
             dto,
@@ -345,10 +345,10 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
             )
         key = DTOKey([model])
         dto = self.backend.build(name, model, field_defs, **(backend_kwargs or {}))
-        dto.__strawchemy_description__ = (
+        dto.__strawchemy_definition__.description = (
             "Boolean expression to compare field aggregations. All fields are combined with logical 'AND'."
         )
-        dto.__strawchemy_field_map__ = {key + field.name: field for field in field_defs}
+        dto.__strawchemy_definition__.field_map = {key + field.name: field for field in field_defs}
         return dto
 
 
@@ -394,7 +394,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         name = f"{model.__name__}Aggregate{snake_to_camel(aggregation.aggregation_type)}FieldsOrderBy"
         dto = self.backend.build(name, model, field_defs)
         key = DTOKey([model])
-        dto.__strawchemy_field_map__ = {
+        dto.__strawchemy_definition__.field_map = {
             key + name: FunctionArgFieldDefinition.from_field(field, function=aggregation)
             for name, field in self.inspector.field_definitions(model, dto_config)
         }
@@ -430,7 +430,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             )
 
         dto = self.backend.build(f"{model.__name__}AggregateOrderBy", model, field_definitions)
-        dto.__strawchemy_field_map__ = {DTOKey([model, field.name]): field for field in field_definitions}
+        dto.__strawchemy_definition__.field_map = {DTOKey([model, field.name]): field for field in field_definitions}
         return self._mapper.registry.register_type(
             dto,
             dto_config=dto_config,
@@ -502,5 +502,5 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             aggregate_filters=aggregate_filters,
             **kwargs,
         )
-        dto.__strawchemy_description__ = "Ordering options"
+        dto.__strawchemy_definition__.description = "Ordering options"
         return dto
