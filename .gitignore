@@ -196,7 +196,6 @@ mise.local.toml
 *.sqlite
 
 .windsurf
-
 CLAUDE.md
-
 .serena
+docs/superpowers

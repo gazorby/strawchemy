@@ -38,7 +38,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.strawberry import EnumDTO, OrderByDTO, StrawchemyObject
     from strawchemy.dto.types import DTOScope, IncludeFields
     from strawchemy.schema.pagination import DefaultOffsetPagination
-    from strawchemy.typing import GraphQLType, StrawchemyTypeWithStrawberryObjectDefinition
+    from strawchemy.typing import GraphQLType, StrawchemyObjectWithStrawberryObjectDefinition
 
 __all__ = ("RegistryTypeInfo", "StrawberryRegistry")
 
@@ -125,14 +125,14 @@ class RegistryTypeInfo:
 class StrawberryRegistry:
     def __init__(self, strawberry_config: StrawberryConfig) -> None:
         self.strawberry_config = strawberry_config
-        self._namespaces: defaultdict[GraphQLType, dict[str, type[StrawchemyTypeWithStrawberryObjectDefinition]]] = (
+        self._namespaces: defaultdict[GraphQLType, dict[str, type[StrawchemyObjectWithStrawberryObjectDefinition]]] = (
             defaultdict(dict)
         )
         self._forward_type_refs: defaultdict[GraphQLType, defaultdict[str, list[_TypeReference]]] = defaultdict(
             lambda: defaultdict(list)
         )
         self._type_refs: defaultdict[Hashable, list[_TypeReference]] = defaultdict(list)
-        self._scoped_types: dict[Hashable, type[StrawchemyTypeWithStrawberryObjectDefinition]] = {}
+        self._scoped_types: dict[Hashable, type[StrawchemyObjectWithStrawberryObjectDefinition]] = {}
         self._type_map: dict[RegistryTypeInfo, type[Any]] = {}
         self._names_map: defaultdict[GraphQLType, dict[str, RegistryTypeInfo]] = defaultdict(dict)
         self._tracked_type_names: defaultdict[GraphQLType, set[str]] = defaultdict(set)

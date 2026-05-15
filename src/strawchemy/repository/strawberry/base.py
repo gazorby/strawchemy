@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from strawberry.types.field import StrawberryField
 
     from strawchemy.transpiler import QueryHook, QueryResult
-    from strawchemy.typing import QueryNodeType, StrawchemyTypeWithStrawberryObjectDefinition
+    from strawchemy.typing import QueryNodeType, StrawchemyObjectWithStrawberryObjectDefinition
 
 __all__ = ("IS_ASYNC_REPOSITORY", "IS_SYNC_REPOSITORY", "GraphQLResult", "StrawchemyRepository")
 
@@ -206,7 +206,7 @@ class StrawchemyRepository(Generic[T]):
 
     def _build(
         self,
-        strawberry_type: type[StrawchemyTypeWithStrawberryObjectDefinition],
+        strawberry_type: type[StrawchemyObjectWithStrawberryObjectDefinition],
         selected_fields: list[Selection],
         node: QueryNodeType,
     ) -> None:

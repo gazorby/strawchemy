@@ -51,7 +51,7 @@ __all__ = (
     "QueryNodeType",
     "QueryObject",
     "StrawberryGraphQLDTO",
-    "StrawchemyTypeWithStrawberryObjectDefinition",
+    "StrawchemyObjectWithStrawberryObjectDefinition",
     "SupportedDialect",
 )
 
@@ -97,10 +97,10 @@ MappedGraphQLDTO: TypeAlias = "MappedStrawberryGraphQLDTO[T] | MappedPydanticGra
 AnyMappedDTO: TypeAlias = "MappedStrawberryGraphQLDTO[Any] | MappedPydanticGraphQLDTO[Any]"
 QueryNodeType: TypeAlias = "Node[GraphQLFieldDefinition, QueryNodeMetadata]"
 OneOrManyResult: TypeAlias = (
-    "Sequence[StrawchemyTypeWithStrawberryObjectDefinition] | StrawchemyTypeWithStrawberryObjectDefinition"
+    "Sequence[StrawchemyObjectWithStrawberryObjectDefinition] | StrawchemyObjectWithStrawberryObjectDefinition"
 )
 ListResolverResult: TypeAlias = OneOrManyResult
-GetByIdResolverResult: TypeAlias = "StrawchemyTypeWithStrawberryObjectDefinition | None"
+GetByIdResolverResult: TypeAlias = "StrawchemyObjectWithStrawberryObjectDefinition | None"
 CreateOrUpdateResolverResult: TypeAlias = "OneOrManyResult | ValidationErrorType | Sequence[ValidationErrorType]"
 
 
@@ -109,4 +109,4 @@ if TYPE_CHECKING:
     class DataclassProtocol(Protocol):
         __dataclass_fields__: ClassVar[dict[str, Any]]
 
-    class StrawchemyTypeWithStrawberryObjectDefinition(StrawchemyObject, WithStrawberryObjectDefinition): ...
+    class StrawchemyObjectWithStrawberryObjectDefinition(StrawchemyObject, WithStrawberryObjectDefinition): ...

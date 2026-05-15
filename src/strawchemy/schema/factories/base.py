@@ -243,15 +243,16 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 distinct_on=self._mapper.config.distinct_on if distinct_on is None else distinct_on,
                 default_pagination=default_pagination,
             )
-            dto.__strawchemy_definition__.query_hook = query_hook
+            strawchemy_def = dto.__strawchemy_definition__
+            strawchemy_def.query_hook = query_hook
             if issubclass(dto, MappedStrawberryGraphQLDTO):
                 if order_by_input is not None:
-                    dto.__strawchemy_definition__.order_by = order_by_input
+                    strawchemy_def.order_by = order_by_input
                 if distinct_on_input is not None:
-                    dto.__strawchemy_definition__.distinct_on = distinct_on_input
+                    strawchemy_def.distinct_on = distinct_on_input
                 if filter_input is not None:
-                    dto.__strawchemy_definition__.filter = filter_input
-            dto.__strawchemy_definition__.purpose = mode
+                    strawchemy_def.filter = filter_input
+            strawchemy_def.purpose = mode
             return dto
 
         return wrapper

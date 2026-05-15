@@ -290,11 +290,11 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
                 ),
             ],
         )
-        key = DTOKey([model])
-        dto.__strawchemy_definition__.field_map = {
-            key + name: FunctionArgFieldDefinition.from_field(field, function=aggregation)
-            for name, field in self.inspector.field_definitions(model, dto_config)
-        }
+        fields = [
+            FunctionArgFieldDefinition.from_field(field, function=aggregation)
+            for _, field in self.inspector.field_definitions(model, dto_config)
+        ]
+        dto.__strawchemy_definition__.populate_fields(model, fields)
         dto.__strawchemy_definition__.description = "Field filtering information"
         dto.__dto_function_info__ = aggregation
         return self._mapper.registry.register_type(
@@ -343,12 +343,11 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
                     _function=aggregation,
                 ),
             )
-        key = DTOKey([model])
         dto = self.backend.build(name, model, field_defs, **(backend_kwargs or {}))
         dto.__strawchemy_definition__.description = (
             "Boolean expression to compare field aggregations. All fields are combined with logical 'AND'."
         )
-        dto.__strawchemy_definition__.field_map = {key + field.name: field for field in field_defs}
+        dto.__strawchemy_definition__.populate_fields(model, field_defs)
         return dto
 
 
@@ -393,11 +392,11 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
 
         name = f"{model.__name__}Aggregate{snake_to_camel(aggregation.aggregation_type)}FieldsOrderBy"
         dto = self.backend.build(name, model, field_defs)
-        key = DTOKey([model])
-        dto.__strawchemy_definition__.field_map = {
-            key + name: FunctionArgFieldDefinition.from_field(field, function=aggregation)
-            for name, field in self.inspector.field_definitions(model, dto_config)
-        }
+        fields = [
+            FunctionArgFieldDefinition.from_field(field, function=aggregation)
+            for _, field in self.inspector.field_definitions(model, dto_config)
+        ]
+        dto.__strawchemy_definition__.populate_fields(model, fields)
         return self._mapper.registry.register_type(
             dto,
             dto_config=dto_config,
@@ -430,7 +429,7 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             )
 
         dto = self.backend.build(f"{model.__name__}AggregateOrderBy", model, field_definitions)
-        dto.__strawchemy_definition__.field_map = {DTOKey([model, field.name]): field for field in field_definitions}
+        dto.__strawchemy_definition__.populate_fields(model, field_definitions)
         return self._mapper.registry.register_type(
             dto,
             dto_config=dto_config,

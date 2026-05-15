@@ -55,7 +55,7 @@ if TYPE_CHECKING:
         FilterStatementCallable,
         GetByIdResolverResult,
         ListResolverResult,
-        StrawchemyTypeWithStrawberryObjectDefinition,
+        StrawchemyObjectWithStrawberryObjectDefinition,
     )
 
 __all__ = ("StrawchemyField",)
@@ -162,8 +162,8 @@ class StrawchemyField(StrawberryField):
         return type_
 
     @property
-    def _strawchemy_type(self) -> type[StrawchemyTypeWithStrawberryObjectDefinition]:
-        return cast("type[StrawchemyTypeWithStrawberryObjectDefinition]", self.type)
+    def _strawchemy_type(self) -> type[StrawchemyObjectWithStrawberryObjectDefinition]:
+        return cast("type[StrawchemyObjectWithStrawberryObjectDefinition]", self.type)
 
     def _get_repository(self, info: Info[Any, Any]) -> StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]:
         return self._repository_type(

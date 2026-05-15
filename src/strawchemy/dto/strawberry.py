@@ -56,7 +56,7 @@ from strawchemy.utils.graph import AnyNode, GraphMetadata, MatchOn, Node, NodeMe
 from strawchemy.utils.text import camel_to_snake
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Hashable, Sequence
+    from collections.abc import Callable, Hashable, Iterable, Sequence
 
     from strawchemy.schema.filters import EqualityComparison, GraphQLComparison
 
@@ -115,6 +115,15 @@ class StrawchemyDefinition:
 
     def __copy__(self) -> StrawchemyDefinition:
         return dataclasses.replace(self, field_map=dict(self.field_map))
+
+    def populate_fields(
+        self,
+        key_source: type[Any] | DTOKey,
+        fields: Iterable[GraphQLFieldDefinition],
+    ) -> Self:
+        key = key_source if isinstance(key_source, DTOKey) else DTOKey([key_source])
+        self.field_map = {key + f.name: f for f in fields}
+        return self
 
 
 class StrawchemyObject:
