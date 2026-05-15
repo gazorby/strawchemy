@@ -49,6 +49,11 @@ jobs:
           cache: true
           log_level: debug
 
+      - name: Setup uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+
       - name: Generate test matrix
         id: set-matrix
         shell: bash
@@ -201,6 +206,11 @@ jobs:
         with:
           cache: true
           log_level: debug
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
 
       - name: Install dependencies
         run: mise run uv:install
