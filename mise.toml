@@ -4,7 +4,6 @@ _.python.venv = { path = ".venv" }
 _.file = ".env"
 
 [tools]
-uv = "latest"
 jq = "latest"
 pre-commit = "latest"
 actionlint = "latest"
