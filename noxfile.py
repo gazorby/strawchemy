@@ -25,7 +25,6 @@ nox.options.reuse_venv = "yes"
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "unit", "ci"],
     uv_groups=["test"],
-    uv_all_extras=True,
     uv_sync_locked=False,
 )
 def unit_tests(session: Session) -> None:
@@ -39,7 +38,6 @@ def unit_tests(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "unit", "ci"],
     uv_groups=["test"],
-    uv_all_extras=False,
     uv_sync_locked=False,
 )
 def unit_tests_no_extras(session: Session) -> None:
@@ -53,7 +51,6 @@ def unit_tests_no_extras(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration"],
     uv_groups=["test"],
-    uv_all_extras=True,
     uv_sync_locked=False,
 )
 def integration_tests(session: Session) -> None:
@@ -67,7 +64,6 @@ def integration_tests(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "postgres"],
     uv_groups=["test"],
-    uv_all_extras=True,
     uv_sync_locked=False,
 )
 def integration_postgres_tests(session: Session) -> None:
@@ -81,7 +77,6 @@ def integration_postgres_tests(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "mysql"],
     uv_groups=["test"],
-    uv_all_extras=True,
     uv_sync_locked=False,
 )
 def integration_mysql_tests(session: Session) -> None:
@@ -95,7 +90,6 @@ def integration_mysql_tests(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "sqlite"],
     uv_groups=["test"],
-    uv_all_extras=True,
     uv_sync_locked=False,
 )
 def integration_sqlite_tests(session: Session) -> None:
