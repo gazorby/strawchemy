@@ -17,6 +17,7 @@ here = Path(__file__).parent
 nox.options.default_venv_backend = "uv"
 nox.options.error_on_external_run = True
 nox.options.error_on_missing_interpreters = True
+nox.options.reuse_venv = "yes"
 
 
 @session(
