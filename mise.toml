@@ -147,7 +147,10 @@ run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update
 
 [tasks."ci:install"]
 description = "Install dependencies and pre-commit hooks"
-run = "uv venv --allow-existing && uv sync --no-default-groups --only-group nox"
+run = '''
+  # Let the setup-mise action install python
+  uv venv --allow-existing && uv sync --no-python-downloads --no-default-groups --only-group nox
+'''
 
 [tasks."ci:test"]
 description = "Run tests in CI"
