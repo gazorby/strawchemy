@@ -11,7 +11,7 @@ actionlint = "latest"
 [vars]
 local_pytest_options = "-n=6 -vv"
 pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
-ci_uv_run_options = "--no-default-groups --only-group=nox"
+ci_uv_run_options = " --frozen --no-default-groups --only-group=nox"
 ci_pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --junit-xml=./junit.xml -o junit_family=legacy"
 cleanable_paths = '''{{
 [
