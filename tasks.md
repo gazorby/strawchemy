@@ -139,50 +139,44 @@ Run slotscheck
 
 - Depends: uv:install
 
-- **Usage**: `test [test]`
+- **Usage**: `test [test]…`
 - **Aliases**: `t`
 
 Run tests
 
 ### Arguments
 
-#### `[test]`
-
-**Default:** ``
+#### `[test]…`
 
 ## `test:coverage`
 
 - Depends: uv:install
 
-- **Usage**: `test:coverage [test]`
+- **Usage**: `test:coverage [test]…`
 - **Aliases**: `tc`
 
 Run tests with coverage
 
 ### Arguments
 
-#### `[test]`
-
-**Default:** ``
+#### `[test]…`
 
 ## `test:integration`
 
 - Depends: uv:install
 
-- **Usage**: `test:integration [--python [python]] <test>…`
+- **Usage**: `test:integration [--python <python>] [test]…`
 - **Aliases**: `ti`
 
 Run integration tests
 
 ### Arguments
 
-#### `<test>…`
-
-**Default:** ``
+#### `[test]…`
 
 ### Flags
 
-#### `--python [python]`
+#### `--python <python>`
 
 **Default:** `3.13`
 
@@ -190,20 +184,18 @@ Run integration tests
 
 - Depends: uv:install
 
-- **Usage**: `test:integration-all [--python [python]] [test]`
+- **Usage**: `test:integration-all [--python <python>] [test]…`
 - **Aliases**: `tia`
 
 Run integration tests on all supported python versions
 
 ### Arguments
 
-#### `[test]`
-
-**Default:** ``
+#### `[test]…`
 
 ### Flags
 
-#### `--python [python]`
+#### `--python <python>`
 
 **Default:** `3.13`
 
@@ -211,20 +203,18 @@ Run integration tests on all supported python versions
 
 - Depends: uv:install
 
-- **Usage**: `test:integration-mysql [--python [python]] <test>…`
+- **Usage**: `test:integration-mysql [--python <python>] [test]…`
 - **Aliases**: `ti-mysql`
 
 Run integration tests
 
 ### Arguments
 
-#### `<test>…`
-
-**Default:** ``
+#### `[test]…`
 
 ### Flags
 
-#### `--python [python]`
+#### `--python <python>`
 
 **Default:** `3.13`
 
@@ -232,20 +222,18 @@ Run integration tests
 
 - Depends: uv:install
 
-- **Usage**: `test:integration-postgres [--python [python]] <test>…`
+- **Usage**: `test:integration-postgres [--python <python>] [test]…`
 - **Aliases**: `ti-postgres`
 
 Run integration tests
 
 ### Arguments
 
-#### `<test>…`
-
-**Default:** ``
+#### `[test]…`
 
 ### Flags
 
-#### `--python [python]`
+#### `--python <python>`
 
 **Default:** `3.13`
 
@@ -253,20 +241,18 @@ Run integration tests
 
 - Depends: uv:install
 
-- **Usage**: `test:integration-sqlite [--python [python]] <test>…`
+- **Usage**: `test:integration-sqlite [--python <python>] [test]…`
 - **Aliases**: `ti-sqlite`
 
 Run integration tests
 
 ### Arguments
 
-#### `<test>…`
-
-**Default:** ``
+#### `[test]…`
 
 ### Flags
 
-#### `--python [python]`
+#### `--python <python>`
 
 **Default:** `3.13`
 
@@ -274,20 +260,18 @@ Run integration tests
 
 - Depends: uv:install
 
-- **Usage**: `test:integration:coverage [--python [python]] [test]`
+- **Usage**: `test:integration:coverage [--python <python>] [test]…`
 - **Aliases**: `tic`
 
 Run integration tests with coverage
 
 ### Arguments
 
-#### `[test]`
-
-**Default:** ``
+#### `[test]…`
 
 ### Flags
 
-#### `--python [python]`
+#### `--python <python>`
 
 **Default:** `3.13`
 
@@ -295,20 +279,18 @@ Run integration tests with coverage
 
 - Depends: uv:install
 
-- **Usage**: `test:unit [--python [python]] [test]`
+- **Usage**: `test:unit [--python <python>] [test]…`
 - **Aliases**: `tu`
 
 Run unit tests
 
 ### Arguments
 
-#### `[test]`
-
-**Default:** ``
+#### `[test]…`
 
 ### Flags
 
-#### `--python [python]`
+#### `--python <python>`
 
 **Default:** `3.13`
 
@@ -316,20 +298,18 @@ Run unit tests
 
 - Depends: uv:install
 
-- **Usage**: `test:unit-all [--python [python]] [test]`
+- **Usage**: `test:unit-all [--python <python>] [test]…`
 - **Aliases**: `tua`
 
 Run unit tests on all supported python versions
 
 ### Arguments
 
-#### `[test]`
-
-**Default:** ``
+#### `[test]…`
 
 ### Flags
 
-#### `--python [python]`
+#### `--python <python>`
 
 **Default:** `3.13`
 
@@ -337,20 +317,18 @@ Run unit tests on all supported python versions
 
 - Depends: uv:install
 
-- **Usage**: `test:unit:coverage [--python [python]] [test]`
+- **Usage**: `test:unit:coverage [--python <python>] [test]…`
 - **Aliases**: `tuc`
 
 Run unit tests with coverage
 
 ### Arguments
 
-#### `[test]`
-
-**Default:** ``
+#### `[test]…`
 
 ### Flags
 
-#### `--python [python]`
+#### `--python <python>`
 
 **Default:** `3.13`
 
@@ -358,20 +336,18 @@ Run unit tests with coverage
 
 - Depends: uv:install
 
-- **Usage**: `test:unit:no-extras [--python [python]] <test>…`
+- **Usage**: `test:unit:no-extras [--python <python>] [test]…`
 - **Aliases**: `tug`
 
 Run unit tests without extras dependencies
 
 ### Arguments
 
-#### `<test>…`
-
-**Default:** ``
+#### `[test]…`
 
 ### Flags
 
-#### `--python [python]`
+#### `--python <python>`
 
 **Default:** `3.13`
 
