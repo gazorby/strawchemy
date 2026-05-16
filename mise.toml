@@ -42,8 +42,7 @@ cleanable_paths = '''{{
 
 [tasks."uv:install"]
 description = "Install dependencies"
-run = "uv sync --all-extras --dev"
-
+run = "uv sync --all-extras"
 
 [tasks.install]
 description = "Install dependencies and pre-commit hooks"
@@ -212,7 +211,13 @@ run = "uv run --only-group lint vulture"
 [tasks.lint]
 description = "Lint the code"
 alias = "l"
-depends = ["vulture", "pyright", "ruff:check", "ruff:format:check", "slotscheck"]
+depends = [
+  "vulture",
+  "pyright",
+  "ruff:check",
+  "ruff:format:check",
+  "slotscheck"
+]
 
 [tasks."lint:pre-commit"]
 description = "Lint the code in pre-commit hook"
@@ -242,14 +247,14 @@ description = "Clean working directory"
 alias = "c"
 confirm = "Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files."
 run = [
-    "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
-    "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
-    "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
-    "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
+  "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
+  "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
+  "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
+  "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
 ]
 
 [tasks."render:usage"]

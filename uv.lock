@@ -3310,14 +3310,7 @@ postgres = [
     { name = "psycopg", extra = ["binary", "pool"] },
 ]
 test = [
-    { name = "aiosqlite" },
-    { name = "asyncmy" },
-    { name = "asyncpg" },
     { name = "covdefaults" },
-    { name = "cryptography" },
-    { name = "nox", extra = ["uv"] },
-    { name = "nox-uv" },
-    { name = "psycopg", extra = ["binary", "pool"] },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -3400,14 +3393,7 @@ postgres = [
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.3" },
 ]
 test = [
-    { name = "aiosqlite" },
-    { name = "asyncmy" },
-    { name = "asyncpg", specifier = ">=0.29.0" },
     { name = "covdefaults" },
-    { name = "cryptography" },
-    { name = "nox", extras = ["uv"] },
-    { name = "nox-uv" },
-    { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.3" },
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pytest-cov" },

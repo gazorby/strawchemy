@@ -66,8 +66,7 @@ def integration_tests(session: Session) -> None:
     name="integration-postgres",
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "postgres"],
-    uv_groups=["test"],
-    uv_no_groups=["dev"],
+    uv_groups=["test", "postgres"],
     uv_sync_locked=False,
 )
 def integration_postgres_tests(session: Session) -> None:
@@ -80,8 +79,7 @@ def integration_postgres_tests(session: Session) -> None:
     name="integration-mysql",
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "mysql"],
-    uv_groups=["test"],
-    uv_no_groups=["dev"],
+    uv_groups=["test", "mysql"],
     uv_sync_locked=False,
 )
 def integration_mysql_tests(session: Session) -> None:
@@ -94,8 +92,7 @@ def integration_mysql_tests(session: Session) -> None:
     name="integration-sqlite",
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "sqlite"],
-    uv_groups=["test"],
-    uv_no_groups=["dev"],
+    uv_groups=["test", "aiosqlite"],
     uv_sync_locked=False,
 )
 def integration_sqlite_tests(session: Session) -> None:
