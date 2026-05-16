@@ -153,6 +153,7 @@ run = "uv venv --allow-existing"
 description = "Run tests in CI"
 usage = 'arg "<session>"'
 depends = "ci:install"
+env = { UV_LINK_MODE = "copy" }
 run = "uv run {{vars.ci_uv_run_options}} nox -s '{{arg(name='session')}}' -- -n=2 {{vars.ci_pytest_coverage_options}}"
 
 [tasks."ci:lint"]
@@ -212,11 +213,11 @@ run = "uv run --only-group lint vulture"
 description = "Lint the code"
 alias = "l"
 depends = [
-  "vulture",
-  "pyright",
-  "ruff:check",
-  "ruff:format:check",
-  "slotscheck"
+    "vulture",
+    "pyright",
+    "ruff:check",
+    "ruff:format:check",
+    "slotscheck"
 ]
 
 [tasks."lint:pre-commit"]
@@ -247,14 +248,14 @@ description = "Clean working directory"
 alias = "c"
 confirm = "Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files."
 run = [
-  "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
-  "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
-  "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
-  "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
+    "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
+    "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
+    "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
+    "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
 ]
 
 [tasks."render:usage"]
