@@ -3,6 +3,7 @@ name: 🔂 Tests and linting
 env:
   COLUMNS: 120 # Makes the error summary table printed by pytest-pretty much easier to read
   PROJECT_NAME: "strawchemy"
+  UV_PYTHON_INSTALL_DIR: ${{ github.workspace }}/.uv-python
 
 on:
   push:
@@ -86,6 +87,7 @@ jobs:
           path: |
             ~/.nox
             .nox
+            ${{ github.workspace }}/.uv-python
           key:
             ${{ runner.os }}-nox-${{ matrix.session.session }}-${{ matrix.session.python }}-${{
             hashFiles('**/uv.lock') }}-${{ hashFiles('**/noxfile.py') }}
@@ -96,7 +98,6 @@ jobs:
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           enable-cache: true
-          cache-python: true
 
       - name: Setup mise
         uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
