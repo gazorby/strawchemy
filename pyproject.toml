@@ -60,9 +60,8 @@ dev = [
     { include-group = "aiosqlite" },
     "testapp",
     "debugpy",
-    "nox[uv]",
-    "nox-uv",
 ]
+nox = ["nox[uv]", "nox-uv"]
 codeflash = ["codeflash"]
 doc = ["git-cliff>=2.6.1"]
 lint = ["basedpyright", "ruff", "vulture", "slotscheck>=0.16.5"]
@@ -72,6 +71,7 @@ test = [
     { include-group = "postgres" },
     { include-group = "mysql" },
     { include-group = "aiosqlite" },
+    { include-group = "nox" },
     "testapp",
     "pytest",
     "pytest-cov",

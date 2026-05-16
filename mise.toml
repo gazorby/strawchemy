@@ -147,13 +147,12 @@ run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update
 
 [tasks."ci:install"]
 description = "Install dependencies and pre-commit hooks"
-run = "uv venv --allow-existing && uv pip install nox nox-uv"
+run = "uv venv --allow-existing && uv sync --no-default-groups --only-group nox"
 
 [tasks."ci:test"]
 description = "Run tests in CI"
 usage = 'arg "<session>"'
 depends = "ci:install"
-env = { UV_PYTHON_PREFERENCE = "only-managed" }
 run = "uv run nox -s '{{arg(name='session')}}' -- -n=2 {{vars.ci_pytest_coverage_options}}"
 
 [tasks."ci:lint"]

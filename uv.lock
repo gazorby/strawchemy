@@ -632,7 +632,7 @@ name = "colorlog"
 version = "6.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a2/61/f083b5ac52e505dfc1c624eafbf8c7589a0d7f32daa398d2e7590efa5fda/colorlog-6.10.1.tar.gz", hash = "sha256:eb4ae5cb65fe7fec7773c2306061a8e63e02efc2c72eba9d27b0fa23c94f1321", size = 17162, upload-time = "2025-10-16T16:14:11.978Z" }
 wheels = [
@@ -908,7 +908,8 @@ version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
-    { name = "tomli", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "tomli", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-build') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
+    { name = "tomli", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-codeflash') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/62/55/f054de99871e7beb81935dea8a10b90cd5ce42122b1c3081d5282fdb3621/dependency_groups-1.3.1.tar.gz", hash = "sha256:78078301090517fd938c19f64a53ce98c32834dfe0dee6b88004a569a6adfefd", size = 10093, upload-time = "2025-05-02T00:34:29.452Z" }
 wheels = [
@@ -2088,7 +2089,8 @@ dependencies = [
     { name = "dependency-groups" },
     { name = "humanize" },
     { name = "packaging" },
-    { name = "tomli", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "tomli", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-build') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
+    { name = "tomli", version = "2.3.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-codeflash') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
     { name = "virtualenv" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b4/a8/e169497599266d176832e2232c08557ffba97eef87bf8a18f9f918e0c6aa/nox-2025.11.12.tar.gz", hash = "sha256:3d317f9e61f49d6bde39cf2f59695bb4e1722960457eee3ae19dacfe03c07259", size = 4030561, upload-time = "2025-11-12T18:39:03.319Z" }
@@ -3299,6 +3301,10 @@ mysql = [
     { name = "asyncmy" },
     { name = "cryptography" },
 ]
+nox = [
+    { name = "nox", extra = ["uv"] },
+    { name = "nox-uv" },
+]
 postgres = [
     { name = "asyncpg" },
     { name = "psycopg", extra = ["binary", "pool"] },
@@ -3309,6 +3315,8 @@ test = [
     { name = "asyncpg" },
     { name = "covdefaults" },
     { name = "cryptography" },
+    { name = "nox", extra = ["uv"] },
+    { name = "nox-uv" },
     { name = "psycopg", extra = ["binary", "pool"] },
     { name = "pytest" },
     { name = "pytest-asyncio" },
@@ -3383,6 +3391,10 @@ mysql = [
     { name = "asyncmy" },
     { name = "cryptography" },
 ]
+nox = [
+    { name = "nox", extras = ["uv"] },
+    { name = "nox-uv" },
+]
 postgres = [
     { name = "asyncpg", specifier = ">=0.29.0" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.3" },
@@ -3393,6 +3405,8 @@ test = [
     { name = "asyncpg", specifier = ">=0.29.0" },
     { name = "covdefaults" },
     { name = "cryptography" },
+    { name = "nox", extras = ["uv"] },
+    { name = "nox-uv" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.3" },
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
@@ -3738,7 +3752,7 @@ dependencies = [
     { name = "distlib" },
     { name = "filelock" },
     { name = "platformdirs" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/20/28/e6f1a6f655d620846bd9df527390ecc26b3805a0c5989048c210e22c5ca9/virtualenv-20.35.4.tar.gz", hash = "sha256:643d3914d73d3eeb0c552cbb12d7e82adf0e504dbf86a3182f8771a153a1971c", size = 6028799, upload-time = "2025-10-29T06:57:40.511Z" }
 wheels = [
