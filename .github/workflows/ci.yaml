@@ -84,18 +84,18 @@ jobs:
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: |
-            ~/.cache
             ~/.nox
             .nox
           key:
-            ${{ runner.os }}-nox-${{ matrix.session.session }}-${{ env.pythonLocation }}-${{
+            ${{ runner.os }}-nox-${{ matrix.session.session }}-${{ matrix.session.python }}-${{
             hashFiles('**/uv.lock') }}-${{ hashFiles('**/noxfile.py') }}
           restore-keys: |
-            ${{ runner.os }}-nox-${{ matrix.session.session }}-${{ env.pythonLocation }}
+            ${{ runner.os }}-nox-${{ matrix.session.session }}-${{ matrix.session.python }}
 
       - name: Setup uv
         uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
+          python-version: ${{ matrix.session.python }}
           enable-cache: true
           cache-python: true
 
