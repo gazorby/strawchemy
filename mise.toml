@@ -153,6 +153,7 @@ run = "uv venv --allow-existing"
 description = "Run tests in CI"
 usage = 'arg "<session>"'
 depends = "ci:install"
+env = { UV_PYTHON_PREFERENCE = "only-managed" }
 run = "uv run {{vars.ci_uv_run_options}} nox -s '{{arg(name='session')}}' -- -n=2 {{vars.ci_pytest_coverage_options}}"
 
 [tasks."ci:lint"]
