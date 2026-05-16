@@ -11,6 +11,7 @@ actionlint = "latest"
 [vars]
 local_pytest_options = "-n=6 -vv"
 pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
+ci_uv_run_options = "--no-default-groups --only-group=nox"
 ci_pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --junit-xml=./junit.xml -o junit_family=legacy"
 cleanable_paths = '''{{
 [
@@ -147,16 +148,13 @@ run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update
 
 [tasks."ci:install"]
 description = "Install dependencies and pre-commit hooks"
-run = '''
-  # Let the setup-mise action install python
-  uv venv --allow-existing && uv sync --no-python-downloads --no-default-groups --only-group nox
-'''
+run = "uv venv --allow-existing"
 
 [tasks."ci:test"]
 description = "Run tests in CI"
 usage = 'arg "<session>"'
 depends = "ci:install"
-run = "uv run nox -s '{{arg(name='session')}}' -- -n=2 {{vars.ci_pytest_coverage_options}}"
+run = "uv run {{vars.ci_uv_run_options}} nox -s '{{arg(name='session')}}' -- -n=2 {{vars.ci_pytest_coverage_options}}"
 
 [tasks."ci:lint"]
 description = "Lint CI yaml files"
@@ -166,7 +164,7 @@ run = "actionlint -shellcheck ''"
 description = "Output test matrix for CI"
 depends = "ci:install"
 run = '''
-    uv run nox --json -t tests -t ci -l |
+    uv run {{vars.ci_uv_run_options}} nox --json -t tests -t ci -l |
     jq 'map(
         {
         session,
@@ -181,7 +179,7 @@ run = '''
 [tasks."ci:test-sessions"]
 description = "Output test session names for CI"
 depends = "ci:install"
-run = "uv run nox --json -t tests -l | jq 'map(.name) | unique'"
+run = "uv run {{vars.ci_uv_run_options}} nox --json -t tests -l | jq 'map(.name) | unique'"
 
 # ###############
 # Linting
