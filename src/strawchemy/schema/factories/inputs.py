@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union
 
 from strawberry import UNSET
-from typing_extensions import override
+from typing_extensions import Unpack, override
 
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.strawberry import (
@@ -25,14 +25,14 @@ from strawchemy.typing import AggregationFunction, GraphQLFilterDTOT, GraphQLPur
 from strawchemy.utils.text import snake_to_camel
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Mapping, Sequence
+    from collections.abc import Callable, Generator
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, Relation
-    from strawchemy.dto.types import FieldIterable, IncludeFields
     from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs, InputDecoratorKwargs
     from strawchemy.schema.factories.base import TypeScope
     from strawchemy.schema.filters import GraphQLFilter
     from strawchemy.utils.graph import Node
@@ -55,37 +55,13 @@ class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLD
         self,
         model: type[DeclarativeT],
         *,
-        include: IncludeFields | None = None,
-        exclude: FieldIterable | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
         name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        override: bool = False,
         purpose: Purpose = Purpose.READ,
-        scope: TypeScope | None = None,
         mode: GraphQLPurpose = "filter",
-        **kwargs: Any,
+        scope: TypeScope | None = None,
+        **kwargs: Unpack[InputDecoratorKwargs],
     ) -> Callable[[type[Any]], type[UnmappedGraphQLDTOT]]:
-        return self._input_wrapper(
-            model=model,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            type_map=type_map,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            name=name,
-            description=description,
-            directives=directives,
-            override=override,
-            purpose=purpose,
-            mode=mode,
-            **kwargs,
-        )
+        return self._input_wrapper(model=model, name=name, purpose=purpose, mode=mode, **kwargs)
 
 
 class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
@@ -170,30 +146,11 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, GraphQLFilterDTOT], None] | None = None,
-        if_no_fields: Literal["raise", "skip"] = "skip",
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
-        no_cache: bool = False,
         *,
         aggregate_filters: bool = True,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[GraphQLFilterDTOT]:
-        return super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            if_no_fields,
-            tags,
-            backend_kwargs,
-            no_cache,
-            aggregate_filters=aggregate_filters,
-            **kwargs,
-        )
+        return super().factory(model, dto_config, base, name, aggregate_filters=aggregate_filters, **kwargs)
 
 
 class BooleanFilterDTOFactory(_FilterDTOFactory[BooleanFilterDTO]):
@@ -477,29 +434,10 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, OrderByDTO], None] | None = None,
-        if_no_fields: Literal["raise", "skip"] = "skip",
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
-        no_cache: bool = False,
         *,
         aggregate_filters: bool = True,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[OrderByDTO]:
-        dto = super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            if_no_fields,
-            tags,
-            backend_kwargs,
-            no_cache,
-            aggregate_filters=aggregate_filters,
-            **kwargs,
-        )
+        dto = super().factory(model, dto_config, base, name, aggregate_filters=aggregate_filters, **kwargs)
         dto.__strawchemy_definition__.description = "Ordering options"
         return dto

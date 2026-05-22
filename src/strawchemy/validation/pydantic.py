@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import partial
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from pydantic import ValidationError
-from typing_extensions import override
+from typing_extensions import Unpack, override
 
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
 from strawchemy.dto.base import ModelT
@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, Relation
     from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields, Purpose
     from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs
     from strawchemy.typing import GraphQLPurpose
     from strawchemy.utils.graph import Node
 
@@ -104,33 +105,13 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
         dto_config: DTOConfig = read_partial,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, MappedPydanticGraphQLDTO[T]], None] | None = None,
-        if_no_fields: Literal["raise", "skip"] = "skip",
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
-        no_cache: bool = False,
-        *,
-        description: str | None = None,
-        mode: GraphQLPurpose,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[MappedPydanticGraphQLDTO[DeclarativeT]]:
-        return super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            if_no_fields,
-            tags,
-            backend_kwargs,
-            no_cache=no_cache,
-            description=description or f"{mode.capitalize()} validation type",
-            mode=mode,
-            register_type=False,
-            **kwargs,
-        )
+        mode = kwargs.get("mode")
+        assert mode is not None, "PydanticInputFactory.factory requires `mode`"
+        kwargs["register_type"] = False
+        kwargs["description"] = kwargs.get("description") or f"{mode.capitalize()} validation type"
+        return super().factory(model, dto_config, base, name, **kwargs)
 
 
 class PydanticMapper:

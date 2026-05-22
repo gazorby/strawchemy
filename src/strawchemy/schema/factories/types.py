@@ -6,7 +6,7 @@ from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types.arguments import StrawberryArgument
-from typing_extensions import Self, override
+from typing_extensions import Self, Unpack, override
 
 from strawchemy.constants import AGGREGATIONS_KEY, JSON_PATH_KEY, NODES_KEY
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
@@ -45,7 +45,7 @@ from strawchemy.utils.annotation import get_annotations, non_optional_type_hint
 from strawchemy.utils.text import snake_to_camel
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Hashable, Sequence
+    from collections.abc import Generator, Hashable
     from enum import Enum
 
     from strawberry.types.field import StrawberryField
@@ -54,6 +54,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.base import DTOBackend, DTOBase, Relation
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
     from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.utils.graph import Node
 
@@ -277,45 +278,24 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
-        if_no_fields: Literal["raise", "skip"] = "skip",
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
-        no_cache: bool = False,
-        *,
-        default_pagination: None | DefaultOffsetPagination = None,
-        order: IncludeFields | type[OrderByDTO] | None = None,
-        distinct_on: IncludeFields | None = None,
-        paginate: IncludeFields | None = None,
-        aggregations: bool = True,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        override: bool = False,
-        user_defined: bool = False,
-        register_type: bool = True,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[MappedGraphQLDTOT]:
-        dto = super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            if_no_fields,
-            tags,
-            backend_kwargs,
-            no_cache,
-            aggregations=aggregations if dto_config.purpose is Purpose.READ else False,
-            register_type=False,
-            override=override,
-            paginate=paginate if paginate == "all" else self._mapper.config.pagination,
-            order=order if order == "all" else self._mapper.config.order_by,
-            distinct_on=distinct_on if distinct_on == "all" else self._mapper.config.distinct_on,
-            default_pagination=default_pagination,
-            **kwargs,
-        )
+        aggregations = kwargs.get("aggregations", True)
+        paginate = kwargs.get("paginate")
+        order = kwargs.get("order")
+        distinct_on = kwargs.get("distinct_on")
+        default_pagination = kwargs.get("default_pagination")
+        description = kwargs.get("description")
+        directives = kwargs.get("directives", ())
+        override_ = kwargs.get("override", False)
+        user_defined = kwargs.get("user_defined", False)
+        register_type = kwargs.get("register_type", True)
+        kwargs["register_type"] = False
+        kwargs["aggregations"] = aggregations if dto_config.purpose is Purpose.READ else False
+        kwargs["paginate"] = paginate if paginate == "all" else self._mapper.config.pagination
+        kwargs["order"] = order if order == "all" else self._mapper.config.order_by
+        kwargs["distinct_on"] = distinct_on if distinct_on == "all" else self._mapper.config.distinct_on
+        dto = super().factory(model, dto_config, base, name, **kwargs)
         if self.graphql_type(dto_config) == "object":
             dto = self._add_fields_arguments(
                 dto,
@@ -332,13 +312,13 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 dto_config=dto_config,
                 description=description,
                 directives=directives,
-                override=override,
+                override=override_,
                 user_defined=user_defined,
                 default_pagination=default_pagination,
                 order=order,
                 distinct_on=distinct_on,
                 paginate=paginate,
-                current_node=current_node,
+                current_node=kwargs.get("current_node"),
                 default_name=self.root_dto_name(model, dto_config),
             )
         return dto
@@ -411,30 +391,9 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
-        if_no_fields: Literal["raise", "skip"] = "skip",
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
-        no_cache: bool = False,
-        *,
-        aggregations: bool = True,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[MappedGraphQLDTOT]:
-        dto: type[MappedGraphQLDTOT] = super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            if_no_fields,
-            tags,
-            backend_kwargs,
-            no_cache,
-            aggregations=aggregations,
-            **kwargs,
-        )
+        dto: type[MappedGraphQLDTOT] = super().factory(model, dto_config, base, name, **kwargs)
         dto.__strawchemy_definition__.is_root_aggregation_type = True
         return dto
 
@@ -774,29 +733,10 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig = read_partial,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
-        if_no_fields: Literal["raise", "skip"] = "skip",
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
-        no_cache: bool = False,
-        *,
-        description: str | None = None,
-        mode: GraphQLPurpose,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[MappedGraphQLDTOT]:
-        return super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            if_no_fields,
-            tags=tags or set() | {mode},
-            backend_kwargs=backend_kwargs,
-            description=description or self._description(mode),
-            mode=mode,
-            no_cache=no_cache,
-            **kwargs,
-        )
+        mode = kwargs.get("mode")
+        assert mode is not None, "InputFactory.factory requires `mode`"
+        kwargs["tags"] = kwargs.get("tags") or (set() | {mode})
+        kwargs["description"] = kwargs.get("description") or self._description(mode)
+        return super().factory(model, dto_config, base, name, **kwargs)

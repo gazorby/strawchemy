@@ -6,18 +6,19 @@ from types import new_class
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from typing_extensions import override
+from typing_extensions import Unpack, override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.strawberry import EnumDTO, GraphQLFieldDefinition
-from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields, Purpose
+from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.utils.text import snake_to_lower_camel_case
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
+    from collections.abc import Callable, Generator, Iterable
 
     from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
+    from strawchemy.schema.factories._kwargs import DecoratorKwargs, FactoryMethodKwargs
     from strawchemy.utils.graph import Node
 
 T = TypeVar("T")
@@ -142,48 +143,16 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
         self,
         model: type[DeclarativeBase],
         purpose: Purpose = Purpose.READ,
-        include: IncludeFields | None = None,
-        exclude: FieldIterable | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[DecoratorKwargs],
     ) -> Callable[[type[Any]], type[EnumDTO]]:
-        return super().decorator(
-            model,
-            purpose,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            type_map=type_map,
-            **kwargs,
-        )
+        return super().decorator(model, purpose, **kwargs)
 
     def input(
         self,
         model: type[DeclarativeBase],
-        include: IncludeFields | None = None,
-        exclude: FieldIterable | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[DecoratorKwargs],
     ) -> Callable[[type[Any]], type[EnumDTO]]:
-        return super().decorator(
-            model,
-            Purpose.WRITE,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            type_map=type_map,
-            **kwargs,
-        )
+        return super().decorator(model, Purpose.WRITE, **kwargs)
 
     def upsert_conflict_fields(
         self,
@@ -209,45 +178,17 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[EnumDTO]] | None = None,
-        current_node: Node[Relation[Any, EnumDTO], None] | None = None,
-        if_no_fields: Literal["raise", "skip"] = "skip",
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
-        no_cache: bool = False,
-        *,
-        description: str | None = None,
-        directives: Sequence[object] = (),
-        override: bool = False,
-        register_type: bool = True,
-        user_defined: bool = False,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[EnumDTO]:
-        dto = super().factory(
-            model=model,
-            dto_config=dto_config,
-            base=base,
-            name=name,
-            parent_field_def=parent_field_def,
-            current_node=current_node,
-            if_no_fields=if_no_fields,
-            tags=tags,
-            backend_kwargs=backend_kwargs,
-            no_cache=no_cache,
-            description=description,
-            directives=directives,
-            override=override,
-            register_type=register_type,
-            user_defined=user_defined,
-            **kwargs,
-        )
+        register_type = kwargs.get("register_type", True)
+        dto = super().factory(model=model, dto_config=dto_config, base=base, name=name, **kwargs)
         if register_type:
             return self._mapper.registry.register_enum(
                 dto,
                 dto_config=dto_config,
-                description=description,
-                directives=directives,
-                override=override,
-                user_defined=user_defined,
+                description=kwargs.get("description"),
+                directives=kwargs.get("directives") or (),
+                override=kwargs.get("override", False),
+                user_defined=kwargs.get("user_defined", False),
             )
         return dto

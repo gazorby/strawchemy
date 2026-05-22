@@ -7,7 +7,7 @@ from functools import cached_property
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Optional, TypeVar, cast
 
 from sqlalchemy.orm import DeclarativeBase
-from typing_extensions import override
+from typing_extensions import Unpack, override
 
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.strawberry import (
@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.types import DTOConfig
     from strawchemy.mapper import Strawchemy
     from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs
     from strawchemy.typing import AggregationFunction, AggregationType, FunctionInfo
     from strawchemy.utils.graph import Node
 
@@ -118,30 +119,11 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None] | None = None,
-        if_no_fields: Literal["raise", "skip"] = "skip",
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
-        no_cache: bool = False,
         *,
         function: FunctionInfo | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]]:
-        return super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            if_no_fields,
-            tags,
-            backend_kwargs,
-            no_cache,
-            function=function,
-            **kwargs,
-        )
+        return super().factory(model, dto_config, base, name, function=function, **kwargs)
 
     def enum_factory(
         self,
