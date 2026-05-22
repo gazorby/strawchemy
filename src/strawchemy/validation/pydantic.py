@@ -11,7 +11,7 @@ from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBacken
 from strawchemy.dto.base import ModelT
 from strawchemy.dto.strawberry import StrawchemyObject
 from strawchemy.dto.utils import read_partial
-from strawchemy.schema.factories import InputFactory
+from strawchemy.schema.factories import MutationInputFactory
 from strawchemy.schema.mutation import LocalizedErrorType, ValidationErrorType
 from strawchemy.utils.text import snake_to_lower_camel_case
 from strawchemy.validation.base import InputValidationError, T, ValidationProtocol
@@ -61,7 +61,7 @@ class MappedPydanticGraphQLDTO(StrawchemyObject, MappedPydanticDTO[ModelT]):
     __strawchemy_order_by__: ClassVar[type[Any] | None] = None
 
 
-class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any]]):
+class StrawchemyMutationInputValidationFactory(MutationInputFactory[MappedPydanticGraphQLDTO[Any]]):
     @override
     def _resolve_type(
         self,
@@ -131,7 +131,7 @@ class PydanticMapper:
         pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
         self._strawchemy: Strawchemy = strawchemy
         """The Strawchemy instance used for schema introspection."""
-        self._validation_factory: StrawchemyInputValidationFactory = StrawchemyInputValidationFactory(
+        self._validation_factory: StrawchemyMutationInputValidationFactory = StrawchemyMutationInputValidationFactory(
             self._strawchemy, pydantic_backend
         )
         """Factory for creating input validation Pydantic models."""

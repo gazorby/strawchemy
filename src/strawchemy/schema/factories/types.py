@@ -26,12 +26,12 @@ from strawchemy.dto.utils import read_partial, write_all_config
 from strawchemy.exceptions import EmptyDTOError
 from strawchemy.schema.factories import (
     AggregationInspector,
-    EnumDTOFactory,
-    GraphQLDTOFactory,
+    EnumFactory,
+    GraphQLFactory,
     MappedGraphQLDTOT,
-    OrderByDTOFactory,
+    OrderByFactory,
     StrawchemyMappedFactory,
-    UpsertConflictFieldsEnumDTOBackend,
+    UpsertConflictEnumBackend,
 )
 from strawchemy.schema.mutation import (
     RequiredToManyUpdateInput,
@@ -60,37 +60,37 @@ if TYPE_CHECKING:
 
 
 __all__ = (
-    "AggregateDTOFactory",
-    "DistinctOnFieldsDTOFactory",
-    "InputFactory",
-    "RootAggregateTypeDTOFactory",
-    "TypeDTOFactory",
-    "UpsertConflictFieldsDTOFactory",
+    "AggregateFieldsFactory",
+    "AggregateRootTypeFactory",
+    "DistinctOnEnumFactory",
+    "MutationInputFactory",
+    "ObjectTypeFactory",
+    "UpsertConflictEnumFactory",
 )
 
 T = TypeVar("T")
 
 
-class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
+class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
     def __init__(
         self,
         mapper: Strawchemy,
         backend: DTOBackend[MappedGraphQLDTOT],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_factory: AggregateDTOFactory[AggregateDTOT] | None = None,
-        order_by_factory: OrderByDTOFactory | None = None,
-        distinct_on_factory: DistinctOnFieldsDTOFactory | None = None,
+        aggregation_factory: AggregateFieldsFactory[AggregateDTOT] | None = None,
+        order_by_factory: OrderByFactory | None = None,
+        distinct_on_factory: DistinctOnEnumFactory | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
-        self._aggregation_factory = aggregation_factory or AggregateDTOFactory(
+        self._aggregation_factory = aggregation_factory or AggregateFieldsFactory(
             mapper, StrawberrryDTOBackend(AggregateDTO)
         )
-        self._order_by_factory = order_by_factory or OrderByDTOFactory(
+        self._order_by_factory = order_by_factory or OrderByFactory(
             mapper, handle_cycles=handle_cycles, type_map=type_map
         )
-        self._distinct_on_factory = distinct_on_factory or DistinctOnFieldsDTOFactory(
+        self._distinct_on_factory = distinct_on_factory or DistinctOnEnumFactory(
             self._mapper, handle_cycles=handle_cycles, type_map=type_map
         )
 
@@ -324,20 +324,20 @@ class TypeDTOFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         return dto
 
 
-class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
+class AggregateRootTypeFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
     def __init__(
         self,
         mapper: Strawchemy,
         backend: DTOBackend[MappedGraphQLDTOT],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        type_factory: TypeDTOFactory[MappedGraphQLDTOT] | None = None,
-        aggregation_factory: AggregateDTOFactory[AggregateDTOT] | None = None,
+        type_factory: ObjectTypeFactory[MappedGraphQLDTOT] | None = None,
+        aggregation_factory: AggregateFieldsFactory[AggregateDTOT] | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
-        self._type_factory = type_factory or TypeDTOFactory(mapper, backend)
-        self._aggregation_factory = aggregation_factory or AggregateDTOFactory(
+        self._type_factory = type_factory or ObjectTypeFactory(mapper, backend)
+        self._aggregation_factory = aggregation_factory or AggregateFieldsFactory(
             mapper, StrawberrryDTOBackend(AggregateDTO)
         )
 
@@ -398,7 +398,7 @@ class RootAggregateTypeDTOFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         return dto
 
 
-class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
+class AggregateFieldsFactory(GraphQLFactory[AggregateDTOT]):
     def __init__(
         self,
         mapper: Strawchemy,
@@ -456,7 +456,7 @@ class AggregateDTOFactory(GraphQLDTOFactory[AggregateDTOT]):
         return self.backend.build(name, model, field_definitions, **(backend_kwargs or {}))
 
 
-class DistinctOnFieldsDTOFactory(EnumDTOFactory):
+class DistinctOnEnumFactory(EnumFactory):
     @override
     def dto_name(
         self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None
@@ -474,19 +474,17 @@ class DistinctOnFieldsDTOFactory(EnumDTOFactory):
         return super()._resolve_relation_type(field, dto_config.copy_with(include="all"), node, **factory_kwargs)
 
 
-class UpsertConflictFieldsDTOFactory(EnumDTOFactory):
+class UpsertConflictEnumFactory(EnumFactory):
     inspector: SQLAlchemyGraphQLInspector
 
     def __init__(
         self,
         mapper: Strawchemy,
-        backend: UpsertConflictFieldsEnumDTOBackend | None = None,
+        backend: UpsertConflictEnumBackend | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
-        super().__init__(
-            mapper, backend or UpsertConflictFieldsEnumDTOBackend(mapper.config.inspector), handle_cycles, type_map
-        )
+        super().__init__(mapper, backend or UpsertConflictEnumBackend(mapper.config.inspector), handle_cycles, type_map)
 
     @override
     def dto_name(
@@ -541,7 +539,7 @@ class UpsertConflictFieldsDTOFactory(EnumDTOFactory):
         )
 
 
-class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
+class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
     def __init__(
         self,
         mapper: Strawchemy,
@@ -553,8 +551,8 @@ class InputFactory(TypeDTOFactory[MappedGraphQLDTOT]):
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
         self._identifier_input_dto_builder = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO[DeclarativeBase])
         self._identifier_input_dto_factory = DTOFactory(self.inspector, self.backend)
-        self._upsert_update_fields_enum_factory = EnumDTOFactory(self._mapper)
-        self._upsert_conflict_fields_enum_factory = UpsertConflictFieldsDTOFactory(self._mapper)
+        self._upsert_update_fields_enum_factory = EnumFactory(self._mapper)
+        self._upsert_conflict_fields_enum_factory = UpsertConflictEnumFactory(self._mapper)
 
     def _identifier_input(
         self,

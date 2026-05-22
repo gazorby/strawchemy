@@ -15,8 +15,8 @@ if TYPE_CHECKING:
     from strawberry.extensions.field_extension import FieldExtension
 
     from strawchemy.config.base import StrawchemyConfig
-    from strawchemy.schema.factories import DistinctOnFieldsDTOFactory
-    from strawchemy.schema.factories.inputs import BooleanFilterDTOFactory, OrderByDTOFactory
+    from strawchemy.schema.factories import DistinctOnEnumFactory
+    from strawchemy.schema.factories.inputs import BooleanFilterFactory, OrderByFactory
     from strawchemy.schema.mutation.fields import (
         StrawchemyCreateMutationField,
         StrawchemyDeleteMutationField,
@@ -37,9 +37,9 @@ class MutationFieldBuilder:
 
     config: StrawchemyConfig
     registry_namespace_getter: Callable[[], dict[str, Any]]
-    order_by_factory: OrderByDTOFactory
-    filter_factory: BooleanFilterDTOFactory
-    distinct_on_factory: DistinctOnFieldsDTOFactory
+    order_by_factory: OrderByFactory
+    filter_factory: BooleanFilterFactory
+    distinct_on_factory: DistinctOnEnumFactory
 
     def build(
         self,

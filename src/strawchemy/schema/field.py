@@ -46,8 +46,8 @@ if TYPE_CHECKING:
     from strawchemy.repository.strawberry import StrawchemyAsyncRepository, StrawchemySyncRepository
     from strawchemy.repository.strawberry.base import GraphQLResult
     from strawchemy.repository.typing import QueryHookCallable
-    from strawchemy.schema.factories import DistinctOnFieldsDTOFactory
-    from strawchemy.schema.factories.inputs import BooleanFilterDTOFactory, OrderByDTOFactory
+    from strawchemy.schema.factories import DistinctOnEnumFactory
+    from strawchemy.schema.factories.inputs import BooleanFilterFactory, OrderByFactory
     from strawchemy.typing import (
         AnyRepository,
         AnyRepositoryType,
@@ -81,9 +81,9 @@ class StrawchemyField(StrawberryField):
     def __init__(
         self,
         config: StrawchemyConfig,
-        order_by_factory: OrderByDTOFactory,
-        filter_factory: BooleanFilterDTOFactory,
-        distinct_on_factory: DistinctOnFieldsDTOFactory,
+        order_by_factory: OrderByFactory,
+        filter_factory: BooleanFilterFactory,
+        distinct_on_factory: DistinctOnEnumFactory,
         filter_type: type[BooleanFilterDTO] | bool | None = None,
         order_by: IncludeFields | type[OrderByDTO] | Literal[False] | None = None,
         distinct_on: IncludeFields | type[EnumDTO] | Literal[False] | None = None,

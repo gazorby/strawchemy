@@ -20,7 +20,7 @@ from strawchemy.dto.strawberry import (
     OrderByEnum,
 )
 from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
-from strawchemy.schema.factories import AggregationInspector, StrawchemyUnMappedDTOFactory, UnmappedGraphQLDTOT
+from strawchemy.schema.factories import AggregationInspector, StrawchemyUnMappedFactory, UnmappedGraphQLDTOT
 from strawchemy.typing import AggregationFunction, GraphQLFilterDTOT, GraphQLPurpose, GraphQLType
 from strawchemy.utils.text import snake_to_camel
 
@@ -40,7 +40,7 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
-class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLDTOT]):
+class _BaseFilterFactory(StrawchemyUnMappedFactory[UnmappedGraphQLDTOT]):
     @classmethod
     @override
     def graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
@@ -64,18 +64,18 @@ class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLD
         return self._input_wrapper(model=model, name=name, purpose=purpose, mode=mode, **kwargs)
 
 
-class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
+class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
     def __init__(
         self,
         mapper: Strawchemy,
         backend: DTOBackend[GraphQLFilterDTOT],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_filter_factory: AggregateFilterDTOFactory | None = None,
+        aggregation_filter_factory: AggregateFilterFactory | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
-        self._aggregation_filter_factory = aggregation_filter_factory or AggregateFilterDTOFactory(mapper)
+        self._aggregation_filter_factory = aggregation_filter_factory or AggregateFilterFactory(mapper)
 
     def _filter_type(self, field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]) -> type[GraphQLFilter]:
         return self.inspector.get_field_comparison(field)
@@ -153,14 +153,14 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         return super().factory(model, dto_config, base, name, aggregate_filters=aggregate_filters, **kwargs)
 
 
-class BooleanFilterDTOFactory(_FilterDTOFactory[BooleanFilterDTO]):
+class BooleanFilterFactory(_FilterFactory[BooleanFilterDTO]):
     def __init__(
         self,
         mapper: Strawchemy,
         backend: DTOBackend[BooleanFilterDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregate_filter_factory: AggregateFilterDTOFactory | None = None,
+        aggregate_filter_factory: AggregateFilterFactory | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(
@@ -177,7 +177,7 @@ class BooleanFilterDTOFactory(_FilterDTOFactory[BooleanFilterDTO]):
         return "Boolean expression to compare fields. All fields are combined with logical 'AND'."
 
 
-class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]):
+class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
     def __init__(
         self,
         mapper: Strawchemy,
@@ -308,14 +308,14 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
         return dto
 
 
-class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
+class OrderByFactory(_FilterFactory[OrderByDTO]):
     def __init__(
         self,
         mapper: Strawchemy,
         backend: DTOBackend[OrderByDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_filter_factory: AggregateFilterDTOFactory | None = None,
+        aggregation_filter_factory: AggregateFilterFactory | None = None,
     ) -> None:
         super().__init__(
             mapper,

@@ -20,8 +20,8 @@ from strawchemy.dto.strawberry import (
     UnmappedStrawberryGraphQLDTO,
 )
 from strawchemy.exceptions import DTOError
-from strawchemy.schema.factories.base import GraphQLDTOFactory
-from strawchemy.schema.factories.enum import EnumDTOBackend, EnumDTOFactory
+from strawchemy.schema.factories.base import GraphQLFactory
+from strawchemy.schema.factories.enum import EnumBackend, EnumFactory
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -52,7 +52,7 @@ class _TypeFilterConfig:
     types: frozenset[type[Any]] = field(default_factory=frozenset)
 
 
-class _CountFieldsDTOFactory(EnumDTOFactory):
+class _CountFieldsFactory(EnumFactory):
     @override
     def dto_name(
         self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None
@@ -60,7 +60,7 @@ class _CountFieldsDTOFactory(EnumDTOFactory):
         return f"{base_name}CountFields"
 
 
-class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[DeclarativeBase]]):
+class _FunctionArgFactory(GraphQLFactory[UnmappedStrawberryGraphQLDTO[DeclarativeBase]]):
     types: ClassVar[set[type[Any]]] = set()
 
     def __init__(
@@ -73,7 +73,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         super().__init__(
             mapper, backend or StrawberrryDTOBackend(UnmappedStrawberryGraphQLDTO), handle_cycles, type_map
         )
-        self._enum_backend = EnumDTOBackend()
+        self._enum_backend = EnumBackend()
 
     @override
     def should_exclude_field(
@@ -148,7 +148,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         return self._enum_backend.build(name, model, list(field_defs), base)
 
 
-class _TypeFilteredFunctionArgDTOFactory(_FunctionArgDTOFactory):
+class _TypeFilteredFunctionArgFactory(_FunctionArgFactory):
     """Generic factory for type-filtered aggregation field DTOs.
 
     This factory replaces multiple nearly-identical factory classes by using
@@ -174,7 +174,7 @@ class _TypeFilteredFunctionArgDTOFactory(_FunctionArgDTOFactory):
         has_override: bool = False,
     ) -> bool:
         return (
-            super(_FunctionArgDTOFactory, self).should_exclude_field(field, dto_config, node, has_override)
+            super(_FunctionArgFactory, self).should_exclude_field(field, dto_config, node, has_override)
             or field.is_relation
             or self.inspector.model_field_type(field) not in self._filter_types
         )
@@ -203,11 +203,11 @@ class AggregationInspector:
 
     def __init__(self, mapper: Strawchemy) -> None:
         self._inspector = mapper.config.inspector
-        self._count_fields_factory = _CountFieldsDTOFactory(mapper)
+        self._count_fields_factory = _CountFieldsFactory(mapper)
 
         # Create type-filtered factories from configuration
-        self._type_filtered_factories: dict[str, _TypeFilteredFunctionArgDTOFactory] = {
-            key: _TypeFilteredFunctionArgDTOFactory(mapper, config)
+        self._type_filtered_factories: dict[str, _TypeFilteredFunctionArgFactory] = {
+            key: _TypeFilteredFunctionArgFactory(mapper, config)
             for key, config in self._aggregation_type_filters.items()
         }
 

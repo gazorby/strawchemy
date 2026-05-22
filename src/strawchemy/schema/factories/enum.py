@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 T = TypeVar("T")
 
 
-class EnumDTOBackend(DTOBackend[EnumDTO]):
+class EnumBackend(DTOBackend[EnumDTO]):
     def __init__(self, to_camel: bool = True) -> None:
         self.dto_base = EnumDTO
         self.to_camel = to_camel
@@ -68,7 +68,7 @@ class EnumDTOBackend(DTOBackend[EnumDTO]):
         return enum
 
 
-class UpsertConflictFieldsEnumDTOBackend(EnumDTOBackend):
+class UpsertConflictEnumBackend(EnumBackend):
     def __init__(self, inspector: SQLAlchemyGraphQLInspector, to_camel: bool = True) -> None:
         self.dto_base = EnumDTO
         self.to_camel = to_camel
@@ -95,7 +95,7 @@ class UpsertConflictFieldsEnumDTOBackend(EnumDTOBackend):
         )
 
 
-class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO]):
+class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO]):
     inspector: SQLAlchemyGraphQLInspector
 
     def __init__(
@@ -106,7 +106,7 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
         type_map: dict[Any, Any] | None = None,
     ) -> None:
         self._mapper = mapper
-        super().__init__(mapper.config.inspector, backend or EnumDTOBackend(), handle_cycles, type_map)
+        super().__init__(mapper.config.inspector, backend or EnumBackend(), handle_cycles, type_map)
 
     @override
     def dto_name(

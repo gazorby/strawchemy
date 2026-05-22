@@ -13,17 +13,17 @@ from strawchemy.dto.base import TYPING_NS
 from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
 from strawchemy.dto.utils import read_all_config
 from strawchemy.schema.factories import (
-    AggregateFilterDTOFactory,
-    BooleanFilterDTOFactory,
-    DistinctOnFieldsDTOFactory,
-    EnumDTOBackend,
-    EnumDTOFactory,
-    InputFactory,
-    OrderByDTOFactory,
-    RootAggregateTypeDTOFactory,
-    TypeDTOFactory,
-    UpsertConflictFieldsDTOFactory,
-    UpsertConflictFieldsEnumDTOBackend,
+    AggregateFilterFactory,
+    AggregateRootTypeFactory,
+    BooleanFilterFactory,
+    DistinctOnEnumFactory,
+    EnumBackend,
+    EnumFactory,
+    MutationInputFactory,
+    ObjectTypeFactory,
+    OrderByFactory,
+    UpsertConflictEnumBackend,
+    UpsertConflictEnumFactory,
 )
 from strawchemy.schema.field import StrawchemyField
 from strawchemy.schema.mutation import types as mutation_types
@@ -106,25 +106,25 @@ class Strawchemy:
         self.registry = StrawberryRegistry(strawberry_config or StrawberryConfig())
 
         strawberry_backend = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO)
-        enum_backend = EnumDTOBackend(self.config.auto_snake_case)
-        upsert_conflict_fields_enum_backend = UpsertConflictFieldsEnumDTOBackend(
+        enum_backend = EnumBackend(self.config.auto_snake_case)
+        upsert_conflict_fields_enum_backend = UpsertConflictEnumBackend(
             self.config.inspector, self.config.auto_snake_case
         )
 
-        self.aggregate_filter_factory = AggregateFilterDTOFactory(self)
-        self.order_by_factory = OrderByDTOFactory(self)
-        self.distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self)
-        self.type_factory = TypeDTOFactory(
+        self.aggregate_filter_factory = AggregateFilterFactory(self)
+        self.order_by_factory = OrderByFactory(self)
+        self.distinct_on_enum_factory = DistinctOnEnumFactory(self)
+        self.type_factory = ObjectTypeFactory(
             self,
             strawberry_backend,
             order_by_factory=self.order_by_factory,
             distinct_on_factory=self.distinct_on_enum_factory,
         )
-        self.input_factory = InputFactory(self, strawberry_backend)
-        self.aggregation_factory = RootAggregateTypeDTOFactory(self, strawberry_backend, type_factory=self.type_factory)
-        self.enum_factory = EnumDTOFactory(self, enum_backend)
-        self.filter_factory = BooleanFilterDTOFactory(self, aggregate_filter_factory=self.aggregate_filter_factory)
-        self.upsert_conflict_factory = UpsertConflictFieldsDTOFactory(self, upsert_conflict_fields_enum_backend)
+        self.input_factory = MutationInputFactory(self, strawberry_backend)
+        self.aggregation_factory = AggregateRootTypeFactory(self, strawberry_backend, type_factory=self.type_factory)
+        self.enum_factory = EnumFactory(self, enum_backend)
+        self.filter_factory = BooleanFilterFactory(self, aggregate_filter_factory=self.aggregate_filter_factory)
+        self.upsert_conflict_factory = UpsertConflictEnumFactory(self, upsert_conflict_fields_enum_backend)
 
         self.filter = self.filter_factory.input
         self.aggregate_filter = partial(self.aggregate_filter_factory.input, mode="aggregate_filter")

@@ -60,7 +60,7 @@ if TYPE_CHECKING:
     from strawchemy.utils.graph import Node
     from strawchemy.validation.pydantic import MappedPydanticGraphQLDTO
 
-__all__ = ("GraphQLDTOFactory", "StrawchemyMappedFactory", "StrawchemyUnMappedDTOFactory")
+__all__ = ("GraphQLFactory", "StrawchemyMappedFactory", "StrawchemyUnMappedFactory")
 
 T = TypeVar("T", bound="DeclarativeBase")
 PydanticGraphQLDTOT = TypeVar("PydanticGraphQLDTOT", bound="MappedPydanticGraphQLDTO[Any]")
@@ -77,7 +77,7 @@ class ChildOptions:
     order_by: bool = False
 
 
-class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQLDTOT]):
+class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQLDTOT]):
     inspector: SQLAlchemyGraphQLInspector
 
     def __init__(
@@ -421,7 +421,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         return dto
 
 
-class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
+class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
     def _root_input_config(self, model: type[Any], dto_config: DTOConfig, mode: GraphQLPurpose) -> DTOConfig:
         annotations_overrides: dict[str, Any] = {}
         partial = dto_config.partial
@@ -508,7 +508,7 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         return super().factory(model, dto_config, base, name, mode=mode, **kwargs)
 
 
-class StrawchemyUnMappedDTOFactory(GraphQLDTOFactory[UnmappedGraphQLDTOT]):
+class StrawchemyUnMappedFactory(GraphQLFactory[UnmappedGraphQLDTOT]):
     @dataclass_transform(order_default=True, kw_only_default=True)
     def input(
         self,
