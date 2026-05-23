@@ -19,7 +19,7 @@ from strawchemy.dto.types import (
     DTOConfig,
     DTOFieldConfig,
     DTOScope,
-    ExcludeFields,
+    FieldIterable,
     IncludeFields,
     Purpose,
     PurposeConfig,
@@ -45,7 +45,9 @@ __all__ = (
 def config(
     purpose: Purpose,
     include: IncludeFields | None = None,
-    exclude: ExcludeFields | None = None,
+    exclude: FieldIterable | None = None,
+    global_include: IncludeFields | None = None,
+    global_exclude: FieldIterable | None = None,
     partial: bool | None = None,
     type_map: Mapping[Any, Any] | None = None,
     aliases: Mapping[str, str] | None = None,
@@ -58,6 +60,10 @@ def config(
         config.exclude = exclude
     if include:
         config.include = include
+    if global_include:
+        config.global_include = global_include
+    if global_exclude:
+        config.global_exclude = global_exclude
     if type_map:
         config.type_overrides = type_map
     if aliases:

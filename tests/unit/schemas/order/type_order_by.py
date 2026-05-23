@@ -12,7 +12,7 @@ strawchemy = Strawchemy("postgresql")
 class SQLDataTypesOrderBy: ...
 
 
-@strawchemy.type(SQLDataTypes, include="all", order_by=SQLDataTypesOrderBy)
+@strawchemy.type(SQLDataTypes, include="all", order=SQLDataTypesOrderBy)
 class SQLDataTypesType: ...
 
 

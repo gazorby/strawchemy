@@ -2094,14 +2094,14 @@ uv = [
 
 [[package]]
 name = "nox-uv"
-version = "0.6.3"
+version = "0.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nox" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/70/af/ebc522c51facc3b7d26df1c5bc0b72baadb33ce4d539cf66758f22008f6c/nox_uv-0.6.3.tar.gz", hash = "sha256:7940dc4fed7326d00c9687d6dac65d625db21064dd02631af64cfdfa738e817b", size = 4992, upload-time = "2025-10-23T01:32:53.774Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/04/e8/670919c513c22f4bf1656d84dd99a9ad1a5eaaeadf2457bab3efeeac14e0/nox_uv-0.7.1.tar.gz", hash = "sha256:f075d610b4648732fd17cbc9fa48be7d2c23df7b188fed3e4e6dde7bd1f14f20", size = 5124, upload-time = "2026-02-05T03:55:34.807Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/98/cc/32317fd187febd9b2c5dc6cad4d25b358bd3c289958a00b78d94dbddf481/nox_uv-0.6.3-py3-none-any.whl", hash = "sha256:650cc4dafcde281a77d0526ac9ff9c92de5cd7759ecc9fdbf98393e4ab24490f", size = 5315, upload-time = "2025-10-23T01:32:52.977Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/0a/a6798a215366c9b034e92a9992d9013da5f544a488216fc54204ccf3c134/nox_uv-0.7.1-py3-none-any.whl", hash = "sha256:91361cc282a0a764de1b94ad002b67d5b43de4adc3f56e16d1b79928c8ec0433", size = 5457, upload-time = "2026-02-05T03:55:35.994Z" },
 ]
 
 [[package]]
@@ -3302,19 +3302,16 @@ mysql = [
     { name = "asyncmy" },
     { name = "cryptography" },
 ]
+nox = [
+    { name = "nox", extra = ["uv"] },
+    { name = "nox-uv" },
+]
 postgres = [
     { name = "asyncpg" },
     { name = "psycopg", extra = ["binary", "pool"] },
 ]
 test = [
-    { name = "aiosqlite" },
-    { name = "asyncmy" },
-    { name = "asyncpg" },
     { name = "covdefaults" },
-    { name = "cryptography" },
-    { name = "nox", extra = ["uv"] },
-    { name = "nox-uv" },
-    { name = "psycopg", extra = ["binary", "pool"] },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
@@ -3388,19 +3385,16 @@ mysql = [
     { name = "asyncmy" },
     { name = "cryptography" },
 ]
+nox = [
+    { name = "nox", extras = ["uv"] },
+    { name = "nox-uv" },
+]
 postgres = [
     { name = "asyncpg", specifier = ">=0.29.0" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.3" },
 ]
 test = [
-    { name = "aiosqlite" },
-    { name = "asyncmy" },
-    { name = "asyncpg", specifier = ">=0.29.0" },
     { name = "covdefaults" },
-    { name = "cryptography" },
-    { name = "nox", extras = ["uv"] },
-    { name = "nox-uv" },
-    { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.3" },
     { name = "pytest" },
     { name = "pytest-asyncio", specifier = ">=0.24" },
     { name = "pytest-cov" },

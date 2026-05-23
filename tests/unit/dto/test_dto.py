@@ -5,10 +5,13 @@ from typing import Optional
 from uuid import UUID, uuid4
 
 import pytest
+from sqlalchemy import Integer
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from typing_extensions import Self
 
 from strawchemy.dto import DTOConfig, Purpose, PurposeConfig, config, field
 from strawchemy.dto.constants import DTO_INFO_KEY
+from strawchemy.dto.strawberry import DTOKey, GraphQLFieldDefinition, StrawchemyDefinition
 from strawchemy.dto.utils import DTOFieldConfig, read_all_config, write_all_config
 from tests.typing import AnyFactory, MappedPydanticFactory
 from tests.unit.dc_models import (
@@ -21,6 +24,15 @@ from tests.unit.dc_models import (
 )
 from tests.unit.models import Admin, Book, Color, Fruit, SponsoredUser, Tag, Tomato, UserWithGreeting
 from tests.utils import DTOInspect, factory_iterator
+
+
+class _PopulateFieldsBase(DeclarativeBase):
+    pass
+
+
+class _PopulateFieldsModel(_PopulateFieldsBase):
+    __tablename__ = "populate_fields_model"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
 
 def test_config_function_produces_same_default() -> None:
@@ -266,3 +278,93 @@ def test_forward_refs_resolved(name: str, sqlalchemy_pydantic_factory: MappedPyd
             ],
         }
     )
+
+
+# Tests for DTOConfig.from_include() and is_field_included()
+
+
+def test_from_include_with_none() -> None:
+    """Test that from_include(None) creates a config with empty include set."""
+    config = DTOConfig.from_include(None)
+    assert config.include == set()
+    assert config.purpose == Purpose.READ
+
+
+def test_from_include_with_all() -> None:
+    """Test that from_include('all') creates a config with include='all'."""
+    config = DTOConfig.from_include("all")
+    assert config.include == "all"
+    assert config.purpose == Purpose.READ
+
+
+def test_from_include_with_list() -> None:
+    """Test that from_include() accepts a list and converts it to the include parameter."""
+    config = DTOConfig.from_include(["field1", "field2"])
+    assert config.include == ["field1", "field2"]
+    assert config.purpose == Purpose.READ
+
+
+def test_from_include_with_set() -> None:
+    """Test that from_include() accepts a set for the include parameter."""
+    config = DTOConfig.from_include({"field1", "field2"})
+    assert config.include == {"field1", "field2"}
+    assert config.purpose == Purpose.READ
+
+
+def test_from_include_with_custom_purpose() -> None:
+    """Test that from_include() accepts a custom purpose."""
+    config = DTOConfig.from_include(["field1"], purpose=Purpose.WRITE)
+    assert config.include == ["field1"]
+    assert config.purpose == Purpose.WRITE
+
+
+def test_is_field_included_with_all() -> None:
+    """Test that is_field_included() returns True for any field when include='all'."""
+    config = DTOConfig.from_include("all")
+    assert config.is_field_included("any_field") is True
+    assert config.is_field_included("another_field") is True
+
+
+def test_is_field_included_with_specific_list() -> None:
+    """Test that is_field_included() returns True only for listed fields."""
+    config = DTOConfig.from_include(["field1", "field2"])
+    assert config.is_field_included("field1") is True
+    assert config.is_field_included("field2") is True
+    assert config.is_field_included("field3") is False
+
+
+def test_is_field_included_with_empty_include() -> None:
+    """Test that is_field_included() returns False for all fields when include is empty."""
+    config = DTOConfig.from_include(None)
+    assert config.is_field_included("field1") is False
+    assert config.is_field_included("any_field") is False
+
+
+def test_is_field_included_with_exclude() -> None:
+    """Test that excluded fields are properly excluded even when include='all'."""
+    config = DTOConfig(Purpose.READ, include="all", exclude={"field2", "field3"})
+    assert config.is_field_included("field1") is True
+    assert config.is_field_included("field2") is False
+    assert config.is_field_included("field3") is False
+    assert config.is_field_included("field4") is True
+
+
+@pytest.mark.parametrize(
+    "key_source",
+    [_PopulateFieldsModel, DTOKey([_PopulateFieldsModel])],
+    ids=["model-type", "dto-key"],
+)
+def test_strawchemy_definition_populate_fields(key_source: type[DeclarativeBase] | DTOKey) -> None:
+    field_def = GraphQLFieldDefinition(
+        config=DTOFieldConfig(),
+        dto_config=DTOConfig(Purpose.READ),
+        model=_PopulateFieldsModel,
+        model_field_name="id",
+        type_hint=int,
+    )
+
+    definition = StrawchemyDefinition()
+    result = definition.populate_fields(key_source, [field_def])
+
+    assert result is definition
+    assert definition.field_map == {DTOKey([_PopulateFieldsModel]) + "id": field_def}

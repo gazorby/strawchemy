@@ -5,13 +5,13 @@ from functools import partial
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from pydantic import ValidationError
-from typing_extensions import override
+from typing_extensions import Unpack, override
 
 from strawchemy.dto.backend.pydantic import MappedPydanticDTO, PydanticDTOBackend
 from strawchemy.dto.base import ModelT
-from strawchemy.dto.strawberry import StrawchemyDTOAttributes
+from strawchemy.dto.strawberry import StrawchemyObject
 from strawchemy.dto.utils import read_partial
-from strawchemy.schema.factories import InputFactory
+from strawchemy.schema.factories import MutationInputFactory
 from strawchemy.schema.mutation import LocalizedErrorType, ValidationErrorType
 from strawchemy.utils.text import snake_to_lower_camel_case
 from strawchemy.validation.base import InputValidationError, T, ValidationProtocol
@@ -24,8 +24,9 @@ if TYPE_CHECKING:
 
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, Relation
-    from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
+    from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields, Purpose
     from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs
     from strawchemy.typing import GraphQLPurpose
     from strawchemy.utils.graph import Node
 
@@ -55,12 +56,12 @@ class PydanticValidation(ValidationProtocol[T]):
         return ValidationErrorType(errors=[self._to_localized_error(err, self.to_camel) for err in exception.errors()])
 
 
-class MappedPydanticGraphQLDTO(StrawchemyDTOAttributes, MappedPydanticDTO[ModelT]):
+class MappedPydanticGraphQLDTO(StrawchemyObject, MappedPydanticDTO[ModelT]):
     __strawchemy_filter__: ClassVar[type[Any] | None] = None
     __strawchemy_order_by__: ClassVar[type[Any] | None] = None
 
 
-class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any]]):
+class StrawchemyMutationInputValidationFactory(MutationInputFactory[MappedPydanticGraphQLDTO[Any]]):
     @override
     def _resolve_type(
         self,
@@ -84,7 +85,7 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
             *,
             mode: GraphQLPurpose,
             include: IncludeFields | None = None,
-            exclude: ExcludeFields | None = None,
+            exclude: FieldIterable | None = None,
             partial: bool | None = None,
             type_map: Mapping[Any, Any] | None = None,
             aliases: Mapping[str, str] | None = None,
@@ -104,31 +105,13 @@ class StrawchemyInputValidationFactory(InputFactory[MappedPydanticGraphQLDTO[Any
         dto_config: DTOConfig = read_partial,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, MappedPydanticGraphQLDTO[T]], None] | None = None,
-        raise_if_no_fields: bool = False,
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
-        *,
-        description: str | None = None,
-        mode: GraphQLPurpose,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[MappedPydanticGraphQLDTO[DeclarativeT]]:
-        return super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            raise_if_no_fields,
-            tags,
-            backend_kwargs=backend_kwargs,
-            description=description or f"{mode.capitalize()} validation type",
-            mode=mode,
-            register_type=False,
-            **kwargs,
-        )
+        mode = kwargs.get("mode")
+        assert mode is not None, "PydanticInputFactory.factory requires `mode`"
+        kwargs["register_type"] = False
+        kwargs["description"] = kwargs.get("description") or f"{mode.capitalize()} validation type"
+        return super().factory(model, dto_config, base, name, **kwargs)
 
 
 class PydanticMapper:
@@ -148,7 +131,7 @@ class PydanticMapper:
         pydantic_backend = PydanticDTOBackend(MappedPydanticGraphQLDTO)
         self._strawchemy: Strawchemy = strawchemy
         """The Strawchemy instance used for schema introspection."""
-        self._validation_factory: StrawchemyInputValidationFactory = StrawchemyInputValidationFactory(
+        self._validation_factory: StrawchemyMutationInputValidationFactory = StrawchemyMutationInputValidationFactory(
             self._strawchemy, pydantic_backend
         )
         """Factory for creating input validation Pydantic models."""

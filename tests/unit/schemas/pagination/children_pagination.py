@@ -8,7 +8,7 @@ from tests.unit.models import Fruit
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.type(Fruit, include="all", child_pagination=True)
+@strawchemy.type(Fruit, include="all", paginate="all")
 class FruitType:
     pass
 

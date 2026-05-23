@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union
 
 from strawberry import UNSET
-from typing_extensions import override
+from typing_extensions import Unpack, override
 
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.strawberry import (
@@ -20,81 +20,62 @@ from strawchemy.dto.strawberry import (
     OrderByEnum,
 )
 from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
-from strawchemy.schema.factories import AggregationInspector, StrawchemyUnMappedDTOFactory, UnmappedGraphQLDTOT
+from strawchemy.schema.factories import AggregationInspector, StrawchemyUnMappedFactory, UnmappedGraphQLDTOT
 from strawchemy.typing import AggregationFunction, GraphQLFilterDTOT, GraphQLPurpose, GraphQLType
-from strawchemy.utils.registry import RegistryTypeInfo
 from strawchemy.utils.text import snake_to_camel
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Mapping, Sequence
+    from collections.abc import Callable, Generator
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, Relation
-    from strawchemy.dto.types import ExcludeFields, IncludeFields
     from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs, InputDecoratorKwargs
+    from strawchemy.schema.factories.base import TypeScope
     from strawchemy.schema.filters import GraphQLFilter
     from strawchemy.utils.graph import Node
 
 T = TypeVar("T")
 
 
-class _BaseStrawchemyFilterFactory(StrawchemyUnMappedDTOFactory[UnmappedGraphQLDTOT]):
+class _BaseFilterFactory(StrawchemyUnMappedFactory[UnmappedGraphQLDTOT]):
     @classmethod
     @override
     def graphql_type(cls, dto_config: DTOConfig) -> GraphQLType:
         return "input"
 
     @override
+    def type_description(self) -> str:
+        return "GraphQL Filter Input"
+
+    @override
     def input(
         self,
         model: type[DeclarativeT],
         *,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
         name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        override: bool = False,
         purpose: Purpose = Purpose.READ,
         mode: GraphQLPurpose = "filter",
-        **kwargs: Any,
+        scope: TypeScope | None = None,
+        **kwargs: Unpack[InputDecoratorKwargs],
     ) -> Callable[[type[Any]], type[UnmappedGraphQLDTOT]]:
-        return self._input_wrapper(
-            model=model,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            type_map=type_map,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            name=name,
-            description=description,
-            directives=directives,
-            override=override,
-            purpose=purpose,
-            mode=mode,
-            **kwargs,
-        )
+        return self._input_wrapper(model=model, name=name, purpose=purpose, mode=mode, **kwargs)
 
 
-class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
+class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
     def __init__(
         self,
         mapper: Strawchemy,
         backend: DTOBackend[GraphQLFilterDTOT],
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_filter_factory: AggregateFilterDTOFactory | None = None,
+        aggregation_filter_factory: AggregateFilterFactory | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
-        self._aggregation_filter_factory = aggregation_filter_factory or AggregateFilterDTOFactory(mapper)
+        self._aggregation_filter_factory = aggregation_filter_factory or AggregateFilterFactory(mapper)
 
     def _filter_type(self, field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]) -> type[GraphQLFilter]:
         return self.inspector.get_field_comparison(field)
@@ -116,10 +97,6 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         )
 
     @override
-    def type_description(self) -> str:
-        return "Boolean expression to compare fields. All fields are combined with logical 'AND'."
-
-    @override
     def iter_field_definitions(
         self,
         name: str,
@@ -127,7 +104,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, GraphQLFilterDTOT], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         *,
         aggregate_filters: bool = False,
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
@@ -135,7 +112,7 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         field_map = field_map if field_map is not None else {}
         for field in super().iter_field_definitions(
-            name, model, dto_config, base, node, raise_if_no_fields, field_map=field_map, **kwargs
+            name, model, dto_config, base, node, if_no_fields, field_map=field_map, **kwargs
         ):
             key = DTOKey.from_dto_node(node)
             if field.is_relation:
@@ -143,7 +120,9 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
                 if field.uselist and field.related_dto:
                     field.type_ = Union[field.related_dto, None]
                 if aggregate_filters:
-                    aggregation_field = self._aggregation_field(field, dto_config.copy_with(partial_default=UNSET))
+                    aggregation_field = self._aggregation_field(
+                        field, dto_config.copy_with(partial_default=UNSET, partial=True)
+                    )
                     field_map[key + aggregation_field.name] = aggregation_field
                     yield aggregation_field
             else:
@@ -167,38 +146,21 @@ class _FilterDTOFactory(_BaseStrawchemyFilterFactory[GraphQLFilterDTOT]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, GraphQLFilterDTOT], None] | None = None,
-        raise_if_no_fields: bool = False,
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
         *,
         aggregate_filters: bool = True,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[GraphQLFilterDTOT]:
-        return super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            raise_if_no_fields,
-            tags,
-            backend_kwargs,
-            aggregate_filters=aggregate_filters,
-            **kwargs,
-        )
+        return super().factory(model, dto_config, base, name, aggregate_filters=aggregate_filters, **kwargs)
 
 
-class BooleanFilterDTOFactory(_FilterDTOFactory[BooleanFilterDTO]):
+class BooleanFilterFactory(_FilterFactory[BooleanFilterDTO]):
     def __init__(
         self,
         mapper: Strawchemy,
         backend: DTOBackend[BooleanFilterDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregate_filter_factory: AggregateFilterDTOFactory | None = None,
+        aggregate_filter_factory: AggregateFilterFactory | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(
@@ -210,8 +172,12 @@ class BooleanFilterDTOFactory(_FilterDTOFactory[BooleanFilterDTO]):
             **kwargs,
         )
 
+    @override
+    def type_description(self) -> str:
+        return "Boolean expression to compare fields. All fields are combined with logical 'AND'."
 
-class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]):
+
+class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
     def __init__(
         self,
         mapper: Strawchemy,
@@ -281,16 +247,18 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
                 ),
             ],
         )
-        key = DTOKey([model])
-        dto.__strawchemy_field_map__ = {
-            key + name: FunctionArgFieldDefinition.from_field(field, function=aggregation)
-            for name, field in self.inspector.field_definitions(model, dto_config)
-        }
-        dto.__strawchemy_description__ = "Field filtering information"
+        fields = [
+            FunctionArgFieldDefinition.from_field(field, function=aggregation)
+            for _, field in self.inspector.field_definitions(model, dto_config)
+        ]
+        dto.__strawchemy_definition__.populate_fields(model, fields)
+        dto.__strawchemy_definition__.description = "Field filtering information"
         dto.__dto_function_info__ = aggregation
         return self._mapper.registry.register_type(
             dto,
-            RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config)),
+            dto_config=dto_config,
+            graphql_type="input",
+            default_name=self.root_dto_name(model, dto_config),
             description=f"Boolean expression to compare {aggregation.function} aggregation.",
         )
 
@@ -303,7 +271,7 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
         node: Node[Relation[Any, AggregateFilterDTO], None],
         base: type[Any] | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         backend_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> type[AggregateFilterDTO]:
@@ -332,23 +300,22 @@ class AggregateFilterDTOFactory(_BaseStrawchemyFilterFactory[AggregateFilterDTO]
                     _function=aggregation,
                 ),
             )
-        key = DTOKey([model])
         dto = self.backend.build(name, model, field_defs, **(backend_kwargs or {}))
-        dto.__strawchemy_description__ = (
+        dto.__strawchemy_definition__.description = (
             "Boolean expression to compare field aggregations. All fields are combined with logical 'AND'."
         )
-        dto.__strawchemy_field_map__ = {key + field.name: field for field in field_defs}
+        dto.__strawchemy_definition__.populate_fields(model, field_defs)
         return dto
 
 
-class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
+class OrderByFactory(_FilterFactory[OrderByDTO]):
     def __init__(
         self,
         mapper: Strawchemy,
         backend: DTOBackend[OrderByDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
-        aggregation_filter_factory: AggregateFilterDTOFactory | None = None,
+        aggregation_filter_factory: AggregateFilterFactory | None = None,
     ) -> None:
         super().__init__(
             mapper,
@@ -357,6 +324,10 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             type_map,
             aggregation_filter_factory,
         )
+
+    @override
+    def type_description(self) -> str:
+        return "Ordering input."
 
     @override
     def _filter_type(self, field: DTOFieldDefinition[T, ModelFieldT]) -> type[OrderByEnum]:
@@ -378,13 +349,16 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
 
         name = f"{model.__name__}Aggregate{snake_to_camel(aggregation.aggregation_type)}FieldsOrderBy"
         dto = self.backend.build(name, model, field_defs)
-        key = DTOKey([model])
-        dto.__strawchemy_field_map__ = {
-            key + name: FunctionArgFieldDefinition.from_field(field, function=aggregation)
-            for name, field in self.inspector.field_definitions(model, dto_config)
-        }
+        fields = [
+            FunctionArgFieldDefinition.from_field(field, function=aggregation)
+            for _, field in self.inspector.field_definitions(model, dto_config)
+        ]
+        dto.__strawchemy_definition__.populate_fields(model, fields)
         return self._mapper.registry.register_type(
-            dto, RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config))
+            dto,
+            dto_config=dto_config,
+            graphql_type="input",
+            default_name=self.root_dto_name(model, dto_config),
         )
 
     def _order_by_aggregation(self, model: type[DeclarativeBase], dto_config: DTOConfig) -> type[OrderByDTO]:
@@ -412,9 +386,12 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
             )
 
         dto = self.backend.build(f"{model.__name__}AggregateOrderBy", model, field_definitions)
-        dto.__strawchemy_field_map__ = {DTOKey([model, field.name]): field for field in field_definitions}
+        dto.__strawchemy_definition__.populate_fields(model, field_definitions)
         return self._mapper.registry.register_type(
-            dto, RegistryTypeInfo(dto.__name__, "input", default_name=self.root_dto_name(model, dto_config))
+            dto,
+            dto_config=dto_config,
+            graphql_type="input",
+            default_name=self.root_dto_name(model, dto_config),
         )
 
     @override
@@ -432,6 +409,16 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         )
 
     @override
+    def _resolve_relation_type(
+        self,
+        field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, OrderByDTO], None],
+        **factory_kwargs: Any,
+    ) -> Any:
+        return super()._resolve_relation_type(field, dto_config.copy_with(include="all"), node, **factory_kwargs)
+
+    @override
     def dto_name(
         self,
         base_name: str,
@@ -447,27 +434,10 @@ class OrderByDTOFactory(_FilterDTOFactory[OrderByDTO]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, OrderByDTO], None] | None = None,
-        raise_if_no_fields: bool = False,
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
         *,
         aggregate_filters: bool = True,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[OrderByDTO]:
-        dto = super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            raise_if_no_fields,
-            tags,
-            backend_kwargs,
-            aggregate_filters=aggregate_filters,
-            **kwargs,
-        )
-        dto.__strawchemy_description__ = "Ordering options"
+        dto = super().factory(model, dto_config, base, name, aggregate_filters=aggregate_filters, **kwargs)
+        dto.__strawchemy_definition__.description = "Ordering options"
         return dto

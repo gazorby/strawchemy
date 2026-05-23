@@ -197,6 +197,21 @@ class SQLDataTypes(UUIDBase):
     array_str_col: Mapped[list[str]] = mapped_column(postgresql.ARRAY(Text), default=list)
 
 
+class Container(UUIDBase):
+    """Test model with multiple list relationships for testing paginate/order configuration."""
+
+    __tablename__ = "container"
+
+    name: Mapped[str]
+    fruits: Mapped[list[Fruit]] = relationship(
+        "Fruit", primaryjoin="Container.id == foreign(Fruit.color_id)", viewonly=True
+    )
+    vegetables: Mapped[list[Vegetable]] = relationship(
+        "Vegetable", primaryjoin="Container.id == foreign(Vegetable.id)", viewonly=True
+    )
+    colors: Mapped[list[Color]] = relationship("Color", primaryjoin="Container.id == foreign(Color.id)", viewonly=True)
+
+
 # Geo
 
 if GEO_INSTALLED:

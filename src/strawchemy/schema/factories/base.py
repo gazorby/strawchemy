@@ -22,52 +22,53 @@ from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import UNSET
 from strawberry.types.auto import StrawberryAuto
 from strawberry.utils.typing import type_has_annotation
-from typing_extensions import dataclass_transform, override
+from typing_extensions import Unpack, dataclass_transform, override
 
 from strawchemy import typing as strawchemy_typing
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.strawberry import (
     BooleanFilterDTO,
     DTOKey,
+    EnumDTO,
     GraphQLFieldDefinition,
     MappedStrawberryGraphQLDTO,
     OrderByDTO,
-    StrawchemyDTOAttributes,
+    StrawchemyObject,
     UnmappedStrawberryGraphQLDTO,
 )
-from strawchemy.dto.types import DTOAuto, DTOScope, Purpose
+from strawchemy.dto.types import DTOAuto, DTOConfig, DTOScope, Purpose, is_fields_iterable
 from strawchemy.dto.utils import config
-from strawchemy.exceptions import StrawchemyError
+from strawchemy.exceptions import EmptyDTOError, StrawchemyError
 from strawchemy.instance import MapperModelInstance
-from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.transpiler import hook
 from strawchemy.typing import GraphQLDTOT, GraphQLPurpose, GraphQLType, MappedGraphQLDTO
 from strawchemy.utils.annotation import get_annotations
-from strawchemy.utils.registry import RegistryTypeInfo
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Mapping, Sequence
 
     from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
-    from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields
+    from strawchemy.dto.types import FieldIterable, IncludeFields
+    from strawchemy.schema.factories._kwargs import (
+        InputDecoratorKwargs,
+        MakeInputKwargs,
+        TypeDecoratorKwargs,
+    )
+    from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.utils.graph import Node
     from strawchemy.validation.pydantic import MappedPydanticGraphQLDTO
 
-__all__ = ("GraphQLDTOFactory", "StrawchemyMappedFactory", "StrawchemyUnMappedDTOFactory")
+__all__ = ("GraphQLFactory", "StrawchemyMappedFactory", "StrawchemyUnMappedFactory")
 
 T = TypeVar("T", bound="DeclarativeBase")
 PydanticGraphQLDTOT = TypeVar("PydanticGraphQLDTOT", bound="MappedPydanticGraphQLDTO[Any]")
 MappedGraphQLDTOT = TypeVar("MappedGraphQLDTOT", bound="MappedGraphQLDTO[Any]")
 UnmappedGraphQLDTOT = TypeVar("UnmappedGraphQLDTOT", bound="UnmappedStrawberryGraphQLDTO[Any]")
-StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyDTOAttributes")
+StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyObject")
 
 TypeScope: TypeAlias = Literal["schema"]
-
-
-def type_scope_to_dto_scope(scope: TypeScope) -> DTOScope:
-    return "global" if scope == "schema" else "dto"
 
 
 @dataclasses.dataclass(eq=True, frozen=True)
@@ -76,7 +77,7 @@ class ChildOptions:
     order_by: bool = False
 
 
-class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQLDTOT]):
+class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQLDTOT]):
     inspector: SQLAlchemyGraphQLInspector
 
     def __init__(
@@ -89,61 +90,6 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
     ) -> None:
         super().__init__(mapper.config.inspector, backend, handle_cycles, type_map, **kwargs)
         self._mapper = mapper
-
-    def _type_info(
-        self,
-        dto: type[StrawchemyDTOT],
-        dto_config: DTOConfig,
-        current_node: Node[Relation[Any, GraphQLDTOT], None] | None,
-        override: bool = False,
-        user_defined: bool = False,
-        child_options: ChildOptions | None = None,
-    ) -> RegistryTypeInfo:
-        child_options = child_options or ChildOptions()
-        graphql_type = self.graphql_type(dto_config)
-        model: type[DeclarativeBase] | None = dto.__dto_model__ if issubclass(dto, MappedStrawberryGraphQLDTO) else None  # type: ignore[reportGeneralTypeIssues]
-        default_name = self.root_dto_name(model, dto_config, current_node) if model else dto.__name__
-        type_info = RegistryTypeInfo(
-            name=dto.__name__,
-            default_name=default_name,
-            graphql_type=graphql_type,
-            override=override,
-            user_defined=user_defined,
-            pagination=DefaultOffsetPagination() if child_options.pagination is True else child_options.pagination,
-            order_by=child_options.order_by,
-            scope=dto_config.scope,
-            model=model,
-            exclude_from_scope=dto_config.exclude_from_scope,
-        )
-        if self._mapper.registry.name_clash(type_info) and current_node is not None:
-            type_info = dataclasses.replace(
-                type_info, name="".join(node.value.name for node in current_node.path_from_root())
-            )
-        return type_info
-
-    def _register_type(
-        self,
-        dto: type[StrawchemyDTOT],
-        dto_config: DTOConfig,
-        current_node: Node[Relation[Any, GraphQLDTOT], None] | None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        override: bool = False,
-        user_defined: bool = False,
-        child_options: ChildOptions | None = None,
-    ) -> type[StrawchemyDTOT]:
-        type_info = self._type_info(
-            dto,
-            dto_config,
-            override=override,
-            user_defined=user_defined,
-            child_options=child_options,
-            current_node=current_node,
-        )
-        self._raise_if_type_conflicts(type_info)
-        return self._mapper.registry.register_type(
-            dto, type_info, description=description or dto.__strawchemy_description__, directives=directives
-        )
 
     def _check_model_instance_attribute(self, base: type[Any]) -> None:
         instance_attributes = [
@@ -169,19 +115,11 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         base.__annotations__ = base_annotations_copy
         return config
 
-    def _raise_if_type_conflicts(self, type_info: RegistryTypeInfo) -> None:
-        if self._mapper.registry.non_override_exists(type_info):
-            msg = (
-                f"""Type `{type_info.name}` cannot be auto generated because it's already declared."""
-                """ You may want to set `override=True` on the existing type to use it everywhere."""
-            )
-            raise StrawchemyError(msg)
-
     def _config(
         self,
         purpose: Purpose,
         include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
+        exclude: FieldIterable | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
@@ -189,17 +127,67 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         scope: DTOScope | None = None,
         tags: set[str] | None = None,
     ) -> DTOConfig:
-        return config(
-            purpose,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            type_map=type_map,
-            alias_generator=alias_generator,
-            aliases=aliases,
-            scope=scope,
-            tags=tags,
+        return (
+            config(
+                purpose,
+                include=include,
+                exclude=exclude,
+                partial=partial,
+                type_map=type_map,
+                alias_generator=alias_generator,
+                aliases=aliases,
+                scope=scope,
+                tags=tags,
+            )
+            | self._mapper.config.field_config
         )
+
+    def _type_order_by(
+        self, model: type[DeclarativeBase], include: IncludeFields | type[OrderByDTO] | None = None
+    ) -> type[OrderByDTO] | None:
+        order_include = self._mapper.config.order_by if include is None else include
+        if is_fields_iterable(order_include) and order_include is not None:
+            try:
+                order_by_input = self._mapper.order_by_factory.make_input(
+                    model=model,
+                    mode="order_by",
+                    dto_config=DTOConfig(
+                        Purpose.READ,
+                        partial=True,
+                        include=order_include,
+                        global_include=self._mapper.config.order_by or (),
+                    ),
+                    if_no_fields="raise",
+                    no_cache=True,
+                )
+            except EmptyDTOError:
+                order_by_input = None
+        else:
+            order_by_input = order_include
+        return order_by_input
+
+    def _type_distinct_on(
+        self, model: type[DeclarativeBase], include: IncludeFields | type[EnumDTO] | None = None
+    ) -> type[EnumDTO] | None:
+        distinct_on_include = self._mapper.config.distinct_on if include is None else include
+        if is_fields_iterable(distinct_on_include) and distinct_on_include is not None:
+            try:
+                distinct_on_input = self._mapper.distinct_on_enum_factory.factory(
+                    model=model,
+                    dto_config=DTOConfig(
+                        Purpose.READ,
+                        partial=True,
+                        include=distinct_on_include,
+                        global_include=self._mapper.config.distinct_on or (),
+                    ),
+                    if_no_fields="raise",
+                    no_cache=True,
+                )
+            except EmptyDTOError:
+                distinct_on_input = None
+        else:
+            distinct_on_input = distinct_on_include
+        return distinct_on_input
 
     def _type_wrapper(
         self,
@@ -207,15 +195,16 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         *,
         mode: GraphQLPurpose,
         include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
+        exclude: FieldIterable | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
         alias_generator: Callable[[str], str] | None = None,
-        child_pagination: bool | DefaultOffsetPagination = False,
-        child_order_by: bool = False,
+        paginate: IncludeFields | None = None,
+        distinct_on: IncludeFields | None = None,
+        default_pagination: None | DefaultOffsetPagination = None,
         filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
+        order: IncludeFields | type[OrderByDTO] | None = None,
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
@@ -225,17 +214,24 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         scope: DTOScope | None = None,
     ) -> Callable[[type[Any]], type[GraphQLDTOT]]:
         def wrapper(class_: type[Any]) -> type[GraphQLDTOT]:
-            dto_config = config(
-                purpose,
-                include=include,
-                exclude=exclude,
-                partial=partial,
-                type_map=type_map,
-                alias_generator=alias_generator,
-                aliases=aliases,
-                scope=scope,
-                tags={mode},
+            dto_config = (
+                config(
+                    purpose,
+                    include=include,
+                    exclude=exclude,
+                    partial=partial,
+                    type_map=type_map,
+                    alias_generator=alias_generator,
+                    aliases=aliases,
+                    scope=scope,
+                    tags={mode},
+                )
+                | self._mapper.config.field_config
             )
+
+            order_by_input = self._type_order_by(model, order)
+            distinct_on_input = self._type_distinct_on(model, distinct_on)
+
             dto = self.factory(
                 model=model,
                 dto_config=dto_config,
@@ -247,13 +243,21 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 override=override,
                 user_defined=True,
                 mode=mode,
-                child_options=ChildOptions(pagination=child_pagination, order_by=child_order_by),
+                paginate=self._mapper.config.pagination if paginate is None else paginate,
+                order=self._mapper.config.order_by if order is None else order,
+                distinct_on=self._mapper.config.distinct_on if distinct_on is None else distinct_on,
+                default_pagination=default_pagination,
             )
-            dto.__strawchemy_query_hook__ = query_hook
+            strawchemy_def = dto.__strawchemy_definition__
+            strawchemy_def.query_hook = query_hook
             if issubclass(dto, MappedStrawberryGraphQLDTO):
-                dto.__strawchemy_filter__ = filter_input
-                dto.__strawchemy_order_by__ = order_by
-            dto.__strawchemy_purpose__ = mode
+                if order_by_input is not None:
+                    strawchemy_def.order_by = order_by_input
+                if distinct_on_input is not None:
+                    strawchemy_def.distinct_on = distinct_on_input
+                if filter_input is not None:
+                    strawchemy_def.filter = filter_input
+            strawchemy_def.purpose = mode
             return dto
 
         return wrapper
@@ -264,7 +268,7 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         *,
         mode: GraphQLPurpose,
         include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
+        exclude: FieldIterable | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
@@ -289,22 +293,36 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
                 scope=scope,
                 tags={mode},
             )
-            dto = self.factory(
+            return self.make_input(
                 model=model,
                 dto_config=dto_config,
-                base=class_,
+                mode=mode,
                 name=name,
                 description=description,
                 directives=directives,
                 override=override,
-                user_defined=True,
-                mode=mode,
+                base=class_,
                 **kwargs,
             )
-            dto.__strawchemy_purpose__ = mode
-            return dto
 
         return wrapper
+
+    @classmethod
+    def _type_scope_to_dto_scope(cls, scope: TypeScope) -> DTOScope:
+        return "global" if scope == "schema" else "dto"
+
+    def make_input(
+        self,
+        model: type[T],
+        *,
+        mode: GraphQLPurpose,
+        dto_config: DTOConfig,
+        name: str | None = None,
+        **kwargs: Unpack[MakeInputKwargs],
+    ) -> type[GraphQLDTOT]:
+        dto = self.factory(model=model, dto_config=dto_config, name=name, mode=mode, **kwargs)
+        dto.__strawchemy_definition__.purpose = mode
+        return dto
 
     @cached_property
     def _namespace(self) -> dict[str, Any]:
@@ -329,13 +347,13 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, GraphQLDTOT], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         *,
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         field_map = field_map if field_map is not None else {}
-        for field in super().iter_field_definitions(name, model, dto_config, base, node, raise_if_no_fields, **kwargs):
+        for field in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
             key = DTOKey.from_dto_node(node)
             graphql_field = GraphQLFieldDefinition.from_field(field)
             yield graphql_field
@@ -348,12 +366,13 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
+        *,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         current_node: Node[Relation[Any, GraphQLDTOT], None] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
-        *,
+        no_cache: bool = False,
         description: str | None = None,
         directives: Sequence[object] | None = (),
         override: bool = False,
@@ -362,39 +381,47 @@ class GraphQLDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], Gra
         **kwargs: Any,
     ) -> type[GraphQLDTOT]:
         field_map: dict[DTOKey, GraphQLFieldDefinition] = {}
+        if not user_defined and no_cache:
+            name = self.root_dto_name(model, dto_config, current_node) if name is None else name
+            name = self._mapper.registry.uniquify_name(self.graphql_type(dto_config), name)
         if base:
             self._check_model_instance_attribute(base)
             dto_config = self._resolve_config(dto_config, base)
-        dto = super().factory(
+
+        dto: type[GraphQLDTOT] = super().factory(
             model,
             dto_config,
             base,
             name,
-            parent_field_def,
-            current_node,
-            raise_if_no_fields,
-            tags,
+            parent_field_def=parent_field_def,
+            current_node=current_node,
+            if_no_fields=if_no_fields,
+            tags=tags,
             backend_kwargs=backend_kwargs,
+            no_cache=no_cache,
             field_map=field_map,
             **kwargs,
         )
-        if not dto.__strawchemy_field_map__:
-            dto.__strawchemy_field_map__ = field_map
-        dto.__strawchemy_description__ = self.type_description()
+        if not dto.__strawchemy_definition__.field_map:
+            dto.__strawchemy_definition__.field_map = field_map
+        dto.__strawchemy_definition__.description = self.type_description()
+
         if register_type:
-            return self._register_type(
+            return self._mapper.registry.register_type(
                 dto,
-                dto_config,
+                graphql_type=self.graphql_type(dto_config),
+                dto_config=dto_config,
                 current_node=current_node,
                 description=description,
                 directives=directives,
                 override=override,
                 user_defined=user_defined,
+                default_name=self.root_dto_name(model, dto_config),
             )
         return dto
 
 
-class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
+class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
     def _root_input_config(self, model: type[Any], dto_config: DTOConfig, mode: GraphQLPurpose) -> DTOConfig:
         annotations_overrides: dict[str, Any] = {}
         partial = dto_config.partial
@@ -430,45 +457,19 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         self,
         model: type[T],
         *,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        child_pagination: bool | DefaultOffsetPagination = False,
-        child_order_by: bool = False,
-        filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
         name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        query_hook: QueryHook[T] | list[QueryHook[T]] | None = None,
-        override: bool = False,
         purpose: Purpose = Purpose.READ,
         scope: TypeScope | None = None,
         mode: GraphQLPurpose = "type",
+        **kwargs: Unpack[TypeDecoratorKwargs],
     ) -> Callable[[type[Any]], type[MappedGraphQLDTO[T]]]:
         return self._type_wrapper(
             model=model,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            type_map=type_map,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            child_pagination=child_pagination,
-            child_order_by=child_order_by,
-            filter_input=filter_input,
-            order_by=order_by,
             name=name,
-            description=description,
-            directives=directives,
-            query_hook=query_hook,
-            override=override,
             purpose=purpose,
-            scope=type_scope_to_dto_scope(scope) if scope else None,
+            scope=self._type_scope_to_dto_scope(scope) if scope else None,
             mode=mode,
+            **kwargs,
         )
 
     @dataclass_transform(order_default=True, kw_only_default=True)
@@ -477,35 +478,17 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         model: type[T],
         *,
         mode: GraphQLPurpose,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
         name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        override: bool = False,
         purpose: Purpose = Purpose.WRITE,
         scope: TypeScope | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[InputDecoratorKwargs],
     ) -> Callable[[type[Any]], type[MappedGraphQLDTO[T]]]:
         return self._input_wrapper(
             model=model,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            type_map=type_map,
-            aliases=aliases,
-            alias_generator=alias_generator,
             name=name,
-            description=description,
-            directives=directives,
-            override=override,
             purpose=purpose,
             mode=mode,
-            scope=type_scope_to_dto_scope(scope) if scope else None,
+            scope=self._type_scope_to_dto_scope(scope) if scope else None,
             **kwargs,
         )
 
@@ -516,106 +499,37 @@ class StrawchemyMappedFactory(GraphQLDTOFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, MappedGraphQLDTOT], None] | None = None,
-        raise_if_no_fields: bool = False,
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
         *,
         mode: GraphQLPurpose | None = None,
         **kwargs: Any,
     ) -> type[MappedGraphQLDTOT]:
         if mode and dto_config.purpose is Purpose.WRITE:
             dto_config = self._root_input_config(model, dto_config, mode)
-        return super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            raise_if_no_fields,
-            tags,
-            backend_kwargs=backend_kwargs,
-            mode=mode,
-            **kwargs,
-        )
+        return super().factory(model, dto_config, base, name, mode=mode, **kwargs)
 
 
-class StrawchemyUnMappedDTOFactory(GraphQLDTOFactory[UnmappedGraphQLDTOT]):
+class StrawchemyUnMappedFactory(GraphQLFactory[UnmappedGraphQLDTOT]):
     @dataclass_transform(order_default=True, kw_only_default=True)
     def input(
         self,
         model: type[T],
         *,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
+        mode: GraphQLPurpose = "create_input",
         name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        override: bool = False,
         purpose: Purpose = Purpose.WRITE,
-        **kwargs: Any,
+        scope: TypeScope | None = None,
+        **kwargs: Unpack[InputDecoratorKwargs],
     ) -> Callable[[type[Any]], type[UnmappedStrawberryGraphQLDTO[T]]]:
-        return self._input_wrapper(
-            model=model,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            type_map=type_map,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            name=name,
-            description=description,
-            directives=directives,
-            override=override,
-            purpose=purpose,
-            **kwargs,
-        )
+        return self._input_wrapper(model=model, mode=mode, name=name, purpose=purpose, **kwargs)
 
     @dataclass_transform(order_default=True, kw_only_default=True)
     def type(
         self,
         model: type[T],
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        child_pagination: bool | DefaultOffsetPagination = False,
-        child_order_by: bool = False,
-        filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
+        *,
         name: str | None = None,
-        description: str | None = None,
-        directives: Sequence[object] | None = (),
-        query_hook: QueryHook[T] | list[QueryHook[T]] | None = None,
-        override: bool = False,
         purpose: Purpose = Purpose.READ,
         mode: GraphQLPurpose = "type",
+        **kwargs: Unpack[TypeDecoratorKwargs],
     ) -> Callable[[type[Any]], type[UnmappedStrawberryGraphQLDTO[T]]]:
-        return self._type_wrapper(
-            model=model,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            type_map=type_map,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            child_pagination=child_pagination,
-            child_order_by=child_order_by,
-            filter_input=filter_input,
-            order_by=order_by,
-            name=name,
-            description=description,
-            directives=directives,
-            query_hook=query_hook,
-            override=override,
-            purpose=purpose,
-            mode=mode,
-        )
+        return self._type_wrapper(model=model, name=name, purpose=purpose, mode=mode, **kwargs)

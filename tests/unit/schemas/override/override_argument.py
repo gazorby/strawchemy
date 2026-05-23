@@ -8,7 +8,7 @@ from tests.unit.models import Fruit
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.type(Fruit, include="all", child_pagination=True, child_order_by=True)
+@strawchemy.type(Fruit, include="all", paginate="all", order="all")
 class FruitType:
     name: int
 

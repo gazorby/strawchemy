@@ -12,6 +12,9 @@ from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
 
+from strawchemy.dto.strawberry import MappedStrawberryGraphQLDTO
+from strawchemy.dto.types import cast_include_fields, is_fields_iterable
+from strawchemy.exceptions import StrawchemyError
 from strawchemy.utils.strawberry import strawberry_contained_types
 
 try:
@@ -22,7 +25,7 @@ except ModuleNotFoundError:  # pragma: no cover
     geo_comparison = None
 
 if TYPE_CHECKING:
-    from collections.abc import Hashable, Iterable, Sequence
+    from collections.abc import Hashable, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
     from strawberry.experimental.pydantic.conversion_types import PydanticModel, StrawberryTypeFromPydantic
@@ -30,14 +33,18 @@ if TYPE_CHECKING:
     from strawberry.types.arguments import StrawberryArgument
     from strawberry.types.base import WithStrawberryObjectDefinition
 
-    from strawchemy.dto.types import DTOScope
+    from strawchemy.dto import DTOConfig
+    from strawchemy.dto.base import Node, Relation
+    from strawchemy.dto.strawberry import EnumDTO, OrderByDTO, StrawchemyObject
+    from strawchemy.dto.types import DTOScope, IncludeFields
     from strawchemy.schema.pagination import DefaultOffsetPagination
-    from strawchemy.typing import GraphQLType, StrawchemyTypeWithStrawberryObjectDefinition
+    from strawchemy.typing import GraphQLType, StrawchemyObjectWithStrawberryObjectDefinition
 
 __all__ = ("RegistryTypeInfo", "StrawberryRegistry")
 
 T = TypeVar("T")
 EnumT = TypeVar("EnumT", bound=Enum)
+StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyObject")
 
 _RegistryMissing = NewType("_RegistryMissing", object)
 
@@ -101,8 +108,10 @@ class RegistryTypeInfo:
     default_name: str | None = None
     user_defined: bool = False
     override: bool = False
-    pagination: DefaultOffsetPagination | Literal[False] = False
-    order_by: bool = False
+    pagination: DefaultOffsetPagination | None = None
+    order: frozenset[str] | Literal["all"] | type[OrderByDTO] = dataclasses.field(default_factory=frozenset)
+    distinct_on: frozenset[str] | Literal["all"] | type[EnumDTO] = dataclasses.field(default_factory=frozenset)
+    paginate: frozenset[str] | Literal["all"] = dataclasses.field(default_factory=frozenset)
     scope: DTOScope | None = None
     model: type[DeclarativeBase] | None = None
     tags: frozenset[str] = dataclasses.field(default_factory=frozenset)
@@ -110,23 +119,24 @@ class RegistryTypeInfo:
 
     @property
     def scoped_id(self) -> Hashable:
-        return (self.model, self.graphql_type, self.tags)
+        return self.model, self.graphql_type, self.tags
 
 
 class StrawberryRegistry:
     def __init__(self, strawberry_config: StrawberryConfig) -> None:
         self.strawberry_config = strawberry_config
-        self._namespaces: defaultdict[GraphQLType, dict[str, type[StrawchemyTypeWithStrawberryObjectDefinition]]] = (
+        self._namespaces: defaultdict[GraphQLType, dict[str, type[StrawchemyObjectWithStrawberryObjectDefinition]]] = (
             defaultdict(dict)
         )
         self._forward_type_refs: defaultdict[GraphQLType, defaultdict[str, list[_TypeReference]]] = defaultdict(
             lambda: defaultdict(list)
         )
         self._type_refs: defaultdict[Hashable, list[_TypeReference]] = defaultdict(list)
-        self._scoped_types: dict[Hashable, type[StrawchemyTypeWithStrawberryObjectDefinition]] = {}
+        self._scoped_types: dict[Hashable, type[StrawchemyObjectWithStrawberryObjectDefinition]] = {}
         self._type_map: dict[RegistryTypeInfo, type[Any]] = {}
         self._names_map: defaultdict[GraphQLType, dict[str, RegistryTypeInfo]] = defaultdict(dict)
         self._tracked_type_names: defaultdict[GraphQLType, set[str]] = defaultdict(set)
+        self._unique_names: defaultdict[str, int] = defaultdict(int)
 
     def _get_field_type_name(
         self,
@@ -216,7 +226,7 @@ class StrawberryRegistry:
                     self._update_references(argument, "input")
             self._update_references(field, graphql_type)
 
-    def _register_type(self, type_info: RegistryTypeInfo, strawberry_type: type[Any]) -> None:
+    def _register(self, type_info: RegistryTypeInfo, strawberry_type: type[Any]) -> None:
         """Register a type in the registry.
 
         This will add the type to the namespace, update forward references, and track the references of the type.
@@ -229,7 +239,8 @@ class StrawberryRegistry:
         if type_info.override or type_info.scope == "global":
             for reference in self._forward_type_refs[type_info.graphql_type][type_info.name]:
                 reference.update_type(strawberry_type)
-        self._track_references(strawberry_type, type_info.graphql_type, force=type_info.override)
+        if type_info.graphql_type != "enum":
+            self._track_references(strawberry_type, type_info.graphql_type, force=type_info.override)
         if type_info.scope == "global" and type_info.model:
             if type_info.default_name:
                 self._namespaces[type_info.graphql_type][type_info.default_name] = strawberry_type
@@ -286,22 +297,64 @@ class StrawberryRegistry:
         """
         if (
             self.non_override_exists(type_info)
-            or self.namespace("enum").get(type_info.name)
-            or self.name_clash(type_info)
+            or (type_info.graphql_type != "enum" and self.namespace("enum").get(type_info.name))
+            or self._name_clash(type_info)
         ):
-            msg = f"Type {type_info.name} is already registered"
-            raise ValueError(msg)
+            msg = f"Type `{type_info.name}` is already registered"
+            raise StrawchemyError(msg)
 
     def __contains__(self, type_info: RegistryTypeInfo) -> bool:
         return type_info in self._type_map
 
-    def name_clash(self, type_info: RegistryTypeInfo) -> bool:
+    def _name_clash(self, type_info: RegistryTypeInfo) -> bool:
         return (
             type_info not in self
             and (existing := self.get(type_info.graphql_type, type_info.name, None)) is not None
             and not existing.override
             and not type_info.override
         )
+
+    def _get_type_info(
+        self,
+        dto: type[StrawchemyObject | Enum],
+        graphql_type: GraphQLType,
+        dto_config: DTOConfig,
+        current_node: Node[Relation[Any, Any], None] | None,
+        override: bool = False,
+        user_defined: bool = False,
+        paginate: IncludeFields | None = None,
+        order: IncludeFields | type[OrderByDTO] | None = None,
+        distinct_on: IncludeFields | type[EnumDTO] | None = None,
+        default_pagination: DefaultOffsetPagination | None = None,
+        default_name: str | None = None,
+    ) -> RegistryTypeInfo:
+        model: type[DeclarativeBase] | None = dto.__dto_model__ if issubclass(dto, MappedStrawberryGraphQLDTO) else None  # type: ignore[reportGeneralTypeIssues]
+        type_info = RegistryTypeInfo(
+            name=dto.__name__,
+            default_name=default_name,
+            graphql_type=graphql_type,
+            override=override,
+            user_defined=user_defined,
+            pagination=default_pagination,
+            order=cast_include_fields(order) if is_fields_iterable(order) else order,
+            distinct_on=cast_include_fields(distinct_on) if is_fields_iterable(distinct_on) else distinct_on,
+            paginate=cast_include_fields(paginate),
+            scope=dto_config.scope,
+            model=model,
+            exclude_from_scope=dto_config.exclude_from_scope,
+        )
+        if self._name_clash(type_info) and current_node is not None:
+            type_info = dataclasses.replace(
+                type_info, name="".join(node.value.name for node in current_node.path_from_root())
+            )
+        return type_info
+
+    def uniquify_name(self, graphql_type: GraphQLType, name: str) -> str:
+        """Return a type name guaranteed to be unique within the registry."""
+        while self.get(graphql_type, name, None):
+            self._unique_names[name] += 1
+            name = f"{name}{self._unique_names[name]}"
+        return name
 
     @overload
     def get(self, graphql_type: GraphQLType, name: str, default: _RegistryMissing) -> RegistryTypeInfo: ...
@@ -330,39 +383,75 @@ class StrawberryRegistry:
 
     def register_type(
         self,
-        type_: type[Any],
-        type_info: RegistryTypeInfo,
+        dto: type[StrawchemyDTOT],
+        graphql_type: GraphQLType,
+        dto_config: DTOConfig,
+        current_node: Node[Relation[Any, Any], None] | None = None,
+        override: bool = False,
+        user_defined: bool = False,
+        paginate: IncludeFields | None = None,
+        order: IncludeFields | type[OrderByDTO] | None = None,
+        distinct_on: IncludeFields | type[EnumDTO] | None = None,
+        default_pagination: DefaultOffsetPagination | None = None,
+        default_name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
-    ) -> type[Any]:
+    ) -> type[StrawchemyDTOT]:
+        type_info = self._get_type_info(
+            dto=dto,
+            graphql_type=graphql_type,
+            dto_config=dto_config,
+            current_node=current_node,
+            override=override,
+            user_defined=user_defined,
+            paginate=paginate,
+            order=order,
+            distinct_on=distinct_on,
+            default_pagination=default_pagination,
+            default_name=default_name,
+        )
         self._check_conflicts(type_info)
-        if has_object_definition(type_):
-            return type_
+        if has_object_definition(dto):
+            return dto
         if existing := self._get(type_info):
             return existing
 
         strawberry_type = strawberry.type(
-            type_,
+            dto,
             name=type_info.name,
             is_input=type_info.graphql_type == "input",
             is_interface=type_info.graphql_type == "interface",
-            description=description,
+            description=description or dto.__strawchemy_definition__.description,
             directives=directives,
         )
-        self._register_type(type_info, strawberry_type)
+        self._register(type_info, strawberry_type)
         return strawberry_type
 
     def register_enum(
         self,
         enum_type: type[EnumT],
-        name: str | None = None,
+        dto_config: DTOConfig,
+        override: bool = False,
+        user_defined: bool = False,
+        default_name: str | None = None,
         description: str | None = None,
-        directives: Iterable[object] = (),
+        directives: Sequence[object] = (),
     ) -> type[EnumT]:
-        type_name = name or f"{enum_type.__name__}Enum"
-        if existing := self.namespace("enum").get(type_name):
+        type_info = self._get_type_info(
+            dto=enum_type,
+            graphql_type="enum",
+            dto_config=dto_config,
+            override=override,
+            user_defined=user_defined,
+            default_name=default_name,
+            current_node=None,
+        )
+        self._check_conflicts(type_info)
+        if existing := self._get(type_info):
             return cast("type[EnumT]", existing)
-        strawberry_enum_type = strawberry.enum(cls=enum_type, name=name, description=description, directives=directives)
-        self.namespace("enum")[type_name] = strawberry_enum_type
 
-        return strawberry_enum_type
+        strawberry_type = strawberry.enum(
+            cls=enum_type, name=type_info.name, description=description, directives=directives
+        )
+        self._register(type_info, strawberry_type)
+        return strawberry_type

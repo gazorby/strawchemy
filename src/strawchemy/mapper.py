@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from functools import cached_property, partial
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.schema.config import StrawberryConfig
@@ -11,21 +11,22 @@ from strawchemy.config.base import StrawchemyConfig
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import TYPING_NS
 from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
+from strawchemy.dto.utils import read_all_config
 from strawchemy.schema.factories import (
-    AggregateFilterDTOFactory,
-    BooleanFilterDTOFactory,
-    DistinctOnFieldsDTOFactory,
-    EnumDTOBackend,
-    EnumDTOFactory,
-    InputFactory,
-    OrderByDTOFactory,
-    RootAggregateTypeDTOFactory,
-    TypeDTOFactory,
-    UpsertConflictFieldsDTOFactory,
-    UpsertConflictFieldsEnumDTOBackend,
+    AggregateFilterFactory,
+    AggregateRootTypeFactory,
+    BooleanFilterFactory,
+    DistinctOnEnumFactory,
+    EnumBackend,
+    EnumFactory,
+    MutationInputFactory,
+    ObjectTypeFactory,
+    OrderByFactory,
+    UpsertConflictEnumBackend,
+    UpsertConflictEnumFactory,
 )
 from strawchemy.schema.field import StrawchemyField
-from strawchemy.schema.mutation import types
+from strawchemy.schema.mutation import types as mutation_types
 from strawchemy.schema.mutation.field_builder import MutationFieldBuilder
 from strawchemy.schema.mutation.fields import (
     StrawchemyCreateMutationField,
@@ -33,7 +34,6 @@ from strawchemy.schema.mutation.fields import (
     StrawchemyUpdateMutationField,
     StrawchemyUpsertMutationField,
 )
-from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.utils.registry import StrawberryRegistry
 
 if TYPE_CHECKING:
@@ -44,7 +44,9 @@ if TYPE_CHECKING:
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.arguments import StrawberryArgument
 
+    from strawchemy.dto.types import IncludeFields
     from strawchemy.repository.typing import QueryHookCallable
+    from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import AnyRepositoryType, FilterStatementCallable, MappedGraphQLDTO, SupportedDialect
     from strawchemy.validation.base import ValidationProtocol
@@ -53,7 +55,6 @@ if TYPE_CHECKING:
 
 T = TypeVar("T", bound="DeclarativeBase")
 
-_TYPES_NS = TYPING_NS | vars(types)
 
 __all__ = ("Strawchemy",)
 
@@ -83,6 +84,8 @@ class Strawchemy:
         pydantic (PydanticMapper): A mapper for generating Pydantic models.
     """
 
+    _types_namespace: ClassVar[dict[str, Any]] = TYPING_NS | vars(mutation_types)
+
     def __init__(
         self,
         config: StrawchemyConfig | SupportedDialect,
@@ -103,41 +106,47 @@ class Strawchemy:
         self.registry = StrawberryRegistry(strawberry_config or StrawberryConfig())
 
         strawberry_backend = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO)
-        enum_backend = EnumDTOBackend(self.config.auto_snake_case)
-        upsert_conflict_fields_enum_backend = UpsertConflictFieldsEnumDTOBackend(
+        enum_backend = EnumBackend(self.config.auto_snake_case)
+        upsert_conflict_fields_enum_backend = UpsertConflictEnumBackend(
             self.config.inspector, self.config.auto_snake_case
         )
 
-        self._aggregate_filter_factory = AggregateFilterDTOFactory(self)
-        self._order_by_factory = OrderByDTOFactory(self)
-        self._distinct_on_enum_factory = DistinctOnFieldsDTOFactory(self.config.inspector)
-        self._type_factory = TypeDTOFactory(self, strawberry_backend, order_by_factory=self._order_by_factory)
-        self._input_factory = InputFactory(self, strawberry_backend)
-        self._aggregation_factory = RootAggregateTypeDTOFactory(
-            self, strawberry_backend, type_factory=self._type_factory
+        self.aggregate_filter_factory = AggregateFilterFactory(self)
+        self.order_by_factory = OrderByFactory(self)
+        self.distinct_on_enum_factory = DistinctOnEnumFactory(self)
+        self.type_factory = ObjectTypeFactory(
+            self,
+            strawberry_backend,
+            order_by_factory=self.order_by_factory,
+            distinct_on_factory=self.distinct_on_enum_factory,
         )
-        self._enum_factory = EnumDTOFactory(self.config.inspector, enum_backend)
-        self._filter_factory = BooleanFilterDTOFactory(self, aggregate_filter_factory=self._aggregate_filter_factory)
-        self._upsert_conflict_factory = UpsertConflictFieldsDTOFactory(
-            self.config.inspector, upsert_conflict_fields_enum_backend
-        )
+        self.input_factory = MutationInputFactory(self, strawberry_backend)
+        self.aggregation_factory = AggregateRootTypeFactory(self, strawberry_backend, type_factory=self.type_factory)
+        self.enum_factory = EnumFactory(self, enum_backend)
+        self.filter_factory = BooleanFilterFactory(self, aggregate_filter_factory=self.aggregate_filter_factory)
+        self.upsert_conflict_factory = UpsertConflictEnumFactory(self, upsert_conflict_fields_enum_backend)
 
-        self.filter = self._filter_factory.input
-        self.aggregate_filter = partial(self._aggregate_filter_factory.input, mode="aggregate_filter")
-        self.distinct_on = self._distinct_on_enum_factory.decorator
-        self.input = self._input_factory.input
-        self.create_input = partial(self._input_factory.input, mode="create_input")
-        self.pk_update_input = partial(self._input_factory.input, mode="update_by_pk_input")
-        self.filter_update_input = partial(self._input_factory.input, mode="update_by_filter_input")
-        self.order = partial(self._order_by_factory.input, mode="order_by")
-        self.type = self._type_factory.type
-        self.aggregate = partial(self._aggregation_factory.type, mode="aggregate_type")
-        self.upsert_update_fields = self._enum_factory.input
-        self.upsert_conflict_fields = self._upsert_conflict_factory.input
-        # Initialize mutation field builder
-        self._mutation_builder = MutationFieldBuilder(self.config, self._annotation_namespace)
+        self.filter = self.filter_factory.input
+        self.aggregate_filter = partial(self.aggregate_filter_factory.input, mode="aggregate_filter")
+        self.distinct_on = self.distinct_on_enum_factory.decorator
+        self.input = self.input_factory.input
+        self.create_input = partial(self.input_factory.input, mode="create_input")
+        self.pk_update_input = partial(self.input_factory.input, mode="update_by_pk_input")
+        self.filter_update_input = partial(self.input_factory.input, mode="update_by_filter_input")
+        self.order = partial(self.order_by_factory.input, mode="order_by")
+        self.type = self.type_factory.type
+        self.aggregate = partial(self.aggregation_factory.type, mode="aggregate_type")
+        self.upsert_update_fields = self.enum_factory.input
+        self.upsert_conflict_fields = self.upsert_conflict_factory.input
+        self._mutation_builder = MutationFieldBuilder(
+            config=self.config,
+            registry_namespace_getter=self._annotation_namespace,
+            order_by_factory=self.order_by_factory,
+            filter_factory=self.filter_factory,
+            distinct_on_factory=self.distinct_on_enum_factory,
+        )
         # Register common types
-        self.registry.register_enum(OrderByEnum, "OrderByEnum")
+        self.registry.register_enum(OrderByEnum, dto_config=read_all_config)
 
     def _annotation_namespace(self) -> dict[str, Any]:
         """Provides the namespace for Strawberry annotations.
@@ -147,7 +156,7 @@ class Strawchemy:
         Returns:
             A dictionary representing the annotation namespace.
         """
-        return self.registry.namespace("object") | _TYPES_NS
+        return self.registry.namespace("object") | self._types_namespace
 
     @cached_property
     def pydantic(self) -> PydanticMapper:
@@ -168,10 +177,10 @@ class Strawchemy:
         self,
         resolver: Any,
         *,
-        filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
-        distinct_on: type[EnumDTO] | None = None,
+        filter_input: type[BooleanFilterDTO] | bool | None = None,
+        order_by: IncludeFields | type[OrderByDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
+        distinct_on: IncludeFields | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
@@ -196,10 +205,10 @@ class Strawchemy:
     def field(
         self,
         *,
-        filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
-        distinct_on: type[EnumDTO] | None = None,
+        filter_input: type[BooleanFilterDTO] | bool | None = None,
+        order_by: IncludeFields | type[OrderByDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
+        distinct_on: IncludeFields | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
@@ -224,10 +233,10 @@ class Strawchemy:
         self,
         resolver: Any | None = None,
         *,
-        filter_input: type[BooleanFilterDTO] | None = None,
-        order_by: type[OrderByDTO] | None = None,
-        distinct_on: type[EnumDTO] | None = None,
+        filter_input: type[BooleanFilterDTO] | bool | None = None,
+        order_by: IncludeFields | type[OrderByDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
+        distinct_on: IncludeFields | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
@@ -285,21 +294,13 @@ class Strawchemy:
         """
         namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
-        repository_type_ = repository_type if repository_type is not None else self.config.repository_type
-        execution_options_ = execution_options if execution_options is not None else self.config.execution_options
-        pagination = (
-            DefaultOffsetPagination(limit=self.config.pagination_default_limit) if pagination is True else pagination
-        )
-        if pagination is None:
-            pagination = self.config.pagination
-        id_field_name = id_field_name or self.config.default_id_field_name
 
         field = StrawchemyField(
             config=self.config,
-            repository_type=repository_type_,
+            repository_type=repository_type,
             root_field=root_field,
             filter_statement=filter_statement,
-            execution_options=execution_options_,
+            execution_options=execution_options,
             filter_type=filter_input,
             order_by=order_by,
             pagination=pagination,
@@ -321,6 +322,9 @@ class Strawchemy:
             registry_namespace=namespace,
             description=description,
             arguments=arguments,
+            order_by_factory=self.order_by_factory,
+            filter_factory=self.filter_factory,
+            distinct_on_factory=self.distinct_on_enum_factory,
         )
         return field(resolver) if resolver else field
 

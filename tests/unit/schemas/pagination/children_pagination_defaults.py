@@ -9,7 +9,7 @@ from tests.unit.models import Fruit
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.type(Fruit, include="all", child_pagination=DefaultOffsetPagination(limit=10, offset=10))
+@strawchemy.type(Fruit, include="all", paginate="all", default_pagination=DefaultOffsetPagination(limit=10, offset=10))
 class FruitType:
     pass
 

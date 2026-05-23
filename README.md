@@ -42,6 +42,7 @@ Generates GraphQL types, inputs, queries and resolvers directly from SQLAlchemy 
 - [Mapping SQLAlchemy Models](#mapping-sqlalchemy-models)
 - [Resolver Generation](#resolver-generation)
 - [Pagination](#pagination)
+- [Ordering](#ordering)
 - [Filtering](#filtering)
 - [Aggregations](#aggregations)
 - [Mutations](#mutations)
@@ -567,9 +568,11 @@ def farms(self) -> str:
 Strawchemy supports offset-based pagination out of the box.
 
 <details>
-<summary>Pagination example:</summary>
+<summary>Pagination examples</summary>
 
-Enable pagination on fields:
+### Field-Level Pagination
+
+Enable pagination on specific fields:
 
 ```python
 from strawchemy.schema.pagination import DefaultOffsetPagination
@@ -577,10 +580,13 @@ from strawchemy.schema.pagination import DefaultOffsetPagination
 
 @strawberry.type
 class Query:
-    # Enable pagination with default settings
+    # Enable pagination with default settings (limit=100, offset=0)
     users: list[UserType] = strawchemy.field(pagination=True)
-    # Customize pagination defaults
-    users_custom_pagination: list[UserType] = strawchemy.field(pagination=DefaultOffsetPagination(limit=20))
+
+    # Customize pagination defaults for this specific field
+    users_custom: list[UserType] = strawchemy.field(
+        pagination=DefaultOffsetPagination(limit=20, offset=10)
+    )
 ```
 
 In your GraphQL queries, you can use the `offset` and `limit` parameters:
@@ -594,10 +600,40 @@ In your GraphQL queries, you can use the `offset` and `limit` parameters:
 }
 ```
 
-You can also enable pagination for nested relationships:
+### Config-Level Pagination
+
+Enable pagination globally for all list fields:
 
 ```python
-@strawchemy.type(User, include="all", child_pagination=True)
+from strawchemy import Strawchemy, StrawchemyConfig
+
+strawchemy = Strawchemy(
+    StrawchemyConfig(
+        "postgresql",
+        pagination="all",  # Enable on all list fields
+        pagination_default_limit=100,  # Default limit
+        pagination_default_offset=0,  # Default offset
+    )
+)
+
+
+@strawchemy.type(User, include="all")
+class UserType:
+    pass
+
+
+@strawberry.type
+class Query:
+    # This field automatically has pagination enabled
+    users: list[UserType] = strawchemy.field()
+```
+
+### Type-level pagination
+
+Enable pagination for nested relationships from a specific type:
+
+```python
+@strawchemy.type(User, include="all", paginate="all")
 class UserType:
     pass
 ```
@@ -610,6 +646,118 @@ Then in your GraphQL queries:
         id
         name
         posts(offset: 0, limit: 5) {
+            id
+            title
+        }
+    }
+}
+```
+
+</details>
+
+## Ordering
+
+Strawchemy provides flexible ordering capabilities for query results.
+
+<details>
+<summary>Ordering examples</summary>
+
+### Field-Level Ordering
+
+Define ordering inputs and use them on specific fields:
+
+```python
+# Create order by input
+@strawchemy.order(User, include="all")
+class UserOrderBy:
+    pass
+
+
+@strawberry.type
+class Query:
+    users: list[UserType] = strawchemy.field(order_by=UserOrderBy)
+```
+
+Query with ordering:
+
+```graphql
+{
+    users(orderBy: [{ name: ASC }, { createdAt: DESC }]) {
+        id
+        name
+        createdAt
+    }
+}
+```
+
+Available ordering options:
+
+- `ASC` - Ascending order
+- `DESC` - Descending order
+- `ASC_NULLS_FIRST` - Ascending with nulls first
+- `ASC_NULLS_LAST` - Ascending with nulls last
+- `DESC_NULLS_FIRST` - Descending with nulls first
+- `DESC_NULLS_LAST` - Descending with nulls last
+
+### Type-Level Ordering
+
+Enable ordering automatically on a type:
+
+```python
+@strawchemy.type(User, include="all", order="all")
+class UserType:
+    pass
+```
+
+This automatically generates and applies an order by input for all fields using this type.
+
+### Config-Level Ordering
+
+Enable ordering globally for all list fields:
+
+```python
+from strawchemy import Strawchemy, StrawchemyConfig
+
+strawchemy = Strawchemy(
+    StrawchemyConfig(
+        "postgresql",
+        order_by="all",  # Enable ordering on all list fields
+    )
+)
+
+
+@strawchemy.type(User, include="all")
+class UserType:
+    pass
+
+
+@strawberry.type
+class Query:
+    # This field automatically has ordering enabled
+    users: list[UserType] = strawchemy.field()
+```
+
+With this configuration, all list fields will automatically have an `orderBy` argument without needing to specify it per
+field.
+
+### Nested Relationship Ordering
+
+Order nested relationships:
+
+```python
+@strawchemy.type(User, include="all", order="all")
+class UserType:
+    pass
+```
+
+Query with nested ordering:
+
+```graphql
+{
+    users(orderBy: [{ name: ASC }]) {
+        id
+        name
+        posts(orderBy: [{ title: ASC }]) {
             id
             title
         }
@@ -1950,18 +2098,20 @@ Configuration is made by passing a `StrawchemyConfig` to the `Strawchemy` instan
 
 ### Configuration Options
 
-| Option                     | Type                                                        | Default                    | Description                                                                                                                              |
-|----------------------------|-------------------------------------------------------------|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
-| `dialect`                  | `SupportedDialect`                                          |                            | Database dialect to use. Supported dialects are "postgresql", "mysql", "sqlite".                                                         |
-| `session_getter`           | `Callable[[Info], Session]`                                 | `default_session_getter`   | Function to retrieve SQLAlchemy session from strawberry `Info` object. By default, it retrieves the session from `info.context.session`. |
-| `auto_snake_case`          | `bool`                                                      | `True`                     | Automatically convert snake cased names to camel case in GraphQL schema.                                                                 |
-| `repository_type`          | `type[Repository] \| StrawchemySyncRepository`              | `StrawchemySyncRepository` | Repository class to use for auto resolvers.                                                                                              |
-| `filter_overrides`         | `OrderedDict[tuple[type, ...], type[SQLAlchemyFilterBase]]` | `None`                     | Override default filters with custom filters. This allows you to provide custom filter implementations for specific column types.        |
-| `execution_options`        | `dict[str, Any]`                                            | `None`                     | SQLAlchemy execution options for repository operations. These options are passed to the SQLAlchemy `execution_options()` method.         |
-| `pagination_default_limit` | `int`                                                       | `100`                      | Default pagination limit when `pagination=True`.                                                                                         |
-| `pagination`               | `bool`                                                      | `False`                    | Enable/disable pagination on list resolvers by default.                                                                                  |
-| `default_id_field_name`    | `str`                                                       | `"id"`                     | Name for primary key fields arguments on primary key resolvers.                                                                          |
-| `deterministic_ordering`   | `bool`                                                      | `True`                     | Force deterministic ordering for list resolvers.                                                                                         |
+| Option                      | Type                                                        | Default                    | Description                                                                                                                              |
+|-----------------------------|-------------------------------------------------------------|----------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
+| `dialect`                   | `SupportedDialect`                                          |                            | Database dialect to use. Supported dialects are "postgresql", "mysql", "sqlite".                                                         |
+| `session_getter`            | `Callable[[Info], Session]`                                 | `default_session_getter`   | Function to retrieve SQLAlchemy session from strawberry `Info` object. By default, it retrieves the session from `info.context.session`. |
+| `auto_snake_case`           | `bool`                                                      | `True`                     | Automatically convert snake cased names to camel case in GraphQL schema.                                                                 |
+| `repository_type`           | `type[Repository] \| StrawchemySyncRepository`              | `StrawchemySyncRepository` | Repository class to use for auto resolvers.                                                                                              |
+| `filter_overrides`          | `OrderedDict[tuple[type, ...], type[SQLAlchemyFilterBase]]` | `None`                     | Override default filters with custom filters. This allows you to provide custom filter implementations for specific column types.        |
+| `execution_options`         | `dict[str, Any]`                                            | `None`                     | SQLAlchemy execution options for repository operations. These options are passed to the SQLAlchemy `execution_options()` method.         |
+| `default_id_field_name`     | `str`                                                       | `"id"`                     | Name for primary key fields arguments on primary key resolvers.                                                                          |
+| `deterministic_ordering`    | `bool`                                                      | `True`                     | Force deterministic ordering for list resolvers.                                                                                         |
+| `pagination`                | `Literal["all"] \| None`                                    | `None`                     | Enable/disable pagination on list resolvers by default. Set to `"all"` to enable pagination on all list fields.                          |
+| `order_by`                  | `Literal["all"] \| None`                                    | `None`                     | Enable/disable order by on list resolvers by default. Set to `"all"` to enable ordering on all list fields.                              |
+| `pagination_default_limit`  | `int`                                                       | `100`                      | Default pagination limit when `pagination=True`.                                                                                         |
+| `pagination_default_offset` | `int`                                                       | `0`                        | Default pagination offset when `pagination=True`.                                                                                        |
 
 ### Example
 
@@ -1980,8 +2130,10 @@ strawchemy = Strawchemy(
         "postgresql",
         session_getter=get_session_from_context,
         auto_snake_case=True,
-        pagination=True,
+        pagination="all",
         pagination_default_limit=50,
+        pagination_default_offset=0,
+        order_by="all",
         default_id_field_name="pk",
     )
 )

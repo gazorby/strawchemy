@@ -98,13 +98,7 @@ def test_type_resolution_with_resolvers() -> None:
     [pytest.param("tests.unit.schemas.override.auto_type_existing", id="auto_type_existing")],
 )
 def test_multiple_types_error(path: str) -> None:
-    with pytest.raises(
-        StrawchemyError,
-        match=re.escape(
-            """Type `FruitType` cannot be auto generated because it's already declared."""
-            """ You may want to set `override=True` on the existing type to use it everywhere."""
-        ),
-    ):
+    with pytest.raises(StrawchemyError, match=re.escape("Type `FruitType` is already registered")):
         import_module(path)
 
 
@@ -184,21 +178,52 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("pagination.pagination_defaults.Query", id="pagination_defaults"),
         pytest.param("pagination.children_pagination.Query", id="children_pagination"),
         pytest.param("pagination.children_pagination_defaults.Query", id="children_pagination_defaults"),
-        pytest.param("pagination.pagination_default_limit.Query", id="pagination_default_limit"),
         pytest.param("pagination.pagination_config_default.Query", id="pagination_config_default"),
+        pytest.param("pagination.pagination_default_limit.Query", id="pagination_default_limit"),
+        pytest.param("pagination.pagination_default_offset.Query", id="pagination_default_offset"),
+        pytest.param("pagination.paginate_specific_fields.Query", id="paginate_specific_fields"),
+        pytest.param("pagination.paginate_empty.Query", id="paginate_empty"),
+        pytest.param("pagination.pagination_config_empty.Query", id="pagination_config_empty"),
+        pytest.param("pagination.pagination_config_specific_fields.Query", id="pagination_config_specific_fields"),
+        pytest.param(
+            "pagination.pagination_config_with_type_override.Query", id="pagination_config_with_type_override"
+        ),
+        pytest.param("pagination.paginate_and_order_combined.Query", id="paginate_and_order_combined"),
+        pytest.param("pagination.paginate_all_with_default.Query", id="paginate_all_with_default"),
         pytest.param("custom_id_field_name.Query", id="custom_id_field_name"),
         pytest.param("enums.Query", id="enums"),
         pytest.param("filters.filters.Query", id="filters"),
         pytest.param("filters.filters_aggregation.Query", id="aggregation_filters"),
         pytest.param("filters.type_filter.Query", id="type_filter"),
+        pytest.param("filters.field_filter_auto_generate.Query", id="field_filter_auto_generate"),
         pytest.param("order.type_order_by.Query", id="type_order_by"),
         pytest.param("order.field_order_by.Query", id="field_order_by"),
-        pytest.param("order.auto_order_by.Query", id="auto_order_by"),
+        pytest.param("order.field_order_by_all.Query", id="field_order_by_all"),
+        pytest.param("order.field_order_by_specific_fields.Query", id="field_order_by_specific_fields"),
+        pytest.param("order.order_config_all.Query", id="order_config_all"),
+        pytest.param(
+            "order.order_config_specific_fields_with_type_override.Query",
+            id="order_config_specific_fields_with_type_override",
+        ),
+        pytest.param(
+            "order.order_config_empty_with_empty_type_override.Query", id="order_config_empty_with_empty_type_override"
+        ),
+        pytest.param("order.order_config_all_with_field_override.Query", id="order_config_all_with_field_override"),
+        pytest.param("order.order_config_specific_fields.Query", id="order_config_specific_fields"),
+        pytest.param("order.order_config_empty.Query", id="order_config_empty"),
+        pytest.param("order.order_config_with_field_override.Query", id="order_config_with_field_override"),
+        pytest.param("order.type_order_by_specific_fields.Query", id="type_order_by_specific_fields"),
         pytest.param("aggregations.root_aggregations.Query", id="root_aggregations"),
-        pytest.param("distinct.Query", id="distinct"),
+        pytest.param("distinct.type_distinct_manual_enum.Query", id="type_distinct_manual_enum"),
+        pytest.param("distinct.distinct_config_all.Query", id="distinct_config_all"),
+        pytest.param("distinct.field_distinct_all.Query", id="field_distinct_all"),
+        pytest.param("distinct.field_distinct_specific_fields.Query", id="field_distinct_specific_fields"),
+        pytest.param("distinct.distinct_config_with_field_override.Query", id="distinct_config_with_field_override"),
+        pytest.param("distinct.distinct_config_specific_fields.Query", id="distinct_config_specific_fields"),
+        pytest.param("distinct.distinct_config_empty.Query", id="distinct_config_empty"),
         pytest.param("scope.schema_before.Query", id="scope_schema_before"),
         pytest.param("scope.schema_after.Query", id="scope_schema_after"),
-        pytest.param("scope.schema_in_the_middle.Query", id="scope_schema_in_the_middle"),
+        pytest.param("scope.schema_middle.Query", id="scope_schema_middle"),
     ],
 )
 @pytest.mark.snapshot
@@ -505,19 +530,20 @@ def test_pydantic_validation_nested() -> None:
     ]
 
 
-def test_schema_scope_override() -> None:
-    from tests.unit.schemas.scope.schema_after import Query as QueryAfter
-    from tests.unit.schemas.scope.schema_before import Query as QueryBefore
-    from tests.unit.schemas.scope.schema_in_the_middle import Query as QueryInTheMiddle
+@pytest.mark.parametrize(
+    "module_name",
+    [
+        pytest.param("schema_after", id="scope-after"),
+        pytest.param("schema_before", id="scope-before"),
+        pytest.param("schema_middle", id="scope-middle"),
+    ],
+)
+def test_schema_scope_override(module_name: str) -> None:
+    """Test schema scope is working properly no matter where the override is declared."""
+    query_class = import_module(f"tests.unit.schemas.scope.{module_name}").Query
 
-    schema_in_the_middle = strawberry.Schema(query=QueryInTheMiddle, scalar_overrides=SCALAR_OVERRIDES)
-    schema_after = strawberry.Schema(query=QueryAfter, scalar_overrides=SCALAR_OVERRIDES)
-    schema_before = strawberry.Schema(query=QueryBefore, scalar_overrides=SCALAR_OVERRIDES)
+    schema = strawberry.Schema(query=query_class, scalar_overrides=SCALAR_OVERRIDES)
+    schemas_str = textwrap.dedent(str(schema)).strip()
 
-    schemas_str = [
-        textwrap.dedent(str(schema)).strip() for schema in [schema_in_the_middle, schema_after, schema_before]
-    ]
-
-    for schema in schemas_str:
-        assert "GroupType" not in schema
-        assert "GraphQLGroup" in schema
+    assert "GroupType" not in schemas_str
+    assert "GraphQLGroup" in schemas_str

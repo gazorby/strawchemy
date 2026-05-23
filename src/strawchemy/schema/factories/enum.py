@@ -3,26 +3,28 @@ from __future__ import annotations
 from enum import Enum
 from inspect import getmodule
 from types import new_class
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
-from typing_extensions import override
+from typing_extensions import Unpack, override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.strawberry import EnumDTO, GraphQLFieldDefinition
-from strawchemy.dto.types import DTOConfig, ExcludeFields, IncludeFields, Purpose
+from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.utils.text import snake_to_lower_camel_case
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable, Mapping
+    from collections.abc import Callable, Generator, Iterable
 
+    from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
+    from strawchemy.schema.factories._kwargs import DecoratorKwargs, FactoryMethodKwargs
     from strawchemy.utils.graph import Node
 
 T = TypeVar("T")
 
 
-class EnumDTOBackend(DTOBackend[EnumDTO]):
+class EnumBackend(DTOBackend[EnumDTO]):
     def __init__(self, to_camel: bool = True) -> None:
         self.dto_base = EnumDTO
         self.to_camel = to_camel
@@ -66,7 +68,7 @@ class EnumDTOBackend(DTOBackend[EnumDTO]):
         return enum
 
 
-class UpsertConflictFieldsEnumDTOBackend(EnumDTOBackend):
+class UpsertConflictEnumBackend(EnumBackend):
     def __init__(self, inspector: SQLAlchemyGraphQLInspector, to_camel: bool = True) -> None:
         self.dto_base = EnumDTO
         self.to_camel = to_camel
@@ -93,17 +95,18 @@ class UpsertConflictFieldsEnumDTOBackend(EnumDTOBackend):
         )
 
 
-class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO]):
+class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO]):
     inspector: SQLAlchemyGraphQLInspector
 
     def __init__(
         self,
-        inspector: SQLAlchemyGraphQLInspector,
+        mapper: Strawchemy,
         backend: DTOBackend[EnumDTO] | None = None,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
-        super().__init__(inspector, backend or EnumDTOBackend(), handle_cycles, type_map)
+        self._mapper = mapper
+        super().__init__(mapper.config.inspector, backend or EnumBackend(), handle_cycles, type_map)
 
     @override
     def dto_name(
@@ -129,10 +132,10 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, EnumDTO], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
-        for field in super().iter_field_definitions(name, model, dto_config, base, node, raise_if_no_fields, **kwargs):
+        for field in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
             yield GraphQLFieldDefinition.from_field(field)
 
     @override
@@ -140,48 +143,16 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
         self,
         model: type[DeclarativeBase],
         purpose: Purpose = Purpose.READ,
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[DecoratorKwargs],
     ) -> Callable[[type[Any]], type[EnumDTO]]:
-        return super().decorator(
-            model,
-            purpose,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            type_map=type_map,
-            **kwargs,
-        )
+        return super().decorator(model, purpose, **kwargs)
 
     def input(
         self,
         model: type[DeclarativeBase],
-        include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
-        partial: bool | None = None,
-        type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[DecoratorKwargs],
     ) -> Callable[[type[Any]], type[EnumDTO]]:
-        return super().decorator(
-            model,
-            Purpose.WRITE,
-            include=include,
-            exclude=exclude,
-            partial=partial,
-            aliases=aliases,
-            alias_generator=alias_generator,
-            type_map=type_map,
-            **kwargs,
-        )
+        return super().decorator(model, Purpose.WRITE, **kwargs)
 
     def upsert_conflict_fields(
         self,
@@ -199,3 +170,25 @@ class EnumDTOFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDT
                 ],
             ),
         )
+
+    @override
+    def factory(
+        self,
+        model: type[DeclarativeBase],
+        dto_config: DTOConfig,
+        base: type[Any] | None = None,
+        name: str | None = None,
+        **kwargs: Unpack[FactoryMethodKwargs],
+    ) -> type[EnumDTO]:
+        register_type = kwargs.get("register_type", True)
+        dto = super().factory(model=model, dto_config=dto_config, base=base, name=name, **kwargs)
+        if register_type:
+            return self._mapper.registry.register_enum(
+                dto,
+                dto_config=dto_config,
+                description=kwargs.get("description"),
+                directives=kwargs.get("directives") or (),
+                override=kwargs.get("override", False),
+                user_defined=kwargs.get("user_defined", False),
+            )
+        return dto

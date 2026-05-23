@@ -3,41 +3,41 @@ from __future__ import annotations
 from strawchemy.schema.factories.aggregations import AggregationInspector
 from strawchemy.schema.factories.base import (
     ChildOptions,
-    GraphQLDTOFactory,
+    GraphQLFactory,
     MappedGraphQLDTOT,
     StrawchemyMappedFactory,
-    StrawchemyUnMappedDTOFactory,
+    StrawchemyUnMappedFactory,
     UnmappedGraphQLDTOT,
 )
-from strawchemy.schema.factories.enum import EnumDTOBackend, EnumDTOFactory, UpsertConflictFieldsEnumDTOBackend
-from strawchemy.schema.factories.inputs import AggregateFilterDTOFactory, BooleanFilterDTOFactory, OrderByDTOFactory
+from strawchemy.schema.factories.enum import EnumBackend, EnumFactory, UpsertConflictEnumBackend
+from strawchemy.schema.factories.inputs import AggregateFilterFactory, BooleanFilterFactory, OrderByFactory
 from strawchemy.schema.factories.types import (
-    AggregateDTOFactory,
-    DistinctOnFieldsDTOFactory,
-    InputFactory,
-    RootAggregateTypeDTOFactory,
-    TypeDTOFactory,
-    UpsertConflictFieldsDTOFactory,
+    AggregateFieldsFactory,
+    AggregateRootTypeFactory,
+    DistinctOnEnumFactory,
+    MutationInputFactory,
+    ObjectTypeFactory,
+    UpsertConflictEnumFactory,
 )
 
 __all__ = (
-    "AggregateDTOFactory",
-    "AggregateFilterDTOFactory",
+    "AggregateFieldsFactory",
+    "AggregateFilterFactory",
+    "AggregateRootTypeFactory",
     "AggregationInspector",
-    "BooleanFilterDTOFactory",
+    "BooleanFilterFactory",
     "ChildOptions",
-    "DistinctOnFieldsDTOFactory",
-    "EnumDTOBackend",
-    "EnumDTOFactory",
-    "GraphQLDTOFactory",
-    "InputFactory",
+    "DistinctOnEnumFactory",
+    "EnumBackend",
+    "EnumFactory",
+    "GraphQLFactory",
     "MappedGraphQLDTOT",
-    "OrderByDTOFactory",
-    "RootAggregateTypeDTOFactory",
+    "MutationInputFactory",
+    "ObjectTypeFactory",
+    "OrderByFactory",
     "StrawchemyMappedFactory",
-    "StrawchemyUnMappedDTOFactory",
-    "TypeDTOFactory",
+    "StrawchemyUnMappedFactory",
     "UnmappedGraphQLDTOT",
-    "UpsertConflictFieldsDTOFactory",
-    "UpsertConflictFieldsEnumDTOBackend",
+    "UpsertConflictEnumBackend",
+    "UpsertConflictEnumFactory",
 )

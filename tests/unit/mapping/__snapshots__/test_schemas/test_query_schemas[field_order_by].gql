@@ -32,9 +32,7 @@ type Query {
   sqlDataTypes(orderBy: [SQLDataTypesOrderBy!] = null): [SQLDataTypesType!]!
 }
 
-"""
-Boolean expression to compare fields. All fields are combined with logical 'AND'.
-"""
+"""Ordering input."""
 input SQLDataTypesOrderBy {
   dateCol: OrderByEnum
   timeCol: OrderByEnum

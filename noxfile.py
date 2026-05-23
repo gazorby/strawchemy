@@ -15,6 +15,7 @@ COMMON_PYTEST_OPTIONS = ["-n=2", "--showlocals", "-vv"]
 here = Path(__file__).parent
 
 nox.options.default_venv_backend = "uv"
+nox.options.reuse_venv = "yes"
 nox.options.error_on_external_run = True
 nox.options.error_on_missing_interpreters = True
 
@@ -24,7 +25,7 @@ nox.options.error_on_missing_interpreters = True
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "unit", "ci"],
     uv_groups=["test"],
-    uv_all_extras=True,
+    uv_no_groups=["dev"],
     uv_sync_locked=False,
 )
 def unit_tests(session: Session) -> None:
@@ -38,7 +39,7 @@ def unit_tests(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "unit", "ci"],
     uv_groups=["test"],
-    uv_all_extras=False,
+    uv_no_groups=["dev"],
     uv_sync_locked=False,
 )
 def unit_tests_no_extras(session: Session) -> None:
@@ -52,7 +53,7 @@ def unit_tests_no_extras(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration"],
     uv_groups=["test"],
-    uv_all_extras=True,
+    uv_no_groups=["dev"],
     uv_sync_locked=False,
 )
 def integration_tests(session: Session) -> None:
@@ -65,8 +66,7 @@ def integration_tests(session: Session) -> None:
     name="integration-postgres",
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "postgres"],
-    uv_groups=["test"],
-    uv_all_extras=True,
+    uv_groups=["test", "postgres"],
     uv_sync_locked=False,
 )
 def integration_postgres_tests(session: Session) -> None:
@@ -79,8 +79,7 @@ def integration_postgres_tests(session: Session) -> None:
     name="integration-mysql",
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "mysql"],
-    uv_groups=["test"],
-    uv_all_extras=True,
+    uv_groups=["test", "mysql"],
     uv_sync_locked=False,
 )
 def integration_mysql_tests(session: Session) -> None:
@@ -93,8 +92,7 @@ def integration_mysql_tests(session: Session) -> None:
     name="integration-sqlite",
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "sqlite"],
-    uv_groups=["test"],
-    uv_all_extras=True,
+    uv_groups=["test", "aiosqlite"],
     uv_sync_locked=False,
 )
 def integration_sqlite_tests(session: Session) -> None:

@@ -4,10 +4,10 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Optional, TypeVar, cast
 
 from sqlalchemy.orm import DeclarativeBase
-from typing_extensions import override
+from typing_extensions import Unpack, override
 
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.strawberry import (
@@ -20,8 +20,8 @@ from strawchemy.dto.strawberry import (
     UnmappedStrawberryGraphQLDTO,
 )
 from strawchemy.exceptions import DTOError
-from strawchemy.schema.factories.base import GraphQLDTOFactory
-from strawchemy.schema.factories.enum import EnumDTOBackend, EnumDTOFactory
+from strawchemy.schema.factories.base import GraphQLFactory
+from strawchemy.schema.factories.enum import EnumBackend, EnumFactory
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.types import DTOConfig
     from strawchemy.mapper import Strawchemy
     from strawchemy.repository.typing import DeclarativeT
+    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs
     from strawchemy.typing import AggregationFunction, AggregationType, FunctionInfo
     from strawchemy.utils.graph import Node
 
@@ -51,7 +52,7 @@ class _TypeFilterConfig:
     types: frozenset[type[Any]] = field(default_factory=frozenset)
 
 
-class _CountFieldsDTOFactory(EnumDTOFactory):
+class _CountFieldsFactory(EnumFactory):
     @override
     def dto_name(
         self, base_name: str, dto_config: DTOConfig, node: Node[Relation[Any, EnumDTO], None] | None = None
@@ -59,7 +60,7 @@ class _CountFieldsDTOFactory(EnumDTOFactory):
         return f"{base_name}CountFields"
 
 
-class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[DeclarativeBase]]):
+class _FunctionArgFactory(GraphQLFactory[UnmappedStrawberryGraphQLDTO[DeclarativeBase]]):
     types: ClassVar[set[type[Any]]] = set()
 
     def __init__(
@@ -72,7 +73,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         super().__init__(
             mapper, backend or StrawberrryDTOBackend(UnmappedStrawberryGraphQLDTO), handle_cycles, type_map
         )
-        self._enum_backend = EnumDTOBackend()
+        self._enum_backend = EnumBackend()
 
     @override
     def should_exclude_field(
@@ -96,14 +97,14 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         *,
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         function: FunctionInfo | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         for field_def in super().iter_field_definitions(
-            name, model, dto_config, base, node, raise_if_no_fields, field_map=field_map, **kwargs
+            name, model, dto_config, base, node, if_no_fields, field_map=field_map, **kwargs
         ):
             yield (
                 FunctionArgFieldDefinition.from_field(field_def, function=function)
@@ -118,28 +119,11 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
-        parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
-        current_node: Node[Relation[Any, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None] | None = None,
-        raise_if_no_fields: bool = False,
-        tags: set[str] | None = None,
-        backend_kwargs: dict[str, Any] | None = None,
         *,
         function: FunctionInfo | None = None,
-        **kwargs: Any,
+        **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]]:
-        return super().factory(
-            model,
-            dto_config,
-            base,
-            name,
-            parent_field_def,
-            current_node,
-            raise_if_no_fields,
-            tags,
-            backend_kwargs,
-            function=function,
-            **kwargs,
-        )
+        return super().factory(model, dto_config, base, name, function=function, **kwargs)
 
     def enum_factory(
         self,
@@ -147,7 +131,7 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
         dto_config: DTOConfig,
         name: str | None = None,
         base: type[Any] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         **kwargs: Any,
     ) -> type[EnumDTO]:
         if not name:
@@ -158,13 +142,13 @@ class _FunctionArgDTOFactory(GraphQLDTOFactory[UnmappedStrawberryGraphQLDTO[Decl
             dto_config=dto_config,
             base=base,
             node=self._node_or_root(model, name, None),
-            raise_if_no_fields=raise_if_no_fields,
+            if_no_fields=if_no_fields,
             **kwargs,
         )
         return self._enum_backend.build(name, model, list(field_defs), base)
 
 
-class _TypeFilteredFunctionArgDTOFactory(_FunctionArgDTOFactory):
+class _TypeFilteredFunctionArgFactory(_FunctionArgFactory):
     """Generic factory for type-filtered aggregation field DTOs.
 
     This factory replaces multiple nearly-identical factory classes by using
@@ -190,7 +174,7 @@ class _TypeFilteredFunctionArgDTOFactory(_FunctionArgDTOFactory):
         has_override: bool = False,
     ) -> bool:
         return (
-            super(_FunctionArgDTOFactory, self).should_exclude_field(field, dto_config, node, has_override)
+            super(_FunctionArgFactory, self).should_exclude_field(field, dto_config, node, has_override)
             or field.is_relation
             or self.inspector.model_field_type(field) not in self._filter_types
         )
@@ -219,11 +203,11 @@ class AggregationInspector:
 
     def __init__(self, mapper: Strawchemy) -> None:
         self._inspector = mapper.config.inspector
-        self._count_fields_factory = _CountFieldsDTOFactory(self._inspector)
+        self._count_fields_factory = _CountFieldsFactory(mapper)
 
         # Create type-filtered factories from configuration
-        self._type_filtered_factories: dict[str, _TypeFilteredFunctionArgDTOFactory] = {
-            key: _TypeFilteredFunctionArgDTOFactory(mapper, config)
+        self._type_filtered_factories: dict[str, _TypeFilteredFunctionArgFactory] = {
+            key: _TypeFilteredFunctionArgFactory(mapper, config)
             for key, config in self._aggregation_type_filters.items()
         }
 
@@ -342,7 +326,7 @@ class AggregationInspector:
             factory = self._type_filtered_factories.get(aggregation)
             if factory is None:
                 return None
-            dto = factory.enum_factory(model, dto_config, raise_if_no_fields=True)
+            dto = factory.enum_factory(model, dto_config, if_no_fields="raise")
         except DTOError:
             return None
         return dto
@@ -352,7 +336,7 @@ class AggregationInspector:
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
             factory = self._type_filtered_factories["numeric"]
-            dto = factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+            dto = factory.factory(model=model, dto_config=dto_config, if_no_fields="raise")
         except DTOError:
             return None
         return dto
@@ -362,7 +346,7 @@ class AggregationInspector:
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
             factory = self._type_filtered_factories["min_max"]
-            dto = factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+            dto = factory.factory(model=model, dto_config=dto_config, if_no_fields="raise")
         except DTOError:
             return None
         return dto
@@ -372,7 +356,7 @@ class AggregationInspector:
     ) -> type[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None:
         try:
             factory = self._type_filtered_factories["sum"]
-            dto = factory.factory(model=model, dto_config=dto_config, raise_if_no_fields=True)
+            dto = factory.factory(model=model, dto_config=dto_config, if_no_fields="raise")
         except DTOError:
             return None
         return dto

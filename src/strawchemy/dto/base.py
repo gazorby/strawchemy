@@ -14,6 +14,7 @@ from typing import (
     ClassVar,
     ForwardRef,
     Generic,
+    Literal,
     Optional,
     Protocol,
     TypeAlias,
@@ -32,7 +33,7 @@ from strawchemy.dto.types import (
     DTOMissing,
     DTOSkip,
     DTOUnset,
-    ExcludeFields,
+    FieldIterable,
     IncludeFields,
     Purpose,
     PurposeConfig,
@@ -392,17 +393,26 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         explictly_excluded = node.is_root and field.model_field_name in dto_config.exclude
         explicitly_included = node.is_root and field.model_field_name in dto_config.include
 
-        # Exclude fields not present in init if purpose is write
-        if dto_config.purpose is Purpose.WRITE and not explicitly_included:
-            explictly_excluded = explictly_excluded or not field.init
+        globally_excluded = field.model_field_name in dto_config.global_exclude
+        globally_included = field.model_field_name in dto_config.global_include
+
         if dto_config.include == "all" and not explictly_excluded:
-            explicitly_included = True
+            explicitly_included = globally_included = True
+
+        if dto_config.global_include == "all" and not globally_excluded:
+            globally_included = True
 
         excluded = dto_config.purpose not in field.allowed_purposes
+
+        # Exclude fields not present in init if purpose is write
+        if dto_config.purpose is Purpose.WRITE and not (explicitly_included or globally_included):
+            excluded = excluded or not field.init
+
         if node.is_root:
             excluded = excluded or (explictly_excluded or not explicitly_included)
         else:
-            excluded = excluded or explictly_excluded
+            excluded = excluded or (globally_excluded or not globally_included)
+
         return not has_override and excluded
 
     def _resolve_basic_type(self, field: DTOFieldDefinition[ModelT, ModelFieldT], dto_config: DTOConfig) -> Any:
@@ -524,7 +534,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         node: Node[Relation[Any, DTOBaseT], None],
         base: type[Any] | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         backend_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
@@ -538,7 +548,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
                 dto_config=dto_config,
                 base=base,
                 node=node,
-                raise_if_no_fields=raise_if_no_fields,
+                if_no_fields=if_no_fields,
                 **kwargs,
             )
             for field_def in iterable:
@@ -579,7 +589,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         dto_config: DTOConfig,
         base: type[DTOBase[ModelT]] | None,
         node: Node[Relation[ModelT, DTOBaseT], None],
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         **factory_kwargs: Any,
     ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT]]:
         no_fields = True
@@ -611,7 +621,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         if no_fields:
             msg = f"{name} DTO generated from {model.__qualname__} have no fields"
-            if raise_if_no_fields:
+            if if_no_fields == "raise":
                 raise EmptyDTOError(msg)
             warnings.warn(msg, stacklevel=2)
 
@@ -621,11 +631,13 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         dto_config: DTOConfig,
         base: type[Any] | None = None,
         name: str | None = None,
+        *,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
         current_node: Node[Relation[Any, DTOBaseT], None] | None = None,
-        raise_if_no_fields: bool = False,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         tags: set[str] | None = None,
         backend_kwargs: dict[str, Any] | None = None,
+        no_cache: bool = False,
         **kwargs: Any,
     ) -> type[DTOBaseT]:
         """Build a Data transfer object (DTO) from an SQAlchemy model."""
@@ -640,7 +652,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         if dto_config.scope == "global":
             self._scoped_dto_names[self._scoped_cache_key(model, dto_config)] = name
 
-        if (dto := self._dto_cache.get(cache_key)) or (dto := self._dto_cache.get(scoped_cache_key)):
+        if not no_cache and ((dto := self._dto_cache.get(cache_key)) or (dto := self._dto_cache.get(scoped_cache_key))):
             return self.backend.copy(dto, name) if node.is_root else dto
 
         dto = self._factory(
@@ -650,7 +662,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             node,
             base,
             parent_field_def,
-            raise_if_no_fields,
+            if_no_fields,
             backend_kwargs,
             **kwargs,
         )
@@ -684,8 +696,9 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self,
         model: type[ModelT],
         purpose: Purpose,
+        *,
         include: IncludeFields | None = None,
-        exclude: ExcludeFields | None = None,
+        exclude: FieldIterable | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
