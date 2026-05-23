@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import dataclasses
 from collections import defaultdict
-from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
 
@@ -30,15 +29,18 @@ from strawchemy.dto.strawberry import (
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.repository.strawberry._node import StrawberryQueryNode
 from strawchemy.schema.mutation import error_type_names
+from strawchemy.transpiler import QueryHook
 from strawchemy.utils.graph import NodeMetadata
 from strawchemy.utils.strawberry import dto_model_from_type, strawberry_contained_user_type
 from strawchemy.utils.text import camel_to_snake, snake_keys
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from strawberry import Info
     from strawberry.types.field import StrawberryField
 
-    from strawchemy.transpiler import QueryHook, QueryResult
+    from strawchemy.transpiler import QueryResult
     from strawchemy.typing import QueryNodeType, StrawchemyObjectWithStrawberryObjectDefinition
 
 __all__ = ("IS_ASYNC_REPOSITORY", "IS_SYNC_REPOSITORY", "GraphQLResult", "StrawchemyRepository")
@@ -198,9 +200,8 @@ class StrawchemyRepository(Generic[T]):
 
         return field.query_hook if isinstance(field, StrawchemyField) else None
 
-    def _add_query_hooks(self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: QueryNodeType) -> None:
-        hooks = query_hooks if isinstance(query_hooks, Collection) else [query_hooks]
-        for hook in hooks:
+    def _add_query_hooks(self, query_hooks: Sequence[QueryHook[Any]], node: QueryNodeType) -> None:
+        for hook in query_hooks:
             hook.info_var.set(self.info)
             self._query_hooks[node].append(hook)
 
@@ -215,8 +216,7 @@ class StrawchemyRepository(Generic[T]):
             selection_type = selection_type.resolve_type()
         strawberry_definition = get_object_definition(selection_type, strict=True)
 
-        if selection_type.__strawchemy_definition__.query_hook:
-            self._add_query_hooks(selection_type.__strawchemy_definition__.query_hook, node)
+        self._add_query_hooks(selection_type.__strawchemy_definition__.query_hooks, node)
 
         for selection in selected_fields:
             if (
@@ -234,7 +234,7 @@ class StrawchemyRepository(Generic[T]):
             dto_model = dto_model_from_type(selection_type)
 
             if (hooks := self._get_field_hooks(strawberry_field)) is not None:
-                self._add_query_hooks(hooks, node)
+                self._add_query_hooks([hooks] if isinstance(hooks, QueryHook) else hooks, node)
 
             if has_object_definition(selection_type):
                 dto = selection_type
@@ -245,9 +245,8 @@ class StrawchemyRepository(Generic[T]):
 
             key = DTOKey.from_query_node(QueryNode.root_node(dto_model)) + strawberry_field.name
 
-            try:
-                field_definition = dto.__strawchemy_definition__.field_map[key]
-            except KeyError:
+            field_definition = dto.__strawchemy_definition__.get_field_or_none(key)
+            if field_definition is None:
                 continue
 
             selection_arguments = snake_keys(selection.arguments) if self.auto_snake_case else selection.arguments

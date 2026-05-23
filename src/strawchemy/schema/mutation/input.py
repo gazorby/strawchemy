@@ -262,7 +262,7 @@ class Input(Generic[InputModel]):
             mapped = dto.to_mapped(
                 visitor=_InputVisitor(
                     self,
-                    is_update=dto.__strawchemy_definition__.purpose in ("update_by_pk_input", "update_by_filter_input"),
+                    is_update=dto.__strawchemy_definition__.is_update_purpose,
                 ),
                 override=override,
             )

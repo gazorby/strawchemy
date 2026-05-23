@@ -6,12 +6,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 if TYPE_CHECKING:
     from re import Pattern
 
-__all__ = (
-    "camel_to_snake",
-    "snake_keys",
-    "snake_to_camel",
-    "snake_to_lower_camel_case",
-)
+__all__ = ("camel_to_snake", "snake_keys", "snake_to_camel", "snake_to_lower_camel_case")
 
 T = TypeVar("T", bound="Any")
 

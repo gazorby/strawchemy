@@ -125,6 +125,26 @@ class StrawchemyDefinition:
         self.field_map = {key + f.name: f for f in fields}
         return self
 
+    def get_field(self, key: DTOKey, name: str | None = None) -> GraphQLFieldDefinition:
+        full_key = key + name if name else key
+        return self.field_map[full_key]
+
+    def get_field_or_none(self, key: DTOKey, name: str | None = None) -> GraphQLFieldDefinition | None:
+        full_key = key + name if name else key
+        return self.field_map.get(full_key)
+
+    @property
+    def query_hooks(self) -> list[QueryHook[Any]]:
+        if self.query_hook is None:
+            return []
+        if isinstance(self.query_hook, list):
+            return self.query_hook
+        return [self.query_hook]
+
+    @property
+    def is_update_purpose(self) -> bool:
+        return self.purpose in ("update_by_pk_input", "update_by_filter_input")
+
 
 class StrawchemyObject:
     __strawchemy_definition__: ClassVar[StrawchemyDefinition]
@@ -484,7 +504,7 @@ class OrderByDTO(GraphQLFilterDTO):
 
         for name in self.dto_set_fields:
             value: OrderByDTO | OrderByEnum = getattr(self, name)
-            field = self.__strawchemy_definition__.field_map[key + name]
+            field = self.__strawchemy_definition__.get_field(key, name)
             if isinstance(field, FunctionFieldDefinition) and not field.has_model_field:
                 field.model_field = node.value.model_field
             if isinstance(value, OrderByDTO):
@@ -511,7 +531,7 @@ class BooleanFilterDTO(GraphQLFilterDTO):
         )
         for name in self.dto_set_fields:
             value: EqualityComparison[Any] | BooleanFilterDTO | AggregateFilterDTO = getattr(self, name)
-            field = self.__strawchemy_definition__.field_map[key + name]
+            field = self.__strawchemy_definition__.get_field(key, name)
             if isinstance(value, BooleanFilterDTO):
                 child, _ = node.upsert_child(field, match_on="value_equality")
                 _, sub_query = value.filters_tree(child)
