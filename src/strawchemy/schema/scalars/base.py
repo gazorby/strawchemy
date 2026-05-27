@@ -13,7 +13,7 @@ from strawchemy.utils.annotation import new_type
 if TYPE_CHECKING:
     from typing import Any
 
-__all__ = ("Date", "DateTime", "Interval", "Time")
+__all__ = ("Date", "DateTime", "HStore", "Interval", "Time")
 
 
 UTC = timezone.utc
@@ -57,4 +57,12 @@ DateTime = scalar(
     new_type("DateTime", datetime),
     serialize=_serialize_date,
     parse_value=wrap_parser(datetime.fromisoformat, "DateTime"),
+)
+
+
+HStore = scalar(
+    new_type("HStore", dict),
+    description="The `HStore` scalar type represents a PostgreSQL hstore value, a flat mapping of string keys to string values.",
+    serialize=lambda x: x,  # pyright: ignore[reportUnknownLambdaType]
+    parse_value=partial(json.decode, type=dict[str, str]),
 )

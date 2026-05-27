@@ -1,0 +1,160 @@
+# serializer version: 1
+# name: test_hstore_filters[session-tracked-async-containedIn-asyncpg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col <@ $1
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-async-containedIn-psycopg_async_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col <@ %(param_1)s
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-async-contains-asyncpg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col @> $1
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-async-contains-psycopg_async_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col @> %(param_1)s
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-async-hasKey-asyncpg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col ? $1::VARCHAR
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-async-hasKey-psycopg_async_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col ? %(param_1)s::VARCHAR
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-async-hasKeyAll-asyncpg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col ? & CAST($1::TEXT[] AS TEXT[])
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-async-hasKeyAll-psycopg_async_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-async-hasKeyAny-asyncpg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col ? | CAST($1::TEXT[] AS TEXT[])
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-async-hasKeyAny-psycopg_async_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-sync-containedIn-psycopg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col <@ %(param_1)s
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-sync-contains-psycopg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col @> %(param_1)s
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-sync-hasKey-psycopg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col ? %(param_1)s::VARCHAR
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-sync-hasKeyAll-psycopg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_filters[session-tracked-sync-hasKeyAny-psycopg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   WHERE hstore_model.hstore_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_output[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_output[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   ORDER BY hstore_model.id ASC
+  '''
+# ---
+# name: test_hstore_output[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT hstore_model.hstore_col,
+         hstore_model.id
+    FROM hstore_model AS hstore_model
+   ORDER BY hstore_model.id ASC
+  '''
+# ---

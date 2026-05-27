@@ -3,12 +3,13 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Protocol, cast
 
-from sqlalchemy import ARRAY, JSON, ColumnElement, Dialect, Integer, Text, and_, func, not_, null, or_, type_coerce
-from sqlalchemy import cast as sqla_cast
 from sqlalchemy.dialects import mysql
 from sqlalchemy.dialects import postgresql as pg
-from strawberry import UNSET
 from typing_extensions import override
+
+from sqlalchemy import ARRAY, JSON, ColumnElement, Dialect, Integer, Text, and_, func, not_, null, or_, type_coerce
+from sqlalchemy import cast as sqla_cast
+from strawberry import UNSET
 
 if TYPE_CHECKING:
     from datetime import date, timedelta
@@ -25,6 +26,7 @@ if TYPE_CHECKING:
         TextComparison,
         TimeComparison,
         TimeDeltaComparison,
+        _HStoreComparison,
         _JSONComparison,
     )
 
@@ -238,6 +240,30 @@ class JSONFilter(EqualityFilter):
         elif dialect.name == "sqlite":
             expressions.extend(self._sqlite_json(model_attribute))
 
+        return expressions
+
+
+@dataclass(frozen=True)
+class HStoreFilter(EqualityFilter):
+    comparison: _HStoreComparison
+
+    @override
+    def to_expressions(
+        self, dialect: Dialect, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
+    ) -> list[ColumnElement[bool]]:
+        expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
+        as_hstore = type_coerce(model_attribute, pg.HSTORE)
+
+        if self.comparison.contains is not UNSET:
+            expressions.append(as_hstore.contains(self.comparison.contains))
+        if self.comparison.contained_in is not UNSET:
+            expressions.append(as_hstore.contained_by(self.comparison.contained_in))
+        if self.comparison.has_key is not UNSET:
+            expressions.append(as_hstore.has_key(self.comparison.has_key))
+        if self.comparison.has_key_all is not UNSET:
+            expressions.append(as_hstore.has_all(sqla_cast(self.comparison.has_key_all, pg.ARRAY(Text))))
+        if self.comparison.has_key_any is not UNSET:
+            expressions.append(as_hstore.has_any(sqla_cast(self.comparison.has_key_any, pg.ARRAY(Text))))
         return expressions
 
 

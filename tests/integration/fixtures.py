@@ -13,6 +13,12 @@ import pytest
 import sqlparse
 from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
+from sqlalchemy.event import listens_for
+from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import Session, sessionmaker
+from strawberry.scalars import JSON
+from typing_extensions import Self
+
 from sqlalchemy import (
     URL,
     ClauseElement,
@@ -31,15 +37,9 @@ from sqlalchemy import (
     create_engine,
     insert,
 )
-from sqlalchemy.event import listens_for
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.orm import Session, sessionmaker
-from strawberry.scalars import JSON
-from typing_extensions import Self
-
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
-from strawchemy.schema.scalars import Date, DateTime, Interval, Time
+from strawchemy.schema.scalars import Date, DateTime, HStore, Interval, Time
 from tests.fixtures import DefaultQuery
 from tests.integration.models import (
     Color,
@@ -96,6 +96,7 @@ __all__ = (
 FilterableStatement: TypeAlias = Literal["insert", "update", "select", "delete"]
 scalar_overrides: dict[object, Any] = {
     dict[str, Any]: JSON,
+    dict[str, str]: HStore,
     timedelta: Interval,
     time: Time,
     date: Date,
@@ -342,6 +343,15 @@ def raw_intervals() -> RawRecordData:
         {"id": 2, "time_delta_col": timedelta(weeks=1, days=3, hours=12)},
         # empty array
         {"id": 3, "time_delta_col": timedelta(seconds=1)},
+    ]
+
+
+@pytest.fixture
+def raw_hstore() -> RawRecordData:
+    return [
+        {"id": 1, "hstore_col": {"key1": "value1", "key2": "value2", "key3": "value3"}},
+        {"id": 2, "hstore_col": {"status": "pending", "key3": "value3"}},
+        {"id": 3, "hstore_col": {}},
     ]
 
 

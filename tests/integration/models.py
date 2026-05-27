@@ -5,6 +5,12 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta
 from typing import Any
 
+from sqlalchemy.dialects import mysql, postgresql, sqlite
+from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
+from sqlalchemy.orm import registry as Registry  # noqa: N812
+
 from sqlalchemy import (
     ARRAY,
     JSON,
@@ -23,18 +29,13 @@ from sqlalchemy import (
     Time,
     UniqueConstraint,
 )
-from sqlalchemy.dialects import mysql, postgresql, sqlite
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import DeclarativeBase, Mapped, MappedAsDataclass, column_property, mapped_column, relationship
-from sqlalchemy.orm import registry as Registry  # noqa: N812
-
 from strawchemy.dto.utils import PRIVATE, READ_ONLY
 
 metadata = MetaData()
 geo_metadata = MetaData()
 dc_metadata = MetaData()
 json_metadata = MetaData()
+hstore_metadata = MetaData()
 array_metadata = MetaData()
 interval_metadata = MetaData()
 date_time_metadata = MetaData()
@@ -86,6 +87,11 @@ class DataclassBase(BaseColumns, MappedAsDataclass, DeclarativeBase):
 class GeoUUIDBase(BaseColumns, DeclarativeBase):
     __abstract__ = True
     registry = Registry(metadata=geo_metadata)
+
+
+class HStoreBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=hstore_metadata)
 
 
 class ArrayBase(BaseColumns, DeclarativeBase):
@@ -238,6 +244,14 @@ class JSONModel(JSONBase):
     registry = Registry(metadata=json_metadata)
 
     dict_col: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+
+
+class HStoreModel(HStoreBase):
+    __tablename__ = "hstore_model"
+
+    registry = Registry(metadata=hstore_metadata)
+
+    hstore_col: Mapped[dict[str, str]] = mapped_column(postgresql.HSTORE, default=dict)
 
 
 class DateTimeModel(DateTimeBase):

@@ -8,6 +8,7 @@ from strawchemy.schema.filters.base import (
     DateTimeFilter,
     EqualityFilter,
     FilterProtocol,
+    HStoreFilter,
     JSONFilter,
     OrderFilter,
     TextFilter,
@@ -26,9 +27,11 @@ from strawchemy.schema.filters.inputs import (
     TextComparison,
     TimeComparison,
     TimeDeltaComparison,
+    _HStoreComparison,
     _JSONComparison,
     _SQLiteJSONComparison,
     make_full_json_comparison_input,
+    make_hstore_comparison_input,
     make_sqlite_json_comparison_input,
 )
 
@@ -48,6 +51,7 @@ __all__ = (
     "GraphQLComparison",
     "GraphQLComparisonT",
     "GraphQLFilter",
+    "HStoreFilter",
     "JSONFilter",
     "OrderComparison",
     "OrderFilter",
@@ -57,8 +61,10 @@ __all__ = (
     "TimeDeltaComparison",
     "TimeDeltaFilter",
     "TimeFilter",
+    "_HStoreComparison",
     "_JSONComparison",
     "_SQLiteJSONComparison",
     "make_full_json_comparison_input",
+    "make_hstore_comparison_input",
     "make_sqlite_json_comparison_input",
 )

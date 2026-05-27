@@ -1,5 +1,11 @@
 from __future__ import annotations
 
-from strawchemy.schema.scalars.base import Date, DateTime, Interval, Time
+from typing import Any
 
-__all__ = ("Date", "DateTime", "Interval", "Time")
+from strawchemy.schema.scalars.base import Date, DateTime, HStore, Interval, Time
+
+__all__ = ("HSTORE_SCALAR_OVERRIDES", "Date", "DateTime", "HStore", "Interval", "Time")
+
+HSTORE_SCALAR_OVERRIDES: dict[object, type[Any]] = {
+    dict[str, str]: HStore,
+}

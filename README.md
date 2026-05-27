@@ -854,12 +854,109 @@ Strawchemy supports a wide range of filter operations:
 | **Numeric types (Int, Float, Decimal)** | `gt`, `gte`, `lt`, `lte`                                                                                                                                                         |
 | **String**                              | order filter, plus `like`, `nlike`, `ilike`, `nilike`, `regexp`, `iregexp`, `nregexp`, `inregexp`, `startswith`, `endswith`, `contains`, `istartswith`, `iendswith`, `icontains` |
 | **JSON**                                | `contains`, `containedIn`, `hasKey`, `hasKeyAll`, `hasKeyAny`                                                                                                                    |
+| **HStore** (PostgreSQL)                 | `contains`, `containedIn`, `hasKey`, `hasKeyAll`, `hasKeyAny`                                                                                                                    |
 | **Array**                               | `contains`, `containedIn`, `overlap`                                                                                                                                             |
 | **Date**                                | order filters on plain dates, plus `year`, `month`, `day`, `weekDay`, `week`, `quarter`, `isoYear` and `isoWeekDay` filters                                                      |
 | **DateTime**                            | All Date filters plus `hour`, `minute`, `second`                                                                                                                                 |
 | **Time**                                | order filters on plain times, plus `hour`, `minute` and `second` filters                                                                                                         |
 | **Interval**                            | order filters on plain intervals, plus `days`, `hours`, `minutes` and `seconds` filters                                                                                          |
 | **Logical**                             | `_and`, `_or`, `_not`                                                                                                                                                            |
+
+### HStore Filters
+
+Strawchemy supports filtering on PostgreSQL [`hstore`](https://www.postgresql.org/docs/current/hstore.html) columns.
+To use HStore filters, the `hstore` extension must be enabled in your PostgreSQL database.
+
+<details>
+<summary>HStore filters example</summary>
+
+Define models and types:
+
+```python
+from sqlalchemy import MetaData
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+class Base(DeclarativeBase):
+    metadata = MetaData()
+
+class Config(Base):
+    __tablename__ = "config"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    settings: Mapped[dict[str, str]] = mapped_column(postgresql.HSTORE, default=dict)
+
+
+@strawchemy.type(Config, include="all")
+class ConfigType: ...
+
+
+@strawchemy.filter(Config, include="all")
+class ConfigFilter: ...
+
+
+@strawberry.type
+class Query:
+    configs: list[ConfigType] = strawchemy.field(filter_input=ConfigFilter)
+```
+
+**Important:** When creating your Strawberry schema, add `HSTORE_SCALAR_OVERRIDES` so that `dict[str, str]` is
+correctly mapped to the `HStore` GraphQL scalar:
+
+```python
+from strawchemy.schema.scalars import HSTORE_SCALAR_OVERRIDES
+
+schema = strawberry.Schema(
+    query=Query,
+    scalar_overrides={**HSTORE_SCALAR_OVERRIDES},
+)
+```
+
+Then you can use the following HStore filter operations in your GraphQL queries:
+
+```graphql
+{
+    # Find configs where settings contain a specific key-value pair
+    configs(filter: { settings: { contains: { theme: "dark" } } }) {
+        id
+        settings
+    }
+
+    # Find configs where settings are contained within the given dict
+    configs(filter: { settings: { containedIn: { theme: "dark", lang: "en", mode: "advanced" } } }) {
+        id
+        settings
+    }
+
+    # Find configs that have a specific key
+    configs(filter: { settings: { hasKey: "theme" } }) {
+        id
+        settings
+    }
+
+    # Find configs that have all specified keys
+    configs(filter: { settings: { hasKeyAll: ["theme", "lang"] } }) {
+        id
+        settings
+    }
+
+    # Find configs that have any of the specified keys
+    configs(filter: { settings: { hasKeyAny: ["theme", "notifications"] } }) {
+        id
+        settings
+    }
+}
+```
+
+</details>
+
+Strawchemy supports the following HStore filter operations:
+
+- **contains**: Filters for HStore values that contain the given key-value pairs
+- **containedIn**: Filters for HStore values that are contained within the given dict
+- **hasKey**: Filters for HStore values that have the given key
+- **hasKeyAll**: Filters for HStore values that have all the given keys
+- **hasKeyAny**: Filters for HStore values that have any of the given keys
 
 ### Geo Filters
 
