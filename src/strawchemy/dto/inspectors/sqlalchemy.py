@@ -260,7 +260,8 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                         # include a default_factory in that case.
                         or "context" not in signature(default_callable).parameters
                     ):
-                        default_factory = lambda: default.arg({})  # noqa: E731  # ty: ignore[unresolved-attribute]
+                        default_arg = default.arg
+                        default_factory = lambda: default_arg({})  # noqa: E731
                 elif isinstance(default, Sequence):
                     default = DTOUnset
                 else:
