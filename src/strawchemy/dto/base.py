@@ -148,7 +148,7 @@ class MappedDTO(DTOBase[ModelT]):
                     for dto in value
                 ]
             if isinstance(value, ToMappedProtocol):
-                value = value.to_mapped(visitor, level=level + 1)  # ty: ignore[invalid-argument-type]
+                value = value.to_mapped(visitor, level=level + 1)  # ty: ignore[invalid-argument-type]  # runtime isinstance on Generic Protocol drops the ModelT parameter
 
             if visitor is not None:
                 value = visitor.field_value(self, field_def, value, level + 1)
