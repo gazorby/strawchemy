@@ -170,7 +170,7 @@ class StrawchemyField(StrawberryField):
     def _get_repository(self, info: Info[Any, Any]) -> StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]:
         return self._repository_type(
             self._strawchemy_type,
-            session=self._config.session_getter(info),  # ty: ignore[invalid-argument-type]
+            session=self._config.session_getter(info),  # ty: ignore[invalid-argument-type]  # sync/async session unions are not correlated with the repository union here
             info=info,
             auto_snake_case=self._config.auto_snake_case,
             root_aggregations=self.root_aggregations,
