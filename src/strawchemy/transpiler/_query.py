@@ -78,7 +78,7 @@ class Join:
             particularly relevant for ordered relationships.
     """
 
-    target: QueryableAttribute[Any] | NamedFromClause | AliasedClass[Any]
+    target: QueryableAttribute[Any] | NamedFromClause | AliasedClass[Any] | CTE | Lateral
     node: QueryNodeType
     onclause: _OnClauseArgument | None = None
     is_outer: bool = False
@@ -223,7 +223,7 @@ class AggregationJoin(Join):
         if isinstance(self.target, AliasedClass):
             inspect(self.target).selectable = new_sub_select
         else:
-            self.target = new_sub_select  # ty: ignore[invalid-assignment]
+            self.target = new_sub_select  # ty: ignore[invalid-assignment]  # ty treats target as a data descriptor because QueryableAttribute (a union member) defines __set__; the runtime field is a plain attribute
 
     def upsert_column_to_subquery(self, column: ColumnElement[Any]) -> tuple[ColumnElement[Any], bool]:
         """Adds a column to the subquery if an equivalent one doesn't already exist.
