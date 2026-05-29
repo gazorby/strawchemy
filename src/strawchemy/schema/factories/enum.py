@@ -61,9 +61,11 @@ class EnumBackend(DTOBackend[EnumDTO]):
         )
 
     @override
-    @classmethod
-    def copy(cls, dto: type[EnumDTO], name: str) -> EnumDTO:  # pyright: ignore[reportIncompatibleMethodOverride]
-        enum = EnumDTO(value=name, names=[(value.name, value.value) for value in dto])
+    def copy(self, dto: type[EnumDTO], name: str) -> type[EnumDTO]:
+        enum = cast(
+            "type[EnumDTO]",
+            EnumDTO(value=name, names=[(value.name, value.value) for value in dto]),
+        )
         enum.__field_definitions__ = dto.__field_definitions__
         return enum
 
@@ -160,15 +162,12 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
         name: str | None = None,
     ) -> type[Enum]:
         name = name or f"{model.__name__}ConflictFields"
-        return cast(
-            "type[Enum]",
-            Enum(
-                name,
-                [
-                    (f"{'_'.join(col.key for col in constraint.columns)}", constraint)
-                    for constraint in self.inspector.unique_constraints(model)
-                ],
-            ),
+        return Enum(
+            name,
+            [
+                (f"{'_'.join(col.key for col in constraint.columns)}", constraint)
+                for constraint in self.inspector.unique_constraints(model)
+            ],
         )
 
     @override

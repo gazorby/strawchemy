@@ -148,7 +148,7 @@ class MappedDTO(DTOBase[ModelT]):
                     for dto in value
                 ]
             if isinstance(value, ToMappedProtocol):
-                value = value.to_mapped(visitor, level=level + 1)
+                value = value.to_mapped(visitor, level=level + 1)  # ty: ignore[invalid-argument-type]
 
             if visitor is not None:
                 value = visitor.field_value(self, field_def, value, level + 1)
@@ -213,7 +213,7 @@ class DTOBackend(Protocol, Generic[DTOBaseT]):
             dto.__annotations__ = get_type_hints(dto, localns={**TYPING_NS, **namespace}, include_extras=True)
 
     def copy(self, dto: type[DTOBaseT], name: str) -> type[DTOBaseT]:
-        return new_class(name, (dto,))
+        return cast("type[DTOBaseT]", new_class(name, (dto,)))
 
 
 @dataclass
@@ -463,10 +463,10 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             field.related_dto = dto
 
         if field.uselist:
-            dto = list[dto]
+            dto = list[dto]  # ty: ignore[invalid-type-form]
 
         if (is_type_hint_optional(type_hint) and not field.complete) or field.partial:
-            return Optional[dto]
+            return Optional[dto]  # ty: ignore[invalid-type-form]
         return dto
 
     def _resolve_type(
@@ -474,6 +474,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         field: DTOFieldDefinition[ModelT, ModelFieldT],
         dto_config: DTOConfig,
         node: Node[Relation[ModelT, DTOBaseT], None],
+        *_: Any,
         **factory_kwargs: Any,
     ) -> Any:
         """Recursively resolve the type hint to a valid pydantic type."""
@@ -518,6 +519,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         model: type[Any],
         dto_config: DTOConfig,
         node: Node[Relation[Any, DTOBaseT], None],
+        *_: Any,
         **factory_kwargs: Any,
     ) -> Hashable:
         base_key = self._base_cache_key(dto_config)

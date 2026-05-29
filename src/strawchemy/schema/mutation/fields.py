@@ -128,13 +128,13 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
             StrawberryArgument(
                 UPSERT_UPDATE_FIELDS,
                 None,
-                type_annotation=StrawberryAnnotation(Optional[list[self._update_fields_enum]]),
+                type_annotation=StrawberryAnnotation(Optional[list[self._update_fields_enum]]),  # ty: ignore[invalid-type-form]
                 default=None,
             ),
             StrawberryArgument(
                 UPSERT_CONFLICT_FIELDS,
                 None,
-                type_annotation=StrawberryAnnotation(Optional[self._conflict_fields_enum]),
+                type_annotation=StrawberryAnnotation(Optional[self._conflict_fields_enum]),  # ty: ignore[invalid-type-form]
                 default=None,
             ),
         ]

@@ -62,14 +62,14 @@ description = "Run tests"
 depends = "uv:install"
 alias = "t"
 usage = 'arg "[test]" var=#true'
-run = 'uv run pytest {{vars.local_pytest_options}} ${usage_test-}'
+run = "uv run pytest {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:coverage"]
 description = "Run tests with coverage"
 depends = "uv:install"
 alias = "tc"
 usage = 'arg "[test]" var=#true'
-run = 'uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}'
+run = "uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
 
 [tasks."test:unit"]
 description = "Run unit tests"
@@ -79,7 +79,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = 'uv run nox -r -P ${usage_python-} -t unit -- tests/unit {{vars.local_pytest_options}} ${usage_test-}'
+run = "uv run nox -r -P ${usage_python-} -t unit -- tests/unit {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:unit:no-extras"]
 description = "Run unit tests without extras dependencies"
@@ -89,7 +89,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = 'uv run nox -r -P ${usage_python-} -s unit-no-extras -- tests/unit {{vars.local_pytest_options}} ${usage_test-}'
+run = "uv run nox -r -P ${usage_python-} -s unit-no-extras -- tests/unit {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:unit:coverage"]
 description = "Run unit tests with coverage"
@@ -99,7 +99,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = 'uv run nox -r -P ${usage_python-} -t unit -- tests/unit {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}'
+run = "uv run nox -r -P ${usage_python-} -t unit -- tests/unit {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
 
 [tasks."test:integration"]
 description = "Run integration tests"
@@ -109,7 +109,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = 'uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_options}} ${usage_test-}'
+run = "uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:integration-postgres"]
 description = "Run integration tests"
@@ -119,7 +119,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = 'uv run nox -r -P ${usage_python-} -t postgres -- {{vars.local_pytest_options}} ${usage_test-}'
+run = "uv run nox -r -P ${usage_python-} -t postgres -- {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:integration-mysql"]
 description = "Run integration tests"
@@ -129,7 +129,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = 'uv run nox -r -P ${usage_python-} -t mysql -- {{vars.local_pytest_options}} ${usage_test-}'
+run = "uv run nox -r -P ${usage_python-} -t mysql -- {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:integration-sqlite"]
 description = "Run integration tests"
@@ -139,7 +139,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = 'uv run nox -r -P ${usage_python-} -t sqlite -- {{vars.local_pytest_options}} ${usage_test-}'
+run = "uv run nox -r -P ${usage_python-} -t sqlite -- {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:integration:coverage"]
 description = "Run integration tests with coverage"
@@ -149,7 +149,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = 'uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}'
+run = "uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
 
 [tasks."test:unit-all"]
 description = "Run unit tests on all supported python versions"
@@ -159,7 +159,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = 'uv run nox -r -P ${usage_python-} -t unit -- {{vars.local_pytest_options}} ${usage_test-}'
+run = "uv run nox -r -P ${usage_python-} -t unit -- {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:integration-all"]
 description = "Run integration tests on all supported python versions"
@@ -169,7 +169,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = 'uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_options}} ${usage_test-}'
+run = "uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:update-snapshots"]
 description = "Run snapshot-based tests and update snapshots"
@@ -236,28 +236,31 @@ run = "uv run ruff format"
 description = "Format code"
 run = "uv run ruff format --check"
 
-[tasks.pyright]
-description = "Run basedpyright"
-run = "uv run basedpyright"
+[tasks.tombi]
+description = "Run tombi"
+run = "uv run tombi format"
+
+[tasks.ty]
+description = "Run ty"
+run = "uv run ty check"
 
 [tasks.vulture]
 description = "Run vulture"
 run = "uv run vulture"
 
+[tasks.format]
+description = "Lint the code"
+alias = "f"
+depends = ["ruff:format", "tombi"]
+
 [tasks.lint]
 description = "Lint the code"
 alias = "l"
-depends = [
-    "vulture",
-    "pyright",
-    "ruff:check",
-    "ruff:format:check",
-    "slotscheck"
-]
+depends = ["vulture", "ty", "ruff:check", "ruff:format:check", "slotscheck"]
 
 [tasks."lint:pre-commit"]
 description = "Lint the code in pre-commit hook"
-depends = ["vulture", "pyright"]
+depends = ["vulture", "ty"]
 
 [tasks.pre-commit]
 description = "Run pre-commit checks"
@@ -283,14 +286,14 @@ description = "Clean working directory"
 alias = "c"
 confirm = "Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files."
 run = [
-    "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
-    "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
-    "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
-    "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
+  "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
+  "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
+  "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
+  "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
 ]
 
 [tasks."render:usage"]

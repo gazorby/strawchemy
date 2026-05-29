@@ -50,7 +50,7 @@ class GroupCreateValidation:
 @strawchemy.pydantic.create(User, include="all")
 class UserCreateValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
-    group: GroupCreateValidation | None = strawberry.UNSET
+    group: GroupCreateValidation | None = strawberry.UNSET  # ty: ignore[invalid-type-form]
 
 
 @strawchemy.pydantic.pk_update(User, include="all")

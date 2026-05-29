@@ -398,12 +398,15 @@ class NodeInspect:
         Returns:
             True if the node is a data root, False otherwise.
         """
-        return (
-            self.node.graph_metadata.metadata.root_aggregations
-            and self.value.name == NODES_KEY
-            and self.node.parent
-            and self.node.parent.is_root
-        ) or self.node.is_root
+        return bool(
+            (
+                self.node.graph_metadata.metadata.root_aggregations
+                and self.value.name == NODES_KEY
+                and self.node.parent
+                and self.node.parent.is_root
+            )
+            or self.node.is_root
+        )
 
     def output_functions(
         self,
@@ -928,7 +931,7 @@ class QueryScope(Generic[DeclarativeT]):
             >>> scope.key(node)  # Returns a unique key for the node
             >>> scope.key("column_name")  # Returns a unique key for the literal
         """
-        if isinstance(element, Node):
+        if isinstance(element, Node) and not isinstance(element, str):
             scoped_name = self._node_key(element)
         else:
             scoped_name = f"{self._literal_namespace}_{element}_{self._literal_name_counts[element]}"

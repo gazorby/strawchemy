@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypedDict, TypeVar, Union
 
 from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -69,6 +69,10 @@ __all__ = (
 )
 
 T = TypeVar("T")
+
+
+class _HasModeKwargs(TypedDict, total=False):
+    mode: GraphQLPurpose
 
 
 class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
@@ -369,7 +373,7 @@ class AggregateRootTypeFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             dto_config=dto_config,
             model=model,
             model_field_name=NODES_KEY,
-            type_hint=list[nodes_dto],
+            type_hint=list[nodes_dto],  # ty: ignore[invalid-type-form]
             is_relation=False,
         )
         aggregations_field = GraphQLFieldDefinition(
@@ -686,7 +690,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         if field.uselist:
             if mode == "create_input":
                 input_type = ToManyCreateInput[
-                    identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields  # pyright: ignore[reportInvalidTypeArguments]
+                    identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields  # ty: ignore[invalid-type-form, invalid-type-arguments]
                 ]
             else:
                 type_ = (
@@ -694,14 +698,10 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
                     if self.inspector.reverse_relation_required(field.model_field)
                     else ToManyUpdateInput
                 )
-                input_type = type_[  # pyright: ignore[reportInvalidTypeArguments]
-                    identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields
-                ]
+                input_type = type_[identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields]
         else:
             type_ = RequiredToOneInput if field_required else ToOneInput
-            input_type = type_[  # pyright: ignore[reportInvalidTypeArguments]
-                identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields
-            ]
+            input_type = type_[identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields]
         return input_type if field_required and mode == "create_input" else Optional[input_type]
 
     @override
@@ -714,13 +714,23 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         if_no_fields: Literal["raise", "skip"] = "skip",
         *,
-        mode: GraphQLPurpose,
-        **factory_kwargs: Any,
+        aggregations: bool = False,
+        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
+        **factory_kwargs: Unpack[_HasModeKwargs],
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         for field in super().iter_field_definitions(
-            name, model, dto_config, base, node, if_no_fields, mode=mode, **factory_kwargs
+            name,
+            model,
+            dto_config,
+            base,
+            node,
+            if_no_fields,
+            mode=factory_kwargs["mode"],
+            aggregations=aggregations,
+            field_map=field_map,
+            **factory_kwargs,
         ):
-            if mode == "update_by_pk_input" and self.inspector.is_primary_key(field.model_field):
+            if factory_kwargs["mode"] == "update_by_pk_input" and self.inspector.is_primary_key(field.model_field):
                 field.type_ = non_optional_type_hint(field.type_)
             yield field
 

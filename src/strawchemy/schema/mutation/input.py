@@ -166,7 +166,9 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
         level: int,
     ) -> Any:
         field_value = getattr(parent, field.model_field_name)
-        add, remove, create = [], [], []
+        add: list[DeclarativeBase] = []
+        remove: list[DeclarativeBase] = []
+        create: list[DeclarativeBase] = []
         set_: list[Any] | None = []
         upsert: UpsertData | None = None
         relation_type = RelationType.TO_MANY

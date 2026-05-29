@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 from strawchemy.exceptions import StrawchemyError
 
@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 @dataclass(frozen=True)
-class DatabaseFeatures(Protocol):
+class DatabaseFeatures:
     """Defines a protocol for database-specific features.
 
     Attributes:

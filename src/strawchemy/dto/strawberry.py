@@ -31,7 +31,7 @@ from copy import copy
 from dataclasses import dataclass
 from enum import Enum
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, cast, overload
 
 import strawberry
 from msgspec import Struct, field, json
@@ -138,7 +138,7 @@ class StrawchemyDefinition:
         if self.query_hook is None:
             return []
         if isinstance(self.query_hook, list):
-            return self.query_hook
+            return cast("list[QueryHook[Any]]", list(self.query_hook))
         return [self.query_hook]
 
     @property
@@ -355,7 +355,7 @@ class FunctionFieldDefinition(GraphQLFieldDefinition):
 
     @override
     @classmethod
-    def from_field(
+    def from_field(  # ty: ignore[invalid-method-override]
         cls,
         field_def: DTOFieldDefinition[ModelT, ModelFieldT],
         *,
@@ -471,7 +471,8 @@ class EnumDTO(DTOBase[Any], Enum):
     __field_definitions__: dict[str, GraphQLFieldDefinition]
 
     @property
-    def field_definition(self) -> GraphQLFieldDefinition: ...
+    def field_definition(self) -> GraphQLFieldDefinition:
+        return self.__field_definitions__[self.value]
 
 
 class MappedStrawberryGraphQLDTO(StrawchemyObject, MappedStrawberryDTO[ModelT]): ...

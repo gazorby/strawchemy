@@ -19,9 +19,9 @@ def test_add_non_input_relationships(
     @strawchemy.create_input(color_model, include="all")
     class ColorInput: ...
 
-    color = ColorInput(name="Blue")  # pyright: ignore[reportCallIssue]
+    color = ColorInput(name="Blue")
     color_input = Input(color)
     assert len(color_input.relations) == 0
-    color_input.instances[0].fruits.append(fruit_model(name="Apple", color_id=uuid4(), sweetness=1, color=None))  # pyright: ignore[reportArgumentType]
+    color_input.instances[0].fruits.append(fruit_model(name="Apple", color_id=uuid4(), sweetness=1, color=None))
     color_input.add_non_input_relations()
     assert len(color_input.relations) == 1

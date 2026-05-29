@@ -45,6 +45,7 @@ from strawchemy.typing import GraphQLDTOT, GraphQLPurpose, GraphQLType, MappedGr
 from strawchemy.utils.annotation import get_annotations
 
 if TYPE_CHECKING:
+    import builtins
     from collections.abc import Callable, Generator, Mapping, Sequence
 
     from strawchemy import Strawchemy
@@ -422,7 +423,7 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
 
 
 class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
-    def _root_input_config(self, model: type[Any], dto_config: DTOConfig, mode: GraphQLPurpose) -> DTOConfig:
+    def _root_input_config(self, model: builtins.type[Any], dto_config: DTOConfig, mode: GraphQLPurpose) -> DTOConfig:
         annotations_overrides: dict[str, Any] = {}
         partial = dto_config.partial
         exclude_defaults = dto_config.exclude_defaults
@@ -455,14 +456,14 @@ class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
     @dataclass_transform(order_default=True, kw_only_default=True)
     def type(
         self,
-        model: type[T],
+        model: builtins.type[T],
         *,
         name: str | None = None,
         purpose: Purpose = Purpose.READ,
         scope: TypeScope | None = None,
         mode: GraphQLPurpose = "type",
         **kwargs: Unpack[TypeDecoratorKwargs],
-    ) -> Callable[[type[Any]], type[MappedGraphQLDTO[T]]]:
+    ) -> Callable[[builtins.type[Any]], builtins.type[MappedGraphQLDTO[T]]]:
         return self._type_wrapper(
             model=model,
             name=name,
@@ -475,14 +476,14 @@ class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
     @dataclass_transform(order_default=True, kw_only_default=True)
     def input(
         self,
-        model: type[T],
+        model: builtins.type[T],
         *,
         mode: GraphQLPurpose,
         name: str | None = None,
         purpose: Purpose = Purpose.WRITE,
         scope: TypeScope | None = None,
         **kwargs: Unpack[InputDecoratorKwargs],
-    ) -> Callable[[type[Any]], type[MappedGraphQLDTO[T]]]:
+    ) -> Callable[[builtins.type[Any]], builtins.type[MappedGraphQLDTO[T]]]:
         return self._input_wrapper(
             model=model,
             name=name,
@@ -495,14 +496,14 @@ class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
     @override
     def factory(
         self,
-        model: type[T],
+        model: builtins.type[T],
         dto_config: DTOConfig,
-        base: type[Any] | None = None,
+        base: builtins.type[Any] | None = None,
         name: str | None = None,
         *,
         mode: GraphQLPurpose | None = None,
         **kwargs: Any,
-    ) -> type[MappedGraphQLDTOT]:
+    ) -> builtins.type[MappedGraphQLDTOT]:
         if mode and dto_config.purpose is Purpose.WRITE:
             dto_config = self._root_input_config(model, dto_config, mode)
         return super().factory(model, dto_config, base, name, mode=mode, **kwargs)
@@ -512,24 +513,24 @@ class StrawchemyUnMappedFactory(GraphQLFactory[UnmappedGraphQLDTOT]):
     @dataclass_transform(order_default=True, kw_only_default=True)
     def input(
         self,
-        model: type[T],
+        model: builtins.type[T],
         *,
         mode: GraphQLPurpose = "create_input",
         name: str | None = None,
         purpose: Purpose = Purpose.WRITE,
         scope: TypeScope | None = None,
         **kwargs: Unpack[InputDecoratorKwargs],
-    ) -> Callable[[type[Any]], type[UnmappedStrawberryGraphQLDTO[T]]]:
+    ) -> Callable[[builtins.type[Any]], builtins.type[UnmappedStrawberryGraphQLDTO[T]]]:
         return self._input_wrapper(model=model, mode=mode, name=name, purpose=purpose, **kwargs)
 
     @dataclass_transform(order_default=True, kw_only_default=True)
     def type(
         self,
-        model: type[T],
+        model: builtins.type[T],
         *,
         name: str | None = None,
         purpose: Purpose = Purpose.READ,
         mode: GraphQLPurpose = "type",
         **kwargs: Unpack[TypeDecoratorKwargs],
-    ) -> Callable[[type[Any]], type[UnmappedStrawberryGraphQLDTO[T]]]:
+    ) -> Callable[[builtins.type[Any]], builtins.type[UnmappedStrawberryGraphQLDTO[T]]]:
         return self._type_wrapper(model=model, name=name, purpose=purpose, mode=mode, **kwargs)

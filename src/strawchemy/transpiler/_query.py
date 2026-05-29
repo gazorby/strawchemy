@@ -223,7 +223,7 @@ class AggregationJoin(Join):
         if isinstance(self.target, AliasedClass):
             inspect(self.target).selectable = new_sub_select
         else:
-            self.target = new_sub_select
+            self.target = new_sub_select  # ty: ignore[invalid-assignment]
 
     def upsert_column_to_subquery(self, column: ColumnElement[Any]) -> tuple[ColumnElement[Any], bool]:
         """Adds a column to the subquery if an equivalent one doesn't already exist.
@@ -683,7 +683,7 @@ class Query:
         order_by_expressions = self.order_by.expressions if self.order_by else []
 
         for join in sorted_joins:
-            base_statement = base_statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)  # pyright: ignore[reportArgumentType]
+            base_statement = base_statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)  # ty: ignore[invalid-argument-type]
         if self.where and self.where.expressions:
             base_statement = base_statement.where(*self.where.expressions)
         if order_by_expressions:
@@ -729,7 +729,7 @@ class SubqueryBuilder(Generic[DeclarativeT]):
         table name) and is created with `flat=True` to prevent nesting if the
         model is already an alias.
         """
-        self.alias = aliased(class_mapper(self.scope.model), name=self.name, flat=True)
+        self.alias = aliased(class_mapper(self.scope.model), name=self.name, flat=True)  # ty: ignore[invalid-assignment]
 
     @cached_property
     def _distinct_on_rank_column(self) -> str:
@@ -838,7 +838,7 @@ class SubqueryBuilder(Generic[DeclarativeT]):
             in_subquery=True,
         )
 
-        return aliased(class_mapper(self.scope.model), statement.subquery(self.name), name=self.name)
+        return aliased(class_mapper(self.scope.model), statement.subquery(self.name), name=self.name)  # ty: ignore[invalid-return-type]
 
 
 @dataclass

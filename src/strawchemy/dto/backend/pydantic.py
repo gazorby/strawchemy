@@ -8,7 +8,7 @@ for generating DTOs from models, and support for mapping DTOs to SQLAlchemy mode
 from __future__ import annotations
 
 from inspect import getmodule
-from typing import TYPE_CHECKING, Annotated, Any, TypeVar
+from typing import TYPE_CHECKING, Annotated, Any, TypeVar, cast
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, create_model
 from pydantic.fields import Field, FieldInfo
@@ -97,15 +97,15 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         if model_module := getmodule(self.dto_base):
             module = model_module.__name__
 
-        dto = create_model(  # pyright: ignore[reportCallIssue]
+        dto = create_model(  # ty: ignore[no-matching-overload]
             name,
             __base__=(self.dto_base,),
             __module__=module,
             __doc__=f"Pydantic generated DTO for {model.__name__} model" if docstring else None,
-            **fields,  # pyright: ignore[reportArgumentType]
+            **fields,
         )
 
         if config_dict:
             cls_body = {"model_config": config_dict} if config_dict else {}
-            return type(dto.__name__, (dto,), cls_body)
-        return dto
+            return cast("type[PydanticDTOT]", type(dto.__name__, (dto,), cls_body))
+        return cast("type[PydanticDTOT]", dto)

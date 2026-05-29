@@ -378,7 +378,9 @@ class QueryTranspiler(Generic[DeclarativeT]):
             (join for join in existing_joins if isinstance(join, AggregationJoin) and join.node == aggregation_node),
             None,
         )
-        alias = existing_join.subquery_alias if existing_join else aliased(node_inspect.mapper)
+        alias: AliasedClass[Any] = (
+            existing_join.subquery_alias if existing_join else cast("AliasedClass[Any]", aliased(node_inspect.mapper))
+        )
         for child_inspect in node_inspect.children:
             child_functions = child_inspect.output_functions(alias)
             for node in set(child_functions) & set(self.scope.columns):
@@ -482,10 +484,10 @@ class QueryTranspiler(Generic[DeclarativeT]):
         relationship = node.value.model_field.property
         assert isinstance(relationship, RelationshipProperty)
         target_mapper: Mapper[Any] = relationship.mapper.mapper
-        target_alias = aliased(target_mapper, flat=True)
-        order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else ()
+        target_alias: AliasedClass[Any] = cast("AliasedClass[Any]", aliased(target_mapper, flat=True))
+        order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else []
         with self._sub_scope(target_mapper.class_, target_alias):
-            query_graph = QueryGraph(self.scope, order_by=order_by)
+            query_graph = QueryGraph(self.scope, order_by=order_by)  # ty:ignore[invalid-argument-type]
             query = self._build_query(query_graph, limit=relation_filter.limit, offset=relation_filter.offset)
         if self._inspector.db_features.supports_lateral:
             join = self._lateral_join(node, target_alias, query, is_outer)
@@ -879,7 +881,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        executor_cls: type[QueryExecutorT] = SyncQueryExecutor,
+        executor_cls: type[QueryExecutorT] = SyncQueryExecutor,  # ty: ignore[invalid-parameter-default]
         execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
         """Creates a QueryExecutor that executes a SQLAlchemy query based on a selection tree.

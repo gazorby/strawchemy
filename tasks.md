@@ -53,6 +53,15 @@ Output test session names for CI
 
 Clean working directory
 
+## `format`
+
+- Depends: ruff:format, tombi
+
+- **Usage**: `format`
+- **Aliases**: `f`
+
+Lint the code
+
 ## `install`
 
 - Depends: install:pre-commit, uv:install
@@ -70,7 +79,7 @@ Install pre-commit hooks
 
 ## `lint`
 
-- Depends: vulture, pyright, ruff:check, ruff:format:check, slotscheck
+- Depends: vulture, ty, ruff:check, ruff:format:check, slotscheck
 
 - **Usage**: `lint`
 - **Aliases**: `l`
@@ -79,7 +88,7 @@ Lint the code
 
 ## `lint:pre-commit`
 
-- Depends: vulture, pyright
+- Depends: vulture, ty
 
 - **Usage**: `lint:pre-commit`
 
@@ -92,12 +101,6 @@ Lint the code in pre-commit hook
 - **Usage**: `pre-commit`
 
 Run pre-commit checks
-
-## `pyright`
-
-- **Usage**: `pyright`
-
-Run basedpyright
 
 ## `render:usage`
 
@@ -358,6 +361,18 @@ Run unit tests without extras dependencies
 - **Usage**: `test:update-snapshots`
 
 Run snapshot-based tests and update snapshots
+
+## `tombi`
+
+- **Usage**: `tombi`
+
+Run tombi
+
+## `ty`
+
+- **Usage**: `ty`
+
+Run ty
 
 ## `uv:install`
 

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from inspect import getmodule
 from types import new_class
-from typing import TYPE_CHECKING, Any, TypeVar, get_origin
+from typing import TYPE_CHECKING, Any, TypeVar, cast, get_origin
 
 import strawberry
 from strawberry.types.field import StrawberryField
@@ -77,7 +77,7 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
             namespace.update(attributes)
             return namespace
 
-        return new_class(name, (self.dto_base,), exec_body=_exec_body)
+        return cast("type[AnnotatedDTOT]", new_class(name, (self.dto_base,), exec_body=_exec_body))
 
     @override
     def build(
@@ -121,4 +121,4 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
             namespace.update(base_attributes | attributes)
             return namespace
 
-        return new_class(name, bases=bases, exec_body=_exec_body)
+        return cast("type[AnnotatedDTOT]", new_class(name, bases=bases, exec_body=_exec_body))
