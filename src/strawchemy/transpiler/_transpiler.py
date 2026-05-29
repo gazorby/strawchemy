@@ -881,7 +881,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         offset: int | None = None,
         distinct_on: list[EnumDTO] | None = None,
         allow_null: bool = False,
-        executor_cls: type[QueryExecutorT] = SyncQueryExecutor,  # ty: ignore[invalid-parameter-default]
+        executor_cls: type[QueryExecutorT] = SyncQueryExecutor,  # ty: ignore[invalid-parameter-default]  # concrete default cannot satisfy an open TypeVar; overloading is not worth the verbosity
         execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
         """Creates a QueryExecutor that executes a SQLAlchemy query based on a selection tree.
