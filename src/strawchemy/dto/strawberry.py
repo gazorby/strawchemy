@@ -355,13 +355,16 @@ class FunctionFieldDefinition(GraphQLFieldDefinition):
 
     @override
     @classmethod
-    def from_field(  # ty: ignore[invalid-method-override]
+    def from_field(
         cls,
         field_def: DTOFieldDefinition[ModelT, ModelFieldT],
         *,
-        function: FilterFunctionInfo | OutputFunctionInfo,
+        function: FilterFunctionInfo | OutputFunctionInfo | None = None,
         **kwargs: Any,
     ) -> Self:
+        if function is None:
+            msg = "FunctionFieldDefinition.from_field requires `function`"
+            raise ValueError(msg)
         return super().from_field(field_def, _function=function, **kwargs)
 
     @override
