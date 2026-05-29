@@ -134,7 +134,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         self.execution_options = execution_options
         self.deterministic_ordering = deterministic_ordering
 
-        self._dialect = session.get_bind().dialect  # ty: ignore[invalid-argument-type]
+        self._dialect = session.get_bind().dialect  # ty: ignore[invalid-argument-type]  # get_bind() typing differs across sync/async Session stubs
 
     def _get_query_executor(
         self,
