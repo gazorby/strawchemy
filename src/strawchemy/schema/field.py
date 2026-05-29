@@ -106,13 +106,13 @@ class StrawchemyField(StrawberryField):
         is_subscription: bool = False,
         description: str | None = None,
         base_resolver: StrawberryResolver[Any] | None = None,
-        permission_classes: list[builtins.type[BasePermission]] = (),  # ty: ignore[invalid-parameter-default]
+        permission_classes: Sequence[builtins.type[BasePermission]] = (),
         default: object = dataclasses.MISSING,
         default_factory: Callable[[], Any] | object = dataclasses.MISSING,
         metadata: Mapping[Any, Any] | None = None,
         deprecation_reason: str | None = None,
         directives: Sequence[object] = (),
-        extensions: list[FieldExtension] = (),  # ty: ignore[invalid-parameter-default]
+        extensions: Sequence[FieldExtension] = (),
         root_field: bool = False,
     ) -> None:
         self.type_annotation = type_annotation
@@ -144,13 +144,13 @@ class StrawchemyField(StrawberryField):
             is_subscription,
             description,
             base_resolver,
-            permission_classes,
+            list(permission_classes),
             default,
             default_factory,
             metadata,
             deprecation_reason,
             directives,
-            extensions,
+            list(extensions),
         )
 
         self._arguments = arguments
