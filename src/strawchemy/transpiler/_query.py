@@ -729,7 +729,7 @@ class SubqueryBuilder(Generic[DeclarativeT]):
         table name) and is created with `flat=True` to prevent nesting if the
         model is already an alias.
         """
-        self.alias = aliased(class_mapper(self.scope.model), name=self.name, flat=True)  # ty: ignore[invalid-assignment]
+        self.alias = aliased(class_mapper(self.scope.model), name=self.name, flat=True)  # ty: ignore[invalid-assignment]  # aliased() over a runtime Mapper does not infer AliasedClass[DeclarativeT]
 
     @cached_property
     def _distinct_on_rank_column(self) -> str:
