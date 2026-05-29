@@ -51,4 +51,4 @@ def get_annotations(obj: Any) -> dict[str, Any]:
 
 
 def new_type(name: str, type_: type[T]) -> type[T]:
-    return cast("type[T]", NewType(name, type_))  # ty: ignore[invalid-newtype]
+    return cast("type[T]", NewType(name, type_))  # ty: ignore[invalid-newtype]  # NewType needs a literal name; built dynamically in this helper

@@ -578,7 +578,7 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
         Returns:
             The (potentially specialized) GraphQL filter type.
         """
-        return sqlalchemy_filter if cls._is_specialized(sqlalchemy_filter) else sqlalchemy_filter[type_]  # ty: ignore[not-subscriptable]
+        return sqlalchemy_filter if cls._is_specialized(sqlalchemy_filter) else sqlalchemy_filter[type_]  # ty: ignore[not-subscriptable]  # runtime generic specialization with a dynamic type argument
 
     def get_field_comparison(
         self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]
