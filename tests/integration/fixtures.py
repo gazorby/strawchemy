@@ -36,6 +36,7 @@ from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, a
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.util import immutabledict
 from strawberry.scalars import JSON
+from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from typing_extensions import Self
 
 from strawchemy.config.databases import DatabaseFeatures
@@ -96,7 +97,7 @@ __all__ = (
 
 FilterableStatement: TypeAlias = Literal["insert", "update", "select", "delete"]
 scalar_overrides: dict[object, Any] = {
-    dict[str, Any]: JSON,
+    dict[str, Any]: DEFAULT_SCALAR_REGISTRY[JSON],
     timedelta: Interval,
     time: Time,
     date: Date,

@@ -2,23 +2,15 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta, timezone
 from functools import partial
-from typing import TYPE_CHECKING, TypeVar
 
 from msgspec import json
 from strawberry import scalar
 from strawberry.schema.types.base_scalars import wrap_parser
 
-from strawchemy.utils.annotation import new_type
-
-if TYPE_CHECKING:
-    from typing import Any
-
 __all__ = ("Date", "DateTime", "Interval", "Time")
 
 
 UTC = timezone.utc
-
-T = TypeVar("T", bound="Any")
 
 
 def _serialize_time(value: time | timedelta | str) -> str:
@@ -36,7 +28,7 @@ def _serialize(value: timedelta) -> str:
 
 
 Interval = scalar(
-    new_type("Interval", timedelta),
+    name="Interval",
     description=(
         "The `Interval` scalar type represents a duration of time as specified by "
         "[ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations)."
@@ -47,14 +39,18 @@ Interval = scalar(
 )
 
 Time = scalar(
-    new_type("Time", time),
+    name="Time",
     serialize=_serialize_time,
     parse_value=wrap_parser(time.fromisoformat, "Time"),
     description="Time (isoformat)",
 )
-Date = scalar(new_type("Date", date), serialize=_serialize_date, parse_value=wrap_parser(date.fromisoformat, "Date"))
+Date = scalar(
+    name="Date",
+    serialize=_serialize_date,
+    parse_value=wrap_parser(date.fromisoformat, "Date"),
+)
 DateTime = scalar(
-    new_type("DateTime", datetime),
+    name="DateTime",
     serialize=_serialize_date,
     parse_value=wrap_parser(datetime.fromisoformat, "DateTime"),
 )
