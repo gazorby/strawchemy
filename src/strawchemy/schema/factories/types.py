@@ -718,6 +718,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **factory_kwargs: Unpack[_HasModeKwargs],
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
+        mode: GraphQLPurpose = factory_kwargs.pop("mode")
         for field in super().iter_field_definitions(
             name,
             model,
@@ -725,12 +726,12 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             base,
             node,
             if_no_fields,
-            mode=factory_kwargs["mode"],
+            mode=mode,
             aggregations=aggregations,
             field_map=field_map,
             **factory_kwargs,
         ):
-            if factory_kwargs["mode"] == "update_by_pk_input" and self.inspector.is_primary_key(field.model_field):
+            if mode == "update_by_pk_input" and self.inspector.is_primary_key(field.model_field):
                 field.type_ = non_optional_type_hint(field.type_)
             yield field
 
