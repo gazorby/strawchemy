@@ -67,8 +67,10 @@ def _parse_geojson(val: dict[str, Any], geometry: type[PydanticGeometry] | None 
     return _GeometryHolder(_PYDANTIC_GEO_ADAPTER_MAP[geometry].validate_python(val))
 
 
-GeoJSON = strawberry.scalar(
-    new_type("GeoJSON", _GeometryHolder),
+GeoJSON = new_type("GeoJSON", _GeometryHolder)
+
+_GeoJSONScalar = strawberry.scalar(
+    name="GeoJSON",
     description=(
         "The `GeoJSON` type represents GeoJSON values as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -79,7 +81,7 @@ GeoJSON = strawberry.scalar(
 )
 
 GeoJSONPoint = strawberry.scalar(
-    new_type("GeoJSONPoint", object),
+    name="GeoJSONPoint",
     description=(
         "The `GeoJSONPoint` type represents GeoJSON Point object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -90,7 +92,7 @@ GeoJSONPoint = strawberry.scalar(
 )
 
 GeoJSONMultiPoint = strawberry.scalar(
-    new_type("GeoJSONMultiPoint", object),
+    name="GeoJSONMultiPoint",
     description=(
         "The `GeoJSONMultiPoint` type represents GeoJSON MultiPoint object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -101,7 +103,7 @@ GeoJSONMultiPoint = strawberry.scalar(
 )
 
 GeoJSONPolygon = strawberry.scalar(
-    new_type("GeoJSONPolygon", object),
+    name="GeoJSONPolygon",
     description=(
         "The `GeoJSONPolygon` type represents GeoJSON Polygon object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -112,7 +114,7 @@ GeoJSONPolygon = strawberry.scalar(
 )
 
 GeoJSONMultiPolygon = strawberry.scalar(
-    new_type("GeoJSONMultiPolygon", object),
+    name="GeoJSONMultiPolygon",
     description=(
         "The `GeoJSONMultiPolygon` type represents GeoJSON MultiPolygon object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -123,7 +125,7 @@ GeoJSONMultiPolygon = strawberry.scalar(
 )
 
 GeoJSONLineString = strawberry.scalar(
-    new_type("GeoJSONLineString", object),
+    name="GeoJSONLineString",
     description=(
         "The `GeoJSONLineString` type represents GeoJSON LineString object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -134,7 +136,7 @@ GeoJSONLineString = strawberry.scalar(
 )
 
 GeoJSONMultiLineString = strawberry.scalar(
-    new_type("GeoJSONMultiLineString", object),
+    name="GeoJSONMultiLineString",
     description=(
         "The `GeoJSONMultiLineString` type represents GeoJSON MultiLineString object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -145,7 +147,7 @@ GeoJSONMultiLineString = strawberry.scalar(
 )
 
 GeoJSONGeometryCollection = strawberry.scalar(
-    new_type("GeoJSONGeometryCollection", object),
+    name="GeoJSONGeometryCollection",
     description=(
         "The `GeoJSONGeometryCollection` type represents GeoJSON GeometryCollection object as specified by "
         "[RFC 7946](https://datatracker.ietf.org/doc/html/rfc7946)"
@@ -156,9 +158,10 @@ GeoJSONGeometryCollection = strawberry.scalar(
 )
 
 
-GEO_SCALAR_OVERRIDES: dict[object, type[Any]] = {
-    WKTElement: GeoJSON,
-    WKBElement: GeoJSON,
+GEO_SCALAR_OVERRIDES: dict[object, Any] = {
+    GeoJSON: _GeoJSONScalar,
+    WKTElement: _GeoJSONScalar,
+    WKBElement: _GeoJSONScalar,
     shapely.Point: GeoJSONPoint,
     shapely.MultiPoint: GeoJSONMultiPoint,
     shapely.Polygon: GeoJSONPolygon,
@@ -166,5 +169,5 @@ GEO_SCALAR_OVERRIDES: dict[object, type[Any]] = {
     shapely.LineString: GeoJSONLineString,
     shapely.MultiLineString: GeoJSONMultiLineString,
     shapely.GeometryCollection: GeoJSONGeometryCollection,
-    shapely.Geometry: GeoJSON,
+    shapely.Geometry: _GeoJSONScalar,
 }

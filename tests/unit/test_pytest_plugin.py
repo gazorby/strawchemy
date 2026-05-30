@@ -33,12 +33,13 @@ def test_patch_query_fixture(query: str, pytester: pytest.Pytester) -> None:
         from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository, StrawchemyConfig
         from strawchemy.testing import MockContext
         from tests.unit.models import Fruit, SQLDataTypes
-        from strawberry.scalars import JSON
         from typing import Any
         from datetime import timedelta
+        from strawberry.scalars import JSON
+        from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
         from strawchemy.schema.scalars import Interval
 
-        SCALAR_OVERRIDES: dict[object, Any] = {{dict[str, Any]: JSON, timedelta: Interval}}
+        SCALAR_OVERRIDES: dict[object, Any] = {{dict[str, Any]: DEFAULT_SCALAR_REGISTRY[JSON], timedelta: Interval}}
         pytest_plugins = ["strawchemy.testing.pytest_plugin", "pytest_asyncio"]
 
         strawchemy = Strawchemy("postgresql")

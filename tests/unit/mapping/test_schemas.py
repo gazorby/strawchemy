@@ -11,6 +11,7 @@ import pytest
 import strawberry
 from strawberry import auto
 from strawberry.scalars import JSON
+from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 from syrupy.assertion import SnapshotAssertion
@@ -28,7 +29,7 @@ if TYPE_CHECKING:
     from strawchemy.mapper import Strawchemy
 
 
-SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: JSON, timedelta: Interval}
+SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: DEFAULT_SCALAR_REGISTRY[JSON], timedelta: Interval}
 
 
 def test_type_instance(strawchemy: Strawchemy) -> None:
