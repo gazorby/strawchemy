@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import inspect
-from typing import Any, NewType, Optional, TypeVar, Union, get_args, get_origin
+from typing import Any, NewType, Optional, TypeVar, Union, cast, get_args, get_origin
 
 from strawchemy.typing import UNION_TYPES
 
@@ -51,5 +51,4 @@ def get_annotations(obj: Any) -> dict[str, Any]:
 
 
 def new_type(name: str, type_: type[T]) -> type[T]:
-    # Needed for pyright
-    return NewType(name, type_)  # pyright: ignore[reportArgumentType]
+    return cast("type[T]", NewType(name, type_))  # ty: ignore[invalid-newtype]  # NewType needs a literal name; built dynamically in this helper

@@ -20,6 +20,8 @@ from strawchemy.repository.strawberry.base import (
 from strawchemy.utils.strawberry import default_session_getter, dto_model_from_type, strawberry_contained_user_type
 
 if TYPE_CHECKING:
+    import builtins
+
     from sqlalchemy import Select
     from strawberry import Info
 
@@ -78,8 +80,8 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
     def get_one_or_none(
         self,
         filter_input: BooleanFilterDTO | None = None,
-        order_by: list[OrderByDTO] | None = None,
-        distinct_on: list[EnumDTO] | None = None,
+        order_by: builtins.list[OrderByDTO] | None = None,
+        distinct_on: builtins.list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> GraphQLResult[Any, T]:
@@ -109,8 +111,8 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
     def get_one(
         self,
         filter_input: BooleanFilterDTO | None = None,
-        order_by: list[OrderByDTO] | None = None,
-        distinct_on: list[EnumDTO] | None = None,
+        order_by: builtins.list[OrderByDTO] | None = None,
+        distinct_on: builtins.list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> GraphQLResult[Any, T]:
@@ -161,8 +163,8 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
     def list(
         self,
         filter_input: BooleanFilterDTO | None = None,
-        order_by: list[OrderByDTO] | None = None,
-        distinct_on: list[EnumDTO] | None = None,
+        order_by: builtins.list[OrderByDTO] | None = None,
+        distinct_on: builtins.list[EnumDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
     ) -> GraphQLResult[Any, T]:
@@ -205,7 +207,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
         self,
         data: Input[InputModel],
         filter_input: BooleanFilterDTO | None = None,
-        update_fields: list[EnumDTO] | None = None,
+        update_fields: builtins.list[EnumDTO] | None = None,
         conflict_fields: EnumDTO | None = None,
     ) -> GraphQLResult[InputModel, T]:
         """Asynchronously insert or update an entity.

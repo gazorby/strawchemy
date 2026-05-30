@@ -260,7 +260,8 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                         # include a default_factory in that case.
                         or "context" not in signature(default_callable).parameters
                     ):
-                        default_factory = lambda: default.arg({})  # noqa: E731
+                        default_arg = default.arg
+                        default_factory = lambda: default_arg({})  # noqa: E731
                 elif isinstance(default, Sequence):
                     default = DTOUnset
                 else:
@@ -373,7 +374,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                 and column_prop.type.geometry_type in _shapely_geometry_map
             ):
                 geo_type_hint = _shapely_geometry_map[column_prop.type.geometry_type]
-                type_hint = Optional[geo_type_hint] if is_type_hint_optional(type_hint) else geo_type_hint
+                type_hint = Optional[geo_type_hint] if is_type_hint_optional(type_hint) else geo_type_hint  # ty: ignore[invalid-type-form]
 
         return DTOFieldDefinition(
             type_hint=type_hint,
@@ -577,7 +578,7 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
         Returns:
             The (potentially specialized) GraphQL filter type.
         """
-        return sqlalchemy_filter if cls._is_specialized(sqlalchemy_filter) else sqlalchemy_filter[type_]  # pyright: ignore[reportInvalidTypeArguments]
+        return sqlalchemy_filter if cls._is_specialized(sqlalchemy_filter) else sqlalchemy_filter[type_]  # ty: ignore[not-subscriptable]  # runtime generic specialization with a dynamic type argument
 
     def get_field_comparison(
         self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]
@@ -621,4 +622,4 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
         for types, sqlalchemy_filter in self.filters_map.items():
             if issubclass(type_, types):
                 return self._filter_type(type_, sqlalchemy_filter)
-        return EqualityComparison[type_]
+        return EqualityComparison[type_]  # ty: ignore[invalid-type-form]

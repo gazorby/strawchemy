@@ -34,6 +34,7 @@ from sqlalchemy import (
 from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.util import immutabledict
 from strawberry.scalars import JSON
 from typing_extensions import Self
 
@@ -460,7 +461,7 @@ def psycopg_engine(postgres_database_service: PostgresService) -> Generator[Engi
             host=postgres_database_service.host,
             port=postgres_database_service.port,
             database=postgres_database_service.database,
-            query={},  # type:ignore[arg-type]
+            query=immutabledict(),
         ),
         poolclass=NullPool,
         plugins=engine_plugins,
@@ -530,7 +531,7 @@ async def asyncmy_engine(mysql_service: MySQLService) -> AsyncGenerator[AsyncEng
             host=mysql_service.host,
             port=mysql_service.port,
             database=mysql_service.db,
-            query={},  # type:ignore[arg-type]
+            query=immutabledict(),
         ),
         poolclass=NullPool,
         plugins=engine_plugins,
@@ -561,7 +562,7 @@ async def asyncpg_engine(postgres_database_service: PostgresService) -> AsyncGen
             host=postgres_database_service.host,
             port=postgres_database_service.port,
             database=postgres_database_service.database,
-            query={},  # type:ignore[arg-type]
+            query=immutabledict(),
         ),
         poolclass=NullPool,
         plugins=engine_plugins,
@@ -583,7 +584,7 @@ async def psycopg_async_engine(postgres_database_service: PostgresService) -> As
             host=postgres_database_service.host,
             port=postgres_database_service.port,
             database=postgres_database_service.database,
-            query={},  # type:ignore[arg-type]
+            query=immutabledict(),
         ),
         poolclass=NullPool,
         plugins=engine_plugins,

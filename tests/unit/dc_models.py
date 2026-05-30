@@ -76,7 +76,7 @@ class UserWithGreetingDataclass(UUIDBase):
     __tablename__ = "user_with_greeting_dataclass"
 
     name: Mapped[str] = mapped_column()
-    greeting_column_property: Mapped[str] = column_property("Hello, " + name)
+    greeting_column_property: Mapped[str] = column_property("Hello, " + name)  # ty: ignore[invalid-argument-type]
     id: Mapped[UUID] = mapped_column(primary_key=True, default_factory=uuid4)
 
     @hybrid_property

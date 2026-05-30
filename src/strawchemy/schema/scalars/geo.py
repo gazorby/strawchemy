@@ -44,7 +44,7 @@ class _GeometryHolder:
 
 _PydanticGeometryType = TypeAdapter(PydanticGeometry)
 
-_PYDANTIC_GEO_ADAPTER_MAP = {
+_PYDANTIC_GEO_ADAPTER_MAP: dict[type[PydanticGeometry], TypeAdapter[Any]] = {
     Point: TypeAdapter(Point),
     Polygon: TypeAdapter(Polygon),
     MultiPolygon: TypeAdapter(MultiPolygon),

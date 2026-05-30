@@ -100,7 +100,7 @@ def test_to_mapped(
         **{  # noqa: PIE804
             "name": "foo",
             "id": fruit_uuid,
-            "color": color_dto(id=color_uuid, name="red", fruits=[]),  # pyright: ignore[reportCallIssue]
+            "color": color_dto(id=color_uuid, name="red", fruits=[]),  # ty: ignore[unknown-argument]
             "color_id": color_uuid,
             "sweetness": 1,
         }
@@ -193,7 +193,7 @@ def test_field_validator(factory: AnyFactory, model: type[Tomato | TomatoDatacla
     tomato_dto = factory.factory(model, write_all_config)
 
     with pytest.raises(ValueError, match=re.escape("We do not allow rotten tomato.")):
-        tomato_dto(name="rotten", weight=1, sugarness=1, popularity=1)  # pyright: ignore[reportCallIssue]
+        tomato_dto(name="rotten", weight=1, sugarness=1, popularity=1)  # ty: ignore[unknown-argument]
 
 
 @pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
@@ -201,9 +201,9 @@ def test_field_validator(factory: AnyFactory, model: type[Tomato | TomatoDatacla
 def test_field_alias(factory: AnyFactory, model: type[Tomato | TomatoDataclass]) -> None:
     tomato_dto = factory.factory(model, write_all_config)
 
-    tomato = tomato_dto(name="good", weight=1, sugarness=1.25, popularity=1)  # pyright: ignore[reportCallIssue]
+    tomato = tomato_dto(name="good", weight=1, sugarness=1.25, popularity=1)  # ty: ignore[unknown-argument]
 
-    assert tomato.sugarness == 1.25  # pyright: ignore[reportAttributeAccessIssue]
+    assert tomato.sugarness == 1.25  # ty: ignore[unresolved-attribute]
     assert tomato.to_mapped().sweetness == 1.25
 
 
@@ -228,8 +228,8 @@ def test_column_property(factory: AnyFactory, model: type[UserWithGreeting | Use
 @pytest.mark.parametrize("factory", factory_iterator())
 def test_self_reference(factory: AnyFactory, model: type[SponsoredUser | SponsoredUserDataclass]) -> None:
     user_dto = factory.factory(model, read_all_config)
-    assert DTOInspect(user_dto).field_type("sponsor") == Optional[Self]  # pyright: ignore[reportGeneralTypeIssues]
-    assert DTOInspect(user_dto).field_type("sponsored") == list[Self]  # pyright: ignore[reportGeneralTypeIssues]
+    assert DTOInspect(user_dto).field_type("sponsor") == Optional[Self]  # ty: ignore[invalid-type-form]
+    assert DTOInspect(user_dto).field_type("sponsored") == list[Self]  # ty: ignore[invalid-type-form]
 
 
 @pytest.mark.parametrize("name", ["SomeTag", None])

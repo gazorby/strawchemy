@@ -92,7 +92,7 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
             model=related_model,
             _model_field=field_def.model_field,
             model_field_name=f"{field_def.name}_aggregate",
-            type_hint=Optional[type_hint],
+            type_hint=Optional[type_hint],  # ty: ignore[invalid-type-form]
             default=UNSET,
         )
 
@@ -118,7 +118,7 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
             if field.is_relation:
                 field.type_ = Union[field.type_, None]
                 if field.uselist and field.related_dto:
-                    field.type_ = Union[field.related_dto, None]
+                    field.type_ = Union[field.related_dto, None]  # ty: ignore[invalid-type-form]
                 if aggregate_filters:
                     aggregation_field = self._aggregation_field(
                         field, dto_config.copy_with(partial_default=UNSET, partial=True)
@@ -127,7 +127,7 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
                     yield aggregation_field
             else:
                 comparison_type = self._filter_type(field)
-                field.type_ = Optional[comparison_type]
+                field.type_ = Optional[comparison_type]  # ty: ignore[invalid-type-form]
 
             field.default = UNSET
             field.default_factory = DTOMissing
@@ -221,9 +221,9 @@ class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
                     dto_config=dto_config,
                     model=model,
                     model_field_name="arguments",
-                    type_hint=list[aggregation.enum_fields]
+                    type_hint=list[aggregation.enum_fields]  # ty: ignore[invalid-type-form]
                     if aggregation.require_arguments
-                    else Optional[list[aggregation.enum_fields]],
+                    else Optional[list[aggregation.enum_fields]],  # ty: ignore[invalid-type-form]
                     default_factory=DTOMissing if aggregation.require_arguments else list,
                     _function=aggregation,
                     _model_field=model_field,
@@ -294,7 +294,7 @@ class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
                     dto_config=dto_config,
                     model=model,
                     model_field_name=aggregation.field_name,
-                    type_hint=Optional[type_hint],
+                    type_hint=Optional[type_hint],  # ty: ignore[invalid-type-form]
                     default=UNSET,
                     _model_field=model_field,
                     _function=aggregation,
@@ -379,7 +379,7 @@ class OrderByFactory(_FilterFactory[OrderByDTO]):
                     dto_config=dto_config,
                     model=model,
                     model_field_name=aggregation.field_name,
-                    type_hint=Optional[type_hint],
+                    type_hint=Optional[type_hint],  # ty: ignore[invalid-type-form]
                     default=UNSET,
                     _function=aggregation,
                 )
@@ -404,7 +404,7 @@ class OrderByFactory(_FilterFactory[OrderByDTO]):
             model=related_model,
             _model_field=field_def.model_field,
             model_field_name=f"{field_def.name}_aggregate",
-            type_hint=Optional[self._order_by_aggregation(related_model, dto_config)],
+            type_hint=Optional[self._order_by_aggregation(related_model, dto_config)],  # ty: ignore[invalid-type-form]
             default=UNSET,
         )
 

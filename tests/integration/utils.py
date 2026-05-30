@@ -23,7 +23,7 @@ __all__ = ("from_graphql_representation", "python_type", "to_graphql_representat
 
 
 _TimeDeltaType = TypeAdapter(timedelta)
-AnyTypesModule: TypeAlias = pg_types
+AnyTypesModule: TypeAlias = pg_types  # ty: ignore[invalid-type-form]
 
 
 def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> Any:

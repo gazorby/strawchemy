@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
 from functools import cache
-from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar
+from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar, cast
 
 import strawberry
 from strawberry import UNSET, Private
@@ -330,13 +330,17 @@ class _SQLiteJSONComparison(EqualityComparison[dict[str, Any]]):
 
 @cache
 def make_full_json_comparison_input() -> type[_JSONComparison]:
-    return strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))(
-        _JSONComparison
+    return cast(
+        "type[_JSONComparison]",
+        strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))(_JSONComparison),
     )
 
 
 @cache
 def make_sqlite_json_comparison_input() -> type[_SQLiteJSONComparison]:
-    return strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))(
-        _SQLiteJSONComparison
+    return cast(
+        "type[_SQLiteJSONComparison]",
+        strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))(
+            _SQLiteJSONComparison
+        ),
     )

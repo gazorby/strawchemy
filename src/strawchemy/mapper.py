@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 from functools import cached_property, partial
-from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, overload
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.schema.config import StrawberryConfig
@@ -52,9 +52,7 @@ if TYPE_CHECKING:
     from strawchemy.validation.base import ValidationProtocol
     from strawchemy.validation.pydantic import PydanticMapper
 
-
 T = TypeVar("T", bound="DeclarativeBase")
-
 
 __all__ = ("Strawchemy",)
 
@@ -102,7 +100,7 @@ class Strawchemy:
             strawberry_config: A StrawberryConfig instance to initialize the registry.
                 If not provided, a default StrawberryConfig will be used.
         """
-        self.config = StrawchemyConfig(config) if isinstance(config, str) else config
+        self.config = StrawchemyConfig(cast("SupportedDialect", config)) if isinstance(config, str) else config
         self.registry = StrawberryRegistry(strawberry_config or StrawberryConfig())
 
         strawberry_backend = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO)

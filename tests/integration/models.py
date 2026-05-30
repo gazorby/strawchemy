@@ -62,7 +62,7 @@ class BaseColumns:
         """BigInt Primary key column."""
         return mapped_column(
             Integer,
-            Sequence(f"{cls.__tablename__}_id_seq", start=FREE_ID_RANGE.stop, optional=False),  # type: ignore[attr-defined]
+            Sequence(f"{cls.__tablename__}_id_seq", start=FREE_ID_RANGE.stop, optional=False),  # ty: ignore[unresolved-attribute]
             primary_key=True,
         )
 

@@ -134,7 +134,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         self.execution_options = execution_options
         self.deterministic_ordering = deterministic_ordering
 
-        self._dialect = session.get_bind().dialect
+        self._dialect = session.get_bind().dialect  # ty: ignore[invalid-argument-type]  # get_bind() typing differs across sync/async Session stubs
 
     def _get_query_executor(
         self,
@@ -171,23 +171,24 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
     def _insert_statement(self, data: InsertData) -> Insert:
         if not data.is_upsert:
             return insert(data.model_type)
-        if self._dialect.name == "postgresql":
+        dialect_name: SupportedDialect = cast("SupportedDialect", self._dialect.name)
+        if dialect_name == "postgresql":
             statement = postgresql.insert(data.model_type)
             statement = statement.on_conflict_do_update(
-                set_=data.upsert_set(self._dialect.name, statement.excluded),
+                set_=data.upsert_set(dialect_name, statement.excluded),
                 index_elements=data.conflict_target_columns(),
             )
-        elif self._dialect.name == "sqlite":
+        elif dialect_name == "sqlite":
             statement = sqlite.insert(data.model_type)
             statement = statement.on_conflict_do_update(
-                set_=data.upsert_set(self._dialect.name, statement.excluded),
+                set_=data.upsert_set(dialect_name, statement.excluded),
                 index_elements=data.conflict_target_columns(),
             )
-        elif self._dialect.name == "mysql":
+        elif dialect_name == "mysql":
             statement = mysql.insert(data.model_type)
-            statement = statement.on_duplicate_key_update(data.upsert_set(self._dialect.name, statement.inserted))
+            statement = statement.on_duplicate_key_update(data.upsert_set(dialect_name, statement.inserted))
         else:
-            msg = f"This dialect does not support upsert statements: {self._dialect.name}"
+            msg = f"This dialect does not support upsert statements: {dialect_name}"
             raise StrawchemyError(msg)
         return statement
 

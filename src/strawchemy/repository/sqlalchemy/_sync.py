@@ -15,6 +15,7 @@ from strawchemy.schema.mutation import RelationType, UpsertData
 from strawchemy.transpiler import QueryResult, QueryTranspiler, SyncQueryExecutor
 
 if TYPE_CHECKING:
+    import builtins
     from collections.abc import Sequence
 
     from sqlalchemy.orm import DeclarativeBase
@@ -93,7 +94,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     def _delete_where(
         self,
         alias: AliasedClass[Any],
-        where: list[ColumnElement[bool]] | None = None,
+        where: builtins.list[ColumnElement[bool]] | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> Sequence[Row[Any]]:
         alias_insp = inspect(alias)
@@ -116,7 +117,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         self,
         alias: AliasedClass[Any],
         values: dict[str, Any],
-        where: list[ColumnElement[bool]] | None = None,
+        where: builtins.list[ColumnElement[bool]] | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> Sequence[Row[Any]]:
         alias_insp = inspect(alias)
@@ -239,11 +240,11 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             )
 
         pks = [column.key for column in self.model.__mapper__.primary_key if column.key]
-        pk_tuple = namedtuple("AsRow", pks)  # pyright: ignore[reportUntypedNamedTuple]  # noqa: PYI024
+        AsRow = namedtuple("AsRow", pks)  # noqa: PYI024
 
         if data.mode == "update_by_pks":
             self.session.execute(update(self.model), values)
-            return [pk_tuple(*[instance[name] for name in pks]) for instance in values]
+            return [AsRow(*[instance[name] for name in pks]) for instance in values]
 
         transpiler = QueryTranspiler(self.model, self._dialect, statement=self.statement)
         where_expressions = transpiler.filter_expressions(data.dto_filter) if data.dto_filter else None
@@ -290,12 +291,12 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         self,
         selection: QueryNodeType | None = None,
         dto_filter: BooleanFilterDTO | None = None,
-        order_by: list[OrderByDTO] | None = None,
+        order_by: builtins.list[OrderByDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
-        distinct_on: list[EnumDTO] | None = None,
+        distinct_on: builtins.list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
+        query_hooks: defaultdict[QueryNodeType, builtins.list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
@@ -343,12 +344,12 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         self,
         selection: QueryNodeType | None = None,
         dto_filter: BooleanFilterDTO | None = None,
-        order_by: list[OrderByDTO] | None = None,
+        order_by: builtins.list[OrderByDTO] | None = None,
         limit: int | None = None,
         offset: int | None = None,
-        distinct_on: list[EnumDTO] | None = None,
+        distinct_on: builtins.list[EnumDTO] | None = None,
         allow_null: bool = False,
-        query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
+        query_hooks: defaultdict[QueryNodeType, builtins.list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
@@ -395,7 +396,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     def get_by_id(
         self,
         selection: QueryNodeType | None = None,
-        query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
+        query_hooks: defaultdict[QueryNodeType, builtins.list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> QueryResult[DeclarativeT]:
@@ -451,7 +452,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         self,
         data: Input[DeclarativeT],
         selection: QueryNodeType | None = None,
-        update_fields: list[EnumDTO] | None = None,
+        update_fields: builtins.list[EnumDTO] | None = None,
         conflict_fields: EnumDTO | None = None,
         dto_filter: BooleanFilterDTO | None = None,
     ) -> QueryResult[DeclarativeT]:

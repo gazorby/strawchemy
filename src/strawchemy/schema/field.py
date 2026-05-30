@@ -33,6 +33,7 @@ from strawchemy.utils.strawberry import (
 )
 
 if TYPE_CHECKING:
+    import builtins
     from collections.abc import Awaitable, Callable, Coroutine, Mapping, Sequence
 
     from sqlalchemy import Select
@@ -84,9 +85,9 @@ class StrawchemyField(StrawberryField):
         order_by_factory: OrderByFactory,
         filter_factory: BooleanFilterFactory,
         distinct_on_factory: DistinctOnEnumFactory,
-        filter_type: type[BooleanFilterDTO] | bool | None = None,
-        order_by: IncludeFields | type[OrderByDTO] | Literal[False] | None = None,
-        distinct_on: IncludeFields | type[EnumDTO] | Literal[False] | None = None,
+        filter_type: builtins.type[BooleanFilterDTO] | bool | None = None,
+        order_by: IncludeFields | builtins.type[OrderByDTO] | Literal[False] | None = None,
+        distinct_on: IncludeFields | builtins.type[EnumDTO] | Literal[False] | None = None,
         pagination: DefaultOffsetPagination | bool | None = False,
         repository_type: AnyRepositoryType | None = None,
         root_aggregations: bool = False,
@@ -100,17 +101,18 @@ class StrawchemyField(StrawberryField):
         python_name: str | None = None,
         graphql_name: str | None = None,
         type_annotation: StrawberryAnnotation | None = None,
-        origin: None | (type | Callable[..., Any] | staticmethod[Any, Any] | classmethod[Any, Any, Any]) = None,
+        origin: None
+        | (builtins.type | Callable[..., Any] | staticmethod[Any, Any] | classmethod[Any, Any, Any]) = None,
         is_subscription: bool = False,
         description: str | None = None,
         base_resolver: StrawberryResolver[Any] | None = None,
-        permission_classes: list[type[BasePermission]] = (),  # pyright: ignore[reportArgumentType]
+        permission_classes: Sequence[builtins.type[BasePermission]] = (),
         default: object = dataclasses.MISSING,
         default_factory: Callable[[], Any] | object = dataclasses.MISSING,
         metadata: Mapping[Any, Any] | None = None,
         deprecation_reason: str | None = None,
         directives: Sequence[object] = (),
-        extensions: list[FieldExtension] = (),  # pyright: ignore[reportArgumentType]
+        extensions: Sequence[FieldExtension] = (),
         root_field: bool = False,
     ) -> None:
         self.type_annotation = type_annotation
@@ -142,33 +144,33 @@ class StrawchemyField(StrawberryField):
             is_subscription,
             description,
             base_resolver,
-            permission_classes,
+            list(permission_classes),
             default,
             default_factory,
             metadata,
             deprecation_reason,
             directives,
-            extensions,
+            list(extensions),
         )
 
         self._arguments = arguments
 
     def _type_or_annotation(
         self,
-    ) -> StrawberryType | type[WithStrawberryObjectDefinition] | object | str:
+    ) -> StrawberryType | builtins.type[WithStrawberryObjectDefinition] | object | str:
         type_ = self.type
         if type_ is UNRESOLVED and self.type_annotation:
             type_ = self.type_annotation.annotation
         return type_
 
     @property
-    def _strawchemy_type(self) -> type[StrawchemyObjectWithStrawberryObjectDefinition]:
+    def _strawchemy_type(self) -> builtins.type[StrawchemyObjectWithStrawberryObjectDefinition]:
         return cast("type[StrawchemyObjectWithStrawberryObjectDefinition]", self.type)
 
     def _get_repository(self, info: Info[Any, Any]) -> StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]:
         return self._repository_type(
             self._strawchemy_type,
-            session=self._config.session_getter(info),  # pyright: ignore[reportArgumentType]
+            session=self._config.session_getter(info),  # ty: ignore[invalid-argument-type]  # sync/async session unions are not correlated with the repository union here
             info=info,
             auto_snake_case=self._config.auto_snake_case,
             root_aggregations=self.root_aggregations,
@@ -177,7 +179,9 @@ class StrawchemyField(StrawberryField):
             deterministic_ordering=self._config.deterministic_ordering,
         )
 
-    def _is_repo_async(self, repository: AnyRepository | type[AnyRepository]) -> TypeIs[StrawchemyAsyncRepository[Any]]:
+    def _is_repo_async(
+        self, repository: AnyRepository | builtins.type[AnyRepository]
+    ) -> TypeIs[StrawchemyAsyncRepository[Any]]:
         return repository.is_async
 
     async def _list_result_async(self, repository_call: Awaitable[GraphQLResult[Any, Any]]) -> ListResolverResult:
@@ -217,7 +221,7 @@ class StrawchemyField(StrawberryField):
             return self._list_result_async(repository.list(filter_input, order_by, distinct_on, limit, offset))
         return self._list_result_sync(repository.list(filter_input, order_by, distinct_on, limit, offset))
 
-    def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
+    def _validate_type(self, type_: StrawberryType | builtins.type[WithStrawberryObjectDefinition] | Any) -> None:
         for inner_type in strawberry_contained_types(type_):
             if (
                 self.root_aggregations
@@ -230,7 +234,7 @@ class StrawchemyField(StrawberryField):
     @classmethod
     def _is_strawchemy_type(
         cls, type_: Any
-    ) -> TypeIs[MappedStrawberryGraphQLDTO[Any] | type[MappedStrawberryGraphQLDTO[Any]]]:
+    ) -> TypeIs[MappedStrawberryGraphQLDTO[Any] | builtins.type[MappedStrawberryGraphQLDTO[Any]]]:
         return isinstance(type_, MappedStrawberryGraphQLDTO) or (
             isclass(type_) and issubclass(type_, MappedStrawberryGraphQLDTO)
         )
@@ -247,8 +251,8 @@ class StrawchemyField(StrawberryField):
         return None if not self._pagination else self._pagination
 
     @property
-    def distinct_on(self) -> type[EnumDTO] | None:
-        if isclass(self._distinct_on) and issubclass(self._distinct_on, EnumDTO):  # pyright: ignore[reportUnnecessaryIsInstance]
+    def distinct_on(self) -> builtins.type[EnumDTO] | None:
+        if isclass(self._distinct_on) and issubclass(self._distinct_on, EnumDTO):
             return self._distinct_on
 
         inner_type = strawberry_contained_user_type(self.type)
@@ -257,7 +261,7 @@ class StrawchemyField(StrawberryField):
         if self._is_strawchemy_type(inner_type) and distinct_on:
             try:
                 return self._distinct_on_factory.factory(
-                    inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
+                    inner_type.__dto_model__,
                     dto_config=inner_type.__dto_config__.copy_with(
                         include=inner_type.__dto_config__.include if distinct_on == "all" else distinct_on
                     ),
@@ -277,8 +281,8 @@ class StrawchemyField(StrawberryField):
         return None
 
     @property
-    def order_by(self) -> type[OrderByDTO] | None:
-        if isclass(self._order_by) and issubclass(self._order_by, OrderByDTO):  # pyright: ignore[reportUnnecessaryIsInstance]
+    def order_by(self) -> builtins.type[OrderByDTO] | None:
+        if isclass(self._order_by) and issubclass(self._order_by, OrderByDTO):
             return self._order_by
 
         inner_type = strawberry_contained_user_type(self.type)
@@ -287,7 +291,7 @@ class StrawchemyField(StrawberryField):
         if self._is_strawchemy_type(inner_type) and order_by:
             try:
                 return self._order_by_factory.make_input(
-                    inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
+                    inner_type.__dto_model__,
                     mode="order_by",
                     dto_config=inner_type.__dto_config__.copy_with(
                         include=inner_type.__dto_config__.include if order_by == "all" else order_by
@@ -307,15 +311,15 @@ class StrawchemyField(StrawberryField):
         return None
 
     @cached_property
-    def filter(self) -> type[BooleanFilterDTO] | None:
-        if isclass(self._filter) and issubclass(self._filter, BooleanFilterDTO):  # pyright: ignore[reportUnnecessaryIsInstance]
+    def filter(self) -> builtins.type[BooleanFilterDTO] | None:
+        if isclass(self._filter) and issubclass(self._filter, BooleanFilterDTO):
             return self._filter
 
         inner_type = strawberry_contained_user_type(self.type)
 
         if self._is_strawchemy_type(inner_type) and self._filter is True:
             return self._filter_factory.make_input(
-                inner_type.__dto_model__,  # type: ignore[reportGeneralTypeIssues]
+                inner_type.__dto_model__,
                 mode="filter",
                 dto_config=inner_type.__dto_config__,
                 no_cache=True,
@@ -427,13 +431,13 @@ class StrawchemyField(StrawberryField):
             is_subscription=self.is_subscription,
             description=self.description,
             base_resolver=self.base_resolver,
-            permission_classes=(self.permission_classes[:] if self.permission_classes is not None else []),  # pyright: ignore[reportUnnecessaryComparison]
+            permission_classes=(self.permission_classes[:] if self.permission_classes is not None else []),
             default=self.default_value,
             default_factory=self.default_factory,
-            metadata=self.metadata.copy() if self.metadata is not None else None,  # pyright: ignore[reportUnnecessaryComparison]
+            metadata=self.metadata.copy() if self.metadata is not None else None,
             deprecation_reason=self.deprecation_reason,
-            directives=self.directives[:] if self.directives is not None else [],  # pyright: ignore[reportUnnecessaryComparison]
-            extensions=self.extensions[:] if self.extensions is not None else [],  # pyright: ignore[reportUnnecessaryComparison]
+            directives=self.directives[:] if self.directives is not None else [],
+            extensions=self.extensions[:] if self.extensions is not None else [],
             filter_statement=self._filter_statement,
             query_hook=self.query_hook,
             id_field_name=self.id_field_name,
@@ -455,7 +459,7 @@ class StrawchemyField(StrawberryField):
 
     @property
     @override
-    def type(self) -> StrawberryType | type[WithStrawberryObjectDefinition] | Literal[UNRESOLVED]:  # pyright: ignore[reportInvalidTypeForm, reportUnknownParameterType]
+    def type(self) -> StrawberryType | builtins.type[WithStrawberryObjectDefinition] | Literal[UNRESOLVED]:  # ty: ignore[invalid-type-form]
         return super().type
 
     @type.setter
@@ -467,7 +471,6 @@ class StrawchemyField(StrawberryField):
         self.type_annotation = StrawberryAnnotation.from_annotation(type_, namespace=self.registry_namespace)
 
     @property
-    @override
     def description(self) -> str | None:
         if self._description is not None:
             return self._description
@@ -485,7 +488,7 @@ class StrawchemyField(StrawberryField):
         return named_template.format(object="objects", name=definition.name)
 
     @description.setter
-    def description(self, value: str) -> None:  # pyright: ignore[reportIncompatibleVariableOverride]
+    def description(self, value: str) -> None:
         self._description = value
 
     @property
@@ -500,12 +503,12 @@ class StrawchemyField(StrawberryField):
     @arguments.setter
     def arguments(self, value: list[StrawberryArgument]) -> None:
         args_prop = super(StrawchemyField, self.__class__).arguments
-        return args_prop.fset(self, value)  # pyright: ignore[reportAttributeAccessIssue]
+        return args_prop.fset(self, value)
 
     @override
     def resolve_type(
         self, *, type_definition: StrawberryObjectDefinition | None = None
-    ) -> StrawberryType | type[WithStrawberryObjectDefinition] | Any:
+    ) -> StrawberryType | builtins.type[WithStrawberryObjectDefinition] | Any:
         type_ = super().resolve_type(type_definition=type_definition)
         self._validate_type(type_)
         return type_

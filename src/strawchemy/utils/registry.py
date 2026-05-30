@@ -328,7 +328,9 @@ class StrawberryRegistry:
         default_pagination: DefaultOffsetPagination | None = None,
         default_name: str | None = None,
     ) -> RegistryTypeInfo:
-        model: type[DeclarativeBase] | None = dto.__dto_model__ if issubclass(dto, MappedStrawberryGraphQLDTO) else None  # type: ignore[reportGeneralTypeIssues]
+        model: type[DeclarativeBase] | None = (
+            cast("type[DeclarativeBase]", dto.__dto_model__) if issubclass(dto, MappedStrawberryGraphQLDTO) else None
+        )
         type_info = RegistryTypeInfo(
             name=dto.__name__,
             default_name=default_name,
@@ -365,7 +367,9 @@ class StrawberryRegistry:
     @overload
     def get(self, graphql_type: GraphQLType, name: str, default: T) -> RegistryTypeInfo | T: ...
 
-    def get(self, graphql_type: GraphQLType, name: str, default: T = _RegistryMissing) -> RegistryTypeInfo | T:
+    def get(
+        self, graphql_type: GraphQLType, name: str, default: T | type[_RegistryMissing] = _RegistryMissing
+    ) -> RegistryTypeInfo | T:
         if default is _RegistryMissing:
             return self._names_map[graphql_type][name]
         return self._names_map[graphql_type].get(name, default)
@@ -416,13 +420,16 @@ class StrawberryRegistry:
         if existing := self._get(type_info):
             return existing
 
-        strawberry_type = strawberry.type(
-            dto,
-            name=type_info.name,
-            is_input=type_info.graphql_type == "input",
-            is_interface=type_info.graphql_type == "interface",
-            description=description or dto.__strawchemy_definition__.description,
-            directives=directives,
+        strawberry_type = cast(
+            "type[StrawchemyDTOT]",
+            strawberry.type(
+                dto,
+                name=type_info.name,
+                is_input=type_info.graphql_type == "input",
+                is_interface=type_info.graphql_type == "interface",
+                description=description or dto.__strawchemy_definition__.description,
+                directives=directives,
+            ),
         )
         self._register(type_info, strawberry_type)
         return strawberry_type
