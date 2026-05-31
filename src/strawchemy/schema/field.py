@@ -462,7 +462,7 @@ class StrawchemyField(StrawberryField):
     def type(self) -> StrawberryType | builtins.type[WithStrawberryObjectDefinition] | Literal[UNRESOLVED]:  # ty: ignore[invalid-type-form]
         return super().type
 
-    @type.setter
+    @type.setter  # noqa: A003
     def type(self, type_: Any) -> None:
         # Ensure type can only be narrowed
         current_annotation = self.type_annotation.annotation if self.type_annotation else UNRESOLVED

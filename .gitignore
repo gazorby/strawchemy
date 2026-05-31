@@ -195,7 +195,9 @@ mise.local.toml
 # Example apps
 *.sqlite
 
-.windsurf
+# AI
 CLAUDE.md
+.claude
+.windsurf
 .serena
 docs/superpowers

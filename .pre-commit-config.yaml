@@ -53,25 +53,25 @@ repos:
         args: [ "--py310-plus" ]
 
   - repo: https://github.com/provinzkraut/unasyncd
-    rev: v0.9.0
+    rev: v0.10.0
     hooks:
       - id: unasyncd
         additional_dependencies: [ "ruff" ]
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.13.0
+  - repo: local
     hooks:
-      - id: ruff-check
-        types_or: [ python, pyi ]
-        args: [ --fix ]
-      - id: ruff-format
-        types_or: [ python, pyi ]
+      - id: format
+        name: format
+        entry: mise run format
+        language: python
+        types: [ python ]
+        require_serial: true
 
   - repo: local
     hooks:
       - id: lint
         name: lint
-        entry: mise run lint:pre-commit
+        entry: mise run lint
         language: python
         types: [ python ]
         require_serial: true
