@@ -88,7 +88,7 @@ class QueryResult(Generic[ModelT]):
             the query.
     """
 
-    node_key: Callable[[QueryNodeType], str] = lambda key: str(key)
+    node_key: Callable[[QueryNodeType], str] = str
     nodes: Sequence[ModelT] = dataclasses.field(default_factory=list)
     node_computed_values: Sequence[dict[str, Any]] = dataclasses.field(default_factory=list)
     query_computed_values: defaultdict[str, Any] = dataclasses.field(default_factory=lambda: defaultdict(lambda: None))

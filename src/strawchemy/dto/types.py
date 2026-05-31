@@ -252,7 +252,7 @@ class DTOConfig:
             A new DTOConfig instance with the specified include and purpose settings.
             All other configuration parameters use their defaults.
         """
-        return cls(purpose, include=include if include else set())
+        return cls(purpose, include=include or set())
 
     def copy_with(
         self,

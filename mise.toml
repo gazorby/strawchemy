@@ -222,7 +222,7 @@ run = "uv run {{vars.ci_uv_run_options}} nox --json -t tests -l | jq 'map(.name)
 
 [tasks."ruff:check"]
 description = "Check ruff formatting"
-run = "uv run ruff check"
+run = "uv run ruff --version  && uv run ruff check"
 
 [tasks."ruff:fix"]
 description = "Fix ruff errors"
@@ -234,7 +234,7 @@ run = "uv run ruff format"
 
 [tasks."ruff:format:check"]
 description = "Format code"
-run = "uv run ruff format --check"
+run = "uv run ruff --version && uv run ruff format --check"
 
 [tasks.tombi]
 description = "Run tombi"
@@ -242,11 +242,11 @@ run = "uv run tombi format"
 
 [tasks.ty]
 description = "Run ty"
-run = "uv run ty check"
+run = "uv run ty --version && uv run ty check"
 
 [tasks.vulture]
 description = "Run vulture"
-run = "uv run vulture"
+run = "uv run vulture --version && uv run vulture"
 
 [tasks.format]
 description = "Lint the code"
@@ -269,7 +269,7 @@ run = "pre-commit run --color=always --all-files"
 
 [tasks.slotscheck]
 description = "Run slotscheck"
-run = "uv run slotscheck src/strawchemy"
+run = "uv run slotscheck --version && uv run slotscheck"
 
 # ###############
 # Tools

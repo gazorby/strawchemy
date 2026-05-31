@@ -1,5 +1,3 @@
-# ruff: noqa: DTZ005
-
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
@@ -66,10 +64,10 @@ class BaseColumns:
             primary_key=True,
         )
 
-    created_at: Mapped[datetime] = mapped_column(DateTimeType, default=lambda: datetime.now(), info=READ_ONLY)
+    created_at: Mapped[datetime] = mapped_column(DateTimeType, default=datetime.now, info=READ_ONLY)
     """Date/time of instance creation."""
     updated_at: Mapped[datetime] = mapped_column(
-        DateTimeType, default=lambda: datetime.now(), onupdate=lambda: datetime.now(), info=READ_ONLY
+        DateTimeType, default=datetime.now, onupdate=datetime.now, info=READ_ONLY
     )
 
 
