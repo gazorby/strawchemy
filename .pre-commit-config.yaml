@@ -24,7 +24,7 @@ repos:
         exclude: "^.*__snapshots__/.*$"
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.4.1
+    rev: v2.4.2
     hooks:
       - id: codespell
         exclude: "^CHANGELOG.md$"
@@ -34,14 +34,14 @@ repos:
           - --toml=./pyproject.toml
 
   - repo: https://github.com/rhysd/actionlint
-    rev: v1.7.7
+    rev: v1.7.12
     hooks:
       - id: actionlint
         args: [ "-shellcheck", "" ]
 
   # Commitizen
   - repo: https://github.com/commitizen-tools/commitizen
-    rev: v4.9.0
+    rev: v4.16.3
     hooks:
       - id: commitizen
 

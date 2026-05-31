@@ -86,14 +86,6 @@ Install pre-commit hooks
 
 Lint the code
 
-## `lint:pre-commit`
-
-- Depends: vulture, ty
-
-- **Usage**: `lint:pre-commit`
-
-Lint the code in pre-commit hook
-
 ## `pre-commit`
 
 - Depends: install:pre-commit
