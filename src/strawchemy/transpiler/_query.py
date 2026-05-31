@@ -683,7 +683,7 @@ class Query:
         order_by_expressions = self.order_by.expressions if self.order_by else []
 
         for join in sorted_joins:
-            base_statement = base_statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)  # ty: ignore[invalid-argument-type]
+            base_statement = base_statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
         if self.where and self.where.expressions:
             base_statement = base_statement.where(*self.where.expressions)
         if order_by_expressions:

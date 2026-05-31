@@ -15,14 +15,19 @@ allowing for efficient data transfer and filtering in GraphQL queries.
 from __future__ import annotations
 
 import dataclasses
+import warnings
+from enum import Enum
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Literal, Optional, TypeAlias, TypeVar, get_type_hints
+from typing import TYPE_CHECKING, Any, ForwardRef, Literal, Optional, TypeAlias, TypeVar, get_type_hints
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import UNSET
+from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
+from strawberry.types import has_object_definition
 from strawberry.types.auto import StrawberryAuto
+from strawberry.types.scalar import ScalarDefinition, ScalarWrapper
 from strawberry.utils.typing import type_has_annotation
-from typing_extensions import Unpack, dataclass_transform, override
+from typing_extensions import Self, Unpack, dataclass_transform, override
 
 from strawchemy import typing as strawchemy_typing
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
@@ -36,13 +41,13 @@ from strawchemy.dto.strawberry import (
     StrawchemyObject,
     UnmappedStrawberryGraphQLDTO,
 )
-from strawchemy.dto.types import DTOAuto, DTOConfig, DTOScope, Purpose, is_fields_iterable
+from strawchemy.dto.types import DTOAuto, DTOConfig, DTOScope, DTOSkip, Purpose, is_fields_iterable
 from strawchemy.dto.utils import config
 from strawchemy.exceptions import EmptyDTOError, StrawchemyError
 from strawchemy.instance import MapperModelInstance
 from strawchemy.transpiler import hook
 from strawchemy.typing import GraphQLDTOT, GraphQLPurpose, GraphQLType, MappedGraphQLDTO
-from strawchemy.utils.annotation import get_annotations
+from strawchemy.utils.annotation import get_annotations, inner_types, try_resolve_forwardref
 
 if TYPE_CHECKING:
     import builtins
@@ -101,6 +106,56 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         if len(instance_attributes) > 1:
             msg = f"{base.__name__} has multiple `MapperModelInstance` attributes: {instance_attributes}"
             raise StrawchemyError(msg)
+
+    def is_graphql_mappable(self, annotation: Any, namespace: Mapping[str, Any] | None = None) -> bool:
+        """True if `annotation` resolves to a GraphQL output/input type via Strawberry."""
+        namespace = self.type_hint_namespace() if namespace is None else namespace
+        return all(self._is_graphql_mappable(leaf, namespace) for leaf in inner_types(annotation))
+
+    def _is_graphql_mappable(self, annotation: Any, namespace: Mapping[str, Any]) -> bool:
+        # Forward references / string annotations: try to resolve and re-check; assume mappable
+        # if resolution fails (e.g. an as-yet-unregistered relation reference).
+        if isinstance(annotation, (str, ForwardRef)):
+            resolved = try_resolve_forwardref(annotation, namespace)
+            return True if resolved is None else self.is_graphql_mappable(resolved, namespace)
+        # Strawberry scalar objects (e.g. Strawchemy's Date/DateTime/Interval/Time/GeoJSON, used
+        # directly as annotations) are unhashable, so test these before any registry membership lookup.
+        if (
+            self._is_strawberry_scalar(annotation)
+            or annotation in (None, Self)
+            or isinstance(annotation, TypeVar)
+            or has_object_definition(annotation)
+            or (isinstance(annotation, type) and issubclass(annotation, Enum))
+        ):
+            return True
+        try:
+            return annotation in DEFAULT_SCALAR_REGISTRY
+        except TypeError:  # unhashable and not a known scalar object
+            return False
+
+    @staticmethod
+    def _is_strawberry_scalar(leaf: Any) -> bool:
+        return (
+            isinstance(leaf, (ScalarWrapper, ScalarDefinition)) or getattr(leaf, "_scalar_definition", None) is not None
+        )
+
+    @override
+    def _resolve_basic_type(
+        self, field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
+    ) -> Any:
+        resolved = super()._resolve_basic_type(field, dto_config)
+        if self._mapper.config.strict:
+            return resolved
+        overridden = (
+            field.has_type_override or field.type_hint in dto_config.type_overrides or field.type_hint in self.type_map
+        )
+        if overridden or self.is_graphql_mappable(resolved):
+            return resolved
+        warnings.warn(
+            f"Skipping {field.model.__name__}.{field.model_field_name}: no GraphQL mapping for {resolved!r}",
+            stacklevel=2,
+        )
+        return DTOSkip
 
     def _resolve_config(self, dto_config: DTOConfig, base: type[Any]) -> DTOConfig:
         config = dto_config.with_base_annotations(base)

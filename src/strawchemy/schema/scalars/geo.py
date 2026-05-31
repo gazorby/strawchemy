@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from functools import partial
-from typing import Any
+from typing import Any, NewType
 
 import shapely
 import strawberry
@@ -21,8 +21,6 @@ from geojson_pydantic.geometries import (
 )
 from pydantic import TypeAdapter
 from shapely import Geometry, to_geojson
-
-from strawchemy.utils.annotation import new_type
 
 __all__ = (
     "GEO_SCALAR_OVERRIDES",
@@ -67,7 +65,7 @@ def _parse_geojson(val: dict[str, Any], geometry: type[PydanticGeometry] | None 
     return _GeometryHolder(_PYDANTIC_GEO_ADAPTER_MAP[geometry].validate_python(val))
 
 
-GeoJSON = new_type("GeoJSON", _GeometryHolder)
+GeoJSON = NewType("GeoJSON", _GeometryHolder)
 
 _GeoJSONScalar = strawberry.scalar(
     name="GeoJSON",
