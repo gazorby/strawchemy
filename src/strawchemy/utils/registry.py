@@ -4,7 +4,7 @@ import dataclasses
 from collections import defaultdict
 from copy import copy
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, cast, get_args, get_origin, overload
+from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, cast, overload
 
 import strawberry
 from strawberry.annotation import StrawberryAnnotation
@@ -15,6 +15,7 @@ from strawberry.types.field import StrawberryField
 from strawchemy.dto.strawberry import MappedStrawberryGraphQLDTO
 from strawchemy.dto.types import cast_include_fields, is_fields_iterable
 from strawchemy.exceptions import StrawchemyError
+from strawchemy.utils.annotation import inner_types
 from strawchemy.utils.strawberry import strawberry_contained_types
 
 try:
@@ -157,7 +158,7 @@ class StrawberryRegistry:
             The type name of the field, or None if it cannot be resolved.
         """
         if field.type_annotation:
-            for type_ in self._inner_types(field.type_annotation.raw_annotation):
+            for type_ in inner_types(field.type_annotation.raw_annotation):
                 if isinstance(type_, (str, ForwardRef)):
                     field.type_annotation.namespace = self.namespace(graphql_type)
                     return type_.__forward_arg__ if isinstance(type_, ForwardRef) else type_
@@ -249,26 +250,6 @@ class StrawberryRegistry:
             self._scoped_types[type_info.scoped_id] = strawberry_type
         self._names_map[type_info.graphql_type][type_info.name] = type_info
         self._type_map[type_info] = strawberry_type
-
-    @classmethod
-    def _inner_types(cls, typ: Any) -> tuple[Any, ...]:
-        """Get innermost types in typ.
-
-        List[Optional[str], Union[Mapping[int, float]]] -> (str, int, float)
-
-        Args:
-            typ: A type annotation
-
-        Returns:
-            All inner types found after walked in all outer types
-        """
-        origin = get_origin(typ)
-        if not origin or not hasattr(typ, "__args__"):
-            return (typ,)
-        arg_types = []
-        for arg_type in get_args(typ):
-            arg_types.extend(cls._inner_types(arg_type))
-        return tuple(arg_types)
 
     def _get(self, type_info: RegistryTypeInfo) -> type[Any] | None:
         """Get a type from the registry.

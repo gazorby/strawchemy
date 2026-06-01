@@ -49,6 +49,11 @@ class StrawchemyConfig:
     """Name for primary key fields arguments on primary key resolvers."""
     deterministic_ordering: bool = True
     """Force deterministic ordering for list resolvers."""
+    strict: bool = True
+    """When False, silently skip (and warn about) model columns whose type hint has no GraphQL
+    mapping, instead of failing the schema build. Explicit `type_overrides` are always honored.
+    Note: types mapped only via `strawberry.Schema(scalar_overrides=...)` are not visible here;
+    force them with `type_overrides=` instead."""
     include: IncludeFields = "all"
     """Globally included fields."""
     exclude: FieldIterable | None = None
