@@ -157,16 +157,13 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         related = Self if field.related_dto is dto else field.related_dto
         type_annotation = list[related] if related is not None else field.type_  # ty: ignore[invalid-type-form]
         assert field.related_model
-        field_name = field.model_field_name
         order_by_input, distinct_on_input, pagination = None, None, False
-        if order_config.is_field_included(field_name) or self._mapper.config.order_config.is_field_included(field_name):
+        if order_config.is_field_included(field) or self._mapper.config.order_config.is_field_included(field):
             order_by_input = self._order_by_input_for_field(field)
-        if pagination_config.is_field_included(field_name) or self._mapper.config.pagination_config.is_field_included(
-            field_name
-        ):
+        if pagination_config.is_field_included(field) or self._mapper.config.pagination_config.is_field_included(field):
             pagination = default_pagination or True
-        if distinct_on_config.is_field_included(field_name) or self._mapper.config.distinct_on_config.is_field_included(
-            field_name
+        if distinct_on_config.is_field_included(field) or self._mapper.config.distinct_on_config.is_field_included(
+            field
         ):
             distinct_on_input = self._distinct_on_input_for_field(field)
         strawberry_field = self._mapper.field(

@@ -14,8 +14,13 @@ from strawchemy.utils.annotation import get_annotations
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
+    from strawchemy.dto.base import DTOFieldDefinition
+
 
 __all__ = (
+    "ALL",
+    "RELATIONSHIPS",
+    "SCALARS",
     "DTOAuto",
     "DTOConfig",
     "DTOFieldConfig",
@@ -23,17 +28,40 @@ __all__ = (
     "DTOScope",
     "DTOSkip",
     "DTOUnset",
+    "FieldGroup",
     "FieldIterable",
+    "FieldSelector",
     "IncludeFields",
     "Purpose",
     "PurposeConfig",
     "cast_include_fields",
+    "has_field_group",
+    "include_field",
     "is_fields_iterable",
 )
 
 DTOScope: TypeAlias = Literal["global", "dto"]
-FieldIterable: TypeAlias = "list[str] | set[str] | frozenset[str] | tuple[str, ...]"
-IncludeFields: TypeAlias = "FieldIterable | Literal['all']"
+FieldSelector: TypeAlias = "str | FieldGroup"
+FieldIterable: TypeAlias = (
+    "list[FieldSelector] | set[FieldSelector] | frozenset[FieldSelector] | tuple[FieldSelector, ...]"
+)
+FieldGroupStr: TypeAlias = Literal["all", "scalars", "relationships"]
+IncludeFields: TypeAlias = "FieldIterable | FieldGroupStr"
+
+
+class FieldGroup(str, Enum):
+    """Field-group selectors for ``include``/``exclude`` sequences."""
+
+    ALL = "all"
+    """Include all fields from model."""
+    SCALARS = "scalars"
+    """Include everything but relationships."""
+    RELATIONSHIPS = "relationships"
+    """Include only relationships."""
+
+    @staticmethod
+    def list_str() -> str:
+        return ", ".join(member.value for member in FieldGroup)
 
 
 @final
@@ -127,11 +155,17 @@ class DTOConfig:
             Determines which fields from the source model are included based on
             their `DTOFieldConfig`.
         include: Explicitly include fields from the source model in the generated
-            DTO. Can be a list or set of field names, or the literal "all" to
-            include all fields not explicitly excluded. Defaults to an empty set.
-        exclude: Explicitly exclude fields from the source model. Can be a list
-            or set of field names. Defaults to an empty set. Setting this
-            implicitly sets `include` to "all".
+            DTO. Can be a list or set of field names, the literal "all" to include
+            all fields not explicitly excluded, or the `ALL` / `SCALARS` /
+            `RELATIONSHIPS` group selectors (mixable with names, e.g.
+            `[SCALARS, "owner"]`). `[SCALARS, RELATIONSHIPS]` is equivalent to
+            "all". Plain string literals "all", "scalars", "relationships" are
+            accepted interchangeably with the constants. Defaults to an empty set.
+        exclude: Explicitly exclude fields from the source model. Can be a list or
+            set of field names and/or the `ALL` / `SCALARS` / `RELATIONSHIPS` group
+            selectors (e.g. `[RELATIONSHIPS]` keeps all scalar fields and walks no
+            relationships). Plain string literals are accepted. A bare `exclude` (no
+            `include`) implies `include="all"`. Defaults to an empty set.
         partial: If True, makes all fields in the generated DTO optional.
             Defaults to None.
         partial_default: The default value assigned to fields when `partial` is
@@ -185,15 +219,17 @@ class DTOConfig:
         if self.aliases and self.alias_generator is not None:
             msg = "You must set `aliases` or `alias_generator`, not both"
             raise ValueError(msg)
-        if self.include and self.include != "all" and self.exclude:
-            msg = "When using `exclude` you must set `include='all' or leave it unset`"
+        if self.include and not has_field_group(self.include) and self.exclude:
+            msg = f"When using `exclude`, `include` must be unset or be a field group {FieldGroup.list_str()}."
             raise ValueError(msg)
-        if self.global_include and self.global_include != "all" and self.global_exclude:
-            msg = "When using `global_exclude` you must set `global_include='all' or leave it unset`"
+        if self.global_include and not has_field_group(self.global_include) and self.global_exclude:
+            msg = f"When using `global_exclude`, `global_include` must be unset or be a field group {FieldGroup.list_str()}."
             raise ValueError(msg)
-        if self.global_exclude:
+        # A bare exclude (no include) means "everything except"; promote to "all".
+        # If include carries a FieldGroup it is truthy, so the clobber is skipped.
+        if self.global_exclude and not self.global_include:
             self.global_include = "all"
-        if self.exclude:
+        if self.exclude and not self.include:
             self.include = "all"
 
     @overload
@@ -320,7 +356,7 @@ class DTOConfig:
         1. When include is "all" or exclude is specified: All fields from the base class are included
         2. When specific fields are included: Only those fields are added to the include set
         """
-        include: set[str] = set(self.include) if self.include != "all" else set()
+        include: set[FieldSelector] = set(self.include) if self.include != "all" else set()
         include_all = self.include == "all" or self.exclude
         annotation_overrides: dict[str, Any] = self.annotation_overrides
         try:
@@ -344,45 +380,41 @@ class DTOConfig:
             return self.alias_generator(name)
         return None
 
-    def is_field_included(self, name: str) -> bool:
-        """Check if a field should be included based on this configuration.
+    def is_field_included(self, field: str | DTOFieldDefinition[Any, Any]) -> bool:
+        """Whether a field is included per the include/exclude rules.
 
-        This method is used during DTO factory operations to determine which fields
-        from the source model should be included in the generated DTO.
-
-        Args:
-            name: The field name to check for inclusion.
-
-        Returns:
-            True if the field should be included based on the include/exclude rules,
-            False otherwise.
+        `field` is a field name or a `DTOFieldDefinition`. A bare `str` is treated as a non-relation field name.
         """
+        name, is_relation = (field, False) if isinstance(field, str) else (field.model_field_name, field.is_relation)
         if self.include == "all":
-            return name not in self.exclude
+            return not include_field(name, is_relation, self.exclude)
         if self.global_include == "all":
-            return name not in self.global_exclude
-
-        included = set(self.include) | set(self.global_include)
-        excluded = set(self.exclude) | set(self.global_exclude)
-        return name in included and name not in excluded
+            return not include_field(name, is_relation, self.global_exclude)
+        return (
+            include_field(name, is_relation, self.include) or include_field(name, is_relation, self.global_include)
+        ) and not (
+            include_field(name, is_relation, self.exclude) or include_field(name, is_relation, self.global_exclude)
+        )
 
     def __or__(self, other: DTOConfig) -> DTOConfig:
         return self.union(other)
 
 
 @overload
-def cast_include_fields(value: Literal["all"]) -> Literal["all"]: ...
+def cast_include_fields(value: FieldGroupStr) -> FieldGroupStr: ...
 
 
 @overload
-def cast_include_fields(value: frozenset[str] | set[str] | list[str] | tuple[str, ...] | None) -> frozenset[str]: ...
+def cast_include_fields(
+    value: frozenset[FieldSelector] | set[FieldSelector] | list[FieldSelector] | tuple[FieldSelector, ...] | None,
+) -> frozenset[FieldSelector]: ...
 
 
-def cast_include_fields(value: IncludeFields | None) -> frozenset[str] | Literal["all"]:
+def cast_include_fields(value: IncludeFields | None) -> frozenset[FieldSelector] | FieldGroupStr:
     match value:
         case None:
             return frozenset()
-        case "all":
+        case "all" | "scalars" | "relationships":
             return "all"
         case _:
             return frozenset(value)
@@ -395,3 +427,23 @@ def is_fields_iterable(value: Any) -> TypeIs[IncludeFields | FieldIterable | Non
     if isinstance(value, str):
         return False
     return isinstance(value, (frozenset, set, list, tuple))
+
+
+def include_field(field_name: str, is_relation: bool, fields: IncludeFields | FieldIterable) -> bool:
+    """Whether `fields` selects the field."""
+    if fields == "all":
+        return True
+    group = FieldGroup.RELATIONSHIPS if is_relation else FieldGroup.SCALARS
+    return field_name in fields or group in fields or FieldGroup.ALL in fields
+
+
+def has_field_group(value: IncludeFields | FieldIterable) -> bool:
+    """True if the selection contains a FieldGroup member."""
+    if value in FieldGroup or isinstance(value, FieldGroup):
+        return True
+    return any(isinstance(item, FieldGroup) for item in value)
+
+
+ALL = FieldGroup.ALL
+SCALARS = FieldGroup.SCALARS
+RELATIONSHIPS = FieldGroup.RELATIONSHIPS

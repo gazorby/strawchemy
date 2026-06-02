@@ -37,6 +37,7 @@ from strawchemy.dto.types import (
     IncludeFields,
     Purpose,
     PurposeConfig,
+    include_field,
 )
 from strawchemy.dto.utils import config
 from strawchemy.exceptions import DTOError, EmptyDTOError
@@ -390,11 +391,13 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         has_override: bool,
     ) -> bool:
         """Whether the model field should be excluded from the dto or not."""
-        explictly_excluded = node.is_root and field.model_field_name in dto_config.exclude
-        explicitly_included = node.is_root and field.model_field_name in dto_config.include
+        name, is_relation = field.model_field_name, field.is_relation
 
-        globally_excluded = field.model_field_name in dto_config.global_exclude
-        globally_included = field.model_field_name in dto_config.global_include
+        explictly_excluded = node.is_root and include_field(name, is_relation, dto_config.exclude)
+        explicitly_included = node.is_root and include_field(name, is_relation, dto_config.include)
+
+        globally_excluded = include_field(name, is_relation, dto_config.global_exclude)
+        globally_included = include_field(name, is_relation, dto_config.global_include)
 
         if dto_config.include == "all" and not explictly_excluded:
             explicitly_included = globally_included = True

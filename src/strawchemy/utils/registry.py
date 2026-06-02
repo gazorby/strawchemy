@@ -4,7 +4,7 @@ import dataclasses
 from collections import defaultdict
 from copy import copy
 from enum import Enum
-from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, ForwardRef, NewType, TypeVar, cast, overload
 
 import strawberry
 from strawberry import LazyType
@@ -15,7 +15,7 @@ from strawberry.types.field import StrawberryField
 from strawberry.types.union import StrawberryUnion
 
 from strawchemy.dto.strawberry import MappedStrawberryGraphQLDTO
-from strawchemy.dto.types import cast_include_fields, is_fields_iterable
+from strawchemy.dto.types import FieldGroupStr, cast_include_fields, is_fields_iterable
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.utils.annotation import inner_types
 from strawchemy.utils.strawberry import strawberry_contained_types
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
     from strawchemy.dto import DTOConfig
     from strawchemy.dto.base import Node, Relation
     from strawchemy.dto.strawberry import EnumDTO, OrderByDTO, StrawchemyObject
-    from strawchemy.dto.types import DTOScope, IncludeFields
+    from strawchemy.dto.types import DTOScope, FieldSelector, IncludeFields
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.typing import GraphQLType, StrawchemyObjectWithStrawberryObjectDefinition
 
@@ -149,9 +149,9 @@ class RegistryTypeInfo:
     user_defined: bool = False
     override: bool = False
     pagination: DefaultOffsetPagination | None = None
-    order: frozenset[str] | Literal["all"] | type[OrderByDTO] = dataclasses.field(default_factory=frozenset)
-    distinct_on: frozenset[str] | Literal["all"] | type[EnumDTO] = dataclasses.field(default_factory=frozenset)
-    paginate: frozenset[str] | Literal["all"] = dataclasses.field(default_factory=frozenset)
+    order: frozenset[FieldSelector] | FieldGroupStr | type[OrderByDTO] = dataclasses.field(default_factory=frozenset)
+    distinct_on: frozenset[FieldSelector] | FieldGroupStr | type[EnumDTO] = dataclasses.field(default_factory=frozenset)
+    paginate: frozenset[FieldSelector] | FieldGroupStr = dataclasses.field(default_factory=frozenset)
     scope: DTOScope | None = None
     model: type[DeclarativeBase] | None = None
     tags: frozenset[str] = dataclasses.field(default_factory=frozenset)
