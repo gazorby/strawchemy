@@ -41,6 +41,34 @@ def test_type_instance(strawchemy: Strawchemy) -> None:
     assert user.name == "user"
 
 
+def test_override_same_name_does_not_leak_fields(strawchemy: Strawchemy) -> None:
+    """The last override wins when used with the same model/name pair.
+
+    A second `override=True` registration under the same GraphQL type name must
+    reflect its own (narrower) config, not inherit fields from the earlier
+    registration.
+    """
+    from tests.unit.models import Color, Fruit
+
+    @strawchemy.type(Fruit, name="FruitNode", include=["id"], override=True)
+    class FruitNode:
+        pass
+
+    @strawchemy.type(Color, name="ColorNode", include=["id", "name", "fruits"], override=True)
+    class ColorWide:
+        pass
+
+    @strawchemy.type(Color, name="ColorNode", include=["id"], override=True)
+    class ColorSlim:
+        pass
+
+    wide_fields = {f.name for f in ColorWide.__strawberry_definition__.fields}
+    slim_fields = {f.name for f in ColorSlim.__strawberry_definition__.fields}
+
+    assert wide_fields == {"fruits_aggregate", "fruits", "id", "name"}
+    assert slim_fields == {"id"}
+
+
 def test_type_instance_auto_as_str(strawchemy: Strawchemy) -> None:
     @strawchemy.type(User)
     class UserType:
