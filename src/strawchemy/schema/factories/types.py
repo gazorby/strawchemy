@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING, Any, Literal, Optional, TypedDict, TypeVar, Union
 
 from sqlalchemy import JSON
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types.arguments import StrawberryArgument
+from strawberry.types.field import StrawberryField
 from typing_extensions import Self, Unpack, override
 
 from strawchemy.constants import AGGREGATIONS_KEY, JSON_PATH_KEY, NODES_KEY
@@ -48,8 +50,6 @@ if TYPE_CHECKING:
     from collections.abc import Generator, Hashable
     from enum import Enum
 
-    from strawberry.types.field import StrawberryField
-
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOBackend, DTOBase, Relation
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
@@ -57,7 +57,6 @@ if TYPE_CHECKING:
     from strawchemy.schema.factories._kwargs import FactoryMethodKwargs
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.utils.graph import Node
-
 
 __all__ = (
     "AggregateFieldsFactory",
@@ -145,6 +144,36 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             ],
         )
 
+    def _relation_field(
+        self,
+        field: GraphQLFieldDefinition,
+        dto: type[GraphQLDTOT],
+        order_config: DTOConfig,
+        pagination_config: DTOConfig,
+        distinct_on_config: DTOConfig,
+        default_pagination: None | DefaultOffsetPagination,
+    ) -> tuple[StrawberryField, Any]:
+        """Build the pagination/order/distinct_on argument field for a to-many relation."""
+        related = Self if field.related_dto is dto else field.related_dto
+        type_annotation = list[related] if related is not None else field.type_  # ty: ignore[invalid-type-form]
+        assert field.related_model
+        field_name = field.model_field_name
+        order_by_input, distinct_on_input, pagination = None, None, False
+        if order_config.is_field_included(field_name) or self._mapper.config.order_config.is_field_included(field_name):
+            order_by_input = self._order_by_input_for_field(field)
+        if pagination_config.is_field_included(field_name) or self._mapper.config.pagination_config.is_field_included(
+            field_name
+        ):
+            pagination = default_pagination or True
+        if distinct_on_config.is_field_included(field_name) or self._mapper.config.distinct_on_config.is_field_included(
+            field_name
+        ):
+            distinct_on_input = self._distinct_on_input_for_field(field)
+        strawberry_field = self._mapper.field(
+            pagination=pagination, order_by=order_by_input, distinct_on=distinct_on_input, root_field=False
+        )
+        return strawberry_field, type_annotation
+
     def _add_fields_arguments(
         self,
         dto: type[GraphQLDTOT],
@@ -197,32 +226,25 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         pagination_config = DTOConfig.from_include(paginate)
         distinct_on_config = DTOConfig.from_include(distinct_on)
 
+        # Make sure Class-body `@strawberry.field` resolvers take precedence over auto-derived
+        # JSON-path projection and relation arguments.
+        body_fields = (
+            {name for name, _ in inspect.getmembers(base, lambda v: isinstance(v, StrawberryField))}
+            if base is not None
+            else set()
+        )
+
         for field in dto.__strawchemy_definition__.field_map.values():
+            if field.name in body_fields:
+                # Drop the model-derived annotation so the resolver's own return type
+                # drives the field type, rather than the column type.
+                dto.__annotations__.pop(field.name, None)
+                continue
             # Add pagination, distinct_on and ordering arguments for relations
             if field.is_relation and field.uselist:
-                related = Self if field.related_dto is dto else field.related_dto
-                type_annotation = list[related] if related is not None else field.type_
-                assert field.related_model
-                field_name = field.model_field_name
-                order_by_input, distinct_on_input, pagination = None, None, False
-                if order_config.is_field_included(field_name) or self._mapper.config.order_config.is_field_included(
-                    field_name
-                ):
-                    order_by_input = self._order_by_input_for_field(field)
-                if pagination_config.is_field_included(
-                    field_name
-                ) or self._mapper.config.pagination_config.is_field_included(field_name):
-                    pagination = default_pagination or True
-                if distinct_on_config.is_field_included(
-                    field_name
-                ) or self._mapper.config.distinct_on_config.is_field_included(field_name):
-                    distinct_on_input = self._distinct_on_input_for_field(field)
-
-                strawberry_field = self._mapper.field(
-                    pagination=pagination, order_by=order_by_input, distinct_on=distinct_on_input, root_field=False
+                attributes[field.name], annotations[field.name] = self._relation_field(
+                    field, dto, order_config, pagination_config, distinct_on_config, default_pagination
                 )
-                attributes[field.name] = strawberry_field
-                annotations[field.name] = type_annotation
             # Add path filtering argument for JSON fields
             elif (
                 not field.is_relation
@@ -690,7 +712,10 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         if field.uselist:
             if mode == "create_input":
                 input_type = ToManyCreateInput[
-                    identifier_input, field.related_dto, upsert_update_fields, upsert_conflict_fields  # ty: ignore[invalid-type-form, invalid-type-arguments]
+                    identifier_input,  # ty: ignore[invalid-type-form]
+                    field.related_dto,  # ty: ignore[invalid-type-form, invalid-type-arguments]
+                    upsert_update_fields,  # ty: ignore[invalid-type-form]
+                    upsert_conflict_fields,  # ty: ignore[invalid-type-form]
                 ]
             else:
                 type_ = (
