@@ -144,9 +144,6 @@ class FactoryType(Enum):
 class DTOInspectProtocol(Protocol):
     dto: type[Any]
 
-    def __init__(self, dto: type[Any]) -> None:
-        self.dto = dto
-
     @classmethod
     def is_class(cls, dto: type[Any]) -> bool: ...
 
@@ -161,7 +158,7 @@ class DataclassInspect(DTOInspectProtocol):
     dto: type[DataclassProtocol]
 
     def __init__(self, dto: type[DataclassProtocol]) -> None:
-        super().__init__(dto)
+        self.dto = dto
         self._dataclass_fields = {field.name: field for field in dataclasses.fields(self.dto)}
 
     @classmethod

@@ -16,13 +16,13 @@ from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 
-from strawchemy import SCALARS
+from strawchemy import RELATIONSHIPS, SCALARS
 from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
 from strawchemy.schema.scalars import Interval
 from strawchemy.testing.pytest_plugin import MockContext
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
-from tests.unit.models import Fruit, User
+from tests.unit.models import Color, Fruit, User
 from tests.utils import DTOInspect
 
 if TYPE_CHECKING:
@@ -645,8 +645,6 @@ def test_json_column_class_body_resolver_executes() -> None:
 
 def test_exclude_relationships_avoids_stub_collision(strawchemy: Strawchemy) -> None:
     """Test that exclude=[RELATIONSHIPS] walks no relationships, so a later explicit type for a related model does not collide with a pre-registered walker stub (#162)."""
-    from strawchemy import RELATIONSHIPS
-    from tests.unit.models import Color, Fruit
 
     # First slice scopes Fruit with a relationship-free walk...
     @strawchemy.type(Fruit, exclude=[RELATIONSHIPS])

@@ -63,6 +63,10 @@ class FieldGroup(str, Enum):
     def list_str() -> str:
         return ", ".join(member.value for member in FieldGroup)
 
+    @classmethod
+    def values(cls) -> frozenset[str]:
+        return frozenset(member.value for member in FieldGroup)
+
 
 @final
 class DTOMissing:
@@ -439,8 +443,8 @@ def include_field(field_name: str, is_relation: bool, fields: IncludeFields | Fi
 
 def has_field_group(value: IncludeFields | FieldIterable) -> bool:
     """True if the selection contains a FieldGroup member."""
-    if value in FieldGroup or isinstance(value, FieldGroup):
-        return True
+    if isinstance(value, str):
+        return value in FieldGroup.values()
     return any(isinstance(item, FieldGroup) for item in value)
 
 
