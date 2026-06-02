@@ -7,6 +7,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, ForwardRef, Literal, NewType, TypeVar, cast, overload
 
 import strawberry
+from strawberry import LazyType
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer
@@ -177,8 +178,11 @@ class StrawberryRegistry:
             field: The field or argument to update the references of.
             graphql_type: The graphql type of the field.
         """
-        for inner_type in strawberry_contained_types(field.type):
-            field_type_name = self._get_field_type_name(field, inner_type, graphql_type)
+        for inner_type in strawberry_contained_types(field.type, resolve_lazy=False):
+            if isinstance(inner_type, LazyType):
+                field_type_name: str | None = inner_type.type_name
+            else:
+                field_type_name = self._get_field_type_name(field, inner_type, graphql_type)
             if not field_type_name:
                 continue
 
@@ -222,7 +226,7 @@ class StrawberryRegistry:
             for argument in field.arguments:
                 if any(
                     get_object_definition(inner_type) is not None
-                    for inner_type in strawberry_contained_types(argument.type)
+                    for inner_type in strawberry_contained_types(argument.type, resolve_lazy=False)
                 ):
                     self._update_references(argument, "input")
             self._update_references(field, graphql_type)

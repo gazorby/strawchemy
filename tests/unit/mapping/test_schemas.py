@@ -252,6 +252,10 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("scope.schema_before.Query", id="scope_schema_before"),
         pytest.param("scope.schema_after.Query", id="scope_schema_after"),
         pytest.param("scope.schema_middle.Query", id="scope_schema_middle"),
+        pytest.param("lazy.query.Query", id="lazy_circular_default_scope"),
+        pytest.param("lazy_global.query.Query", id="lazy_circular_global_scope"),
+        pytest.param("forwardref.query.Query", id="forwardref_circular_default_scope"),
+        pytest.param("forwardref_global.query.Query", id="forwardref_circular_global_scope"),
     ],
 )
 @pytest.mark.snapshot
