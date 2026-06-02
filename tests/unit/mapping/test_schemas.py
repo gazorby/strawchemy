@@ -14,7 +14,6 @@ from strawberry.scalars import JSON
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
-from syrupy.assertion import SnapshotAssertion
 
 from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
 from strawchemy.schema.scalars import Interval
@@ -27,7 +26,6 @@ if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
     from strawchemy.mapper import Strawchemy
-
 
 SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: DEFAULT_SCALAR_REGISTRY[JSON], timedelta: Interval}
 
@@ -171,6 +169,7 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("exclude.exclude_and_override_field.Query", id="exclude_and_override_field"),
         pytest.param("resolver.primary_key_resolver.Query", id="primary_key_resolver"),
         pytest.param("resolver.list_resolver.Query", id="list_resolver"),
+        pytest.param("resolver.class_body_resolver_override.Query", id="class_body_resolver_override"),
         pytest.param("override.override_argument.Query", id="argument_override"),
         pytest.param("override.override_auto_type.Query", id="override_auto_type"),
         pytest.param("override.override_with_custom_name.Query", id="override_with_custom_name"),
@@ -548,3 +547,13 @@ def test_schema_scope_override(module_name: str) -> None:
 
     assert "GroupType" not in schemas_str
     assert "GraphQLGroup" in schemas_str
+
+
+def test_json_column_class_body_resolver_executes() -> None:
+    """The overridden `dict_col` resolver runs and returns its own value, not the JSON projection (#161)."""
+    from tests.unit.schemas.resolver.class_body_resolver_override import ExecutableQuery
+
+    schema = strawberry.Schema(query=ExecutableQuery, scalar_overrides=SCALAR_OVERRIDES)
+    result = schema.execute_sync("{ overriddenJson { dictCol } }")
+    assert not result.errors
+    assert result.data == {"overriddenJson": {"dictCol": "OVERRIDE"}}
