@@ -138,6 +138,46 @@ async def test_filtered_statement(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+@pytest.mark.parametrize(
+    ("limit", "offset", "expected"),
+    [
+        pytest.param(1, 0, ["Red"], id="first-page"),
+        pytest.param(1, 1, ["Green"], id="second-page"),
+        pytest.param(2, 0, ["Red", "Green"], id="full-set"),
+    ],
+)
+async def test_filter_statement_pagination(
+    any_query: AnyQueryExecutor, limit: int, offset: int, expected: list[str]
+) -> None:
+    """filter_statement must scope rows BEFORE limit/offset."""
+    query = f"{{ colorsFilteredPaginated(limit: {limit}, offset: {offset}, orderBy: [{{id: ASC}}]) {{ name }} }}"
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert [c["name"] for c in result.data["colorsFilteredPaginated"]] == expected
+
+
+@pytest.mark.parametrize(
+    ("offset", "expected"),
+    [
+        # Visible names sorted ASC: Green, Pink, Red
+        pytest.param(0, ["Green"], id="first"),
+        pytest.param(1, ["Pink"], id="second"),
+        pytest.param(2, ["Red"], id="third"),
+    ],
+)
+async def test_filter_statement_distinct_pagination(
+    any_query: AnyQueryExecutor, offset: int, expected: list[str]
+) -> None:
+    """filter_statement must scope rows before DISTINCT ON ranking and pagination."""
+    query = (
+        f"{{ colorsFilteredDistinct(distinctOn: [name], orderBy: [{{name: ASC}}], limit: 1, offset: {offset})"
+        " { name } }"
+    )
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert [c["name"] for c in result.data["colorsFilteredDistinct"]] == expected
+
+
 @pytest.mark.snapshot
 async def test_secondary_table_relationships(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, raw_users: RawRecordData
@@ -155,5 +195,17 @@ async def test_secondary_table_relationships(
         {"id": 4, "departments": []},
     ]
 
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_filter_statement_pagination_sql(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(
+        any_query("{ colorsFilteredPaginated(limit: 1, offset: 1, orderBy: [{id: ASC}]) { name } }")
+    )
+    assert not result.errors
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

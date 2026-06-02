@@ -5,10 +5,7 @@
          color.id
     FROM color AS color
     JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = ?
          ) AS anon_1
@@ -21,10 +18,7 @@
          color.id
     FROM color AS color
    INNER JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = %s
          ) AS anon_1
@@ -37,10 +31,7 @@
          color.id
     FROM color AS color
     JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = $1::VARCHAR
          ) AS anon_1
@@ -53,10 +44,7 @@
          color.id
     FROM color AS color
     JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = %(name_1)s::VARCHAR
          ) AS anon_1
@@ -69,10 +57,7 @@
          color.id
     FROM color AS color
     JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = %(name_1)s::VARCHAR
          ) AS anon_1
@@ -85,10 +70,7 @@
          color.id
     FROM color AS color
     JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = ?
          ) AS anon_1

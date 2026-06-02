@@ -1,14 +1,151 @@
 # serializer version: 1
+# name: test_filter_statement_pagination_sql[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id,
+                 color.id AS id__1
+            FROM color AS color
+            JOIN (
+                  SELECT color.id AS id
+                    FROM color
+                   WHERE color.name IN (__[POSTCOMPILE_name_1])
+                 ) AS anon_1
+              ON color.id = anon_1.id
+           ORDER BY color.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS color
+   ORDER BY color.id ASC
+   LIMIT ?
+  OFFSET ?
+  '''
+# ---
+# name: test_filter_statement_pagination_sql[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id,
+                 color.id AS id__1
+            FROM color AS color
+           INNER JOIN (
+                  SELECT color.id AS id
+                    FROM color
+                   WHERE color.name IN (__[POSTCOMPILE_name_1])
+                 ) AS anon_1
+              ON color.id = anon_1.id
+           ORDER BY color.id ASC
+           LIMIT %s,
+                 %s
+         ) AS color
+   ORDER BY color.id ASC
+   LIMIT %s
+  '''
+# ---
+# name: test_filter_statement_pagination_sql[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id,
+                 color.id AS id__1
+            FROM color AS color
+            JOIN (
+                  SELECT color.id AS id
+                    FROM color
+                   WHERE color.name IN (__[POSTCOMPILE_name_1])
+                 ) AS anon_1
+              ON color.id = anon_1.id
+           ORDER BY color.id ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS color
+   ORDER BY color.id ASC
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_filter_statement_pagination_sql[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id,
+                 color.id AS id__1
+            FROM color AS color
+            JOIN (
+                  SELECT color.id AS id
+                    FROM color
+                   WHERE color.name IN (__[POSTCOMPILE_name_1])
+                 ) AS anon_1
+              ON color.id = anon_1.id
+           ORDER BY color.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS color
+   ORDER BY color.id ASC
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_filter_statement_pagination_sql[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id,
+                 color.id AS id__1
+            FROM color AS color
+            JOIN (
+                  SELECT color.id AS id
+                    FROM color
+                   WHERE color.name IN (__[POSTCOMPILE_name_1])
+                 ) AS anon_1
+              ON color.id = anon_1.id
+           ORDER BY color.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS color
+   ORDER BY color.id ASC
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_filter_statement_pagination_sql[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id,
+                 color.id AS id__1
+            FROM color AS color
+            JOIN (
+                  SELECT color.id AS id
+                    FROM color
+                   WHERE color.name IN (__[POSTCOMPILE_name_1])
+                 ) AS anon_1
+              ON color.id = anon_1.id
+           ORDER BY color.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS color
+   ORDER BY color.id ASC
+   LIMIT ?
+  OFFSET ?
+  '''
+# ---
 # name: test_filtered_statement[session-tracked-async-aiosqlite_engine]
   '''
   SELECT color.name,
          color.id
     FROM color AS color
     JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = ?
          ) AS anon_1
@@ -22,10 +159,7 @@
          color.id
     FROM color AS color
    INNER JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = %s
          ) AS anon_1
@@ -39,10 +173,7 @@
          color.id
     FROM color AS color
     JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = $1::VARCHAR
          ) AS anon_1
@@ -56,10 +187,7 @@
          color.id
     FROM color AS color
     JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = %(name_1)s::VARCHAR
          ) AS anon_1
@@ -73,10 +201,7 @@
          color.id
     FROM color AS color
     JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = %(name_1)s::VARCHAR
          ) AS anon_1
@@ -90,10 +215,7 @@
          color.id
     FROM color AS color
     JOIN (
-          SELECT color.name AS name,
-                 color.created_at AS created_at,
-                 color.updated_at AS updated_at,
-                 color.id AS id
+          SELECT color.id AS id
             FROM color
            WHERE color.name = ?
          ) AS anon_1

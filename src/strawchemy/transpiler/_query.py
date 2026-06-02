@@ -47,7 +47,7 @@ from strawchemy.repository.typing import DeclarativeT, OrderBySpec
 from strawchemy.utils.graph import merge_trees
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Callable, Sequence
 
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
@@ -718,6 +718,7 @@ class SubqueryBuilder(Generic[DeclarativeT]):
     scope: QueryScope[Any]
     hook_applier: HookApplier
     db_features: DatabaseFeatures
+    filter_statement_join: Callable[[Select[Any], AliasedClass[Any]], Select[Any]] | None = None
 
     alias: AliasedClass[DeclarativeT] = dataclasses.field(init=False)
 
@@ -829,6 +830,10 @@ class SubqueryBuilder(Generic[DeclarativeT]):
             only_columns.append(rank)
 
         statement = statement.with_only_columns(*only_columns)
+
+        if self.filter_statement_join is not None:
+            statement = self.filter_statement_join(statement, self.alias)
+
         statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
         statement, _ = self.hook_applier.apply(
             statement,

@@ -82,7 +82,7 @@ test = [
   "pytest-databases[postgres,mysql]",
   "pytest-lazy-fixtures",
   "pytest-pretty",
-  "pytest-xdist",
+  "pytest-xdist[psutil]",
   "sqlparse",
   "syrupy",
   "testapp",

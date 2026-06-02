@@ -105,34 +105,51 @@ class QueryTranspiler(Generic[DeclarativeT]):
         self._aggregation_joins: dict[QueryNodeType, AggregationJoin] = {}
         self._statement = statement
         self._deterministic_ordering = deterministic_ordering
+        self._filter_in_subquery = False
         self.dialect = dialect
         self.scope = scope or QueryScope(model, supported_dialect, inspector=self._inspector)
 
         self._hook_applier = HookApplier(self.scope, query_hooks or defaultdict(list))
 
+    def _apply_filter_statement(
+        self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[Any]
+    ) -> Select[tuple[DeclarativeT]]:
+        """Joins the `filter_statement` subquery to `alias` on primary-key equality.
+
+        Restricts `statement` to rows that survive `filter_statement` as a semi-join
+        (no columns selected from the filter subquery). Reused by both the outer query
+        and the pagination/distinct subquery so OFFSET/LIMIT count only filter-visible
+        rows.
+
+        Args:
+            statement: The select statement to restrict.
+            alias: The root alias whose PK columns are matched against the filter subquery.
+
+        Returns:
+            The statement joined to the filter subquery on PK equality.
+        """
+        assert self._statement is not None
+        root_mapper = class_mapper(self.scope.model)
+        pk_attributes = self._inspector.pk_attributes(root_mapper)
+        # Only PK columns are needed for the join, so avoid selecting the rest.
+        filter_alias = self._statement.with_only_columns(*pk_attributes).subquery().alias()
+        on_clause = and_(*[getattr(alias, attr.key) == filter_alias.c[attr.key] for attr in pk_attributes])
+        return statement.join(filter_alias, onclause=on_clause)
+
     def _base_statement(self) -> Select[tuple[DeclarativeT]]:
         """Creates the base select statement for the query.
 
-        If a `self._statement` was provided during initialization, this method
-        joins the root alias of the current scope to an aliased subquery
-        derived from `self._statement`. Otherwise, it returns a simple select
-        from the root alias.
+        Joins the `filter_statement` (if any) to the root alias on PK equality —
+        unless that join was already pushed into the pagination/distinct subquery,
+        in which case the root alias is the already scoped subquery and must not be re-joined.
 
         Returns:
             The base SQLAlchemy Select statement.
         """
-        if self._statement is not None:
-            root_mapper = class_mapper(self.scope.model)
-            alias = self._statement.subquery().alias()
-            aliased_cls = aliased(root_mapper, alias)
-            on_clause = and_(
-                *[
-                    getattr(self.scope.root_alias, attr.key) == getattr(aliased_cls, attr.key)
-                    for attr in self._inspector.pk_attributes(root_mapper)
-                ]
-            )
-            return select(self.scope.root_alias).join(alias, onclause=on_clause)
-        return select(self.scope.root_alias)
+        statement = select(self.scope.root_alias)
+        if self._statement is not None and not self._filter_in_subquery:
+            return self._apply_filter_statement(statement, self.scope.root_alias)
+        return statement
 
     @contextmanager
     def _sub_scope(self, model: type[Any], root_alias: AliasedClass[Any]) -> Iterator[Self]:
@@ -821,10 +838,19 @@ class QueryTranspiler(Generic[DeclarativeT]):
             use_distinct_on=not distinct_on_rank,
         )
         subquery_needed = self.scope.is_root and (limit is not None or offset is not None or distinct_on_rank)
-        subquery_builder = SubqueryBuilder(self.scope, self._hook_applier, self._inspector.db_features)
+        subquery_builder = SubqueryBuilder(
+            self.scope,
+            self._hook_applier,
+            self._inspector.db_features,
+            filter_statement_join=(
+                self._apply_filter_statement if self.scope.is_root and self._statement is not None else None
+            ),
+        )
 
         if subquery_needed:
             self.scope.replace(alias=subquery_builder.alias)
+            if self._statement is not None:
+                self._filter_in_subquery = True
 
         if query_graph.query_filter:
             query.where = self._where(query_graph.query_filter, allow_null)
