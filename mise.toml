@@ -9,7 +9,7 @@ pre-commit = "latest"
 actionlint = "latest"
 
 [vars]
-local_pytest_options = "-n=6 -vv"
+local_pytest_options = "-n=auto -vv"
 pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
 ci_uv_run_options = " --frozen --no-default-groups --only-group=nox"
 ci_pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --junit-xml=./junit.xml -o junit_family=legacy"
@@ -175,6 +175,11 @@ run = "uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_o
 description = "Run snapshot-based tests and update snapshots"
 depends = "uv:install"
 run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update"
+
+[tasks."test:add-new-snapshots"]
+description = "Run snapshot-based tests and add new snapshots"
+depends = "uv:install"
+run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update-new-only"
 
 # ###############
 # CI

@@ -143,6 +143,14 @@ Run tests
 
 #### `[test]…`
 
+## `test:add-new-snapshots`
+
+- Depends: uv:install
+
+- **Usage**: `test:add-new-snapshots`
+
+Run snapshot-based tests and add new snapshots
+
 ## `test:coverage`
 
 - Depends: uv:install

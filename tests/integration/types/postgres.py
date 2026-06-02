@@ -367,6 +367,19 @@ class AsyncQuery:
     colors_filtered: list[ColorType] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
     )
+    colors_filtered_paginated: list[ColorType] = strawchemy.field(
+        order_by=ColorOrder,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+        filter_statement=lambda _: select(Color).where(Color.name.in_(["Red", "Green", "Pink"])),
+    )
+    colors_filtered_distinct: list[ColorType] = strawchemy.field(
+        distinct_on=ColorDistinctOn,
+        order_by=ColorOrder,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+        filter_statement=lambda _: select(Color).where(Color.name.in_(["Red", "Green", "Pink"])),
+    )
     colors_with_filtered_fruits: list[ColorWithFilteredFruit] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository
     )
@@ -451,6 +464,19 @@ class SyncQuery:
     )
     colors_filtered: list[ColorType] = strawchemy.field(
         repository_type=StrawchemySyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
+    )
+    colors_filtered_paginated: list[ColorType] = strawchemy.field(
+        order_by=ColorOrder,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
+        filter_statement=lambda _: select(Color).where(Color.name.in_(["Red", "Green", "Pink"])),
+    )
+    colors_filtered_distinct: list[ColorType] = strawchemy.field(
+        distinct_on=ColorDistinctOn,
+        order_by=ColorOrder,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
+        filter_statement=lambda _: select(Color).where(Color.name.in_(["Red", "Green", "Pink"])),
     )
     colors_with_filtered_fruits: list[ColorWithFilteredFruit] = strawchemy.field(
         repository_type=StrawchemySyncRepository
