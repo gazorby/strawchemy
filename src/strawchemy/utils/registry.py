@@ -265,10 +265,13 @@ class StrawberryRegistry:
             # override for the same model must keep their chosen type.
             # ``scope="global"`` keeps the historical behavior and refreshes
             # every scoped reference.
-            previous_default_type = None
+            previous_default_type: type[WithStrawberryObjectDefinition] | None = None
             if type_info.default_name:
                 previous_type_info = self._names_map[type_info.graphql_type].get(type_info.default_name)
-                previous_default_type = self._type_map.get(previous_type_info) if previous_type_info else None
+                previous_default_type = cast(
+                    "type[WithStrawberryObjectDefinition] | None",
+                    self._type_map.get(previous_type_info) if previous_type_info else None,
+                )
                 self._namespaces[type_info.graphql_type][type_info.default_name] = strawberry_type
                 if type_info.default_name != type_info.name:
                     for reference in self._forward_type_refs[type_info.graphql_type][type_info.default_name]:
