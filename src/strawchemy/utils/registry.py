@@ -262,7 +262,11 @@ class StrawberryRegistry:
         Returns:
             The type if it exists, otherwise None.
         """
-        if (existing := self.get(type_info.graphql_type, type_info.name, None)) and existing.override:
+        if (
+            not type_info.override
+            and (existing := self.get(type_info.graphql_type, type_info.name, None))
+            and existing.override
+        ):
             return self._type_map[existing]
         if not type_info.override and (existing := self._type_map.get(type_info)):
             return existing
