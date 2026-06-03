@@ -122,6 +122,18 @@ class RegistryTypeInfo:
     def scoped_id(self) -> Hashable:
         return self.model, self.graphql_type, self.tags
 
+    @property
+    def resolves_scoped_references(self) -> bool:
+        """Whether this registration should satisfy refs to generated DTOs for the same model."""
+        return bool(
+            self.model
+            and not self.exclude_from_scope
+            and (
+                self.scope == "global"
+                or (self.scope is None and self.override and self.user_defined and self.default_name is not None)
+            )
+        )
+
 
 class StrawberryRegistry:
     def __init__(self, strawberry_config: StrawberryConfig) -> None:
@@ -242,9 +254,12 @@ class StrawberryRegistry:
                 reference.update_type(strawberry_type)
         if type_info.graphql_type != "enum":
             self._track_references(strawberry_type, type_info.graphql_type, force=type_info.override)
-        if type_info.scope == "global" and type_info.model:
+        if type_info.resolves_scoped_references:
             if type_info.default_name:
                 self._namespaces[type_info.graphql_type][type_info.default_name] = strawberry_type
+                if type_info.default_name != type_info.name:
+                    for reference in self._forward_type_refs[type_info.graphql_type][type_info.default_name]:
+                        reference.update_type(strawberry_type)
             for reference in self._type_refs[type_info.scoped_id]:
                 reference.update_type(strawberry_type)
             self._scoped_types[type_info.scoped_id] = strawberry_type

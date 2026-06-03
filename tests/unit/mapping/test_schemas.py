@@ -69,6 +69,38 @@ def test_override_same_name_does_not_leak_fields(strawchemy: Strawchemy) -> None
     assert slim_fields == {"id"}
 
 
+def test_relationship_uses_late_explicit_related_type_registration(strawchemy: Strawchemy) -> None:
+    """Relationship type selection must not depend on decoration/import order."""
+    from tests.unit.models import Color, Fruit
+
+    @strawchemy.type(Fruit, name="FruitNode", include=["id", "color"], override=True)
+    class FruitNode:
+        pass
+
+    @strawchemy.type(Color, name="ColorNode", include=["id", "name"], override=True)
+    class ColorNode:
+        @strawberry.field
+        def label(self) -> str:
+            return "label"
+
+    @strawberry.type
+    class Query:
+        @strawberry.field(graphql_type=FruitNode | None)
+        def fruit(self) -> object | None:
+            return None
+
+        @strawberry.field(graphql_type=ColorNode | None)
+        def color(self) -> object | None:
+            return None
+
+    schema = strawberry.Schema(query=Query)
+    schema_sdl = str(schema)
+
+    assert "color: ColorNode!" in schema_sdl
+    assert "label: String!" in schema_sdl
+    assert "color: ColorType!" not in schema_sdl
+
+
 def test_type_instance_auto_as_str(strawchemy: Strawchemy) -> None:
     @strawchemy.type(User)
     class UserType:
