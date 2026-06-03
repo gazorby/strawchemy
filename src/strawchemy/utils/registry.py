@@ -126,15 +126,17 @@ class RegistryTypeInfo:
         return self.model, self.graphql_type, self.tags
 
     @property
+    def _is_user_defined_default_name_override(self) -> bool:
+        """Whether this override should take over generated refs for the model's default DTO name."""
+        return self.scope is None and self.override and self.user_defined and self.default_name is not None
+
+    @property
     def resolves_scoped_references(self) -> bool:
         """Whether this registration should satisfy refs to generated DTOs for the same model."""
         return bool(
             self.model
             and not self.exclude_from_scope
-            and (
-                self.scope == "global"
-                or (self.scope is None and self.override and self.user_defined and self.default_name is not None)
-            )
+            and (self.scope == "global" or self._is_user_defined_default_name_override)
         )
 
 
