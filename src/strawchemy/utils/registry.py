@@ -258,6 +258,13 @@ class StrawberryRegistry:
         if type_info.graphql_type != "enum":
             self._track_references(strawberry_type, type_info.graphql_type, force=type_info.override)
         if type_info.resolves_scoped_references:
+            # A user-defined override can replace a generated/default DTO for
+            # the same model after relationship fields have already recorded
+            # references to it. Update only refs that still point at that
+            # previous default DTO; refs already resolved to another explicit
+            # override for the same model must keep their chosen type.
+            # ``scope="global"`` keeps the historical behavior and refreshes
+            # every scoped reference.
             previous_default_type = None
             if type_info.default_name:
                 previous_type_info = self._names_map[type_info.graphql_type].get(type_info.default_name)
