@@ -101,6 +101,9 @@ class _TypeReference:
         else:
             self._set_type(strawberry_type)
 
+    def contains_type(self, strawberry_type: type[WithStrawberryObjectDefinition]) -> bool:
+        return any(inner_type is strawberry_type for inner_type in strawberry_contained_types(self.ref_holder.type))
+
 
 @dataclasses.dataclass(frozen=True, eq=True)
 class RegistryTypeInfo:
@@ -255,13 +258,22 @@ class StrawberryRegistry:
         if type_info.graphql_type != "enum":
             self._track_references(strawberry_type, type_info.graphql_type, force=type_info.override)
         if type_info.resolves_scoped_references:
+            previous_default_type = None
             if type_info.default_name:
+                previous_type_info = self._names_map[type_info.graphql_type].get(type_info.default_name)
+                previous_default_type = self._type_map.get(previous_type_info) if previous_type_info else None
                 self._namespaces[type_info.graphql_type][type_info.default_name] = strawberry_type
                 if type_info.default_name != type_info.name:
                     for reference in self._forward_type_refs[type_info.graphql_type][type_info.default_name]:
-                        reference.update_type(strawberry_type)
+                        if previous_default_type is None or reference.contains_type(previous_default_type):
+                            reference.update_type(strawberry_type)
             for reference in self._type_refs[type_info.scoped_id]:
-                reference.update_type(strawberry_type)
+                if (
+                    type_info.scope == "global"
+                    or previous_default_type is None
+                    or reference.contains_type(previous_default_type)
+                ):
+                    reference.update_type(strawberry_type)
             self._scoped_types[type_info.scoped_id] = strawberry_type
         self._names_map[type_info.graphql_type][type_info.name] = type_info
         self._type_map[type_info] = strawberry_type

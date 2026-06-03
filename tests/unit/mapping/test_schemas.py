@@ -83,6 +83,12 @@ def test_relationship_uses_late_explicit_related_type_registration(strawchemy: S
         def label(self) -> str:
             return "label"
 
+    @strawchemy.type(Color, name="AlternateColorNode", include=["id", "name"], override=True)
+    class AlternateColorNode:
+        @strawberry.field
+        def alternate_label(self) -> str:
+            return "alternate"
+
     @strawberry.type
     class Query:
         @strawberry.field(graphql_type=FruitNode | None)
@@ -99,6 +105,7 @@ def test_relationship_uses_late_explicit_related_type_registration(strawchemy: S
     assert "color: ColorNode!" in schema_sdl
     assert "label: String!" in schema_sdl
     assert "color: ColorType!" not in schema_sdl
+    assert "color: AlternateColorNode!" not in schema_sdl
 
 
 def test_type_instance_auto_as_str(strawchemy: Strawchemy) -> None:
