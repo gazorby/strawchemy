@@ -249,7 +249,6 @@ class UserType:
     pass
 ```
 
-
 Add a custom fields
 
 ```python
@@ -276,38 +275,6 @@ class UserType:
 See the [custom resolvers](#custom-resolvers) for more details
 
 </details>
-
-### Field groups
-
-The `SCALARS` and `RELATIONSHIPS` selectors expand to all non-relationship columns and all
-relationships respectively. Mix them into `include`/`exclude` sequences to avoid listing every
-column by hand.
-
-```python
-from strawchemy import RELATIONSHIPS, SCALARS
-
-
-# All scalar columns, no relationships walked
-@strawchemy.type(User, include="scalars")
-class UserType:
-    pass
-
-
-# All scalar columns plus the `posts` relationship
-@strawchemy.type(User, include=[SCALARS, "posts"])
-class UserType:
-    pass
-
-
-# All scalar columns, no relationships (equivalent to include="scalars")
-@strawchemy.type(User, exclude="relationships")
-class UserType:
-    pass
-```
-
-- The plain string literals `"all"`, `"scalars"`, and `"relationships"` are only recognized as field groups when passed directly to `include/exclude`.
-- When passing a sequence to include/exclude, use `SCALARS/RELATIONSHIPS/ALL` enums to expand to the corresponding field groups.
-
 
 ### Type Override
 
