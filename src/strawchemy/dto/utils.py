@@ -15,15 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from strawchemy.dto.constants import DTO_INFO_KEY
-from strawchemy.dto.types import (
-    DTOConfig,
-    DTOFieldConfig,
-    DTOScope,
-    FieldIterable,
-    IncludeFields,
-    Purpose,
-    PurposeConfig,
-)
+from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOScope, FieldSpec, Purpose, PurposeConfig
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
@@ -44,10 +36,10 @@ __all__ = (
 
 def config(
     purpose: Purpose,
-    include: IncludeFields | None = None,
-    exclude: FieldIterable | None = None,
-    global_include: IncludeFields | None = None,
-    global_exclude: FieldIterable | None = None,
+    include: FieldSpec | None = None,
+    exclude: FieldSpec | None = None,
+    global_include: FieldSpec | None = None,
+    global_exclude: FieldSpec | None = None,
     partial: bool | None = None,
     type_map: Mapping[Any, Any] | None = None,
     aliases: Mapping[str, str] | None = None,
@@ -55,24 +47,19 @@ def config(
     scope: DTOScope | None = None,
     tags: set[str] | None = None,
 ) -> DTOConfig:
-    config = DTOConfig(purpose, alias_generator=alias_generator, scope=scope)
-    if exclude:
-        config.exclude = exclude
-    if include:
-        config.include = include
-    if global_include:
-        config.global_include = global_include
-    if global_exclude:
-        config.global_exclude = global_exclude
-    if type_map:
-        config.type_overrides = type_map
-    if aliases:
-        config.aliases = aliases
-    if partial is not None:
-        config.partial = partial
-    if tags:
-        config.tags = tags
-    return config
+    return DTOConfig(
+        purpose,
+        include=include or None,
+        exclude=exclude or None,
+        global_include=global_include or None,
+        global_exclude=global_exclude or None,
+        partial=partial,
+        type_overrides=type_map or {},
+        aliases=aliases or {},
+        alias_generator=alias_generator,
+        scope=scope,
+        tags=tags or set(),
+    )
 
 
 def field(

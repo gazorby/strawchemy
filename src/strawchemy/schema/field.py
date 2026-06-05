@@ -21,7 +21,7 @@ from strawchemy.dto.strawberry import (
     OrderByDTO,
     StrawchemyObject,
 )
-from strawchemy.dto.types import DTOConfig, IncludeFields, Purpose
+from strawchemy.dto.types import DTOConfig, FieldSpec, Purpose
 from strawchemy.exceptions import EmptyDTOError, StrawchemyFieldError
 from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.utils.annotation import is_type_hint_optional
@@ -86,8 +86,8 @@ class StrawchemyField(StrawberryField):
         filter_factory: BooleanFilterFactory,
         distinct_on_factory: DistinctOnEnumFactory,
         filter_type: builtins.type[BooleanFilterDTO] | bool | None = None,
-        order_by: IncludeFields | builtins.type[OrderByDTO] | Literal[False] | None = None,
-        distinct_on: IncludeFields | builtins.type[EnumDTO] | Literal[False] | None = None,
+        order_by: FieldSpec | builtins.type[OrderByDTO] | Literal[False] | None = None,
+        distinct_on: FieldSpec | builtins.type[EnumDTO] | Literal[False] | None = None,
         pagination: DefaultOffsetPagination | bool | None = False,
         repository_type: AnyRepositoryType | None = None,
         root_aggregations: bool = False,
@@ -263,7 +263,7 @@ class StrawchemyField(StrawberryField):
                 return self._distinct_on_factory.factory(
                     inner_type.__dto_model__,
                     dto_config=inner_type.__dto_config__.copy_with(
-                        include=inner_type.__dto_config__.include if distinct_on == "all" else distinct_on
+                        include=inner_type.__dto_config__.included_fields & distinct_on
                     ),
                     no_cache=True,
                     if_no_fields="raise",
@@ -294,7 +294,7 @@ class StrawchemyField(StrawberryField):
                     inner_type.__dto_model__,
                     mode="order_by",
                     dto_config=inner_type.__dto_config__.copy_with(
-                        include=inner_type.__dto_config__.include if order_by == "all" else order_by
+                        include=inner_type.__dto_config__.included_fields & order_by
                     ),
                     no_cache=True,
                     if_no_fields="raise",

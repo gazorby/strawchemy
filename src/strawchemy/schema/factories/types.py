@@ -23,7 +23,7 @@ from strawchemy.dto.strawberry import (
     MappedStrawberryGraphQLDTO,
     OrderByDTO,
 )
-from strawchemy.dto.types import DTOConfig, DTOMissing, IncludeFields, Purpose, is_fields_iterable
+from strawchemy.dto.types import DTOConfig, DTOMissing, FieldSpec, Purpose, is_fields_iterable
 from strawchemy.dto.utils import read_partial, write_all_config
 from strawchemy.exceptions import EmptyDTOError
 from strawchemy.schema.factories import (
@@ -175,9 +175,9 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         self,
         dto: type[GraphQLDTOT],
         base: type[Any] | None,
-        order: IncludeFields | None = None,
-        paginate: IncludeFields | None = None,
-        distinct_on: IncludeFields | None = None,
+        order: FieldSpec | None = None,
+        paginate: FieldSpec | None = None,
+        distinct_on: FieldSpec | None = None,
         default_pagination: None | DefaultOffsetPagination = None,
     ) -> type[GraphQLDTOT]:
         """Add pagination and ordering arguments to a GraphQL DTO type.

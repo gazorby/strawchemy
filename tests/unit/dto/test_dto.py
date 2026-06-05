@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Optional
+from typing import Any, Optional, get_args
 from uuid import UUID, uuid4
 
 import pytest
@@ -12,11 +12,11 @@ from typing_extensions import Self
 import strawchemy
 from strawchemy import ALL, RELATIONSHIPS, SCALARS
 from strawchemy.dto import DTOConfig, Purpose, PurposeConfig, config, field
-from strawchemy.dto.base import DTOFieldDefinition
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.strawberry import DTOKey, GraphQLFieldDefinition, StrawchemyDefinition
-from strawchemy.dto.types import FieldGroup, include_field
+from strawchemy.dto.types import FieldGroup
 from strawchemy.dto.utils import DTOFieldConfig, read_all_config, write_all_config
+from strawchemy.exceptions import EmptyDTOError
 from tests.typing import AnyFactory, MappedPydanticFactory
 from tests.unit.dc_models import (
     AdminDataclass,
@@ -30,16 +30,6 @@ from tests.unit.models import Admin, Book, Color, Fruit, SponsoredUser, Tag, Tom
 from tests.utils import DTOInspect, factory_iterator
 
 
-def _fruit_field(name: str, *, is_relation: bool) -> DTOFieldDefinition:  # type: ignore[type-arg]
-    return DTOFieldDefinition(
-        dto_config=DTOConfig(Purpose.READ),
-        model=Fruit,
-        model_field_name=name,
-        type_hint=int,
-        is_relation=is_relation,
-    )
-
-
 class _PopulateFieldsBase(DeclarativeBase):
     pass
 
@@ -49,8 +39,14 @@ class _PopulateFieldsModel(_PopulateFieldsBase):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
 
-def test_config_function_produces_same_default() -> None:
-    assert config(Purpose.READ) == DTOConfig(Purpose.READ)
+@pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_config_function_produces_same_default(factory: AnyFactory, model: type[Tomato | TomatoDataclass]) -> None:
+    """Test that config() and DTOConfig produce DTOs with identical fields."""
+    from_function = factory.factory(model, config(Purpose.READ, include="all"), name="FromFunction")
+    from_class = factory.factory(model, DTOConfig(Purpose.READ, include="all"), name="FromClass")
+
+    assert DTOInspect(from_function).annotations() == DTOInspect(from_class).annotations()
 
 
 def test_default_field_config() -> None:
@@ -294,73 +290,48 @@ def test_forward_refs_resolved(name: str, sqlalchemy_pydantic_factory: MappedPyd
     )
 
 
-# Tests for DTOConfig.from_include() and is_field_included()
+@pytest.mark.parametrize("model", [Fruit, FruitDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_from_include_empty_raises(factory: AnyFactory, model: type[Fruit | FruitDataclass]) -> None:
+    """Test that from_include(None) produces a DTO with no fields."""
+    with pytest.raises(EmptyDTOError):
+        factory.factory(model, DTOConfig.from_include(None), if_no_fields="raise")
 
 
-def test_from_include_with_none() -> None:
-    """Test that from_include(None) creates a config with empty include set."""
-    config = DTOConfig.from_include(None)
-    assert config.include == set()
-    assert config.purpose == Purpose.READ
+@pytest.mark.parametrize(
+    ("include_spec", "expected_fields"),
+    [
+        pytest.param("all", {"name", "color_id", "sweetness", "id", "color"}, id="all"),
+        pytest.param(["name", "sweetness"], {"name", "sweetness"}, id="list"),
+        pytest.param({"name", "sweetness"}, {"name", "sweetness"}, id="set"),
+    ],
+)
+@pytest.mark.parametrize("model", [Fruit, FruitDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_from_include_spec(
+    factory: AnyFactory,
+    model: type[Fruit | FruitDataclass],
+    include_spec: Any,
+    expected_fields: set[str],
+) -> None:
+    """Test that from_include() accepts 'all' and field-name collections."""
+    dto = factory.factory(model, DTOConfig.from_include(include_spec))
+    assert set(DTOInspect(dto).annotations()) == expected_fields
 
 
-def test_from_include_with_all() -> None:
-    """Test that from_include('all') creates a config with include='all'."""
-    config = DTOConfig.from_include("all")
-    assert config.include == "all"
-    assert config.purpose == Purpose.READ
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_from_include_with_custom_purpose(factory: AnyFactory) -> None:
+    """Test that from_include() honors the purpose: read-only fields are dropped from write DTOs."""
+    dto = factory.factory(Book, DTOConfig.from_include(["title", "isbn"], purpose=Purpose.WRITE))
+    assert set(DTOInspect(dto).annotations()) == {"title"}
 
 
-def test_from_include_with_list() -> None:
-    """Test that from_include() accepts a list and converts it to the include parameter."""
-    config = DTOConfig.from_include(["field1", "field2"])
-    assert config.include == ["field1", "field2"]
-    assert config.purpose == Purpose.READ
-
-
-def test_from_include_with_set() -> None:
-    """Test that from_include() accepts a set for the include parameter."""
-    config = DTOConfig.from_include({"field1", "field2"})
-    assert config.include == {"field1", "field2"}
-    assert config.purpose == Purpose.READ
-
-
-def test_from_include_with_custom_purpose() -> None:
-    """Test that from_include() accepts a custom purpose."""
-    config = DTOConfig.from_include(["field1"], purpose=Purpose.WRITE)
-    assert config.include == ["field1"]
-    assert config.purpose == Purpose.WRITE
-
-
-def test_is_field_included_with_all() -> None:
-    """Test that is_field_included() returns True for any field when include='all'."""
-    config = DTOConfig.from_include("all")
-    assert config.is_field_included("any_field") is True
-    assert config.is_field_included("another_field") is True
-
-
-def test_is_field_included_with_specific_list() -> None:
-    """Test that is_field_included() returns True only for listed fields."""
-    config = DTOConfig.from_include(["field1", "field2"])
-    assert config.is_field_included("field1") is True
-    assert config.is_field_included("field2") is True
-    assert config.is_field_included("field3") is False
-
-
-def test_is_field_included_with_empty_include() -> None:
-    """Test that is_field_included() returns False for all fields when include is empty."""
-    config = DTOConfig.from_include(None)
-    assert config.is_field_included("field1") is False
-    assert config.is_field_included("any_field") is False
-
-
-def test_is_field_included_with_exclude() -> None:
-    """Test that excluded fields are properly excluded even when include='all'."""
-    config = DTOConfig(Purpose.READ, include="all", exclude={"field2", "field3"})
-    assert config.is_field_included("field1") is True
-    assert config.is_field_included("field2") is False
-    assert config.is_field_included("field3") is False
-    assert config.is_field_included("field4") is True
+@pytest.mark.parametrize("model", [Fruit, FruitDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_named_exclude_with_include_all(factory: AnyFactory, model: type[Fruit | FruitDataclass]) -> None:
+    """Test that excluded fields are dropped from the DTO even when include='all'."""
+    dto = factory.factory(model, DTOConfig(Purpose.READ, include="all", exclude={"color", "color_id"}))
+    assert set(DTOInspect(dto).annotations()) == {"name", "sweetness", "id"}
 
 
 @pytest.mark.parametrize(
@@ -384,182 +355,134 @@ def test_strawchemy_definition_populate_fields(key_source: type[DeclarativeBase]
     assert definition.field_map == {DTOKey([_PopulateFieldsModel]) + "id": field_def}
 
 
-def test_field_group_constants_are_enum_members() -> None:
-    """Test that the top-level SCALARS/RELATIONSHIPS constants are the enum members."""
+def test_field_group_constants() -> None:
+    """Test that group constants are the enum members, equal their string literals, and are hashable."""
     assert strawchemy.SCALARS is FieldGroup.SCALARS
     assert strawchemy.RELATIONSHIPS is FieldGroup.RELATIONSHIPS
-
-
-def test_field_group_constants_hashable_in_sets() -> None:
-    """Test that group constants are usable inside include/exclude frozensets."""
+    assert FieldGroup.ALL == "all"
+    assert FieldGroup.SCALARS == "scalars"
+    assert FieldGroup.RELATIONSHIPS == "relationships"
     members = frozenset([strawchemy.SCALARS, strawchemy.RELATIONSHIPS, "name"])
     assert strawchemy.SCALARS in members
     assert strawchemy.RELATIONSHIPS in members
     assert "name" in members
 
 
-def test_scalars_include_allows_exclude() -> None:
+@pytest.mark.parametrize("model", [Fruit, FruitDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_scalars_include_allows_exclude(factory: AnyFactory, model: type[Fruit | FruitDataclass]) -> None:
     """Test that a group-bearing include coexists with exclude and is not clobbered to 'all'."""
-    config = DTOConfig(Purpose.READ, include=[SCALARS], exclude=["secret"])
-    assert config.include != "all"
-    assert SCALARS in config.include
-    assert "secret" in config.exclude
+    dto = factory.factory(model, DTOConfig(Purpose.READ, include=[SCALARS], exclude=["name"]))
+    assert set(DTOInspect(dto).annotations()) == {"id", "color_id", "sweetness"}
 
 
-def test_plain_include_with_exclude_still_raises() -> None:
+@pytest.mark.parametrize("model", [Fruit, FruitDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_plain_include_with_exclude_still_raises(factory: AnyFactory, model: type[Fruit | FruitDataclass]) -> None:
     """Test that a plain field-name include combined with exclude still raises."""
     with pytest.raises(ValueError, match="exclude"):
-        DTOConfig(Purpose.READ, include=["a", "b"], exclude=["c"])
+        factory.factory(model, DTOConfig(Purpose.READ, include=["name"], exclude=["sweetness"]))
 
 
-def test_bare_exclude_still_implies_all() -> None:
+@pytest.mark.parametrize("model", [Fruit, FruitDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_bare_exclude_still_implies_all(factory: AnyFactory, model: type[Fruit | FruitDataclass]) -> None:
     """Test that a bare exclude (no include) still implies include='all'."""
-    config = DTOConfig(Purpose.READ, exclude=["secret"])
-    assert config.include == "all"
+    dto = factory.factory(model, DTOConfig(Purpose.READ, exclude=["name"]))
+    assert set(DTOInspect(dto).annotations()) == {"id", "color_id", "sweetness", "color"}
 
 
-def test_relationships_exclude_implies_all_include() -> None:
-    """Test that exclude=[RELATIONSHIPS] with no include promotes include to 'all'."""
-    config = DTOConfig(Purpose.READ, exclude=[RELATIONSHIPS])
-    assert config.include == "all"
-    assert RELATIONSHIPS in config.exclude
-
-
-def test_mixed_group_and_name_include_allows_exclude() -> None:
+@pytest.mark.parametrize("model", [Fruit, FruitDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_mixed_group_and_name_include_allows_exclude(factory: AnyFactory, model: type[Fruit | FruitDataclass]) -> None:
     """Test that a group selector mixed with a field name coexists with exclude."""
-    config = DTOConfig(Purpose.READ, include=[SCALARS, "owner"], exclude=["secret"])
-    assert config.include != "all"
-    assert SCALARS in config.include
-    assert "owner" in config.include
-    assert "secret" in config.exclude
+    dto = factory.factory(model, DTOConfig(Purpose.READ, include=[SCALARS, "color"], exclude=["name"]))
+    assert set(DTOInspect(dto).annotations()) == {"id", "color_id", "sweetness", "color"}
 
 
-def test_global_group_include_allows_global_exclude() -> None:
-    """Test that a group-bearing global_include coexists with global_exclude."""
-    config = DTOConfig(Purpose.READ, global_include=[SCALARS], global_exclude=["secret"])
-    assert config.global_include != "all"
-    assert SCALARS in config.global_include
-    assert "secret" in config.global_exclude
-
-
+@pytest.mark.parametrize("model", [Fruit, FruitDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_include_scalars_excludes_relationships(factory: AnyFactory) -> None:
+def test_global_group_include_allows_global_exclude(factory: AnyFactory, model: type[Fruit | FruitDataclass]) -> None:
+    """Test that group-bearing global_include/global_exclude shape nested DTOs."""
+    dto = factory.factory(
+        model, DTOConfig(Purpose.READ, include=[SCALARS, "color"], global_include=[SCALARS], global_exclude=["name"])
+    )
+    annotations = DTOInspect(dto).annotations()
+    # Root fields follow `include`; global rules don't apply at the root.
+    assert set(annotations) == {"id", "name", "color_id", "sweetness", "color"}
+    # Nested DTO follows global rules: scalars only, minus the global exclude.
+    color_dto = next((arg for arg in get_args(annotations["color"]) if arg is not type(None)), annotations["color"])
+    assert set(DTOInspect(color_dto).annotations()) == {"id"}
+
+
+@pytest.mark.parametrize(
+    "include_spec",
+    [
+        pytest.param({"all"}, id="literal-set"),
+        pytest.param([ALL], id="constant-list"),
+        pytest.param([SCALARS, RELATIONSHIPS], id="both-groups"),
+    ],
+)
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_include_all_equivalents(factory: AnyFactory, include_spec: Any) -> None:
+    """Test that {'all'}, [ALL] and [SCALARS, RELATIONSHIPS] are all equivalent to include='all'."""
+    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=include_spec))
+    assert set(DTOInspect(dto).annotations()) == {"id", "name", "color_id", "sweetness", "color"}
+
+
+@pytest.mark.parametrize(
+    "include_spec",
+    [
+        pytest.param([SCALARS], id="constant-list"),
+        pytest.param(frozenset([SCALARS]), id="constant-frozenset"),
+        pytest.param(["scalars"], id="string-literal"),
+    ],
+)
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_include_scalars(factory: AnyFactory, include_spec: Any) -> None:
     """Test that include=[SCALARS] keeps scalar fields and drops relationships."""
-    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=[SCALARS]))
-    fields = set(DTOInspect(dto).annotations())
-    assert "color" not in fields
-    assert {"id", "name", "sweetness", "color_id"} <= fields
+    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=include_spec))
+    assert set(DTOInspect(dto).annotations()) == {"id", "name", "color_id", "sweetness"}
 
 
+@pytest.mark.parametrize(
+    "include_spec",
+    [
+        pytest.param([RELATIONSHIPS], id="constant-list"),
+        pytest.param(frozenset([RELATIONSHIPS]), id="constant-frozenset"),
+        pytest.param(["relationships"], id="string-literal"),
+    ],
+)
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_include_scalars_plus_named_relationship(factory: AnyFactory) -> None:
-    """Test that include=[SCALARS, 'color'] keeps scalars plus the named relationship."""
-    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=[SCALARS, "color"]))
-    fields = set(DTOInspect(dto).annotations())
-    assert "color" in fields
-    assert {"id", "name", "sweetness", "color_id"} <= fields
-
-
-@pytest.mark.parametrize("factory", factory_iterator())
-def test_include_relationships_only(factory: AnyFactory) -> None:
+def test_include_relationships(factory: AnyFactory, include_spec: Any) -> None:
     """Test that include=[RELATIONSHIPS] keeps only relationships and drops scalars."""
-    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=[RELATIONSHIPS]))
-    fields = set(DTOInspect(dto).annotations())
-    assert "color" in fields
-    assert "name" not in fields
-    assert "sweetness" not in fields
-    assert "color_id" not in fields
+    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=include_spec))
+    assert set(DTOInspect(dto).annotations()) == {"color"}
 
 
+@pytest.mark.parametrize(
+    "exclude_spec",
+    [
+        pytest.param([RELATIONSHIPS], id="constant-list"),
+        pytest.param(frozenset([RELATIONSHIPS]), id="constant-frozenset"),
+    ],
+)
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_include_both_groups_equals_all(factory: AnyFactory) -> None:
-    """Test that include=[SCALARS, RELATIONSHIPS] is equivalent to include='all'."""
-    grouped = factory.factory(Fruit, DTOConfig(Purpose.READ, include=[SCALARS, RELATIONSHIPS]))
-    all_dto = factory.factory(Fruit, read_all_config)
-    assert set(DTOInspect(grouped).annotations()) == set(DTOInspect(all_dto).annotations())
-
-
-@pytest.mark.parametrize("factory", factory_iterator())
-def test_exclude_relationships_keeps_scalars(factory: AnyFactory) -> None:
-    """Test that exclude=[RELATIONSHIPS] keeps all scalar fields and walks no relationships."""
-    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, exclude=[RELATIONSHIPS]))
-    fields = set(DTOInspect(dto).annotations())
-    assert "color" not in fields
-    assert {"id", "name", "sweetness", "color_id"} <= fields
+def test_exclude_relationships(factory: AnyFactory, exclude_spec: Any) -> None:
+    """Test that a bare exclude=[RELATIONSHIPS] implies include='all' and drops relations."""
+    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, exclude=exclude_spec))
+    assert set(DTOInspect(dto).annotations()) == {"id", "name", "color_id", "sweetness"}
 
 
 @pytest.mark.parametrize("factory", factory_iterator())
 def test_exclude_relationships_plus_named_scalar(factory: AnyFactory) -> None:
     """Test that exclude=[RELATIONSHIPS, 'sweetness'] drops relationships and the named scalar."""
     dto = factory.factory(Fruit, DTOConfig(Purpose.READ, exclude=[RELATIONSHIPS, "sweetness"]))
-    fields = set(DTOInspect(dto).annotations())
-    assert "color" not in fields
-    assert "sweetness" not in fields
-    assert {"id", "name", "color_id"} <= fields
-
-
-def test_is_field_included_relationships_group_matches_relations() -> None:
-    """Test that include=[RELATIONSHIPS] includes relation fields and excludes scalars."""
-    config = DTOConfig(Purpose.READ, include=frozenset([RELATIONSHIPS]))
-    assert config.is_field_included(_fruit_field("owner", is_relation=True)) is True
-    assert config.is_field_included(_fruit_field("name", is_relation=False)) is False
-
-
-def test_is_field_included_scalars_group_matches_scalars() -> None:
-    """Test that include=[SCALARS] includes scalar fields and excludes relations."""
-    config = DTOConfig(Purpose.READ, include=frozenset([SCALARS]))
-    assert config.is_field_included(_fruit_field("name", is_relation=False)) is True
-    assert config.is_field_included(_fruit_field("owner", is_relation=True)) is False
-
-
-def test_is_field_included_group_in_exclude() -> None:
-    """Test that a group selector in exclude drops matching fields."""
-    config = DTOConfig(Purpose.READ, include="all", exclude=frozenset([RELATIONSHIPS]))
-    assert config.is_field_included(_fruit_field("owner", is_relation=True)) is False
-    assert config.is_field_included(_fruit_field("name", is_relation=False)) is True
-
-
-def test_is_field_included_no_group_unchanged() -> None:
-    """Test that behavior is unchanged when no group constants are present."""
-    config = DTOConfig(Purpose.READ, include=frozenset(["a", "b"]))
-    assert config.is_field_included("a") is True
-    assert config.is_field_included("c") is False
-    assert config.is_field_included(_fruit_field("a", is_relation=True)) is True
-
-
-def test_string_literals_equal_field_group_members() -> None:
-    """Test that plain string literals equal their FieldGroup members."""
-    assert FieldGroup.ALL == "all"
-    assert FieldGroup.SCALARS == "scalars"
-    assert FieldGroup.RELATIONSHIPS == "relationships"
+    assert set(DTOInspect(dto).annotations()) == {"id", "name", "color_id"}
 
 
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_include_string_scalars_literal(factory: AnyFactory) -> None:
-    """Test that the literal include=['scalars'] behaves like include=[SCALARS]."""
-    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=["scalars"]))
-    fields = set(DTOInspect(dto).annotations())
-    assert "color" not in fields
-    assert {"id", "name", "sweetness", "color_id"} <= fields
-
-
-@pytest.mark.parametrize("factory", factory_iterator())
-def test_include_all_literal_set_equals_all(factory: AnyFactory) -> None:
-    """Test that include={'all'} is equivalent to include='all'."""
-    grouped = factory.factory(Fruit, DTOConfig(Purpose.READ, include={"all"}))
-    all_dto = factory.factory(Fruit, read_all_config)
-    assert set(DTOInspect(grouped).annotations()) == set(DTOInspect(all_dto).annotations())
-
-
-@pytest.mark.parametrize("factory", factory_iterator())
-def test_include_all_constant_in_collection(factory: AnyFactory) -> None:
-    """Test that include=[ALL] is equivalent to include='all'."""
-    grouped = factory.factory(Fruit, DTOConfig(Purpose.READ, include=[ALL]))
-    all_dto = factory.factory(Fruit, read_all_config)
-    assert set(DTOInspect(grouped).annotations()) == set(DTOInspect(all_dto).annotations())
-
-
-def test_include_field_all_selects_everything() -> None:
-    """Test that include_field returns True for the 'all' selector."""
-    assert include_field("anything", False, "all") is True
-    assert include_field("anything", True, "all") is True
+def test_include_plain_names_with_relationship(factory: AnyFactory) -> None:
+    """Test that plain field-name includes select scalars and relations by name, without groups."""
+    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=frozenset(["name", "color"])))
+    assert set(DTOInspect(dto).annotations()) == {"name", "color"}

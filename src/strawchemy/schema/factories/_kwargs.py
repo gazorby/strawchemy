@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
     from strawchemy.dto.base import DTOFieldDefinition
     from strawchemy.dto.strawberry import BooleanFilterDTO, DTOKey, GraphQLFieldDefinition, OrderByDTO
-    from strawchemy.dto.types import FieldIterable, IncludeFields
+    from strawchemy.dto.types import FieldSpec
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.typing import GraphQLPurpose
 
@@ -41,8 +41,8 @@ __all__ = (
 class DTOConfigKwargs(TypedDict, total=False):
     """Args forwarded to ``config(...)`` to build a ``DTOConfig``."""
 
-    include: IncludeFields | None
-    exclude: FieldIterable | None
+    include: FieldSpec | None
+    exclude: FieldSpec | None
     partial: bool | None
     type_map: Mapping[Any, Any] | None
     aliases: Mapping[str, str] | None
@@ -70,11 +70,11 @@ class RegistrationKwargs(TypedDict, total=False):
 class TypeWrapperKwargs(TypedDict, total=False):
     """Args specific to ``.type()`` / ``_type_wrapper``."""
 
-    paginate: IncludeFields | None
+    paginate: FieldSpec | None
     default_pagination: DefaultOffsetPagination | None
     filter_input: type[BooleanFilterDTO] | None
-    distinct_on: IncludeFields | None
-    order: IncludeFields | type[OrderByDTO] | None
+    distinct_on: FieldSpec | None
+    order: FieldSpec | type[OrderByDTO] | None
     query_hook: Any
 
 

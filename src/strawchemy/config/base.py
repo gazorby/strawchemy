@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from strawchemy.dto import Purpose
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
-from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields
+from strawchemy.dto.types import DTOConfig, FieldSpec
 from strawchemy.repository.strawberry import StrawchemySyncRepository
 from strawchemy.utils.strawberry import default_session_getter
 
@@ -59,15 +59,15 @@ class StrawchemyConfig:
     output object types so they work as GraphQL Union / interface members without
     boilerplate. A user-defined is_type_of on the decorated class is always
     respected. Set to False to disable globally."""
-    include: IncludeFields = "all"
+    include: FieldSpec = "all"
     """Globally included fields."""
-    exclude: FieldIterable | None = None
+    exclude: FieldSpec | None = None
     """Globally included fields."""
-    pagination: IncludeFields | None = None
+    pagination: FieldSpec | None = None
     """Enable/disable pagination on list resolvers."""
-    order_by: IncludeFields | None = None
+    order_by: FieldSpec | None = None
     """Enable/disable order by on list resolvers."""
-    distinct_on: IncludeFields | None = None
+    distinct_on: FieldSpec | None = None
     """Enable/disable order by on list resolvers."""
     pagination_default_limit: int = 100
     """Default pagination limit when `pagination=True`."""

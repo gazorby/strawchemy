@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOFieldDefinition, MappedDTO, Relation
-    from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields, Purpose
+    from strawchemy.dto.types import DTOConfig, FieldSpec, Purpose
     from strawchemy.repository.typing import DeclarativeT
     from strawchemy.schema.factories._kwargs import FactoryMethodKwargs
     from strawchemy.typing import GraphQLPurpose
@@ -84,8 +84,8 @@ class StrawchemyMutationInputValidationFactory(MutationInputFactory[MappedPydant
             model: type[DeclarativeT],
             *,
             mode: GraphQLPurpose,
-            include: IncludeFields | None = None,
-            exclude: FieldIterable | None = None,
+            include: FieldSpec | None = None,
+            exclude: FieldSpec | None = None,
             partial: bool | None = None,
             type_map: Mapping[Any, Any] | None = None,
             aliases: Mapping[str, str] | None = None,
