@@ -411,6 +411,7 @@ def test_global_group_include_allows_global_exclude(factory: AnyFactory, model: 
     "include_spec",
     [
         pytest.param("all", id="all-string"),
+        pytest.param(ALL, id="bare-constant"),
         pytest.param([ALL], id="constant-list"),
         pytest.param([SCALARS, RELATIONSHIPS], id="both-groups"),
     ],
@@ -426,7 +427,9 @@ def test_include_all_equivalents(factory: AnyFactory, include_spec: Any) -> None
     "include_spec",
     [
         pytest.param(("scalars", ()), id="include-scalars-string"),
+        pytest.param((SCALARS, ()), id="include-scalars-bare-constant"),
         pytest.param(([SCALARS], ()), id="include-scalars-list"),
+        pytest.param((None, RELATIONSHIPS), id="bare-exclude-relationships-bare-constant"),
         pytest.param(([ALL], [RELATIONSHIPS]), id="exclude-relationships-constant-list"),
         pytest.param(("all", "relationships"), id="exclude-relationships-string"),
         pytest.param((None, "relationships"), id="bare-exclude-relationships-string"),
@@ -445,7 +448,9 @@ def test_include_scalars(factory: AnyFactory, include_spec: tuple[FieldSpec | No
     "include_spec",
     [
         pytest.param(("relationships", ()), id="include-relationships-string"),
+        pytest.param((RELATIONSHIPS, ()), id="include-relationships-bare-constant"),
         pytest.param(([RELATIONSHIPS], ()), id="include-relationships-list"),
+        pytest.param((None, SCALARS), id="bare-exclude-scalars-bare-constant"),
         pytest.param(([ALL], [SCALARS]), id="exclude-scalars-constant-list"),
         pytest.param(("all", "scalars"), id="exclude-scalars-string"),
         pytest.param((None, "scalars"), id="bare-exclude-scalars-string"),

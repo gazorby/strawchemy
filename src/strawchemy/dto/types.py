@@ -43,7 +43,7 @@ FieldIterable: TypeAlias = (
     "list[FieldSelector] | set[FieldSelector] | frozenset[FieldSelector] | tuple[FieldSelector, ...]"
 )
 FieldGroupStr: TypeAlias = Literal["all", "scalars", "relationships"]
-FieldSpec: TypeAlias = "FieldIterable | FieldGroupStr"
+FieldSpec: TypeAlias = "FieldIterable | FieldGroupStr | FieldGroup"
 ConfigScope: TypeAlias = Literal["local", "global"]
 
 
@@ -75,21 +75,9 @@ class FieldGroup(Enum):
 class FieldSet:
     """Normalized, immutable view over a field selection.
 
-    Wraps a `FieldSpec` (a group string such as "all", an iterable of field
-    names and/or `FieldGroup` selectors, or `None`) into a uniform
-    `frozenset[FieldSelector]` so selections can be compared, hashed, and
-    combined regardless of how they were originally expressed.
-
-    Set-like semantics:
-        - `item in field_set`: matches by field name, by the field's group
-          (`SCALARS`/`RELATIONSHIPS`), or by `ALL`. `item` can be a field name,
-          a `DTOFieldDefinition` (its `is_relation` flag picks the group), or a
-          `FieldGroup` — group items only match themselves or `ALL`, never via
-          group matching.
-        - `self & other`: intersection of two selections; `ALL` subsumes the
-          other side.
-        - `self | other`: union, returned as a `FieldSpec | None` — collapses
-          to "all" when `ALL` is present, `None` when both sides are empty.
+    Wraps a `FieldSpec`, into a uniform `frozenset[FieldSelector]` so selections can be
+    compared, hashed, and combined regardless of how they were originally
+    expressed.
     """
 
     value: InitVar[FieldSpec | None]
@@ -247,17 +235,16 @@ class DTOConfig:
             Determines which fields from the source model are included based on
             their `DTOFieldConfig`.
         include: Explicitly include fields from the source model in the generated
-            DTO. Can be a list or set of field names, the literal "all" to include
-            all fields not explicitly excluded, or the `ALL` / `SCALARS` /
-            `RELATIONSHIPS` group selectors (mixable with names, e.g.
+            DTO. Can be a list or set of field names, and/or the `ALL` / `SCALARS` /
+            `RELATIONSHIPS` group selectors, either assigned directly
+            (`include=SCALARS`) or mixed with names inside an iterable (e.g.
             `[SCALARS, "owner"]`). `[SCALARS, RELATIONSHIPS]` is equivalent to
-            "all". Plain string literals "all", "scalars", "relationships" are
-            accepted interchangeably with the constants. Defaults to an empty set.
+            `ALL`. Defaults to an empty set.
         exclude: Explicitly exclude fields from the source model. Can be a list or
             set of field names and/or the `ALL` / `SCALARS` / `RELATIONSHIPS` group
             selectors (e.g. `[RELATIONSHIPS]` keeps all scalar fields and walks no
-            relationships). Plain string literals are accepted. A bare `exclude` (no
-            `include`) implies `include="all"`. Defaults to an empty set.
+            relationships). A bare `exclude` (no `include`) implies everything else
+            is included. Defaults to an empty set.
         partial: If True, makes all fields in the generated DTO optional.
             Defaults to None.
         partial_default: The default value assigned to fields when `partial` is
@@ -289,11 +276,11 @@ class DTOConfig:
     include: FieldSpec | None = None
     """Explicitly include fields from the generated DTO."""
     exclude: FieldSpec | None = None
-    """Explicitly exclude fields from the generated DTO. Implies `include="all"`."""
+    """Explicitly exclude fields from the generated DTO. Implies everything else is included."""
     global_include: FieldSpec | None = None
     """Explicitly include fields from the generated DTO and all its children."""
     global_exclude: FieldSpec | None = None
-    """Explicitly exclude fields from the generated DTO and all its children. Implies `global_include="all"`."""
+    """Explicitly exclude fields from the generated DTO and all its children. Implies everything else is included."""
     partial: bool | None = None
     """Make all field optional."""
     partial_default: Any = None
@@ -486,15 +473,14 @@ class DTOConfig:
         if scope == "local":
             return field in FieldSet(self.include) and field not in FieldSet(self.exclude)
         if scope == "global":
-            # `include="all"` propagates inclusion to children, same as `global_include="all"`.
-            included = field in FieldSet(self.global_include) or self.include == "all"
+            included = field in FieldSet(self.global_include) or FieldGroup.ALL in self.included_fields.field_set
             return included and field not in FieldSet(self.global_exclude)
         return field in self.included_fields and field not in self.excluded_fields
 
 
 def is_fields_iterable(value: Any) -> TypeIs[FieldSpec | FieldIterable | None]:
     """Test the given value is suitable to be used as either `include` or `exclude` in a DTOConfig."""
-    if value == "all" or value is None:
+    if value == "all" or value is None or isinstance(value, FieldGroup):
         return True
     if isinstance(value, str):
         return False
