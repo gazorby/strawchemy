@@ -12,6 +12,7 @@ from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
+from strawberry.types.union import StrawberryUnion
 
 from strawchemy.dto.strawberry import MappedStrawberryGraphQLDTO
 from strawchemy.dto.types import cast_include_fields, is_fields_iterable
@@ -51,32 +52,71 @@ StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyObject")
 _RegistryMissing = NewType("_RegistryMissing", object)
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True)
 class _TypeReference:
+    """Reference to a type used by a field or argument, used to update it later."""
+
     ref_holder: StrawberryField | StrawberryArgument
+    """The field or argument whose type holds the referenced type."""
+    target: Any = None
+    """The inner type (class, `LazyType`, forward ref) this reference was created for.
 
-    @classmethod
-    def _replace_contained_type(
-        cls, container: StrawberryContainer, strawberry_type: type[WithStrawberryObjectDefinition]
-    ) -> StrawberryContainer:
-        """Recursively replace the contained type in a StrawberryContainer.
+    Used to match the right member when the referenced type is part of a `StrawberryUnion`.
+    """
+    target_name: str | None = None
+    """The registry name the reference is keyed under.
 
-        Args:
-            container: The container to replace the type in.
-            strawberry_type: The type to replace with.
+    Fallback for matching a union member when `target` identity does not hold
+    (e.g. the member annotation was re-resolved).
+    """
 
-        Returns:
-            A new container with the type replaced.
+    def _matches_target(self, member: Any) -> bool:
+        """Check whether a union member is the one this reference was created for."""
+        if member is self.target:
+            return True
+        if self.target_name is None:
+            return False
+        if isinstance(member, LazyType):
+            return member.type_name == self.target_name
+        member_definition = get_object_definition(member)
+        return member_definition is not None and member_definition.name == self.target_name
+
+    def _replaced_union(
+        self, union: StrawberryUnion, strawberry_type: type[WithStrawberryObjectDefinition]
+    ) -> StrawberryUnion:
+        """Return a copy of the union with only the matching member replaced.
+
+        The member is matched by identity against the reference target, falling back
+        to a name comparison. If no member matches, the union is returned unchanged
         """
-        container_copy = copy(container)
-        if isinstance(container.of_type, StrawberryContainer):
-            replaced = cls._replace_contained_type(container.of_type, strawberry_type)
-        else:
-            replaced = strawberry_type
-        container_copy.of_type = replaced
-        return container_copy
+        annotations = list(union.type_annotations)
+        for index, member in enumerate(union.types):
+            if self._matches_target(member):
+                annotations[index] = StrawberryAnnotation(strawberry_type, namespace=annotations[index].namespace)
+                union_copy = copy(union)
+                union_copy.type_annotations = tuple(annotations)
+                return union_copy
+        return union
 
-    def _set_type(self, strawberry_type: type[WithStrawberryObjectDefinition] | StrawberryContainer) -> None:
+    def _replaced(
+        self, node: Any, strawberry_type: type[WithStrawberryObjectDefinition]
+    ) -> type[WithStrawberryObjectDefinition] | StrawberryContainer | StrawberryUnion:
+        """Recursively replace the referenced type within containers and unions.
+
+        Containers are copied with their inner type replaced; unions are rebuilt with
+        only the matching member swapped; any other node is replaced directly.
+        """
+        if isinstance(node, StrawberryContainer):
+            container_copy = copy(node)
+            container_copy.of_type = self._replaced(node.of_type, strawberry_type)
+            return container_copy
+        if isinstance(node, StrawberryUnion):
+            return self._replaced_union(node, strawberry_type)
+        return strawberry_type
+
+    def _set_type(
+        self, strawberry_type: type[WithStrawberryObjectDefinition] | StrawberryContainer | StrawberryUnion
+    ) -> None:
         """Set the type of the referenced field or argument.
 
         Args:
@@ -92,15 +132,13 @@ class _TypeReference:
     def update_type(self, strawberry_type: type[WithStrawberryObjectDefinition]) -> None:
         """Update the type of the referenced field or argument.
 
-        If the referenced type is a container, it will recursively replace the contained type.
+        Containers are recursed into; union members are replaced individually (a
+        union field is never replaced wholesale).
 
         Args:
             strawberry_type: The type to update to.
         """
-        if isinstance(self.ref_holder.type, StrawberryContainer):
-            self._set_type(self._replace_contained_type(self.ref_holder.type, strawberry_type))
-        else:
-            self._set_type(strawberry_type)
+        self._set_type(self._replaced(self.ref_holder.type, strawberry_type))
 
 
 @dataclasses.dataclass(frozen=True, eq=True)
@@ -186,7 +224,7 @@ class StrawberryRegistry:
             if not field_type_name:
                 continue
 
-            type_ref = _TypeReference(field)
+            type_ref = _TypeReference(field, target=inner_type, target_name=field_type_name)
             type_info = self.get(graphql_type, field_type_name, None)
 
             if type_info and not type_info.exclude_from_scope:
@@ -303,7 +341,7 @@ class StrawberryRegistry:
             and not type_info.override
         )
 
-    def _get_type_info(
+    def _type_info(
         self,
         dto: type[StrawchemyObject | Enum],
         graphql_type: GraphQLType,
@@ -390,7 +428,7 @@ class StrawberryRegistry:
         description: str | None = None,
         directives: Sequence[object] | None = (),
     ) -> type[StrawchemyDTOT]:
-        type_info = self._get_type_info(
+        type_info = self._type_info(
             dto=dto,
             graphql_type=graphql_type,
             dto_config=dto_config,
@@ -433,7 +471,7 @@ class StrawberryRegistry:
         description: str | None = None,
         directives: Sequence[object] = (),
     ) -> type[EnumT]:
-        type_info = self._get_type_info(
+        type_info = self._type_info(
             dto=enum_type,
             graphql_type="enum",
             dto_config=dto_config,
