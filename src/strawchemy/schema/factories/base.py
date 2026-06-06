@@ -202,7 +202,7 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         self, model: type[DeclarativeBase], include: FieldSpec | type[OrderByDTO] | None = None
     ) -> type[OrderByDTO] | None:
         order_include = self._mapper.config.order_by if include is None else include
-        if is_fields_iterable(order_include) and order_include is not None:
+        if is_fields_iterable(order_include):
             try:
                 order_by_input = self._mapper.order_by_factory.make_input(
                     model=model,
@@ -226,7 +226,7 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         self, model: type[DeclarativeBase], include: FieldSpec | type[EnumDTO] | None = None
     ) -> type[EnumDTO] | None:
         distinct_on_include = self._mapper.config.distinct_on if include is None else include
-        if is_fields_iterable(distinct_on_include) and distinct_on_include is not None:
+        if is_fields_iterable(distinct_on_include):
             try:
                 distinct_on_input = self._mapper.distinct_on_enum_factory.factory(
                     model=model,

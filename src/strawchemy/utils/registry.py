@@ -15,7 +15,7 @@ from strawberry.types.field import StrawberryField
 from strawberry.types.union import StrawberryUnion
 
 from strawchemy.dto.strawberry import MappedStrawberryGraphQLDTO
-from strawchemy.dto.types import FieldSet, is_fields_iterable
+from strawchemy.dto.types import FieldSet
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.utils.annotation import inner_types
 from strawchemy.utils.strawberry import strawberry_contained_types
@@ -365,8 +365,8 @@ class StrawberryRegistry:
             override=override,
             user_defined=user_defined,
             pagination=default_pagination,
-            order=FieldSet(order) if is_fields_iterable(order) else order,
-            distinct_on=FieldSet(distinct_on) if is_fields_iterable(distinct_on) else distinct_on,
+            order=order if isinstance(order, type) else FieldSet(order),
+            distinct_on=distinct_on if isinstance(distinct_on, type) else FieldSet(distinct_on),
             paginate=FieldSet(paginate),
             scope=dto_config.scope,
             model=model,

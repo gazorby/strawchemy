@@ -478,9 +478,9 @@ class DTOConfig:
         return field in self.included_fields and field not in self.excluded_fields
 
 
-def is_fields_iterable(value: Any) -> TypeIs[FieldSpec | FieldIterable | None]:
+def is_fields_iterable(value: Any) -> TypeIs[FieldSpec]:
     """Test the given value is suitable to be used as either `include` or `exclude` in a DTOConfig."""
-    if value == "all" or value is None or isinstance(value, FieldGroup):
+    if value == "all" or isinstance(value, FieldGroup):
         return True
     if isinstance(value, str):
         return False
