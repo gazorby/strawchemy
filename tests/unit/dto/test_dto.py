@@ -9,12 +9,11 @@ from sqlalchemy import Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from typing_extensions import Self
 
-import strawchemy
 from strawchemy import ALL, RELATIONSHIPS, SCALARS
 from strawchemy.dto import DTOConfig, Purpose, PurposeConfig, config, field
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.strawberry import DTOKey, GraphQLFieldDefinition, StrawchemyDefinition
-from strawchemy.dto.types import FieldGroup
+from strawchemy.dto.types import FieldSpec
 from strawchemy.dto.utils import DTOFieldConfig, read_all_config, write_all_config
 from strawchemy.exceptions import EmptyDTOError
 from tests.typing import AnyFactory, MappedPydanticFactory
@@ -355,24 +354,17 @@ def test_strawchemy_definition_populate_fields(key_source: type[DeclarativeBase]
     assert definition.field_map == {DTOKey([_PopulateFieldsModel]) + "id": field_def}
 
 
-def test_field_group_constants() -> None:
-    """Test that group constants are the enum members, equal their string literals, and are hashable."""
-    assert strawchemy.SCALARS is FieldGroup.SCALARS
-    assert strawchemy.RELATIONSHIPS is FieldGroup.RELATIONSHIPS
-    assert FieldGroup.ALL == "all"
-    assert FieldGroup.SCALARS == "scalars"
-    assert FieldGroup.RELATIONSHIPS == "relationships"
-    members = frozenset([strawchemy.SCALARS, strawchemy.RELATIONSHIPS, "name"])
-    assert strawchemy.SCALARS in members
-    assert strawchemy.RELATIONSHIPS in members
-    assert "name" in members
-
-
+@pytest.mark.parametrize(
+    "include_spec",
+    [pytest.param("scalars", id="direct-string"), pytest.param([SCALARS], id="constant-list")],
+)
 @pytest.mark.parametrize("model", [Fruit, FruitDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_scalars_include_allows_exclude(factory: AnyFactory, model: type[Fruit | FruitDataclass]) -> None:
+def test_scalars_include_allows_exclude(
+    factory: AnyFactory, model: type[Fruit | FruitDataclass], include_spec: FieldSpec
+) -> None:
     """Test that a group-bearing include coexists with exclude and is not clobbered to 'all'."""
-    dto = factory.factory(model, DTOConfig(Purpose.READ, include=[SCALARS], exclude=["name"]))
+    dto = factory.factory(model, DTOConfig(Purpose.READ, include=include_spec, exclude=["name"]))
     assert set(DTOInspect(dto).annotations()) == {"id", "color_id", "sweetness"}
 
 
@@ -418,14 +410,14 @@ def test_global_group_include_allows_global_exclude(factory: AnyFactory, model: 
 @pytest.mark.parametrize(
     "include_spec",
     [
-        pytest.param({"all"}, id="literal-set"),
+        pytest.param("all", id="all-string"),
         pytest.param([ALL], id="constant-list"),
         pytest.param([SCALARS, RELATIONSHIPS], id="both-groups"),
     ],
 )
 @pytest.mark.parametrize("factory", factory_iterator())
 def test_include_all_equivalents(factory: AnyFactory, include_spec: Any) -> None:
-    """Test that {'all'}, [ALL] and [SCALARS, RELATIONSHIPS] are all equivalent to include='all'."""
+    """Test that [ALL] and [SCALARS, RELATIONSHIPS] are equivalent to include='all'."""
     dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=include_spec))
     assert set(DTOInspect(dto).annotations()) == {"id", "name", "color_id", "sweetness", "color"}
 
@@ -433,45 +425,54 @@ def test_include_all_equivalents(factory: AnyFactory, include_spec: Any) -> None
 @pytest.mark.parametrize(
     "include_spec",
     [
-        pytest.param([SCALARS], id="constant-list"),
-        pytest.param(frozenset([SCALARS]), id="constant-frozenset"),
-        pytest.param(["scalars"], id="string-literal"),
+        pytest.param(("scalars", ()), id="include-scalars-string"),
+        pytest.param(([SCALARS], ()), id="include-scalars-list"),
+        pytest.param(([ALL], [RELATIONSHIPS]), id="exclude-relationships-constant-list"),
+        pytest.param(("all", "relationships"), id="exclude-relationships-string"),
+        pytest.param((None, "relationships"), id="bare-exclude-relationships-string"),
+        pytest.param((None, [RELATIONSHIPS]), id="bare-exclude-relationships-constant-list"),
     ],
 )
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_include_scalars(factory: AnyFactory, include_spec: Any) -> None:
-    """Test that include=[SCALARS] keeps scalar fields and drops relationships."""
-    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=include_spec))
+def test_include_scalars(factory: AnyFactory, include_spec: tuple[FieldSpec | None, FieldSpec]) -> None:
+    """Test that scalars group selectors keep scalar fields and drop relationships."""
+    include, exclude = include_spec
+    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=include, exclude=exclude))
     assert set(DTOInspect(dto).annotations()) == {"id", "name", "color_id", "sweetness"}
 
 
 @pytest.mark.parametrize(
     "include_spec",
     [
-        pytest.param([RELATIONSHIPS], id="constant-list"),
-        pytest.param(frozenset([RELATIONSHIPS]), id="constant-frozenset"),
-        pytest.param(["relationships"], id="string-literal"),
+        pytest.param(("relationships", ()), id="include-relationships-string"),
+        pytest.param(([RELATIONSHIPS], ()), id="include-relationships-list"),
+        pytest.param(([ALL], [SCALARS]), id="exclude-scalars-constant-list"),
+        pytest.param(("all", "scalars"), id="exclude-scalars-string"),
+        pytest.param((None, "scalars"), id="bare-exclude-scalars-string"),
+        pytest.param((None, [SCALARS]), id="bare-exclude-scalars-constant-list"),
     ],
 )
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_include_relationships(factory: AnyFactory, include_spec: Any) -> None:
-    """Test that include=[RELATIONSHIPS] keeps only relationships and drops scalars."""
-    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=include_spec))
+def test_include_relationships(factory: AnyFactory, include_spec: tuple[FieldSpec | None, FieldSpec]) -> None:
+    """Test that relationships group selectors keep only relationships and drop scalars."""
+    include, exclude = include_spec
+    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, include=include, exclude=exclude))
     assert set(DTOInspect(dto).annotations()) == {"color"}
 
 
 @pytest.mark.parametrize(
-    "exclude_spec",
+    "include_spec",
     [
-        pytest.param([RELATIONSHIPS], id="constant-list"),
-        pytest.param(frozenset([RELATIONSHIPS]), id="constant-frozenset"),
+        pytest.param(["scalars"], id="scalars-list"),
+        pytest.param(["relationships"], id="relationships-list"),
+        pytest.param({"all"}, id="all-set"),
     ],
 )
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_exclude_relationships(factory: AnyFactory, exclude_spec: Any) -> None:
-    """Test that a bare exclude=[RELATIONSHIPS] implies include='all' and drops relations."""
-    dto = factory.factory(Fruit, DTOConfig(Purpose.READ, exclude=exclude_spec))
-    assert set(DTOInspect(dto).annotations()) == {"id", "name", "color_id", "sweetness"}
+def test_group_string_in_iterable_is_field_name(factory: AnyFactory, include_spec: Any) -> None:
+    """Test that group string literals inside iterables are treated as field names, not group selectors."""
+    with pytest.raises(EmptyDTOError):
+        factory.factory(Fruit, DTOConfig(Purpose.READ, include=include_spec), if_no_fields="raise")
 
 
 @pytest.mark.parametrize("factory", factory_iterator())

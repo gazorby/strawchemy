@@ -47,7 +47,7 @@ FieldSpec: TypeAlias = "FieldIterable | FieldGroupStr"
 ConfigScope: TypeAlias = Literal["local", "global"]
 
 
-class FieldGroup(str, Enum):
+class FieldGroup(Enum):
     """Field-group selectors for ``include``/``exclude`` sequences."""
 
     ALL = "all"
@@ -56,9 +56,6 @@ class FieldGroup(str, Enum):
     """Include everything but relationships."""
     RELATIONSHIPS = "relationships"
     """Include only relationships."""
-
-    def __bool__(self) -> bool:
-        return True
 
     @staticmethod
     def list_str() -> str:
@@ -113,8 +110,8 @@ class FieldSet:
         if isinstance(item, FieldGroup):
             return item in self.field_set or FieldGroup.ALL in self.field_set
         name, is_relation = (item, False) if isinstance(item, str) else (item.model_field_name, item.is_relation)
-        group = FieldGroup.RELATIONSHIPS if is_relation else FieldGroup.SCALARS
-        return name in self.field_set or group in self.field_set or FieldGroup.ALL in self.field_set
+        item_group = FieldGroup.RELATIONSHIPS if is_relation else FieldGroup.SCALARS
+        return name in self.field_set or item_group in self.field_set or FieldGroup.ALL in self.field_set
 
     def __and__(self, other: FieldSpec) -> FieldIterable:
         other_set = FieldSet(other)
@@ -128,10 +125,10 @@ class FieldSet:
         )
 
     def __or__(self, other: FieldSpec | None) -> FieldSpec | None:
-        union = self.field_set | FieldSet(other).field_set
-        if FieldGroup.ALL in union:
+        other_set = FieldSet(other)
+        if FieldGroup.ALL in self.field_set or FieldGroup.ALL in other_set.field_set:
             return "all"
-        return union or None
+        return (self.field_set | other_set.field_set) or None
 
     def __bool__(self) -> bool:
         return bool(self.field_set)
@@ -148,10 +145,10 @@ class FieldSet:
                 iterable of field names and/or `FieldGroup` members, or `None`.
 
         Returns:
-            A group string as a single-member frozenset of the matching
-            `FieldGroup`, `None` as an empty frozenset, and any iterable as a
-            frozenset of its items.
+            Normalized field selector set
         """
+        if isinstance(value, FieldGroup):
+            return frozenset((value,))
         if isinstance(value, str) and FieldGroup.is_group(value):
             return frozenset((FieldGroup(value),))
         if value is None:
@@ -339,19 +336,11 @@ class DTOConfig:
     @classmethod
     def _has_field_group(cls, value: FieldSpec | FieldIterable) -> bool:
         """True if the selection contains a FieldGroup member."""
+        if isinstance(value, FieldGroup):
+            return True
         if isinstance(value, str):
             return value in FieldGroup.values()
         return any(isinstance(item, FieldGroup) for item in value)
-
-    @classmethod
-    def _include_field(cls, field_name: str, is_relation: bool, fields: FieldSpec | FieldIterable | None) -> bool:
-        """Whether `fields` selects the field."""
-        if fields is None:
-            return False
-        if fields == "all":
-            return True
-        group = FieldGroup.RELATIONSHIPS if is_relation else FieldGroup.SCALARS
-        return field_name in fields or group in fields or FieldGroup.ALL in fields
 
     def union(self, other: DTOConfig) -> DTOConfig:
         include = FieldSet(self.include) | other.include
