@@ -160,7 +160,7 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7
         with:
           name: ${{env.PROJECT_NAME}}-tests
-          report-type: coverage
+          report_type: coverage
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
           verbose: true
@@ -188,7 +188,7 @@ jobs:
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7
         with:
           name: ${{env.PROJECT_NAME}}-test-results
-          report-type: test_results
+          report_type: test_results
           token: ${{ secrets.CODECOV_TOKEN }}
           flags: ${{ matrix.session.session }}
           verbose: true
