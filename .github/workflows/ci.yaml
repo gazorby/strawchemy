@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Skip check
         id: skip_check
-        uses: fkirc/skip-duplicate-actions@f75f66ce1886f00957d99748a42c724f4330bdcf # v5
+        uses: step-security/skip-duplicate-actions@4eef6ae57f2ca5ea100e5c1da2ead9138483f53c # v5
         with:
           concurrent_skipping: "never"
           skip_after_successful_duplicate: "true"
