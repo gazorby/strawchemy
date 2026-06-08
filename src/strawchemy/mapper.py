@@ -123,7 +123,15 @@ class Strawchemy:
         self.enum_factory = EnumFactory(self, enum_backend)
         self.filter_factory = BooleanFilterFactory(self, aggregate_filter_factory=self.aggregate_filter_factory)
         self.upsert_conflict_factory = UpsertConflictEnumFactory(self, upsert_conflict_fields_enum_backend)
+        self._mutation_builder = MutationFieldBuilder(
+            config=self.config,
+            registry_namespace_getter=self._annotation_namespace,
+            order_by_factory=self.order_by_factory,
+            filter_factory=self.filter_factory,
+            distinct_on_factory=self.distinct_on_enum_factory,
+        )
 
+        # Decorators
         self.filter = self.filter_factory.input
         self.aggregate_filter = partial(self.aggregate_filter_factory.input, mode="aggregate_filter")
         self.distinct_on = self.distinct_on_enum_factory.decorator
@@ -136,13 +144,7 @@ class Strawchemy:
         self.aggregate = partial(self.aggregation_factory.type, mode="aggregate_type")
         self.upsert_update_fields = self.enum_factory.input
         self.upsert_conflict_fields = self.upsert_conflict_factory.input
-        self._mutation_builder = MutationFieldBuilder(
-            config=self.config,
-            registry_namespace_getter=self._annotation_namespace,
-            order_by_factory=self.order_by_factory,
-            filter_factory=self.filter_factory,
-            distinct_on_factory=self.distinct_on_enum_factory,
-        )
+
         # Register common types
         self.registry.register_enum(OrderByEnum, dto_config=read_all_config)
 

@@ -300,7 +300,7 @@ class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
                     _function=aggregation,
                 ),
             )
-        dto = self.backend.build(name, model, field_defs, **(backend_kwargs or {}))
+        dto = self.backend.build(name, model, field_defs, base, **(backend_kwargs or {}))
         dto.__strawchemy_definition__.description = (
             "Boolean expression to compare field aggregations. All fields are combined with logical 'AND'."
         )
