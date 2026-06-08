@@ -8,6 +8,7 @@
   ],
   "dependencyDashboard": true,
   "dependencyDashboardApproval": true,
+  "rebaseWhen": "behind-base-branch",
   "lockFileMaintenance": {
     "enabled": true,
     "dependencyDashboardCategory": "\uD83D\uDD04 Maintenance"
@@ -32,7 +33,9 @@
       "dependencyDashboardCategory": "\uD83D\uDC94 Major Updates"
     },
     {
-      "matchPackageNames": ["python"],
+      "matchPackageNames": [
+        "python"
+      ],
       "dependencyDashboardCategory": "</> Language version"
     }
   ],
