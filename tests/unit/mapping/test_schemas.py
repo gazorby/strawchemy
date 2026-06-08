@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses as dc
 import re
 import textwrap
 from datetime import timedelta
@@ -20,7 +21,7 @@ from strawchemy.schema.scalars import Interval
 from strawchemy.testing.pytest_plugin import MockContext
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
-from tests.unit.models import User
+from tests.unit.models import Fruit, User
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
@@ -89,6 +90,53 @@ def test_input_instance(strawchemy: Strawchemy) -> None:
     user = InputType(id=1, name="user")
     assert user.id == 1
     assert user.name == "user"
+
+
+@pytest.mark.parametrize(
+    ("decorator", "default_value"),
+    [
+        pytest.param("type", "anon", id="type"),
+        pytest.param("order", "anon", id="order"),
+        pytest.param("filter", "anon", id="filter"),
+        pytest.param("create_input", "anon", id="create_input"),
+        pytest.param("pk_update_input", "anon", id="pk_update_input"),
+        pytest.param("filter_update_input", "anon", id="filter_update_input"),
+    ],
+)
+def test_class_body_literal_defaults_preserved(strawchemy: Strawchemy, decorator: str, default_value: Any) -> None:
+    """User-written class-body literal defaults survive every row-shaped strawchemy decorator."""
+
+    @getattr(strawchemy, decorator)(Fruit, include=["name", "sweetness"])
+    class FruitTestType:
+        name: str | None = default_value
+
+    fields = {f.name: f for f in FruitTestType.__strawberry_definition__.fields}
+    assert fields["name"].default == default_value, FruitTestType.__name__
+    # Fields without a class-body default keep their generated default
+    assert {f.name: f for f in FruitTestType.__strawberry_definition__.fields}["sweetness"].default in (
+        dc.MISSING,
+        strawberry.UNSET,
+    )
+    # The literal default applies when instantiating the type
+    assert FruitTestType(sweetness=1).name == default_value
+
+
+@pytest.mark.parametrize(
+    ("decorator", "default_value"),
+    [
+        pytest.param("aggregate", "anon", id="filter_update_input"),
+        pytest.param("aggregate_filter", "anon", id="filter_update_input"),
+    ],
+)
+def test_class_body_literal_defaults_preserved_aggregate(
+    strawchemy: Strawchemy, decorator: str, default_value: Any
+) -> None:
+    @getattr(strawchemy, decorator)(Fruit, include=["name", "sweetness"])
+    class FruitTestType:
+        name: str | None = default_value
+
+    fields = {f.name: f for f in FruitTestType.__strawberry_definition__.fields}
+    assert fields["name"].default == default_value, FruitTestType.__name__
 
 
 def test_field_metadata_default(strawchemy: Strawchemy) -> None:

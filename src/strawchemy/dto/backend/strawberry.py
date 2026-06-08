@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from inspect import getmodule
+from inspect import getmembers, getmodule
 from types import new_class
 from typing import TYPE_CHECKING, Any, TypeVar, cast, get_origin
 
@@ -108,8 +108,16 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         }
         doc = f"DTO generated to be decorated by strawberry for {model.__name__} model"
         if base:
-            annotations |= get_annotations(base)
-            attributes |= {name: value for name, value in base.__dict__.items() if isinstance(value, StrawberryField)}
+            base_annotations = get_annotations(base)
+            annotations |= base_annotations
+            for member_name, value in getmembers(base):
+                if member_name.startswith("__"):
+                    continue
+                if isinstance(value, StrawberryField):
+                    attributes[member_name] = value
+                elif member_name in base_annotations and not callable(value):
+                    # Preserve user-written class-body literal defaults (`= True`) over generated ones
+                    attributes[member_name] = strawberry.field(default=value)
             doc = base.__doc__ or doc
 
         def _exec_body(namespace: dict[str, Any]) -> dict[str, Any]:

@@ -43,7 +43,7 @@ from strawchemy.schema.mutation import (
     ToOneInput,
 )
 from strawchemy.typing import AggregateDTOT, GraphQLDTOT, GraphQLPurpose
-from strawchemy.utils.annotation import get_annotations, non_optional_type_hint
+from strawchemy.utils.annotation import non_optional_type_hint
 from strawchemy.utils.text import snake_to_camel
 
 if TYPE_CHECKING:
@@ -258,12 +258,6 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         for name, value in attributes.items():
             setattr(dto, name, value)
 
-        if base:
-            dto.__annotations__ |= get_annotations(base)
-            for name, value in get_annotations(base).items():
-                if not hasattr(base, name):
-                    continue
-                setattr(dto, name, value)
         return dto
 
     @override
