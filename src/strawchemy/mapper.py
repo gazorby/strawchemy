@@ -103,7 +103,9 @@ class Strawchemy:
         self.config = StrawchemyConfig(cast("SupportedDialect", config)) if isinstance(config, str) else config
         self.registry = StrawberryRegistry(strawberry_config or StrawberryConfig())
 
-        strawberry_backend = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO)
+        strawberry_backend = StrawberrryDTOBackend(
+            MappedStrawberryGraphQLDTO, auto_is_type_of=self.config.auto_is_type_of
+        )
         enum_backend = EnumBackend(self.config.auto_snake_case)
         upsert_conflict_fields_enum_backend = UpsertConflictEnumBackend(
             self.config.inspector, self.config.auto_snake_case
