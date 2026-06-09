@@ -9,6 +9,7 @@ import strawberry
 from strawberry.types.field import StrawberryField
 from typing_extensions import override
 
+from strawchemy.dto import Purpose
 from strawchemy.dto.base import DTOBackend, DTOBase, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOMissing
 from strawchemy.utils.annotation import get_annotations
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterable
 
     from strawchemy.dto.base import DTOFieldDefinition
+    from strawchemy.dto.types import DTOConfig
 
 __all__ = ("AnnotatedDTOT", "MappedStrawberryDTO", "StrawberrryDTOBackend", "StrawberryDTO", "StrawberryDTO")
 
@@ -37,8 +39,11 @@ class FieldInfo:
 
 
 class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
-    def __init__(self, dto_base: type[AnnotatedDTOT]) -> None:
+    def __init__(self, dto_base: type[AnnotatedDTOT], auto_is_type_of: bool = False) -> None:
+        # Defaults off so only the main backend (output types from `@sc.type`) opts in via
+        # config; the filter/order/aggregate backends never auto-generate `is_type_of`.
         self.dto_base = dto_base
+        self.auto_is_type_of = auto_is_type_of
         base_cls = origin if (origin := get_origin(dto_base)) else dto_base
         self._base_annotations = {
             name: value for name, value in get_annotations(base_cls).items() if not self._is_private_attribute(name)
@@ -86,6 +91,7 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         model: type[Any],
         field_definitions: Iterable[DTOFieldDefinition[Any, ModelFieldT]],
         base: type[Any] | None = None,
+        dto_config: DTOConfig | None = None,
         **kwargs: Any,
     ) -> type[AnnotatedDTOT]:
         fields: list[FieldInfo] = []
@@ -126,6 +132,18 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
             namespace["__annotations__"] = annotations
             namespace["__dto_field_definitions__"] = dto_field_definitions
             namespace["__dto_model__"] = model
+
+            if (
+                self.auto_is_type_of
+                and dto_config is not None
+                and dto_config.purpose is Purpose.READ
+                and not (base is not None and hasattr(base, "is_type_of"))
+            ):
+
+                def is_type_of(cls: type[Any], obj: Any, _info: Any, _model: type[Any] = model) -> bool:
+                    return isinstance(obj, (cls, _model))
+
+                namespace["is_type_of"] = classmethod(is_type_of)
             namespace.update(base_attributes | attributes)
             return namespace
 

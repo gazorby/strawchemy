@@ -54,6 +54,11 @@ class StrawchemyConfig:
     mapping, instead of failing the schema build. Explicit `type_overrides` are always honored.
     Note: types mapped only via `strawberry.Schema(scalar_overrides=...)` are not visible here;
     force them with `type_overrides=` instead."""
+    auto_is_type_of: bool = True
+    """Auto-generate is_type_of (an isinstance check against the model) on mapped
+    output object types so they work as GraphQL Union / interface members without
+    boilerplate. A user-defined is_type_of on the decorated class is always
+    respected. Set to False to disable globally."""
     include: IncludeFields = "all"
     """Globally included fields."""
     exclude: FieldIterable | None = None

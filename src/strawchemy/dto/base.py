@@ -564,6 +564,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             model=model,
             field_definitions=_gen(),
             base=base,
+            dto_config=dto_config,
             **(backend_kwargs or {}),
         )
         dto.__dto_field_definitions__ = field_definitions_dict
