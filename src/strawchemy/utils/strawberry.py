@@ -44,15 +44,17 @@ def dto_model_from_type(type_: Any) -> Any:
     return type_.__dto_model__
 
 
-def strawberry_contained_types(type_: StrawberryType | Any) -> tuple[Any, ...]:
+def strawberry_contained_types(type_: StrawberryType | Any, resolve_lazy: bool = True) -> tuple[Any, ...]:
     if isinstance(type_, LazyType):
-        return strawberry_contained_types(type_.resolve_type())
+        if not resolve_lazy:
+            return (type_,)
+        return strawberry_contained_types(type_.resolve_type(), resolve_lazy=resolve_lazy)
     if isinstance(type_, StrawberryContainer):
-        return strawberry_contained_types(type_.of_type)
+        return strawberry_contained_types(type_.of_type, resolve_lazy=resolve_lazy)
     if isinstance(type_, StrawberryUnion):
         union_types = []
         for union_type in type_.types:
-            union_types.extend(strawberry_contained_types(union_type))
+            union_types.extend(strawberry_contained_types(union_type, resolve_lazy=resolve_lazy))
         return tuple(union_types)
     return (type_,)
 
