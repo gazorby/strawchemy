@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from strawchemy.dto import Purpose
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
-from strawchemy.dto.types import DTOConfig, FieldSpec
+from strawchemy.dto.types import DTOConfig, FieldGroup, FieldSet, FieldSpec
 from strawchemy.repository.strawberry import StrawchemySyncRepository
 from strawchemy.utils.strawberry import default_session_getter
 
@@ -79,6 +80,11 @@ class StrawchemyConfig:
     def __post_init__(self) -> None:
         """Initializes the SQLAlchemyGraphQLInspector after the dataclass is created."""
         self.inspector = SQLAlchemyGraphQLInspector(self.dialect, filter_overrides=self.filter_overrides)
+
+        if overlap := FieldSet(self.include).overlap(self.exclude):
+            names = sorted(selector.value if isinstance(selector, FieldGroup) else selector for selector in overlap)
+            msg = f"Fields are both explicitly included and excluded; exclude takes precedence: {names}"
+            warnings.warn(msg, stacklevel=2)
 
     @property
     def field_config(self) -> DTOConfig:

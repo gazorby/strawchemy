@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import functools
+import warnings
 from dataclasses import InitVar, dataclass, field
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias, final, get_type_hints
@@ -143,6 +144,9 @@ class FieldSet:
             return frozenset()
         return frozenset(value)
 
+    def overlap(self, other: FieldSpec | None) -> frozenset[FieldSelector]:
+        return self.field_set & FieldSet(other).field_set
+
 
 @final
 class DTOMissing:
@@ -266,9 +270,7 @@ class DTOConfig:
             with `aliases`.
 
     Raises:
-        ValueError: If both `aliases` and `alias_generator` are provided, or
-            if `exclude` is set while `include` is also set to a specific list/set
-            (i.e., not "all" or empty).
+        ValueError: If both `aliases` and `alias_generator` are provided.
     """
 
     purpose: Purpose
@@ -301,12 +303,6 @@ class DTOConfig:
         if self.aliases and self.alias_generator is not None:
             msg = "You must set `aliases` or `alias_generator`, not both"
             raise ValueError(msg)
-        if self.include and not self._has_field_group(self.include) and self.exclude:
-            msg = f"When using `exclude`, `include` must be unset or be a field group {FieldGroup.list_str()}."
-            raise ValueError(msg)
-        if self.global_include and not self._has_field_group(self.global_include) and self.global_exclude:
-            msg = f"When using `global_exclude`, `global_include` must be unset or be a field group {FieldGroup.list_str()}."
-            raise ValueError(msg)
         # A bare exclude (no include) means "everything except"; promote to "all".
         # If include carries a FieldGroup it is truthy, so the clobber is skipped.
         if self.global_exclude and self.global_include is None:
@@ -317,17 +313,13 @@ class DTOConfig:
         self.included_fields = FieldSet(self.global_include) if self.include is None else FieldSet(self.include)
         self.excluded_fields = FieldSet(self.global_exclude) if self.exclude is None else FieldSet(self.exclude)
 
+        if overlap := FieldSet(self.include).overlap(self.exclude):
+            names = sorted(selector.value if isinstance(selector, FieldGroup) else selector for selector in overlap)
+            msg = f"Fields are both explicitly included and excluded; exclude takes precedence: {names}"
+            warnings.warn(msg, stacklevel=2)
+
     def __or__(self, other: DTOConfig) -> DTOConfig:
         return self.union(other)
-
-    @classmethod
-    def _has_field_group(cls, value: FieldSpec | FieldIterable) -> bool:
-        """True if the selection contains a FieldGroup member."""
-        if isinstance(value, FieldGroup):
-            return True
-        if isinstance(value, str):
-            return value in FieldGroup.values()
-        return any(isinstance(item, FieldGroup) for item in value)
 
     def union(self, other: DTOConfig) -> DTOConfig:
         include = FieldSet(self.include) | other.include

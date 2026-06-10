@@ -336,7 +336,7 @@ class UserType:
     pass
 ```
 
-Combining a plain field-name `include` with `exclude` is ambiguous and raises an error — `include` must be unset or contain a field group when `exclude` is used.
+`include` and `exclude` can always be combined: a field is kept when it is selected by `include` and not selected by `exclude`.
 
 </details>
 

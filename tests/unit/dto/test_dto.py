@@ -9,7 +9,7 @@ from sqlalchemy import Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from typing_extensions import Self
 
-from strawchemy import ALL, RELATIONSHIPS, SCALARS
+from strawchemy import ALL, RELATIONSHIPS, SCALARS, StrawchemyConfig
 from strawchemy.dto import DTOConfig, Purpose, PurposeConfig, config, field
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.strawberry import DTOKey, GraphQLFieldDefinition, StrawchemyDefinition
@@ -370,10 +370,14 @@ def test_scalars_include_allows_exclude(
 
 @pytest.mark.parametrize("model", [Fruit, FruitDataclass])
 @pytest.mark.parametrize("factory", factory_iterator())
-def test_plain_include_with_exclude_still_raises(factory: AnyFactory, model: type[Fruit | FruitDataclass]) -> None:
-    """Test that a plain field-name include combined with exclude still raises."""
-    with pytest.raises(ValueError, match="exclude"):
-        factory.factory(model, DTOConfig(Purpose.READ, include=["name"], exclude=["sweetness"]))
+def test_plain_include_with_exclude(factory: AnyFactory, model: type[Fruit | FruitDataclass]) -> None:
+    """Test that a plain field-name include and exclude combine (exclude wins) and warn on overlap."""
+    msg = "both explicitly included and excluded"
+    with pytest.warns(UserWarning, match=msg):
+        dto = factory.factory(model, DTOConfig(Purpose.READ, include=["name", "sweetness"], exclude=["sweetness"]))
+    assert set(DTOInspect(dto).annotations()) == {"name"}
+    with pytest.warns(UserWarning, match=msg):
+        StrawchemyConfig(dialect="postgresql", include=["name", "sweetness"], exclude=["sweetness"])
 
 
 @pytest.mark.parametrize("model", [Fruit, FruitDataclass])
