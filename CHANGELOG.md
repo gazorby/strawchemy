@@ -2,6 +2,66 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.22.0](https://github.com/gazorby/strawchemy/compare/v0.21.0..v0.22.0) - 2026-06-10
+
+### 🚀 Features
+
+- *(dto)* Make database-resolved defaults optional in GraphQL inputs (#193) - ([4c20ba3](https://github.com/gazorby/strawchemy/commit/4c20ba3df7cf65263fb7ac5a34fea5f705371610))
+- Add strict mode disallowing graphql-unmappable types (#160) - ([c1c673b](https://github.com/gazorby/strawchemy/commit/c1c673b7f1fc33d5a797e73c4f3b693266233713))
+- Auto-generate is_type_of on output types for GraphQL unions/interfaces (#191) - ([ba7a3dd](https://github.com/gazorby/strawchemy/commit/ba7a3ddee976e4979a0907f0716c4e97ac65e8a1))
+- Add field groups (#168) - ([6b936da](https://github.com/gazorby/strawchemy/commit/6b936da340017d3353885a0eea9e0ce0e48cfe8a))
+
+### 🐛 Bug Fixes
+
+- *(dto)* Preserve user-defined literal defaults in Strawberry DTOs (#188) - ([6c1a75a](https://github.com/gazorby/strawchemy/commit/6c1a75a58054fa508b6314bf54857801003006d9))
+- *(schema)* Using override=True twice with the same name/model retains previous config (#173) - ([654b352](https://github.com/gazorby/strawchemy/commit/654b35271c07db97603cad86a3d5b78118a3724c))
+- *(transpiler)* Apply `filter_statement` before pagination (#166) - ([3e9bc2b](https://github.com/gazorby/strawchemy/commit/3e9bc2b98920f7c3710beabc96e29cac84a9adf8))
+- Ensure user-defined relation fiels take precedence over strawchemy generated ones (#167) - ([580eac9](https://github.com/gazorby/strawchemy/commit/580eac94eafa68887a75c76fa5c84fde6a981903))
+- Using strawberry.lazy(...) break circular refs (#169) - ([a3aecc2](https://github.com/gazorby/strawchemy/commit/a3aecc2a86e07dd7e66697fbadece5f7099aae31))
+
+### 💼 Other
+
+- *(deps)* Lock file maintenance (#141) - ([97ab978](https://github.com/gazorby/strawchemy/commit/97ab978fe7e0f6690ca0d2f1ed033526ff557c4d))
+- *(deps)* Update unasyncd digest to a08ab73 (#142) - ([63d5e67](https://github.com/gazorby/strawchemy/commit/63d5e6734f1214f80d016eb07bf67d6f9ad7b35c))
+- *(deps)* Update github/codeql-action digest to 5d4e8d1 (#145) - ([3204c0b](https://github.com/gazorby/strawchemy/commit/3204c0b286ea55fe861d4e84afb7fc67d3266930))
+- *(deps)* Update orhun/git-cliff-action digest to e16f179 (#146) - ([fddb749](https://github.com/gazorby/strawchemy/commit/fddb749e035f3bcf6126657740436b14cd05098d))
+- *(deps)* Update codecov/test-results-action digest to 0fa95f0 (#143) - ([2ad5e1c](https://github.com/gazorby/strawchemy/commit/2ad5e1cd9cb6f14131ae621fd0e6f30234090311))
+- *(deps)* Update docker/setup-buildx-action digest to 8d2750c (#144) - ([fe8ade9](https://github.com/gazorby/strawchemy/commit/fe8ade91c51e8d2fc7d38818d930894cf144fa18))
+- *(deps)* Lock file maintenance (#148) - ([c86af3b](https://github.com/gazorby/strawchemy/commit/c86af3bd62c26085f573f89a2dc589da5e7433eb))
+- *(deps)* Lock file maintenance (#165) - ([3c7b0e1](https://github.com/gazorby/strawchemy/commit/3c7b0e11f138e447f67ffc7a3d13b534992e3c01))
+- *(deps)* Update astral-sh/setup-uv digest to 37802ad (#180) - ([d5b84cf](https://github.com/gazorby/strawchemy/commit/d5b84cf992ec55d4321c2f6709ce961fd6606b21))
+- *(deps)* Update actions/cache digest to 27d5ce7 (#178) - ([5b9b4b3](https://github.com/gazorby/strawchemy/commit/5b9b4b3e5542b71d8d02c74259428f8cbf3ff42f))
+- *(deps)* Update actions/checkout digest to df4cb1c (#179) - ([dcea7f9](https://github.com/gazorby/strawchemy/commit/dcea7f92df4b4748b35265b92db00385ae0cc1f7))
+- *(deps)* Update codecov/codecov-action action to v7 (#181) - ([3cb5105](https://github.com/gazorby/strawchemy/commit/3cb5105f6a3f5852d28b068c9bc149ae2b4bfe1e))
+- *(deps)* Update jdx/mise-action action to v4 (#184) - ([5fcfaa5](https://github.com/gazorby/strawchemy/commit/5fcfaa599cb8f150b52ffbb0974c06f8ecbd0f60))
+- *(deps)* Update astral-sh/setup-uv action to v8.2.0 (#182) - ([6406c87](https://github.com/gazorby/strawchemy/commit/6406c87e6f1a2b85c5c9ec2012f8d33293573431))
+- *(deps)* Update docker/setup-buildx-action action to v4 (#183) - ([94d77c0](https://github.com/gazorby/strawchemy/commit/94d77c0b66bcc51bda2f84b37098837b484819ac))
+- *(deps)* Lock file maintenance (#187) - ([1c8c71e](https://github.com/gazorby/strawchemy/commit/1c8c71ed0dff079995e43e2cc521d78edf98138f))
+- *(deps)* Update github artifact actions (#189) - ([65c6ee3](https://github.com/gazorby/strawchemy/commit/65c6ee385accd1feb96b522ee1a9bdb344dfbd2e))
+- *(deps)* Update softprops/action-gh-release action to v3 (#190) - ([e12f568](https://github.com/gazorby/strawchemy/commit/e12f568e2e50ffe3a8af2c6c6fb43e347a836ac3))
+- *(deps)* Update python docker tag to v3.14 (#192) - ([c9581cb](https://github.com/gazorby/strawchemy/commit/c9581cbeb017167855b126a62a6f6ed3bb8c1547))
+- *(lint)* Upgrade ruff - ([7251dc2](https://github.com/gazorby/strawchemy/commit/7251dc2fb09b1e050691241be16b5628d188a69a))
+- *(lint)* Update pre-commit ruff config - ([5049268](https://github.com/gazorby/strawchemy/commit/50492687f81ea3325e113a8523832e9e375834b0))
+- *(pre-commit)* Upgrade - ([44db5f9](https://github.com/gazorby/strawchemy/commit/44db5f942fdc9fc8d468a1eba4fe1a8113d53d04))
+- New project structure (#140) - ([1cd116a](https://github.com/gazorby/strawchemy/commit/1cd116a71038c628370ef2f7fb1756ccb13b46bc))
+- Mapper api overhaul (#147) - ([54392fd](https://github.com/gazorby/strawchemy/commit/54392fd84a1e074f59f04b1355aba850b8f43433))
+- Upgrade strawberry (#155) - ([83b2658](https://github.com/gazorby/strawchemy/commit/83b26582b6f50965138f559ba5b04580f049ac2c))
+
+### 🚜 Refactor
+
+- Remove ignored files - ([79c22bc](https://github.com/gazorby/strawchemy/commit/79c22bcb33fa0777bcbc29326c02963edf9709ef))
+- Update configuration files - ([8dd16b5](https://github.com/gazorby/strawchemy/commit/8dd16b5b27927fa7a4f47a60908ddf0ee1db2df2))
+
+### 📚 Documentation
+
+- *(readme)* Update - ([7c26ae8](https://github.com/gazorby/strawchemy/commit/7c26ae8272f943e2f421542233562978ebf90133))
+
+### ⚙️ Miscellaneous Tasks
+
+- *(release)* Bump to v0.22.0 - ([b9171fd](https://github.com/gazorby/strawchemy/commit/b9171fd719f110f2f8d38a46efcbd51a027255d4))
+- *(renovate)* Enable rebasing when behind base branch to keep PRs updated - ([c6c2d60](https://github.com/gazorby/strawchemy/commit/c6c2d60ccf7647dccd311406d45804e0166ab9df))
+- Update codecov action to v7 and specify explicit report types (#185) - ([94e9a3a](https://github.com/gazorby/strawchemy/commit/94e9a3a132d2384b87e8aed67d5b09aae040c303))
+- Update skip-duplicate-actions to the official step-security repo (#186) - ([6fd5039](https://github.com/gazorby/strawchemy/commit/6fd50391f8a175866b4ddf81eb03827fd05ef19f))
 ## [0.21.0](https://github.com/gazorby/strawchemy/compare/v0.20.0..v0.21.0) - 2025-12-18
 
 ### 🚀 Features
