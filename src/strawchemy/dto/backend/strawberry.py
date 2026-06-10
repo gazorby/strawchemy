@@ -11,7 +11,7 @@ from typing_extensions import override
 
 from strawchemy.dto import Purpose
 from strawchemy.dto.base import DTOBackend, DTOBase, MappedDTO, ModelFieldT, ModelT
-from strawchemy.dto.types import DTOMissing
+from strawchemy.dto.types import DTOMissing, DTOUnset
 from strawchemy.utils.annotation import get_annotations
 
 if TYPE_CHECKING:
@@ -57,7 +57,10 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
             else:
                 strawberry_field = strawberry.field(default=strawberry.UNSET)
         if field_def.default is not DTOMissing:
-            strawberry_field = strawberry.field(default=field_def.default)
+            # DTOUnset marks a database-resolved default (sequence or SQL expression);
+            # render it as UNSET so the field is optional in write inputs.
+            default = strawberry.UNSET if field_def.default is DTOUnset else field_def.default
+            strawberry_field = strawberry.field(default=default)
         if strawberry_field:
             return FieldInfo(field_def.name, field_def.type_, strawberry_field)
         return FieldInfo(field_def.name, field_def.type_)

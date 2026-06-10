@@ -10,6 +10,7 @@ actionlint = "latest"
 
 [vars]
 local_pytest_options = "-n=auto -vv"
+uv_run = "uv run --frozen"
 pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
 ci_uv_run_options = " --frozen --no-default-groups --only-group=nox"
 ci_pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --junit-xml=./junit.xml -o junit_family=legacy"
@@ -227,31 +228,31 @@ run = "uv run {{vars.ci_uv_run_options}} nox --json -t tests -l | jq 'map(.name)
 
 [tasks."ruff:check"]
 description = "Check ruff formatting"
-run = "uv run ruff --version  && uv run ruff check"
+run = "{{vars.uv_run}} ruff --version  && {{vars.uv_run}} ruff check"
 
 [tasks."ruff:fix"]
 description = "Fix ruff errors"
-run = "uv run ruff check --fix --unsafe-fixes"
+run = "{{vars.uv_run}} ruff check --fix --unsafe-fixes"
 
 [tasks."ruff:format"]
 description = "Format code"
-run = "uv run ruff format"
+run = "{{vars.uv_run}} ruff format"
 
 [tasks."ruff:format:check"]
 description = "Format code"
-run = "uv run ruff --version && uv run ruff format --check"
+run = "{{vars.uv_run}} ruff --version && {{vars.uv_run}} ruff format --check"
 
 [tasks.tombi]
 description = "Run tombi"
-run = "uv run tombi format"
+run = "{{vars.uv_run}} tombi format"
 
 [tasks.ty]
 description = "Run ty"
-run = "uv run ty --version && uv run ty check"
+run = "{{vars.uv_run}} ty --version && {{vars.uv_run}} ty check"
 
 [tasks.vulture]
 description = "Run vulture"
-run = "uv run vulture --version && uv run vulture"
+run = "{{vars.uv_run}} vulture --version && uv run vulture"
 
 [tasks.format]
 description = "Lint the code"

@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast, get_args, get_or
 from sqlalchemy import (
     ARRAY,
     Column,
+    ColumnDefault,
     ColumnElement,
     PrimaryKeyConstraint,
     Sequence,
@@ -68,6 +69,7 @@ if TYPE_CHECKING:
 
     from shapely import Geometry
     from sqlalchemy.orm import MapperProperty
+    from sqlalchemy.schema import DefaultGenerator
     from sqlalchemy.sql.schema import ColumnCollectionConstraint
 
     from strawchemy.repository.typing import FilterMap
@@ -225,6 +227,53 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             return attribute.parent.mapper.relationships[attribute.key]
 
     @classmethod
+    def _column_default(
+        cls, default: DefaultGenerator, default_factory: Callable[..., Any] | type[DTOMissing]
+    ) -> tuple[Any | type[DTOMissing], Callable[..., Any] | type[DTOMissing]]:
+        """Resolve a SQLAlchemy column ``default`` into a DTO (default, default_factory) pair.
+
+        Args:
+            default: The column's ``ColumnDefault`` (already known to be set and non-None).
+            default_factory: The factory resolved so far, used as fallback.
+
+        Returns:
+            The (resolved_default, default_factory) pair to apply to the DTO field.
+
+        Raises:
+            ValueError: If the default is of an unsupported type.
+        """
+        resolved_default: Any = default
+        if isinstance(default, Sequence):
+            resolved_default = DTOUnset
+        elif default.is_clause_element:
+            # SQL-expression default (e.g. func.now()) is resolved by the
+            # database at INSERT, like a server-side sequence above; there is no
+            # Python value/factory to mirror, so the field is left unset and
+            # becomes optional in write inputs.
+            resolved_default = DTOUnset
+        elif isinstance(default, ColumnDefault):
+            if default.is_scalar:
+                resolved_default = default.arg
+            elif default.is_callable:
+                default_callable = default.arg.__func__ if isinstance(default.arg, staticmethod) else default.arg
+                if (
+                    # Eager test because inspect.signature() does not
+                    # recognize builtins
+                    hasattr(builtins, default_callable.__name__)
+                    # If present, context contains information about the current
+                    # statement and can be used to access values from other columns.
+                    # As we can't reproduce such context in DTO, we don't want
+                    # include a default_factory in that case.
+                    or "context" not in signature(default_callable).parameters
+                ):
+                    default_arg = default.arg
+                    default_factory = lambda: default_arg({})  # noqa: E731
+        else:
+            msg = "Unexpected default type"
+            raise ValueError(msg)
+        return resolved_default, default_factory
+
+    @classmethod
     def _defaults(
         cls, attribute: MapperProperty[Any]
     ) -> tuple[Any | type[DTOMissing], Callable[..., Any] | type[DTOMissing]]:
@@ -242,31 +291,13 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         default_factory = (
             getattr(element, "default_factory", DTOMissing) if default_factory is DTOMissing else default_factory
         )
-        default = getattr(element, "default", DTOMissing) if default is DTOMissing else default
+        default: DefaultGenerator | type[DTOMissing] | None = (
+            getattr(element, "default", DTOMissing) if default is DTOMissing else default
+        )
 
         if isinstance(element, Column):
             if default is not DTOMissing and default is not None:
-                if default.is_scalar:
-                    default = default.arg
-                elif default.is_callable:
-                    default_callable = default.arg.__func__ if isinstance(default.arg, staticmethod) else default.arg
-                    if (
-                        # Eager test because inspect.signature() does not
-                        # recognize builtins
-                        hasattr(builtins, default_callable.__name__)
-                        # If present, context contains information about the current
-                        # statement and can be used to access values from other columns.
-                        # As we can't reproduce such context in Pydantic, we don't want
-                        # include a default_factory in that case.
-                        or "context" not in signature(default_callable).parameters
-                    ):
-                        default_arg = default.arg
-                        default_factory = lambda: default_arg({})  # noqa: E731
-                elif isinstance(default, Sequence):
-                    default = DTOUnset
-                else:
-                    msg = "Unexpected default type"
-                    raise ValueError(msg)
+                default, default_factory = cls._column_default(default, default_factory)
             elif default is None and not element.nullable:
                 default = DTOMissing
         elif isinstance(element, RelationshipProperty) and default is DTOMissing and element.uselist:
@@ -443,6 +474,27 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     @override
     def has_default(self, model_field: QueryableAttribute[Any]) -> bool:
         return any(default is not DTOMissing for default in self._defaults(model_field.property))
+
+    def has_db_resolved_default(self, model_field: QueryableAttribute[Any]) -> bool:
+        """Whether the column value is generated by the database when omitted.
+
+        True for columns whose default is a SQL expression (e.g. ``func.now()``)
+        or a sequence: the database fills the value at INSERT, so the column is
+        optional in write inputs.
+
+        Args:
+            model_field: The model attribute to inspect.
+
+        Returns:
+            ``True`` if the column has a database-resolved default.
+        """
+        if not self._is_column(model_field.property):
+            return False
+        return any(
+            (default := getattr(column, "default", DTOMissing)) is not DTOMissing
+            and (getattr(default, "is_clause_element", False) or isinstance(default, Sequence))
+            for column in model_field.property.columns
+        )
 
     @override
     def required(self, model_field: QueryableAttribute[Any]) -> bool:

@@ -8,7 +8,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Table, Text, UniqueConstraint
+from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Table, Text, UniqueConstraint, func
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
@@ -210,6 +210,19 @@ class Container(UUIDBase):
         "Vegetable", primaryjoin="Container.id == foreign(Vegetable.id)", viewonly=True
     )
     colors: Mapped[list[Color]] = relationship("Color", primaryjoin="Container.id == foreign(Color.id)", viewonly=True)
+
+
+class SQLDefaultBase(DeclarativeBase):
+    __abstract__ = True
+
+
+class TimestampedRecord(SQLDefaultBase):
+    """Model exercising a client-side SQL-expression default (func.now())."""
+
+    __tablename__ = "timestamped_record"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(default=func.now())
 
 
 # Geo
