@@ -88,9 +88,6 @@ class FieldSet:
     def __post_init__(self, value: FieldSpec | None) -> None:
         self.field_set = self.normalize(value)
 
-    def __next__(self) -> FieldSelector:
-        return next(iter(self.field_set))
-
     def __iter__(self) -> Iterator[FieldSelector]:
         return iter(self.field_set)
 
