@@ -142,7 +142,7 @@ ignore-words-list = "nin"
 branch = true
 source = ["src"]
 plugins = ["covdefaults"]
-omit = ["*/tests/*"]
+omit = ["*/tests/*", "src/strawchemy/schema/factories/_kwargs.py"]
 parallel = true
 relative_files = true
 

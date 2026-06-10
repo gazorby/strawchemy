@@ -276,6 +276,70 @@ See the [custom resolvers](#custom-resolvers) for more details
 
 </details>
 
+### Field Groups
+
+Instead of listing field names one by one, `include` and `exclude` accept the `SCALARS` (column fields), `RELATIONSHIPS` (relation fields) and `ALL` group selectors, importable from `strawchemy`. They can be assigned directly (`include=SCALARS`), used inside an iterable, or mixed with field names — plain strings are always treated as field names.
+
+<details>
+<summary>Field group examples</summary>
+
+```python
+from strawchemy import ALL, RELATIONSHIPS, SCALARS
+
+
+class User(Base):
+    __tablename__ = "user"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    password: Mapped[str]
+    posts: Mapped[list["Post"]] = relationship("Post", back_populates="author")
+
+
+# Only column fields: id, name, password
+@strawchemy.type(User, include=[SCALARS])
+class UserType:
+    pass
+
+
+# Equivalent: a bare constant assigned directly
+@strawchemy.type(User, include=SCALARS)
+class UserType:
+    pass
+
+
+# Groups mix with field names: all columns plus the `posts` relationship
+@strawchemy.type(User, include=[SCALARS, "posts"])
+class UserType:
+    pass
+
+
+# Both groups together are equivalent to include=ALL
+@strawchemy.type(User, include=[SCALARS, RELATIONSHIPS])
+class UserType:
+    pass
+
+
+# Groups work in exclude too: a bare exclude implies everything else
+# is included, so this keeps only the column fields
+@strawchemy.type(User, exclude=[RELATIONSHIPS])
+class UserType:
+    pass
+```
+
+A group-bearing `include` can be combined with `exclude` to subtract fields from the group:
+
+```python
+# All columns except `password`
+@strawchemy.type(User, include=[SCALARS], exclude=["password"])
+class UserType:
+    pass
+```
+
+`include` and `exclude` can always be combined: a field is kept when it is selected by `include` and not selected by `exclude`.
+
+</details>
+
 ### Type Override
 
 When generating types for relationships, Strawchemy creates default names (e.g., `<ModelName>Type`). If you have already

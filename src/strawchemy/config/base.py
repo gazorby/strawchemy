@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from strawchemy.dto import Purpose
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
-from strawchemy.dto.types import DTOConfig, FieldIterable, IncludeFields
+from strawchemy.dto.types import DTOConfig, FieldGroup, FieldSet, FieldSpec
 from strawchemy.repository.strawberry import StrawchemySyncRepository
 from strawchemy.utils.strawberry import default_session_getter
 
@@ -59,15 +60,15 @@ class StrawchemyConfig:
     output object types so they work as GraphQL Union / interface members without
     boilerplate. A user-defined is_type_of on the decorated class is always
     respected. Set to False to disable globally."""
-    include: IncludeFields = "all"
+    include: FieldSpec = "all"
     """Globally included fields."""
-    exclude: FieldIterable | None = None
+    exclude: FieldSpec | None = None
     """Globally included fields."""
-    pagination: IncludeFields | None = None
+    pagination: FieldSpec | None = None
     """Enable/disable pagination on list resolvers."""
-    order_by: IncludeFields | None = None
+    order_by: FieldSpec | None = None
     """Enable/disable order by on list resolvers."""
-    distinct_on: IncludeFields | None = None
+    distinct_on: FieldSpec | None = None
     """Enable/disable order by on list resolvers."""
     pagination_default_limit: int = 100
     """Default pagination limit when `pagination=True`."""
@@ -79,6 +80,11 @@ class StrawchemyConfig:
     def __post_init__(self) -> None:
         """Initializes the SQLAlchemyGraphQLInspector after the dataclass is created."""
         self.inspector = SQLAlchemyGraphQLInspector(self.dialect, filter_overrides=self.filter_overrides)
+
+        if overlap := FieldSet(self.include).overlap(self.exclude):
+            names = sorted(selector.value if isinstance(selector, FieldGroup) else selector for selector in overlap)
+            msg = f"Fields are both explicitly included and excluded; exclude takes precedence: {names}"
+            warnings.warn(msg, stacklevel=2)
 
     @property
     def field_config(self) -> DTOConfig:

@@ -16,12 +16,14 @@ from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 
+from strawchemy import RELATIONSHIPS, SCALARS
 from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
 from strawchemy.schema.scalars import Interval
 from strawchemy.testing.pytest_plugin import MockContext
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
-from tests.unit.models import Fruit, User
+from tests.unit.models import Color, Fruit, User
+from tests.utils import DTOInspect
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
@@ -639,3 +641,21 @@ def test_json_column_class_body_resolver_executes() -> None:
     result = schema.execute_sync("{ overriddenJson { dictCol } }")
     assert not result.errors
     assert result.data == {"overriddenJson": {"dictCol": "OVERRIDE"}}
+
+
+def test_exclude_relationships_avoids_stub_collision(strawchemy: Strawchemy) -> None:
+    """Test that exclude=[RELATIONSHIPS] walks no relationships, so a later explicit type for a related model does not collide with a pre-registered walker stub (#162)."""
+
+    # First slice scopes Fruit with a relationship-free walk...
+    @strawchemy.type(Fruit, exclude=[RELATIONSHIPS])
+    class FruitNode:
+        pass
+
+    # ...so a later explicit Color type must NOT collide with a walker stub.
+    @strawchemy.type(Color, include=[SCALARS])
+    class ColorNode:
+        pass
+
+    fruit_fields = set(DTOInspect(FruitNode).annotations())
+    assert "color" not in fruit_fields
+    assert {"id", "name", "sweetness", "color_id"} <= fruit_fields

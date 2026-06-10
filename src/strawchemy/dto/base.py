@@ -33,8 +33,8 @@ from strawchemy.dto.types import (
     DTOMissing,
     DTOSkip,
     DTOUnset,
-    FieldIterable,
-    IncludeFields,
+    FieldGroup,
+    FieldSpec,
     Purpose,
     PurposeConfig,
 )
@@ -390,28 +390,16 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         has_override: bool,
     ) -> bool:
         """Whether the model field should be excluded from the dto or not."""
-        explictly_excluded = node.is_root and field.model_field_name in dto_config.exclude
-        explicitly_included = node.is_root and field.model_field_name in dto_config.include
-
-        globally_excluded = field.model_field_name in dto_config.global_exclude
-        globally_included = field.model_field_name in dto_config.global_include
-
-        if dto_config.include == "all" and not explictly_excluded:
-            explicitly_included = globally_included = True
-
-        if dto_config.global_include == "all" and not globally_excluded:
-            globally_included = True
+        included_by_config = node.is_root and dto_config.is_field_included(field, scope="local")
+        included_globally = dto_config.is_field_included(field, scope="global")
 
         excluded = dto_config.purpose not in field.allowed_purposes
 
         # Exclude fields not present in init if purpose is write
-        if dto_config.purpose is Purpose.WRITE and not (explicitly_included or globally_included):
+        if dto_config.purpose is Purpose.WRITE and not (included_by_config or included_globally):
             excluded = excluded or not field.init
 
-        if node.is_root:
-            excluded = excluded or (explictly_excluded or not explicitly_included)
-        else:
-            excluded = excluded or (globally_excluded or not globally_included)
+        excluded = excluded or not included_by_config if node.is_root else excluded or not included_globally
 
         return not has_override and excluded
 
@@ -500,8 +488,10 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
     def _root_cache_key(self, dto_config: DTOConfig) -> Hashable:
         root_key = [
-            frozenset(dto_config.include if dto_config.include != "all" else ()),
-            frozenset(dto_config.exclude),
+            # ALL is dropped so a root "include all" config shares its cache entry with
+            # nested defaults, letting relations reuse user-defined types.
+            frozenset(dto_config.included_fields) - {FieldGroup.ALL},
+            frozenset(dto_config.excluded_fields),
             frozenset(dto_config.aliases.items()),
             frozenset(dto_config.annotation_overrides.items()),
         ]
@@ -700,8 +690,8 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         model: type[ModelT],
         purpose: Purpose,
         *,
-        include: IncludeFields | None = None,
-        exclude: FieldIterable | None = None,
+        include: FieldSpec | None = None,
+        exclude: FieldSpec | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,

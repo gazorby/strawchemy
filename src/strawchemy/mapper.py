@@ -44,7 +44,7 @@ if TYPE_CHECKING:
     from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.arguments import StrawberryArgument
 
-    from strawchemy.dto.types import IncludeFields
+    from strawchemy.dto.types import FieldSpec
     from strawchemy.repository.typing import QueryHookCallable
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.transpiler.hook import QueryHook
@@ -180,9 +180,9 @@ class Strawchemy:
         resolver: Any,
         *,
         filter_input: type[BooleanFilterDTO] | bool | None = None,
-        order_by: IncludeFields | type[OrderByDTO] | None = None,
+        order_by: FieldSpec | type[OrderByDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
-        distinct_on: IncludeFields | type[EnumDTO] | None = None,
+        distinct_on: FieldSpec | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
@@ -208,9 +208,9 @@ class Strawchemy:
         self,
         *,
         filter_input: type[BooleanFilterDTO] | bool | None = None,
-        order_by: IncludeFields | type[OrderByDTO] | None = None,
+        order_by: FieldSpec | type[OrderByDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
-        distinct_on: IncludeFields | type[EnumDTO] | None = None,
+        distinct_on: FieldSpec | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
@@ -236,9 +236,9 @@ class Strawchemy:
         resolver: Any | None = None,
         *,
         filter_input: type[BooleanFilterDTO] | bool | None = None,
-        order_by: IncludeFields | type[OrderByDTO] | None = None,
+        order_by: FieldSpec | type[OrderByDTO] | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
-        distinct_on: IncludeFields | type[EnumDTO] | None = None,
+        distinct_on: FieldSpec | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,

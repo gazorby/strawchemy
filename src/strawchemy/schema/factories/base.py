@@ -55,7 +55,7 @@ if TYPE_CHECKING:
 
     from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
-    from strawchemy.dto.types import FieldIterable, IncludeFields
+    from strawchemy.dto.types import FieldSpec
     from strawchemy.schema.factories._kwargs import (
         InputDecoratorKwargs,
         MakeInputKwargs,
@@ -174,8 +174,8 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
     def _config(
         self,
         purpose: Purpose,
-        include: IncludeFields | None = None,
-        exclude: FieldIterable | None = None,
+        include: FieldSpec | None = None,
+        exclude: FieldSpec | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
@@ -199,10 +199,10 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         )
 
     def _type_order_by(
-        self, model: type[DeclarativeBase], include: IncludeFields | type[OrderByDTO] | None = None
+        self, model: type[DeclarativeBase], include: FieldSpec | type[OrderByDTO] | None = None
     ) -> type[OrderByDTO] | None:
         order_include = self._mapper.config.order_by if include is None else include
-        if is_fields_iterable(order_include) and order_include is not None:
+        if is_fields_iterable(order_include):
             try:
                 order_by_input = self._mapper.order_by_factory.make_input(
                     model=model,
@@ -223,10 +223,10 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         return order_by_input
 
     def _type_distinct_on(
-        self, model: type[DeclarativeBase], include: IncludeFields | type[EnumDTO] | None = None
+        self, model: type[DeclarativeBase], include: FieldSpec | type[EnumDTO] | None = None
     ) -> type[EnumDTO] | None:
         distinct_on_include = self._mapper.config.distinct_on if include is None else include
-        if is_fields_iterable(distinct_on_include) and distinct_on_include is not None:
+        if is_fields_iterable(distinct_on_include):
             try:
                 distinct_on_input = self._mapper.distinct_on_enum_factory.factory(
                     model=model,
@@ -250,17 +250,17 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         model: type[T],
         *,
         mode: GraphQLPurpose,
-        include: IncludeFields | None = None,
-        exclude: FieldIterable | None = None,
+        include: FieldSpec | None = None,
+        exclude: FieldSpec | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
         alias_generator: Callable[[str], str] | None = None,
-        paginate: IncludeFields | None = None,
-        distinct_on: IncludeFields | None = None,
+        paginate: FieldSpec | None = None,
+        distinct_on: FieldSpec | None = None,
         default_pagination: None | DefaultOffsetPagination = None,
         filter_input: type[BooleanFilterDTO] | None = None,
-        order: IncludeFields | type[OrderByDTO] | None = None,
+        order: FieldSpec | type[OrderByDTO] | None = None,
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
@@ -323,8 +323,8 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         model: type[T],
         *,
         mode: GraphQLPurpose,
-        include: IncludeFields | None = None,
-        exclude: FieldIterable | None = None,
+        include: FieldSpec | None = None,
+        exclude: FieldSpec | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
         aliases: Mapping[str, str] | None = None,
@@ -485,7 +485,7 @@ class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
         id_fields = self.inspector.id_field_definitions(model, dto_config)
         # Add PKs for update/delete inputs
         if mode == "update_by_pk_input":
-            if set(dto_config.exclude) & {name for name, _ in id_fields}:
+            if set(dto_config.excluded_fields) & {name for name, _ in id_fields}:
                 msg = (
                     "You cannot exclude primary key columns from an input type intended for create or update mutations"
                 )
@@ -496,9 +496,10 @@ class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
         if mode in {"update_by_pk_input", "update_by_filter_input"}:
             partial = True
         # Exclude default generated PKs for create inputs, if not explicitly included
-        elif dto_config.include == "all":
+        else:
             for name, field in id_fields:
-                if self.inspector.has_default(field.model_field):
+                # Exclude rules are deliberately ignored: default-generated PKs stay as optional inputs.
+                if field in dto_config.included_fields and self.inspector.has_default(field.model_field):
                     annotations_overrides[name] = Optional[field.type_hint]
         return dto_config.copy_with(
             annotation_overrides=annotations_overrides,
