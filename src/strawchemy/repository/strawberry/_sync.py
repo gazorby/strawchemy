@@ -8,7 +8,7 @@ pattern, built on top of SQLAlchemy's asynchronous API.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from strawchemy.repository.sqlalchemy import SQLAlchemyGraphQLSyncRepository
@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.repository.typing import AnySyncSession, SyncSessionGetter
     from strawchemy.schema.mutation import Input, InputModel
+    from strawchemy.typing import OrderByExpr
 
 __all__ = ()
 
@@ -62,6 +63,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
     filter_statement: Select[tuple[Any]] | None = None
     execution_options: dict[str, Any] | None = None
     deterministic_ordering: bool = False
+    default_order_by: builtins.list[OrderByExpr] = field(default_factory=list)
 
     def graphql_repository(self) -> SQLAlchemyGraphQLSyncRepository[Any]:
         """Create and configure the underlying async SQLAlchemy GraphQL strawberry.
@@ -75,6 +77,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
             statement=self.filter_statement,
             execution_options=self.execution_options,
             deterministic_ordering=self.deterministic_ordering,
+            default_order_by=self.default_order_by,
         )
 
     def get_one_or_none(

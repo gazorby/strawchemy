@@ -1,0 +1,381 @@
+# serializer version: 1
+# name: test_default_order_multi_column[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.sweetness DESC,
+            fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_multi_column[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.sweetness DESC,
+            fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_multi_column[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.sweetness DESC,
+            fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_multi_column[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.sweetness DESC,
+            fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_multi_column[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.sweetness DESC,
+            fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_multi_column[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.sweetness,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.sweetness DESC,
+            fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_under_pagination[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+   LIMIT ?
+  OFFSET ?
+  '''
+# ---
+# name: test_default_order_under_pagination[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+           LIMIT %s,
+                 %s
+         ) AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+   LIMIT %s
+  '''
+# ---
+# name: test_default_order_under_pagination[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+   LIMIT $3::INTEGER
+  '''
+# ---
+# name: test_default_order_under_pagination[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_default_order_under_pagination[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+   LIMIT %(param_3)s::INTEGER
+  '''
+# ---
+# name: test_default_order_under_pagination[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+   LIMIT ?
+  OFFSET ?
+  '''
+# ---
+# name: test_default_order_with_distinct_on[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name,
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+         ) AS fruit
+   WHERE fruit.__strawchemy_distinct_on_rank_0 = ?
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_distinct_on[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name,
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+         ) AS fruit
+   WHERE fruit.__strawchemy_distinct_on_rank_0 = %s
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_distinct_on[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name,
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+         ) AS fruit
+   WHERE fruit.__strawchemy_distinct_on_rank_0 = $1::INTEGER
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_distinct_on[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name,
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+         ) AS fruit
+   WHERE fruit.__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_distinct_on[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name,
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+         ) AS fruit
+   WHERE fruit.__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_distinct_on[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.name AS name,
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
+         ) AS fruit
+   WHERE fruit.__strawchemy_distinct_on_rank_0 = ?
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_pk_tiebreaker[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_pk_tiebreaker[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_pk_tiebreaker[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_pk_tiebreaker[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_pk_tiebreaker[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_with_pk_tiebreaker[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_default_order_without_pk_tiebreaker[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
+  '''
+# ---
+# name: test_default_order_without_pk_tiebreaker[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
+  '''
+# ---
+# name: test_default_order_without_pk_tiebreaker[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
+  '''
+# ---
+# name: test_default_order_without_pk_tiebreaker[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
+  '''
+# ---
+# name: test_default_order_without_pk_tiebreaker[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
+  '''
+# ---
+# name: test_default_order_without_pk_tiebreaker[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.name ASC
+  '''
+# ---

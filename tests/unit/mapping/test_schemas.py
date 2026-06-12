@@ -660,3 +660,13 @@ def test_exclude_relationships_avoids_stub_collision(strawchemy: Strawchemy) -> 
     fruit_fields = set(DTOInspect(FruitNode).annotations())
     assert "color" not in fruit_fields
     assert {"id", "name", "sweetness", "color_id"} <= fruit_fields
+
+
+def test_default_order_by_on_non_list_field_raises() -> None:
+    with pytest.raises(StrawchemyFieldError, match="list field"):
+        import_module("tests.unit.schemas.default_order_by_non_list")
+
+
+def test_default_order_by_wrong_model_column_raises() -> None:
+    with pytest.raises(StrawchemyFieldError, match="not a column"):
+        import_module("tests.unit.schemas.default_order_by_invalid")

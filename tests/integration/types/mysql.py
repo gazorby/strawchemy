@@ -194,6 +194,10 @@ class ColorOrder: ...
 class ColorDistinctOn: ...
 
 
+@strawchemy.distinct_on(Fruit, include="all")
+class FruitDistinctOn: ...
+
+
 @strawchemy.type(Color, include="all", paginate="all")
 class ColorTypeWithPagination: ...
 
@@ -318,6 +322,31 @@ class AsyncQuery:
     fruit_aggregations_paginated_limit_2: FruitAggregationType = strawchemy.field(
         root_aggregations=True, pagination=DefaultOffsetPagination(limit=2), repository_type=StrawchemyAsyncRepository
     )
+    fruits_default_order: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        order_by=FruitOrderBy,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    fruits_default_order_no_pagination: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        order_by=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    fruits_default_order_multi: list[FruitType] = strawchemy.field(
+        default_order_by=[Fruit.sweetness.desc(), Fruit.name.asc()],
+        order_by=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    fruits_default_order_distinct: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        distinct_on=FruitDistinctOn,
+        order_by=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemyAsyncRepository,
+    )
     fruits_hooks: list[FruitTypeHooks] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
     fruits_paginated_hooks: list[FruitTypeHooks] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
@@ -416,6 +445,31 @@ class SyncQuery:
     )
     fruit_aggregations_paginated_limit_2: FruitAggregationType = strawchemy.field(
         root_aggregations=True, pagination=DefaultOffsetPagination(limit=2), repository_type=StrawchemySyncRepository
+    )
+    fruits_default_order: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        order_by=FruitOrderBy,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
+    )
+    fruits_default_order_no_pagination: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        order_by=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemySyncRepository,
+    )
+    fruits_default_order_multi: list[FruitType] = strawchemy.field(
+        default_order_by=[Fruit.sweetness.desc(), Fruit.name.asc()],
+        order_by=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemySyncRepository,
+    )
+    fruits_default_order_distinct: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        distinct_on=FruitDistinctOn,
+        order_by=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemySyncRepository,
     )
     fruits_hooks: list[FruitTypeHooks] = strawchemy.field(repository_type=StrawchemySyncRepository)
     fruits_paginated_hooks: list[FruitTypeHooks] = strawchemy.field(

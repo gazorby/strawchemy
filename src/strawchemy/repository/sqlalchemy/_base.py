@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.schema.mutation import Input, LevelInput, UpsertData
     from strawchemy.transpiler.hook import QueryHook
-    from strawchemy.typing import QueryNodeType, SupportedDialect
+    from strawchemy.typing import OrderByExpr, QueryNodeType, SupportedDialect
 
 
 __all__ = ("InsertData", "InsertOrUpdate", "MutationData", "RowLike", "SQLAlchemyGraphQLRepository")
@@ -127,12 +127,14 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         statement: Select[tuple[DeclarativeT]] | None = None,
         execution_options: dict[str, Any] | None = None,
         deterministic_ordering: bool = False,
+        default_order_by: Sequence[OrderByExpr] | None = None,
     ) -> None:
         self.model = model
         self.session = session
         self.statement = statement
         self.execution_options = execution_options
         self.deterministic_ordering = deterministic_ordering
+        self.default_order_by: list[OrderByExpr] = list(default_order_by or [])
 
         self._dialect = session.get_bind().dialect  # ty: ignore[invalid-argument-type]  # get_bind() typing differs across sync/async Session stubs
 
@@ -155,6 +157,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
             query_hooks=query_hooks,
             statement=self.statement,
             deterministic_ordering=self.deterministic_ordering,
+            default_order_by=self.default_order_by,
         )
         return transpiler.select_executor(
             selection_tree=selection,

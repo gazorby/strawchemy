@@ -7,6 +7,8 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
     from sqlalchemy import Select
+    from sqlalchemy.orm import InstrumentedAttribute
+    from sqlalchemy.sql.elements import UnaryExpression
     from strawberry import Info
     from strawberry.types.base import WithStrawberryObjectDefinition
 
@@ -48,6 +50,7 @@ __all__ = (
     "MappedGraphQLDTO",
     "OneOrManyResult",
     "OrderByDTOT",
+    "OrderByExpr",
     "QueryNodeType",
     "QueryObject",
     "StrawberryGraphQLDTO",
@@ -56,6 +59,8 @@ __all__ = (
 )
 
 UNION_TYPES = (Union, UnionType)
+
+OrderByExpr: TypeAlias = "UnaryExpression[Any] | InstrumentedAttribute[Any]"
 
 
 T = TypeVar("T", bound="Any")
