@@ -88,8 +88,6 @@ class StrawchemyMutationInputValidationFactory(MutationInputFactory[MappedPydant
             exclude: FieldSpec | None = None,
             partial: bool | None = None,
             type_map: Mapping[Any, Any] | None = None,
-            aliases: Mapping[str, str] | None = None,
-            alias_generator: Callable[[str], str] | None = None,
             name: str | None = None,
             description: str | None = None,
             directives: Sequence[object] | None = (),

@@ -325,6 +325,7 @@ class DTOConfig:
         global_exclude = FieldSet(self.global_exclude) | other.global_exclude
         type_overrides = dict(self.type_overrides) | dict(other.type_overrides)
         annotation_overrides = self.annotation_overrides | other.annotation_overrides
+        aliases = {**self.aliases, **other.aliases}
         tags = self.tags | other.tags
 
         return self.copy_with(
@@ -334,6 +335,7 @@ class DTOConfig:
             global_exclude=global_exclude,
             type_overrides=type_overrides,
             annotation_overrides=annotation_overrides,
+            aliases=aliases,
             tags=tags,
         )
 

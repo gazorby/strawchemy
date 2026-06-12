@@ -18,6 +18,7 @@ import dataclasses
 import warnings
 from enum import Enum
 from functools import cached_property
+from inspect import getmembers
 from typing import TYPE_CHECKING, Any, ForwardRef, Literal, Optional, TypeAlias, TypeVar, get_type_hints
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
@@ -43,8 +44,9 @@ from strawchemy.dto.strawberry import (
 )
 from strawchemy.dto.types import DTOAuto, DTOConfig, DTOScope, DTOSkip, Purpose, is_fields_iterable
 from strawchemy.dto.utils import config
-from strawchemy.exceptions import EmptyDTOError, StrawchemyError
+from strawchemy.exceptions import EmptyDTOError, StrawchemyError, StrawchemyFieldError
 from strawchemy.instance import MapperModelInstance
+from strawchemy.schema.field import StrawchemyField
 from strawchemy.transpiler import hook
 from strawchemy.typing import GraphQLDTOT, GraphQLPurpose, GraphQLType, MappedGraphQLDTO
 from strawchemy.utils.annotation import get_annotations, inner_types, try_resolve_forwardref
@@ -55,7 +57,7 @@ if TYPE_CHECKING:
 
     from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
-    from strawchemy.dto.types import FieldSpec
+    from strawchemy.dto.types import FieldSelector, FieldSpec
     from strawchemy.schema.factories._kwargs import (
         InputDecoratorKwargs,
         MakeInputKwargs,
@@ -168,8 +170,76 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
             if type_has_annotation(annotation, StrawberryAuto):
                 config.annotation_overrides[name] = DTOAuto
                 base_annotations_copy.pop(name)
+        # Reverse-map model_field aliases so the DTO factory finds the annotation
+        # override under the model field name and includes the aliased field.
+        # A `model_field` declaration always wins: the aliased model field is added
+        # to the include set even if it appears in an explicit `exclude`.
+        reverse_aliases = {schema_name: model_name for model_name, schema_name in config.aliases.items()}
+        extra_include: set[FieldSelector] = set()
+        for schema_name, model_name in reverse_aliases.items():
+            if schema_name in base_annotations and model_name not in config.annotation_overrides:
+                config.annotation_overrides[model_name] = base_annotations[schema_name]
+                extra_include.add(model_name)
+        if extra_include:
+            config = config | DTOConfig(config.purpose, include=extra_include)
         base.__annotations__ = base_annotations_copy
         return config
+
+    def collect_field_model_aliases(
+        self,
+        class_: type[Any],
+        model: type[DeclarativeBase],
+        dto_config: DTOConfig,
+    ) -> dict[str, str]:
+        """Build an alias delta from a class body's ``model_field`` declarations.
+
+        Scans ``class_`` for ``StrawchemyField``s that carry a ``model_field`` and
+        maps each model field name to the schema attribute name it is declared
+        under, so the existing alias machinery renders the field under its schema
+        name while preserving the model linkage for data resolution.
+
+        Args:
+            class_: The decorated class whose body is scanned for declared fields.
+            model: The SQLAlchemy model the type maps to.
+            dto_config: Config used to enumerate the model's fields (via the
+                inspector).
+
+        Returns:
+            A mapping of model field name to schema field name for every declared
+            field that carries a ``model_field``.
+
+        Raises:
+            StrawchemyFieldError: If a ``model_field`` target is not a mapped
+                attribute of ``model``, or if two declared fields target the same
+                model field.
+        """
+        valid_names = {name for name, _ in self.inspector.field_definitions(model, dto_config)}
+        alias_delta: dict[str, str] = {}
+
+        for attr_name, value in getmembers(class_):
+            if not isinstance(value, StrawchemyField):
+                continue
+            target = value.model_field
+            if target is None:
+                continue
+            if target not in valid_names:
+                msg = f"Model field '{target}' not found on {model.__name__}"
+                raise StrawchemyFieldError(msg)
+            if attr_name in valid_names and attr_name != target:
+                msg = (
+                    f"Schema field '{attr_name}' shadows a different model field on "
+                    f"{model.__name__}; rename the schema field or alias that column too"
+                )
+                raise StrawchemyFieldError(msg)
+            if target in alias_delta:
+                msg = (
+                    f"Model field '{target}' is targeted by multiple schema fields: "
+                    f"'{alias_delta[target]}' and '{attr_name}'"
+                )
+                raise StrawchemyFieldError(msg)
+            alias_delta[target] = attr_name
+
+        return alias_delta
 
     def _config(
         self,
@@ -182,21 +252,34 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         alias_generator: Callable[[str], str] | None = None,
         scope: DTOScope | None = None,
         tags: set[str] | None = None,
+        model: type[DeclarativeBase] | None = None,
+        class_: type[Any] | None = None,
     ) -> DTOConfig:
-        return (
+        if aliases is not None:
+            warnings.warn(
+                "The `aliases` parameter is deprecated; use field-level `strawchemy.field(model_field=...)` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+        dto_config = (
             config(
                 purpose,
                 include=include,
                 exclude=exclude,
                 partial=partial,
                 type_map=type_map,
-                alias_generator=alias_generator,
                 aliases=aliases,
+                alias_generator=alias_generator,
                 scope=scope,
                 tags=tags,
             )
             | self._mapper.config.field_config
         )
+        if model is not None and class_ is not None:
+            delta = self.collect_field_model_aliases(class_, model, dto_config)
+            if delta:
+                dto_config = dto_config | DTOConfig(dto_config.purpose, aliases=delta)
+        return dto_config
 
     def _type_order_by(
         self, model: type[DeclarativeBase], include: FieldSpec | type[OrderByDTO] | None = None
@@ -270,19 +353,18 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         scope: DTOScope | None = None,
     ) -> Callable[[type[Any]], type[GraphQLDTOT]]:
         def wrapper(class_: type[Any]) -> type[GraphQLDTOT]:
-            dto_config = (
-                config(
-                    purpose,
-                    include=include,
-                    exclude=exclude,
-                    partial=partial,
-                    type_map=type_map,
-                    alias_generator=alias_generator,
-                    aliases=aliases,
-                    scope=scope,
-                    tags={mode},
-                )
-                | self._mapper.config.field_config
+            dto_config = self._config(
+                purpose,
+                include=include,
+                exclude=exclude,
+                partial=partial,
+                type_map=type_map,
+                aliases=aliases,
+                alias_generator=alias_generator,
+                scope=scope,
+                tags={mode},
+                model=model,
+                class_=class_,
             )
 
             order_by_input = self._type_order_by(model, order)
@@ -348,6 +430,8 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
                 aliases=aliases,
                 scope=scope,
                 tags={mode},
+                model=model,
+                class_=class_,
             )
             return self.make_input(
                 model=model,

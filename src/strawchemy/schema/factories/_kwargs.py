@@ -31,6 +31,7 @@ __all__ = (
     "FactoryMethodKwargs",
     "ForwardedFactoryKwargs",
     "InputDecoratorKwargs",
+    "LegacyKwargs",
     "MakeInputKwargs",
     "RegistrationKwargs",
     "TypeDecoratorKwargs",
@@ -45,6 +46,15 @@ class DTOConfigKwargs(TypedDict, total=False):
     exclude: FieldSpec | None
     partial: bool | None
     type_map: Mapping[Any, Any] | None
+
+
+class LegacyKwargs(TypedDict, total=False):
+    """Legacy aliasing args, exposed only on the type/input decorators.
+
+    ``aliases`` is deprecated in favour of field-level
+    ``strawchemy.field(model_field=...)``; ``alias_generator`` remains supported.
+    """
+
     aliases: Mapping[str, str] | None
     alias_generator: Callable[[str], str] | None
 
@@ -101,11 +111,11 @@ class DecoratorKwargs(DTOConfigKwargs, RegistrationKwargs, total=False):
     """Composite kwargs for plain ``.decorator()`` / ``.input()`` on enum factories."""
 
 
-class TypeDecoratorKwargs(DTOConfigKwargs, RegistrationKwargs, TypeWrapperKwargs, total=False):
+class TypeDecoratorKwargs(DTOConfigKwargs, LegacyKwargs, RegistrationKwargs, TypeWrapperKwargs, total=False):
     """Composite kwargs for public ``.type()`` decorator."""
 
 
-class InputDecoratorKwargs(DTOConfigKwargs, RegistrationKwargs, total=False):
+class InputDecoratorKwargs(DTOConfigKwargs, LegacyKwargs, RegistrationKwargs, total=False):
     """Composite kwargs for public ``.input()`` decorator."""
 
 
