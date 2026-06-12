@@ -184,6 +184,7 @@ class Strawchemy:
         pagination: bool | DefaultOffsetPagination | None = None,
         distinct_on: FieldSpec | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
+        model_field: str | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
@@ -212,6 +213,7 @@ class Strawchemy:
         pagination: bool | DefaultOffsetPagination | None = None,
         distinct_on: FieldSpec | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
+        model_field: str | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
@@ -240,6 +242,7 @@ class Strawchemy:
         pagination: bool | DefaultOffsetPagination | None = None,
         distinct_on: FieldSpec | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
+        model_field: str | None = None,
         id_field_name: str | None = None,
         root_aggregations: bool = False,
         filter_statement: FilterStatementCallable | None = None,
@@ -273,6 +276,10 @@ class Strawchemy:
             pagination: Enables pagination for the field. Can be True for default
                 offset pagination or a DefaultOffsetPagination instance for customization.
             arguments: A list of additional StrawberryArgument instances for the field.
+            model_field: Name of the model attribute this field maps to. Lets a
+                schema field use a different name than the underlying model field.
+                Raises StrawchemyFieldError at decoration time if the named model
+                field does not exist.
             id_field_name: The name of the ID field, used for certain operations.
             root_aggregations: If True, enables root-level aggregations for the field.
             filter_statement: A callable to generate a filter statement for the query.
@@ -297,6 +304,9 @@ class Strawchemy:
         namespace = self._annotation_namespace()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
 
+        if model_field is not None:
+            root_field = False
+
         field = StrawchemyField(
             config=self.config,
             repository_type=repository_type,
@@ -310,6 +320,7 @@ class Strawchemy:
             distinct_on=distinct_on,
             root_aggregations=root_aggregations,
             query_hook=query_hook,
+            model_field=model_field,
             python_name=None,
             graphql_name=name,
             type_annotation=type_annotation,

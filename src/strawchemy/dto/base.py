@@ -694,8 +694,6 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         exclude: FieldSpec | None = None,
         partial: bool | None = None,
         type_map: Mapping[Any, Any] | None = None,
-        aliases: Mapping[str, str] | None = None,
-        alias_generator: Callable[[str], str] | None = None,
         **kwargs: Any,
     ) -> Callable[[type[Any]], type[DTOBaseT]]:
         def wrapper(class_: type[Any]) -> type[DTOBaseT]:
@@ -707,8 +705,6 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
                     exclude=exclude,
                     partial=partial,
                     type_map=type_map,
-                    aliases=aliases,
-                    alias_generator=alias_generator,
                 ),
                 base=class_,
                 name=class_.__name__,

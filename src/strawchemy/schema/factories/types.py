@@ -35,6 +35,7 @@ from strawchemy.schema.factories import (
     StrawchemyMappedFactory,
     UpsertConflictEnumBackend,
 )
+from strawchemy.schema.field import StrawchemyField
 from strawchemy.schema.mutation import (
     RequiredToManyUpdateInput,
     RequiredToOneInput,
@@ -224,9 +225,14 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         distinct_on_config = DTOConfig.from_include(distinct_on)
 
         # Make sure Class-body `@strawberry.field` resolvers take precedence over auto-derived
-        # JSON-path projection and relation arguments.
+        # JSON-path projection and relation arguments. Exclude model_field alias declarations
+        # — those are alias mappings, not resolvers, and must keep their annotations.
         body_fields = (
-            {name for name, _ in inspect.getmembers(base, lambda v: isinstance(v, StrawberryField))}
+            {
+                name
+                for name, field_ in inspect.getmembers(base, lambda v: isinstance(v, StrawberryField))
+                if not (isinstance(field_, StrawchemyField) and field_.model_field is not None)
+            }
             if base is not None
             else set()
         )

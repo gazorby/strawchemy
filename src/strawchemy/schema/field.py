@@ -76,6 +76,8 @@ class StrawchemyField(StrawberryField):
     Attributes:
         arguments: A list of StrawberryArgument instances representing the arguments
                    that the resolver function accepts.
+        model_field: Name of the SQLAlchemy model attribute this schema field maps
+            to, or None if the field uses its own name.
     """
 
     @override
@@ -97,6 +99,7 @@ class StrawchemyField(StrawberryField):
         execution_options: dict[str, Any] | None = None,
         id_field_name: str | None = None,
         arguments: list[StrawberryArgument] | None = None,
+        model_field: str | None = None,
         # Original StrawberryField args
         python_name: str | None = None,
         graphql_name: str | None = None,
@@ -120,6 +123,7 @@ class StrawchemyField(StrawberryField):
         self.is_root_field = root_field
         self.root_aggregations = root_aggregations
         self.query_hook = query_hook
+        self.model_field = model_field
 
         self.id_field_name = config.default_id_field_name if id_field_name is None else id_field_name
 
