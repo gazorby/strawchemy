@@ -278,6 +278,29 @@ Run integration tests with coverage
 
 **Default:** `3.13`
 
+## `test:patch-coverage`
+
+- Depends: uv:install
+
+- **Usage**: `test:patch-coverage [--branch <branch>] [--fail-under <fail_under>] [test]…`
+- **Aliases**: `tpc`
+
+Run tests and report coverage on changed lines only (vs a branch)
+
+### Arguments
+
+#### `[test]…`
+
+### Flags
+
+#### `--branch <branch>`
+
+**Default:** `main`
+
+#### `--fail-under <fail_under>`
+
+**Default:** `100`
+
 ## `test:unit`
 
 - Depends: uv:install

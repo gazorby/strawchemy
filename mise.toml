@@ -11,7 +11,7 @@ actionlint = "latest"
 [vars]
 local_pytest_options = "-n=auto -vv"
 uv_run = "uv run --frozen"
-pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html"
+pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --cov-report=html --cov-report=xml"
 ci_uv_run_options = " --frozen --no-default-groups --only-group=nox"
 ci_pytest_coverage_options = "--cov-config=./pyproject.toml --cov=src --junit-xml=./junit.xml -o junit_family=legacy"
 cleanable_paths = '''{{
@@ -71,6 +71,19 @@ depends = "uv:install"
 alias = "tc"
 usage = 'arg "[test]" var=#true'
 run = "uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
+
+[tasks."test:patch-coverage"]
+description = "Run tests and report coverage on changed lines only (vs a branch)"
+depends = "uv:install"
+alias = "tpc"
+usage = '''
+flag "--branch <branch>" default="main"
+flag "--fail-under <fail_under>" default="100"
+arg "[test]" var=#true
+'''
+run = [
+    "{{vars.uv_run}} diff-cover coverage.xml --compare-branch=${usage_branch} --fail-under=${usage_fail_under}",
+]
 
 [tasks."test:unit"]
 description = "Run unit tests"
@@ -288,14 +301,14 @@ description = "Clean working directory"
 alias = "c"
 confirm = "Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files."
 run = [
-  "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
-  "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
-  "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
-  "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
+    "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
+    "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
+    "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
+    "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
 ]
 
 [tasks."render:usage"]
