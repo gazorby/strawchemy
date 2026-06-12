@@ -20,4 +20,4 @@ class FruitOrderBy:
 
 @strawberry.type
 class Query:
-    fruits: list[FruitType] = strawchemy.field(order_by=FruitOrderBy)
+    fruits: list[FruitType] = strawchemy.field(order_by_input=FruitOrderBy)

@@ -144,8 +144,8 @@ class PostOrderBy:
 # Define GraphQL query fields
 @strawberry.type
 class Query:
-    users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by=UserOrderBy, pagination=True)
-    posts: list[PostType] = strawchemy.field(filter_input=PostFilter, order_by=PostOrderBy, pagination=True)
+    users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by_input=UserOrderBy, pagination=True)
+    posts: list[PostType] = strawchemy.field(filter_input=PostFilter, order_by_input=PostOrderBy, pagination=True)
 
 
 # Create schema
@@ -451,7 +451,8 @@ class Query:
     # Simple field that returns a list of users
     users: list[UserType] = strawchemy.field()
     # Field with filtering, ordering, and pagination
-    filtered_users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by=UserOrderBy, pagination=True)
+    filtered_users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by_input=UserOrderBy,
+                                                      pagination=True)
     # Field that returns a single user by ID
     user: UserType = strawchemy.field()
 ```
@@ -739,7 +740,7 @@ class UserOrderBy:
 
 @strawberry.type
 class Query:
-    users: list[UserType] = strawchemy.field(order_by=UserOrderBy)
+    users: list[UserType] = strawchemy.field(order_by_input=UserOrderBy)
 ```
 
 Query with ordering:

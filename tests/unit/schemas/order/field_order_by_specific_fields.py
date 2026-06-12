@@ -15,4 +15,4 @@ class ContainerType:
 
 @strawberry.type
 class Query:
-    containers: list[ContainerType] = strawchemy.field(order_by=["fruits", "vegetables"])
+    containers: list[ContainerType] = strawchemy.field(order_by_input=["fruits", "vegetables"])
