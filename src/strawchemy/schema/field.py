@@ -5,6 +5,8 @@ from functools import cached_property
 from inspect import isclass
 from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, cast
 
+from sqlalchemy.orm import InstrumentedAttribute
+from sqlalchemy.sql.elements import UnaryExpression
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
@@ -20,6 +22,7 @@ from strawchemy.dto.strawberry import (
     MappedStrawberryGraphQLDTO,
     OrderByDTO,
     StrawchemyObject,
+    decompose_order_by,
 )
 from strawchemy.dto.types import DTOConfig, FieldSpec, Purpose
 from strawchemy.exceptions import EmptyDTOError, StrawchemyFieldError
@@ -56,6 +59,7 @@ if TYPE_CHECKING:
         FilterStatementCallable,
         GetByIdResolverResult,
         ListResolverResult,
+        OrderByExpr,
         StrawchemyObjectWithStrawberryObjectDefinition,
     )
 
@@ -100,6 +104,7 @@ class StrawchemyField(StrawberryField):
         id_field_name: str | None = None,
         arguments: list[StrawberryArgument] | None = None,
         model_field: str | None = None,
+        default_order_by: Sequence[OrderByExpr] | OrderByExpr | None = None,
         # Original StrawberryField args
         python_name: str | None = None,
         graphql_name: str | None = None,
@@ -139,6 +144,13 @@ class StrawchemyField(StrawberryField):
         self._order_by_factory = order_by_factory
         self._filter_factory = filter_factory
         self._distinct_on_factory = distinct_on_factory
+
+        if default_order_by is None:
+            self._default_order_by: list[OrderByExpr] = []
+        elif isinstance(default_order_by, (UnaryExpression, InstrumentedAttribute)):
+            self._default_order_by = [default_order_by]
+        else:
+            self._default_order_by = list(default_order_by)
 
         super().__init__(
             python_name,
@@ -181,6 +193,7 @@ class StrawchemyField(StrawberryField):
             filter_statement=self.filter_statement(info),
             execution_options=self._execution_options,
             deterministic_ordering=self._config.deterministic_ordering,
+            default_order_by=self._default_order_by,
         )
 
     def _is_repo_async(
@@ -226,6 +239,16 @@ class StrawchemyField(StrawberryField):
         return self._list_result_sync(repository.list(filter_input, order_by, distinct_on, limit, offset))
 
     def _validate_type(self, type_: StrawberryType | builtins.type[WithStrawberryObjectDefinition] | Any) -> None:
+        """Validates the resolved field type against ``root_aggregations`` and ``default_order_by``.
+
+        Args:
+            type_: The resolved type of the field from resolve_type.
+
+        Raises:
+            StrawchemyFieldError: If ``root_aggregations`` is enabled on a non-root-aggregation
+                type, or if ``default_order_by`` is set on a non-list field or references a
+                column not belonging to the field's root model.
+        """
         for inner_type in strawberry_contained_types(type_):
             if (
                 self.root_aggregations
@@ -234,6 +257,16 @@ class StrawchemyField(StrawberryField):
             ):
                 msg = f"The `{self.name}` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."
                 raise StrawchemyFieldError(msg)
+
+        if self._default_order_by:
+            if not is_list(type_):
+                msg = f"`default_order_by` is only valid on a list field, but `{self.name}` is not a list field."
+                raise StrawchemyFieldError(msg)
+            model = dto_model_from_type(strawberry_contained_user_type(type_))
+            for expr in self._default_order_by:
+                if decompose_order_by(expr).element.entity_namespace is not model:
+                    msg = f"`default_order_by` expression is not a column of {model.__name__}"
+                    raise StrawchemyFieldError(msg)
 
     @classmethod
     def _is_strawchemy_type(
@@ -449,6 +482,7 @@ class StrawchemyField(StrawberryField):
             root_aggregations=self.root_aggregations,
             filter_type=self._filter,
             order_by=self._order_by,
+            default_order_by=self._default_order_by,
             distinct_on=self._distinct_on,
             pagination=self.pagination,
             registry_namespace=self.registry_namespace,

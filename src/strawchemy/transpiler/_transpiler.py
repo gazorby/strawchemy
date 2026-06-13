@@ -44,8 +44,9 @@ from strawchemy.dto.strawberry import (
     OrderByEnum,
     OrderByRelationFilterDTO,
     QueryNode,
+    decompose_order_by,
 )
-from strawchemy.exceptions import TranspilingError
+from strawchemy.exceptions import StrawchemyFieldError, TranspilingError
 from strawchemy.repository.typing import DeclarativeT, OrderBySpec, QueryExecutorT
 from strawchemy.schema.filters import GraphQLComparison
 from strawchemy.transpiler._executor import SyncQueryExecutor
@@ -72,7 +73,7 @@ if TYPE_CHECKING:
     from sqlalchemy.sql.elements import NamedColumn
 
     from strawchemy.transpiler.hook import QueryHook
-    from strawchemy.typing import QueryNodeType, SupportedDialect
+    from strawchemy.typing import OrderByExpr, QueryNodeType, SupportedDialect
 
 __all__ = ("QueryTranspiler",)
 
@@ -88,6 +89,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         scope: QueryScope[DeclarativeT] | None = None,
         query_hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] | None = None,
         deterministic_ordering: bool = False,
+        default_order_by: Sequence[OrderByExpr] | None = None,
     ) -> None:
         """Initializes the QueryTranspiler.
 
@@ -98,6 +100,8 @@ class QueryTranspiler(Generic[DeclarativeT]):
             scope: An optional existing QueryScope.
             query_hooks: Optional hooks to apply during query transpilation.
             deterministic_ordering: Whether to ensure deterministic ordering of results.
+            default_order_by: Default ordering applied when the client supplies no order.
+                Each expression must reference a mapped column of the root model; validated on first use.
         """
         supported_dialect = cast("SupportedDialect", dialect.name)
         self._inspector = SQLAlchemyGraphQLInspector(supported_dialect, [model.registry])
@@ -105,6 +109,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         self._aggregation_joins: dict[QueryNodeType, AggregationJoin] = {}
         self._statement = statement
         self._deterministic_ordering = deterministic_ordering
+        self._default_order_by: list[OrderByExpr] = list(default_order_by or [])
         self._filter_in_subquery = False
         self.dialect = dialect
         self.scope = scope or QueryScope(model, supported_dialect, inspector=self._inspector)
@@ -661,6 +666,33 @@ class QueryTranspiler(Generic[DeclarativeT]):
             ],
         )
 
+    def _default_order_columns(self) -> list[tuple[SQLColumnExpression[Any], OrderByEnum]]:
+        """Builds ORDER BY columns from the field's ``default_order_by`` expressions.
+
+        Each expression's column is adapted to the active root alias so the ordering
+        is correct inside pagination/distinct subqueries.
+
+        Returns:
+            A list of ``(aliased_column, OrderByEnum)`` tuples in declared order.
+
+        Raises:
+            StrawchemyFieldError: If an expression references a column that is not a
+                column of the root model.
+        """
+        alias_insp = inspect(self.scope.root_alias)
+        column_keys = {attr.key for attr in alias_insp.mapper.column_attrs}
+        columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = []
+        for expr in self._default_order_by:
+            decomposed = decompose_order_by(expr)
+            if (
+                decomposed.key not in column_keys
+            ):  # pragma: no cover  # defensive: shadowed by StrawchemyField's stricter schema-build validation
+                msg = f"`default_order_by` column '{decomposed.key}' is not a column of {self.scope.model.__name__}"
+                raise StrawchemyFieldError(msg)
+            aliased_attribute = alias_insp.mapper.attrs[decomposed.key].class_attribute.adapt_to_entity(alias_insp)
+            columns.append((aliased_attribute, decomposed.order))
+        return columns
+
     def _order_by(self, order_by_nodes: list[QueryNodeType], existing_joins: list[Join]) -> OrderBy:
         """Creates ORDER BY expressions and joins from a list of nodes.
 
@@ -697,7 +729,12 @@ class QueryTranspiler(Generic[DeclarativeT]):
                     joins.append(new_join)
             else:
                 columns.append((self.scope.aliased_attribute(node), node.metadata.data.order_by))
-        if not columns and self._deterministic_ordering:
+        no_user_columns = not columns
+        # PK tiebreaker is appended after any default_order_by columns; no_user_columns
+        # (captured before the default block) prevents doubling up when the client ordered.
+        if no_user_columns and self._default_order_by:
+            columns.extend(self._default_order_columns())
+        if no_user_columns and self._deterministic_ordering:
             pk_aliases = [
                 pk_attribute.adapt_to_entity(inspect(self.scope.root_alias))
                 for pk_attribute in self._inspector.pk_attributes(self.scope.model.__mapper__)
@@ -761,7 +798,10 @@ class QueryTranspiler(Generic[DeclarativeT]):
             True if RANK() should be used for distinct operation, False otherwise.
         """
         if self._inspector.db_features.supports_distinct_on:
-            return bool(query_graph.distinct_on and (query_graph.order_by_tree or self._deterministic_ordering))
+            return bool(
+                query_graph.distinct_on
+                and (query_graph.order_by_tree or self._deterministic_ordering or self._default_order_by)
+            )
         return bool(query_graph.distinct_on)
 
     def _relation_order_by(self, query_graph: QueryGraph[DeclarativeT], query: Query) -> list[OrderBySpec]:
@@ -857,7 +897,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             joins.extend(query.where.joins)
             subquery_join_nodes = {join.node for join in query.where.joins}
 
-        if query_graph.order_by_tree or self._deterministic_ordering:
+        if query_graph.order_by_tree or self._deterministic_ordering or self._default_order_by:
             query.order_by = self._order_by(query_graph.order_by_nodes, joins)
             joins.extend(query.order_by.joins)
 

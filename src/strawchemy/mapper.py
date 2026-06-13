@@ -48,7 +48,13 @@ if TYPE_CHECKING:
     from strawchemy.repository.typing import QueryHookCallable
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.transpiler.hook import QueryHook
-    from strawchemy.typing import AnyRepositoryType, FilterStatementCallable, MappedGraphQLDTO, SupportedDialect
+    from strawchemy.typing import (
+        AnyRepositoryType,
+        FilterStatementCallable,
+        MappedGraphQLDTO,
+        OrderByExpr,
+        SupportedDialect,
+    )
     from strawchemy.validation.base import ValidationProtocol
     from strawchemy.validation.pydantic import PydanticMapper
 
@@ -180,7 +186,8 @@ class Strawchemy:
         resolver: Any,
         *,
         filter_input: type[BooleanFilterDTO] | bool | None = None,
-        order_by: FieldSpec | type[OrderByDTO] | None = None,
+        order_by_input: FieldSpec | type[OrderByDTO] | None = None,
+        default_order_by: Sequence[OrderByExpr] | OrderByExpr | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         distinct_on: FieldSpec | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
@@ -209,7 +216,8 @@ class Strawchemy:
         self,
         *,
         filter_input: type[BooleanFilterDTO] | bool | None = None,
-        order_by: FieldSpec | type[OrderByDTO] | None = None,
+        order_by_input: FieldSpec | type[OrderByDTO] | None = None,
+        default_order_by: Sequence[OrderByExpr] | OrderByExpr | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         distinct_on: FieldSpec | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
@@ -238,7 +246,8 @@ class Strawchemy:
         resolver: Any | None = None,
         *,
         filter_input: type[BooleanFilterDTO] | bool | None = None,
-        order_by: FieldSpec | type[OrderByDTO] | None = None,
+        order_by_input: FieldSpec | type[OrderByDTO] | None = None,
+        default_order_by: Sequence[OrderByExpr] | OrderByExpr | None = None,
         pagination: bool | DefaultOffsetPagination | None = None,
         distinct_on: FieldSpec | type[EnumDTO] | None = None,
         arguments: list[StrawberryArgument] | None = None,
@@ -271,7 +280,12 @@ class Strawchemy:
             resolver: The resolver function for the field. If not provided,
                 Strawchemy will attempt to generate one based on the model.
             filter_input: The input type for filtering results.
-            order_by: The input type for ordering results.
+            order_by_input: The input type for ordering results.
+            default_order_by: Default ordering for a list field as one or more SQLAlchemy
+                column ordering expressions (e.g. ``Model.name.asc()``). Applied only when
+                the client supplies no ``order_by``. Overrides ``deterministic_ordering``:
+                when set, an ordering is always emitted; the primary-key tiebreaker is still
+                appended when ``deterministic_ordering`` is True.
             distinct_on: The enum type for 'distinct on' clauses (PostgreSQL).
             pagination: Enables pagination for the field. Can be True for default
                 offset pagination or a DefaultOffsetPagination instance for customization.
@@ -314,7 +328,8 @@ class Strawchemy:
             filter_statement=filter_statement,
             execution_options=execution_options,
             filter_type=filter_input,
-            order_by=order_by,
+            order_by=order_by_input,
+            default_order_by=default_order_by,
             pagination=pagination,
             id_field_name=id_field_name,
             distinct_on=distinct_on,

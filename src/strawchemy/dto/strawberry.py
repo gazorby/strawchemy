@@ -35,12 +35,15 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, cast
 
 import strawberry
 from msgspec import Struct, field, json
-from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+from sqlalchemy.orm import DeclarativeBase, InstrumentedAttribute, QueryableAttribute
+from sqlalchemy.sql import operators
+from sqlalchemy.sql.elements import UnaryExpression
 from typing_extensions import Self, override
 
 from strawchemy.dto.backend.strawberry import MappedStrawberryDTO, StrawberryDTO
 from strawchemy.dto.base import DTOBase, DTOFieldDefinition, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOMissing, Purpose
+from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.transpiler.hook import (
     QueryHook,  # noqa: TC001 msgspec does not support resolving references dynamically
 )
@@ -50,6 +53,7 @@ from strawchemy.typing import (
     FunctionInfo,
     GraphQLPurpose,
     OrderByDTOT,
+    OrderByExpr,
     QueryNodeType,
 )
 from strawchemy.utils.graph import AnyNode, GraphMetadata, MatchOn, Node, NodeMetadata, NodeT
@@ -57,6 +61,8 @@ from strawchemy.utils.text import camel_to_snake
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Iterable, Sequence
+
+    from sqlalchemy import ColumnElement
 
     from strawchemy.schema.filters import EqualityComparison, GraphQLComparison
 
@@ -102,7 +108,7 @@ class QueryNodeMetadata:
         return bool(self.json_path)
 
 
-@dataclass
+@dataclass(slots=True)
 class StrawchemyDefinition:
     description: str = "GraphQL type"
     is_root_aggregation_type: bool = False
@@ -468,6 +474,82 @@ class OrderByEnum(Enum):
     DESC = "DESC"
     DESC_NULLS_FIRST = "DESC_NULLS_FIRST"
     DESC_NULLS_LAST = "DESC_NULLS_LAST"
+
+
+@dataclass(frozen=True, slots=True)
+class _DecomposedOrderBy:
+    """A ``default_order_by`` expression broken into its column, direction and source element."""
+
+    key: str
+    """Attribute key of the ordered column."""
+    order: OrderByEnum
+    """Ordering direction, including nulls placement."""
+    element: InstrumentedAttribute[Any] | ColumnElement[Any]
+    """Underlying SQLAlchemy column element, with asc/desc/nulls modifiers stripped."""
+
+    @classmethod
+    def from_parts(
+        cls,
+        key: str,
+        descending: bool,
+        nulls: Literal["first", "last"] | None,
+        element: InstrumentedAttribute[Any] | ColumnElement[Any],
+    ) -> Self:
+        """Builds an instance, resolving the ``OrderByEnum`` from direction and nulls placement."""
+        match (descending, nulls):
+            case (False, None):
+                order = OrderByEnum.ASC
+            case (False, "first"):
+                order = OrderByEnum.ASC_NULLS_FIRST
+            case (False, "last"):
+                order = OrderByEnum.ASC_NULLS_LAST
+            case (True, None):
+                order = OrderByEnum.DESC
+            case (True, "first"):
+                order = OrderByEnum.DESC_NULLS_FIRST
+            case _:  # (True, "last")
+                order = OrderByEnum.DESC_NULLS_LAST
+        return cls(key=key, order=order, element=element)
+
+
+def decompose_order_by(expr: OrderByExpr) -> _DecomposedOrderBy:
+    """Decomposes a SQLAlchemy ordering expression into its column, direction and source element.
+
+    Supports bare columns and ``asc()``/``desc()`` optionally wrapped with
+    ``nulls_first()``/``nulls_last()``.
+
+    Args:
+        expr: A root-model column or unary ordering expression derived from one.
+
+    Returns:
+        The decomposed expression.
+
+    Raises:
+        StrawchemyFieldError: If the expression uses an unsupported modifier or no
+            column can be resolved from it.
+    """
+    descending = False
+    nulls: Literal["first", "last"] | None = None
+    element = expr
+    while isinstance(element, UnaryExpression):
+        modifier = element.modifier
+        if modifier is operators.asc_op:
+            descending = False
+        elif modifier is operators.desc_op:
+            descending = True
+        elif modifier is operators.nullsfirst_op:
+            nulls = "first"
+        elif modifier is operators.nullslast_op:
+            nulls = "last"
+        else:
+            msg = f"Unsupported ordering modifier in `default_order_by`: {modifier!r}"
+            raise StrawchemyFieldError(msg)
+        element = element.element
+
+    if not element.key:
+        msg = f"Could not resolve a column from `default_order_by` expression: {expr!r}"
+        raise StrawchemyFieldError(msg)
+    return _DecomposedOrderBy.from_parts(element.key, descending, nulls, element)
 
 
 class EnumDTO(DTOBase[Any], Enum):

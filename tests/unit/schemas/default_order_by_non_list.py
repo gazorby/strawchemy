@@ -8,11 +8,11 @@ from tests.unit.models import Fruit
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.type(Fruit, include="all")
+@strawchemy.type(Fruit, include=["name"])
 class FruitType:
-    pass
+    id: strawberry.auto
 
 
 @strawberry.type
-class Query:
-    fruits: list[FruitType] = strawchemy.field(order_by_input="all")
+class NonListQuery:
+    fruit: FruitType = strawchemy.field(default_order_by=Fruit.name.asc())

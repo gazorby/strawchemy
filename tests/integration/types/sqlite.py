@@ -193,6 +193,10 @@ class ColorOrder: ...
 class ColorDistinctOn: ...
 
 
+@strawchemy.distinct_on(Fruit, include="all")
+class FruitDistinctOn: ...
+
+
 @strawchemy.type(Color, include="all", paginate="all")
 class ColorTypeWithPagination: ...
 
@@ -296,7 +300,7 @@ class DateTimeType: ...
 class AsyncQuery:
     # Fruit
     fruits: list[FruitType] = strawchemy.field(
-        filter_input=FruitFilter, order_by=FruitOrderBy, repository_type=StrawchemyAsyncRepository
+        filter_input=FruitFilter, order_by_input=FruitOrderBy, repository_type=StrawchemyAsyncRepository
     )
     fruits_paginated: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
         filter_input=FruitFilter,
@@ -316,6 +320,31 @@ class AsyncQuery:
     )
     fruit_aggregations_paginated_limit_2: FruitAggregationType = strawchemy.field(
         root_aggregations=True, pagination=DefaultOffsetPagination(limit=2), repository_type=StrawchemyAsyncRepository
+    )
+    fruits_default_order: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        order_by_input=FruitOrderBy,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    fruits_default_order_no_pagination: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        order_by_input=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    fruits_default_order_multi: list[FruitType] = strawchemy.field(
+        default_order_by=[Fruit.sweetness.desc(), Fruit.name.asc()],
+        order_by_input=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    fruits_default_order_distinct: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        distinct_on=FruitDistinctOn,
+        order_by_input=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemyAsyncRepository,
     )
     fruits_hooks: list[FruitTypeHooks] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
     fruits_paginated_hooks: list[FruitTypeHooks] = strawchemy.field(
@@ -337,7 +366,7 @@ class AsyncQuery:
     colors: list[ColorType] = strawchemy.field(
         filter_input=ColorFilter,
         distinct_on=ColorDistinctOn,
-        order_by=ColorOrder,
+        order_by_input=ColorOrder,
         repository_type=StrawchemyAsyncRepository,
     )
     colors_paginated: list[ColorTypeWithPagination] = strawchemy.field(
@@ -348,14 +377,14 @@ class AsyncQuery:
         repository_type=StrawchemyAsyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
     )
     colors_filtered_paginated: list[ColorType] = strawchemy.field(
-        order_by=ColorOrder,
+        order_by_input=ColorOrder,
         pagination=True,
         repository_type=StrawchemyAsyncRepository,
         filter_statement=lambda _: select(Color).where(Color.name.in_(["Red", "Green", "Pink"])),
     )
     colors_filtered_distinct: list[ColorType] = strawchemy.field(
         distinct_on=ColorDistinctOn,
-        order_by=ColorOrder,
+        order_by_input=ColorOrder,
         pagination=True,
         repository_type=StrawchemyAsyncRepository,
         filter_statement=lambda _: select(Color).where(Color.name.in_(["Red", "Green", "Pink"])),
@@ -374,7 +403,7 @@ class AsyncQuery:
     user: UserType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
     users: list[UserType] = strawchemy.field(
         filter_input=UserFilter,
-        order_by=UserOrderBy,
+        order_by_input=UserOrderBy,
         repository_type=StrawchemyAsyncRepository,
         distinct_on=UserDistinctOn,
     )
@@ -395,7 +424,7 @@ class AsyncQuery:
 class SyncQuery:
     # Fruit
     fruits: list[FruitType] = strawchemy.field(
-        filter_input=FruitFilter, order_by=FruitOrderBy, repository_type=StrawchemySyncRepository
+        filter_input=FruitFilter, order_by_input=FruitOrderBy, repository_type=StrawchemySyncRepository
     )
     fruits_paginated: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
         filter_input=FruitFilter,
@@ -415,6 +444,31 @@ class SyncQuery:
     )
     fruit_aggregations_paginated_limit_2: FruitAggregationType = strawchemy.field(
         root_aggregations=True, pagination=DefaultOffsetPagination(limit=2), repository_type=StrawchemySyncRepository
+    )
+    fruits_default_order: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        order_by_input=FruitOrderBy,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
+    )
+    fruits_default_order_no_pagination: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        order_by_input=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemySyncRepository,
+    )
+    fruits_default_order_multi: list[FruitType] = strawchemy.field(
+        default_order_by=[Fruit.sweetness.desc(), Fruit.name.asc()],
+        order_by_input=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemySyncRepository,
+    )
+    fruits_default_order_distinct: list[FruitType] = strawchemy.field(
+        default_order_by=Fruit.name.asc(),
+        distinct_on=FruitDistinctOn,
+        order_by_input=FruitOrderBy,
+        pagination=False,
+        repository_type=StrawchemySyncRepository,
     )
     fruits_hooks: list[FruitTypeHooks] = strawchemy.field(repository_type=StrawchemySyncRepository)
     fruits_paginated_hooks: list[FruitTypeHooks] = strawchemy.field(
@@ -436,7 +490,7 @@ class SyncQuery:
     colors: list[ColorType] = strawchemy.field(
         filter_input=ColorFilter,
         distinct_on=ColorDistinctOn,
-        order_by=ColorOrder,
+        order_by_input=ColorOrder,
         repository_type=StrawchemySyncRepository,
     )
     colors_paginated: list[ColorTypeWithPagination] = strawchemy.field(
@@ -446,14 +500,14 @@ class SyncQuery:
         repository_type=StrawchemySyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
     )
     colors_filtered_paginated: list[ColorType] = strawchemy.field(
-        order_by=ColorOrder,
+        order_by_input=ColorOrder,
         pagination=True,
         repository_type=StrawchemySyncRepository,
         filter_statement=lambda _: select(Color).where(Color.name.in_(["Red", "Green", "Pink"])),
     )
     colors_filtered_distinct: list[ColorType] = strawchemy.field(
         distinct_on=ColorDistinctOn,
-        order_by=ColorOrder,
+        order_by_input=ColorOrder,
         pagination=True,
         repository_type=StrawchemySyncRepository,
         filter_statement=lambda _: select(Color).where(Color.name.in_(["Red", "Green", "Pink"])),
@@ -472,7 +526,7 @@ class SyncQuery:
     user: UserType = strawchemy.field(repository_type=StrawchemySyncRepository)
     users: list[UserType] = strawchemy.field(
         filter_input=UserFilter,
-        order_by=UserOrderBy,
+        order_by_input=UserOrderBy,
         repository_type=StrawchemySyncRepository,
         distinct_on=UserDistinctOn,
     )

@@ -18,4 +18,4 @@ class SQLDataTypesType: ...
 
 @strawberry.type
 class Query:
-    sql_data_types: list[SQLDataTypesType] = strawchemy.field(order_by=SQLDataTypesOrderBy)
+    sql_data_types: list[SQLDataTypesType] = strawchemy.field(order_by_input=SQLDataTypesOrderBy)

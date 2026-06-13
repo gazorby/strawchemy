@@ -168,7 +168,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         ):
             distinct_on_input = self._distinct_on_input_for_field(field)
         strawberry_field = self._mapper.field(
-            pagination=pagination, order_by=order_by_input, distinct_on=distinct_on_input, root_field=False
+            pagination=pagination, order_by_input=order_by_input, distinct_on=distinct_on_input, root_field=False
         )
         return strawberry_field, type_annotation
 
