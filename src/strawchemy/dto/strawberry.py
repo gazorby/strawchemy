@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, cast
 
 import strawberry
 from msgspec import Struct, field, json
-from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+from sqlalchemy.orm import DeclarativeBase, InstrumentedAttribute, QueryableAttribute
 from sqlalchemy.sql import operators
 from sqlalchemy.sql.elements import UnaryExpression
 from typing_extensions import Self, override
@@ -61,6 +61,8 @@ from strawchemy.utils.text import camel_to_snake
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Iterable, Sequence
+
+    from sqlalchemy import ColumnElement
 
     from strawchemy.schema.filters import EqualityComparison, GraphQLComparison
 
@@ -106,7 +108,7 @@ class QueryNodeMetadata:
         return bool(self.json_path)
 
 
-@dataclass
+@dataclass(slots=True)
 class StrawchemyDefinition:
     description: str = "GraphQL type"
     is_root_aggregation_type: bool = False
@@ -482,11 +484,17 @@ class _DecomposedOrderBy:
     """Attribute key of the ordered column."""
     order: OrderByEnum
     """Ordering direction, including nulls placement."""
-    element: Any
+    element: InstrumentedAttribute[Any] | ColumnElement[Any]
     """Underlying SQLAlchemy column element, with asc/desc/nulls modifiers stripped."""
 
     @classmethod
-    def from_parts(cls, key: str, descending: bool, nulls: Literal["first", "last"] | None, element: Any) -> Self:
+    def from_parts(
+        cls,
+        key: str,
+        descending: bool,
+        nulls: Literal["first", "last"] | None,
+        element: InstrumentedAttribute[Any] | ColumnElement[Any],
+    ) -> Self:
         """Builds an instance, resolving the ``OrderByEnum`` from direction and nulls placement."""
         match (descending, nulls):
             case (False, None):
@@ -538,11 +546,10 @@ def decompose_order_by(expr: OrderByExpr) -> _DecomposedOrderBy:
             raise StrawchemyFieldError(msg)
         element = element.element
 
-    key = getattr(element, "key", None)
-    if not isinstance(key, str):
+    if not element.key:
         msg = f"Could not resolve a column from `default_order_by` expression: {expr!r}"
         raise StrawchemyFieldError(msg)
-    return _DecomposedOrderBy.from_parts(key, descending, nulls, element)
+    return _DecomposedOrderBy.from_parts(element.key, descending, nulls, element)
 
 
 class EnumDTO(DTOBase[Any], Enum):
