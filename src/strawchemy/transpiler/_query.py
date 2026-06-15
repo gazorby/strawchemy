@@ -2,18 +2,16 @@ from __future__ import annotations
 
 import dataclasses
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, Generic, cast
 
 from sqlalchemy import (
     CTE,
-    AliasedReturnsRows,
     BooleanClauseList,
     Label,
     Lateral,
     Select,
-    Subquery,
     UnaryExpression,
     func,
     inspect,
@@ -29,7 +27,6 @@ from sqlalchemy.orm import (
     raiseload,
 )
 from sqlalchemy.orm.util import AliasedClass
-from sqlalchemy.sql.elements import NamedColumn
 from typing_extensions import Self
 
 from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
@@ -52,6 +49,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
     from sqlalchemy.sql._typing import _OnClauseArgument
+    from sqlalchemy.sql.elements import NamedColumn
     from sqlalchemy.sql.selectable import NamedFromClause
 
     from strawchemy.config.databases import DatabaseFeatures
@@ -59,7 +57,7 @@ if TYPE_CHECKING:
     from strawchemy.transpiler._scope import QueryScope
     from strawchemy.typing import QueryNodeType
 
-__all__ = ("AggregationJoin", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
+__all__ = ("AggregationJoin", "AggregationSpec", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
 
 
 @dataclass
@@ -133,116 +131,47 @@ class Join:
 
 @dataclass(kw_only=True)
 class AggregationJoin(Join):
-    """Represents a join specifically for aggregation purposes, often involving a subquery.
+    """Marker join distinguishing aggregation joins from regular relation joins.
 
-    This class extends `Join` and is used when aggregations (e.g., counts, sums)
-    need to be performed on related entities. It manages a subquery that computes
-    these aggregations and ensures that columns in the subquery have unique names.
-
-    Attributes:
-        subquery_alias: An aliased class representing the subquery used for aggregation.
-        _column_names: Internal tracking of column names within the subquery to ensure uniqueness.
+    This class extends `Join` with no extra state. It exists solely so aggregation
+    joins can be discriminated via ``isinstance`` (e.g. when excluding them from
+    relation ordering).
     """
 
-    subquery_alias: AliasedClass[Any]
-    _column_names: defaultdict[str, int] = field(default_factory=lambda: defaultdict(int))
 
-    def __post_init__(self) -> None:
-        # Initialize the _column_names mapping from the subquery's selected columns
-        for column in self._inner_select.selected_columns:
-            if isinstance(column, NamedColumn):
-                self._column_names[column.name] = 1
+@dataclass
+class AggregationSpec:
+    """Describes a single aggregation join to build once with all of its function columns.
 
-    @property
-    def _inner_select(self) -> Select[Any]:
-        """The inner SELECT statement of the subquery used for aggregation."""
-        if isinstance(self.selectable, CTE):
-            return cast("Select[Any]", self.selectable.element)
-        self_join = cast("AliasedReturnsRows", self.selectable)
-        return cast("Select[Any]", cast("Subquery", self_join.element).element)
+    A spec is accumulated across the filter, order-by and selection passes for one
+    ``aggregation_node`` (the ``is_aggregate`` node). Each distinct function expression
+    is keyed by its ``function_node`` so the same function referenced by several sources
+    resolves to a single built column.
 
-    def _existing_function_column(self, new_column: ColumnElement[Any]) -> ColumnElement[Any] | None:
-        """Checks if an equivalent column (typically a function call) already exists in the subquery.
+    Attributes:
+        node: The aggregation node this spec builds a join for.
+        alias: The aliased target class the function expressions are adapted to.
+        functions: Labeled function expressions keyed by their function node.
+    """
 
-        This is used to avoid adding duplicate aggregate functions to the subquery.
+    node: QueryNodeType
+    alias: AliasedClass[Any]
+    functions: dict[QueryNodeType, Label[Any]] = dataclasses.field(default_factory=dict)
+
+    @classmethod
+    def create(cls, node: QueryNodeType, scope: QueryScope[Any]) -> Self:
+        """Creates a spec for an aggregation node with a fresh adaptation alias.
 
         Args:
-            new_column: The new column (potentially a function) to check.
+            node: The aggregation node to build a spec for.
+            scope: The query scope used to resolve the node's mapper.
 
         Returns:
-            The existing column if a match is found, otherwise None.
+            A new spec whose ``alias`` is an aliased target class the function
+            expressions are adapted to.
         """
-        for column in self._inner_select.selected_columns:
-            base_columns = column.base_columns
-            new_base_columns = new_column.base_columns
-            if len(base_columns) != len(new_base_columns):
-                continue
-            for first, other in zip(base_columns, new_base_columns, strict=False):
-                if not first.compare(other):
-                    break
-            else:
-                return column
-        return None
-
-    def _ensure_unique_name(self, column: ColumnElement[Any]) -> ColumnElement[Any]:
-        """Ensures that the given column has a unique name within the subquery.
-
-        If a column with the same name already exists, it appends a suffix (e.g., '_1').
-
-        Args:
-            column: The column to ensure has a unique name.
-
-        Returns:
-            The column, possibly relabeled to ensure uniqueness.
-        """
-        if not isinstance(column, NamedColumn):
-            return column
-        if self._column_names[column.name]:
-            name = f"{column.name}_{self._column_names[column.name]}"
-            self._column_names[column.name] += 1
-        else:
-            name = column.name
-        return column.label(name)
-
-    def add_column_to_subquery(self, column: ColumnElement[Any]) -> None:
-        """Adds a new column to the aggregation subquery.
-
-        The column name is made unique before adding.
-        The subquery (CTE or Lateral) is then rebuilt with the new column.
-
-        Args:
-            column: The column to add to the subquery.
-        """
-        new_sub_select = self._inner_select.add_columns(self._ensure_unique_name(column))
-
-        if isinstance(self.selectable, Lateral):
-            new_sub_select = new_sub_select.lateral(self.name)
-        else:
-            new_sub_select = new_sub_select.cte(self.name)
-
-        if isinstance(self.target, AliasedClass):
-            inspect(self.target).selectable = new_sub_select
-        else:
-            self.target = new_sub_select  # ty: ignore[invalid-assignment]  # ty treats target as a data descriptor due to QueryableAttribute's ORM stub typing (union member); the runtime field is a plain attribute
-
-    def upsert_column_to_subquery(self, column: ColumnElement[Any]) -> tuple[ColumnElement[Any], bool]:
-        """Adds a column to the subquery if an equivalent one doesn't already exist.
-
-        If an equivalent column (e.g., the same aggregate function on the same base column)
-        is already present, it returns the existing column. Otherwise, it adds the new
-        column and returns it.
-
-        Args:
-            column: The column to potentially add to the subquery.
-
-        Returns:
-            A tuple containing the column (either existing or newly added) and a boolean
-            indicating whether the column was newly added (True) or already existed (False).
-        """
-        if (existing := self._existing_function_column(column)) is not None:
-            return existing, False
-        self.add_column_to_subquery(column)
-        return column, True
+        alias = cast("AliasedClass[Any]", aliased(scope.inspect(node).mapper))
+        return cls(node=node, alias=alias)
 
 
 @dataclass
@@ -324,7 +253,7 @@ class QueryGraph(Generic[DeclarativeT]):
 
         for node in tree.leaves(iteration_mode="breadth_first"):
             if node.value.is_function:
-                self.scope.selection_function_nodes.add(node)
+                self.scope.collector.selection.add(node)
 
         return tree
 
@@ -814,11 +743,14 @@ class SubqueryBuilder(Generic[DeclarativeT]):
                 for child in aggregation_tree.leaves()
                 if child.value.is_function_arg
             )
-        for function_node in self.scope.referenced_function_nodes:
-            only_columns.append(self.scope.columns[function_node])
-            self.scope.columns[function_node] = self.scope.scoped_column(
-                inspect(self.alias).selectable, self.scope.key(function_node)
-            )
+        # Aggregation function columns referenced by WHERE/SELECT/ORDER BY are not columns
+        # of the inner table; they are selected into the subquery from the aggregation join.
+        # They must be re-pointed to the built subquery (below), not to ``self.alias``.
+        # Snapshot once: ``collector.referenced`` recomputes a fresh set per access, and the
+        # extend (below, pre-build) and re-point (after build) loops must agree on exactly the
+        # same members in the same order.
+        referenced_functions = list(self.scope.collector.referenced)
+        only_columns.extend(self.scope.collector.columns[function_node] for function_node in referenced_functions)
 
         if query.distinct_on and not query.use_distinct_on:
             order_by_expressions = query.order_by.expressions if query.order_by else []
@@ -843,7 +775,16 @@ class SubqueryBuilder(Generic[DeclarativeT]):
             in_subquery=True,
         )
 
-        return aliased(class_mapper(self.scope.model), statement.subquery(self.name), name=self.name)  # ty: ignore[invalid-return-type]
+        subquery = statement.subquery(self.name)
+        for function_node in referenced_functions:
+            # ``scope.key`` is memoized per node, so this returns the same label used when the
+            # column was selected into the subquery above — the re-point resolves against that
+            # exact column.
+            self.scope.collector.columns[function_node] = self.scope.scoped_column(
+                subquery, self.scope.key(function_node)
+            )
+
+        return aliased(class_mapper(self.scope.model), subquery, name=self.name)  # ty: ignore[invalid-return-type]
 
 
 @dataclass

@@ -21,7 +21,7 @@ and function application.
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, TypeAlias
 
 from sqlalchemy import ColumnElement, FromClause, Function, Label, Select, func, inspect
@@ -51,6 +51,29 @@ if TYPE_CHECKING:
 __all__ = ("NodeInspect", "QueryScope")
 
 _FunctionVisitor: TypeAlias = "Callable[[Function[Any]], ColumnElement[Any]]"
+
+
+@dataclass(frozen=True, slots=True)
+class FunctionNodeCollector:
+    """Accumulates function nodes and computed columns during one transpilation scope.
+
+    Centralizes state that previously lived as separate mutable attributes on
+    ``QueryScope``.
+    """
+
+    columns: dict[QueryNodeType, NamedColumn[Any]] = field(default_factory=dict)
+    """Computed/function columns keyed by their query node."""
+    selection: set[QueryNodeType] = field(default_factory=set)
+    """Function nodes appearing in the selection set."""
+    where: set[QueryNodeType] = field(default_factory=set)
+    """Function nodes appearing in WHERE clauses."""
+    order_by: set[QueryNodeType] = field(default_factory=set)
+    """Function nodes appearing in ORDER BY clauses."""
+
+    @property
+    def referenced(self) -> set[QueryNodeType]:
+        """Function nodes both filtered-and-selected, or used in ORDER BY."""
+        return (self.where & self.selection) | self.order_by
 
 
 @dataclass
@@ -669,10 +692,7 @@ class QueryScope(Generic[DeclarativeT]):
         self.dialect: SupportedDialect = dialect
         self.model = model
         self.level: int = self._parent.level + 1 if self._parent else 0
-        self.columns: dict[QueryNodeType, NamedColumn[Any]] = {}
-        self.selection_function_nodes: set[QueryNodeType] = set()
-        self.order_by_function_nodes: set[QueryNodeType] = set()
-        self.where_function_nodes: set[QueryNodeType] = set()
+        self.collector = FunctionNodeCollector()
 
     def _add_scope_id(self, name: str) -> str:
         return name if self.is_root else f"{name}_{self.level}"
@@ -693,20 +713,6 @@ class QueryScope(Generic[DeclarativeT]):
             scoped_name = f"{parent_prefix}__{node_inspect.key}"
 
         return scoped_name
-
-    @property
-    def referenced_function_nodes(self) -> set[QueryNodeType]:
-        """Gets the set of query nodes that represent functions referenced in the query.
-
-        This includes function nodes that are used in WHERE clauses and also
-        selected for output, OR function nodes used in ORDER BY clauses.
-        This helps in identifying all function calls that need to be part of
-        the generated query.
-
-        Returns:
-            A set of `QueryNodeType` objects representing referenced functions.
-        """
-        return (self.where_function_nodes & self.selection_function_nodes) | self.order_by_function_nodes
 
     @property
     def is_root(self) -> bool:

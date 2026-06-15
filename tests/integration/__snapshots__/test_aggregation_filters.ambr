@@ -1,4 +1,130 @@
 # serializer version: 1
+# name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-async-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(*) AS fruits__count_fruits,
+                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > ?
+   ORDER BY __strawchemy_aggregation_0.fruits__count_fruits ASC,
+            __strawchemy_aggregation_0.sum_fruits__sum_sweetness ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-async-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(*) AS fruits__count_fruits,
+                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > %s
+   ORDER BY __strawchemy_aggregation_0.fruits__count_fruits ASC,
+            __strawchemy_aggregation_0.sum_fruits__sum_sweetness ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT count(*) AS fruits__count_fruits,
+                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > $1::INTEGER
+   ORDER BY __strawchemy_aggregation_0.fruits__count_fruits ASC,
+            __strawchemy_aggregation_0.sum_fruits__sum_sweetness ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT count(*) AS fruits__count_fruits,
+                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > %(param_1)s::INTEGER
+   ORDER BY __strawchemy_aggregation_0.fruits__count_fruits ASC,
+            __strawchemy_aggregation_0.sum_fruits__sum_sweetness ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT count(*) AS fruits__count_fruits,
+                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > %(param_1)s::INTEGER
+   ORDER BY __strawchemy_aggregation_0.fruits__count_fruits ASC,
+            __strawchemy_aggregation_0.sum_fruits__sum_sweetness ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-sync-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(*) AS fruits__count_fruits,
+                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > ?
+   ORDER BY __strawchemy_aggregation_0.fruits__count_fruits ASC,
+            __strawchemy_aggregation_0.sum_fruits__sum_sweetness ASC,
+            color__fruits.id ASC
+  '''
+# ---
 # name: test_avg_aggregation_filter[session-tracked-async-decimal-avg-eq-match-asyncmy_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -1225,6 +1351,120 @@
       ON color.id = __strawchemy_aggregation_0.color_id
    WHERE (__strawchemy_aggregation_0.count_fruits__count_id NOT IN (__[POSTCOMPILE_param_1]))
    ORDER BY color.id ASC
+  '''
+# ---
+# name: test_count_aggregation_filter_nested_under_or[session-tracked-async-aiosqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(*) AS fruits__count_fruits,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > ?
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_count_aggregation_filter_nested_under_or[session-tracked-async-asyncmy_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(*) AS fruits__count_fruits,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > %s
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_count_aggregation_filter_nested_under_or[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT count(*) AS fruits__count_fruits
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > $1::INTEGER
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_count_aggregation_filter_nested_under_or[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT count(*) AS fruits__count_fruits
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > %(param_1)s::INTEGER
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_count_aggregation_filter_nested_under_or[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT count(*) AS fruits__count_fruits
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS __strawchemy_aggregation_0
+      ON TRUE
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > %(param_1)s::INTEGER
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
+  '''
+# ---
+# name: test_count_aggregation_filter_nested_under_or[session-tracked-sync-sqlite_engine]
+  '''
+  WITH __strawchemy_aggregation_0 AS (
+          SELECT count(*) AS fruits__count_fruits,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color__fruits.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN __strawchemy_aggregation_0
+      ON color.id = __strawchemy_aggregation_0.color_id
+    LEFT OUTER JOIN fruit AS color__fruits
+      ON color.id = color__fruits.color_id
+   WHERE __strawchemy_aggregation_0.fruits__count_fruits > ?
+   ORDER BY color.id ASC,
+            color__fruits.id ASC
   '''
 # ---
 # name: test_count_aggregation_filter_with_distinct[session-tracked-async-default-match-aiosqlite_engine]

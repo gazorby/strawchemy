@@ -300,6 +300,74 @@ async def test_avg_aggregation_filter(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+@pytest.mark.snapshot
+async def test_count_aggregation_filter_nested_under_or(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that an aggregation predicate nested under a top-level ``_or`` is discovered and applied.
+
+    Guards the build-once collect pass: it must walk into ``_or``/``_not`` branches when
+    gathering aggregation filters, otherwise the nested predicate is silently dropped. The
+    snapshot shows the aggregation subquery is emitted under the ``OR`` branch.
+    """
+    query = """
+        {
+            colors(filter: {
+                _or: [
+                    { fruitsAggregate: { count: { predicate: { gt: 0 } } } }
+                ]
+            }) {
+                id
+                fruits {
+                    id
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    # Every color has at least one fruit, so the count > 0 predicate matches all of them.
+    assert result.data["colors"]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_aggregation_built_once_across_filter_and_order_by(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the aggregation of a relation is built once when filtering and ordering by it.
+
+    Filtering on one aggregation function and ordering by a *different* function of the same
+    relation must reuse a single aggregation subquery; the snapshot shows one aggregation
+    join, not two identically named ones.
+    """
+    query = """
+        {
+            colors(
+                filter: { fruitsAggregate: { count: { predicate: { gt: 0 } } } },
+                orderBy: { fruitsAggregate: { sum: { sweetness: ASC } } }
+            ) {
+                fruits {
+                    id
+                }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
 @pytest.mark.parametrize(
     ("distinct", "expected_count", "expected_color_indices"),
     [
