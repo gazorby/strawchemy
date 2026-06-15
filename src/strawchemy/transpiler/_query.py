@@ -100,11 +100,6 @@ class Join:
         return self.node.level
 
     @property
-    def name(self) -> str:
-        """The name of the selectable for this join."""
-        return self.selectable.name
-
-    @property
     def to_many(self) -> bool:
         """Whether this join represents a to-many relationship."""
         return self._relationship.direction in {

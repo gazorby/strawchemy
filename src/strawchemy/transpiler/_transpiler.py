@@ -94,7 +94,6 @@ class QueryTranspiler(Generic[DeclarativeT]):
 
         self._inspector = SQLAlchemyGraphQLInspector(supported_dialect, [model.registry])
         self._join_strategy = select_join_strategy(self._inspector.db_features)
-        self._aggregation_prefix: str = "aggregation"
         self._aggregation_joins: dict[QueryNodeType, AggregationJoin] = {}
         self._aggregation_specs_by_node: dict[QueryNodeType, AggregationSpec] = {}
         self._emitted_aggregation_joins: set[QueryNodeType] = set()
@@ -385,7 +384,6 @@ class QueryTranspiler(Generic[DeclarativeT]):
                     node=aggregation_node,
                     alias=spec.alias,
                     statement=select(*spec.functions.values()),
-                    cte_name=self.scope.key(self._aggregation_prefix),
                 )
             for function_node in spec.functions:
                 self.scope.collector.columns[function_node] = self.scope.scoped_column(
@@ -544,13 +542,12 @@ class QueryTranspiler(Generic[DeclarativeT]):
         Returns:
             An aggregation join object containing the join information.
         """
-        lateral_name = self.scope.key(self._aggregation_prefix)
         root_relation = self.scope.aliased_attribute(node).of_type(inspect(alias))
-        lateral_statement = select(*function_columns).where(root_relation).lateral(lateral_name)
+        lateral_statement = select(*function_columns).where(root_relation).lateral()
         return AggregationJoin(target=lateral_statement, onclause=true(), node=node)
 
     def _aggregation_cte_join(
-        self, node: QueryNodeType, alias: AliasedClass[Any], statement: Select[Any], cte_name: str
+        self, node: QueryNodeType, alias: AliasedClass[Any], statement: Select[Any]
     ) -> AggregationJoin:
         """Creates an aggregation join using a Common Table Expression (CTE).
 
@@ -561,7 +558,6 @@ class QueryTranspiler(Generic[DeclarativeT]):
             node: The query node to create an aggregation join for.
             alias: The aliased class for the target of the aggregation.
             statement: The SQLAlchemy select statement for the aggregation.
-            cte_name: The name to use for the CTE.
 
         Returns:
             An AggregationJoin object representing the CTE-based aggregation join.
@@ -571,7 +567,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             statement.add_columns(*remote_fks)
             .group_by(*remote_fks)
             .where(and_(*[fk.is_not(null()) for fk in remote_fks]))
-            .cte(cte_name)
+            .cte()
         )
         cte_alias = aliased(alias, cte_statement)
         return AggregationJoin(
