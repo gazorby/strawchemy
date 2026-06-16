@@ -491,25 +491,6 @@
   OFFSET ?
   '''
 # ---
-# name: test_load_relationships_nested[session-tracked-async-co  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.rarity AS fruit_rarity,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
 # name: test_load_relationships_nested[session-tracked-async-colorsWithFilteredFruits-aiosqlite_engine]
   '''
   SELECT color.id
@@ -1128,13 +1109,13 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooks-aiosqlite_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooks-aiosqlite_engine].1
@@ -1151,13 +1132,13 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooks-asyncmy_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooks-asyncmy_engine].1
@@ -1174,13 +1155,13 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooks-asyncpg_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooks-asyncpg_engine].1
@@ -1197,13 +1178,13 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooks-psycopg_async_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooks-psycopg_async_engine].1
@@ -1220,7 +1201,7 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooksPaginated-aiosqlite_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM (
           SELECT color.id AS id,
@@ -1230,10 +1211,10 @@
            LIMIT ?
           OFFSET ?
          ) AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
    LIMIT ?
   OFFSET ?
   '''
@@ -1252,7 +1233,7 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooksPaginated-asyncmy_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM (
           SELECT color.id AS id,
@@ -1262,10 +1243,10 @@
            LIMIT %s,
                  %s
          ) AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
    LIMIT %s
   '''
 # ---
@@ -1283,7 +1264,7 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooksPaginated-asyncpg_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM (
           SELECT color.id AS id,
@@ -1293,10 +1274,10 @@
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
    LIMIT $3::INTEGER
   '''
 # ---
@@ -1314,7 +1295,7 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooksPaginated-psycopg_async_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM (
           SELECT color.id AS id,
@@ -1324,10 +1305,10 @@
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1345,13 +1326,13 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-sync-colorsHooks-psycopg_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-sync-colorsHooks-psycopg_engine].1
@@ -1368,13 +1349,13 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-sync-colorsHooks-sqlite_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-sync-colorsHooks-sqlite_engine].1
@@ -1391,7 +1372,7 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-sync-colorsHooksPaginated-psycopg_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM (
           SELECT color.id AS id,
@@ -1401,10 +1382,10 @@
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
@@ -1422,7 +1403,7 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-sync-colorsHooksPaginated-sqlite_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM (
           SELECT color.id AS id,
@@ -1432,10 +1413,10 @@
            LIMIT ?
           OFFSET ?
          ) AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
    LIMIT ?
   OFFSET ?
   '''
@@ -1726,79 +1707,79 @@
 # ---
 # name: test_query_hook_on_type[session-tracked-async-aiosqlite_engine]
   '''
-  SELECT color__fruits.name,
-         color__fruits.id,
+  SELECT fruit_1.name,
+         fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   WHERE color__fruits.name = ?
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.name = ?
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-async-asyncmy_engine]
   '''
-  SELECT color__fruits.name,
-         color__fruits.id,
+  SELECT fruit_1.name,
+         fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   WHERE color__fruits.name = %s
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.name = %s
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-async-asyncpg_engine]
   '''
-  SELECT color__fruits.name,
-         color__fruits.id,
+  SELECT fruit_1.name,
+         fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   WHERE color__fruits.name = $1::VARCHAR
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.name = $1::VARCHAR
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-async-psycopg_async_engine]
   '''
-  SELECT color__fruits.name,
-         color__fruits.id,
+  SELECT fruit_1.name,
+         fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   WHERE color__fruits.name = %(name_1)s::VARCHAR
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.name = %(name_1)s::VARCHAR
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-sync-psycopg_engine]
   '''
-  SELECT color__fruits.name,
-         color__fruits.id,
+  SELECT fruit_1.name,
+         fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   WHERE color__fruits.name = %(name_1)s::VARCHAR
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.name = %(name_1)s::VARCHAR
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_query_hook_on_type[session-tracked-sync-sqlite_engine]
   '''
-  SELECT color__fruits.name,
-         color__fruits.id,
+  SELECT fruit_1.name,
+         fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
-   WHERE color__fruits.name = ?
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   WHERE fruit_1.name = ?
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---

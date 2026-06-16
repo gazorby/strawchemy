@@ -3,126 +3,126 @@
   '''
   WITH anon_1 AS (
           SELECT count(*) AS fruits__count_fruits,
-                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness,
-                 fruit_1.color_id AS color_id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id
-         ) SELECT color__fruits.id,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
     JOIN anon_1
       ON color.id = anon_1.color_id
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > ?
    ORDER BY anon_1.fruits__count_fruits ASC,
             anon_1.sum_fruits__sum_sweetness ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-async-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT count(*) AS fruits__count_fruits,
-                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness,
-                 fruit_1.color_id AS color_id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id
-         ) SELECT color__fruits.id,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
    INNER JOIN anon_1
       ON color.id = anon_1.color_id
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > %s
    ORDER BY anon_1.fruits__count_fruits ASC,
             anon_1.sum_fruits__sum_sweetness ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-async-asyncpg_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS fruits__count_fruits,
-                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > $1::INTEGER
    ORDER BY anon_1.fruits__count_fruits ASC,
             anon_1.sum_fruits__sum_sweetness ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-async-psycopg_async_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS fruits__count_fruits,
-                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > %(param_1)s::INTEGER
    ORDER BY anon_1.fruits__count_fruits ASC,
             anon_1.sum_fruits__sum_sweetness ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-sync-psycopg_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS fruits__count_fruits,
-                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > %(param_1)s::INTEGER
    ORDER BY anon_1.fruits__count_fruits ASC,
             anon_1.sum_fruits__sum_sweetness ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_aggregation_built_once_across_filter_and_order_by[session-tracked-sync-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT count(*) AS fruits__count_fruits,
-                 sum(fruit_1.sweetness) AS sum_fruits__sum_sweetness,
-                 fruit_1.color_id AS color_id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id
-         ) SELECT color__fruits.id,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
     JOIN anon_1
       ON color.id = anon_1.color_id
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > ?
    ORDER BY anon_1.fruits__count_fruits ASC,
             anon_1.sum_fruits__sum_sweetness ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_avg_aggregation_filter[session-tracked-async-float-avg-eq-match-aiosqlite_engine]
@@ -1209,114 +1209,114 @@
   '''
   WITH anon_1 AS (
           SELECT count(*) AS fruits__count_fruits,
-                 fruit_1.color_id AS color_id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id
-         ) SELECT color__fruits.id,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
     JOIN anon_1
       ON color.id = anon_1.color_id
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > ?
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_count_aggregation_filter_nested_under_or[session-tracked-async-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT count(*) AS fruits__count_fruits,
-                 fruit_1.color_id AS color_id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id
-         ) SELECT color__fruits.id,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
    INNER JOIN anon_1
       ON color.id = anon_1.color_id
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > %s
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_count_aggregation_filter_nested_under_or[session-tracked-async-asyncpg_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS fruits__count_fruits
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > $1::INTEGER
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_count_aggregation_filter_nested_under_or[session-tracked-async-psycopg_async_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS fruits__count_fruits
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > %(param_1)s::INTEGER
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_count_aggregation_filter_nested_under_or[session-tracked-sync-psycopg_engine]
   '''
-  SELECT color__fruits.id,
+  SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS fruits__count_fruits
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > %(param_1)s::INTEGER
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_count_aggregation_filter_nested_under_or[session-tracked-sync-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT count(*) AS fruits__count_fruits,
-                 fruit_1.color_id AS color_id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id
-         ) SELECT color__fruits.id,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
     JOIN anon_1
       ON color.id = anon_1.color_id
-    LEFT OUTER JOIN fruit AS color__fruits
-      ON color.id = color__fruits.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
    WHERE anon_1.fruits__count_fruits > ?
    ORDER BY color.id ASC,
-            color__fruits.id ASC
+            fruit_1.id ASC
   '''
 # ---
 # name: test_count_aggregation_filter_with_distinct[session-tracked-async-default-match-aiosqlite_engine]

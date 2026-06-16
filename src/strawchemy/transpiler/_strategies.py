@@ -85,11 +85,10 @@ class LateralJoinStrategy:
         target_insp = inspect(target_alias)
         aliased_attribute = scope.aliased_attribute(node)
         node_inspect = scope.inspect(node)
-        name = scope.key(node)
         root_relation = aliased_attribute.of_type(target_insp)
         base_statement = select(target_insp).with_only_columns(*node_inspect.selection(target_alias))
-        statement = query.statement(base_statement).where(root_relation).lateral(name)
-        lateral_alias = aliased(target_insp.mapper, statement, name=name, flat=True)
+        statement = query.statement(base_statement).where(root_relation).lateral()
+        lateral_alias = aliased(target_insp.mapper, statement, flat=True)
         scope.set_relation_alias(node, "target", lateral_alias)
         return Join(statement, node=node, is_outer=is_outer, onclause=true())
 
@@ -122,10 +121,8 @@ class CteJoinStrategy:
         Returns:
             A Join object representing the CTE-based join.
         """
-        aliased_attribute = scope.aliased_attribute(node)
         remote_fks = scope.inspect(node).foreign_key_columns("target", target_alias)
         rank_column = self._rank_column(remote_fks, query)
-        name = scope.key(node)
         # Remove limit/offset in CTE as it's applied in the WHERE clause of the main query
         query_wihtout_limit_offset = dataclasses.replace(query, offset=None, limit=None)
         node_inspect = scope.inspect(node)
@@ -138,9 +135,12 @@ class CteJoinStrategy:
         )
         if rank_column is not None:
             base_statement = base_statement.add_columns(rank_column)
-        statement = query_wihtout_limit_offset.statement(base_statement).cte(name)
-        cte_alias = aliased(target_alias, statement, name=name)
+        statement = query_wihtout_limit_offset.statement(base_statement).cte()
+        cte_alias = aliased(target_alias, statement)
         scope.set_relation_alias(node, "target", cte_alias)
+        # Resolve the relationship expression AFTER registering the CTE alias so the ON
+        # clause binds to the CTE in the FROM, not a separate plain alias.
+        aliased_attribute = scope.aliased_attribute(node)
         limit_offset_condition: list[ColumnElement[bool]] = []
         if rank_column is not None:
             scoped_rank = scope.scoped_column(statement, rank_column.name)

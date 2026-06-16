@@ -743,7 +743,7 @@ class QueryScope(Generic[DeclarativeT]):
         if (alias := self._node_alias_map.get((node, side))) is not None:
             return alias
         mapper = attribute.parent.mapper if side == "parent" else attribute.entity.mapper
-        alias = aliased(mapper.class_, name=self.key(node), flat=True)
+        alias = aliased(mapper.class_, flat=True)
         self.set_relation_alias(node, side, alias)
         return alias
 
@@ -945,11 +945,7 @@ class QueryScope(Generic[DeclarativeT]):
         self._keys_set.add(scoped_name)
         return self._add_scope_id(scoped_name)
 
-    def replace(
-        self,
-        model: type[DeclarativeT] | None = None,
-        alias: AliasedClass[Any] | None = None,
-    ) -> None:
+    def replace(self, model: type[DeclarativeT] | None = None, alias: AliasedClass[Any] | None = None) -> None:
         if model is not None:
             self.model = model
         if alias is not None:
