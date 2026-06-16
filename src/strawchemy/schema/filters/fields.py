@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from sqlalchemy import Dialect, Select
     from sqlalchemy.orm import DeclarativeBase
 
-    from strawchemy.schema.factories._kwargs import StrawberryFieldKwargs
+    from strawchemy.schema.field import StrawberryFieldKwargs
 
 __all__ = ("VALID_JOINS", "CustomFilterApply", "FilterFieldMarker", "JoinStrategy")
 

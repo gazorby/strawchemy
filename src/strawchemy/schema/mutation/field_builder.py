@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -16,16 +15,12 @@ from strawchemy.schema.mutation.fields import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
-
-    from strawberry import BasePermission
-    from strawberry.extensions.field_extension import FieldExtension
+    from collections.abc import Callable
 
     from strawchemy.config.base import StrawchemyConfig
     from strawchemy.schema.factories import DistinctOnEnumFactory
     from strawchemy.schema.factories.inputs import BooleanFilterFactory, OrderByFactory
     from strawchemy.schema.mutation.input import EventRegistry
-    from strawchemy.typing import AnyRepositoryType
 
 
 @dataclass
@@ -55,18 +50,8 @@ class MutationFieldBuilder:
         ],
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepositoryType | None = None,
         graphql_type: Any | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        permission_classes: list[type[BasePermission]] | None = None,
-        deprecation_reason: str | None = None,
-        default: Any = dataclasses.MISSING,
-        default_factory: Callable[..., object] | object = dataclasses.MISSING,
-        metadata: Mapping[Any, Any] | None = None,
-        directives: Sequence[object] = (),
-        extensions: list[FieldExtension] | None = None,
-        **field_specific_kwargs: Any,
+        **field_kwargs: Any,
     ) -> Any:
         """Build a mutation field with common configuration.
 
@@ -74,20 +59,11 @@ class MutationFieldBuilder:
             field_class: The specific mutation field class to instantiate
                 (e.g., StrawchemyCreateMutationField).
             resolver: An optional custom resolver function for the mutation.
-            repository_type: An optional custom strawberry class. Defaults to
-                the strawberry configured in StrawchemyConfig.
             graphql_type: The GraphQL return type of the mutation.
-            name: The name of the GraphQL mutation field.
-            description: The description of the GraphQL mutation field.
-            permission_classes: A list of permission classes for the field.
-            deprecation_reason: The reason for deprecating the field.
-            default: The default value for the field.
-            default_factory: A factory function to generate the default value.
-            metadata: Additional metadata for the field.
-            directives: A sequence of directives for the field.
-            extensions: A list of Strawberry FieldExtensions.
-            **field_specific_kwargs: Additional keyword arguments specific to
-                the field type (e.g., input_type, filter_input, update_fields, etc.).
+            **field_kwargs: The common ``strawberry.field`` / repository arguments
+                (see ``MutationFieldKwargs``) merged with any field-specific arguments
+                (e.g., input_type, filter_input, update_fields). ``name`` maps to the
+                GraphQL field name.
 
         Returns:
             A configured mutation field instance, either wrapped with the resolver
@@ -95,6 +71,7 @@ class MutationFieldBuilder:
         """
         namespace = self.registry_namespace_getter()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
+        graphql_name = field_kwargs.pop("name", None)
 
         # Inject the shared registry only for input mutation fields (create/update/upsert),
         # not for the delete field which shares the `input_type` kwarg name for filter types.
@@ -105,23 +82,14 @@ class MutationFieldBuilder:
 
         field = field_class(
             config=self.config,
-            repository_type=repository_type,
             python_name=None,
-            graphql_name=name,
+            graphql_name=graphql_name,
             type_annotation=type_annotation,
             is_subscription=False,
-            permission_classes=permission_classes or [],
-            deprecation_reason=deprecation_reason,
-            default=default,
-            default_factory=default_factory,
-            metadata=metadata,
-            directives=directives,
-            extensions=extensions or [],
             registry_namespace=namespace,
-            description=description,
             order_by_factory=self.order_by_factory,
             filter_factory=self.filter_factory,
             distinct_on_factory=self.distinct_on_factory,
-            **field_specific_kwargs,
+            **field_kwargs,
         )
         return field(resolver) if resolver else field
