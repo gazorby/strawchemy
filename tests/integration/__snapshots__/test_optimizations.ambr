@@ -2,8 +2,8 @@
 # name: test_aggregation_computation_is_reused[session-tracked-async-filter-multiple-aggregations-aiosqlite_engine]
   '''
   WITH anon_1 AS (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
                  fruit_2.color_id AS color_id
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
@@ -15,8 +15,8 @@
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.sum_fruits__sum_sweetness > ?
-     AND anon_1.avg_fruits__avg_water_percent > ?
+   WHERE anon_1.avg_fruits__avg_water_percent > ?
+     AND anon_1.sum_fruits__sum_sweetness > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -24,8 +24,8 @@
 # name: test_aggregation_computation_is_reused[session-tracked-async-filter-multiple-aggregations-asyncmy_engine]
   '''
   WITH anon_1 AS (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
                  fruit_2.color_id AS color_id
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
@@ -37,8 +37,8 @@
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.sum_fruits__sum_sweetness > %s
-     AND anon_1.avg_fruits__avg_water_percent > %s
+   WHERE anon_1.avg_fruits__avg_water_percent > %s
+     AND anon_1.sum_fruits__sum_sweetness > %s
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -49,16 +49,16 @@
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness
             FROM fruit AS fruit_2
            WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.sum_fruits__sum_sweetness > $1::FLOAT
-     AND anon_1.avg_fruits__avg_water_percent > $2::FLOAT
+   WHERE anon_1.avg_fruits__avg_water_percent > $1::FLOAT
+     AND anon_1.sum_fruits__sum_sweetness > $2::FLOAT
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -69,16 +69,16 @@
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness
             FROM fruit AS fruit_2
            WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.sum_fruits__sum_sweetness > %(param_1)s
-     AND anon_1.avg_fruits__avg_water_percent > %(param_2)s
+   WHERE anon_1.avg_fruits__avg_water_percent > %(param_1)s
+     AND anon_1.sum_fruits__sum_sweetness > %(param_2)s
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -246,8 +246,8 @@
 # name: test_aggregation_computation_is_reused[session-tracked-async-order-by-multiple-aggregations-aiosqlite_engine]
   '''
   WITH anon_1 AS (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
                  fruit_2.color_id AS color_id
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
@@ -259,16 +259,16 @@
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   ORDER BY anon_1.sum_fruits__sum_sweetness ASC,
-            anon_1.avg_fruits__avg_water_percent ASC,
+   ORDER BY anon_1.avg_fruits__avg_water_percent ASC,
+            anon_1.sum_fruits__sum_sweetness ASC,
             fruit_1.id ASC
   '''
 # ---
 # name: test_aggregation_computation_is_reused[session-tracked-async-order-by-multiple-aggregations-asyncmy_engine]
   '''
   WITH anon_1 AS (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
                  fruit_2.color_id AS color_id
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
@@ -280,8 +280,8 @@
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   ORDER BY anon_1.sum_fruits__sum_sweetness ASC,
-            anon_1.avg_fruits__avg_water_percent ASC,
+   ORDER BY anon_1.avg_fruits__avg_water_percent ASC,
+            anon_1.sum_fruits__sum_sweetness ASC,
             fruit_1.id ASC
   '''
 # ---
@@ -291,16 +291,16 @@
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness
             FROM fruit AS fruit_2
            WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   ORDER BY anon_1.sum_fruits__sum_sweetness ASC,
-            anon_1.avg_fruits__avg_water_percent ASC,
+   ORDER BY anon_1.avg_fruits__avg_water_percent ASC,
+            anon_1.sum_fruits__sum_sweetness ASC,
             fruit_1.id ASC
   '''
 # ---
@@ -310,16 +310,16 @@
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness
             FROM fruit AS fruit_2
            WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   ORDER BY anon_1.sum_fruits__sum_sweetness ASC,
-            anon_1.avg_fruits__avg_water_percent ASC,
+   ORDER BY anon_1.avg_fruits__avg_water_percent ASC,
+            anon_1.sum_fruits__sum_sweetness ASC,
             fruit_1.id ASC
   '''
 # ---
@@ -529,16 +529,16 @@
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness
             FROM fruit AS fruit_2
            WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.sum_fruits__sum_sweetness > %(param_1)s
-     AND anon_1.avg_fruits__avg_water_percent > %(param_2)s
+   WHERE anon_1.avg_fruits__avg_water_percent > %(param_1)s
+     AND anon_1.sum_fruits__sum_sweetness > %(param_2)s
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -546,8 +546,8 @@
 # name: test_aggregation_computation_is_reused[session-tracked-sync-filter-multiple-aggregations-sqlite_engine]
   '''
   WITH anon_1 AS (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
                  fruit_2.color_id AS color_id
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
@@ -559,8 +559,8 @@
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.sum_fruits__sum_sweetness > ?
-     AND anon_1.avg_fruits__avg_water_percent > ?
+   WHERE anon_1.avg_fruits__avg_water_percent > ?
+     AND anon_1.sum_fruits__sum_sweetness > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -651,24 +651,24 @@
          color.id AS id_1
     FROM color AS color
     JOIN LATERAL (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness
             FROM fruit AS fruit_2
            WHERE color.id = fruit_2.color_id
          ) AS anon_1
       ON TRUE
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   ORDER BY anon_1.sum_fruits__sum_sweetness ASC,
-            anon_1.avg_fruits__avg_water_percent ASC,
+   ORDER BY anon_1.avg_fruits__avg_water_percent ASC,
+            anon_1.sum_fruits__sum_sweetness ASC,
             fruit_1.id ASC
   '''
 # ---
 # name: test_aggregation_computation_is_reused[session-tracked-sync-order-by-multiple-aggregations-sqlite_engine]
   '''
   WITH anon_1 AS (
-          SELECT sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
-                 avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+          SELECT avg(fruit_2.water_percent) AS avg_fruits__avg_water_percent,
+                 sum(fruit_2.sweetness) AS sum_fruits__sum_sweetness,
                  fruit_2.color_id AS color_id
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
@@ -680,8 +680,8 @@
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   ORDER BY anon_1.sum_fruits__sum_sweetness ASC,
-            anon_1.avg_fruits__avg_water_percent ASC,
+   ORDER BY anon_1.avg_fruits__avg_water_percent ASC,
+            anon_1.sum_fruits__sum_sweetness ASC,
             fruit_1.id ASC
   '''
 # ---

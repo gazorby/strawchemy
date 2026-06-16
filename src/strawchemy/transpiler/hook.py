@@ -163,6 +163,17 @@ class QueryHook(Generic[DeclarativeT]):
         """
         return [self._load_relationships(load_spec, alias) for load_spec in self._relationships]
 
+    def column_load_options(self, alias: AliasedClass[Any]) -> list[_AbstractLoad]:
+        """Returns ``undefer`` loader options for this hook's columns.
+
+        Args:
+            alias: The aliased entity the columns belong to.
+
+        Returns:
+            A list of ``undefer`` options for the configured columns.
+        """
+        return [undefer(getattr(alias, column.key)) for column in self._columns]
+
     def load_columns(
         self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[Any], mode: ColumnLoadingMode
     ) -> tuple[Select[tuple[DeclarativeT]], list[_AbstractLoad]]:
@@ -185,12 +196,11 @@ class QueryHook(Generic[DeclarativeT]):
             and a list of SQLAlchemy `_AbstractLoad` options (e.g., `undefer` options).
         """
         load_options: list[_AbstractLoad] = []
-        for column in self._columns:
-            alias_attribute = getattr(alias, column.key)
-            if mode == "undefer":
-                load_options.append(undefer(alias_attribute))
-            else:
-                statement = statement.add_columns(alias_attribute)
+        if mode == "undefer":
+            load_options = self.column_load_options(alias)
+        else:
+            for column in self._columns:
+                statement = statement.add_columns(getattr(alias, column.key))
         return statement, load_options
 
     def apply_hook(

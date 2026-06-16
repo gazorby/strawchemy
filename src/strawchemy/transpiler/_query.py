@@ -849,3 +849,42 @@ class HookApplier:
             if not in_subquery:
                 options.extend(hook.load_relationships(self.scope.alias_from_relation_node(node, "target")))
         return statement, options
+
+    def collect_load_options(
+        self, node: QueryNodeType, alias: AliasedClass[Any], in_subquery: bool = False
+    ) -> list[_AbstractLoad]:
+        """Collects loader options (undefer columns + relationships) from a node's hooks.
+
+        Excludes ``apply_hook`` statement mutations — those are applied separately.
+
+        Args:
+            node: The node whose hooks contribute loader options.
+            alias: The aliased entity passed to the hooks.
+            in_subquery: When True, relationship loads are skipped.
+
+        Returns:
+            The accumulated loader options.
+        """
+        options: list[_AbstractLoad] = []
+        for hook in self.hooks[node]:
+            options.extend(hook.column_load_options(alias))
+            if not in_subquery:
+                options.extend(hook.load_relationships(self.scope.alias_from_relation_node(node, "target")))
+        return options
+
+    def apply_statement_hooks(
+        self, statement: Select[tuple[DeclarativeT]], node: QueryNodeType, alias: AliasedClass[Any]
+    ) -> Select[tuple[DeclarativeT]]:
+        """Applies a node's hooks' ``apply_hook`` statement mutations only.
+
+        Args:
+            statement: The statement to mutate.
+            node: The node whose hooks apply.
+            alias: The aliased entity passed to the hooks.
+
+        Returns:
+            The mutated statement.
+        """
+        for hook in self.hooks[node]:
+            statement = hook.apply_hook(statement, alias)
+        return statement

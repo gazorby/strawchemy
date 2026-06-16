@@ -10,6 +10,7 @@ Classes:
 from __future__ import annotations
 
 import dataclasses
+import os
 from collections import defaultdict
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generic, cast
@@ -35,6 +36,7 @@ from strawchemy.exceptions import StrawchemyFieldError, TranspilingError
 from strawchemy.repository.typing import DeclarativeT, OrderBySpec, QueryExecutorT
 from strawchemy.schema.filters import GraphQLComparison
 from strawchemy.transpiler._executor import SyncQueryExecutor
+from strawchemy.transpiler._plan import FilterSemiJoin, HookSpec, QueryPlan, emit_plan
 from strawchemy.transpiler._query import (
     AggregationJoin,
     AggregationSpec,
@@ -58,11 +60,35 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
     from sqlalchemy.sql.elements import NamedColumn
+    from sqlalchemy.sql.selectable import Alias
 
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import OrderByExpr, QueryNodeType, SupportedDialect
 
 __all__ = ("QueryTranspiler",)
+
+
+def _assert_plan_equivalent(plan_statement: Select[Any], legacy_statement: Select[Any], dialect: Dialect) -> None:
+    """Asserts the plan/emit statement compiles identically to the legacy statement.
+
+    Temporary Phase-2 build-time harness; removed at cutover.
+
+    Args:
+        plan_statement: The statement produced by the plan/emit path.
+        legacy_statement: The statement produced by the legacy builder.
+        dialect: The active SQLAlchemy dialect.
+
+    Raises:
+        AssertionError: If the compiled SQL or bind parameters differ.
+    """
+    plan_compiled = plan_statement.compile(dialect=dialect)
+    legacy_compiled = legacy_statement.compile(dialect=dialect)
+    assert str(plan_compiled) == str(legacy_compiled), (
+        f"plan/emit SQL diverged from legacy:\n--- PLAN ---\n{plan_compiled}\n--- LEGACY ---\n{legacy_compiled}"
+    )
+    assert plan_compiled.params == legacy_compiled.params, (
+        f"plan/emit params diverged:\nPLAN={plan_compiled.params}\nLEGACY={legacy_compiled.params}"
+    )
 
 
 class QueryTranspiler(Generic[DeclarativeT]):
@@ -107,6 +133,24 @@ class QueryTranspiler(Generic[DeclarativeT]):
 
         self._hook_applier = HookApplier(self.scope, query_hooks or defaultdict(list))
 
+    def _build_filter_semijoin(self, alias: AliasedClass[Any]) -> FilterSemiJoin:
+        """Builds the PK semi-join from ``alias`` to the filter-statement subquery.
+
+        Args:
+            alias: The root alias whose PK columns are matched against the filter subquery.
+
+        Returns:
+            The filter subquery alias paired with the PK-equality onclause.
+        """
+        assert self._statement is not None
+        root_mapper = class_mapper(self.scope.model)
+        pk_attributes = self._inspector.pk_attributes(root_mapper)
+        # Only PK columns are needed for the join, so avoid selecting the rest.
+        # .alias() returns Alias at runtime; stubs declare NamedFromClause, so cast here.
+        filter_alias = cast("Alias", self._statement.with_only_columns(*pk_attributes).subquery().alias())
+        onclause = and_(*[getattr(alias, attr.key) == filter_alias.c[attr.key] for attr in pk_attributes])
+        return FilterSemiJoin(alias=filter_alias, onclause=onclause)
+
     def _apply_filter_statement(
         self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[Any]
     ) -> Select[tuple[DeclarativeT]]:
@@ -124,13 +168,8 @@ class QueryTranspiler(Generic[DeclarativeT]):
         Returns:
             The statement joined to the filter subquery on PK equality.
         """
-        assert self._statement is not None
-        root_mapper = class_mapper(self.scope.model)
-        pk_attributes = self._inspector.pk_attributes(root_mapper)
-        # Only PK columns are needed for the join, so avoid selecting the rest.
-        filter_alias = self._statement.with_only_columns(*pk_attributes).subquery().alias()
-        on_clause = and_(*[getattr(alias, attr.key) == filter_alias.c[attr.key] for attr in pk_attributes])
-        return statement.join(filter_alias, onclause=on_clause)
+        semijoin = self._build_filter_semijoin(alias)
+        return statement.join(semijoin.alias, onclause=semijoin.onclause)
 
     def _base_statement(self) -> Select[tuple[DeclarativeT]]:
         """Creates the base select statement for the query.
@@ -486,6 +525,78 @@ class QueryTranspiler(Generic[DeclarativeT]):
             if column_options:
                 load = load.options(column_options)
         return statement, load
+
+    def _collect_child_load(
+        self, node: QueryNodeType
+    ) -> tuple[list[ColumnElement[Any]], _AbstractLoad, list[HookSpec]]:
+        """Collects a child relation's transform columns, eager-load option, and outer hook application points.
+
+        Mirrors :meth:`_select_child` structure; used by the plan path to record hook specs
+        for this subtree so the emitter can replay them. Recurses into child relations.
+
+        Args:
+            node: The relation node to collect loads for.
+
+        Returns:
+            A tuple of (transform columns to add to the projection, the eager-load option,
+            outer hook application points for this subtree).
+        """
+        columns, column_transforms = self.scope.inspect(node).columns()
+        transform_columns: list[ColumnElement[Any]] = [transform.attribute for transform in column_transforms]
+        eager_options: list[_AbstractLoad] = [load_only(*columns)] if columns else []
+        node_alias = self.scope.alias_from_relation_node(node, "target")
+        eager_options.extend(self._hook_applier.collect_load_options(node, node_alias))
+        load = contains_eager(self.scope.aliased_attribute(node)).options(*eager_options)
+        hook_specs: list[HookSpec] = [HookSpec(node=node, alias=node_alias, loading_mode="undefer")]
+        for child in node.children:
+            if not child.value.is_relation or child.value.is_computed:
+                continue
+            child_transforms, child_load, child_hook_specs = self._collect_child_load(child)
+            transform_columns.extend(child_transforms)
+            load = load.options(child_load)
+            hook_specs.extend(child_hook_specs)
+        return transform_columns, load, hook_specs
+
+    def _collect_select(
+        self, selection_tree: QueryNodeType
+    ) -> tuple[tuple[ColumnElement[Any], ...], tuple[_AbstractLoad, ...], tuple[Join, ...], tuple[HookSpec, ...]]:
+        """Collects projection columns, ORM load options, aggregation joins, and hook specs.
+
+        Mirrors :meth:`_select`'s column order exactly — root transform columns, then
+        aggregate function columns (depth-first), then child-relation transform columns —
+        so the emitted SELECT list is byte-identical. The aggregation joins it returns are
+        those of selection aggregations not already emitted by the filter/order passes (the
+        emit-once guard prevents duplicates). Also records outer hook application points for
+        the root and all child relation subtrees so the emitter can replay them.
+
+        Args:
+            selection_tree: The resolved selection tree.
+
+        Returns:
+            A tuple of (projection columns, load options, selection aggregation joins, hook specs).
+        """
+        root_columns, column_transforms = self.scope.inspect(selection_tree).columns()
+        projection_columns: list[ColumnElement[Any]] = [transform.attribute for transform in column_transforms]
+        hook_specs: list[HookSpec] = [
+            HookSpec(node=selection_tree.root, alias=self.scope.root_alias, loading_mode="undefer")
+        ]
+        aggregation_joins: list[Join] = []
+        for node in selection_tree.iter_depth_first():
+            if node.value.is_aggregate:
+                function_columns, new_join = self._upsert_aggregations(node)
+                projection_columns.extend(function_columns)
+                if new_join is not None:
+                    aggregation_joins.append(new_join)
+        load_options: list[_AbstractLoad] = [load_only(*root_columns)] if root_columns else []
+        load_options.extend(self._hook_applier.collect_load_options(selection_tree.root, self.scope.root_alias))
+        for child in selection_tree.children:
+            if not child.value.is_relation or child.value.is_computed:
+                continue
+            child_transforms, child_load, child_hook_specs = self._collect_child_load(child)
+            projection_columns.extend(child_transforms)
+            load_options.append(child_load)
+            hook_specs.extend(child_hook_specs)
+        return tuple(projection_columns), tuple(load_options), tuple(aggregation_joins), tuple(hook_specs)
 
     def _root_aggregation_functions(self, selection_tree: QueryNodeType) -> list[Label[Any]]:
         """Build a list of root aggregations, given an QueryNodeType representing the selection tree.
@@ -849,6 +960,144 @@ class QueryTranspiler(Generic[DeclarativeT]):
         elif query.where:
             query.where.clear_expressions()
 
+    def _clone_for_plan(self) -> Self:
+        """Returns a fresh transpiler with identical config and its own scope.
+
+        Used by the equivalence harness so building the plan (which mutates scope via
+        relation-alias registration) does not contaminate the live legacy build. Hooks
+        are preserved so the plan path reproduces them via the recorded hook specs.
+        """
+        return type(self)(
+            model=self.scope.model,
+            dialect=self.dialect,
+            statement=self._statement,
+            deterministic_ordering=self._deterministic_ordering,
+            default_order_by=self._default_order_by,
+            query_hooks=self._hook_applier.hooks,
+        )
+
+    def _is_supported_shape(self, query_graph: QueryGraph[DeclarativeT], limit: int | None, offset: int | None) -> bool:
+        """Returns whether a query is covered by the plan/emit path.
+
+        Covers all read-flow shapes including hooks: root SELECT + projection + relation joins
+        + WHERE + ORDER BY + aggregations + root pagination (limit/offset, incl. the pagination
+        subquery) + DISTINCT ON (native and rank-emulation) + query hooks. Excludes only
+        non-root scope.
+
+        Args:
+            query_graph: The graph representation of the query.
+            limit: The pagination limit, if any.
+            offset: The pagination offset, if any.
+
+        Returns:
+            True if the query is covered by the plan path.
+        """
+        return self.scope.is_root
+
+    def _build_plan(
+        self,
+        query_graph: QueryGraph[DeclarativeT],
+        limit: int | None = None,
+        offset: int | None = None,
+        allow_null: bool = False,
+    ) -> QueryPlan:
+        """Builds a QueryPlan natively from a query graph (all shapes, incl. the subquery boundary).
+
+        Reproduces the legacy orchestration directly — filter/order/join/aggregation passes, and
+        for root pagination/distinct-rank the subquery boundary via ``SubqueryBuilder`` +
+        ``_subquery_pass`` (which ``scope.replace``s onto the materialized subquery) — then
+        translates into the immutable plan + projection. No longer delegates to ``_build_query``.
+        Must only be called when ``_is_supported_shape`` is True, on a disposable-scope transpiler
+        (the harness uses a clone; the subquery ``scope.replace`` mutates that clone scope).
+
+        Args:
+            query_graph: The supported-shape graph representation of the query.
+            limit: Optional pagination limit.
+            offset: Optional pagination offset.
+            allow_null: Whether to allow nulls in filter conditions.
+
+        Returns:
+            The assembled QueryPlan.
+        """
+        distinct_on_rank = self._use_distinct_rank(query_graph)
+        query = Query(
+            self._inspector.db_features,
+            limit=limit,
+            offset=offset,
+            distinct_on=DistinctOn(query_graph),
+            use_distinct_on=not distinct_on_rank,
+        )
+        subquery_needed = self.scope.is_root and (limit is not None or offset is not None or distinct_on_rank)
+        subquery_builder = SubqueryBuilder(
+            self.scope,
+            self._hook_applier,
+            self._inspector.db_features,
+            filter_statement_join=(
+                self._apply_filter_statement if self.scope.is_root and self._statement is not None else None
+            ),
+        )
+        if subquery_needed:
+            self.scope.replace(alias=subquery_builder.alias)
+            if self._statement is not None:
+                self._filter_in_subquery = True
+
+        self._emitted_aggregation_joins = set()
+        self._aggregation_specs_by_node = self._aggregation_specs(query_graph)
+        self._build_aggregation_joins(self._aggregation_specs_by_node)
+
+        joins, subquery_join_nodes = self._filter_pass(query_graph, query, allow_null)
+        order_by = self._order_pass(query_graph)
+        if order_by is not None:
+            query.order_by = order_by
+            joins.extend(order_by.joins)
+        if query_graph.subquery_join_tree:
+            joins.extend(
+                join
+                for join in self._gather_joins(query_graph.subquery_join_tree, is_outer=True)
+                if join.node not in subquery_join_nodes
+            )
+        if subquery_needed:
+            self._subquery_pass(query_graph, query, subquery_builder, joins, distinct_on_rank)
+        else:
+            query.joins = joins + [
+                join
+                for join in self._gather_joins(query_graph.root_join_tree, is_outer=True)
+                if join.node not in subquery_join_nodes
+            ]
+        if query.order_by:
+            query.order_by.columns.extend(self._relation_order_by(query_graph, query))
+        if query_graph.selection_tree and query_graph.selection_tree.graph_metadata.metadata.root_aggregations:
+            query.root_aggregation_functions = self._root_aggregation_functions(query_graph.selection_tree)
+
+        projection_columns, load_options, aggregation_joins, hook_specs = self._collect_select(
+            query_graph.resolved_selection_tree()
+        )
+        filter_semijoin = (
+            self._build_filter_semijoin(self.scope.root_alias)
+            if self._statement is not None and not self._filter_in_subquery
+            else None
+        )
+        return QueryPlan(
+            root=self.scope.root_alias,
+            filter_semijoin=filter_semijoin,
+            projection_columns=projection_columns,
+            load_options=load_options,
+            where=tuple(query.where.expressions) if query.where else (),
+            order_by=tuple(query.order_by.expressions) if query.order_by else (),
+            joins=(*query.joins, *aggregation_joins),
+            root_aggregation_functions=tuple(query.root_aggregation_functions),
+            distinct_on=(
+                cast("tuple[ColumnElement[Any], ...]", tuple(query.distinct_on.expressions))
+                if query.distinct_on
+                else ()
+            ),
+            use_distinct_on=query.use_distinct_on,
+            limit=query.limit,
+            offset=query.offset,
+            hook_specs=hook_specs,
+            hook_applier=self._hook_applier,
+        )
+
     def _build_query(
         self,
         query_graph: QueryGraph[DeclarativeT],
@@ -985,10 +1234,31 @@ class QueryTranspiler(Generic[DeclarativeT]):
             order_by=order_by or [],
             distinct_on=distinct_on or [],
         )
+
+        # Temporary Phase-2 equivalence harness: build the plan on a CLONE (its own scope) so
+        # relation-alias registration during planning does not contaminate the legacy build.
+        # Removed at cutover.
+        plan_statement: Select[Any] | None = None
+        if os.environ.get("STRAWCHEMY_PLAN_EQUIVALENCE") == "1" and self._is_supported_shape(
+            query_graph, limit, offset
+        ):
+            plan_transpiler = self._clone_for_plan()
+            plan_graph = QueryGraph(
+                plan_transpiler.scope,
+                selection_tree=selection_tree,
+                dto_filter=dto_filter,
+                order_by=order_by or [],
+                distinct_on=distinct_on or [],
+            )
+            plan_statement = emit_plan(plan_transpiler._build_plan(plan_graph, limit, offset, allow_null))  # noqa: SLF001
+
         query = self._build_query(query_graph, limit, offset, allow_null)
         statement, aggregation_joins = self._select(query_graph.resolved_selection_tree())
         query.joins.extend(aggregation_joins)
         statement = query.statement(statement)
+
+        if plan_statement is not None:
+            _assert_plan_equivalent(plan_statement, statement, self.dialect)
 
         return executor_cls(
             base_statement=statement,
