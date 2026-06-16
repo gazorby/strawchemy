@@ -62,9 +62,12 @@ from strawchemy.utils.text import camel_to_snake
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Iterator
 
+    from strawberry.types.field import StrawberryField
+
     from sqlalchemy import ColumnElement
 
     from strawchemy.schema.filters import EqualityComparison, GraphQLComparison
+    from strawchemy.schema.filters.fields import CustomFilterApply, JoinStrategy
 
 T = TypeVar("T")
 
@@ -182,6 +185,8 @@ class GraphQLFieldDefinition(DTOFieldDefinition[DeclarativeBase, QueryableAttrib
     is_aggregate: bool = False
     is_function: bool = False
     is_function_arg: bool = False
+    graphql_field: StrawberryField | None = None
+    """Prebuilt strawberry field carrying explicit field config."""
 
     _function: FunctionInfo | None = None
 
@@ -286,6 +291,16 @@ class FunctionArgFieldDefinition(FunctionFieldDefinition):
         self.is_function_arg = True
 
 
+@dataclass(eq=False, repr=False, kw_only=True)
+class CustomFilterFieldDefinition(GraphQLFieldDefinition):
+    """Field definition for a custom-apply virtual filter field."""
+
+    apply: CustomFilterApply
+    """The custom filter callable; always set for this field type."""
+    join: JoinStrategy = "exists"
+    """Fold-back strategy used by the transpiler (``"exists"`` or ``"in"``)."""
+
+
 @dataclass(eq=False)
 class QueryNode(Node[GraphQLFieldDefinition, QueryNodeMetadata]):
     node_metadata: NodeMetadata[QueryNodeMetadata] | None = dataclasses.field(
@@ -355,8 +370,22 @@ class AggregationFilter:
 
 
 @dataclass
+class CustomFilter:
+    """A set custom-apply filter value, ready to be folded into the query."""
+
+    apply: CustomFilterApply
+    """The custom filter callable (see ``CustomFilterApply``)."""
+    value: Any
+    """The scalar value supplied in the GraphQL query."""
+    join: JoinStrategy
+    """Fold-back strategy (``"exists"`` or ``"in"``)."""
+    field_node: QueryNodeType
+    """The model's query node, used to correlate the EXISTS/IN subquery."""
+
+
+@dataclass
 class Filter:
-    and_: list[Self | GraphQLComparison | AggregationFilter] = dataclasses.field(default_factory=list)
+    and_: list[Self | GraphQLComparison | AggregationFilter | CustomFilter] = dataclasses.field(default_factory=list)
     or_: list[Self] = dataclasses.field(default_factory=list)
     not_: Self | None = None
 
@@ -531,7 +560,9 @@ class BooleanFilterDTO(GraphQLFilterDTO):
         for name in self.dto_set_fields:
             value: EqualityComparison[Any] | BooleanFilterDTO | AggregateFilterDTO = getattr(self, name)
             field = self.__dto_field_definitions__[name]
-            if isinstance(value, BooleanFilterDTO):
+            if isinstance(field, CustomFilterFieldDefinition):
+                query.and_.append(CustomFilter(apply=field.apply, value=value, join=field.join, field_node=node))
+            elif isinstance(value, BooleanFilterDTO):
                 child, _ = node.upsert_child(field, match_on="value_equality")
                 _, sub_query = value.filters_tree(child)
                 if sub_query:

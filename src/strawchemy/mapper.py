@@ -6,12 +6,14 @@ from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.schema.config import StrawberryConfig
+from typing_extensions import Unpack
 
 from strawchemy.config.base import StrawchemyConfig
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import TYPING_NS
 from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
 from strawchemy.dto.utils import read_all_config
+from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.factories import (
     AggregateFilterFactory,
     AggregateRootTypeFactory,
@@ -26,6 +28,7 @@ from strawchemy.schema.factories import (
     UpsertConflictEnumFactory,
 )
 from strawchemy.schema.field import StrawchemyField
+from strawchemy.schema.filters.fields import VALID_JOINS, FilterFieldMarker
 from strawchemy.schema.mutation import types as mutation_types
 from strawchemy.schema.mutation.field_builder import MutationFieldBuilder
 from strawchemy.schema.mutation.fields import (
@@ -47,6 +50,8 @@ if TYPE_CHECKING:
 
     from strawchemy.dto.types import FieldSpec
     from strawchemy.repository.typing import QueryHookCallable
+    from strawchemy.schema.factories._kwargs import StrawberryFieldKwargs
+    from strawchemy.schema.filters.fields import CustomFilterApply, JoinStrategy
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import (
@@ -358,6 +363,46 @@ class Strawchemy:
             distinct_on_factory=self.distinct_on_enum_factory,
         )
         return field(resolver) if resolver else field
+
+    def filter_field(
+        self,
+        *,
+        ops: Sequence[str] | None = None,
+        apply: CustomFilterApply | None = None,
+        join: JoinStrategy = "exists",
+        **field_kwargs: Unpack[StrawberryFieldKwargs],
+    ) -> Any:
+        """Declares a fine-grained filter field default.
+
+        The field's annotation supplies the comparison data type. With ``ops`` the field exposes
+        only those GraphQL operators; with ``apply`` it becomes a custom virtual scalar input;
+        with neither it force-includes the column's full default comparison.
+
+        Args:
+            ops: GraphQL operator names to expose (restricted field). Mutually exclusive with ``apply``.
+            apply: Custom filter callable ``(statement, value, *, dialect, model)`` returning a
+                mutated ``Select``.
+            join: Fold-back strategy when ``apply`` is set (``"exists"`` or ``"in"``).
+            **field_kwargs: ``strawberry.field`` arguments applied to the generated GraphQL field
+                (``name``, ``description``, ``metadata``, ``deprecation_reason``, ``directives``,
+                ``graphql_type``).
+
+        Returns:
+            A ``FilterFieldMarker`` consumed by the filter factory. Typed ``Any`` so it can sit as
+            a default under any annotation.
+
+        Raises:
+            StrawchemyFieldError: If ``ops`` and ``apply`` are both given, or ``join`` is unsupported.
+        """
+        if ops is not None and apply is not None:
+            msg = "filter_field() arguments 'ops' and 'apply' are mutually exclusive"
+            raise StrawchemyFieldError(msg)
+        if join not in VALID_JOINS:
+            msg = f"Invalid join strategy {join!r}; expected one of {sorted(VALID_JOINS)}"
+            raise StrawchemyFieldError(msg)
+        return FilterFieldMarker(
+            ops=tuple(ops) if ops is not None else None, apply=apply, join=join, field_kwargs=field_kwargs
+        )
 
     def create(
         self,

@@ -10,13 +10,17 @@ compare fields of DTOs in GraphQL queries.
 # ruff: noqa: TC001
 from __future__ import annotations
 
+import inspect
+from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from functools import cache
-from typing import TYPE_CHECKING, Any, Generic, TypeAlias, TypeVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeAlias, TypeVar, cast
 
 import strawberry
 from strawberry import UNSET, Private
+from typing_extensions import Self, assert_never
 
+from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.filters import (
     ArrayFilter,
     DateFilter,
@@ -32,6 +36,8 @@ from strawchemy.schema.filters import (
 from strawchemy.typing import QueryNodeType
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from sqlalchemy import ColumnElement, Dialect
     from sqlalchemy.orm import QueryableAttribute
 
@@ -52,14 +58,142 @@ __all__ = (
 )
 
 T = TypeVar("T")
+_ComparisonT = TypeVar("_ComparisonT", bound="GraphQLComparison")
 GraphQLComparisonT = TypeVar("GraphQLComparisonT", bound="GraphQLComparison")
+
 GraphQLFilter: TypeAlias = "GraphQLComparison | OrderByEnum"
 AnyGraphQLComparison: TypeAlias = "EqualityComparison[Any] | OrderComparison[Any] | TextComparison | DateComparison | TimeComparison | DateTimeComparison | TimeDeltaComparison | ArrayComparison[Any] | _JSONComparison | _SQLiteJSONComparison"
 AnyOrderGraphQLComparison: TypeAlias = (
     "OrderComparison[Any] | TextComparison | DateComparison | TimeComparison | DateTimeComparison | TimeDeltaComparison"
 )
+FilterLabel: TypeAlias = Literal["equality", "order", "string", "list", "date", "time", "interval", "datetime", "json"]
 
 _DESCRIPTION = "Boolean expression to compare {field}. All fields are combined with logical 'AND'"
+
+
+def _scalar(t: Any) -> Any:
+    return t | None  # eq/neq/gt/lt/...  -> T | None  (the common case; Op's default)
+
+
+def _seq(t: Any) -> Any:
+    return list[t] | None  # in/nin/array ops -> list[T] | None
+
+
+@dataclass(frozen=True)
+class Op:
+    """A filter operator: its GraphQL name and how its input value type depends on the data type."""
+
+    graphql_name: str
+    """Name as exposed in the schema (e.g. ``in``)."""
+    value_type: Callable[[Any], Any] = _scalar
+    """``data_type -> annotation`` builder; defaults to scalar ``T | None``."""
+    attr: str | None = None
+    """Python attribute name when it differs from ``graphql_name`` (e.g. ``in_``)."""
+
+    @property
+    def python_attr(self) -> str:
+        return self.attr or self.graphql_name
+
+
+# Equality (order matches EqualityComparison today: eq, neq, is_null, in, nin)
+EQUALITY_OPS = (
+    Op("eq"),
+    Op("neq"),
+    Op("is_null", lambda _t: bool | None),
+    Op("in", _seq, attr="in_"),
+    Op("nin", _seq),
+)
+# Order increment (gt, gte, lt, lte) — all scalar (default value_type)
+ORDER_OPS = (Op("gt"), Op("gte"), Op("lt"), Op("lte"))
+# Text increment (exact order of TextComparison today) — always str
+TEXT_OPS = tuple(
+    Op(n, lambda _t: str | None)
+    for n in (
+        "like",
+        "nlike",
+        "ilike",
+        "nilike",
+        "regexp",
+        "iregexp",
+        "nregexp",
+        "inregexp",
+        "startswith",
+        "endswith",
+        "contains",
+        "istartswith",
+        "iendswith",
+        "icontains",
+    )
+)
+# Array increment (contains, contained_in, overlap) — list-typed
+ARRAY_OPS = (Op("contains", _seq), Op("contained_in", _seq), Op("overlap", _seq))
+# Date parts (int sub-comparisons); referenced lazily because OrderComparison is defined below
+DATE_OPS = tuple(
+    Op(n, lambda _t: OrderComparison[int] | None)
+    for n in ("year", "month", "day", "week_day", "week", "quarter", "iso_year", "iso_week_day")
+)
+# Time parts (int sub-comparisons)
+TIME_OPS = tuple(Op(n, lambda _t: OrderComparison[int] | None) for n in ("hour", "minute", "second"))
+# Interval parts (float sub-comparisons)
+INTERVAL_OPS = tuple(Op(n, lambda _t: OrderComparison[float] | None) for n in ("days", "hours", "minutes", "seconds"))
+
+
+def _filter_description(label: FilterLabel) -> str:
+    """Builds a comparison-input description for the given field label.
+
+    Returns:
+        The full description string, e.g. ``"Boolean expression to compare String fields. ..."``.
+    """
+    match label:
+        case "equality":
+            field = "fields supporting equality comparisons"
+        case "order":
+            field = "fields supporting order comparisons"
+        case "string":
+            field = "String fields"
+        case "list":
+            field = "List fields"
+        case "date":
+            field = "Date fields"
+        case "time":
+            field = "Time fields"
+        case "interval":
+            field = "Interval fields"
+        case "datetime":
+            field = "DateTime fields"
+        case "json":
+            field = "JSON fields"
+        case _:
+            assert_never(label)
+    return _DESCRIPTION.format(field=field)
+
+
+def comparison_input(
+    name: str, *, data_type: Any = T, description: str = ""
+) -> Callable[[type[_ComparisonT]], type[_ComparisonT]]:
+    """Generates a comparison class's own operator fields from its ``__strawchemy_comparison__`` and decorates it.
+
+    ``data_type`` is the TypeVar ``T`` for generic comparisons, or a concrete type (e.g. ``str``).
+    """
+
+    def deco(cls: type[_ComparisonT]) -> type[_ComparisonT]:
+        annotations, attributes = cls._field_namespace(data_type, cls.__strawchemy_comparison__.operators)
+        cls.__annotations__ = {**inspect.get_annotations(cls), **annotations}
+        for attr, value in attributes.items():
+            setattr(cls, attr, value)
+        return strawberry.input(name=name, description=description)(cls)
+
+    return deco
+
+
+@dataclass(frozen=True, slots=True)
+class _StrawchemyComparison:
+    """Static metadata for a comparison class."""
+
+    filter: type[FilterProtocol]
+    """The query-time filter that turns this comparison into SQL expressions."""
+    operators: tuple[Op, ...] = ()
+    """The comparison's own operators (merged across the MRO by ``_all_operators``)."""
 
 
 class GraphQLComparison:
@@ -76,12 +210,86 @@ class GraphQLComparison:
     """
 
     __strawchemy_field_node__: Private[QueryNodeType | None] = None
-    __strawchemy_filter__: Private[type[FilterProtocol]]
+    __strawchemy_comparison__: ClassVar[_StrawchemyComparison]
+    _restricted_cache: ClassVar[dict[tuple[type[Any], Any, tuple[str, ...]], type[GraphQLComparison]]] = {}
+
+    @classmethod
+    def _all_operators(cls) -> tuple[Op, ...]:
+        """Full operator set for this comparison, collected base-first across the MRO (deduped)."""
+        seen: set[str] = set()
+        collected: list[Op] = []
+        for klass in reversed(inspect.getmro(cls)):
+            definition: _StrawchemyComparison | None = klass.__dict__.get("__strawchemy_comparison__")
+            for op in definition.operators if definition is not None else ():
+                if op.graphql_name not in seen:
+                    seen.add(op.graphql_name)
+                    collected.append(op)
+        return tuple(collected)
+
+    @classmethod
+    def restricted(cls, data_type: Any, ops: tuple[str, ...]) -> type[Self]:
+        """Builds (and caches) a comparison input over ``data_type`` exposing only ``ops``.
+
+        The result is a standalone strawberry input carrying every operator attribute (unselected
+        ones defaulted ``UNSET``) so the query-time ``*Filter.to_expressions`` keep working, and the
+        same ``__strawchemy_comparison__.filter`` as ``cls``.
+
+        Args:
+            data_type: The scalar type the operators compare against.
+            ops: Selected GraphQL operator names (order-independent).
+
+        Returns:
+            A strawberry input type restricted to the selected operators.
+
+        Raises:
+            StrawchemyFieldError: If an operator is not defined for this comparison.
+        """
+        chosen_ops = tuple(sorted(set(ops)))
+        cache_key = (cls, data_type, chosen_ops)
+        if (cached := GraphQLComparison._restricted_cache.get(cache_key)) is not None:
+            return cast("type[Self]", cached)
+
+        all_ops = cls._all_operators()
+        ops_by_name = {op.graphql_name: op for op in all_ops}
+
+        if invalid_ops := [op for op in chosen_ops if op not in ops_by_name]:
+            msg = f"Operator(s) {invalid_ops} not valid for {cls.__name__}; allowed: {sorted(ops_by_name)}"
+            raise StrawchemyFieldError(msg)
+
+        annotations, attributes = cls._field_namespace(data_type, tuple(ops_by_name[op] for op in chosen_ops))
+        namespace: dict[str, Any] = {
+            "__annotations__": annotations,
+            "__strawchemy_comparison__": _StrawchemyComparison(filter=cls.__strawchemy_comparison__.filter),
+            **attributes,
+        }
+        for op in all_ops:  # unselected ops present as UNSET so query-time filters work
+            namespace.setdefault(op.python_attr, UNSET)
+
+        # Build restricted type
+        suffix = "".join(part.capitalize() for op in chosen_ops for part in op.split("_"))
+        type_name = f"{cls.__name__}{data_type.__name__.capitalize()}{suffix}"
+        built = cast(
+            "type[Self]",
+            strawberry.input(name=type_name, description=f"{cls.__name__} restricted to {', '.join(chosen_ops)}")(
+                type(type_name, (GraphQLComparison,), namespace)
+            ),
+        )
+        GraphQLComparison._restricted_cache[cache_key] = built
+        return built
+
+    @classmethod
+    def _field_namespace(cls, data_type: Any, ops: tuple[Op, ...]) -> tuple[dict[str, Any], dict[str, Any]]:
+        """Builds (annotations, attributes) for ``ops`` resolved against ``data_type``."""
+        annotations = {op.python_attr: op.value_type(data_type) for op in ops}
+        attributes = {
+            op.python_attr: (strawberry.field(name=op.graphql_name, default=UNSET) if op.attr else UNSET) for op in ops
+        }
+        return annotations, attributes
 
     def to_expressions(
         self, dialect: Dialect, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
     ) -> list[ColumnElement[bool]]:
-        return self.__strawchemy_filter__(self).to_expressions(dialect, model_attribute)
+        return self.__strawchemy_comparison__.filter(self).to_expressions(dialect, model_attribute)
 
     @property
     def field_node(self) -> QueryNodeType:
@@ -94,192 +302,113 @@ class GraphQLComparison:
         self.__strawchemy_field_node__ = value
 
 
-@strawberry.input(
-    name="GenericComparison", description=_DESCRIPTION.format(field="fields supporting equality comparisons")
-)
+@comparison_input("GenericComparison", description=_filter_description("equality"))
 class EqualityComparison(GraphQLComparison, Generic[T]):
-    """Generic comparison class for GraphQL filters.
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=EqualityFilter, operators=EQUALITY_OPS)
 
-    This class provides a set of generic comparison operators that can be
-    used to filter data based on equality, inequality, null checks, and
-    inclusion in a list.
-
-    Attributes:
-        eq: Filters for values equal to this.
-        neq: Filters for values not equal to this.
-        is_null: Filters for null values if True, or non-null values if False.
-        in: Filters for values present in this list.
-        nin: Filters for values not present in this list.
-    """
-
-    __strawchemy_filter__ = EqualityFilter
-
-    eq: T | None = UNSET
-    neq: T | None = UNSET
-    is_null: bool | None = UNSET
-    in_: list[T] | None = strawberry.field(name="in", default=UNSET)
-    nin: list[T] | None = UNSET
+    if TYPE_CHECKING:
+        # Generated at runtime from ``__strawchemy_comparison__.operators``; declared for type checkers.
+        eq: T | None
+        neq: T | None
+        is_null: bool | None
+        in_: list[T] | None
+        nin: list[T] | None
 
 
-@strawberry.input(name="OrderComparison", description=_DESCRIPTION.format(field="fields supporting order comparisons"))
+@comparison_input("OrderComparison", description=_filter_description("order"))
 class OrderComparison(EqualityComparison[T]):
-    """Order comparison class for GraphQL filters.
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=OrderFilter, operators=ORDER_OPS)
 
-    This class provides a set of numeric comparison operators that can be
-    used to filter data based on greater than, less than, and equality.
-
-    Attributes:
-        gt: Filters for values greater than this.
-        gte: Filters for values greater than or equal to this.
-        lt: Filters for values less than this.
-        lte: Filters for values less than or equal to this.
-    """
-
-    __strawchemy_filter__ = OrderFilter
-
-    gt: T | None = UNSET
-    gte: T | None = UNSET
-    lt: T | None = UNSET
-    lte: T | None = UNSET
+    if TYPE_CHECKING:
+        gt: T | None
+        gte: T | None
+        lt: T | None
+        lte: T | None
 
 
-@strawberry.input(name="TextComparison", description=_DESCRIPTION.format(field="String fields"))
+@comparison_input("TextComparison", data_type=str, description=_filter_description("string"))
 class TextComparison(OrderComparison[str]):
-    """Text comparison class for GraphQL filters.
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=TextFilter, operators=TEXT_OPS)
 
-    This class provides a set of text comparison operators that can be
-    used to filter data based on various string matching patterns.
-
-    Attributes:
-        like: Filters for values that match this SQL LIKE pattern.
-        nlike: Filters for values that do not match this SQL LIKE pattern.
-        ilike: Filters for values that match this case-insensitive SQL LIKE pattern.
-        nilike: Filters for values that do not match this case-insensitive SQL LIKE pattern.
-        regexp: Filters for values that match this regular expression.
-        nregexp: Filters for values that do not match this regular expression.
-        startswith: Filters for values that start with this string.
-        endswith: Filters for values that end with this string.
-        contains: Filters for values that contain this string.
-        istartswith: Filters for values that start with this string (case-insensitive).
-        iendswith: Filters for values that end with this string (case-insensitive).
-        icontains: Filters for values that contain this string (case-insensitive).
-    """
-
-    __strawchemy_filter__ = TextFilter
-
-    like: str | None = UNSET
-    nlike: str | None = UNSET
-    ilike: str | None = UNSET
-    nilike: str | None = UNSET
-    regexp: str | None = UNSET
-    iregexp: str | None = UNSET
-    nregexp: str | None = UNSET
-    inregexp: str | None = UNSET
-    startswith: str | None = UNSET
-    endswith: str | None = UNSET
-    contains: str | None = UNSET
-    istartswith: str | None = UNSET
-    iendswith: str | None = UNSET
-    icontains: str | None = UNSET
+    if TYPE_CHECKING:
+        like: str | None
+        nlike: str | None
+        ilike: str | None
+        nilike: str | None
+        regexp: str | None
+        iregexp: str | None
+        nregexp: str | None
+        inregexp: str | None
+        startswith: str | None
+        endswith: str | None
+        contains: str | None
+        istartswith: str | None
+        iendswith: str | None
+        icontains: str | None
 
 
-@strawberry.input(name="ArrayComparison", description=_DESCRIPTION.format(field="List fields"))
+@comparison_input("ArrayComparison", description=_filter_description("list"))
 class ArrayComparison(EqualityComparison[T], Generic[T]):
-    """Postgres array comparison class for GraphQL filters.
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=ArrayFilter, operators=ARRAY_OPS)
 
-    This class provides a set of array comparison operators that can be
-    used to filter data based on containment, overlap, and other
-    array-specific properties.
-
-    Attributes:
-        contains: Filters for array values that contain all elements in this list.
-        contained_in: Filters for array values that are contained in this list.
-        overlap: Filters for array values that have any elements in common with this list.
-    """
-
-    __strawchemy_filter__ = ArrayFilter
-
-    contains: list[T] | None = UNSET
-    contained_in: list[T] | None = UNSET
-    overlap: list[T] | None = UNSET
+    if TYPE_CHECKING:
+        contains: list[T] | None
+        contained_in: list[T] | None
+        overlap: list[T] | None
 
 
-@strawberry.input(name="DateComparison", description=_DESCRIPTION.format(field="Date fields"))
+@comparison_input("DateComparison", data_type=date, description=_filter_description("date"))
 class DateComparison(OrderComparison[date]):
-    """Date comparison class for GraphQL filters.
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=DateFilter, operators=DATE_OPS)
 
-    This class provides a set of date component comparison operators that
-    can be used to filter data based on specific parts of a date.
-
-    Attributes:
-        year: Filters based on the year.
-        month: Filters based on the month.
-        day: Filters based on the day.
-        week_day: Filters based on the day of the week.
-        week: Filters based on the week number.
-        quarter: Filters based on the quarter of the year.
-        iso_year: Filters based on the ISO year.
-        iso_week_day: Filters based on the ISO day of the week.
-    """
-
-    __strawchemy_filter__ = DateFilter
-
-    year: OrderComparison[int] | None = UNSET
-    month: OrderComparison[int] | None = UNSET
-    day: OrderComparison[int] | None = UNSET
-    week_day: OrderComparison[int] | None = UNSET
-    week: OrderComparison[int] | None = UNSET
-    quarter: OrderComparison[int] | None = UNSET
-    iso_year: OrderComparison[int] | None = UNSET
-    iso_week_day: OrderComparison[int] | None = UNSET
+    if TYPE_CHECKING:
+        year: OrderComparison[int] | None
+        month: OrderComparison[int] | None
+        day: OrderComparison[int] | None
+        week_day: OrderComparison[int] | None
+        week: OrderComparison[int] | None
+        quarter: OrderComparison[int] | None
+        iso_year: OrderComparison[int] | None
+        iso_week_day: OrderComparison[int] | None
 
 
-@strawberry.input(name="TimeComparison", description=_DESCRIPTION.format(field="Time fields"))
+@comparison_input("TimeComparison", data_type=time, description=_filter_description("time"))
 class TimeComparison(OrderComparison[time]):
-    """Time comparison class for GraphQL filters.
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=TimeFilter, operators=TIME_OPS)
 
-    This class provides a set of time component comparison operators that
-    can be used to filter data based on specific parts of a time.
-
-    Attributes:
-        hour: Filters based on the hour.
-        minute: Filters based on the minute.
-        second: Filters based on the second.
-    """
-
-    __strawchemy_filter__ = TimeFilter
-
-    hour: OrderComparison[int] | None = UNSET
-    minute: OrderComparison[int] | None = UNSET
-    second: OrderComparison[int] | None = UNSET
+    if TYPE_CHECKING:
+        hour: OrderComparison[int] | None
+        minute: OrderComparison[int] | None
+        second: OrderComparison[int] | None
 
 
-@strawberry.input(name="IntervalComparison", description=_DESCRIPTION.format(field="Interval fields"))
+@comparison_input("IntervalComparison", data_type=timedelta, description=_filter_description("interval"))
 class TimeDeltaComparison(OrderComparison[timedelta]):
-    __strawchemy_filter__ = TimeDeltaFilter
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=TimeDeltaFilter, operators=INTERVAL_OPS)
 
-    days: OrderComparison[float] | None = UNSET
-    hours: OrderComparison[float] | None = UNSET
-    minutes: OrderComparison[float] | None = UNSET
-    seconds: OrderComparison[float] | None = UNSET
+    if TYPE_CHECKING:
+        days: OrderComparison[float] | None
+        hours: OrderComparison[float] | None
+        minutes: OrderComparison[float] | None
+        seconds: OrderComparison[float] | None
 
 
-@strawberry.input(name="DateTimeComparison", description=_DESCRIPTION.format(field="DateTime fields"))
+@comparison_input("DateTimeComparison", data_type=datetime, description=_filter_description("datetime"))
 class DateTimeComparison(OrderComparison[datetime]):
-    __strawchemy_filter__ = DateTimeFilter
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=DateTimeFilter, operators=(*DATE_OPS, *TIME_OPS))
 
-    year: OrderComparison[int] | None = UNSET
-    month: OrderComparison[int] | None = UNSET
-    day: OrderComparison[int] | None = UNSET
-    week_day: OrderComparison[int] | None = UNSET
-    week: OrderComparison[int] | None = UNSET
-    quarter: OrderComparison[int] | None = UNSET
-    iso_year: OrderComparison[int] | None = UNSET
-    iso_week_day: OrderComparison[int] | None = UNSET
-
-    hour: OrderComparison[int] | None = UNSET
-    minute: OrderComparison[int] | None = UNSET
-    second: OrderComparison[int] | None = UNSET
+    if TYPE_CHECKING:
+        year: OrderComparison[int] | None
+        month: OrderComparison[int] | None
+        day: OrderComparison[int] | None
+        week_day: OrderComparison[int] | None
+        week: OrderComparison[int] | None
+        quarter: OrderComparison[int] | None
+        iso_year: OrderComparison[int] | None
+        iso_week_day: OrderComparison[int] | None
+        hour: OrderComparison[int] | None
+        minute: OrderComparison[int] | None
+        second: OrderComparison[int] | None
 
 
 class _JSONComparison(EqualityComparison[dict[str, Any]]):
@@ -297,7 +426,7 @@ class _JSONComparison(EqualityComparison[dict[str, Any]]):
         has_key_any: Filters for JSON values that have any of these keys.
     """
 
-    __strawchemy_filter__ = JSONFilter
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=JSONFilter)
 
     contains: dict[str, Any] | None = UNSET
     contained_in: dict[str, Any] | None = UNSET
@@ -321,7 +450,7 @@ class _SQLiteJSONComparison(EqualityComparison[dict[str, Any]]):
         has_key_any: Filters for JSON values that have any of these keys.
     """
 
-    __strawchemy_filter__ = JSONFilter
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=JSONFilter)
 
     has_key: str | None = UNSET
     has_key_all: list[str] | None = UNSET
@@ -332,7 +461,7 @@ class _SQLiteJSONComparison(EqualityComparison[dict[str, Any]]):
 def make_full_json_comparison_input() -> type[_JSONComparison]:
     return cast(
         "type[_JSONComparison]",
-        strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))(_JSONComparison),
+        strawberry.input(name="JSONComparison", description=_filter_description("json"))(_JSONComparison),
     )
 
 
@@ -340,7 +469,5 @@ def make_full_json_comparison_input() -> type[_JSONComparison]:
 def make_sqlite_json_comparison_input() -> type[_SQLiteJSONComparison]:
     return cast(
         "type[_SQLiteJSONComparison]",
-        strawberry.input(name="JSONComparison", description=_DESCRIPTION.format(field="JSON fields"))(
-            _SQLiteJSONComparison
-        ),
+        strawberry.input(name="JSONComparison", description=_filter_description("json"))(_SQLiteJSONComparison),
     )

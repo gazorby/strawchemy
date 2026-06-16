@@ -34,9 +34,25 @@ __all__ = (
     "LegacyKwargs",
     "MakeInputKwargs",
     "RegistrationKwargs",
+    "StrawberryFieldKwargs",
     "TypeDecoratorKwargs",
     "TypeWrapperKwargs",
 )
+
+
+class StrawberryFieldKwargs(TypedDict, total=False):
+    """Input-relevant ``strawberry.field`` args (keys match ``strawberry.field`` for spreading).
+
+    Used by ``Strawchemy.filter_field`` to forward field metadata onto the generated GraphQL
+    input field. Output/resolver-only args are intentionally excluded.
+    """
+
+    name: str | None
+    description: str | None
+    metadata: Mapping[Any, Any] | None
+    deprecation_reason: str | None
+    directives: Sequence[object]
+    graphql_type: Any | None
 
 
 class DTOConfigKwargs(TypedDict, total=False):

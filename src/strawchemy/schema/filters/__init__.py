@@ -28,6 +28,7 @@ from strawchemy.schema.filters.inputs import (
     TimeDeltaComparison,
     _JSONComparison,
     _SQLiteJSONComparison,
+    _StrawchemyComparison,
     make_full_json_comparison_input,
     make_sqlite_json_comparison_input,
 )
@@ -59,6 +60,7 @@ __all__ = (
     "TimeFilter",
     "_JSONComparison",
     "_SQLiteJSONComparison",
+    "_StrawchemyComparison",
     "make_full_json_comparison_input",
     "make_sqlite_json_comparison_input",
 )
