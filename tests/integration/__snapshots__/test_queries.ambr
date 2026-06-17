@@ -19,8 +19,6 @@
           OFFSET ?
          ) AS color
    ORDER BY color.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_filter_statement_pagination_sql[session-tracked-async-asyncmy_engine]
@@ -43,7 +41,6 @@
                  %s
          ) AS color
    ORDER BY color.id ASC
-   LIMIT %s
   '''
 # ---
 # name: test_filter_statement_pagination_sql[session-tracked-async-asyncpg_engine]
@@ -66,7 +63,6 @@
           OFFSET $2::INTEGER
          ) AS color
    ORDER BY color.id ASC
-   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_filter_statement_pagination_sql[session-tracked-async-psycopg_async_engine]
@@ -89,7 +85,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS color
    ORDER BY color.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_filter_statement_pagination_sql[session-tracked-sync-psycopg_engine]
@@ -112,7 +107,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS color
    ORDER BY color.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_filter_statement_pagination_sql[session-tracked-sync-sqlite_engine]
@@ -135,8 +129,6 @@
           OFFSET ?
          ) AS color
    ORDER BY color.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_filtered_statement[session-tracked-async-aiosqlite_engine]

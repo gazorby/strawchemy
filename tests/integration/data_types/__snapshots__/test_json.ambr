@@ -2,7 +2,7 @@
 # name: test_json_extract_inner_path[session-tracked-async-aiosqlite_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> ?, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> ?, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -10,7 +10,7 @@
 # name: test_json_extract_inner_path[session-tracked-async-asyncmy_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> %s, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> %s, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -18,7 +18,7 @@
 # name: test_json_extract_inner_path[session-tracked-async-asyncpg_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -26,7 +26,7 @@
 # name: test_json_extract_inner_path[session-tracked-async-psycopg_async_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -34,7 +34,7 @@
 # name: test_json_extract_inner_path[session-tracked-sync-psycopg_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -42,7 +42,7 @@
 # name: test_json_extract_inner_path[session-tracked-sync-sqlite_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> ?, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> ?, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -58,7 +58,7 @@
 # name: test_json_extract_path[session-tracked-async-key1-aiosqlite_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> ?, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> ?, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -66,7 +66,7 @@
 # name: test_json_extract_path[session-tracked-async-key1-asyncmy_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> %s, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> %s, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -74,7 +74,7 @@
 # name: test_json_extract_path[session-tracked-async-key1-asyncpg_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -82,7 +82,7 @@
 # name: test_json_extract_path[session-tracked-async-key1-psycopg_async_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -90,7 +90,7 @@
 # name: test_json_extract_path[session-tracked-async-key3-aiosqlite_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> ?, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> ?, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -98,7 +98,7 @@
 # name: test_json_extract_path[session-tracked-async-key3-asyncmy_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> %s, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> %s, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -106,7 +106,7 @@
 # name: test_json_extract_path[session-tracked-async-key3-asyncpg_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -114,7 +114,7 @@
 # name: test_json_extract_path[session-tracked-async-key3-psycopg_async_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -122,7 +122,7 @@
 # name: test_json_extract_path[session-tracked-async-key4-aiosqlite_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> ?, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> ?, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -130,7 +130,7 @@
 # name: test_json_extract_path[session-tracked-async-key4-asyncmy_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> %s, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> %s, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -138,7 +138,7 @@
 # name: test_json_extract_path[session-tracked-async-key4-asyncpg_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -146,7 +146,7 @@
 # name: test_json_extract_path[session-tracked-async-key4-psycopg_async_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -154,7 +154,7 @@
 # name: test_json_extract_path[session-tracked-async-nested-aiosqlite_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> ?, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> ?, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -162,7 +162,7 @@
 # name: test_json_extract_path[session-tracked-async-nested-asyncmy_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> %s, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> %s, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -170,7 +170,7 @@
 # name: test_json_extract_path[session-tracked-async-nested-asyncpg_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -178,7 +178,7 @@
 # name: test_json_extract_path[session-tracked-async-nested-psycopg_async_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -194,7 +194,7 @@
 # name: test_json_extract_path[session-tracked-sync-key1-psycopg_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -202,7 +202,7 @@
 # name: test_json_extract_path[session-tracked-sync-key1-sqlite_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> ?, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> ?, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -210,7 +210,7 @@
 # name: test_json_extract_path[session-tracked-sync-key3-psycopg_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -218,7 +218,7 @@
 # name: test_json_extract_path[session-tracked-sync-key3-sqlite_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> ?, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> ?, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -226,7 +226,7 @@
 # name: test_json_extract_path[session-tracked-sync-key4-psycopg_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -234,7 +234,7 @@
 # name: test_json_extract_path[session-tracked-sync-key4-sqlite_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> ?, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> ?, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -242,7 +242,7 @@
 # name: test_json_extract_path[session-tracked-sync-nested-psycopg_engine]
   '''
   SELECT json_model.id,
-         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS json_model__dict_col
+         coalesce(jsonb_path_query_first(json_model.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''
@@ -250,7 +250,7 @@
 # name: test_json_extract_path[session-tracked-sync-nested-sqlite_engine]
   '''
   SELECT json_model.id,
-         coalesce(json_model.dict_col -> ?, json_object()) AS json_model__dict_col
+         coalesce(json_model.dict_col -> ?, json_object()) AS coalesce_1
     FROM json_model AS json_model
    ORDER BY json_model.id ASC
   '''

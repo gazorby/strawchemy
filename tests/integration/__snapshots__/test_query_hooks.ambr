@@ -50,8 +50,6 @@
          ) AS fruit
    ORDER BY fruit.water_percent ASC,
             fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-async-orderedFruitsPaginated-asyncmy_engine]
@@ -69,7 +67,6 @@
          ) AS fruit
    ORDER BY fruit.water_percent ASC,
             fruit.id ASC
-   LIMIT %s
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-async-orderedFruitsPaginated-asyncpg_engine]
@@ -87,7 +84,6 @@
          ) AS fruit
    ORDER BY fruit.water_percent ASC,
             fruit.id ASC
-   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-async-orderedFruitsPaginated-psycopg_async_engine]
@@ -105,7 +101,6 @@
          ) AS fruit
    ORDER BY fruit.water_percent ASC,
             fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-sync-orderedFruits-psycopg_engine]
@@ -141,7 +136,6 @@
          ) AS fruit
    ORDER BY fruit.water_percent ASC,
             fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_order_by[session-tracked-sync-orderedFruitsPaginated-sqlite_engine]
@@ -159,8 +153,6 @@
          ) AS fruit
    ORDER BY fruit.water_percent ASC,
             fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-async-filteredFruits-aiosqlite_engine]
@@ -214,8 +206,6 @@
          ) AS fruit
    WHERE fruit.name = ?
    ORDER BY fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-async-filteredFruitsPaginated-asyncmy_engine]
@@ -233,7 +223,6 @@
          ) AS fruit
    WHERE fruit.name = %s
    ORDER BY fruit.id ASC
-   LIMIT %s
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-async-filteredFruitsPaginated-asyncpg_engine]
@@ -251,7 +240,6 @@
          ) AS fruit
    WHERE fruit.name = $4::VARCHAR
    ORDER BY fruit.id ASC
-   LIMIT $5::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-async-filteredFruitsPaginated-psycopg_async_engine]
@@ -269,7 +257,6 @@
          ) AS fruit
    WHERE fruit.name = %(name_2)s::VARCHAR
    ORDER BY fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-sync-filteredFruits-psycopg_engine]
@@ -305,7 +292,6 @@
          ) AS fruit
    WHERE fruit.name = %(name_2)s::VARCHAR
    ORDER BY fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_custom_query_hook_where[session-tracked-sync-filteredFruitsPaginated-sqlite_engine]
@@ -323,8 +309,6 @@
          ) AS fruit
    WHERE fruit.name = ?
    ORDER BY fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-async-fruitsHooks-aiosqlite_engine]
@@ -378,8 +362,6 @@
           OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-async-fruitsPaginatedHooks-asyncmy_engine]
@@ -397,7 +379,6 @@
                  %s
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %s
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-async-fruitsPaginatedHooks-asyncpg_engine]
@@ -415,7 +396,6 @@
           OFFSET $2::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-async-fruitsPaginatedHooks-psycopg_async_engine]
@@ -433,7 +413,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-sync-fruitsHooks-psycopg_engine]
@@ -469,7 +448,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_columns_hook[session-tracked-sync-fruitsPaginatedHooks-sqlite_engine]
@@ -487,8 +465,6 @@
           OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-async-colorsWithFilteredFruits-aiosqlite_engine]
@@ -606,8 +582,6 @@
           OFFSET ?
          ) AS color
    ORDER BY color.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-async-colorsWithFilteredFruitsPaginated-aiosqlite_engine].1
@@ -640,7 +614,6 @@
                  %s
          ) AS color
    ORDER BY color.id ASC
-   LIMIT %s
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-async-colorsWithFilteredFruitsPaginated-asyncmy_engine].1
@@ -673,7 +646,6 @@
           OFFSET $2::INTEGER
          ) AS color
    ORDER BY color.id ASC
-   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-async-colorsWithFilteredFruitsPaginated-asyncpg_engine].1
@@ -706,7 +678,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS color
    ORDER BY color.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-async-colorsWithFilteredFruitsPaginated-psycopg_async_engine].1
@@ -791,7 +762,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS color
    ORDER BY color.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-sync-colorsWithFilteredFruitsPaginated-psycopg_engine].1
@@ -824,8 +794,6 @@
           OFFSET ?
          ) AS color
    ORDER BY color.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_relationships_nested[session-tracked-sync-colorsWithFilteredFruitsPaginated-sqlite_engine].1
@@ -930,8 +898,6 @@
           OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-async-fruitsPaginatedHooks-aiosqlite_engine].1
@@ -956,7 +922,6 @@
                  %s
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %s
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-async-fruitsPaginatedHooks-asyncmy_engine].1
@@ -981,7 +946,6 @@
           OFFSET $2::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-async-fruitsPaginatedHooks-asyncpg_engine].1
@@ -1006,7 +970,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-async-fruitsPaginatedHooks-psycopg_async_engine].1
@@ -1067,7 +1030,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-sync-fruitsPaginatedHooks-psycopg_engine].1
@@ -1092,8 +1054,6 @@
           OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_relationships_no_columns[session-tracked-sync-fruitsPaginatedHooks-sqlite_engine].1
@@ -1215,8 +1175,6 @@
       ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
             fruit_1.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooksPaginated-aiosqlite_engine].1
@@ -1247,7 +1205,6 @@
       ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
             fruit_1.id ASC
-   LIMIT %s
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooksPaginated-asyncmy_engine].1
@@ -1278,7 +1235,6 @@
       ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
             fruit_1.id ASC
-   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooksPaginated-asyncpg_engine].1
@@ -1309,7 +1265,6 @@
       ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
             fruit_1.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-async-colorsHooksPaginated-psycopg_async_engine].1
@@ -1386,7 +1341,6 @@
       ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
             fruit_1.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-sync-colorsHooksPaginated-psycopg_engine].1
@@ -1417,8 +1371,6 @@
       ON color.id = fruit_1.color_id
    ORDER BY color.id ASC,
             fruit_1.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-tracked-sync-colorsHooksPaginated-sqlite_engine].1
@@ -1520,8 +1472,6 @@
           OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-async-fruitsPaginatedHooks-aiosqlite_engine].1
@@ -1547,7 +1497,6 @@
                  %s
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %s
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-async-fruitsPaginatedHooks-asyncmy_engine].1
@@ -1573,7 +1522,6 @@
           OFFSET $2::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-async-fruitsPaginatedHooks-asyncpg_engine].1
@@ -1599,7 +1547,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-async-fruitsPaginatedHooks-psycopg_async_engine].1
@@ -1663,7 +1610,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-sync-fruitsPaginatedHooks-psycopg_engine].1
@@ -1689,8 +1635,6 @@
           OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_load_relationships_with_columns[session-tracked-sync-fruitsPaginatedHooks-sqlite_engine].1

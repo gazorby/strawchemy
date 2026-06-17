@@ -281,7 +281,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             provided IDs, structured according to the selection.
         """
         executor = self._get_query_executor(SyncQueryExecutor, selection=selection)
-        id_fields = executor.scope.id_field_definitions(self.model)
+        id_fields = executor.id_field_definitions
         executor.base_statement = executor.base_statement.where(
             *[field.model_field.in_([getattr(row, field.model_field_name) for row in id_rows]) for field in id_fields]
         )
@@ -422,10 +422,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             SyncQueryExecutor, selection=selection, query_hooks=query_hooks, execution_options=execution_options
         )
         executor.base_statement = executor.base_statement.where(
-            *[
-                field_def.model_field == kwargs.pop(field_def.name)
-                for field_def in executor.scope.id_field_definitions(self.model)
-            ]
+            *[field_def.model_field == kwargs.pop(field_def.name) for field_def in executor.id_field_definitions]
         )
         return executor.get_one_or_none(self.session)
 

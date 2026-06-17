@@ -16,13 +16,15 @@ Functions:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import select
 from sqlalchemy.orm import raiseload
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from sqlalchemy import Label, Select
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.orm.util import AliasedClass
@@ -35,6 +37,9 @@ if TYPE_CHECKING:
     from strawchemy.typing import QueryNodeType
 
 __all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan", "emit_plan")
+
+# ``_apply_clauses`` is intentionally module-private (leading underscore) but is imported
+# by ``_strategies`` to share the join/where/order/limit/offset assembly with ``emit_plan``.
 
 
 @dataclass(frozen=True)
@@ -104,6 +109,10 @@ class QueryPlan:
     offset: int | None = None
     hook_specs: tuple[HookSpec, ...] = ()
     hook_applier: HookApplier | None = None
+    column_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
+    """Maps each computed/transform/root-aggregation node to the column object that carries
+    its value in the result row. The executor reads values via ``row._mapping[column]`` — so
+    the rendered column name is irrelevant to correctness."""
 
 
 def _apply_distinct(statement: Select[Any], plan: QueryPlan) -> Select[Any]:
@@ -133,6 +142,38 @@ def _apply_distinct(statement: Select[Any], plan: QueryPlan) -> Select[Any]:
     return statement.distinct(*plan.distinct_on)
 
 
+def _apply_clauses(statement: Select[Any], plan: QueryPlan) -> Select[Any]:
+    """Applies the shared join/where/order/distinct/limit/offset/aggregation clauses.
+
+    This is the core assembly shared by ``emit_plan`` and the relation-join strategies:
+    sorted joins, WHERE, ORDER BY, DISTINCT ON, LIMIT, OFFSET, and root aggregation
+    columns. It assumes the projection (``select(plan.root)`` + filter semi-join +
+    projection columns) has already been applied to ``statement``.
+
+    Args:
+        statement: The statement being assembled (projection already applied).
+        plan: The query plan supplying joins, predicates, ordering, and pagination.
+
+    Returns:
+        The statement with the shared clauses applied.
+    """
+    for join in sorted(plan.joins):
+        statement = statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
+    if plan.where:
+        statement = statement.where(*plan.where)
+    if plan.order_by:
+        statement = statement.order_by(*plan.order_by)
+    if plan.distinct_on:
+        statement = _apply_distinct(statement, plan)
+    if plan.limit is not None:
+        statement = statement.limit(plan.limit)
+    if plan.offset is not None:
+        statement = statement.offset(plan.offset)
+    if plan.root_aggregation_functions:
+        statement = statement.add_columns(*plan.root_aggregation_functions)
+    return statement
+
+
 def emit_plan(plan: QueryPlan) -> Select[Any]:
     """Emits the SQLAlchemy Select for a query plan.
 
@@ -152,18 +193,5 @@ def emit_plan(plan: QueryPlan) -> Select[Any]:
     if plan.hook_applier is not None:
         for spec in plan.hook_specs:
             statement = plan.hook_applier.apply_statement_hooks(statement, spec.node, spec.alias)
-    for join in sorted(plan.joins):
-        statement = statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
-    if plan.where:
-        statement = statement.where(*plan.where)
-    if plan.order_by:
-        statement = statement.order_by(*plan.order_by)
-    if plan.distinct_on:
-        statement = _apply_distinct(statement, plan)
-    if plan.limit is not None:
-        statement = statement.limit(plan.limit)
-    if plan.offset is not None:
-        statement = statement.offset(plan.offset)
-    if plan.root_aggregation_functions:
-        statement = statement.add_columns(*plan.root_aggregation_functions)
+    statement = _apply_clauses(statement, plan)
     return statement.options(raiseload("*"), *plan.load_options)

@@ -13,18 +13,14 @@ from sqlalchemy import (
     Lateral,
     Select,
     UnaryExpression,
-    func,
     inspect,
     null,
-    select,
 )
 from sqlalchemy.orm import (
     QueryableAttribute,
     RelationshipDirection,
     RelationshipProperty,
     aliased,
-    class_mapper,
-    raiseload,
 )
 from sqlalchemy.orm.util import AliasedClass
 from typing_extensions import Self
@@ -44,17 +40,16 @@ from strawchemy.repository.typing import DeclarativeT, OrderBySpec
 from strawchemy.utils.graph import merge_trees
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Sequence
 
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
     from sqlalchemy.sql._typing import _OnClauseArgument
-    from sqlalchemy.sql.elements import NamedColumn
     from sqlalchemy.sql.selectable import NamedFromClause
 
     from strawchemy.config.databases import DatabaseFeatures
     from strawchemy.transpiler import ColumnLoadingMode, QueryHook
-    from strawchemy.transpiler._scope import QueryScope
+    from strawchemy.transpiler._scope import AliasContext
     from strawchemy.typing import QueryNodeType
 
 __all__ = ("AggregationJoin", "AggregationSpec", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
@@ -154,7 +149,7 @@ class AggregationSpec:
     functions: dict[QueryNodeType, Label[Any]] = dataclasses.field(default_factory=dict)
 
     @classmethod
-    def create(cls, node: QueryNodeType, scope: QueryScope[Any]) -> Self:
+    def create(cls, node: QueryNodeType, scope: AliasContext[Any]) -> Self:
         """Creates a spec for an aggregation node with a fresh adaptation alias.
 
         Args:
@@ -179,7 +174,7 @@ class QueryGraph(Generic[DeclarativeT]):
     final SQLAlchemy query.
 
     Attributes:
-        scope: The QueryScope, providing context about the root model and database features.
+        scope: The AliasContext, providing context about the root model and database features.
         selection_tree: The root node of the GraphQL query's selection set.
         order_by: A sequence of OrderByDTOs specifying how the results should be ordered.
         distinct_on: A list of EnumDTOs specifying fields for a DISTINCT ON clause.
@@ -191,7 +186,7 @@ class QueryGraph(Generic[DeclarativeT]):
         order_by_nodes: A list of query nodes involved in the ORDER BY clause.
     """
 
-    scope: QueryScope[DeclarativeT]
+    scope: AliasContext[DeclarativeT]
     selection_tree: QueryNodeType | None = None
     order_by: Sequence[OrderByDTO] = dataclasses.field(default_factory=list)
     distinct_on: list[EnumDTO] = dataclasses.field(default_factory=list)
@@ -245,10 +240,6 @@ class QueryGraph(Generic[DeclarativeT]):
             tree = QueryNode.root_node(self.scope.model)
             for field in self.scope.id_field_definitions(self.scope.model):
                 tree.insert_child(field)
-
-        for node in tree.leaves(iteration_mode="breadth_first"):
-            if node.value.is_function:
-                self.scope.collector.selection.add(node)
 
         return tree
 
@@ -498,291 +489,6 @@ class DistinctOn:
 
 
 @dataclass
-class Query:
-    """Encapsulates all components required to build a SQLAlchemy query.
-
-    This class acts as a container for various parts of a query, such as
-    database-specific features, distinct clauses, joins, filtering conditions (WHERE),
-    ordering (ORDER BY), root-level aggregation functions, and pagination (limit/offset).
-    It provides a structured way to assemble these components before generating
-    the final SQLAlchemy `Select` statement.
-
-    Attributes:
-        db_features: An instance of `DatabaseFeatures` providing information about
-            the capabilities of the target database.
-        distinct_on: A `DistinctOn` object managing the expressions for a
-            `DISTINCT ON` clause.
-        joins: A list of `Join` objects representing the joins to be applied.
-        where: An optional `Where` object containing the filter conditions.
-        order_by: An optional `OrderBy` object specifying the sorting criteria.
-        root_aggregation_functions: A list of SQLAlchemy `Label` objects for
-            aggregations performed at the root level of the query (e.g., total counts).
-        limit: An optional integer specifying the maximum number of rows to return.
-        offset: An optional integer specifying the number of rows to skip before
-            starting to return rows.
-        use_distinct_on: A boolean flag indicating whether `DISTINCT ON` should be
-            actively applied. This can depend on database support and query structure.
-    """
-
-    db_features: DatabaseFeatures
-    distinct_on: DistinctOn
-    joins: list[Join] = dataclasses.field(default_factory=list)
-    where: Where | None = None
-    order_by: OrderBy | None = None
-    root_aggregation_functions: list[Label[Any]] = dataclasses.field(default_factory=list)
-    limit: int | None = None
-    offset: int | None = None
-    use_distinct_on: bool = False
-
-    def _distinct_on(self, statement: Select[Any], order_by_expressions: list[UnaryExpression[Any]]) -> Select[Any]:
-        """Applies DISTINCT ON expressions to the SELECT statement.
-
-        If `self.use_distinct_on` is True, this method modifies the given `statement`
-        to include `DISTINCT ON` behavior. It retrieves distinct expressions from
-        `self.distinct_on`.
-
-        Crucially, for `DISTINCT ON` to work correctly (especially in PostgreSQL),
-        the columns in the `ORDER BY` clause must be available in the `SELECT` list
-        if they are part of the `DISTINCT ON` criteria or if `DISTINCT ON` is used
-        at all with an `ORDER BY`. This method ensures that any such necessary columns
-        from `order_by_expressions` are added to the statement's selected columns
-        before applying `.distinct()`.
-
-        Args:
-            statement: The SQLAlchemy `Select` statement to modify.
-            order_by_expressions: A list of `UnaryExpression` objects representing
-                the `ORDER BY` clause, used to ensure necessary columns are selected.
-
-        Returns:
-            The modified `Select` statement, potentially with added columns and
-            a `.distinct()` clause applied.
-        """
-        distinct_expressions = self.distinct_on.expressions if self.distinct_on else []
-
-        if self.use_distinct_on:
-            # Add ORDER BY columns not present in the SELECT clause
-            statement = statement.add_columns(
-                *[
-                    expression.element
-                    for expression in order_by_expressions
-                    if not any(elem.compare(expression.element) for elem in statement.selected_columns)
-                ]
-            )
-            statement = statement.distinct(*distinct_expressions)
-        return statement
-
-    @property
-    def joins_have_many(self) -> bool:
-        """Checks if any of the configured joins are to-many relationships.
-
-        Returns:
-            True if at least one join in `self.joins` has its `to_many` attribute
-            set to True, indicating a join across a one-to-many or many-to-many
-            relationship. False otherwise.
-        """
-        return next((True for join in self.joins if join.to_many), False)
-
-    def statement(self, base_statement: Select[tuple[DeclarativeT]]) -> Select[tuple[DeclarativeT]]:
-        """Constructs the final SQLAlchemy Select statement from the query components.
-
-        This method takes a base SELECT statement (usually selecting from the root
-        entity) and applies all configured query parts in a specific order:
-        1. Joins (sorted by their defined order).
-        2. WHERE clause conditions.
-        3. ORDER BY clauses.
-        4. DISTINCT ON clauses (if applicable, potentially modifying selected columns).
-        5. LIMIT and OFFSET for pagination.
-        6. Root-level aggregation functions are added to the selected columns.
-
-        Args:
-            base_statement: The initial SQLAlchemy `Select` object, typically selecting
-                from the primary model or its alias.
-
-        Returns:
-            The fully constructed SQLAlchemy `Select` statement, incorporating all
-            joins, filters, ordering, pagination, and aggregations.
-        """
-        sorted_joins = sorted(self.joins)
-        distinct_expressions = self.distinct_on.expressions if self.distinct_on else []
-        order_by_expressions = self.order_by.expressions if self.order_by else []
-
-        for join in sorted_joins:
-            base_statement = base_statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
-        if self.where and self.where.expressions:
-            base_statement = base_statement.where(*self.where.expressions)
-        if order_by_expressions:
-            base_statement = base_statement.order_by(*order_by_expressions)
-        if distinct_expressions:
-            base_statement = self._distinct_on(base_statement, order_by_expressions)
-        if self.limit is not None:
-            base_statement = base_statement.limit(self.limit)
-        if self.offset is not None:
-            base_statement = base_statement.offset(self.offset)
-
-        return base_statement.add_columns(*self.root_aggregation_functions)
-
-
-@dataclass
-class SubqueryBuilder(Generic[DeclarativeT]):
-    """Builds and manages aliased subqueries, often for DISTINCT ON emulation.
-
-    This utility class is responsible for constructing aliased subqueries,
-    particularly useful for emulating `DISTINCT ON` behavior with window functions
-    (e.g., `ROW_NUMBER()`). It handles creating an alias for the target model,
-    generating unique names for helper columns (like a rank column), and defining
-    conditions based on these columns.
-
-    Attributes:
-        scope: The `QueryScope` providing context for the model being queried.
-        hook_applier: A `HookApplier` instance for applying query hooks.
-        db_features: `DatabaseFeatures` for database-specific logic.
-        alias: An `AliasedClass` for `scope.model`, initialized in `__post_init__`.
-    """
-
-    scope: QueryScope[Any]
-    hook_applier: HookApplier
-    db_features: DatabaseFeatures
-    filter_statement_join: Callable[[Select[Any], AliasedClass[Any]], Select[Any]] | None = None
-
-    alias: AliasedClass[DeclarativeT] = dataclasses.field(init=False)
-
-    def __post_init__(self) -> None:
-        """Initializes `self.alias` with an aliased version of the scoped model.
-
-        This method creates an `AliasedClass` for the model specified in
-        `self.scope.model`. The alias is named using `self.name` (typically the
-        table name) and is created with `flat=True` to prevent nesting if the
-        model is already an alias.
-        """
-        self.alias = aliased(class_mapper(self.scope.model), name=self.name, flat=True)  # ty: ignore[invalid-assignment]  # aliased() over a runtime Mapper does not infer AliasedClass[DeclarativeT]
-
-    @cached_property
-    def _distinct_on_rank_column(self) -> str:
-        """Provides a unique name for the rank column used in DISTINCT ON emulation.
-
-        This name is generated using `self.scope.key("distinct_on_rank")` to ensure
-        it doesn't clash with other column names within the current query scope.
-        The result is cached for efficiency.
-
-        Returns:
-            A string representing the unique name for the rank column.
-        """
-        return self.scope.key("distinct_on_rank")
-
-    def distinct_on_condition(self, aliased_subquery: AliasedClass[DeclarativeT]) -> ColumnElement[bool]:
-        """Generates a SQLAlchemy filter condition to select rows with rank 1.
-
-        This method is typically used after a window function (like `ROW_NUMBER()`)
-        has assigned ranks to rows. It creates a condition to filter for rows
-        where the column named by `self._distinct_on_rank_column` in the
-        provided `aliased_subquery` is equal to 1.
-
-        Args:
-            aliased_subquery: The `AliasedClass` instance of the subquery
-                that contains the rank column.
-
-        Returns:
-            A SQLAlchemy `ColumnElement[bool]` representing the filter condition
-            (e.g., `rank_column == 1`).
-        """
-        return inspect(aliased_subquery).selectable.columns[self._distinct_on_rank_column] == 1
-
-    @property
-    def name(self) -> str:
-        """The name for the subquery alias, typically the model's table name.
-
-        Returns:
-            The `__tablename__` attribute of the model in `self.scope`.
-        """
-        return self.scope.model.__tablename__
-
-    def build(self, query_graph: QueryGraph[DeclarativeT], query: Query) -> AliasedClass[DeclarativeT]:
-        """Builds a subquery (typically a CTE) for complex query scenarios.
-
-        This method constructs a subquery based on the provided `query_graph`
-        and `query` object. It's primarily used to handle situations like:
-        - Emulating `DISTINCT ON` using a `ROW_NUMBER()` window function when
-          `query.use_distinct_on` is True.
-        - Ensuring correct pagination (limit/offset) when applied with complex
-          joins or when `DISTINCT ON` is active.
-
-        The process involves:
-        1. Selecting an initial set of columns from `self.alias` based on `query_graph`.
-        2. If `query.use_distinct_on`, adding a `ROW_NUMBER()` window function partitioned
-           by distinct expressions and ordered by order_by expressions. The rank column
-           is named using `self._distinct_on_rank_column`.
-        3. Applying query hooks to the selected columns.
-        4. Applying the main query components (joins, where, order by, limit, offset)
-           from the `query` object to the subquery statement.
-        5. Materializing the resulting statement as a Common Table Expression (CTE).
-
-        Args:
-            query_graph: The `QueryGraph` instance providing the overall query
-                structure, including selection trees and distinct/order by nodes.
-            query: The `Query` object containing specific components like filters,
-                ordering, pagination settings, and the `use_distinct_on` flag.
-
-        Returns:
-            An `AliasedClass` representing the built subquery (CTE), ready to be
-            used in further query construction (e.g., by joining it).
-        """
-        statement = select(inspect(self.alias)).options(raiseload("*"))
-        only_columns: list[QueryableAttribute[Any] | NamedColumn[Any]] = [
-            *self.scope.inspect(query_graph.root_join_tree).selection(self.alias),
-            *[self.scope.aliased_attribute(node) for node in query_graph.order_by_nodes if not node.value.is_computed],
-        ]
-        # Add columns referenced in root aggregations
-        if aggregation_tree := query_graph.root_aggregation_tree():
-            only_columns.extend(
-                self.scope.aliased_attribute(child)
-                for child in aggregation_tree.leaves()
-                if child.value.is_function_arg
-            )
-        # Aggregation function columns referenced by WHERE/SELECT/ORDER BY are not columns
-        # of the inner table; they are selected into the subquery from the aggregation join.
-        # They must be re-pointed to the built subquery (below), not to ``self.alias``.
-        # Snapshot once: ``collector.referenced`` recomputes a fresh set per access, and the
-        # extend (below, pre-build) and re-point (after build) loops must agree on exactly the
-        # same members in the same order.
-        referenced_functions = list(self.scope.collector.referenced)
-        only_columns.extend(self.scope.collector.columns[function_node] for function_node in referenced_functions)
-
-        if query.distinct_on and not query.use_distinct_on:
-            order_by_expressions = query.order_by.expressions if query.order_by else []
-            rank = (
-                func.row_number()
-                .over(partition_by=query.distinct_on.expressions, order_by=order_by_expressions or None)
-                .label(self._distinct_on_rank_column)
-            )
-            only_columns.append(rank)
-
-        statement = statement.with_only_columns(*only_columns)
-
-        if self.filter_statement_join is not None:
-            statement = self.filter_statement_join(statement, self.alias)
-
-        statement = dataclasses.replace(query, root_aggregation_functions=[]).statement(statement)
-        statement, _ = self.hook_applier.apply(
-            statement,
-            node=query_graph.root_join_tree.root,
-            alias=self.scope.root_alias,
-            loading_mode="add",
-            in_subquery=True,
-        )
-
-        subquery = statement.subquery(self.name)
-        for function_node in referenced_functions:
-            # ``scope.key`` is memoized per node, so this returns the same label used when the
-            # column was selected into the subquery above — the re-point resolves against that
-            # exact column.
-            self.scope.collector.columns[function_node] = self.scope.scoped_column(
-                subquery, self.scope.key(function_node)
-            )
-
-        return aliased(class_mapper(self.scope.model), subquery, name=self.name)  # ty: ignore[invalid-return-type]
-
-
-@dataclass
 class HookApplier:
     """Manages and applies query hooks to SQLAlchemy SELECT statements.
 
@@ -793,14 +499,14 @@ class HookApplier:
     `QueryNodeType` being processed.
 
     Attributes:
-        scope: The `QueryScope` providing context (e.g., root model, database
+        scope: The `AliasContext` providing context (e.g., root model, database
             features) that might be relevant for hook execution.
         hooks: A `defaultdict` mapping `QueryNodeType` instances to a list of
             `QueryHook` objects. This allows multiple hooks to be registered
             and applied for the same node type.
     """
 
-    scope: QueryScope[Any]
+    scope: AliasContext[Any]
     hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(list)
     )

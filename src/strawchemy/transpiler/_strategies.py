@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Protocol
 from sqlalchemy import and_, func, inspect, null, select, true
 from sqlalchemy.orm import aliased
 
+from strawchemy.transpiler._plan import _apply_clauses
 from strawchemy.transpiler._query import Join
 
 if TYPE_CHECKING:
@@ -26,8 +27,8 @@ if TYPE_CHECKING:
     from sqlalchemy.sql import ColumnElement
 
     from strawchemy.config.databases import DatabaseFeatures
-    from strawchemy.transpiler._query import Query
-    from strawchemy.transpiler._scope import QueryScope
+    from strawchemy.transpiler._plan import QueryPlan
+    from strawchemy.transpiler._scope import AliasContext
     from strawchemy.typing import QueryNodeType
 
 __all__ = ("CteJoinStrategy", "JoinStrategy", "LateralJoinStrategy", "select_join_strategy")
@@ -38,10 +39,10 @@ class JoinStrategy(Protocol):
 
     def relation_join(
         self,
-        scope: QueryScope[Any],
+        scope: AliasContext[Any],
         node: QueryNodeType,
         target_alias: AliasedClass[Any],
-        query: Query,
+        plan: QueryPlan,
         is_outer: bool,
     ) -> Join:
         """Builds the subquery join for a related collection.
@@ -50,7 +51,7 @@ class JoinStrategy(Protocol):
             scope: The query scope used to resolve aliases and inspections.
             node: The query node representing the relation to join.
             target_alias: The aliased class for the target of the join.
-            query: The subquery definition for the join.
+            plan: The query plan for the join's nested subquery.
             is_outer: Whether to perform an outer join.
 
         Returns:
@@ -64,10 +65,10 @@ class LateralJoinStrategy:
 
     def relation_join(
         self,
-        scope: QueryScope[Any],
+        scope: AliasContext[Any],
         node: QueryNodeType,
         target_alias: AliasedClass[Any],
-        query: Query,
+        plan: QueryPlan,
         is_outer: bool,
     ) -> Join:
         """Creates a LATERAL join for a given node.
@@ -76,7 +77,7 @@ class LateralJoinStrategy:
             scope: The query scope used to resolve aliases and inspections.
             node: The query node representing the relation to join.
             target_alias: The aliased class for the target of the join.
-            query: The subquery definition for the lateral join.
+            plan: The query plan for the lateral subquery.
             is_outer: Whether to perform an outer join.
 
         Returns:
@@ -87,7 +88,7 @@ class LateralJoinStrategy:
         node_inspect = scope.inspect(node)
         root_relation = aliased_attribute.of_type(target_insp)
         base_statement = select(target_insp).with_only_columns(*node_inspect.selection(target_alias))
-        statement = query.statement(base_statement).where(root_relation).lateral()
+        statement = _apply_clauses(base_statement, plan).where(root_relation).lateral()
         lateral_alias = aliased(target_insp.mapper, statement, flat=True)
         scope.set_relation_alias(node, "target", lateral_alias)
         return Join(statement, node=node, is_outer=is_outer, onclause=true())
@@ -101,10 +102,10 @@ class CteJoinStrategy:
 
     def relation_join(
         self,
-        scope: QueryScope[Any],
+        scope: AliasContext[Any],
         node: QueryNodeType,
         target_alias: AliasedClass[Any],
-        query: Query,
+        plan: QueryPlan,
         is_outer: bool,
     ) -> Join:
         """Creates a CTE-based join for a given node.
@@ -115,16 +116,16 @@ class CteJoinStrategy:
             scope: The query scope used to resolve aliases and inspections.
             node: The query node representing the relation to join.
             target_alias: The aliased class for the target of the join.
-            query: The subquery definition for the CTE.
+            plan: The query plan for the CTE subquery.
             is_outer: Whether to perform an outer join.
 
         Returns:
             A Join object representing the CTE-based join.
         """
         remote_fks = scope.inspect(node).foreign_key_columns("target", target_alias)
-        rank_column = self._rank_column(remote_fks, query)
+        rank_column = self._rank_column(remote_fks, plan)
         # Remove limit/offset in CTE as it's applied in the WHERE clause of the main query
-        query_wihtout_limit_offset = dataclasses.replace(query, offset=None, limit=None)
+        plan_wihtout_limit_offset = dataclasses.replace(plan, limit=None, offset=None)
         node_inspect = scope.inspect(node)
         remote_fks = node_inspect.foreign_key_columns("target", target_alias)
         selection = node_inspect.selection(target_alias)
@@ -135,7 +136,7 @@ class CteJoinStrategy:
         )
         if rank_column is not None:
             base_statement = base_statement.add_columns(rank_column)
-        statement = query_wihtout_limit_offset.statement(base_statement).cte()
+        statement = _apply_clauses(base_statement, plan_wihtout_limit_offset).cte()
         cte_alias = aliased(target_alias, statement)
         scope.set_relation_alias(node, "target", cte_alias)
         # Resolve the relationship expression AFTER registering the CTE alias so the ON
@@ -144,44 +145,40 @@ class CteJoinStrategy:
         limit_offset_condition: list[ColumnElement[bool]] = []
         if rank_column is not None:
             scoped_rank = scope.scoped_column(statement, rank_column.name)
-            limit_offset_condition = self._limit_offset_condition(scoped_rank, query)
+            limit_offset_condition = self._limit_offset_condition(scoped_rank, plan)
         return Join(statement, node, onclause=and_(aliased_attribute, *limit_offset_condition), is_outer=is_outer)
 
     @staticmethod
-    def _rank_column(remote_fks: list[QueryableAttribute[Any]], query: Query) -> Label[int] | None:
+    def _rank_column(remote_fks: list[QueryableAttribute[Any]], plan: QueryPlan) -> Label[int] | None:
         """Builds the ``dense_rank()`` column used to emulate limit/offset per partition.
 
         Args:
             remote_fks: The remote foreign key columns to partition the ranking by.
-            query: The query providing the ordering and limit/offset settings.
+            plan: The query plan providing the ordering and limit/offset settings.
 
         Returns:
             A labeled rank column, or None when neither ordering nor limit/offset apply.
         """
-        if not (query.order_by or query.limit is not None or query.offset is not None):
+        if not (plan.order_by or plan.limit is not None or plan.offset is not None):
             return None
-        return (
-            func.dense_rank()
-            .over(partition_by=remote_fks, order_by=query.order_by.expressions if query.order_by else None)
-            .label(name="rank")
-        )
+        return func.dense_rank().over(partition_by=remote_fks, order_by=plan.order_by or None).label(name="rank")
 
     @staticmethod
-    def _limit_offset_condition(rank_column: Label[Any], query: Query) -> list[ColumnElement[bool]]:
-        """Builds the rank-based predicates emulating the query's limit/offset.
+    def _limit_offset_condition(rank_column: ColumnElement[Any], plan: QueryPlan) -> list[ColumnElement[bool]]:
+        """Builds the rank-based predicates emulating the plan's limit/offset.
 
         Args:
             rank_column: The scoped rank column resolved against the built CTE.
-            query: The query providing the limit and offset settings.
+            plan: The query plan providing the limit and offset settings.
 
         Returns:
             The list of boolean predicates restricting rows to the requested window.
         """
         condition: list[ColumnElement[bool]] = []
-        if query.offset is not None:
-            condition.append(rank_column > query.offset)
-        if query.limit is not None:
-            condition.append(rank_column <= (query.offset + query.limit if query.offset else query.limit))
+        if plan.offset is not None:
+            condition.append(rank_column > plan.offset)
+        if plan.limit is not None:
+            condition.append(rank_column <= (plan.offset + plan.limit if plan.offset else plan.limit))
         return condition
 
 

@@ -80,8 +80,6 @@
          ) AS fruit
    ORDER BY fruit.name ASC,
             fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_default_order_under_pagination[session-tracked-async-asyncmy_engine]
@@ -99,7 +97,6 @@
          ) AS fruit
    ORDER BY fruit.name ASC,
             fruit.id ASC
-   LIMIT %s
   '''
 # ---
 # name: test_default_order_under_pagination[session-tracked-async-asyncpg_engine]
@@ -117,7 +114,6 @@
          ) AS fruit
    ORDER BY fruit.name ASC,
             fruit.id ASC
-   LIMIT $3::INTEGER
   '''
 # ---
 # name: test_default_order_under_pagination[session-tracked-async-psycopg_async_engine]
@@ -135,7 +131,6 @@
          ) AS fruit
    ORDER BY fruit.name ASC,
             fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_default_order_under_pagination[session-tracked-sync-psycopg_engine]
@@ -153,7 +148,6 @@
          ) AS fruit
    ORDER BY fruit.name ASC,
             fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_default_order_under_pagination[session-tracked-sync-sqlite_engine]
@@ -171,8 +165,6 @@
          ) AS fruit
    ORDER BY fruit.name ASC,
             fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_default_order_with_distinct_on[session-tracked-async-aiosqlite_engine]
@@ -182,12 +174,12 @@
     FROM (
           SELECT fruit.id AS id,
                  fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
             FROM fruit AS fruit
            ORDER BY fruit.name ASC,
                     fruit.id ASC
          ) AS fruit
-   WHERE fruit.__strawchemy_distinct_on_rank_0 = ?
+   WHERE fruit.anon_1 = ?
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
@@ -199,12 +191,12 @@
     FROM (
           SELECT fruit.id AS id,
                  fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
             FROM fruit AS fruit
            ORDER BY fruit.name ASC,
                     fruit.id ASC
          ) AS fruit
-   WHERE fruit.__strawchemy_distinct_on_rank_0 = %s
+   WHERE fruit.anon_1 = %s
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
@@ -216,12 +208,12 @@
     FROM (
           SELECT fruit.id AS id,
                  fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
             FROM fruit AS fruit
            ORDER BY fruit.name ASC,
                     fruit.id ASC
          ) AS fruit
-   WHERE fruit.__strawchemy_distinct_on_rank_0 = $1::INTEGER
+   WHERE fruit.anon_1 = $1::INTEGER
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
@@ -233,12 +225,12 @@
     FROM (
           SELECT fruit.id AS id,
                  fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
             FROM fruit AS fruit
            ORDER BY fruit.name ASC,
                     fruit.id ASC
          ) AS fruit
-   WHERE fruit.__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   WHERE fruit.anon_1 = %(param_1)s::INTEGER
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
@@ -250,12 +242,12 @@
     FROM (
           SELECT fruit.id AS id,
                  fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
             FROM fruit AS fruit
            ORDER BY fruit.name ASC,
                     fruit.id ASC
          ) AS fruit
-   WHERE fruit.__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   WHERE fruit.anon_1 = %(param_1)s::INTEGER
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
@@ -267,12 +259,12 @@
     FROM (
           SELECT fruit.id AS id,
                  fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
             FROM fruit AS fruit
            ORDER BY fruit.name ASC,
                     fruit.id ASC
          ) AS fruit
-   WHERE fruit.__strawchemy_distinct_on_rank_0 = ?
+   WHERE fruit.anon_1 = ?
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
