@@ -569,8 +569,6 @@ class UnmappedStrawberryGraphQLDTO(StrawchemyObject, StrawberryDTO[ModelT]): ...
 class GraphQLFilterDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]):
     @property
     def dto_set_fields(self) -> list[str]:
-        # Preserve declaration order from __dto_field_definitions__ (an ordered dict): a set
-        # here made tree-child insertion — and thus generated SQL column order — hash-seeded.
         return [name for name in self.__dto_field_definitions__ if getattr(self, name) is not strawberry.UNSET]
 
 

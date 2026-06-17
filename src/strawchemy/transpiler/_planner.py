@@ -45,9 +45,9 @@ if TYPE_CHECKING:
 
 __all__ = (
     "AggregationPlan",
-    "FilterPass",
-    "OrderPass",
-    "ProjectionPass",
+    "FilterPlan",
+    "OrderPlan",
+    "ProjectionPlan",
     "plan_aggregations",
     "plan_filter",
     "plan_order",
@@ -76,7 +76,7 @@ class AggregationPlan:
 
 
 @dataclass(frozen=True)
-class FilterPass:
+class FilterPlan:
     """WHERE predicates and the relation joins they require."""
 
     where: tuple[ColumnElement[bool], ...]
@@ -86,7 +86,7 @@ class FilterPass:
 
 
 @dataclass(frozen=True)
-class OrderPass:
+class OrderPlan:
     """Built ORDER BY expressions and the relation joins they require."""
 
     expressions: tuple[UnaryExpression[Any], ...]
@@ -96,7 +96,7 @@ class OrderPass:
 
 
 @dataclass(frozen=True)
-class ProjectionPass:
+class ProjectionPlan:
     """Projection columns, ORM load options, selection aggregation joins, and hook specs."""
 
     columns: tuple[ColumnElement[Any], ...]
@@ -168,11 +168,7 @@ def _aggregation_cte_join(node: QueryNodeType, alias: Any, statement: Any, ctx: 
         .cte()
     )
     cte_alias = aliased(alias, cte_statement)
-    return AggregationJoin(
-        target=cte_alias,
-        onclause=ctx.aliased_attribute(node).of_type(cte_alias),
-        node=node,
-    )
+    return AggregationJoin(target=cte_alias, onclause=ctx.aliased_attribute(node).of_type(cte_alias), node=node)
 
 
 def _accumulate_aggregation_specs(
@@ -270,10 +266,7 @@ def plan_aggregations(
             join = _aggregation_lateral_join(aggregation_node, spec.functions.values(), spec.alias, ctx)
         else:
             join = _aggregation_cte_join(
-                node=aggregation_node,
-                alias=spec.alias,
-                statement=select(*spec.functions.values()),
-                ctx=ctx,
+                node=aggregation_node, alias=spec.alias, statement=select(*spec.functions.values()), ctx=ctx
             )
         for function_node, inner_label in spec.functions.items():
             columns[function_node] = require_corresponding_column(join.selectable, inner_label)
@@ -321,10 +314,6 @@ def _aggregation_filter_pure(
 ) -> tuple[Join | None, list[ColumnElement[bool]], QueryNodeType]:
     """Looks up an aggregation filter's column and builds its filter expressions.
 
-    Pure port of ``QueryTranspiler._aggregation_filter``.  Reads the resolved
-    column from ``agg_plan.columns`` and emits the corresponding join at most once
-    (guarded by ``emitted_agg_joins``).
-
     Args:
         aggregation: The aggregation filter to process.
         ctx: The query scope for node inspection.
@@ -367,8 +356,6 @@ def _gather_conjunctions_pure(
     not_null_check: bool = False,
 ) -> Conjunction:
     """Gathers all conjunctions from a sequence of filters (pure port).
-
-    Port of ``QueryTranspiler._gather_conjonctions``.
 
     Args:
         query: A sequence of filters to gather conjunctions from.
@@ -428,8 +415,6 @@ def _conjunctions_pure(
     allow_null: bool = False,
 ) -> Conjunction:
     """Processes a filter's AND, OR, and NOT conditions into a conjunction (pure port).
-
-    Port of ``QueryTranspiler._conjonctions``.
 
     Args:
         query: The filter to process.
@@ -495,8 +480,6 @@ def _where_pure(
 ) -> Where:
     """Creates WHERE expressions and joins from a filter (pure port).
 
-    Port of ``QueryTranspiler._where``.
-
     Args:
         query_filter: The filter to create expressions from.
         ctx: The query scope.
@@ -533,11 +516,8 @@ def plan_filter(
     dialect: Any,
     join_builder: Callable[[QueryNodeType, bool], Join],
     allow_null: bool = False,
-) -> FilterPass:
+) -> FilterPlan:
     """Builds the WHERE predicates and their relation joins (pure port).
-
-    Port of ``QueryTranspiler._filter_pass`` + ``_where`` + ``_conjonctions`` +
-    ``_gather_conjonctions`` + ``_aggregation_filter``.
 
     Args:
         query_graph: The graph representation of the query being planned.
@@ -554,7 +534,7 @@ def plan_filter(
         joins, and the set of function nodes referenced in WHERE.
     """
     if not query_graph.query_filter:
-        return FilterPass(where=(), joins=(), referenced_functions=frozenset())
+        return FilterPlan(where=(), joins=(), referenced_functions=frozenset())
 
     emitted_agg_joins: set[QueryNodeType] = set()
     where_function_nodes: set[QueryNodeType] = set()
@@ -569,10 +549,8 @@ def plan_filter(
         join_builder,
         allow_null,
     )
-    return FilterPass(
-        where=tuple(where.expressions),
-        joins=tuple(where.joins),
-        referenced_functions=frozenset(where_function_nodes),
+    return FilterPlan(
+        where=tuple(where.expressions), joins=tuple(where.joins), referenced_functions=frozenset(where_function_nodes)
     )
 
 
@@ -680,7 +658,7 @@ def plan_order(
     db_features: DatabaseFeatures,
     default_order_by: Sequence[OrderByExpr] | None = None,
     deterministic_ordering: bool = False,
-) -> OrderPass:
+) -> OrderPlan:
     """Builds the ORDER BY expressions and their relation joins (pure port).
 
     Port of ``QueryTranspiler._order_by`` + ``_order_pass`` +
@@ -704,7 +682,7 @@ def plan_order(
 
     # _order_pass: early-exit when no ordering applies.
     if not (query_graph.order_by_tree or deterministic_ordering or _default_order_by):
-        return OrderPass(expressions=(), joins=(), referenced_functions=frozenset())
+        return OrderPlan(expressions=(), joins=(), referenced_functions=frozenset())
 
     # _order_by: build columns + joins from order_by_nodes.
     columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = []
@@ -715,14 +693,7 @@ def plan_order(
 
     for node in query_graph.order_by_nodes:
         _build_order_by_node(
-            node,
-            ctx,
-            agg_plan,
-            seen_aggregation_nodes,
-            emitted_agg_joins,
-            order_by_function_nodes,
-            columns,
-            joins,
+            node, ctx, agg_plan, seen_aggregation_nodes, emitted_agg_joins, order_by_function_nodes, columns, joins
         )
 
     no_user_columns = not columns
@@ -741,7 +712,7 @@ def plan_order(
     relation_order_columns = _relation_order_by_pure(query_graph, ctx, existing_joins, deterministic_ordering)
     order_by.columns.extend(relation_order_columns)
 
-    return OrderPass(
+    return OrderPlan(
         expressions=tuple(order_by.expressions),
         joins=tuple(order_by.joins),
         referenced_functions=frozenset(order_by_function_nodes),
@@ -912,6 +883,7 @@ def _collect_child_load_pure(
         load = load.options(child_load)
         hook_specs.extend(child_hook_specs)
         transform_map.update(child_transform_map)
+
     return transform_columns, load, hook_specs, transform_map
 
 
@@ -920,7 +892,7 @@ def plan_projection(
     ctx: AliasContext[Any],
     agg_plan: AggregationPlan,
     hook_applier: Any,
-) -> ProjectionPass:
+) -> ProjectionPlan:
     """Collects projection columns, ORM load options, aggregation joins, and hook specs.
 
     Port of ``QueryTranspiler._collect_select`` + ``_collect_child_load``.
@@ -974,7 +946,7 @@ def plan_projection(
         hook_specs.extend(child_hook_specs)
         transform_map.update(child_transform_map)
 
-    return ProjectionPass(
+    return ProjectionPlan(
         columns=tuple(projection_columns),
         load_options=tuple(load_options),
         aggregation_joins=tuple(aggregation_joins),
@@ -1083,7 +1055,7 @@ def _dedup_agg_joins(joins: list[Join]) -> list[Join]:
     return result
 
 
-def _referenced_function_nodes(filt: FilterPass, order: OrderPass, proj: ProjectionPass) -> list[QueryNodeType]:
+def _referenced_function_nodes(filt: FilterPlan, order: OrderPlan, proj: ProjectionPlan) -> list[QueryNodeType]:
     """Computes the function nodes hoisted into the pagination/distinct subquery.
 
     Mirrors ``FunctionNodeCollector.referenced``: function nodes appearing in both
@@ -1444,41 +1416,38 @@ def plan_query(
     use_distinct_on = not distinct_on_rank
 
     # Pass 1: aggregations (built once, shared by all passes).
-    agg_plan = plan_aggregations(query_graph, ctx, db_features)
-
+    aggregation_plan = plan_aggregations(query_graph, ctx, db_features)
     # Pass 2: filter — yields WHERE predicates and the relation/agg joins they require.
-    filt = plan_filter(query_graph, ctx, agg_plan, dialect, join_builder, allow_null)
+    filter_plan = plan_filter(query_graph, ctx, aggregation_plan, dialect, join_builder, allow_null)
     # Nodes already covered by filter joins; used to exclude duplicates from tree gathers.
-    subquery_join_nodes: set[QueryNodeType] = {j.node for j in filt.joins}
+    subquery_join_nodes: set[QueryNodeType] = {j.node for j in filter_plan.joins}
 
     # Pass 3a: gather subquery_join_tree relation joins (outer, filtered).
     subquery_tree_joins: list[Join] = []
     if query_graph.subquery_join_tree:
         subquery_tree_joins = [
-            j
-            for j in plan_relation_joins(query_graph, join_builder, is_outer=True, tree=query_graph.subquery_join_tree)
-            if j.node not in subquery_join_nodes
+            join
+            for join in plan_relation_joins(
+                query_graph, join_builder, is_outer=True, tree=query_graph.subquery_join_tree
+            )
+            if join.node not in subquery_join_nodes
         ]
 
     # Pass 3b: gather root_join_tree relation joins (outer, filtered).
     root_tree_joins: list[Join] = [
-        j for j in plan_relation_joins(query_graph, join_builder, is_outer=True) if j.node not in subquery_join_nodes
+        join
+        for join in plan_relation_joins(query_graph, join_builder, is_outer=True)
+        if join.node not in subquery_join_nodes
     ]
 
     # All relation joins assembled for _relation_order_by: filter → subquery_tree → root_tree.
     # Passed to plan_order so _relation_order_by sees the full relation-join set (agg
     # joins in filt.joins are skipped by _relation_order_by_pure via isinstance check).
-    all_relation_joins: list[Join] = [*filt.joins, *subquery_tree_joins, *root_tree_joins]
+    all_relation_joins: list[Join] = [*filter_plan.joins, *subquery_tree_joins, *root_tree_joins]
 
     # Pass 4: order — includes _relation_order_by against the full relation-join set.
     order = plan_order(
-        query_graph,
-        ctx,
-        agg_plan,
-        all_relation_joins,
-        db_features,
-        default_order_by,
-        deterministic_ordering,
+        query_graph, ctx, aggregation_plan, all_relation_joins, db_features, default_order_by, deterministic_ordering
     )
 
     # Pass 5: root aggregations.
@@ -1488,18 +1457,18 @@ def plan_query(
     root_aggs: tuple[Label[Any], ...] = tuple(root_agg_map.values())
 
     # Pass 6: projection — yields extra columns, load options, selection agg joins, hooks.
-    proj = plan_projection(query_graph, ctx, agg_plan, hook_applier)
+    projection_plan = plan_projection(query_graph, ctx, aggregation_plan, hook_applier)
 
     # Assemble final join list in legacy _build_plan order:
     #   filter.joins → order.joins → subquery_tree(filtered) → root_tree(filtered) → projection.aggregation_joins
     # This matches the non-subquery branch of _build_plan exactly:
     #   joins (filter) → order_by.joins → subquery_tree joins → root_tree joins → aggregation_joins (from _collect_select)
     pre_dedup_joins: list[Join] = [
-        *filt.joins,
+        *filter_plan.joins,
         *order.joins,
         *subquery_tree_joins,
         *root_tree_joins,
-        *proj.aggregation_joins,
+        *projection_plan.aggregation_joins,
     ]
 
     # Cross-pass aggregation-join deduplication: keep first-seen AggregationJoin per node.
@@ -1512,17 +1481,17 @@ def plan_query(
 
     # Mirror _build_plan: {**collector.columns, **transform_map, **root_agg_map}.
     column_map: dict[QueryNodeType, ColumnElement[Any]] = {
-        **agg_plan.columns,
-        **proj.transform_map,
+        **aggregation_plan.columns,
+        **projection_plan.transform_map,
         **root_agg_map,
     }
 
     return QueryPlan(
         root=ctx.root_alias,
         filter_semijoin=filter_semijoin,
-        projection_columns=proj.columns,
-        load_options=proj.load_options,
-        where=filt.where,
+        projection_columns=projection_plan.columns,
+        load_options=projection_plan.load_options,
+        where=filter_plan.where,
         order_by=order.expressions,
         joins=tuple(deduped_joins),
         root_aggregation_functions=root_aggs,
@@ -1530,7 +1499,7 @@ def plan_query(
         use_distinct_on=use_distinct_on,
         limit=limit,
         offset=offset,
-        hook_specs=proj.hook_specs,
+        hook_specs=projection_plan.hook_specs,
         hook_applier=hook_applier,
         column_map=column_map,
     )
