@@ -208,8 +208,6 @@
           OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_filter_on_paginated_query[session-tracked-async-asyncmy_engine]
@@ -226,7 +224,6 @@
                  %s
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %s
   '''
 # ---
 # name: test_filter_on_paginated_query[session-tracked-async-asyncpg_engine]
@@ -243,7 +240,6 @@
           OFFSET $3::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT $4::INTEGER
   '''
 # ---
 # name: test_filter_on_paginated_query[session-tracked-async-psycopg_async_engine]
@@ -260,7 +256,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_filter_on_paginated_query[session-tracked-sync-psycopg_engine]
@@ -277,7 +272,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT %(param_3)s::INTEGER
   '''
 # ---
 # name: test_filter_on_paginated_query[session-tracked-sync-sqlite_engine]
@@ -294,8 +288,6 @@
           OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
-   LIMIT ?
-  OFFSET ?
   '''
 # ---
 # name: test_gt[session-tracked-async-aiosqlite_engine]

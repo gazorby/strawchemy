@@ -24,6 +24,7 @@ if TYPE_CHECKING:
     from sqlalchemy import ColumnElement, Label, Result, Select, StatementLambdaElement
 
     from strawchemy.dto.strawberry import GraphQLFieldDefinition
+    from strawchemy.transpiler._plan import QueryPlan
     from strawchemy.typing import QueryNodeType
 
 
@@ -173,22 +174,43 @@ class QueryExecutor(Generic[DeclarativeT]):
     handling root aggregations, and fetching results as either a list or a single item.
 
     Attributes:
-        base_statement: The SQLAlchemy select statement to execute.
-        column_map: Mapping from each computed/transform/root-aggregation query node to its
-            result-column in the SELECT, used to read values by column-object identity.
+        plan: The query plan emitted into the SQLAlchemy statement to execute.
         id_field_definitions: Precomputed ID field definitions of the queried model,
             used by the repository for get/get-by-id WHERE clauses.
-        apply_unique: Whether to apply unique constraint to the result.
-        root_aggregation_functions: List of root aggregation function labels.
         execution_options: Optional execution options for the statement.
+        extra_where: Additional WHERE predicates applied on top of the emitted statement.
     """
 
-    base_statement: Select[tuple[DeclarativeT]]
-    column_map: Mapping[QueryNodeType, ColumnElement[Any]]
+    plan: QueryPlan
     id_field_definitions: list[GraphQLFieldDefinition]
-    apply_unique: bool = False
-    root_aggregation_functions: list[Label[Any]] = dataclasses.field(default_factory=list)
     execution_options: dict[str, Any] | None = None
+    extra_where: list[ColumnElement[bool]] = dataclasses.field(default_factory=list)
+
+    @property
+    def column_map(self) -> Mapping[QueryNodeType, ColumnElement[Any]]:
+        """Mapping from each computed/transform/root-aggregation node to its result column."""
+        return self.plan.column_map
+
+    @property
+    def root_aggregation_functions(self) -> list[Label[Any]]:
+        """Root aggregation window-function labels carried by the plan."""
+        return list(self.plan.root_aggregation_functions)
+
+    @property
+    def apply_unique(self) -> bool:
+        """Whether a uniquing pass is needed (true when any relation join is to-many)."""
+        return any(join.to_many for join in self.plan.joins)
+
+    def add_where(self, *predicates: ColumnElement[bool]) -> None:
+        """Appends WHERE predicates applied on top of the emitted statement.
+
+        Used by the repository to scope a query to specific primary-key values after the
+        executor is built.
+
+        Args:
+            *predicates: Boolean predicates to AND into the final statement.
+        """
+        self.extra_where.extend(predicates)
 
     def _to_query_result(
         self, result: Result[tuple[DeclarativeT, Any]], fetch: Literal["one_or_none", "all"]
@@ -229,12 +251,14 @@ class QueryExecutor(Generic[DeclarativeT]):
         )
 
     def statement(self) -> Select[tuple[DeclarativeT]] | StatementLambdaElement:
-        """Returns the SQLAlchemy statement to be executed.
+        """Returns the SQLAlchemy statement to execute (plan emit + extra WHERE + options).
 
         Returns:
             The SQLAlchemy statement.
         """
-        statement = self.base_statement
+        statement = self.plan.emit()
+        if self.extra_where:
+            statement = statement.where(*self.extra_where)
         if self.execution_options:
             statement = statement.execution_options(**self.execution_options)
         return statement

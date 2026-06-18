@@ -17,7 +17,6 @@ from typing import TYPE_CHECKING, Any, Protocol
 from sqlalchemy import and_, func, inspect, null, select, true
 from sqlalchemy.orm import aliased
 
-from strawchemy.transpiler._plan import _apply_clauses
 from strawchemy.transpiler._query import Join
 
 if TYPE_CHECKING:
@@ -88,7 +87,7 @@ class LateralJoinStrategy:
         node_inspect = scope.inspect(node)
         root_relation = aliased_attribute.of_type(target_insp)
         base_statement = select(target_insp).with_only_columns(*node_inspect.selection(target_alias))
-        statement = _apply_clauses(base_statement, plan).where(root_relation).lateral()
+        statement = plan.apply_clauses(base_statement).where(root_relation).lateral()
         lateral_alias = aliased(target_insp.mapper, statement, flat=True)
         scope.set_relation_alias(node, "target", lateral_alias)
         return Join(statement, node=node, is_outer=is_outer, onclause=true())
@@ -136,7 +135,7 @@ class CteJoinStrategy:
         )
         if rank_column is not None:
             base_statement = base_statement.add_columns(rank_column)
-        statement = _apply_clauses(base_statement, plan_wihtout_limit_offset).cte()
+        statement = plan_wihtout_limit_offset.apply_clauses(base_statement).cte()
         cte_alias = aliased(target_alias, statement)
         scope.set_relation_alias(node, "target", cte_alias)
         # Resolve the relationship expression AFTER registering the CTE alias so the ON

@@ -8,12 +8,12 @@
                  user.name AS name,
                  user.name AS name__1,
                  user.id AS id__1,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
             FROM USER AS USER
            ORDER BY user.name ASC,
                     user.id DESC
          ) AS USER
-   WHERE user.__strawchemy_distinct_on_rank_0 = ?
+   WHERE user.anon_1 = ?
    ORDER BY user.name ASC,
             user.id DESC
   '''
@@ -27,12 +27,12 @@
                  user.name AS name,
                  user.name AS name__1,
                  user.id AS id__1,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
             FROM USER AS USER
            ORDER BY user.name ASC,
                     user.id DESC
          ) AS USER
-   WHERE user.__strawchemy_distinct_on_rank_0 = %s
+   WHERE user.anon_1 = %s
    ORDER BY user.name ASC,
             user.id DESC
   '''
@@ -46,12 +46,12 @@
                  "user".name AS name,
                  "user".name AS name__1,
                  "user".id AS id__1,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS anon_1
             FROM "user" AS "user"
            ORDER BY "user".name ASC,
                     "user".id DESC
          ) AS "user"
-   WHERE "user".__strawchemy_distinct_on_rank_0 = $1::INTEGER
+   WHERE "user".anon_1 = $1::INTEGER
    ORDER BY "user".name ASC,
             "user".id DESC
   '''
@@ -65,12 +65,12 @@
                  "user".name AS name,
                  "user".name AS name__1,
                  "user".id AS id__1,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS anon_1
             FROM "user" AS "user"
            ORDER BY "user".name ASC,
                     "user".id DESC
          ) AS "user"
-   WHERE "user".__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   WHERE "user".anon_1 = %(param_1)s::INTEGER
    ORDER BY "user".name ASC,
             "user".id DESC
   '''
@@ -84,12 +84,12 @@
                  "user".name AS name,
                  "user".name AS name__1,
                  "user".id AS id__1,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS anon_1
             FROM "user" AS "user"
            ORDER BY "user".name ASC,
                     "user".id DESC
          ) AS "user"
-   WHERE "user".__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   WHERE "user".anon_1 = %(param_1)s::INTEGER
    ORDER BY "user".name ASC,
             "user".id DESC
   '''
@@ -103,12 +103,12 @@
                  user.name AS name,
                  user.name AS name__1,
                  user.id AS id__1,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
             FROM USER AS USER
            ORDER BY user.name ASC,
                     user.id DESC
          ) AS USER
-   WHERE user.__strawchemy_distinct_on_rank_0 = ?
+   WHERE user.anon_1 = ?
    ORDER BY user.name ASC,
             user.id DESC
   '''
@@ -150,11 +150,11 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_1
             FROM USER AS USER
            ORDER BY user.id ASC
          ) AS USER
-   WHERE user.__strawchemy_distinct_on_rank_0 = ?
+   WHERE user.anon_1 = ?
    ORDER BY user.id ASC
   '''
 # ---
@@ -165,11 +165,11 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_1
             FROM USER AS USER
            ORDER BY user.id ASC
          ) AS USER
-   WHERE user.__strawchemy_distinct_on_rank_0 = %s
+   WHERE user.anon_1 = %s
    ORDER BY user.id ASC
   '''
 # ---
@@ -180,11 +180,11 @@
     FROM (
           SELECT "user".id AS id,
                  "user".name AS name,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_1
             FROM "user" AS "user"
            ORDER BY "user".id ASC
          ) AS "user"
-   WHERE "user".__strawchemy_distinct_on_rank_0 = $1::INTEGER
+   WHERE "user".anon_1 = $1::INTEGER
    ORDER BY "user".id ASC
   '''
 # ---
@@ -195,11 +195,11 @@
     FROM (
           SELECT "user".id AS id,
                  "user".name AS name,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_1
             FROM "user" AS "user"
            ORDER BY "user".id ASC
          ) AS "user"
-   WHERE "user".__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   WHERE "user".anon_1 = %(param_1)s::INTEGER
    ORDER BY "user".id ASC
   '''
 # ---
@@ -210,10 +210,10 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 row_number() OVER (PARTITION BY user.name) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY user.name) AS anon_1
             FROM USER AS USER
          ) AS USER
-   WHERE user.__strawchemy_distinct_on_rank_0 = ?
+   WHERE user.anon_1 = ?
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-non-deterministic-ordering-asyncmy_engine]
@@ -223,10 +223,10 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 row_number() OVER (PARTITION BY user.name) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY user.name) AS anon_1
             FROM USER AS USER
          ) AS USER
-   WHERE user.__strawchemy_distinct_on_rank_0 = %s
+   WHERE user.anon_1 = %s
   '''
 # ---
 # name: test_distinct_on[session-tracked-async-non-deterministic-ordering-asyncpg_engine]
@@ -267,11 +267,11 @@
     FROM (
           SELECT "user".id AS id,
                  "user".name AS name,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_1
             FROM "user" AS "user"
            ORDER BY "user".id ASC
          ) AS "user"
-   WHERE "user".__strawchemy_distinct_on_rank_0 = %(strawchemy_distinct_on_rank_0_1)s::INTEGER
+   WHERE "user".anon_1 = %(param_1)s::INTEGER
    ORDER BY "user".id ASC
   '''
 # ---
@@ -282,11 +282,11 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_1
             FROM USER AS USER
            ORDER BY user.id ASC
          ) AS USER
-   WHERE user.__strawchemy_distinct_on_rank_0 = ?
+   WHERE user.anon_1 = ?
    ORDER BY user.id ASC
   '''
 # ---
@@ -305,10 +305,10 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 row_number() OVER (PARTITION BY user.name) AS __strawchemy_distinct_on_rank_0
+                 row_number() OVER (PARTITION BY user.name) AS anon_1
             FROM USER AS USER
          ) AS USER
-   WHERE user.__strawchemy_distinct_on_rank_0 = ?
+   WHERE user.anon_1 = ?
   '''
 # ---
 # name: test_distinct_on[session-tracked-sync-psycopg_engine]

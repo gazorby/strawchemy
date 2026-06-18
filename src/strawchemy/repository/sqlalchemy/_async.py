@@ -246,7 +246,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
 
         transpiler = QueryTranspiler(self.model, self._dialect, statement=self.statement)
         where_expressions = transpiler.filter_expressions(data.dto_filter) if data.dto_filter else None
-        return await self._update_where(transpiler.scope.root_alias, values[0], where_expressions)
+        return await self._update_where(transpiler.context.root_alias, values[0], where_expressions)
 
     async def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
         self._connect_to_one_relations(data.input)
@@ -280,7 +280,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         """
         executor = self._get_query_executor(AsyncQueryExecutor, selection=selection)
         id_fields = executor.id_field_definitions
-        executor.base_statement = executor.base_statement.where(
+        executor.add_where(
             *[field.model_field.in_([getattr(row, field.model_field_name) for row in id_rows]) for field in id_fields]
         )
         return await executor.list(self.session)
@@ -419,7 +419,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         executor = self._get_query_executor(
             AsyncQueryExecutor, selection=selection, query_hooks=query_hooks, execution_options=execution_options
         )
-        executor.base_statement = executor.base_statement.where(
+        executor.add_where(
             *[field_def.model_field == kwargs.pop(field_def.name) for field_def in executor.id_field_definitions]
         )
         return await executor.get_one_or_none(self.session)
@@ -504,6 +504,8 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             transpiler = QueryTranspiler(self.model, self._dialect, statement=self.statement)
             where_expressions = transpiler.filter_expressions(dto_filter) if dto_filter else None
             to_be_deleted = await self.list(selection, dto_filter=dto_filter)
-            affected_rows = await self._delete_where(transpiler.scope.root_alias, where_expressions, execution_options)
+            affected_rows = await self._delete_where(
+                transpiler.context.root_alias, where_expressions, execution_options
+            )
             await transaction.commit()
         return to_be_deleted.filter_in(**self._rows_to_filter_dict(affected_rows))

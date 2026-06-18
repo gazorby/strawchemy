@@ -1,6 +1,6 @@
 """Explicit query-plan IR and its emitter.
 
-This module introduces the immutable ``QueryPlan`` and the pure ``emit_plan`` function.
+This module introduces the immutable ``QueryPlan`` and its ``emit`` method.
 Covers a root ``SELECT`` with projection, an optional filter semi-join, relation joins
 (LATERAL/CTE), WHERE, ORDER BY, DISTINCT ON, LIMIT/OFFSET, and root aggregation window
 columns. Structure is held as data; leaf predicate/column/order expressions are opaque
@@ -8,10 +8,8 @@ SQLAlchemy fragments.
 
 Classes:
     FilterSemiJoin: A pre-built PK semi-join to the filter-statement subquery.
-    QueryPlan: The immutable plan for a supported-shape query.
-
-Functions:
-    emit_plan: Emits a SQLAlchemy Select from a QueryPlan.
+    QueryPlan: The immutable plan for a supported-shape query; ``QueryPlan.emit`` is the
+        emitter method that builds a SQLAlchemy Select.
 """
 
 from __future__ import annotations
@@ -36,10 +34,10 @@ if TYPE_CHECKING:
     from strawchemy.transpiler.hook import ColumnLoadingMode
     from strawchemy.typing import QueryNodeType
 
-__all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan", "emit_plan")
+__all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan")
 
-# ``_apply_clauses`` is intentionally module-private (leading underscore) but is imported
-# by ``_strategies`` to share the join/where/order/limit/offset assembly with ``emit_plan``.
+# ``apply_clauses`` is a public method because ``_strategies`` shares the join/where/order
+# assembly with it.
 
 
 @dataclass(frozen=True)
@@ -97,10 +95,10 @@ class QueryPlan:
 
     root: AliasedClass[Any]
     filter_semijoin: FilterSemiJoin | None
-    projection_columns: tuple[ColumnElement[Any], ...]
-    load_options: tuple[_AbstractLoad, ...]
-    where: tuple[ColumnElement[bool], ...]
-    order_by: tuple[UnaryExpression[Any], ...]
+    projection_columns: tuple[ColumnElement[Any], ...] = ()
+    load_options: tuple[_AbstractLoad, ...] = ()
+    where: tuple[ColumnElement[bool], ...] = ()
+    order_by: tuple[UnaryExpression[Any], ...] = ()
     joins: tuple[Join, ...] = ()
     root_aggregation_functions: tuple[Label[Any], ...] = ()
     distinct_on: tuple[ColumnElement[Any], ...] = ()
@@ -114,84 +112,76 @@ class QueryPlan:
     its value in the result row. The executor reads values via ``row._mapping[column]`` — so
     the rendered column name is irrelevant to correctness."""
 
+    def emit(self) -> Select[Any]:
+        """Emits the SQLAlchemy Select for this query plan.
 
-def _apply_distinct(statement: Select[Any], plan: QueryPlan) -> Select[Any]:
-    """Mirrors Query._distinct_on: native DISTINCT ON only.
+        Mechanical assembly only; all decisions live in the planner.
 
-    When ``use_distinct_on`` is False the distinctness is handled inside the subquery
-    (row_number rank + an outer ``WHERE rank = 1`` already present in ``plan.where``), so
-    this is a no-op. When True, ORDER BY columns absent from the SELECT list are added
-    (DISTINCT ON requires them) before applying ``.distinct(*distinct_on)``.
+        Returns:
+            The assembled SQLAlchemy Select statement.
+        """
+        statement = select(self.root)
+        if self.filter_semijoin is not None:
+            statement = statement.join(self.filter_semijoin.alias, onclause=self.filter_semijoin.onclause)
+        if self.projection_columns:
+            statement = statement.add_columns(*self.projection_columns)
+        if self.hook_applier is not None:
+            for spec in self.hook_specs:
+                statement = self.hook_applier.apply_statement_hooks(statement, spec.node, spec.alias)
+        statement = self.apply_clauses(statement)
+        return statement.options(raiseload("*"), *self.load_options)
 
-    Args:
-        statement: The statement being assembled.
-        plan: The query plan (provides ``order_by``, ``distinct_on``, ``use_distinct_on``).
+    def apply_clauses(self, statement: Select[Any]) -> Select[Any]:
+        """Applies the shared join/where/order/distinct/limit/offset/aggregation clauses.
 
-    Returns:
-        The statement with DISTINCT ON applied, or unchanged.
-    """
-    if not plan.use_distinct_on:
+        This is the core assembly shared by ``emit`` and the relation-join strategies:
+        sorted joins, WHERE, ORDER BY, DISTINCT ON, LIMIT, OFFSET, and root aggregation
+        columns. It assumes the projection (``select(self.root)`` + filter semi-join +
+        projection columns) has already been applied to ``statement``.
+
+        Args:
+            statement: The statement being assembled (projection already applied).
+
+        Returns:
+            The statement with the shared clauses applied.
+        """
+        for join in sorted(self.joins):
+            statement = statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
+        if self.where:
+            statement = statement.where(*self.where)
+        if self.order_by:
+            statement = statement.order_by(*self.order_by)
+        if self.distinct_on:
+            statement = self._apply_distinct(statement)
+        if self.limit is not None:
+            statement = statement.limit(self.limit)
+        if self.offset is not None:
+            statement = statement.offset(self.offset)
+        if self.root_aggregation_functions:
+            statement = statement.add_columns(*self.root_aggregation_functions)
         return statement
-    statement = statement.add_columns(
-        *[
-            expression.element
-            for expression in plan.order_by
-            if not any(selected.compare(expression.element) for selected in statement.selected_columns)
-        ]
-    )
-    return statement.distinct(*plan.distinct_on)
 
+    def _apply_distinct(self, statement: Select[Any]) -> Select[Any]:
+        """Applies native DISTINCT ON only.
 
-def _apply_clauses(statement: Select[Any], plan: QueryPlan) -> Select[Any]:
-    """Applies the shared join/where/order/distinct/limit/offset/aggregation clauses.
+        When ``use_distinct_on`` is False the distinctness is handled inside the subquery
+        (row_number rank + an outer ``WHERE rank = 1`` already present in ``self.where``), so
+        this is a no-op. When True, ORDER BY columns absent from the SELECT list are added
+        (DISTINCT ON requires them) before applying ``.distinct(*distinct_on)``.
 
-    This is the core assembly shared by ``emit_plan`` and the relation-join strategies:
-    sorted joins, WHERE, ORDER BY, DISTINCT ON, LIMIT, OFFSET, and root aggregation
-    columns. It assumes the projection (``select(plan.root)`` + filter semi-join +
-    projection columns) has already been applied to ``statement``.
+        Args:
+            statement: The statement being assembled.
 
-    Args:
-        statement: The statement being assembled (projection already applied).
-        plan: The query plan supplying joins, predicates, ordering, and pagination.
-
-    Returns:
-        The statement with the shared clauses applied.
-    """
-    for join in sorted(plan.joins):
-        statement = statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
-    if plan.where:
-        statement = statement.where(*plan.where)
-    if plan.order_by:
-        statement = statement.order_by(*plan.order_by)
-    if plan.distinct_on:
-        statement = _apply_distinct(statement, plan)
-    if plan.limit is not None:
-        statement = statement.limit(plan.limit)
-    if plan.offset is not None:
-        statement = statement.offset(plan.offset)
-    if plan.root_aggregation_functions:
-        statement = statement.add_columns(*plan.root_aggregation_functions)
-    return statement
-
-
-def emit_plan(plan: QueryPlan) -> Select[Any]:
-    """Emits the SQLAlchemy Select for a query plan.
-
-    Mechanical assembly only; all decisions live in the planner.
-
-    Args:
-        plan: The query plan to emit.
-
-    Returns:
-        The assembled SQLAlchemy Select statement.
-    """
-    statement = select(plan.root)
-    if plan.filter_semijoin is not None:
-        statement = statement.join(plan.filter_semijoin.alias, onclause=plan.filter_semijoin.onclause)
-    if plan.projection_columns:
-        statement = statement.add_columns(*plan.projection_columns)
-    if plan.hook_applier is not None:
-        for spec in plan.hook_specs:
-            statement = plan.hook_applier.apply_statement_hooks(statement, spec.node, spec.alias)
-    statement = _apply_clauses(statement, plan)
-    return statement.options(raiseload("*"), *plan.load_options)
+        Returns:
+            The statement with DISTINCT ON applied, or unchanged.
+        """
+        if not self.use_distinct_on:
+            return statement
+        statement = statement.add_columns(
+            *[
+                expression.element
+                for expression in self.order_by
+                if not any(selected.compare(expression.element) for selected in statement.selected_columns)
+            ]
+        )
+        return statement.distinct(*self.distinct_on)

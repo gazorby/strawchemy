@@ -20,7 +20,6 @@ from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
 from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO, OrderByRelationFilterDTO
 from strawchemy.repository.typing import DeclarativeT, QueryExecutorT
 from strawchemy.transpiler._executor import SyncQueryExecutor
-from strawchemy.transpiler._plan import emit_plan
 from strawchemy.transpiler._planner import plan_query
 from strawchemy.transpiler._query import HookApplier, Join, QueryGraph
 from strawchemy.transpiler._scope import AliasContext
@@ -73,12 +72,12 @@ class QueryTranspiler(Generic[DeclarativeT]):
         self._default_order_by: list[OrderByExpr] = list(default_order_by or [])
 
         self.dialect = dialect
-        self.scope = scope or AliasContext(model, supported_dialect, inspector=self._inspector)
+        self.context = scope or AliasContext(model, supported_dialect, inspector=self._inspector)
 
-        self._hook_applier = HookApplier(self.scope, query_hooks or defaultdict(list))
+        self._hook_applier = HookApplier(self.context, query_hooks or defaultdict(list))
 
     @contextmanager
-    def _sub_scope(self, model: type[Any], root_alias: AliasedClass[Any]) -> Iterator[Self]:
+    def _sub_context(self, model: type[Any], root_alias: AliasedClass[Any]) -> Iterator[Self]:
         """Creates a new scope for a sub-query.
 
         Args:
@@ -88,12 +87,12 @@ class QueryTranspiler(Generic[DeclarativeT]):
         Yields:
             A new transpiler instance with the sub-scope.
         """
-        current_scope, sub_scope = self.scope, self.scope.sub(model, root_alias)
+        current_scope, sub_scope = self.context, self.context.sub(model, root_alias)
         try:
-            self.scope = sub_scope
+            self.context = sub_scope
             yield self
         finally:
-            self.scope = current_scope
+            self.context = current_scope
 
     def _join(self, node: QueryNodeType, is_outer: bool = False) -> Join:
         """Creates a join object for a query node.
@@ -105,7 +104,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         Returns:
             A join object containing the join information.
         """
-        aliased_attribute = self.scope.aliased_attribute(node)
+        aliased_attribute = self.context.aliased_attribute(node)
         relation_filter = node.metadata.data.relation_filter
 
         if not relation_filter:
@@ -117,11 +116,11 @@ class QueryTranspiler(Generic[DeclarativeT]):
         target_alias: AliasedClass[Any] = cast("AliasedClass[Any]", aliased(target_mapper, flat=True))
         order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else []
 
-        with self._sub_scope(target_mapper.class_, target_alias):
-            query_graph = QueryGraph(self.scope, order_by=order_by)  # ty:ignore[invalid-argument-type]
+        with self._sub_context(target_mapper.class_, target_alias):
+            query_graph = QueryGraph(self.context, order_by=order_by)  # ty:ignore[invalid-argument-type]
             plan = plan_query(
                 query_graph,
-                self.scope,
+                self.context,
                 self._inspector.db_features,
                 self.dialect,
                 self._hook_applier,
@@ -132,7 +131,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
                 deterministic_ordering=self._deterministic_ordering,
                 statement=None,
             )
-        join = self._join_strategy.relation_join(self.scope, node, target_alias, plan, is_outer)
+        join = self._join_strategy.relation_join(self.context, node, target_alias, plan, is_outer)
         join.order_nodes = query_graph.order_by_nodes
         return join
 
@@ -183,7 +182,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
             ```
         """
         query_graph = QueryGraph(
-            self.scope,
+            self.context,
             selection_tree=selection_tree,
             dto_filter=dto_filter,
             order_by=order_by or [],
@@ -191,7 +190,7 @@ class QueryTranspiler(Generic[DeclarativeT]):
         )
         plan = plan_query(
             query_graph,
-            ctx=self.scope,
+            ctx=self.context,
             db_features=self._inspector.db_features,
             dialect=self.dialect,
             hook_applier=self._hook_applier,
@@ -204,19 +203,16 @@ class QueryTranspiler(Generic[DeclarativeT]):
             statement=self._statement,
         )
         return executor_cls(
-            base_statement=emit_plan(plan),
-            column_map=plan.column_map,
-            id_field_definitions=self.scope.id_field_definitions(self.scope.model),
-            apply_unique=any(join.to_many for join in plan.joins),
-            root_aggregation_functions=list(plan.root_aggregation_functions),
+            plan=plan,
+            id_field_definitions=self.context.id_field_definitions(self.context.model),
             execution_options=execution_options,
         )
 
     def filter_expressions(self, dto_filter: BooleanFilterDTO) -> list[ColumnElement[bool]]:
-        query_graph = QueryGraph(self.scope, dto_filter=dto_filter)
+        query_graph = QueryGraph(self.context, dto_filter=dto_filter)
         plan = plan_query(
             query_graph,
-            ctx=self.scope,
+            ctx=self.context,
             db_features=self._inspector.db_features,
             dialect=self.dialect,
             hook_applier=self._hook_applier,
@@ -229,4 +225,4 @@ class QueryTranspiler(Generic[DeclarativeT]):
 
     @override
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {self.scope.model}>"
+        return f"<{self.__class__.__name__} {self.context.model}>"
