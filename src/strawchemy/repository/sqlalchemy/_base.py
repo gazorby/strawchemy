@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
+from inspect import isclass
 from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, TypeAlias, TypeVar, cast
 
 from sqlalchemy import Column, Function, Insert, Row, Table, func, insert, inspect
@@ -137,6 +138,29 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         self.default_order_by: list[OrderByExpr] = list(default_order_by or [])
 
         self._dialect = session.get_bind().dialect  # ty: ignore[invalid-argument-type]  # get_bind() typing differs across sync/async Session stubs
+
+    def _populate_new_ids(self, data: InsertData, level: LevelInput, new_ids: Sequence[Row[Any]]) -> None:
+        pk_index, fk_index = 0, 0
+        pk_names = [pk.name for pk in data.pks]
+
+        for relation_input in level.inputs:
+            if isclass(data.model_type) and not isinstance(relation_input.instance, data.model_type):
+                continue
+            # Update Pks
+            for column in data.pks:
+                setattr(relation_input.instance, column.key, new_ids[pk_index][pk_names.index(column.key)])
+            pk_index += 1
+            if relation_input.relation.relation_type is RelationType.TO_MANY:
+                continue
+            # Update Fks
+            prop = relation_input.relation.attribute
+            assert isinstance(prop, RelationshipProperty)
+            assert prop.local_remote_pairs
+            for local, remote in prop.local_remote_pairs:
+                assert local.key
+                assert remote.key
+                setattr(relation_input.relation.parent, local.key, new_ids[fk_index][pk_names.index(remote.key)])
+            fk_index += 1
 
     def _get_query_executor(
         self,

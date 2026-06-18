@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from collections import defaultdict, namedtuple
-from inspect import isclass
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
-from sqlalchemy.orm import RelationshipProperty
 
 from strawchemy.repository.sqlalchemy._base import InsertData, MutationData, SQLAlchemyGraphQLRepository
 from strawchemy.repository.typing import AnySyncSession, DeclarativeT
@@ -67,29 +65,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                 created and their relationships, used to update instances with
                 generated primary and foreign keys.
         """
-        instance_ids: Sequence[Row[Any]] = self._insert_many(data)
-
-        pk_names = [pk.name for pk in data.pks]
-
-        pk_index, fk_index = 0, 0
-        for relation_input in level.inputs:
-            if isclass(data.model_type) and not isinstance(relation_input.instance, data.model_type):
-                continue
-            # Update Pks
-            for column in data.pks:
-                setattr(relation_input.instance, column.key, instance_ids[pk_index][pk_names.index(column.key)])
-            pk_index += 1
-            if relation_input.relation.relation_type is RelationType.TO_MANY:
-                continue
-            # Update Fks
-            prop = relation_input.relation.attribute
-            assert isinstance(prop, RelationshipProperty)
-            assert prop.local_remote_pairs
-            for local, remote in prop.local_remote_pairs:
-                assert local.key
-                assert remote.key
-                setattr(relation_input.relation.parent, local.key, instance_ids[fk_index][pk_names.index(remote.key)])
-            fk_index += 1
+        new_instance_ids: Sequence[Row[Any]] = self._insert_many(data)
+        self._populate_new_ids(data, level, new_instance_ids)
 
     def _delete_where(
         self,
