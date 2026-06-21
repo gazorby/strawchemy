@@ -327,6 +327,33 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             return any(not column.nullable for column in prop.local_columns)
         return False
 
+    @classmethod
+    def _reverse_relationships(cls, prop: RelationshipProperty[Any]) -> set[RelationshipProperty[Any]]:
+        """Resolve the relationships that point back to ``prop``.
+
+        Mirrors SQLAlchemy's internal ``RelationshipProperty._reverse_property``
+        using only public attributes: the reverse relationships live on the
+        related entity's mapper, target ``prop``'s own class, and are linked
+        through ``back_populates`` (which both ``back_populates`` and ``backref``
+        declarations populate on both sides after mapper configuration).
+
+        Args:
+            prop: The relationship to find the reverse side(s) of.
+
+        Returns:
+            The relationships on the related mapper that point back to ``prop``.
+        """
+        target = prop.entity.mapper
+        return {
+            other
+            for other in target.relationships
+            if other.entity.mapper is prop.parent
+            and (
+                other.back_populates == prop.key
+                or (prop.back_populates is not None and prop.back_populates == other.key)
+            )
+        }
+
     def _field_definitions_from_columns(
         self, model: type[DeclarativeBase], columns: Iterable[ColumnElement[Any]], dto_config: DTOConfig
     ) -> list[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
@@ -468,7 +495,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                 parent_relationships.add(relationship)
         return any(
             relationship in parent_relationships
-            for relationship in field.model_field.property._reverse_property  # noqa: SLF001
+            for relationship in self._reverse_relationships(field.model_field.property)
         )
 
     @override
@@ -499,7 +526,10 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     @override
     def required(self, model_field: QueryableAttribute[Any]) -> bool:
         if self._is_column(model_field.property):
-            return any(not column.nullable for column, _ in model_field.property.columns_to_assign)
+            # NOTE: reached only for column properties; the sole caller invokes
+            # required() exclusively for relationships, so this branch is
+            # currently unexercised in production.
+            return any(not column.nullable for column in model_field.property.columns)
         if self._is_relationship(model_field.property):
             return self._relationship_required(model_field.property)
         return False
@@ -520,7 +550,10 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     def reverse_relation_required(self, model_field: QueryableAttribute[Any]) -> bool:
         if not self._is_relationship(model_field.property):
             return False
-        return any(self._relationship_required(relationship) for relationship in model_field.property._reverse_property)  # noqa: SLF001
+        return any(
+            self._relationship_required(relationship)
+            for relationship in self._reverse_relationships(model_field.property)
+        )
 
     @classmethod
     def unique_constraints(cls, model: type[DeclarativeBase]) -> list[ColumnCollectionConstraint]:
