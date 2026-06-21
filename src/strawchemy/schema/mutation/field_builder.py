@@ -8,6 +8,13 @@ from typing import TYPE_CHECKING, Any
 
 from strawberry.annotation import StrawberryAnnotation
 
+from strawchemy.schema.mutation.fields import (
+    StrawchemyCreateMutationField,
+    StrawchemyDeleteMutationField,
+    StrawchemyUpdateMutationField,
+    StrawchemyUpsertMutationField,
+)
+
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
 
@@ -17,12 +24,7 @@ if TYPE_CHECKING:
     from strawchemy.config.base import StrawchemyConfig
     from strawchemy.schema.factories import DistinctOnEnumFactory
     from strawchemy.schema.factories.inputs import BooleanFilterFactory, OrderByFactory
-    from strawchemy.schema.mutation.fields import (
-        StrawchemyCreateMutationField,
-        StrawchemyDeleteMutationField,
-        StrawchemyUpdateMutationField,
-        StrawchemyUpsertMutationField,
-    )
+    from strawchemy.schema.mutation.input import EventRegistry
     from strawchemy.typing import AnyRepositoryType
 
 
@@ -40,6 +42,8 @@ class MutationFieldBuilder:
     order_by_factory: OrderByFactory
     filter_factory: BooleanFilterFactory
     distinct_on_factory: DistinctOnEnumFactory
+    event_registry: EventRegistry
+    """Shared event registry owned by the Strawchemy instance, reused across mutation requests."""
 
     def build(
         self,
@@ -91,6 +95,13 @@ class MutationFieldBuilder:
         """
         namespace = self.registry_namespace_getter()
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
+
+        # Inject the shared registry only for input mutation fields (create/update/upsert),
+        # not for the delete field which shares the `input_type` kwarg name for filter types.
+        if issubclass(
+            field_class, (StrawchemyCreateMutationField, StrawchemyUpdateMutationField, StrawchemyUpsertMutationField)
+        ):
+            field_specific_kwargs.setdefault("event_registry", self.event_registry)
 
         field = field_class(
             config=self.config,

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO
     from strawchemy.repository.strawberry.base import GraphQLResult
+    from strawchemy.schema.mutation.input import EventRegistry
     from strawchemy.typing import AnyMappedDTO, CreateOrUpdateResolverResult, ListResolverResult, MappedGraphQLDTO
     from strawchemy.validation import ValidationProtocol
 
@@ -41,12 +42,14 @@ class _StrawchemyInputMutationField(StrawchemyField):
         input_type: type[MappedGraphQLDTO[T]],
         *args: Any,
         validation: ValidationProtocol[T] | None = None,
+        event_registry: EventRegistry | None = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.is_root_field = True
         self._input_type = input_type
         self._validation = validation
+        self._event_registry = event_registry
 
 
 class _StrawchemyMutationField:
@@ -68,7 +71,7 @@ class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
-            input_data = Input(data, self._validation)
+            input_data = Input(data, self._validation, registry=self._event_registry)
         except InputValidationError as error:
             return error.graphql_type()
         if self._is_repo_async(repository):
@@ -111,7 +114,7 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
-            input_data = Input(data, self._validation)
+            input_data = Input(data, self._validation, registry=self._event_registry)
         except InputValidationError as error:
             return error.graphql_type()
         if self._is_repo_async(repository):
@@ -165,7 +168,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
-            input_data = Input(data, self._validation)
+            input_data = Input(data, self._validation, registry=self._event_registry)
         except InputValidationError as error:
             error_result = error.graphql_type()
             return [error_result] if isinstance(data, Sequence) else error_result
@@ -179,7 +182,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
         repository = self._get_repository(info)
         try:
-            input_data = Input(data, self._validation)
+            input_data = Input(data, self._validation, registry=self._event_registry)
         except InputValidationError as error:
             return [error.graphql_type()]
         if self._is_repo_async(repository):
