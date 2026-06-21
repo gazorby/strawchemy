@@ -7,7 +7,7 @@ from strawchemy.transpiler._executor import (
     QueryResult,
     SyncQueryExecutor,
 )
-from strawchemy.transpiler._transpiler import QueryTranspiler
+from strawchemy.transpiler._transpiler import Transpiler
 from strawchemy.transpiler.hook import ColumnLoadingMode, QueryHook
 
 __all__ = (
@@ -17,6 +17,6 @@ __all__ = (
     "QueryExecutor",
     "QueryHook",
     "QueryResult",
-    "QueryTranspiler",
     "SyncQueryExecutor",
+    "Transpiler",
 )

@@ -14,7 +14,7 @@ from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.repository.typing import DeclarativeT, QueryExecutorT, SessionT
 from strawchemy.schema.mutation.types import RelationType
-from strawchemy.transpiler import QueryTranspiler
+from strawchemy.transpiler import Transpiler
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -175,7 +175,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
-        transpiler = QueryTranspiler(
+        transpiler = Transpiler(
             self.model,
             self._dialect,
             query_hooks=query_hooks,
