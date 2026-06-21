@@ -46,7 +46,7 @@ if TYPE_CHECKING:
     from strawchemy.repository.typing import DeclarativeSubT, FunctionGenerator, RelationshipSide
     from strawchemy.typing import QueryNodeType, SupportedDialect
 
-__all__ = ("AliasContext", "NodeInspect")
+__all__ = ("AliasContext",)
 
 _FunctionVisitor: TypeAlias = "Callable[[Function[Any]], ColumnElement[Any]]"
 
@@ -153,7 +153,7 @@ class AggregationFunctionInfo:
 
 
 @dataclass(frozen=True)
-class ColumnTransform:
+class _ColumnTransform:
     """Represents a transformed SQLAlchemy column attribute.
 
     This dataclass typically stores a `QueryableAttribute` that has undergone
@@ -228,64 +228,43 @@ class ColumnTransform:
         return cls._new(transform, node)
 
 
-class NodeInspect:
-    """Inspection helper for SQLAlchemy query nodes.
+class _NodeInspect:
+    """Reads one query node against an ``AliasContext``.
 
-    Provides functionality to inspect and process SQLAlchemy query nodes within a AliasContext context.
-    Handles function mapping, foreign key resolution, and property access for query nodes.
+    Bundles a node with its scope and exposes the node-level derivations the
+    planning passes need: aliased columns and foreign keys, aggregation-function
+    expressions, the node's mapper, and the scope-unique key/name used to label
+    columns. Stateless beyond the ``(node, scope)`` pair; obtained via
+    ``AliasContext.inspect(node)``.
 
     Attributes:
-        node (QueryNodeType): The query node being inspected
-        scope (AliasContext): The query scope providing context for inspection
-
-    Key Responsibilities:
-        - Maps GraphQL functions to corresponding SQL functions
-        - Resolves foreign key relationships between nodes
-        - Provides access to node properties and children
-        - Generates SQL expressions for functions and selections
-        - Handles column and ID selection for query building
-
-    The class works closely with AliasContext to provide context-aware inspection capabilities
-    and is primarily used by the Transpiler class to build SQL queries from GraphQL queries.
-
-    Example:
-        >>> node = QueryNodeType(...)
-        >>> scope = AliasContext(...)
-        >>> inspector = NodeInspect(node, scope)
-        >>> inspector.functions(alias)  # Get SQL function expressions
-        >>> inspector.columns_or_ids()  # Get columns or IDs for selection
+        node: The query node being inspected.
+        scope: The scope resolving the node's aliases.
     """
 
     def __init__(self, node: QueryNodeType, scope: AliasContext[Any]) -> None:
-        """Initializes the NodeInspect helper.
+        """Binds the helper to a node and its scope.
 
         Args:
-            node: The query node (`QueryNodeType`) to be inspected.
-            scope: The `AliasContext` providing context for the inspection,
-                such as aliases, dialect, and parent relationships.
+            node: The query node to inspect.
+            scope: The scope resolving the node's aliases.
         """
         self.node = node
         self.scope = scope
 
     def _foreign_keys_selection(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
-        """Selects local foreign key columns for child relationships of the current node.
+        """Returns the local FK columns of the node's child relationships.
 
-        Iterates through the children of the current `self.node`. If a child
-        represents a relationship (is_relation is True and model_field.property
-        is a RelationshipProperty), it identifies the local columns involved in
-        that relationship.
-
-        These local columns (foreign keys on the parent side of the relationship)
-        are then adapted to the provided `alias` (or an alias inferred from the
-        parent node if `alias` is None).
+        For each child that is a relationship, its local (parent-side) foreign-key
+        columns are adapted to ``alias``. These keep the parent side of a relation
+        selectable so a later join can resolve.
 
         Args:
-            alias: The `AliasedClass` to which the foreign key attributes should be
-                adapted. If None, defaults to the alias of the parent of `self.node`.
+            alias: The alias to adapt the FK columns to; defaults to the node's
+                parent alias when ``None``.
 
         Returns:
-            A list of `QueryableAttribute` objects representing the aliased
-            local foreign key columns.
+            The aliased local foreign-key ``QueryableAttribute`` list.
         """
         selected_fks: list[QueryableAttribute[Any]] = []
         alias_insp = inspect(alias or self.scope.alias_from_relation_node(self.node, "parent"))
@@ -306,59 +285,40 @@ class NodeInspect:
 
     def _transform_column(
         self, node: QueryNodeType, attribute: QueryableAttribute[Any]
-    ) -> QueryableAttribute[Any] | ColumnTransform:
-        """Applies transformations to a column attribute if necessary.
+    ) -> QueryableAttribute[Any] | _ColumnTransform:
+        """Wraps a column in a JSON-extraction transform when the node requires one.
 
-        Currently, this method checks if the `node.metadata.data.json_path` is set.
-        If it is, it applies a JSON extraction transformation using
-        `ColumnTransform.extract_json`. Otherwise, it returns the original attribute.
+        When ``node.metadata.data.json_path`` is set, returns a ``ColumnTransform``
+        extracting that path; otherwise returns the attribute unchanged.
 
         Args:
-            node: The `QueryNodeType` providing metadata for potential transformations
-                (e.g., JSON path).
-            attribute: The `QueryableAttribute` to potentially transform.
+            node: The node supplying the optional JSON path.
+            attribute: The column attribute to possibly transform.
 
         Returns:
-            The transformed attribute (as a `ColumnTransform` instance) if a
-            transformation was applied, or the original `QueryableAttribute` otherwise.
+            A ``ColumnTransform`` when a JSON path applies, else the attribute.
         """
-        transform: ColumnTransform | None = None
+        transform: _ColumnTransform | None = None
         if node.metadata.data.json_path:
-            transform = ColumnTransform.extract_json(attribute, node, self.scope)
+            transform = _ColumnTransform.extract_json(attribute, node, self.scope)
         return attribute if transform is None else transform
 
     @property
-    def children(self) -> list[NodeInspect]:
-        """Provides `NodeInspect` instances for all children of the current node.
-
-        Returns:
-            A list of `NodeInspect` objects, each initialized with a child
-            of `self.node` and the same `self.scope`.
-        """
-        return [NodeInspect(child, self.scope) for child in self.node.children]
+    def children(self) -> list[_NodeInspect]:
+        """The node's children, each wrapped in a ``_NodeInspect`` over the same scope."""
+        return [_NodeInspect(child, self.scope) for child in self.node.children]
 
     @property
     def value(self) -> GraphQLFieldDefinition:
-        """The `GraphQLFieldDefinition` associated with the current node.
-
-        This is a direct accessor to `self.node.value`.
-
-        Returns:
-            The `GraphQLFieldDefinition` of the current node.
-        """
+        """The node's ``GraphQLFieldDefinition`` (shortcut for ``self.node.value``)."""
         return self.node.value
 
     @property
     def mapper(self) -> Mapper[Any]:
-        """The SQLAlchemy `Mapper` for the model associated with the current node.
+        """The SQLAlchemy ``Mapper`` for the node's model.
 
-        If the node's value (`self.value`) has a `model_field` (e.g., it's an
-        attribute of a model), it returns the mapper from that field's property.
-        Otherwise (e.g., it's a root model type), it returns the mapper directly
-        from `self.value.model`.
-
-        Returns:
-            The SQLAlchemy `Mapper` object.
+        Taken from the model field's relationship property when the node is a
+        mapped field, otherwise from the node's model directly (e.g. a root node).
         """
         if self.value.has_model_field:
             return self.value.model_field.property.mapper.mapper
@@ -366,16 +326,13 @@ class NodeInspect:
 
     @property
     def key(self) -> str:
-        """Generates a base key for the current node.
+        """The node's base label key.
 
-        The key is constructed based on whether the node represents a function,
-        is a root node, or is a model field.
-        - If it's a function, the function name is used as a prefix.
-        - If it's a root node, the model's table name is used as a suffix.
-        - If it's a model field, the field's key is used as a suffix.
+        Composed as an optional function-name prefix plus a suffix that is the
+        table name for a root node or the model-field key otherwise.
 
         Returns:
-            A string key representing the node.
+            The label key for the node.
         """
         prefix = f"{function.function}_" if (function := self.value.function()) else ""
         if self.node.is_root:
@@ -386,38 +343,29 @@ class NodeInspect:
 
     @property
     def name(self) -> str:
-        """Generates a potentially qualified name for the current node.
+        """The node's key, qualified by its parent's key when nested.
 
-        If the node has a parent, the name is constructed by prefixing the
-        parent's key (obtained via `NodeInspect(self.node.parent, self.scope).key`)
-        to the current node's `key`, separated by '__'.
-        If there is no parent, it simply returns the node's `key`.
-        This helps create unique names in nested structures.
+        Returns ``"<parent key>__<key>"`` when the node has a parent with a key,
+        otherwise just ``key`` — keeping labels unique across nesting levels.
 
         Returns:
-            A string name, potentially qualified by its parent's key.
+            The qualified label name.
         """
-        if self.node.parent and (parent_key := NodeInspect(self.node.parent, self.scope).key):
+        if self.node.parent and (parent_key := _NodeInspect(self.node.parent, self.scope).key):
             return f"{parent_key}__{self.key}"
         return self.key
 
     @property
     def is_data_root(self) -> bool:
-        """Determines if the current node acts as a data root in an aggregation query.
+        """Whether the node is the data root of the query.
 
-        A node is considered a data root if:
-        - It's part of a query with root aggregations (`self.node.graph_metadata.metadata.root_aggregations` is True),
-        - AND its field name is the standard 'nodes' key (`NODES_KEY`),
-        - AND it has a parent node which is itself a root node (`self.node.parent.is_root`).
-        Alternatively, if the node itself is marked as a root (`self.node.is_root`),
-        it's also considered a data root.
-
-        This is typically used to identify the primary entity collection within
-        queries that involve aggregations at the root level (e.g., total count
-        alongside a list of items).
+        True when the node is the root node, or — in a root-aggregations query —
+        the ``NODES_KEY`` collection directly under the root. This is the entity
+        collection that shares the root alias (e.g. the items listed alongside a
+        root-level total count).
 
         Returns:
-            True if the node is a data root, False otherwise.
+            True if the node is a data root.
         """
         return bool(
             (
@@ -434,32 +382,21 @@ class NodeInspect:
         alias: AliasedClass[Any],
         visit_func: _FunctionVisitor = lambda func: func,
     ) -> dict[QueryNodeType, Label[Any]]:
-        """Generates labeled SQLAlchemy function expressions for output.
+        """Builds the labelled aggregation-function columns for projection.
 
-        This method processes the function defined in `self.value.function()`.
-        It uses `AggregationFunctionInfo` to get the SQLAlchemy function.
-
-        - If `apply_on_column` is True (e.g., MIN, MAX), it iterates through
-          the children of the current node (which represent function arguments),
-          adapts each child's model field to the given `alias`, applies the
-          function, labels it with a unique key from the scope, and stores it.
-        - If `apply_on_column` is False (e.g., COUNT), it applies the function
-          (often to a wildcard or no specific column), labels it, and stores it.
-
-        The `visit_func` can be used to further transform the generated
-        SQLAlchemy function expression before labeling.
+        For a column-applied function (e.g. MIN, MAX) each argument child is
+        adapted to ``alias`` and the function applied per argument; for a
+        column-less function (e.g. COUNT) the function is built once on the node
+        itself. ``visit_func`` post-processes each expression before labelling
+        (e.g. wrapping it in ``.over()`` for a window function).
 
         Args:
-            alias: The `AliasedClass` to which function arguments (if any)
-                should be adapted.
-            visit_func: An optional callable to transform the generated
-                SQLAlchemy function expression before labeling. Defaults to an
-                identity function.
+            alias: The alias to adapt function arguments to.
+            visit_func: Transform applied to each function expression before
+                labelling; identity by default.
 
         Returns:
-            A dictionary mapping `QueryNodeType` (representing the function or
-            its argument node) to the corresponding labeled SQLAlchemy
-            function expression (`Label`).
+            A mapping of function/argument node to its anonymously labelled column.
         """
         functions: dict[QueryNodeType, Label[Any]] = {}
         function_info = AggregationFunctionInfo.from_name(self.value.function(strict=True).function, visitor=visit_func)
@@ -476,28 +413,19 @@ class NodeInspect:
     def filter_function(
         self, alias: AliasedClass[Any], distinct: bool | None = None
     ) -> tuple[QueryNodeType, Label[Any]]:
-        """Generates a labeled SQLAlchemy function expression for use in filters.
+        """Builds the labelled aggregation-function column for a WHERE predicate.
 
-        Similar to `output_functions`, but tailored for filter conditions.
-        It retrieves the function using `AggregationFunctionInfo`.
-        Arguments for the function are derived from the children of the current node,
-        adapted to the given `alias`.
-        If `distinct` is True, `strawberry.distinct()` is applied to the arguments.
-
-        The label for the function is determined by the scope key of either the
-        first child (if there's only one, implying the function applies to that
-        child's attribute) or the current node itself.
+        Like ``output_functions`` but returns a single function: its arguments are
+        the node's children adapted to ``alias``, wrapped in SQLAlchemy
+        ``distinct()`` when ``distinct`` is set. The associated node is the sole
+        argument child when there is exactly one, otherwise the node itself.
 
         Args:
-            alias: The `AliasedClass` to adapt function arguments to.
-            distinct: If True, applies `strawberry.distinct()` to the function
-                arguments. Defaults to None (no distinct).
+            alias: The alias to adapt function arguments to.
+            distinct: Whether to wrap the arguments in ``distinct()``.
 
         Returns:
-            A tuple containing:
-            - `QueryNodeType`: The node associated with the function (either the
-              current node or its first child).
-            - `Label[Any]`: The labeled SQLAlchemy function expression.
+            The associated node and its anonymously labelled function column.
         """
         function_info = AggregationFunctionInfo.from_name(self.value.function(strict=True).function)
         function_args = []
@@ -511,39 +439,29 @@ class NodeInspect:
 
     def columns(
         self, alias: AliasedClass[Any] | None = None
-    ) -> tuple[list[QueryableAttribute[Any]], list[ColumnTransform]]:
-        """Extracts regular columns and transformed columns for the current node.
+    ) -> tuple[list[QueryableAttribute[Any]], list[_ColumnTransform]]:
+        """Splits the node's scalar children into plain columns and transforms.
 
-        Iterates through the children of the current node (`self.node`).
-        For each child that is not a relation and not a computed field:
-        1. It gets the aliased attribute using `self.scope.aliased_attribute()`.
-        2. It attempts to transform the column using `self._transform_column()`.
-        3. If transformed (e.g., JSON extraction), it's added to the `transforms` list.
-        4. Otherwise, the regular aliased attribute is added to the `columns` list.
-
-        After processing all children, it ensures that ID attributes for the current
-        node (obtained via `self.scope.aliased_id_attributes()`) are included in
-        the `columns` list if they haven't been added already (to avoid duplicates
-        if ID fields were explicitly requested).
+        Each non-relation, non-computed child is resolved to its aliased attribute;
+        JSON-path children become ``ColumnTransform`` entries, the rest plain
+        columns. The node's primary-key attributes are appended to the columns
+        unless already selected, so the row is always identifiable.
 
         Args:
-            alias: The `AliasedClass` to which the column attributes should be
-                adapted. If None, the scope will infer the appropriate alias.
+            alias: The alias to adapt columns to; inferred by the scope when ``None``.
 
         Returns:
-            A tuple containing two lists:
-            - The first list contains `QueryableAttribute` objects for regular columns.
-            - The second list contains `ColumnTransform` objects for transformed columns.
+            The plain ``QueryableAttribute`` columns and the ``ColumnTransform`` list.
         """
         columns: list[QueryableAttribute[Any]] = []
-        transforms: list[ColumnTransform] = []
+        transforms: list[_ColumnTransform] = []
         property_set: set[MapperProperty[Any]] = set()
         for child in self.node.children:
             if not child.value.is_relation and not child.value.is_computed:
                 aliased = self.scope.aliased_attribute(child, alias)
                 property_set.add(aliased.property)
                 aliased = self._transform_column(child, aliased)
-                if isinstance(aliased, ColumnTransform):
+                if isinstance(aliased, _ColumnTransform):
                     transforms.append(aliased)
                 else:
                     columns.append(aliased)
@@ -556,29 +474,21 @@ class NodeInspect:
     def foreign_key_columns(
         self, side: RelationshipSide, alias: AliasedClass[Any] | None = None
     ) -> list[QueryableAttribute[Any]]:
-        """Retrieves foreign key columns for the current node's relationship.
+        """Returns the foreign-key columns of the node's relationship, adapted to an alias.
 
-        This method identifies the foreign key columns involved in the relationship
-        represented by `self.node.value.model_field.property`. The `side` argument
-        determines whether to fetch local columns (if `side` is "parent") or
-        remote columns (if `side` is "child").
-
-        The columns are then adapted to the provided `alias` (or an alias
-        inferred from the node and side if `alias` is None).
+        ``side`` picks which end: ``"parent"`` yields the local columns,
+        ``"target"`` the remote columns. They are adapted to ``alias``, or to the
+        alias inferred from the node and side when ``None``.
 
         Args:
-            side: Specifies which side of the relationship to get keys from
-                ("parent" for local, "child" for remote).
-            alias: The `AliasedClass` to adapt the foreign key attributes to.
-                If None, an alias is inferred based on the node and relationship side.
+            side: Which end of the relationship to read keys from (``"parent"`` or ``"target"``).
+            alias: The alias to adapt the FK columns to; inferred when ``None``.
 
         Returns:
-            A list of `QueryableAttribute` objects representing the aliased
-            foreign key columns.
+            The aliased foreign-key ``QueryableAttribute`` list.
 
         Raises:
-            AssertionError: If `self.node.value.model_field.property` is not
-                a `RelationshipProperty`.
+            AssertionError: If the node's model field is not a ``RelationshipProperty``.
         """
         alias_insp = inspect(alias or self.scope.alias_from_relation_node(self.node, side))
         relationship = self.node.value.model_field.property
@@ -591,58 +501,39 @@ class NodeInspect:
         ]
 
     def selection(self, alias: AliasedClass[Any] | None = None) -> list[QueryableAttribute[Any]]:
-        """Computes the full list of attributes to select for the current node.
+        """Returns every attribute to select for the node.
 
-        This combines the regular columns (and transformed columns, though only
-        the `QueryableAttribute` part is returned here) obtained from `self.columns(alias)`
-        with the foreign key columns needed for relationships, obtained from
-        `self._foreign_keys_selection(alias)`.
+        The node's plain columns (from ``columns``; transforms are excluded) plus
+        the local foreign keys of its child relationships (from
+        ``_foreign_keys_selection``), so child relations can later be joined.
 
         Args:
-            alias: The `AliasedClass` to adapt attributes to. If None, aliases
-                are inferred by the called methods.
+            alias: The alias to adapt attributes to; inferred when ``None``.
 
         Returns:
-            A list of `QueryableAttribute` objects representing all columns
-            to be selected for the current node, including necessary foreign keys.
+            The columns to select, including the relationship foreign keys.
         """
         columns, _ = self.columns(alias)
         return [*columns, *self._foreign_keys_selection(alias)]
 
 
 class AliasContext(Generic[DeclarativeT]):
-    """Manages the context for building SQLAlchemy queries from GraphQL queries.
+    """The per-query scope mapping GraphQL query nodes to SQLAlchemy aliases.
 
-    The AliasContext class is responsible for maintaining the state and context
-    required to transpile a GraphQL query into a SQLAlchemy query. It manages
-    aliases for tables and relationships, tracks selected columns, and provides
-    utilities for generating SQL expressions.
+    Holds the root alias for one model level plus a shared map from
+    ``(node, relationship side)`` to the aliased class used for it, so every
+    reference to a column or relationship resolves to a consistent alias and the
+    generated SQL stays free of naming conflicts.
 
-    Key Responsibilities:
-        - Manages aliases for SQLAlchemy models and relationships.
-        - Tracks selected columns and functions within the query.
-        - Provides methods for generating aliased attributes and literal columns.
-        - Supports nested scopes for subqueries and related entities.
-        - Maintains a mapping of relationship properties to their aliases.
-        - Generates unique names for columns and functions within the scope.
+    A scope is mutable and hierarchical:
 
-    The class is used by the Transpiler to build complex SQL queries by providing
-    context-aware access to model attributes and relationships. It ensures that
-    all parts of the query are correctly aliased and referenced, preventing
-    naming conflicts and ensuring the query is valid.
+    - ``replace`` re-roots it in place, used when the query is wrapped in a
+      pagination/distinct subquery.
+    - ``sub`` derives a child scope for a related collection, sharing this
+      scope's alias map and inspector so aliases stay consistent across levels.
 
-    Example:
-        >>> from strawberry.orm import declarative_base
-        >>> from strawberry import Column, Integer, String
-        >>> Base = declarative_base()
-        >>> class User(Base):
-        ...     __tablename__ = 'users'
-        ...     id = Column(Integer, primary_key=True)
-        ...     name = Column(String)
-        >>> scope = AliasContext(User)
-        >>> user_alias = scope.root_alias
-        >>> print(user_alias.name)
-        users
+    ``PlanContext`` holds the active scope as its ``aliases`` field; the planning
+    passes resolve attributes and build expressions through it.
     """
 
     def __init__(
@@ -695,12 +586,31 @@ class AliasContext(Generic[DeclarativeT]):
 
     @property
     def root_alias(self) -> AliasedClass[Any]:
+        """The aliased class this scope is currently rooted on."""
         return self._root_alias
 
-    def inspect(self, node: QueryNodeType) -> NodeInspect:
-        return NodeInspect(node, self)
+    def inspect(self, node: QueryNodeType) -> _NodeInspect:
+        """Returns a node-inspection helper bound to this scope."""
+        return _NodeInspect(node, self)
 
     def alias_from_relation_node(self, node: QueryNodeType, side: RelationshipSide) -> AliasedClass[Any]:
+        """Returns the aliased class for one side of a relation node.
+
+        The alias is created on first use and cached in the scope's alias map, so
+        repeated lookups for the same ``(node, side)`` return the same alias. The
+        root alias is returned when the node is the data root (or, for ``"parent"``,
+        when its parent is).
+
+        Args:
+            node: The relation node to resolve an alias for.
+            side: Which end of the relationship to alias (``"parent"`` or ``"target"``).
+
+        Returns:
+            The aliased class for that side of the relation.
+
+        Raises:
+            TranspilingError: If ``node`` is not a relation node.
+        """
         node_inspect = self.inspect(node)
         if (side == "parent" and node.parent and self.inspect(node.parent).is_data_root) or node_inspect.is_data_root:
             return self._root_alias
@@ -716,41 +626,19 @@ class AliasContext(Generic[DeclarativeT]):
         return alias
 
     def aliased_attribute(self, node: QueryNodeType, alias: AliasedClass[Any] | None = None) -> QueryableAttribute[Any]:
-        """Adapts a model field to an aliased entity for query building.
+        """Adapts a node's model field to the alias it should use in the query.
 
-        This method is a core component of the GraphQL to SQL transpilation process,
-        handling the adaptation of model fields to their aliased representations in
-        the generated SQL query. It manages both explicit aliases and inferred aliases
-        based on parent-child relationships in the query structure.
-
-        The method works in conjunction with other AliasContext methods to ensure
-        consistent alias handling across the query:
-        - Uses alias_from_relation_node for relationship traversal
-        - Integrates with aliased_id_attributes for primary key handling
-        - Supports the overall query building process in the Transpiler
+        With an explicit ``alias`` the field is adapted to it directly. Otherwise
+        the alias is inferred from the node's position: a column field adapts to
+        its parent relation's target alias, while a relation field adapts to the
+        parent alias and is then typed (``of_type``) onto its own target alias.
 
         Args:
-            node: The SQLAlchemy query node containing the model field to be aliased.
-                Must be a valid query node with a model field reference.
-            alias: An optional explicit alias to use for adaptation. If None, the alias
-                will be inferred based on the node's position in the query structure.
+            node: The query node whose model field is being resolved.
+            alias: An explicit alias to adapt to; inferred from the node when ``None``.
 
         Returns:
-            QueryableAttribute[Any]: The adapted attribute ready for use in SQL
-            expressions. The attribute will be properly aliased according to the
-            query context.
-
-        Raises:
-            AttributeError: If the node does not have a valid model field reference.
-            TranspilingError: If there are issues with the node's relationship structure.
-
-        Example:
-            >>> node = QueryNodeType(...)  # Node with model field reference
-            >>> scope = AliasContext(User)  # Query scope for User model
-            >>> # Get attribute with explicit alias
-            >>> attr = scope.aliased_attribute(node, aliased(User))
-            >>> # Get attribute with inferred alias
-            >>> attr = scope.aliased_attribute(node)
+            The adapted ``QueryableAttribute`` ready for use in SQL expressions.
         """
         model_field: QueryableAttribute[RelationshipProperty[Any]] = node.value.model_field
         if alias is not None:
@@ -771,31 +659,19 @@ class AliasContext(Generic[DeclarativeT]):
     def aliased_id_attributes(
         self, node: QueryNodeType, alias: AliasedClass[Any] | None = None
     ) -> list[QueryableAttribute[Any]]:
-        """Retrieves aliased primary key (ID) attributes for a given node.
+        """Returns a node's primary-key attributes, adapted to its alias.
 
-        This method determines the correct mapper for the node (root mapper for
-        root nodes, node's own mapper otherwise) and fetches its primary key
-        attributes using `SQLAlchemyInspector.pk_attributes()`.
-
-        The retrieved PK attributes are then adapted to an appropriate alias:
-        - If an explicit `alias` is provided, all PKs are adapted to it.
-        - If the `node` is the root of the query, PKs are adapted to the scope's
-          `_root_alias`.
-        - For non-root nodes (typically representing relationships), PKs are
-          adapted to the target alias of that relationship, obtained via
-          `self.alias_from_relation_node(node, "target")`.
-
-        This ensures that ID columns are correctly referenced in the query,
-        whether for direct selection or for joins.
+        The PK columns come from the node's mapper (the root mapper for the root
+        node). They are adapted to ``alias`` when given, otherwise to the root
+        alias for the root node, or to the relation's target alias for a
+        non-root node.
 
         Args:
-            node: The `QueryNodeType` for which to get aliased ID attributes.
-            alias: An optional explicit `AliasedClass` to adapt the ID attributes to.
-                If None, the alias is inferred based on the node's context.
+            node: The node whose primary-key attributes are requested.
+            alias: An explicit alias to adapt to; inferred from the node when ``None``.
 
         Returns:
-            A list of `QueryableAttribute` objects representing the aliased
-            primary key attributes.
+            The aliased primary-key ``QueryableAttribute`` list.
         """
         # Get the appropriate mapper based on whether the node is root or not
         # For root nodes, use the root alias mapper, otherwise inspect the node to get its mapper
@@ -876,12 +752,35 @@ class AliasContext(Generic[DeclarativeT]):
         ]
 
     def replace(self, model: type[DeclarativeT] | None = None, alias: AliasedClass[Any] | None = None) -> None:
+        """Re-roots this scope in place onto a new model and/or root alias.
+
+        Mutates the current scope rather than deriving a child, so callers holding
+        the same scope object (e.g. ``PlanContext.build_join``) observe the new
+        root. Used at the pagination/distinct subquery boundary.
+
+        Args:
+            model: The model to root on, or ``None`` to keep the current one.
+            alias: The root alias to use, or ``None`` to keep the current one.
+        """
         if model is not None:
             self.model = model
         if alias is not None:
             self._root_alias = alias
 
     def sub(self, model: type[DeclarativeSubT], alias: AliasedClass[Any]) -> AliasContext[DeclarativeSubT]:
+        """Derives a child scope rooted on a related model.
+
+        The child shares this scope's alias map and inspector so aliases stay
+        consistent across levels, and links back via ``parent`` (raising its
+        ``level`` by one).
+
+        Args:
+            model: The related model the child scope is rooted on.
+            alias: The root alias for the child scope.
+
+        Returns:
+            A new child ``AliasContext`` one level below this one.
+        """
         return AliasContext(
             model=model,
             root_alias=alias,

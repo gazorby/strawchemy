@@ -1,7 +1,7 @@
 """Transpiles a GraphQL query into a SQLAlchemy query.
 
-This module contains the QueryTranspiler class, a thin facade over a
-``PlanEnv`` that builds executors and filter expressions via ``plan_query``.
+This module contains the Transpiler class, a thin facade over a
+``PlanContext`` that builds executors and filter expressions via ``plan_query``.
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ class Transpiler(Generic[DeclarativeT]):
         deterministic_ordering: bool = False,
         default_order_by: Sequence[OrderByExpr] | None = None,
     ) -> None:
-        """Initializes the QueryTranspiler.
+        """Initializes the Transpiler.
 
         Args:
             model: The SQLAlchemy model to transpile queries for.
