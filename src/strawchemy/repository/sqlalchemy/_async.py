@@ -223,7 +223,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
 
         transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
         where_expressions = transpiler.filter_expressions(data.dto_filter) if data.dto_filter else None
-        return await self._update_where(transpiler.env.ctx.root_alias, values[0], where_expressions)
+        return await self._update_where(transpiler.context.aliases.root_alias, values[0], where_expressions)
 
     async def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
         self._connect_to_one_relations(data.input)
@@ -482,7 +482,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             where_expressions = transpiler.filter_expressions(dto_filter) if dto_filter else None
             to_be_deleted = await self.list(selection, dto_filter=dto_filter)
             affected_rows = await self._delete_where(
-                transpiler.env.ctx.root_alias, where_expressions, execution_options
+                transpiler.context.aliases.root_alias, where_expressions, execution_options
             )
             await transaction.commit()
         return to_be_deleted.filter_in(**self._rows_to_filter_dict(affected_rows))

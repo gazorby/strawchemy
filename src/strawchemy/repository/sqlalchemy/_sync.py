@@ -225,7 +225,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
         transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
         where_expressions = transpiler.filter_expressions(data.dto_filter) if data.dto_filter else None
-        return self._update_where(transpiler.env.ctx.root_alias, values[0], where_expressions)
+        return self._update_where(transpiler.context.aliases.root_alias, values[0], where_expressions)
 
     def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
         self._connect_to_one_relations(data.input)
@@ -481,6 +481,8 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
             where_expressions = transpiler.filter_expressions(dto_filter) if dto_filter else None
             to_be_deleted = self.list(selection, dto_filter=dto_filter)
-            affected_rows = self._delete_where(transpiler.env.ctx.root_alias, where_expressions, execution_options)
+            affected_rows = self._delete_where(
+                transpiler.context.aliases.root_alias, where_expressions, execution_options
+            )
             transaction.commit()
         return to_be_deleted.filter_in(**self._rows_to_filter_dict(affected_rows))

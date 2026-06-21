@@ -51,7 +51,7 @@ class Transpiler(Generic[DeclarativeT]):
             deterministic_ordering: Whether to ensure deterministic ordering of results.
             default_order_by: Default ordering applied when the client supplies no order.
         """
-        self.env: PlanContext[DeclarativeT] = PlanContext.create(
+        self.context: PlanContext[DeclarativeT] = PlanContext.create(
             model,
             dialect,
             statement=statement,
@@ -89,16 +89,16 @@ class Transpiler(Generic[DeclarativeT]):
             A QueryExecutor instance that can execute the built query.
         """
         query_graph = QueryGraph(
-            self.env.ctx,
+            self.context.aliases,
             selection_tree=selection_tree,
             dto_filter=dto_filter,
             order_by=order_by or [],
             distinct_on=distinct_on or [],
         )
-        plan = plan_query(query_graph, self.env, limit=limit, offset=offset, allow_null=allow_null)
+        plan = plan_query(query_graph, self.context, limit=limit, offset=offset, allow_null=allow_null)
         return executor_cls(
             plan=plan,
-            id_field_definitions=self.env.ctx.id_field_definitions(self.env.ctx.model),
+            id_field_definitions=self.context.aliases.id_field_definitions(self.context.aliases.model),
             execution_options=execution_options,
         )
 
@@ -111,10 +111,10 @@ class Transpiler(Generic[DeclarativeT]):
         Returns:
             The list of boolean WHERE expressions.
         """
-        query_graph = QueryGraph(self.env.ctx, dto_filter=dto_filter)
-        plan = plan_query(query_graph, self.env)
+        query_graph = QueryGraph(self.context.aliases, dto_filter=dto_filter)
+        plan = plan_query(query_graph, self.context)
         return list(plan.where)
 
     @override
     def __repr__(self) -> str:
-        return f"<{self.__class__.__name__} {self.env.ctx.model}>"
+        return f"<{self.__class__.__name__} {self.context.aliases.model}>"
