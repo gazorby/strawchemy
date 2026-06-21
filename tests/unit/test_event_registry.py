@@ -29,16 +29,68 @@ def _make_relation(registry: EventRegistry, parent: Color) -> RelationInput:
     )
 
 
-def test_event_routes_only_to_owning_relation() -> None:
-    """An append on one parent updates only the RelationInput bound to that parent."""
+def _color_prop() -> RelationshipProperty[Any]:
+    """The Fruit.color relationship MapperProperty (to-one)."""
+    return inspect(Fruit).attrs["color"]
+
+
+def _make_to_one_relation(registry: EventRegistry, parent: Fruit) -> RelationInput:
+    return RelationInput(
+        attribute=_color_prop(),
+        related=Color,
+        parent=parent,
+        relation_type=RelationType.TO_ONE,
+        event_registry=registry,
+    )
+
+
+def test_append_event_updates_only_owning_relation() -> None:
+    """An append on one parent's collection fills only that parent's RelationInput create bucket."""
     registry = EventRegistry()
     parent_a, parent_b = Color(name="A"), Color(name="B")
     relation_a = _make_relation(registry, parent_a)
     relation_b = _make_relation(registry, parent_b)
+    fruit_a = Fruit(name="A", color_id=uuid4(), sweetness=1, color=None)
+    fruit_b = Fruit(name="B", color_id=uuid4(), sweetness=1, color=None)
 
-    parent_b.fruits.append(Fruit(name="Apple", color_id=uuid4(), sweetness=1, color=None))
+    parent_a.fruits.append(fruit_a)
+    parent_b.fruits.append(fruit_b)
 
-    assert len(relation_b.create) == 1
+    assert relation_a.create == [fruit_a]
+    assert relation_b.create == [fruit_b]
+
+
+def test_remove_event_updates_only_owning_relation() -> None:
+    """A remove on one parent's collection clears only that parent's RelationInput create bucket."""
+    registry = EventRegistry()
+    parent_a, parent_b = Color(name="A"), Color(name="B")
+    relation_a = _make_relation(registry, parent_a)
+    relation_b = _make_relation(registry, parent_b)
+    fruit_a = Fruit(name="A", color_id=uuid4(), sweetness=1, color=None)
+    fruit_b = Fruit(name="B", color_id=uuid4(), sweetness=1, color=None)
+    parent_a.fruits.append(fruit_a)
+    parent_b.fruits.append(fruit_b)
+    assert relation_a.create == [fruit_a]
+    assert relation_b.create == [fruit_b]
+
+    parent_b.fruits.remove(fruit_b)
+
+    assert relation_b.create == []
+    assert relation_a.create == [fruit_a]  # owning-relation isolation preserved
+
+
+def test_set_event_updates_only_owning_relation() -> None:
+    """A set on one parent's to-one attribute fills only that parent's RelationInput create bucket."""
+    registry = EventRegistry()
+    fruit_a = Fruit(name="A", color_id=uuid4(), sweetness=1, color=None)
+    fruit_b = Fruit(name="B", color_id=uuid4(), sweetness=1, color=None)
+    relation_a = _make_to_one_relation(registry, fruit_a)
+    relation_b = _make_to_one_relation(registry, fruit_b)
+    color = Color(name="Blue")  # transient
+
+    fruit_b.color = color  # set event -> handle_set -> create == [color]
+
+    assert relation_b.create == [color]
     assert relation_a.create == []
 
 
