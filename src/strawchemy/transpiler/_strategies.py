@@ -26,8 +26,8 @@ if TYPE_CHECKING:
     from sqlalchemy.sql import ColumnElement
 
     from strawchemy.config.databases import DatabaseFeatures
+    from strawchemy.transpiler._aliasing import AliasContext
     from strawchemy.transpiler._plan import QueryPlan
-    from strawchemy.transpiler._scope import AliasContext
     from strawchemy.typing import QueryNodeType
 
 __all__ = ("CteJoinStrategy", "JoinStrategy", "LateralJoinStrategy", "select_join_strategy")

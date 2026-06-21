@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 
     from strawchemy.config.databases import DatabaseFeatures
     from strawchemy.transpiler import ColumnLoadingMode, QueryHook
-    from strawchemy.transpiler._scope import AliasContext
+    from strawchemy.transpiler._aliasing import AliasContext
     from strawchemy.typing import QueryNodeType
 
 __all__ = ("AggregationJoin", "AggregationSpec", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")

@@ -28,6 +28,7 @@ from strawchemy.dto.strawberry import (
 from strawchemy.exceptions import StrawchemyFieldError, TranspilingError
 from strawchemy.repository.typing import DeclarativeT
 from strawchemy.schema.filters import GraphQLComparison
+from strawchemy.transpiler._aliasing import AliasContext, require_corresponding_column
 from strawchemy.transpiler._plan import FilterSemiJoin, HookSpec, QueryPlan
 from strawchemy.transpiler._query import (
     AggregationJoin,
@@ -40,7 +41,6 @@ from strawchemy.transpiler._query import (
     QueryGraph,
     Where,
 )
-from strawchemy.transpiler._scope import AliasContext, require_corresponding_column
 from strawchemy.transpiler._strategies import select_join_strategy
 
 if TYPE_CHECKING:

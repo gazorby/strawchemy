@@ -8,7 +8,7 @@ import pytest
 from sqlalchemy import Result
 
 from strawchemy.transpiler import _executor as executor
-from strawchemy.transpiler._scope import AggregationFunctionInfo
+from strawchemy.transpiler._aliasing import AggregationFunctionInfo
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
