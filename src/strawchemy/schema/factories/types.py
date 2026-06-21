@@ -16,7 +16,6 @@ from strawchemy.dto.base import DTOFactory, DTOFieldDefinition, MappedDTO
 from strawchemy.dto.strawberry import (
     AggregateDTO,
     AggregateFieldDefinition,
-    DTOKey,
     EnumDTO,
     FunctionFieldDefinition,
     GraphQLFieldDefinition,
@@ -237,7 +236,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             else set()
         )
 
-        for field in dto.__strawchemy_definition__.field_map.values():
+        for field in dto.__dto_field_definitions__.values():
             if field.name in body_fields:
                 # Drop the model-derived annotation so the resolver's own return type
                 # drives the field type, rather than the column type.
@@ -280,18 +279,11 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         if_no_fields: Literal["raise", "skip"] = "skip",
         *,
         aggregations: bool = False,
-        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
-        field_map = field_map if field_map is not None else {}
-        for field in super().iter_field_definitions(
-            name, model, dto_config, base, node, if_no_fields, field_map=field_map, **kwargs
-        ):
-            key = DTOKey.from_dto_node(node)
+        for field in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
             if field.is_relation and field.uselist and aggregations:
-                aggregation_field = self._aggregation_field(field, dto_config)
-                field_map[key + aggregation_field.name] = aggregation_field
-                yield aggregation_field
+                yield self._aggregation_field(field, dto_config)
             yield field
 
     @override
@@ -380,13 +372,10 @@ class AggregateRootTypeFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         if_no_fields: Literal["raise", "skip"] = "skip",
         aggregations: bool = False,
-        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         if not node.is_root:
             yield from ()
-        key = DTOKey.from_dto_node(node)
-        field_map = field_map if field_map is not None else {}
         nodes_dto = self._type_factory.factory(model, dto_config=dto_config, aggregations=aggregations)
         nodes = GraphQLFieldDefinition(
             dto_config=dto_config,
@@ -403,8 +392,6 @@ class AggregateRootTypeFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             is_relation=False,
             is_aggregate=True,
         )
-        field_map[key + nodes.name] = nodes
-        field_map[key + aggregations_field.name] = aggregations_field
         yield from iter((nodes, aggregations_field))
 
     @override
@@ -455,10 +442,8 @@ class AggregateFieldsFactory(GraphQLFactory[AggregateDTOT]):
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         if_no_fields: Literal["raise", "skip"] = "skip",
         backend_kwargs: dict[str, Any] | None = None,
-        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
     ) -> type[AggregateDTOT]:
-        field_map = field_map if field_map is not None else {}
         model_field = parent_field_def.model_field if parent_field_def else None
         aggregate_config = dto_config.copy_with(partial=True, include="all")
         field_definitions: list[FunctionFieldDefinition] = [
@@ -474,8 +459,6 @@ class AggregateFieldsFactory(GraphQLFactory[AggregateDTOT]):
             for aggregation in self._aggregation_builder.output_functions(model, aggregate_config)
         ]
 
-        root_key = DTOKey.from_dto_node(node)
-        field_map.update({root_key + field.model_field_name: field for field in field_definitions})
         return self.backend.build(name, model, field_definitions, **(backend_kwargs or {}))
 
 
@@ -737,7 +720,6 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         if_no_fields: Literal["raise", "skip"] = "skip",
         *,
         aggregations: bool = False,
-        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **factory_kwargs: Unpack[_HasModeKwargs],
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         mode: GraphQLPurpose = factory_kwargs.pop("mode")
@@ -750,7 +732,6 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             if_no_fields,
             mode=mode,
             aggregations=aggregations,
-            field_map=field_map,
             **factory_kwargs,
         ):
             if mode == "update_by_pk_input" and self.inspector.is_primary_key(field.model_field):

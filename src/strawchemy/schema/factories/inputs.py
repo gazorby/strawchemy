@@ -11,7 +11,6 @@ from strawchemy.dto.strawberry import (
     AggregateFilterDTO,
     AggregationFunctionFilterDTO,
     BooleanFilterDTO,
-    DTOKey,
     FilterFunctionInfo,
     FunctionArgFieldDefinition,
     FunctionFieldDefinition,
@@ -107,24 +106,15 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
         if_no_fields: Literal["raise", "skip"] = "skip",
         *,
         aggregate_filters: bool = False,
-        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
-        field_map = field_map if field_map is not None else {}
-        for field in super().iter_field_definitions(
-            name, model, dto_config, base, node, if_no_fields, field_map=field_map, **kwargs
-        ):
-            key = DTOKey.from_dto_node(node)
+        for field in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
             if field.is_relation:
                 field.type_ = Union[field.type_, None]
                 if field.uselist and field.related_dto:
                     field.type_ = Union[field.related_dto, None]  # ty: ignore[invalid-type-form]
                 if aggregate_filters:
-                    aggregation_field = self._aggregation_field(
-                        field, dto_config.copy_with(partial_default=UNSET, partial=True)
-                    )
-                    field_map[key + aggregation_field.name] = aggregation_field
-                    yield aggregation_field
+                    yield self._aggregation_field(field, dto_config.copy_with(partial_default=UNSET, partial=True))
             else:
                 comparison_type = self._filter_type(field)
                 field.type_ = Optional[comparison_type]  # ty: ignore[invalid-type-form]
@@ -247,11 +237,6 @@ class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
                 ),
             ],
         )
-        fields = [
-            FunctionArgFieldDefinition.from_field(field, function=aggregation)
-            for _, field in self.inspector.field_definitions(model, dto_config)
-        ]
-        dto.__strawchemy_definition__.populate_fields(model, fields)
         dto.__strawchemy_definition__.description = "Field filtering information"
         dto.__dto_function_info__ = aggregation
         return self._mapper.registry.register_type(
@@ -304,7 +289,6 @@ class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
         dto.__strawchemy_definition__.description = (
             "Boolean expression to compare field aggregations. All fields are combined with logical 'AND'."
         )
-        dto.__strawchemy_definition__.populate_fields(model, field_defs)
         return dto
 
 
@@ -336,6 +320,7 @@ class OrderByFactory(_FilterFactory[OrderByDTO]):
     def _order_by_aggregation_fields(
         self, aggregation: FilterFunctionInfo, model: type[Any], dto_config: DTOConfig
     ) -> type[OrderByDTO]:
+        model_fields = {field.name: field for _, field in self.inspector.field_definitions(model, dto_config)}
         field_defs = [
             FunctionArgFieldDefinition(
                 dto_config=dto_config,
@@ -343,17 +328,13 @@ class OrderByFactory(_FilterFactory[OrderByDTO]):
                 model_field_name=name.field_definition.name,
                 type_hint=OrderByEnum,
                 _function=aggregation,
+                _model_field=model_fields[name.field_definition.name].model_field,
             )
             for name in aggregation.enum_fields
         ]
 
         name = f"{model.__name__}Aggregate{snake_to_camel(aggregation.aggregation_type)}FieldsOrderBy"
         dto = self.backend.build(name, model, field_defs)
-        fields = [
-            FunctionArgFieldDefinition.from_field(field, function=aggregation)
-            for _, field in self.inspector.field_definitions(model, dto_config)
-        ]
-        dto.__strawchemy_definition__.populate_fields(model, fields)
         return self._mapper.registry.register_type(
             dto,
             dto_config=dto_config,
@@ -386,7 +367,6 @@ class OrderByFactory(_FilterFactory[OrderByDTO]):
             )
 
         dto = self.backend.build(f"{model.__name__}AggregateOrderBy", model, field_definitions)
-        dto.__strawchemy_definition__.populate_fields(model, field_definitions)
         return self._mapper.registry.register_type(
             dto,
             dto_config=dto_config,

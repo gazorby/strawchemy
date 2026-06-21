@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import QueryableAttribute
 
     from strawchemy.dto.base import DTOFieldDefinition
-    from strawchemy.dto.strawberry import BooleanFilterDTO, DTOKey, GraphQLFieldDefinition, OrderByDTO
+    from strawchemy.dto.strawberry import BooleanFilterDTO, OrderByDTO
     from strawchemy.dto.types import FieldSpec
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.typing import GraphQLPurpose
@@ -102,7 +102,6 @@ class ForwardedFactoryKwargs(TypedDict, total=False):
     tags: set[str] | None
     backend_kwargs: dict[str, Any] | None
     no_cache: bool
-    field_map: dict[DTOKey, GraphQLFieldDefinition] | None
     register_type: bool
     user_defined: bool
 

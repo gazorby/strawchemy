@@ -670,3 +670,20 @@ def test_default_order_by_on_non_list_field_raises() -> None:
 def test_default_order_by_wrong_model_column_raises() -> None:
     with pytest.raises(StrawchemyFieldError, match="not a column"):
         import_module("tests.unit.schemas.default_order_by_invalid")
+
+
+def test_aggregation_order_by_aliased_column_no_key_error() -> None:
+    """Schema build must not raise KeyError for aggregatable columns with a field-level alias.
+
+    Regression test for the bug introduced by the "centralize field_map" refactor.
+    `_order_by_aggregation_fields` was keying `model_fields` by `prop.key` (raw SQLAlchemy
+    attribute name) but looking up by `name.field_definition.name` (alias-aware). For any
+    aggregatable column with a Purpose.READ alias the subscript raised a KeyError.
+    """
+    from tests.unit.schemas.order.order_by_aliased_aggregation import Query
+
+    # Schema build must not raise KeyError.
+    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+    schema_sdl = str(schema)
+    # The aggregate order-by input type for the aliased model must appear in the schema.
+    assert "AliasedItemAggregateOrderBy" in schema_sdl
