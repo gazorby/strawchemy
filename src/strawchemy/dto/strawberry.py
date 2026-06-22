@@ -60,7 +60,7 @@ from strawchemy.utils.graph import AnyNode, GraphMetadata, MatchOn, Node, NodeMe
 from strawchemy.utils.text import camel_to_snake
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
+    from collections.abc import Callable, Hashable, Iterator
 
     from sqlalchemy import ColumnElement
 
