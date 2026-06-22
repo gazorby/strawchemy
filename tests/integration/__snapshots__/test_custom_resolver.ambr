@@ -12,12 +12,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-   INNER JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = %s
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = %s
   '''
 # ---
 # name: test_get_one[session-tracked-async-asyncpg_engine]
@@ -25,12 +20,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-    JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = $1::VARCHAR
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = $1::VARCHAR
   '''
 # ---
 # name: test_get_one[session-tracked-async-psycopg_async_engine]
@@ -38,12 +28,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-    JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = %(name_1)s::VARCHAR
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = %(name_1)s::VARCHAR
   '''
 # ---
 # name: test_get_one[session-tracked-sync-psycopg_engine]
@@ -51,12 +36,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-    JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = %(name_1)s::VARCHAR
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = %(name_1)s::VARCHAR
   '''
 # ---
 # name: test_get_one[session-tracked-sync-sqlite_engine]

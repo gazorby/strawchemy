@@ -1193,8 +1193,7 @@
   SELECT fruit_1.id,
          color.id AS id_1
     FROM (
-          SELECT color.id AS id,
-                 color.id AS id__1
+          SELECT color.id AS id
             FROM color AS color
            ORDER BY color.id ASC
            LIMIT %s,
@@ -1223,8 +1222,7 @@
   SELECT fruit_1.id,
          color.id AS id_1
     FROM (
-          SELECT color.id AS id,
-                 color.id AS id__1
+          SELECT color.id AS id
             FROM color AS color
            ORDER BY color.id ASC
            LIMIT $1::INTEGER
@@ -1253,8 +1251,7 @@
   SELECT fruit_1.id,
          color.id AS id_1
     FROM (
-          SELECT color.id AS id,
-                 color.id AS id__1
+          SELECT color.id AS id
             FROM color AS color
            ORDER BY color.id ASC
            LIMIT %(param_1)s::INTEGER
@@ -1329,8 +1326,7 @@
   SELECT fruit_1.id,
          color.id AS id_1
     FROM (
-          SELECT color.id AS id,
-                 color.id AS id__1
+          SELECT color.id AS id
             FROM color AS color
            ORDER BY color.id ASC
            LIMIT %(param_1)s::INTEGER

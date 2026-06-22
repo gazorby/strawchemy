@@ -21,15 +21,9 @@
          color.id
     FROM (
           SELECT color.name AS name,
-                 color.id AS id,
-                 color.id AS id__1
+                 color.id AS id
             FROM color AS color
-           INNER JOIN (
-                  SELECT color.id AS id
-                    FROM color
-                   WHERE color.name IN (__[POSTCOMPILE_name_1])
-                 ) AS anon_1
-              ON color.id = anon_1.id
+           WHERE color.name IN (__[POSTCOMPILE_name_1])
            ORDER BY color.id ASC
            LIMIT %s,
                  %s
@@ -43,15 +37,9 @@
          color.id
     FROM (
           SELECT color.name AS name,
-                 color.id AS id,
-                 color.id AS id__1
+                 color.id AS id
             FROM color AS color
-            JOIN (
-                  SELECT color.id AS id
-                    FROM color
-                   WHERE color.name IN (__[POSTCOMPILE_name_1])
-                 ) AS anon_1
-              ON color.id = anon_1.id
+           WHERE color.name IN (__[POSTCOMPILE_name_1])
            ORDER BY color.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
@@ -65,15 +53,9 @@
          color.id
     FROM (
           SELECT color.name AS name,
-                 color.id AS id,
-                 color.id AS id__1
+                 color.id AS id
             FROM color AS color
-            JOIN (
-                  SELECT color.id AS id
-                    FROM color
-                   WHERE color.name IN (__[POSTCOMPILE_name_1])
-                 ) AS anon_1
-              ON color.id = anon_1.id
+           WHERE color.name IN (__[POSTCOMPILE_name_1])
            ORDER BY color.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
@@ -87,15 +69,9 @@
          color.id
     FROM (
           SELECT color.name AS name,
-                 color.id AS id,
-                 color.id AS id__1
+                 color.id AS id
             FROM color AS color
-            JOIN (
-                  SELECT color.id AS id
-                    FROM color
-                   WHERE color.name IN (__[POSTCOMPILE_name_1])
-                 ) AS anon_1
-              ON color.id = anon_1.id
+           WHERE color.name IN (__[POSTCOMPILE_name_1])
            ORDER BY color.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
@@ -133,12 +109,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-   INNER JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = %s
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = %s
    ORDER BY color.id ASC
   '''
 # ---
@@ -147,12 +118,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-    JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = $1::VARCHAR
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = $1::VARCHAR
    ORDER BY color.id ASC
   '''
 # ---
@@ -161,12 +127,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-    JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = %(name_1)s::VARCHAR
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = %(name_1)s::VARCHAR
    ORDER BY color.id ASC
   '''
 # ---
@@ -175,12 +136,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-    JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = %(name_1)s::VARCHAR
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = %(name_1)s::VARCHAR
    ORDER BY color.id ASC
   '''
 # ---
