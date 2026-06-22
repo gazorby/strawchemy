@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import re
-import warnings
 from typing import TYPE_CHECKING
 
 import pytest
@@ -12,8 +10,6 @@ from tests.utils import maybe_async
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
-
-    from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
 
@@ -126,23 +122,25 @@ pytestmark = [pytest.mark.integration]
         ),
     ],
 )
+@pytest.mark.snapshot
 async def test_aggregation_computation_is_reused(
-    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, dialect: SupportedDialect
+    query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that aggregation computation is reused when filtering and ordering by the same aggregation."""
-    with warnings.catch_warnings():
-        warnings.simplefilter("error")
-        result = await maybe_async(any_query(query))
+    """Test that aggregation computation is reused when filtering and ordering by the same aggregation.
+
+    A single query is issued and the snapshot shows one shared aggregation subquery rather
+    than a duplicate, regardless of SQLAlchemy's auto-generated alias name.
+    """
+    result = await maybe_async(any_query(query))
 
     assert not result.errors
     assert result.data
 
     assert query_tracker.query_count == 1
-    if dialect == "postgresql":
-        assert query_tracker[0].statement_str.count("JOIN LATERAL (") == 1
-    else:
-        assert query_tracker[0].statement_str.count("aggregation_0 AS ") == 1
-        assert not re.match(r" aggregation_[1-9]\d* AS $", query_tracker[0].statement_str)
+    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.parametrize(

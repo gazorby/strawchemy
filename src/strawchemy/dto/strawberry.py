@@ -60,7 +60,7 @@ from strawchemy.utils.graph import AnyNode, GraphMetadata, MatchOn, Node, NodeMe
 from strawchemy.utils.text import camel_to_snake
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Hashable, Iterable, Sequence
+    from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
 
     from sqlalchemy import ColumnElement
 
@@ -466,6 +466,24 @@ class Filter:
     def __bool__(self) -> bool:
         return bool(self.and_ or self.or_ or self.not_)
 
+    def iter_aggregation_filters(self) -> Iterator[AggregationFilter]:
+        """Yields every ``AggregationFilter`` in this filter tree in traversal order.
+
+        Walks the ``and_``, ``or_`` and ``not_`` branches depth-first.
+
+        Yields:
+            Each aggregation filter found under the AND, OR and NOT branches.
+        """
+        for value in self.and_:
+            if isinstance(value, AggregationFilter):
+                yield value
+            elif isinstance(value, Filter):
+                yield from value.iter_aggregation_filters()
+        for value in self.or_:
+            yield from value.iter_aggregation_filters()
+        if self.not_ is not None:
+            yield from self.not_.iter_aggregation_filters()
+
 
 class OrderByEnum(Enum):
     ASC = "ASC"
@@ -568,8 +586,8 @@ class UnmappedStrawberryGraphQLDTO(StrawchemyObject, StrawberryDTO[ModelT]): ...
 
 class GraphQLFilterDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]):
     @property
-    def dto_set_fields(self) -> set[str]:
-        return {name for name in self.__dto_field_definitions__ if getattr(self, name) is not strawberry.UNSET}
+    def dto_set_fields(self) -> list[str]:
+        return [name for name in self.__dto_field_definitions__ if getattr(self, name) is not strawberry.UNSET]
 
 
 class AggregateDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]): ...

@@ -19,11 +19,12 @@ from strawchemy.exceptions import QueryResultError
 from strawchemy.repository.typing import AnyAsyncSession, AnySyncSession, DeclarativeT
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Sequence
+    from collections.abc import Generator, Mapping, Sequence
 
-    from sqlalchemy import Label, Result, Select, StatementLambdaElement
+    from sqlalchemy import ColumnElement, Label, Result, Select, StatementLambdaElement
 
-    from strawchemy.transpiler._scope import QueryScope
+    from strawchemy.dto.strawberry import GraphQLFieldDefinition
+    from strawchemy.transpiler._plan import QueryPlan
     from strawchemy.typing import QueryNodeType
 
 
@@ -36,13 +37,11 @@ class NodeResult(Generic[ModelT]):
 
     Attributes:
         model: The SQLAlchemy model instance.
-        computed_values: A dictionary of computed values for this node.
-        node_key: A callable to generate a key for a query node type.
+        computed_values: A mapping of computed values for this node, keyed by query node.
     """
 
     model: ModelT
-    computed_values: dict[str, Any]
-    node_key: Callable[[QueryNodeType], str]
+    computed_values: dict[QueryNodeType, Any]
 
     def value(self, key: QueryNodeType) -> Any:
         """Retrieves the value for a given query node type.
@@ -58,7 +57,7 @@ class NodeResult(Generic[ModelT]):
             The value corresponding to the key.
         """
         if key.value.is_computed or key.metadata.data.is_transform:
-            return self.computed_values[self.node_key(key)]
+            return self.computed_values[key]
         return getattr(self.model, key.value.model_field_name)
 
     def copy_with(self, model: Any) -> Self:
@@ -88,10 +87,11 @@ class QueryResult(Generic[ModelT]):
             the query.
     """
 
-    node_key: Callable[[QueryNodeType], str] = str
     nodes: Sequence[ModelT] = dataclasses.field(default_factory=list)
-    node_computed_values: Sequence[dict[str, Any]] = dataclasses.field(default_factory=list)
-    query_computed_values: defaultdict[str, Any] = dataclasses.field(default_factory=lambda: defaultdict(lambda: None))
+    node_computed_values: Sequence[dict[QueryNodeType, Any]] = dataclasses.field(default_factory=list)
+    query_computed_values: defaultdict[QueryNodeType, Any] = dataclasses.field(
+        default_factory=lambda: defaultdict(lambda: None)
+    )
 
     def __post_init__(self) -> None:
         if not self.node_computed_values:
@@ -104,7 +104,7 @@ class QueryResult(Generic[ModelT]):
             NodeResult[ModelT]: An individual result node.
         """
         for model, computed_values in zip(self.nodes, self.node_computed_values, strict=False):
-            yield NodeResult(model, computed_values, self.node_key)
+            yield NodeResult(model, computed_values)
 
     def filter_in(self, **kwargs: Sequence[Any]) -> Self:
         """Filters the query results based on attribute values.
@@ -137,7 +137,7 @@ class QueryResult(Generic[ModelT]):
         Returns:
             The computed value for the query.
         """
-        return self.query_computed_values[self.node_key(key)]
+        return self.query_computed_values[key]
 
     def one(self) -> NodeResult[ModelT]:
         """Returns the single result node.
@@ -151,7 +151,7 @@ class QueryResult(Generic[ModelT]):
         if len(self.nodes) != 1 or len(self.node_computed_values) != 1:
             msg = f"Expected one item, got {len(self.nodes)}"
             raise QueryResultError(msg)
-        return NodeResult(self.nodes[0], self.node_computed_values[0], self.node_key)
+        return NodeResult(self.nodes[0], self.node_computed_values[0])
 
     def one_or_none(self) -> NodeResult[ModelT] | None:
         """Returns the single result node, or None if there isn't exactly one result.
@@ -172,13 +172,45 @@ class QueryExecutor(Generic[DeclarativeT]):
     This class provides methods for executing SQLAlchemy queries and converting
     the results into QueryResult objects. It supports applying unique constraints,
     handling root aggregations, and fetching results as either a list or a single item.
+
+    Attributes:
+        plan: The query plan emitted into the SQLAlchemy statement to execute.
+        id_field_definitions: Precomputed ID field definitions of the queried model,
+            used by the repository for get/get-by-id WHERE clauses.
+        execution_options: Optional execution options for the statement.
+        extra_where: Additional WHERE predicates applied on top of the emitted statement.
     """
 
-    base_statement: Select[tuple[DeclarativeT]]
-    scope: QueryScope[Any]
-    apply_unique: bool = False
-    root_aggregation_functions: list[Label[Any]] = dataclasses.field(default_factory=list)
+    plan: QueryPlan
+    id_field_definitions: list[GraphQLFieldDefinition]
     execution_options: dict[str, Any] | None = None
+    extra_where: list[ColumnElement[bool]] = dataclasses.field(default_factory=list)
+
+    @property
+    def column_map(self) -> Mapping[QueryNodeType, ColumnElement[Any]]:
+        """Mapping from each computed/transform/root-aggregation node to its result column."""
+        return self.plan.column_map
+
+    @property
+    def root_aggregation_functions(self) -> list[Label[Any]]:
+        """Root aggregation window-function labels carried by the plan."""
+        return list(self.plan.root_aggregation_functions)
+
+    @property
+    def apply_unique(self) -> bool:
+        """Whether a uniquing pass is needed (true when any relation join is to-many)."""
+        return any(join.to_many for join in self.plan.joins)
+
+    def add_where(self, *predicates: ColumnElement[bool]) -> None:
+        """Appends WHERE predicates applied on top of the emitted statement.
+
+        Used by the repository to scope a query to specific primary-key values after the
+        executor is built.
+
+        Args:
+            *predicates: Boolean predicates to AND into the final statement.
+        """
+        self.extra_where.extend(predicates)
 
     def _to_query_result(
         self, result: Result[tuple[DeclarativeT, Any]], fetch: Literal["one_or_none", "all"]
@@ -193,7 +225,7 @@ class QueryExecutor(Generic[DeclarativeT]):
             A QueryResult object containing the nodes and computed values.
         """
         nodes: list[DeclarativeT] = []
-        computed: list[dict[str, Any]] = []
+        computed: list[dict[QueryNodeType, Any]] = []
         if self.apply_unique:
             result = result.unique()
         if fetch == "all":
@@ -202,29 +234,31 @@ class QueryExecutor(Generic[DeclarativeT]):
             item = result.one_or_none()
             rows = [] if item is None else [item]
         for row in rows:
-            (obj, *computed_values) = row
-            (_, *computed_fields) = row._fields
+            obj = row[0]
+            mapping = row._mapping  # noqa: SLF001  # Row exposes computed values only via _mapping keyed by Label.
             nodes.append(obj)
-            computed.append(dict(zip(computed_fields, computed_values, strict=False)))
+            computed.append({node: mapping[label] for node, label in self.column_map.items() if label in mapping})
 
-        root_aggregations_set = {function.name for function in self.root_aggregation_functions}
+        root_agg_label_set = set(self.root_aggregation_functions)
+        root_agg_nodes = {node for node, label in self.column_map.items() if label in root_agg_label_set}
         first_computed = computed[0] if computed else {}
-        query_computed_values = {name: value for name, value in first_computed.items() if name in root_aggregations_set}
+        query_computed_values = {node: first_computed[node] for node in root_agg_nodes if node in first_computed}
 
         return QueryResult(
             nodes=nodes,
             node_computed_values=computed,
             query_computed_values=defaultdict(lambda: None) | query_computed_values,
-            node_key=self.scope.key,
         )
 
     def statement(self) -> Select[tuple[DeclarativeT]] | StatementLambdaElement:
-        """Returns the SQLAlchemy statement to be executed.
+        """Returns the SQLAlchemy statement to execute (plan emit + extra WHERE + options).
 
         Returns:
             The SQLAlchemy statement.
         """
-        statement = self.base_statement
+        statement = self.plan.emit()
+        if self.extra_where:
+            statement = statement.where(*self.extra_where)
         if self.execution_options:
             statement = statement.execution_options(**self.execution_options)
         return statement
