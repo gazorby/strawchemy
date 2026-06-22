@@ -5,15 +5,9 @@
          color.id
     FROM (
           SELECT color.name AS name,
-                 color.id AS id,
-                 color.id AS id__1
+                 color.id AS id
             FROM color AS color
-            JOIN (
-                  SELECT color.id AS id
-                    FROM color
-                   WHERE color.name IN (__[POSTCOMPILE_name_1])
-                 ) AS anon_1
-              ON color.id = anon_1.id
+           WHERE color.name IN (__[POSTCOMPILE_name_1])
            ORDER BY color.id ASC
            LIMIT ?
           OFFSET ?
@@ -115,15 +109,9 @@
          color.id
     FROM (
           SELECT color.name AS name,
-                 color.id AS id,
-                 color.id AS id__1
+                 color.id AS id
             FROM color AS color
-            JOIN (
-                  SELECT color.id AS id
-                    FROM color
-                   WHERE color.name IN (__[POSTCOMPILE_name_1])
-                 ) AS anon_1
-              ON color.id = anon_1.id
+           WHERE color.name IN (__[POSTCOMPILE_name_1])
            ORDER BY color.id ASC
            LIMIT ?
           OFFSET ?
@@ -136,12 +124,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-    JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = ?
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -206,12 +189,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-    JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = ?
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = ?
    ORDER BY color.id ASC
   '''
 # ---

@@ -6,8 +6,6 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 user.name AS name__1,
-                 user.id AS id__1,
                  row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
             FROM USER AS USER
            ORDER BY user.name ASC,
@@ -101,8 +99,6 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 user.name AS name__1,
-                 user.id AS id__1,
                  row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
             FROM USER AS USER
            ORDER BY user.name ASC,

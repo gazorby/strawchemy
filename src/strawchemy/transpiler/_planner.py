@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Generic, cast
 
 from sqlalchemy import and_, func, inspect, not_, null, or_, select, true
 from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
+from sqlalchemy.sql.util import ClauseAdapter
 
 from strawchemy.constants import AGGREGATIONS_KEY
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
@@ -983,35 +984,13 @@ def _plan_relation_joins(
     return tuple(joins)
 
 
-def _build_root_aggregations(
-    query_graph: QueryGraph[Any], context: PlanContext[Any]
-) -> dict[QueryNodeType, Label[Any]]:
-    """Builds root aggregation window-function columns.
-
-    Args:
-        query_graph: The graph representation of the query being planned.
-        context: The shared planning context (``aliases`` used for inspect/root_alias).
-
-    Returns:
-        A mapping of query node to its labelled root aggregation function
-        expression, preserving the order in which aggregation children appear,
-        or an empty mapping when no root aggregations are present.
-    """
-    aliases = context.aliases
-    result: dict[QueryNodeType, Label[Any]] = {}
-    if query_graph.selection_tree is None:
-        return result
-    selection_tree = query_graph.selection_tree
-    aggregation_tree = selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
-    if not aggregation_tree:
-        return result
-    for child in aggregation_tree.children:
-        result.update(aliases.inspect(child).output_functions(aliases.root_alias, lambda func: func.over()))
-    return result
-
-
 def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any]) -> bool:
-    """Decides whether DISTINCT ON should be emulated via a RANK() window function.
+    """Decides whether DISTINCT ON should be emulated via a window rank function.
+
+    On dialects with native ``DISTINCT ON`` (PostgreSQL), emulation is only needed when
+    ordering is present *and* the distinct-on fields are not the leftmost ORDER BY columns.
+    With no ordering, or with a compatible prefix ordering, native DISTINCT ON is used. On
+    dialects without native support, any distinct clause is emulated.
 
     Args:
         query_graph: The graph representation of the query being planned.
@@ -1019,33 +998,116 @@ def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any]) 
             ``default_order_by`` read here).
 
     Returns:
-        True if RANK() window function should be used for DISTINCT ON, False otherwise.
+        True if a RANK/row_number window emulation should be used, False for native/none.
     """
-    if context.db_features.supports_distinct_on:
-        return bool(
-            query_graph.distinct_on
-            and (query_graph.order_by_tree or context.deterministic_ordering or context.default_order_by)
+    if not context.db_features.supports_distinct_on:
+        return bool(query_graph.distinct_on)
+    if not query_graph.distinct_on:
+        return False
+    has_ordering = bool(query_graph.order_by_tree or context.deterministic_ordering or context.default_order_by)
+    if not has_ordering:
+        return False
+    # Native DISTINCT ON requires the distinct-on fields to be the leftmost ORDER BY
+    # columns, in order; otherwise fall back to row_number emulation.
+    distinct_fields = [enum.field_definition for enum in query_graph.distinct_on]
+    order_nodes = query_graph.order_by_nodes
+    if len(order_nodes) < len(distinct_fields):
+        return True
+    is_order_prefix = all(
+        order_nodes[index].value.model_field is field.model_field for index, field in enumerate(distinct_fields)
+    )
+    return not is_order_prefix
+
+
+@dataclass(frozen=True)
+class UserStatementPlan:
+    """Encapsulates applying a user-provided base ``filter_statement``.
+
+    A user statement is applied either by inlining its WHERE predicates directly (when the
+    statement is a plain WHERE-only select of the root model) or, otherwise, via a
+    primary-key semi-join to the statement reduced to its primary-key columns.
+
+    Attributes:
+        statement: The user-provided base filter statement.
+        aliases: The query scope, providing the root model and root alias.
+    """
+
+    statement: Select[Any]
+    aliases: AliasContext[Any]
+
+    def is_trivial(self) -> bool:
+        """Decides whether the statement is a plain WHERE-only select of the root model.
+
+        Compares the statement (public ``ClauseElement.compare``) against a canonical
+        ``select(model).where(whereclause)``. Any additional clause — join, GROUP BY,
+        DISTINCT, HAVING, LIMIT, OFFSET, ORDER BY — makes the comparison fail, leaving the
+        statement to the semi-join path.
+
+        A statement's ``execution_options`` are not preserved when inlined; the emitted SQL
+        is identical, but non-SQL driver hints attached to the filter statement are dropped.
+
+        Returns:
+            True if the statement can be inlined as direct WHERE predicates.
+        """
+        canonical = select(self.aliases.model)
+        where = self.statement.whereclause
+        if where is not None:
+            canonical = canonical.where(where)
+        try:
+            return self.statement.compare(canonical)
+        except AttributeError:  # uncomparable statement → fall back to the semi-join path
+            return False
+
+    def inline_where(self, alias: AliasedClass[Any]) -> ColumnElement[bool] | None:
+        """Adapts the statement's WHERE predicate onto ``alias``.
+
+        The base statement references the model's base-table columns; the main query selects
+        from an aliased root, so the predicate is rewritten to bind to that alias.
+
+        Args:
+            alias: The aliased entity the main query selects from.
+
+        Returns:
+            The adapted WHERE predicate, or None when the statement has no WHERE clause.
+        """
+        where = self.statement.whereclause
+        if where is None:
+            return None
+        adapter = ClauseAdapter(inspect(alias).selectable)
+        return adapter.traverse(where)
+
+    def semijoin(self) -> FilterSemiJoin:
+        """Builds the PK semi-join from the root alias to the filter-statement subquery.
+
+        Returns:
+            A FilterSemiJoin with the subquery alias and the PK-equality onclause.
+        """
+        root_mapper = class_mapper(self.aliases.model)
+        pk_attributes = SQLAlchemyInspector.pk_attributes(root_mapper)
+        filter_alias = cast("Alias", self.statement.with_only_columns(*pk_attributes).subquery().alias())
+        on_clause = and_(
+            *[getattr(self.aliases.root_alias, attr.key) == filter_alias.c[attr.key] for attr in pk_attributes]
         )
-    return bool(query_graph.distinct_on)
+        return FilterSemiJoin(alias=filter_alias, onclause=on_clause)
 
+    def apply_to_statement(self, statement: Select[Any], alias: AliasedClass[Any]) -> Select[Any]:
+        """Applies the user statement to a select being assembled (subquery path).
 
-def _build_filter_semijoin(context: PlanContext[Any]) -> FilterSemiJoin:
-    """Builds the PK semi-join from the root alias to the filter-statement subquery.
+        Owns the inline-vs-semijoin decision so call sites do not branch: a trivial
+        statement's WHERE is inlined onto ``alias``; otherwise the PK semi-join is joined in.
 
-    Args:
-        context: The shared planning context (``aliases`` root alias/model, ``statement``).
+        Args:
+            statement: The select being assembled.
+            alias: The aliased root the statement selects from.
 
-    Returns:
-        A FilterSemiJoin with the subquery alias and the PK-equality onclause.
-    """
-    aliases = context.aliases
-    statement = context.statement
-    assert statement is not None
-    root_mapper = class_mapper(aliases.model)
-    pk_attributes = SQLAlchemyInspector.pk_attributes(root_mapper)
-    filter_alias = cast("Alias", statement.with_only_columns(*pk_attributes).subquery().alias())
-    on_clause = and_(*[getattr(aliases.root_alias, attr.key) == filter_alias.c[attr.key] for attr in pk_attributes])
-    return FilterSemiJoin(alias=filter_alias, onclause=on_clause)
+        Returns:
+            The statement with the user filter applied.
+        """
+        if not self.is_trivial():
+            semijoin = self.semijoin()
+            return statement.join(semijoin.alias, onclause=semijoin.onclause)
+        where = self.inline_where(alias)
+        return statement.where(where) if where is not None else statement
 
 
 def _dedup_agg_joins(joins: list[Join]) -> list[Join]:
@@ -1071,6 +1133,48 @@ def _dedup_agg_joins(joins: list[Join]) -> list[Join]:
             seen_agg_nodes.add(join.node)
         result.append(join)
     return result
+
+
+def _clause_element(column: ColumnElement[Any]) -> ColumnElement[Any]:
+    """Returns the underlying clause element for a column, unwrapping ORM attributes.
+
+    ``InstrumentedAttribute`` wraps a ``ColumnElement`` via ``__clause_element__()``; calling
+    ``.compare()`` on the attribute directly does not delegate to the underlying element, so
+    two attributes that map to the same column but were constructed via different access paths
+    (e.g. ``getattr(alias, key)`` vs ``field.adapt_to_entity(insp)``) incorrectly compare as
+    unequal.  Unwrapping to the ``AnnotatedColumn`` level gives correct structural equality.
+
+    Args:
+        column: A column or ORM attribute to unwrap.
+
+    Returns:
+        The underlying ``ColumnElement``.
+    """
+    if hasattr(column, "__clause_element__"):
+        return column.__clause_element__()
+    return column
+
+
+def _dedup_columns(columns: Sequence[ColumnElement[Any]]) -> list[ColumnElement[Any]]:
+    """Removes structurally duplicate columns, preserving first-seen order.
+
+    The inner subquery accumulates projection columns from several sources (selection,
+    order-by nodes, root-aggregation arguments). A column reached through more than one
+    source is the same expression but a distinct object, which SQLAlchemy would otherwise
+    emit twice with an auto-suffixed label (``id`` and ``id__1``).
+
+    Args:
+        columns: The assembled projection columns, in selection order.
+
+    Returns:
+        The columns with later structural duplicates dropped.
+    """
+    unique: list[ColumnElement[Any]] = []
+    for column in columns:
+        col_elem = _clause_element(column)
+        if not any(col_elem is _clause_element(seen) or col_elem.compare(_clause_element(seen)) for seen in unique):
+            unique.append(column)
+    return unique
 
 
 def _referenced_function_nodes(filter_plan: FilterPlan, order: OrderPlan, proj: ProjectionPlan) -> list[QueryNodeType]:
@@ -1155,12 +1259,15 @@ def _assemble_inner_statement(
         )
         only_columns.append(rank_label)
 
-    inner_statement = select(inspect(inner_alias)).options(raiseload("*")).with_only_columns(*only_columns)
-    # Filtered + paginated gets: restrict the subquery to filter-visible rows via a PK
-    # semi-join, so LIMIT/OFFSET count only those rows.
+    inner_statement = (
+        select(inspect(inner_alias)).options(raiseload("*")).with_only_columns(*_dedup_columns(only_columns))
+    )
+    # Filtered + paginated gets: restrict the subquery to filter-visible rows; a trivial
+    # statement inlines the WHERE directly, otherwise a PK semi-join is used.
     if context.statement is not None:
-        semijoin = _build_filter_semijoin(context)
-        inner_statement = inner_statement.join(semijoin.alias, onclause=semijoin.onclause)
+        inner_statement = UserStatementPlan(context.statement, context.aliases).apply_to_statement(
+            inner_statement, inner_alias
+        )
     for join in sorted(inner_joins):
         inner_statement = inner_statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
     if where:
@@ -1230,8 +1337,16 @@ def _plan_projection_phase(
         A ProjectionPhase with the root-aggregation column map and the projection plan.
     """
     root_aggregations_map: dict[QueryNodeType, Label[Any]] = {}
-    if query_graph.selection_tree and query_graph.selection_tree.graph_metadata.metadata.root_aggregations:
-        root_aggregations_map = _build_root_aggregations(query_graph, context)
+    selection_tree = query_graph.selection_tree
+    if selection_tree is not None and selection_tree.graph_metadata.metadata.root_aggregations:
+        aggregation_tree = selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
+        if aggregation_tree:
+            for child in aggregation_tree.children:
+                root_aggregations_map.update(
+                    context.aliases.inspect(child).output_functions(
+                        context.aliases.root_alias, lambda func: func.over()
+                    )
+                )
     projection_plan = ProjectionPlan.plan(query_graph, context, agg_plan)
     return ProjectionPhase(root_aggregations_map=root_aggregations_map, projection_plan=projection_plan)
 
@@ -1424,8 +1539,15 @@ def plan_query(
     deduped_joins = _dedup_agg_joins(pre_dedup_joins)
 
     filter_semijoin: FilterSemiJoin | None = None
+    where_predicates: tuple[ColumnElement[bool], ...] = filter_plan.where
     if context.statement is not None:
-        filter_semijoin = _build_filter_semijoin(context)
+        user_statement = UserStatementPlan(context.statement, context.aliases)
+        if user_statement.is_trivial():
+            inlined = user_statement.inline_where(context.aliases.root_alias)
+            if inlined is not None:
+                where_predicates = (*where_predicates, inlined)
+        else:
+            filter_semijoin = user_statement.semijoin()
 
     column_map: dict[QueryNodeType, ColumnElement[Any]] = {
         **aggregation_plan.columns,
@@ -1438,7 +1560,7 @@ def plan_query(
         filter_semijoin=filter_semijoin,
         projection_columns=projection_plan.columns,
         load_options=projection_plan.load_options,
-        where=filter_plan.where,
+        where=where_predicates,
         order_by=order.expressions,
         joins=tuple(deduped_joins),
         root_aggregation_functions=root_aggregations,

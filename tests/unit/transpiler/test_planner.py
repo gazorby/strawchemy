@@ -76,3 +76,11 @@ def test_composer_phase_helpers_exist() -> None:
 
     assert hasattr(planner, "_plan_filter_phase")
     assert hasattr(planner, "_plan_projection_phase")
+
+
+def test_build_root_aggregations_is_folded_in() -> None:
+    """_build_root_aggregations is inlined into _plan_projection_phase; the free helper is gone."""
+    import strawchemy.transpiler._planner as planner
+
+    assert not hasattr(planner, "_build_root_aggregations")
+    assert hasattr(planner, "_plan_projection_phase")

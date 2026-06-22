@@ -4,12 +4,7 @@
   SELECT color.name,
          color.id
     FROM color AS color
-    JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = ?
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = ?
   '''
 # ---
 # name: test_get_one[session-tracked-async-asyncmy_engine]
@@ -69,11 +64,6 @@
   SELECT color.name,
          color.id
     FROM color AS color
-    JOIN (
-          SELECT color.id AS id
-            FROM color
-           WHERE color.name = ?
-         ) AS anon_1
-      ON color.id = anon_1.id
+   WHERE color.name = ?
   '''
 # ---
