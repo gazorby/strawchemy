@@ -312,8 +312,6 @@ exclude = [
   "dist",
   "node_modules",
   "venv",
-  "tests/codegen/snapshots",
-  "alembic/*  ",
 ]
 src = ["src/strawchemy", "tests"]
 
