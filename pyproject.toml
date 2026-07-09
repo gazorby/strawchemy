@@ -29,9 +29,9 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "msgspec>=0.4.2",
+  "msgspec>=0.20.0",
   "sqlalchemy>=2.0.10",
-  "strawberry-graphql",
+  "strawberry-graphql>=0.283.2",
   "typing-extensions"
 ]
 
@@ -61,7 +61,7 @@ dev = [
   { include-group = "test" },
 ]
 aiosqlite = ["aiosqlite"]
-build = ["bump-my-version", "git-cliff", "unasyncd"]
+build = ["bump-my-version", "git-cliff"]
 codeflash = ["codeflash"]
 doc = ["git-cliff>=2.6.1"]
 lint = [
@@ -88,6 +88,7 @@ test = [
   "syrupy",
   "testapp",
 ]
+unasyncd = ["unasyncd"]
 
 [build-system]
 requires = ["hatchling"]
@@ -427,8 +428,10 @@ StrawchemyAsyncRepository = "StrawchemySyncRepository"
 
 [tool.uv]
 default-groups = ["dev"]
-# unasyncd prevent codeflash to be installed to the latest version, need
-conflicts = [[{ group = "build" }, { group = "codeflash" }]]
+conflicts = [
+  [{ group = "build" }, { group = "codeflash" }],
+  [{ group = "test" }, { group = "unasyncd" }]
+]
 exclude-newer = "3 days"
 
 [tool.uv.sources]

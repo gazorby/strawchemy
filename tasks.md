@@ -20,11 +20,12 @@ Lint CI yaml files
 
 ## `ci:test`
 
+Run tests in CI
+
+
 - Depends: ci:install
 
 - **Usage**: `ci:test <session>`
-
-Run tests in CI
 
 ### Arguments
 
@@ -79,7 +80,7 @@ Install pre-commit hooks
 
 ## `lint`
 
-- Depends: vulture, ty, ruff:check, ruff:format:check, slotscheck
+- Depends: vulture, ty, ruff:check, ruff:format:check, slotscheck, unasyncd:check
 
 - **Usage**: `lint`
 - **Aliases**: `l`
@@ -132,12 +133,13 @@ Run slotscheck
 
 ## `test`
 
+Run tests
+
+
 - Depends: uv:install
 
 - **Usage**: `test [test]…`
 - **Aliases**: `t`
-
-Run tests
 
 ### Arguments
 
@@ -153,12 +155,13 @@ Run snapshot-based tests and add new snapshots
 
 ## `test:coverage`
 
+Run tests with coverage
+
+
 - Depends: uv:install
 
 - **Usage**: `test:coverage [test]…`
 - **Aliases**: `tc`
-
-Run tests with coverage
 
 ### Arguments
 
@@ -166,12 +169,13 @@ Run tests with coverage
 
 ## `test:integration`
 
+Run integration tests
+
+
 - Depends: uv:install
 
 - **Usage**: `test:integration [--python <python>] [test]…`
 - **Aliases**: `ti`
-
-Run integration tests
 
 ### Arguments
 
@@ -185,12 +189,13 @@ Run integration tests
 
 ## `test:integration-all`
 
+Run integration tests on all supported python versions
+
+
 - Depends: uv:install
 
 - **Usage**: `test:integration-all [--python <python>] [test]…`
 - **Aliases**: `tia`
-
-Run integration tests on all supported python versions
 
 ### Arguments
 
@@ -204,12 +209,13 @@ Run integration tests on all supported python versions
 
 ## `test:integration-mysql`
 
+Run integration tests
+
+
 - Depends: uv:install
 
 - **Usage**: `test:integration-mysql [--python <python>] [test]…`
 - **Aliases**: `ti-mysql`
-
-Run integration tests
 
 ### Arguments
 
@@ -223,12 +229,13 @@ Run integration tests
 
 ## `test:integration-postgres`
 
+Run integration tests
+
+
 - Depends: uv:install
 
 - **Usage**: `test:integration-postgres [--python <python>] [test]…`
 - **Aliases**: `ti-postgres`
-
-Run integration tests
 
 ### Arguments
 
@@ -242,12 +249,13 @@ Run integration tests
 
 ## `test:integration-sqlite`
 
+Run integration tests
+
+
 - Depends: uv:install
 
 - **Usage**: `test:integration-sqlite [--python <python>] [test]…`
 - **Aliases**: `ti-sqlite`
-
-Run integration tests
 
 ### Arguments
 
@@ -261,12 +269,13 @@ Run integration tests
 
 ## `test:integration:coverage`
 
+Run integration tests with coverage
+
+
 - Depends: uv:install
 
 - **Usage**: `test:integration:coverage [--python <python>] [test]…`
 - **Aliases**: `tic`
-
-Run integration tests with coverage
 
 ### Arguments
 
@@ -280,12 +289,13 @@ Run integration tests with coverage
 
 ## `test:patch-coverage`
 
+Run tests and report coverage on changed lines only (vs a branch)
+
+
 - Depends: uv:install
 
 - **Usage**: `test:patch-coverage [--branch <branch>] [--fail-under <fail_under>] [test]…`
 - **Aliases**: `tpc`
-
-Run tests and report coverage on changed lines only (vs a branch)
 
 ### Arguments
 
@@ -303,12 +313,13 @@ Run tests and report coverage on changed lines only (vs a branch)
 
 ## `test:unit`
 
+Run unit tests
+
+
 - Depends: uv:install
 
 - **Usage**: `test:unit [--python <python>] [test]…`
 - **Aliases**: `tu`
-
-Run unit tests
 
 ### Arguments
 
@@ -322,12 +333,13 @@ Run unit tests
 
 ## `test:unit-all`
 
+Run unit tests on all supported python versions
+
+
 - Depends: uv:install
 
 - **Usage**: `test:unit-all [--python <python>] [test]…`
 - **Aliases**: `tua`
-
-Run unit tests on all supported python versions
 
 ### Arguments
 
@@ -341,12 +353,13 @@ Run unit tests on all supported python versions
 
 ## `test:unit:coverage`
 
+Run unit tests with coverage
+
+
 - Depends: uv:install
 
 - **Usage**: `test:unit:coverage [--python <python>] [test]…`
 - **Aliases**: `tuc`
-
-Run unit tests with coverage
 
 ### Arguments
 
@@ -360,12 +373,13 @@ Run unit tests with coverage
 
 ## `test:unit:no-extras`
 
+Run unit tests without extras dependencies
+
+
 - Depends: uv:install
 
 - **Usage**: `test:unit:no-extras [--python <python>] [test]…`
 - **Aliases**: `tug`
-
-Run unit tests without extras dependencies
 
 ### Arguments
 
@@ -396,6 +410,18 @@ Run tombi
 - **Usage**: `ty`
 
 Run ty
+
+## `unasyncd`
+
+- **Usage**: `unasyncd`
+
+Generate synchronous code from asynchronous version
+
+## `unasyncd:check`
+
+- **Usage**: `unasyncd:check`
+
+Check synchronous code from asynchronous version
 
 ## `uv:install`
 

@@ -272,10 +272,31 @@ description = "Lint the code"
 alias = "f"
 depends = ["ruff:format", "tombi"]
 
+[tasks.unasyncd]
+description = "Generate synchronous code from asynchronous version"
+wait_for = ["slotscheck"]
+run = '''
+  uv run --quiet --only-group unasyncd unasyncd
+'''
+
+[tasks."unasyncd:check"]
+description = "Check synchronous code from asynchronous version"
+wait_for = ["slotscheck"]
+run = '''
+  uv run --quiet --only-group unasyncd unasyncd --check
+'''
+
 [tasks.lint]
 description = "Lint the code"
 alias = "l"
-depends = ["vulture", "ty", "ruff:check", "ruff:format:check", "slotscheck"]
+depends = [
+  "vulture",
+  "ty",
+  "ruff:check",
+  "ruff:format:check",
+  "slotscheck",
+  "unasyncd:check"
+]
 
 [tasks.pre-commit]
 description = "Run pre-commit checks"
