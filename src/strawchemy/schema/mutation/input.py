@@ -158,11 +158,6 @@ class EventRegistry:
     A single set/append/remove listener is registered per relationship attribute for the
     process lifetime. Each event is dispatched to the one RelationInput whose ``parent`` is
     the event's ``target``, looked up in a weakly-held per-parent mapping.
-
-    Each registry instance wires its own dispatchers onto the process-global relationship
-    attribute, so the number of dispatchers per attribute is bounded by the number of registry
-    instances (one per ``Strawchemy``), not by request volume; dispatchers for unrelated
-    registries are no-ops because their weak entries hold no matching target.
     """
 
     _entries: WeakValueDictionary[tuple[int, str], RelationInput] = field(init=False, default_factory=_new_entries)
@@ -172,40 +167,40 @@ class EventRegistry:
     cannot be recycled while this entry is live — the key is therefore stable for the
     entry's lifetime.
     """
-    _wired: set[MapperProperty[Any]] = field(init=False, default_factory=set)
+    _registry: set[MapperProperty[Any]] = field(init=False, default_factory=set)
     """Relationship attributes whose dispatcher has already been registered."""
 
     def register(self, relation: RelationInput) -> None:
         """Wire the relation's attribute once and index the relation by its parent."""
-        self._wire(relation.attribute, relation.relation_type)
+        self._register(relation.attribute, relation.relation_type)
         # Weak-ownership invariant: the registry holds entries weakly (by value), so a
         # RelationInput that is no longer retained by its owning Input stops routing once
         # collected.  The owning Input strongly holds every relation it consumes via
         # self.relations, so live relations are always reachable.
         self._entries[(id(relation.parent), relation.attribute.key)] = relation
 
-    def _wire(self, attribute: MapperProperty[Any], relation_type: RelationType) -> None:
-        if attribute in self._wired:
+    def _register(self, attribute: MapperProperty[Any], relation_type: RelationType) -> None:
+        if attribute in self._registry:
             return
         if relation_type is RelationType.TO_ONE:
             event.listens_for(attribute, "set")(self._dispatch_set)
         else:
             event.listens_for(attribute, "append")(self._dispatch_append)
             event.listens_for(attribute, "remove")(self._dispatch_remove)
-        self._wired.add(attribute)
+        self._registry.add(attribute)
 
     def _get_input(self, target: DeclarativeBase, initiator: Any) -> RelationInput | None:
         return self._entries.get((id(target), initiator.key))
 
-    def _dispatch_set(self, target: DeclarativeBase, value: Any, _oldvalue: Any, initiator: Any) -> None:
+    def _dispatch_set(self, target: DeclarativeBase, value: DeclarativeBase, _oldvalue: Any, initiator: Any) -> None:
         if (relation := self._get_input(target, initiator)) is not None:
             relation.handle_set(value)
 
-    def _dispatch_append(self, target: DeclarativeBase, value: Any, initiator: Any) -> None:
+    def _dispatch_append(self, target: DeclarativeBase, value: DeclarativeBase, initiator: Any) -> None:
         if (relation := self._get_input(target, initiator)) is not None:
             relation.handle_append(value)
 
-    def _dispatch_remove(self, target: DeclarativeBase, value: Any, initiator: Any) -> None:
+    def _dispatch_remove(self, target: DeclarativeBase, value: DeclarativeBase, initiator: Any) -> None:
         if (relation := self._get_input(target, initiator)) is not None:
             relation.handle_remove(value)
 
