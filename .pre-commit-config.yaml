@@ -89,3 +89,11 @@ repos:
         files: ^mise.toml$
         pass_filenames: false
         require_serial: true
+
+  - repo: local
+    hooks:
+      - id: validate-commit-msg
+        name: Validate commit message
+        entry: cog verify --file
+        language: system
+        stages: [ commit-msg ]

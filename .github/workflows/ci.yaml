@@ -30,7 +30,7 @@ jobs:
         with:
           concurrent_skipping: "never"
           skip_after_successful_duplicate: "true"
-          paths_ignore: '["**/**.md", "**/.vscode/**", "**/.dockerignore", "Makefile"]'
+          paths_ignore: '["**/**.md", "**/.vscode/**", "**/.idea/**"]'
           paths: '["src/**", "tests/**", "uv.lock", "pyproject.toml", ".github/workflows/ci.yaml", "noxfile.py", "mise.toml"]'
 
   generate-jobs-tests:
