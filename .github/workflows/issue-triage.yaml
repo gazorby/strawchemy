@@ -8,3 +8,5 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - uses: fuxingloh/multi-labeler@b40774a90b449fe5311b96cef6bab906b671342d # v5
+        with:
+          config-path: .github/issue-labeler.yml
