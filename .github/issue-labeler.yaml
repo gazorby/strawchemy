@@ -14,3 +14,7 @@ labels:
   - label: 'docs'
     matcher:
       title: '^(docs|doc):.*'
+
+  - label: 'perf'
+    matcher:
+      title: '^(perf):.*'

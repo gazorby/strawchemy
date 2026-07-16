@@ -28,6 +28,11 @@ labels:
       title: '^docs: .*'
       commits: '^docs: .*'
 
+  - label: 'perf'
+    matcher:
+      title: '^perf: .*'
+      commits: '^perf: .*'
+
   # Bots
 
   - label: dependabot
