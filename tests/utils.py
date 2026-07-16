@@ -7,6 +7,7 @@ from enum import Enum, auto
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
 
+import sqlparse
 import strawberry
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import TypeIs, override
@@ -45,6 +46,10 @@ def factory_iterator() -> Generator[AnyFactory]:
         factories.append(sqlalchemy_pydantic_factory)
     for factory in factories:
         yield factory()
+
+
+def format_sql(statement: str) -> str:
+    return sqlparse.format(statement, reindent_aligned=True, use_space_around_operators=True, keyword_case="upper")
 
 
 @overload

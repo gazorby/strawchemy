@@ -1,15 +1,42 @@
-"""DB-free tests for the pure planner helper functions."""
+"""DB-free tests for the planner helpers and the filter-statement handling.
+
+The filter-statement tests drive the public ``plan_query`` entry point (building a
+``PlanContext`` and ``QueryGraph`` and compiling the emitted statement) rather than poking
+``UserStatementPlan`` directly, so they exercise the real inline-vs-semijoin wiring.
+"""
 
 from __future__ import annotations
 
 from types import SimpleNamespace
 
-from sqlalchemy import select
+import pytest
+from inline_snapshot import snapshot
+from sqlalchemy import Select, select
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import aliased
 
-from strawchemy.transpiler._planner import UserStatementPlan, _dedup_columns, _use_distinct_rank
+from strawchemy.transpiler._planner import PlanContext, _dedup_columns, _use_distinct_rank, plan_query
+from strawchemy.transpiler._query import QueryGraph
 from tests.unit.models import Fruit
+from tests.utils import format_sql
+
+
+def _filter_statement_sql(statement: Select[tuple[Fruit]], *, limit: int | None = None) -> str:
+    """Builds and formats the SQL ``plan_query`` emits for a base ``filter_statement``.
+
+    Compile is DB-free (sqlite dialect); the output is sqlparse-formatted to match the
+    integration ``.ambr`` snapshot style.
+
+    Args:
+        statement: The user-provided base filter statement applied to the query.
+        limit: Optional pagination limit, forcing the inner-subquery path.
+
+    Returns:
+        The formatted compiled SQL string for the emitted plan.
+    """
+    context = PlanContext.create(Fruit, sqlite.dialect(), statement=statement)
+    plan = plan_query(QueryGraph(context.aliases), context, limit=limit)
+    return format_sql(str(plan.emit().compile(dialect=sqlite.dialect())))
 
 
 def test_dedup_columns_removes_structural_duplicates() -> None:
@@ -110,62 +137,109 @@ def test_use_distinct_rank_emulates_when_no_native_support() -> None:
     assert _use_distinct_rank(graph, context) is True  # ty: ignore[invalid-argument-type]
 
 
-# ---------------------------------------------------------------------------
-# UserStatementPlan tests (Task 3)
-# ---------------------------------------------------------------------------
+@pytest.mark.inline_snapshot
+def test_trivial_filter_statement_is_inlined() -> None:
+    """A trivial WHERE-only filter statement is inlined directly, with no PK semi-join."""
+    assert _filter_statement_sql(select(Fruit).where(Fruit.name == "x")).splitlines() == snapshot(
+        ["SELECT fruit.id", "  FROM fruit AS fruit", " WHERE fruit.name = ?"]
+    )
 
 
-def _statement_plan(statement: object) -> UserStatementPlan:
-    """Builds a UserStatementPlan over the Fruit model with a stand-in scope.
-
-    is_trivial/inline_where only read aliases.model, so a SimpleNamespace suffices here;
-    the semijoin path is exercised by the integration tests.
-    """
-    return UserStatementPlan(statement=statement, aliases=SimpleNamespace(model=Fruit))  # ty: ignore[invalid-argument-type]
-
-
-def test_user_statement_plan_trivial_for_plain_where_select() -> None:
-    """A WHERE-only select of the root model is trivial."""
-    assert _statement_plan(select(Fruit).where(Fruit.name == "x")).is_trivial() is True
-
-
-def test_user_statement_plan_not_trivial_with_limit() -> None:
-    """A select carrying LIMIT is not trivial."""
-    assert _statement_plan(select(Fruit).where(Fruit.name == "x").limit(5)).is_trivial() is False
+@pytest.mark.inline_snapshot
+def test_trivial_filter_statement_is_inlined_in_pagination_subquery() -> None:
+    """With pagination the trivial filter is inlined inside the inner subquery, no semi-join."""
+    assert _filter_statement_sql(select(Fruit).where(Fruit.name == "x"), limit=5).splitlines() == snapshot(
+        [
+            "SELECT fruit.id",
+            "  FROM (",
+            "        SELECT fruit.id AS id",
+            "          FROM fruit AS fruit",
+            "         WHERE fruit.name = ?",
+            "         LIMIT ?",
+            "        OFFSET ?",
+            "       ) AS fruit",
+        ]
+    )
 
 
-def test_user_statement_plan_not_trivial_with_group_by() -> None:
-    """A select carrying GROUP BY is not trivial."""
-    assert _statement_plan(select(Fruit).where(Fruit.name == "x").group_by(Fruit.color_id)).is_trivial() is False
-
-
-def test_user_statement_plan_not_trivial_with_distinct() -> None:
-    """A select carrying DISTINCT is not trivial."""
-    assert _statement_plan(select(Fruit).where(Fruit.name == "x").distinct()).is_trivial() is False
-
-
-def test_user_statement_plan_not_trivial_with_join() -> None:
-    """A select carrying a join is not trivial."""
-    assert _statement_plan(select(Fruit).join(Fruit.color).where(Fruit.name == "x")).is_trivial() is False
-
-
-def test_user_statement_plan_inline_where_adapts_to_alias() -> None:
-    """The inlined WHERE returns a single non-None clause bound to the alias."""
-    root_alias = aliased(Fruit, name="fruit")
-    predicate = _statement_plan(select(Fruit).where(Fruit.name == "x")).inline_where(root_alias)  # ty: ignore[invalid-argument-type]
-    assert predicate is not None
-    compiled = str(predicate.compile(dialect=sqlite.dialect()))
-    assert "name" in compiled
-
-
-def test_user_statement_plan_apply_to_statement_inlines_trivial() -> None:
-    """apply_to_statement inlines a trivial statement's WHERE without a join."""
-    root_alias = aliased(Fruit, name="fruit")
-    base = select(root_alias)
-    result = _statement_plan(select(Fruit).where(Fruit.name == "x")).apply_to_statement(base, root_alias)  # ty: ignore[invalid-argument-type]
-    compiled = str(result.compile(dialect=sqlite.dialect()))
-    assert "WHERE" in compiled
-    assert "JOIN" not in compiled
+@pytest.mark.parametrize(
+    ("statement", "expected"),
+    [
+        pytest.param(
+            select(Fruit).where(Fruit.name == "x").limit(5),
+            snapshot(
+                [
+                    "SELECT fruit.id",
+                    "  FROM fruit AS fruit",
+                    "  JOIN (",
+                    "        SELECT fruit.id AS id",
+                    "          FROM fruit",
+                    "         WHERE fruit.name = ?",
+                    "         LIMIT ?",
+                    "        OFFSET ?",
+                    "       ) AS anon_1",
+                    "    ON fruit.id = anon_1.id",
+                ]
+            ),
+            id="limit",
+        ),
+        pytest.param(
+            select(Fruit).where(Fruit.name == "x").group_by(Fruit.color_id),
+            snapshot(
+                [
+                    "SELECT fruit.id",
+                    "  FROM fruit AS fruit",
+                    "  JOIN (",
+                    "        SELECT fruit.id AS id",
+                    "          FROM fruit",
+                    "         WHERE fruit.name = ?",
+                    "         GROUP BY fruit.color_id",
+                    "       ) AS anon_1",
+                    "    ON fruit.id = anon_1.id",
+                ]
+            ),
+            id="group_by",
+        ),
+        pytest.param(
+            select(Fruit).where(Fruit.name == "x").distinct(),
+            snapshot(
+                [
+                    "SELECT fruit.id",
+                    "  FROM fruit AS fruit",
+                    "  JOIN (",
+                    "        SELECT DISTINCT fruit.id AS id",
+                    "          FROM fruit",
+                    "         WHERE fruit.name = ?",
+                    "       ) AS anon_1",
+                    "    ON fruit.id = anon_1.id",
+                ]
+            ),
+            id="distinct",
+        ),
+        pytest.param(
+            select(Fruit).join(Fruit.color).where(Fruit.name == "x"),
+            snapshot(
+                [
+                    "SELECT fruit.id",
+                    "  FROM fruit AS fruit",
+                    "  JOIN (",
+                    "        SELECT fruit.id AS id",
+                    "          FROM fruit",
+                    "          JOIN color",
+                    "            ON color.id = fruit.color_id",
+                    "         WHERE fruit.name = ?",
+                    "       ) AS anon_1",
+                    "    ON fruit.id = anon_1.id",
+                ]
+            ),
+            id="join",
+        ),
+    ],
+)
+@pytest.mark.inline_snapshot
+def test_non_trivial_filter_statement_uses_semijoin(statement: Select[tuple[Fruit]], expected: list[str]) -> None:
+    """A non-trivial filter statement (LIMIT/GROUP BY/DISTINCT/JOIN) falls back to the PK semi-join."""
+    assert _filter_statement_sql(statement).splitlines() == expected
 
 
 def test_dedup_columns_collapses_distinct_objects_for_same_column() -> None:

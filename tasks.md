@@ -147,9 +147,25 @@ Run tests
 
 ## `test:add-new-snapshots`
 
-- Depends: uv:install
+- Depends: test:add-new-snapshots:inline, test:add-new-snapshots:file
 
 - **Usage**: `test:add-new-snapshots`
+
+Run snapshot-based tests and add new snapshots
+
+## `test:add-new-snapshots:file`
+
+- Depends: uv:install
+
+- **Usage**: `test:add-new-snapshots:file`
+
+Run snapshot-based tests and add new snapshots
+
+## `test:add-new-snapshots:inline`
+
+- Depends: uv:install
+
+- **Usage**: `test:add-new-snapshots:inline`
 
 Run snapshot-based tests and add new snapshots
 
