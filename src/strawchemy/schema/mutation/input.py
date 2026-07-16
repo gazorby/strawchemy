@@ -4,6 +4,7 @@ import dataclasses
 from collections.abc import Hashable, Iterator, Sequence
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeAlias, TypeVar, cast, final
+from weakref import WeakValueDictionary
 
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import MapperProperty, RelationshipDirection, object_mapper
@@ -30,8 +31,7 @@ if TYPE_CHECKING:
     from strawchemy.typing import MappedGraphQLDTO
     from strawchemy.validation.base import ValidationProtocol
 
-
-__all__ = ("Input", "InputModel", "LevelInput", "RelationType")
+__all__ = ("EventRegistry", "Input", "InputModel", "LevelInput", "RelationInput", "RelationType")
 
 T = TypeVar("T", bound=MappedDTO[Any])
 DeclarativeBaseT = TypeVar("DeclarativeBaseT", bound="DeclarativeBase")
@@ -103,22 +103,19 @@ class _UnboundRelationInput:
 @dataclass
 class RelationInput(_UnboundRelationInput):
     parent: DeclarativeBase = field(kw_only=True)
+    event_registry: EventRegistry = field(kw_only=True)
 
     def __post_init__(self) -> None:
         super().__post_init__()
-
-        if self.relation_type is RelationType.TO_ONE:
-            event.listens_for(self.attribute, "set")(self._set_event)
-        else:
-            event.listens_for(self.attribute, "append")(self._append_event)
-            event.listens_for(self.attribute, "remove")(self._remove_event)
+        self.event_registry.register(self)
 
     @classmethod
-    def from_unbound(cls, unbound: _UnboundRelationInput, model: DeclarativeBase) -> Self:
+    def from_unbound(cls, unbound: _UnboundRelationInput, model: DeclarativeBase, registry: EventRegistry) -> Self:
         return cls(
             attribute=unbound.attribute,
             related=unbound.related,
             parent=model,
+            event_registry=registry,
             set_=unbound.set,
             add=unbound.add,
             remove=unbound.remove,
@@ -129,7 +126,7 @@ class RelationInput(_UnboundRelationInput):
             upsert=unbound.upsert,
         )
 
-    def _set_event(self, target: DeclarativeBase, value: DeclarativeBase | None, *_: Any, **__: Any) -> None:
+    def handle_set(self, value: DeclarativeBase | None) -> None:
         if value is None:
             return
         if _has_record(value):
@@ -137,17 +134,75 @@ class RelationInput(_UnboundRelationInput):
         else:
             self.create = [value]
 
-    def _append_event(self, target: DeclarativeBase, value: DeclarativeBase, *_: Any, **__: Any) -> None:
+    def handle_append(self, value: DeclarativeBase) -> None:
         if _has_record(value):
             self.add.append(value)
         else:
             self.create.append(value)
 
-    def _remove_event(self, target: DeclarativeBase, value: DeclarativeBase, *_: Any, **__: Any) -> None:
+    def handle_remove(self, value: DeclarativeBase) -> None:
         if _has_record(value):
             self.add = [model for model in self.add if model is not value]
         else:
             self.create = [model for model in self.create if model is not value]
+
+
+def _new_entries() -> WeakValueDictionary[tuple[int, str], RelationInput]:
+    return WeakValueDictionary()
+
+
+@dataclass
+class EventRegistry:
+    """Routes SQLAlchemy relationship events to the RelationInput owning (target, attribute).
+
+    A single set/append/remove listener is registered per relationship attribute for the
+    process lifetime. Each event is dispatched to the one RelationInput whose ``parent`` is
+    the event's ``target``, looked up in a weakly-held per-parent mapping.
+    """
+
+    _entries: WeakValueDictionary[tuple[int, str], RelationInput] = field(init=False, default_factory=_new_entries)
+    """Maps ``(id(parent), attr_key)`` to the owning RelationInput, held weakly.
+
+    The value (``RelationInput``) strongly references ``parent``, so ``id(parent)``
+    cannot be recycled while this entry is live — the key is therefore stable for the
+    entry's lifetime.
+    """
+    _registry: set[MapperProperty[Any]] = field(init=False, default_factory=set)
+    """Relationship attributes whose dispatcher has already been registered."""
+
+    def register(self, relation: RelationInput) -> None:
+        """Wire the relation's attribute once and index the relation by its parent."""
+        self._register(relation.attribute, relation.relation_type)
+        # Weak-ownership invariant: the registry holds entries weakly (by value), so a
+        # RelationInput that is no longer retained by its owning Input stops routing once
+        # collected.  The owning Input strongly holds every relation it consumes via
+        # self.relations, so live relations are always reachable.
+        self._entries[(id(relation.parent), relation.attribute.key)] = relation
+
+    def _register(self, attribute: MapperProperty[Any], relation_type: RelationType) -> None:
+        if attribute in self._registry:
+            return
+        if relation_type is RelationType.TO_ONE:
+            event.listens_for(attribute, "set")(self._dispatch_set)
+        else:
+            event.listens_for(attribute, "append")(self._dispatch_append)
+            event.listens_for(attribute, "remove")(self._dispatch_remove)
+        self._registry.add(attribute)
+
+    def _get_input(self, target: DeclarativeBase, initiator: Any) -> RelationInput | None:
+        return self._entries.get((id(target), initiator.key))
+
+    def _dispatch_set(self, target: DeclarativeBase, value: DeclarativeBase, _oldvalue: Any, initiator: Any) -> None:
+        if (relation := self._get_input(target, initiator)) is not None:
+            relation.handle_set(value)
+
+    def _dispatch_append(self, target: DeclarativeBase, value: DeclarativeBase, initiator: Any) -> None:
+        if (relation := self._get_input(target, initiator)) is not None:
+            relation.handle_append(value)
+
+    def _dispatch_remove(self, target: DeclarativeBase, value: DeclarativeBase, initiator: Any) -> None:
+        if (relation := self._get_input(target, initiator)) is not None:
+            relation.handle_remove(value)
 
 
 @dataclass
@@ -228,7 +283,7 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
                     delattr(model, attribute)
 
         for relation in self.current_relations:
-            self.input_data.add_relation(RelationInput.from_unbound(relation, model))
+            self.input_data.add_relation(RelationInput.from_unbound(relation, model, self.input_data.registry))
         self.current_relations.clear()
         # Return dict because .model_validate will be called at root level
         return model if level == 1 or self.input_data.validation is None else params
@@ -250,8 +305,11 @@ class Input(Generic[InputModel]):
         self,
         dtos: MappedGraphQLDTO[InputModel] | Sequence[MappedGraphQLDTO[InputModel]],
         _validation_: ValidationProtocol[InputModel] | None = None,
+        *,
+        registry: EventRegistry | None = None,
         **override: Any,
     ) -> None:
+        self.registry = registry if registry is not None else EventRegistry()
         self.max_level = 0
         self.relations: list[RelationInput] = []
         self.instances: list[InputModel] = []
@@ -305,6 +363,7 @@ class Input(Generic[InputModel]):
             relation = RelationInput(
                 attribute=relationship,
                 parent=model,
+                event_registry=self.registry,
                 level=_level,
                 input_index=input_index,
                 relation_type=relation_type,

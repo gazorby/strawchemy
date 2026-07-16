@@ -34,6 +34,7 @@ from strawchemy.schema.mutation.fields import (
     StrawchemyUpdateMutationField,
     StrawchemyUpsertMutationField,
 )
+from strawchemy.schema.mutation.input import EventRegistry
 from strawchemy.utils.registry import StrawberryRegistry
 
 if TYPE_CHECKING:
@@ -108,6 +109,7 @@ class Strawchemy:
         """
         self.config = StrawchemyConfig(cast("SupportedDialect", config)) if isinstance(config, str) else config
         self.registry = StrawberryRegistry(strawberry_config or StrawberryConfig())
+        self._event_registry = EventRegistry()
 
         strawberry_backend = StrawberrryDTOBackend(
             MappedStrawberryGraphQLDTO, auto_is_type_of=self.config.auto_is_type_of
@@ -137,6 +139,7 @@ class Strawchemy:
             order_by_factory=self.order_by_factory,
             filter_factory=self.filter_factory,
             distinct_on_factory=self.distinct_on_enum_factory,
+            event_registry=self._event_registry,
         )
 
         # Decorators
