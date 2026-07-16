@@ -5,12 +5,12 @@ ignore_merge_commits = true
 # so we can do our own skip logic in workflow
 skip_ci = "[ci-skip]"
 pre_bump_hooks = [
-    "uv version --no-sync {{version}}",
-    "git add :pyproject.toml :uv.lock"
+  "uv version --no-sync {{version}}",
+  "git add :pyproject.toml :uv.lock"
 ]
 post_bump_hooks = [
-    "git push",
-    "git push origin {{version_tag}}",
+  "git push",
+  "git push origin {{version_tag}}",
 ]
 
 [changelog]
@@ -21,8 +21,8 @@ owner = "gazorby"
 repository = "strawchemy"
 
 authors = [
-    { signature = "gazorby", username = "gazorby" },
-    { signature = "Matthieu", username = "gazorby" }
+  { signature = "gazorby", username = "gazorby" },
+  { signature = "Matthieu", username = "gazorby" }
 ]
 
 [commit_types]
@@ -42,10 +42,8 @@ test = { omit_from_changelog = true }
 
 [bump_profiles.manual]
 pre_bump_hooks = [
-    "uv version --no-sync {{version}}",
-    "mise run lint",
+  "uv version --no-sync {{version}}",
+  "mise run lint",
 ]
 
-post_bump_hooks = [
-    "echo 'Manual bump from {{latest}} to {{version}}.'"
-]
+post_bump_hooks = ["echo 'Manual bump from {{latest}} to {{version}}.'"]
