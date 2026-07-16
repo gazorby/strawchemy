@@ -46,6 +46,11 @@ repos:
         types: [ python ]
         args: [ "--py310-plus" ]
 
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.11.29
+    hooks:
+      - id: uv-lock
+
   - repo: local
     hooks:
       - id: unasyncd
