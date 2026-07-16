@@ -1,0 +1,39 @@
+version: v1
+
+labels:
+
+  # Semantic
+
+  - label: 'feat'
+    matcher:
+      title: '^feat: .*'
+      commits: '^feat: .*'
+
+  - label: 'fix'
+    matcher:
+      title: '^fix: .*'
+      commits: '^fix: .*'
+
+  - label: 'chore'
+    matcher:
+      title: '^chore: .*'
+      commits: '^chore: .*'
+
+  - label: 'chore'
+    matcher:
+      title: "^bump(\\((deps|ci)\\))?:.*"
+
+  - label: 'docs'
+    matcher:
+      title: '^docs: .*'
+      commits: '^docs: .*'
+
+  # Bots
+
+  - label: dependabot
+    matcher:
+      branch: '^dependabot/.*'
+
+  - label: renovate
+    matcher:
+      branch: '^renovate/.*'

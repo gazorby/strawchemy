@@ -1,0 +1,16 @@
+version: v1
+
+labels:
+  - label: 'bug'
+    matcher:
+      title: '^bug:.*'
+      body: "(\\n|.)*- \\[x\\] bug(\\n|.)*"
+
+  - label: 'feat'
+    matcher:
+      title: '^feat:.*'
+      body: "(\\n|.)*- \\[x\\] feat(\\n|.)*"
+
+  - label: 'docs'
+    matcher:
+      title: '^(docs|doc):.*'
