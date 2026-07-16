@@ -3,18 +3,18 @@ version: v1
 labels:
   - label: 'bug'
     matcher:
-      title: '^bug:.*'
+      title: '^bug(\\([^()\\r\\n]*\\))?:.*'
       body: "(\\n|.)*- \\[x\\] bug(\\n|.)*"
 
   - label: 'feat'
     matcher:
-      title: '^feat:.*'
+      title: '^feat(\\([^()\\r\\n]*\\))?:.*'
       body: "(\\n|.)*- \\[x\\] feat(\\n|.)*"
 
   - label: 'docs'
     matcher:
-      title: '^(docs|doc):.*'
+      title: '^(docs|doc)(\\([^()\\r\\n]*\\))?:.*'
 
   - label: 'perf'
     matcher:
-      title: '^(perf):.*'
+      title: '^perf(\\([^()\\r\\n]*\\))?:.*'
