@@ -2,47 +2,17 @@ version = 1
 revision = 3
 requires-python = ">=3.10"
 resolution-markers = [
-    "python_full_version >= '3.14' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.14' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.14' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.14' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.14' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
+    "python_full_version >= '3.14'",
+    "python_full_version == '3.13.*'",
+    "python_full_version >= '3.11' and python_full_version < '3.13'",
+    "python_full_version < '3.11'",
 ]
 conflicts = [[
-    { package = "strawchemy", group = "build" },
-    { package = "strawchemy", group = "codeflash" },
-], [
     { package = "strawchemy", group = "test" },
     { package = "strawchemy", group = "unasyncd" },
 ], [
     { package = "strawchemy", group = "dev" },
     { package = "strawchemy", group = "unasyncd" },
-], [
-    { package = "strawchemy", group = "codeflash" },
-    { package = "strawchemy", group = "dev" },
 ]]
 
 [options]
@@ -61,7 +31,7 @@ version = "1.11.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
-    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "greenlet" },
     { name = "sqlalchemy" },
     { name = "typing-extensions" },
@@ -87,7 +57,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mako" },
     { name = "sqlalchemy" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/94/13/8b084e0f2efb0275a1d534838844926f798bd766566b1375174e2448cd31/alembic-1.18.4.tar.gz", hash = "sha256:cb6e1fd84b6174ab8dbb2329f86d631ba9559dd78df550b57804d607672cedbc", size = 2056725, upload-time = "2026-02-10T16:00:47.195Z" }
@@ -118,9 +88,9 @@ name = "anyio"
 version = "4.13.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "idna" },
-    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/19/14/2c5dd9f512b66549ae92767a9c7b330ae88e1932ca57876909410251fe13/anyio-4.13.0.tar.gz", hash = "sha256:334b70e641fd2221c1505b3890c69882fe4a2df910cba14d97019b90b24439dc", size = 231622, upload-time = "2026-03-24T12:59:09.671Z" }
 wheels = [
@@ -190,7 +160,7 @@ name = "asyncpg"
 version = "0.31.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "async-timeout", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "async-timeout", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/fe/cc/d18065ce2380d80b1bcce927c24a2642efd38918e33fd724bc4bca904877/asyncpg-0.31.0.tar.gz", hash = "sha256:c989386c83940bfbd787180f2b1519415e2d3d6277a70d9d0f0145ac73500735", size = 993667, upload-time = "2025-11-24T23:27:00.812Z" }
 wheels = [
@@ -276,14 +246,14 @@ name = "black"
 version = "26.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "click", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-unasyncd'" },
+    { name = "click", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "mypy-extensions", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "packaging", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "pathspec", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "platformdirs", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "pytokens", marker = "extra == 'group-10-strawchemy-unasyncd'" },
-    { name = "tomli", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "typing-extensions", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "tomli", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c0/37/5628dd55bf2b34257fc7603f0fe97c40e3aaf24265f416a9c85c95ca1436/black-26.5.1.tar.gz", hash = "sha256:dd321f668053961824bcc1be1cc1df748b2d7e4fa28086b08331e577b0100a73", size = 679439, upload-time = "2026-05-18T16:53:36.107Z" }
 wheels = [
@@ -329,43 +299,13 @@ wheels = [
 ]
 
 [[package]]
-name = "bracex"
-version = "2.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/63/9a/fec38644694abfaaeca2798b58e276a8e61de49e2e37494ace423395febc/bracex-2.6.tar.gz", hash = "sha256:98f1347cd77e22ee8d967a30ad4e310b233f7754dbf31ff3fceb76145ba47dc7", size = 26642, upload-time = "2025-06-22T19:12:31.254Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/2a/9186535ce58db529927f6cf5990a849aa9e052eea3e2cfefe20b9e1802da/bracex-2.6-py3-none-any.whl", hash = "sha256:0b0049264e7340b3ec782b5cb99beb325f36c3782a32e36e876452fd49a09952", size = 11508, upload-time = "2025-06-22T19:12:29.781Z" },
-]
-
-[[package]]
-name = "bump-my-version"
-version = "1.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "click", version = "8.3.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "httpx", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "pydantic", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "pydantic-settings", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "questionary", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "rich", version = "13.6.0", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-dev' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "rich-click", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "tomlkit", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "wcmatch", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/61/07b90027091a4192b4a0290dc3da1aeea6b9e7b6b4c0f7fd30dab36070c1/bump_my_version-1.3.0.tar.gz", hash = "sha256:5780137a8d93378af3839798fcba01c7e6cb28dcc5aa5a7ab4d8507787f1995c", size = 1142429, upload-time = "2026-03-22T13:27:34.923Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/36/01/b168791bfbfb0322ef6d38d236f6f17a02e41fb7753e23e4cdb0f19ac969/bump_my_version-1.3.0-py3-none-any.whl", hash = "sha256:3cdaa54588d2443a29303b77e7539417187952c3d22f87bfdd32c0fe6af2f570", size = 64878, upload-time = "2026-03-22T13:27:33.006Z" },
-]
-
-[[package]]
 name = "cattrs"
 version = "26.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "attrs", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "exceptiongroup", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "attrs", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "exceptiongroup", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a0/ec/ba18945e7d6e55a58364d9fb2e46049c1c2998b3d805f19b703f14e81057/cattrs-26.1.0.tar.gz", hash = "sha256:fa239e0f0ec0715ba34852ce813986dfed1e12117e209b816ab87401271cdd40", size = 495672, upload-time = "2026-02-18T22:15:19.406Z" }
 wheels = [
@@ -386,7 +326,7 @@ name = "cffi"
 version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser", marker = "implementation_name != 'PyPy' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "pycparser", marker = "implementation_name != 'PyPy' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/eb/56/b1ba7935a17738ae8453301356628e8147c79dbb825bcbc73dc7401f9846/cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529", size = 523588, upload-time = "2025-09-08T23:24:04.541Z" }
 wheels = [
@@ -613,42 +553,10 @@ wheels = [
 
 [[package]]
 name = "click"
-version = "8.3.3"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.14' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-]
-dependencies = [
-    { name = "colorama", marker = "(sys_platform == 'win32' and extra == 'group-10-strawchemy-build') or (sys_platform == 'win32' and extra == 'group-10-strawchemy-dev') or (sys_platform == 'win32' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (sys_platform == 'win32' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/bb/63/f9e1ea081ce35720d8b92acde70daaedace594dc93b693c869e0d5910718/click-8.3.3.tar.gz", hash = "sha256:398329ad4837b2ff7cbe1dd166a4c0f8900c3ca3a218de04466f38f6497f18a2", size = 328061, upload-time = "2026-04-22T15:11:27.506Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ae/44/c1221527f6a71a01ec6fbad7fa78f1d50dfa02217385cf0fa3eec7087d59/click-8.3.3-py3-none-any.whl", hash = "sha256:a2bf429bb3033c89fa4936ffb35d5cb471e3719e1f3c8a7c3fff0b8314305613", size = 110502, upload-time = "2026-04-22T15:11:25.044Z" },
-]
-
-[[package]]
-name = "click"
 version = "8.4.1"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.14'",
-    "python_full_version == '3.13.*'",
-    "python_full_version >= '3.11' and python_full_version < '3.13'",
-    "python_full_version < '3.11'",
-]
 dependencies = [
-    { name = "colorama", marker = "(sys_platform == 'win32' and extra == 'group-10-strawchemy-codeflash') or (sys_platform == 'win32' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9b/98/518d8e5081007684232226f475082b30087d0f585e8457db087298259f49/click-8.4.1.tar.gz", hash = "sha256:918b5633eddf6b41c32d4f454bf0de810065c74e3f7dbf8ee5452f8be88d3e96", size = 353007, upload-time = "2026-05-22T04:08:37.769Z" }
 wheels = [
@@ -667,7 +575,7 @@ resolution-markers = [
 ]
 dependencies = [
     { name = "black", marker = "extra == 'group-10-strawchemy-unasyncd'" },
-    { name = "click", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-unasyncd'" },
+    { name = "click", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "dill", version = "0.3.9", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "gitpython", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "humanize", marker = "extra == 'group-10-strawchemy-unasyncd'" },
@@ -681,8 +589,8 @@ dependencies = [
     { name = "pydantic", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "pytest", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "pytest-timeout", marker = "extra == 'group-10-strawchemy-unasyncd'" },
-    { name = "returns", version = "0.26.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "returns", version = "0.28.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "returns", version = "0.26.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "returns", version = "0.28.0", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "sentry-sdk", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "tiktoken", marker = "extra == 'group-10-strawchemy-unasyncd'" },
     { name = "timeout-decorator", marker = "extra == 'group-10-strawchemy-unasyncd'" },
@@ -706,44 +614,44 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "attrs", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "click", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "codeflash-benchmark", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "coverage", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "crosshair-tool", marker = "(python_full_version < '3.15' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.15' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "dill", version = "0.4.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "filelock", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "gitpython", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "humanize", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "inquirer", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "isort", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "jedi", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "junitparser", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "libcst", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "line-profiler", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "lxml", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "memray", marker = "(sys_platform != 'win32' and extra == 'group-10-strawchemy-test') or (sys_platform != 'win32' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "parameterized", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "platformdirs", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "posthog", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "pydantic", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "pygls", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "pytest", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "pytest-asyncio", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "pytest-memray", marker = "(sys_platform != 'win32' and extra == 'group-10-strawchemy-test') or (sys_platform != 'win32' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "pytest-timeout", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "requests", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "sentry-sdk", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "tomlkit", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "tree-sitter", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "tree-sitter-go", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "tree-sitter-groovy", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "tree-sitter-java", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "tree-sitter-javascript", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "tree-sitter-kotlin", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "tree-sitter-typescript", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "unidiff", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "attrs", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "click", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "codeflash-benchmark", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "coverage", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "crosshair-tool", marker = "(python_full_version < '3.15' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.15' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.15' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "dill", version = "0.4.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "filelock", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "gitpython", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "humanize", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "inquirer", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "isort", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "jedi", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "junitparser", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "libcst", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "line-profiler", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "lxml", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "memray", marker = "(sys_platform != 'win32' and extra == 'group-10-strawchemy-dev') or (sys_platform != 'win32' and extra == 'group-10-strawchemy-test') or (sys_platform != 'win32' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "parameterized", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "platformdirs", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "posthog", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pydantic", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pygls", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pytest", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pytest-asyncio", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pytest-memray", marker = "(sys_platform != 'win32' and extra == 'group-10-strawchemy-dev') or (sys_platform != 'win32' and extra == 'group-10-strawchemy-test') or (sys_platform != 'win32' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "pytest-timeout", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "requests", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "sentry-sdk", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "tomlkit", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "tree-sitter", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "tree-sitter-go", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "tree-sitter-groovy", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "tree-sitter-java", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "tree-sitter-javascript", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "tree-sitter-kotlin", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "tree-sitter-typescript", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "unidiff", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2d/bc/d86b03b88cf254f4581162a33c8f296092d1f1c46bd7c3478802dd8b9c23/codeflash-0.20.6.tar.gz", hash = "sha256:411202748597aff5ebb3fd8bceb510da209b3253a86fe49783238113076bba55", size = 810714, upload-time = "2026-05-30T13:23:22.792Z" }
 wheels = [
@@ -755,7 +663,7 @@ name = "codeflash-benchmark"
 version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pytest", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pytest", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7c/10/4d43fcb71914324efc9e1f88ec88d3abd2a615aaf26d268f26dd29a9bffa/codeflash_benchmark-0.3.0.tar.gz", hash = "sha256:465232854ed64a263c0c4c8d1f919a3a92b82b73487806c45686df89feb62037", size = 4897, upload-time = "2026-02-19T06:36:47.19Z" }
 wheels = [
@@ -776,7 +684,7 @@ name = "colorlog"
 version = "6.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a2/61/f083b5ac52e505dfc1c624eafbf8c7589a0d7f32daa398d2e7590efa5fda/colorlog-6.10.1.tar.gz", hash = "sha256:eb4ae5cb65fe7fec7773c2306061a8e63e02efc2c72eba9d27b0fa23c94f1321", size = 17162, upload-time = "2025-10-16T16:14:11.978Z" }
 wheels = [
@@ -788,7 +696,7 @@ name = "covdefaults"
 version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "coverage", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "coverage" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/44/ee/9a6f2611f72e4c5657ae5542a510cf4164d2c673687c0ea73bb1cbd85b4d/covdefaults-2.3.0.tar.gz", hash = "sha256:4e99f679f12d792bc62e5510fa3eb59546ed47bd569e36e4fddc4081c9c3ebf7", size = 4835, upload-time = "2023-03-05T16:43:34.779Z" }
 wheels = [
@@ -910,7 +818,7 @@ wheels = [
 
 [package.optional-dependencies]
 toml = [
-    { name = "tomli", marker = "(python_full_version <= '3.11' and extra == 'group-10-strawchemy-dev') or (python_full_version <= '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version <= '3.11' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "tomli", marker = "python_full_version <= '3.11'" },
 ]
 
 [[package]]
@@ -930,13 +838,13 @@ name = "crosshair-tool"
 version = "0.0.106"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "importlib-metadata", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "packaging", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "pygls", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "typeshed-client", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "typing-inspect", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "z3-solver", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "importlib-metadata", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "packaging", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pygls", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "typeshed-client", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "typing-inspect", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "z3-solver", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/6f/2d/0044cb0d563ad63d8492b4b18ca688182b089b788580da79000bb3c20d47/crosshair_tool-0.0.106.tar.gz", hash = "sha256:7e37ff9829e6dffe40311a8c712999e989160663919e7114480bb22a6653dd72", size = 493872, upload-time = "2026-06-02T00:34:18.912Z" }
 wheels = [
@@ -982,8 +890,8 @@ name = "cryptography"
 version = "48.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "cffi", marker = "platform_python_implementation != 'PyPy' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/12/45/870e7f4bef50e5f53b9f51d4428aee5290eedf58ba443f16b1ebb7ab8e66/cryptography-48.0.1.tar.gz", hash = "sha256:266f4ee051abb2f725b74ef8072b521ce1feacf685a3364fa6a6b45548db791a", size = 832989, upload-time = "2026-06-09T22:32:31.8Z" }
 wheels = [
@@ -1072,7 +980,7 @@ version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "packaging" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/62/55/f054de99871e7beb81935dea8a10b90cd5ce42122b1c3081d5282fdb3621/dependency_groups-1.3.1.tar.gz", hash = "sha256:78078301090517fd938c19f64a53ce98c32834dfe0dee6b88004a569a6adfefd", size = 10093, upload-time = "2025-05-02T00:34:29.452Z" }
 wheels = [
@@ -1084,10 +992,10 @@ name = "diff-cover"
 version = "10.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "chardet", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "jinja2", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "pluggy", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "pygments", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "chardet" },
+    { name = "jinja2" },
+    { name = "pluggy" },
+    { name = "pygments" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/35/21/057e816125c162662d2a2cc2ebcd72dd333e78e51678298d07dd3146011a/diff_cover-10.3.0.tar.gz", hash = "sha256:474dbc63e815fbb7567d7b7ca5b104123e96129f25426ebdbc9a1bdbb935b2c6", size = 106546, upload-time = "2026-05-30T14:17:14.32Z" }
 wheels = [
@@ -1147,9 +1055,9 @@ name = "docker"
 version = "7.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pywin32", marker = "(sys_platform == 'win32' and extra == 'group-10-strawchemy-dev') or (sys_platform == 'win32' and extra == 'group-10-strawchemy-test') or (sys_platform == 'win32' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev')" },
-    { name = "requests", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "urllib3", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
+    { name = "requests" },
+    { name = "urllib3" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/91/9b/4a2ea29aeba62471211598dac5d96825bb49348fa07e906ea930394a83ce/docker-7.1.0.tar.gz", hash = "sha256:ad8c70e6e3f8926cb8a92619b832b4ea5299e2831c14284663184e200546fa6c", size = 117834, upload-time = "2024-05-23T11:13:57.216Z" }
 wheels = [
@@ -1183,7 +1091,7 @@ name = "exceptiongroup"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz", hash = "sha256:8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219", size = 30371, upload-time = "2025-11-21T23:01:54.787Z" }
 wheels = [
@@ -1204,7 +1112,7 @@ name = "faker"
 version = "40.23.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "tzdata", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "tzdata", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f3/d6/fc071e5754815d9058e12ab549cc88e90f8f4ecf4dc33b6b750cdf4b622d/faker-40.23.0.tar.gz", hash = "sha256:f135e563f1f95f19346bb680bc2e43570bc43b7893e566023746f51f32c69dfc", size = 1972975, upload-time = "2026-06-10T20:53:21.611Z" }
 wheels = [
@@ -1243,26 +1151,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d9/76/77c6f2e608028a2885e4d9d9a28cb6801879972d4bb3106c1dca02201df6/geojson_pydantic-2.1.1.tar.gz", hash = "sha256:3b64fa2dcd98108ff8a19bfb01eee3dab41bc230be2481804aefd7c1659d1c23", size = 8156, upload-time = "2026-04-07T09:48:07.252Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/95/97/d59d999f00aec90fc7a4efb742fc11e6c160552aa1b313438d3497998644/geojson_pydantic-2.1.1-py3-none-any.whl", hash = "sha256:55354f22ededc3c070e3210fec6f518d784b65c4368c1763f2c6dc4bab79b898", size = 9456, upload-time = "2026-04-07T09:48:05.772Z" },
-]
-
-[[package]]
-name = "git-cliff"
-version = "2.13.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/62/57/b12494e2cbc3c9154c942e64659b5aec2b1ce9f12d07f6dc6167e2c63ae5/git_cliff-2.13.1.tar.gz", hash = "sha256:e949ea9c3951ba6037b99eec465162be2584f27f0836ace45f44d6f45650f8c6", size = 113119, upload-time = "2026-04-26T10:33:42.331Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/8f/dd/24768c3c0030710d36706c17b997d06aee27cb76b27ab2abb058ae254175/git_cliff-2.13.1-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:08a9cb0ec760e165210ed22fefa295b6549a3520b420db995ccbb3620cbb1fbe", size = 7260035, upload-time = "2026-04-26T10:33:16.269Z" },
-    { url = "https://files.pythonhosted.org/packages/22/df/842973ead79d27a58cd1eccd167191c0a71513e5c1e9dc30337dafdb7d36/git_cliff-2.13.1-py3-none-macosx_11_0_arm64.whl", hash = "sha256:e92cf470ecbe73f7d2963dfa80e8961a6b76888d0c19949b0f028a28a0a0470c", size = 6854384, upload-time = "2026-04-26T10:33:18.808Z" },
-    { url = "https://files.pythonhosted.org/packages/7c/4d/6d6efa7d61be8632563990ccd402e401695e4a85a0bb1002f28730d03268/git_cliff-2.13.1-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2e8d8e420adf6a36b97e0fbdbf2b07e47712199a9baf3675c9a759430243ea26", size = 7308164, upload-time = "2026-04-26T10:33:20.869Z" },
-    { url = "https://files.pythonhosted.org/packages/f0/4a/98b8d2f53a2d0b7d313e98ab363ad7e0d6a514e878a8d678f22402cb0ec7/git_cliff-2.13.1-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1ab059d671565189faa4f3858b2fb42535aa39fe265ad95d84d5c116a2724fc7", size = 7687163, upload-time = "2026-04-26T10:33:23.096Z" },
-    { url = "https://files.pythonhosted.org/packages/c7/07/cdd149b3909644aa3f0be7960406d9bbb38598f8618e039ac48cbb43ded6/git_cliff-2.13.1-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:a93db30da45967c42df607fbbc2092111fcd576b0ca9e2fbddd3f653d8c71be7", size = 7317670, upload-time = "2026-04-26T10:33:25.323Z" },
-    { url = "https://files.pythonhosted.org/packages/2e/11/6d377a7f3113f6e26d87a28a32013eb05bd62bce176d6f8ee808e4868c1f/git_cliff-2.13.1-py3-none-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:df9f5a2bd16e5225030c9c2362e6ac70b34a906c0fbb83f8cbf5ae46932ba0d2", size = 7502294, upload-time = "2026-04-26T10:33:27.315Z" },
-    { url = "https://files.pythonhosted.org/packages/80/6b/e1da9acf3aec99e6600be02b6ce0c9e8bd42d072e3120384514c905231e2/git_cliff-2.13.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:c12276784d280aa6a7148d3e52ff139e891f4c97720cd9be581b19892ea39fe0", size = 7927258, upload-time = "2026-04-26T10:33:29.554Z" },
-    { url = "https://files.pythonhosted.org/packages/ed/ea/9f2188a5e474e5f02193d9c1cdf7028773d483a3f508a1df4f1d93c9cc80/git_cliff-2.13.1-py3-none-musllinux_1_2_aarch64.whl", hash = "sha256:17da93dc605cbc48c762770402067fa726437cedbd62514f9caef6e0ccb58a43", size = 7308153, upload-time = "2026-04-26T10:33:31.589Z" },
-    { url = "https://files.pythonhosted.org/packages/b3/70/5e2b2a0e42c07956f911e1eccd6dc6d79b96fc6c8a604a526c1ee0474c84/git_cliff-2.13.1-py3-none-musllinux_1_2_i686.whl", hash = "sha256:cd4a08cf3f638ec71d2ed451aa8673bef99e1107a36366153db97ca18d981655", size = 7502287, upload-time = "2026-04-26T10:33:33.894Z" },
-    { url = "https://files.pythonhosted.org/packages/05/50/cc4c1d3d360621c0235d66d2c74472d9993d8aadf23ffa311eaf29d7a3aa/git_cliff-2.13.1-py3-none-musllinux_1_2_x86_64.whl", hash = "sha256:c5bb87f6e1db18be09e50c9d59234dc949713e20c2700e94eca378d22ad79719", size = 7927253, upload-time = "2026-04-26T10:33:36.205Z" },
-    { url = "https://files.pythonhosted.org/packages/86/5d/717d30f37dad65a6cc5220b04a3ef1bc44c31fb56d0ce2895114e159df4f/git_cliff-2.13.1-py3-none-win32.whl", hash = "sha256:c8878972e0a6c26d9137fc406a611116239333578d95ac05064d2807920bd83c", size = 6718261, upload-time = "2026-04-26T10:33:38.1Z" },
-    { url = "https://files.pythonhosted.org/packages/99/b2/99fac50978b9a90bfec0f1b89354a667ec83f4990301f6c708abce05484e/git_cliff-2.13.1-py3-none-win_amd64.whl", hash = "sha256:856d831a0bede9c258229dbd4d4c2b1c0810d8fce3d3882729669e8dc09c72bf", size = 7714969, upload-time = "2026-04-26T10:33:40.163Z" },
 ]
 
 [[package]]
@@ -1494,7 +1382,7 @@ name = "importlib-metadata"
 version = "9.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "zipp", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "zipp", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a9/01/15bb152d77b21318514a96f43af312635eb2500c96b55398d020c93d86ea/importlib_metadata-9.0.0.tar.gz", hash = "sha256:a4f57ab599e6a2e3016d7595cfd72eb4661a5106e787a95bcc90c7105b831efc", size = 56405, upload-time = "2026-03-20T06:42:56.999Z" }
 wheels = [
@@ -1571,7 +1459,7 @@ name = "jinxed"
 version = "2.0.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ansicon", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "ansicon", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3c/5e/2eea62fd64689685b082f29e1dcd0e57a19009c90733318a4bc9ddb54b2c/jinxed-2.0.4.tar.gz", hash = "sha256:a92ac48923433c0a88577bb0479191788813fd5055ef17ff2b04a701a1b83f19", size = 135991, upload-time = "2026-05-23T16:30:58.304Z" }
 wheels = [
@@ -1605,8 +1493,8 @@ name = "libcst"
 version = "1.8.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pyyaml", marker = "(python_full_version != '3.13.*' and extra == 'group-10-strawchemy-codeflash') or (python_full_version != '3.13.*' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "pyyaml-ft", marker = "(python_full_version == '3.13.*' and extra == 'group-10-strawchemy-codeflash') or (python_full_version == '3.13.*' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "pyyaml", marker = "python_full_version != '3.13.*' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "pyyaml-ft", marker = "python_full_version == '3.13.*' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/de/cd/337df968b38d94c5aabd3e1b10630f047a2b345f6e1d4456bd9fe7417537/libcst-1.8.6.tar.gz", hash = "sha256:f729c37c9317126da9475bdd06a7208eb52fcbd180a6341648b45a56b4ba708b", size = 891354, upload-time = "2025-11-03T22:33:30.621Z" }
 wheels = [
@@ -1673,8 +1561,8 @@ name = "line-profiler"
 version = "5.0.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "tomli", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "tomli", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/03/b6/6d18ad201417a9c5168995541d0fd7981b5652b2b34f6e46a3a93c0f1beb/line_profiler-5.0.2.tar.gz", hash = "sha256:8d8a990c84c64bcde45af22af502d17bc0ae107be405ce41bba92af5c39c0000", size = 407075, upload-time = "2026-02-23T23:31:20.698Z" }
 wheels = [
@@ -1729,7 +1617,7 @@ name = "linkify-it-py"
 version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "uc-micro-py", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "uc-micro-py", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2e/c9/06ea13676ef354f0af6169587ae292d3e2406e212876a413bf9eece4eb23/linkify_it_py-2.1.0.tar.gz", hash = "sha256:43360231720999c10e9328dc3691160e27a718e280673d444c38d7d3aaa3b98b", size = 29158, upload-time = "2026-03-01T07:48:47.683Z" }
 wheels = [
@@ -1742,9 +1630,8 @@ version = "2.24.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
-    { name = "click", version = "8.3.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "click", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-codeflash' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "click" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "httpx" },
     { name = "litestar-htmx" },
     { name = "msgspec" },
@@ -1752,8 +1639,8 @@ dependencies = [
     { name = "multipart" },
     { name = "polyfactory" },
     { name = "pyyaml" },
-    { name = "rich", version = "13.6.0", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "rich", version = "13.6.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-unasyncd'" },
+    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
     { name = "rich-click" },
     { name = "sniffio" },
     { name = "typing-extensions" },
@@ -1787,8 +1674,8 @@ name = "lsprotocol"
 version = "2025.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "attrs", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "cattrs", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "attrs", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "cattrs", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e9/26/67b84e6ec1402f0e6764ef3d2a0aaf9a79522cc1d37738f4e5bb0b21521a/lsprotocol-2025.0.0.tar.gz", hash = "sha256:e879da2b9301e82cfc3e60d805630487ac2f7ab17492f4f5ba5aaba94fe56c29", size = 74896, upload-time = "2025-06-17T21:30:18.156Z" }
 wheels = [
@@ -1939,7 +1826,7 @@ wheels = [
 
 [package.optional-dependencies]
 linkify = [
-    { name = "linkify-it-py", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "linkify-it-py", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 
 [[package]]
@@ -2032,7 +1919,7 @@ name = "mdit-py-plugins"
 version = "0.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "markdown-it-py", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "markdown-it-py", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/59/fc/f8d0863f8862f25602c0404d75568e89fb6b4109804645e5cdfb1be5cf56/mdit_py_plugins-0.6.1.tar.gz", hash = "sha256:a2bca0f039f39dbd35fb74ae1b5f998608c437463371f0ff7f49a19a17a114d0", size = 56114, upload-time = "2026-05-13T09:03:38.91Z" }
 wheels = [
@@ -2053,9 +1940,9 @@ name = "memray"
 version = "1.19.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "jinja2", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "textual", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "jinja2", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "textual", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/96/04/5b886a36df947599e0f37cd46e6e44e565299815f044e2303ab2ae9f8870/memray-1.19.3.tar.gz", hash = "sha256:4e0fb29ff0a50c0ec9dc84294d8f2c83419feba561a37628b304c2ae4fe73d03", size = 2417089, upload-time = "2026-04-08T18:49:32.409Z" }
 wheels = [
@@ -2158,7 +2045,7 @@ name = "multidict"
 version = "6.7.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1a/c2/c2d94cbe6ac1753f3fc980da97b3d930efe1da3af3c9f5125354436c073d/multidict-6.7.1.tar.gz", hash = "sha256:ec6652a1bee61c53a3e5776b6049172c53b6aaba34f18c9ad04f82712bac623d", size = 102010, upload-time = "2026-01-26T02:46:45.979Z" }
 wheels = [
@@ -2320,7 +2207,7 @@ dependencies = [
     { name = "dependency-groups" },
     { name = "humanize" },
     { name = "packaging" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "virtualenv" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/e7/6b/e672c862a43cfca704d32359221fa3780226daa1e5db5dfc401bcc8be9c9/nox-2026.4.10.tar.gz", hash = "sha256:2d0af5374f3f37a295428c927d1b04a8182aa01762897d172446dda2f1ce9692", size = 4034839, upload-time = "2026-04-10T17:42:42.209Z" }
@@ -2415,25 +2302,9 @@ name = "numpy"
 version = "2.4.6"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.14' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.14' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.14' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.14' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.14' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
+    "python_full_version >= '3.14'",
+    "python_full_version == '3.13.*'",
+    "python_full_version >= '3.11' and python_full_version < '3.13'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d0/ad/fed0499ce6a338d2a03ebae59cd15093910c8875328855781952abf6c2fe/numpy-2.4.6.tar.gz", hash = "sha256:f3a3570c4a2a16746ac2c31a7c7c7b0c186b95ce902e33db6f28094ed7387dda", size = 20735807, upload-time = "2026-05-18T23:37:14.07Z" }
 wheels = [
@@ -2593,18 +2464,6 @@ wheels = [
 ]
 
 [[package]]
-name = "prompt-toolkit"
-version = "3.0.52"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "wcwidth", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/a1/96/06e01a7b38dce6fe1db213e061a4602dd6032a8a97ef6c1a862537732421/prompt_toolkit-3.0.52.tar.gz", hash = "sha256:28cde192929c8e7321de85de1ddbe736f1375148b02f2e17edd840042b1be855", size = 434198, upload-time = "2025-08-27T15:24:02.057Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/84/03/0d3ce49e2505ae70cf43bc5bb3033955d2fc9f932163e84dc0779cc47f48/prompt_toolkit-3.0.52-py3-none-any.whl", hash = "sha256:9aac639a3bbd33284347de5ad8d68ecc044b91a762dc39b7c21095fcd6a19955", size = 391431, upload-time = "2025-08-27T15:23:59.498Z" },
-]
-
-[[package]]
 name = "psutil"
 version = "7.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2637,8 +2496,8 @@ name = "psycopg"
 version = "3.3.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "tzdata", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.13' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "tzdata", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/db/2f/cb91e5502ec9de1de6f1b76cfbf69531932725361168bb06963620c77e2e/psycopg-3.3.4.tar.gz", hash = "sha256:e21207764952cff81b6b8bdacad9a3939f2793367fdac2987b3aac36a651b5bc", size = 165799, upload-time = "2026-05-01T23:31:55.179Z" }
 wheels = [
@@ -2647,7 +2506,7 @@ wheels = [
 
 [package.optional-dependencies]
 binary = [
-    { name = "psycopg-binary", marker = "implementation_name != 'pypy' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "psycopg-binary", marker = "implementation_name != 'pypy' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 pool = [
     { name = "psycopg-pool" },
@@ -2868,27 +2727,13 @@ wheels = [
 ]
 
 [[package]]
-name = "pydantic-settings"
-version = "2.14.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "pydantic", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "python-dotenv", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "typing-inspection", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/07/60/1d1e59c9c90d54591469ada7d268251f71c24bdb765f1a8a832cee8c6653/pydantic_settings-2.14.1.tar.gz", hash = "sha256:e874d3bec7e787b0c9958277956ed9b4dd5de6a80e162188fdaff7c5e26fd5fa", size = 235551, upload-time = "2026-05-08T13:40:06.542Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ae/8d/f1af3832f5e6eb13ba94ee809e72b8ecb5eef226d27ee0bef7d963d943c7/pydantic_settings-2.14.1-py3-none-any.whl", hash = "sha256:6e3c7edfd8277687cdc598f56e5cff0e9bfff0910a3749deaa8d4401c3a2b9de", size = 60964, upload-time = "2026-05-08T13:40:04.958Z" },
-]
-
-[[package]]
 name = "pygls"
 version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "attrs", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "cattrs", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "lsprotocol", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "attrs", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "cattrs", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "lsprotocol", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/da/2e/7bbe061d175c0baddde8fc9edb908a4c31ba5d9165b8c68e3439c3a9f138/pygls-2.1.1.tar.gz", hash = "sha256:1da03ba9053201bb337dcdd8d121df70feb2a91e1a0dcc74de5da79755b1a201", size = 55091, upload-time = "2026-03-25T11:19:10.541Z" }
 wheels = [
@@ -2909,13 +2754,13 @@ name = "pytest"
 version = "9.0.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "(sys_platform == 'win32' and extra == 'group-10-strawchemy-codeflash') or (sys_platform == 'win32' and extra == 'group-10-strawchemy-dev') or (sys_platform == 'win32' and extra == 'group-10-strawchemy-test') or (sys_platform == 'win32' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "exceptiongroup", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-codeflash') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "iniconfig", marker = "extra == 'group-10-strawchemy-codeflash' or extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "packaging", marker = "extra == 'group-10-strawchemy-codeflash' or extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "pluggy", marker = "extra == 'group-10-strawchemy-codeflash' or extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "pygments", marker = "extra == 'group-10-strawchemy-codeflash' or extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "tomli", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-codeflash') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "exceptiongroup", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "iniconfig" },
+    { name = "packaging" },
+    { name = "pluggy" },
+    { name = "pygments" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7d/0d/549bd94f1a0a402dc8cf64563a117c0f3765662e2e668477624baeec44d5/pytest-9.0.3.tar.gz", hash = "sha256:b86ada508af81d19edeb213c681b1d48246c1a91d304c6c81a427674c17eb91c", size = 1572165, upload-time = "2026-04-07T17:16:18.027Z" }
 wheels = [
@@ -2927,9 +2772,9 @@ name = "pytest-asyncio"
 version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "backports-asyncio-runner", marker = "(python_full_version < '3.11' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "pytest", marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "typing-extensions", marker = "(python_full_version < '3.13' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.13' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.13' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "backports-asyncio-runner", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "pytest", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "typing-extensions", marker = "(python_full_version < '3.13' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.13' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.13' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/43/7c/d36d04db312ecf4298932ef77e6e4a9e8ad017906e24e34f0b0c361a2473/pytest_asyncio-1.4.0.tar.gz", hash = "sha256:c6c0d2259945122819f171a32ecea2c349ead889ee28176caaf492143424be42", size = 58514, upload-time = "2026-05-26T09:56:04.083Z" }
 wheels = [
@@ -2941,9 +2786,9 @@ name = "pytest-cov"
 version = "7.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "coverage", extra = ["toml"], marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "pluggy", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "pytest", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "coverage", extra = ["toml"], marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pluggy" },
+    { name = "pytest" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b1/51/a849f96e117386044471c8ec2bd6cfebacda285da9525c9106aeb28da671/pytest_cov-7.1.0.tar.gz", hash = "sha256:30674f2b5f6351aa09702a9c8c364f6a01c27aae0c1366ae8016160d1efc56b2", size = 55592, upload-time = "2026-03-21T20:11:16.284Z" }
 wheels = [
@@ -2955,9 +2800,9 @@ name = "pytest-databases"
 version = "0.19.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "docker", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "filelock", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "pytest", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "docker" },
+    { name = "filelock" },
+    { name = "pytest" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ab/4e/e899556b3876eec2db9bd630ad3054ced94a9541c26319bec5c4cd00579d/pytest_databases-0.19.0.tar.gz", hash = "sha256:ba7b8e51b551455daf3bd144384f6d4fba23d747b001f071795b02e6be2a3cbf", size = 350034, upload-time = "2026-05-23T18:33:49.262Z" }
 wheels = [
@@ -2966,7 +2811,7 @@ wheels = [
 
 [package.optional-dependencies]
 postgres = [
-    { name = "psycopg", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "psycopg" },
 ]
 
 [[package]]
@@ -2974,7 +2819,7 @@ name = "pytest-lazy-fixtures"
 version = "1.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pytest", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "pytest" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/75/05/030c4efe596bc31bcb4fefb31f5fcefc8917df99bd745a920763c5e81863/pytest_lazy_fixtures-1.4.0.tar.gz", hash = "sha256:f544b60c96b909b307558a62cc1f28f026f11e9f03d7f583a1dc636de3dbcb10", size = 36188, upload-time = "2025-09-16T18:42:31.797Z" }
 wheels = [
@@ -2986,8 +2831,8 @@ name = "pytest-memray"
 version = "1.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "memray", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "pytest", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "memray", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pytest", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3d/28/f67963efed56d847d028d0bb939f26cdeb32c4de474b3befc9da43bf18f9/pytest_memray-1.8.0.tar.gz", hash = "sha256:c0c706ef81941a7aa7064f2b3b8b5cdc0cea72b5277c6a6a09b113ca9ab30bdb", size = 240608, upload-time = "2025-08-18T17:32:47.329Z" }
 wheels = [
@@ -2999,8 +2844,8 @@ name = "pytest-pretty"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pytest", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "pytest" },
+    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ba/d7/c699e0be5401fe9ccad484562f0af9350b4e48c05acf39fb3dab1932128f/pytest_pretty-1.3.0.tar.gz", hash = "sha256:97e9921be40f003e40ae78db078d4a0c1ea42bf73418097b5077970c2cc43bf3", size = 219297, upload-time = "2025-06-04T12:54:37.322Z" }
 wheels = [
@@ -3024,8 +2869,8 @@ name = "pytest-xdist"
 version = "3.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "execnet", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "pytest", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "execnet" },
+    { name = "pytest" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/78/b4/439b179d1ff526791eb921115fca8e44e596a13efeda518b9d845a619450/pytest_xdist-3.8.0.tar.gz", hash = "sha256:7e578125ec9bc6050861aa93f2d59f1d8d085595d6551c2c90b6f4fad8d3a9f1", size = 88069, upload-time = "2025-07-01T13:30:59.346Z" }
 wheels = [
@@ -3034,7 +2879,7 @@ wheels = [
 
 [package.optional-dependencies]
 psutil = [
-    { name = "psutil", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "psutil" },
 ]
 
 [[package]]
@@ -3224,18 +3069,6 @@ wheels = [
 ]
 
 [[package]]
-name = "questionary"
-version = "2.1.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "prompt-toolkit", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f6/45/eafb0bba0f9988f6a2520f9ca2df2c82ddfa8d67c95d6625452e97b204a5/questionary-2.1.1.tar.gz", hash = "sha256:3d7e980292bb0107abaa79c68dd3eee3c561b83a0f89ae482860b181c8bd412d", size = 25845, upload-time = "2025-08-28T19:00:20.851Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/26/1062c7ec1b053db9e499b4d2d5bc231743201b74051c973dadeac80a8f43/questionary-2.1.1-py3-none-any.whl", hash = "sha256:a51af13f345f1cdea62347589fbb6df3b290306ab8930713bfae4d475a7d4a59", size = 36753, upload-time = "2025-08-28T19:00:19.56Z" },
-]
-
-[[package]]
 name = "readchar"
 version = "4.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -3370,10 +3203,10 @@ name = "requests"
 version = "2.34.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "certifi", marker = "extra == 'group-10-strawchemy-codeflash' or extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "charset-normalizer", marker = "extra == 'group-10-strawchemy-codeflash' or extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "idna", marker = "extra == 'group-10-strawchemy-codeflash' or extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "urllib3", marker = "extra == 'group-10-strawchemy-codeflash' or extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "certifi" },
+    { name = "charset-normalizer" },
+    { name = "idna" },
+    { name = "urllib3" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/ac/c3/e2a2b89f2d3e2179abd6d00ebd70bff6273f37fb3e0cc209f48b39d00cbf/requests-2.34.2.tar.gz", hash = "sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed", size = 142856, upload-time = "2026-05-14T19:25:27.735Z" }
 wheels = [
@@ -3388,7 +3221,7 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "typing-extensions", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/06/c2/6dda7ef39464568152e35c766a8b49ab1cdb1b03a5891441a7c2fa40dc61/returns-0.26.0.tar.gz", hash = "sha256:180320e0f6e9ea9845330ccfc020f542330f05b7250941d9b9b7c00203fcc3da", size = 105300, upload-time = "2025-07-24T13:11:21.772Z" }
 wheels = [
@@ -3405,7 +3238,7 @@ resolution-markers = [
     "python_full_version >= '3.11' and python_full_version < '3.13'",
 ]
 dependencies = [
-    { name = "typing-extensions", marker = "(python_full_version >= '3.11' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "(python_full_version >= '3.11' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/db/8a/9f6285f3a195ef4cb400c60e10952b25f19c513f44ef739a959c403087a8/returns-0.28.0.tar.gz", hash = "sha256:0eb059d81bfd8af64c86d9286cdf19c280f5a815ee719ff838a9c20b29ce4f84", size = 105269, upload-time = "2026-06-04T09:07:26.371Z" }
 wheels = [
@@ -3423,8 +3256,8 @@ resolution-markers = [
     "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "markdown-it-py", marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "pygments", marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "markdown-it-py", marker = "extra == 'group-10-strawchemy-unasyncd'" },
+    { name = "pygments", marker = "extra == 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b1/0e/e5aa3ab6857a16dadac7a970b2e1af21ddf23f03c99248db2c01082090a3/rich-13.6.0.tar.gz", hash = "sha256:5c14d22737e6d5084ef4771b62d5d4363165b403455a30a1c8ca39dc7b644bef", size = 220315, upload-time = "2023-09-30T14:10:38.639Z" }
 wheels = [
@@ -3436,26 +3269,14 @@ name = "rich"
 version = "15.0.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
-    "python_full_version >= '3.14' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.14' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version == '3.13.*' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and python_full_version < '3.13' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra == 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version >= '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
-    "python_full_version < '3.11' and extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-test' and extra != 'group-10-strawchemy-unasyncd'",
+    "python_full_version >= '3.14'",
+    "python_full_version == '3.13.*'",
+    "python_full_version >= '3.11' and python_full_version < '3.13'",
+    "python_full_version < '3.11'",
 ]
 dependencies = [
-    { name = "markdown-it-py", marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "pygments", marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "markdown-it-py", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pygments", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c0/8f/0722ca900cc807c13a6a0c696dacf35430f72e0ec571c4275d2371fca3e9/rich-15.0.0.tar.gz", hash = "sha256:edd07a4824c6b40189fb7ac9bc4c52536e9780fbbfbddf6f1e2502c31b068c36", size = 230680, upload-time = "2026-04-12T08:24:00.75Z" }
 wheels = [
@@ -3467,12 +3288,11 @@ name = "rich-click"
 version = "1.9.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "click", version = "8.3.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "click", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-codeflash' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "rich", version = "13.6.0", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-dev') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-build' and extra != 'group-10-strawchemy-unasyncd')" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "click" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "rich", version = "13.6.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-unasyncd'" },
+    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/f7/ea/21e4867ea0ef881ffd4c0550fc21a061435e50d6324bcd034396633cbc18/rich_click-1.9.8.tar.gz", hash = "sha256:4008f921da88b5d91646c134ec881c1500e5a6b3f093e90e8f29400e09608371", size = 75363, upload-time = "2026-05-28T19:54:59.144Z" }
 wheels = [
@@ -3534,8 +3354,8 @@ name = "shapely"
 version = "2.1.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/4d/bc/0989043118a27cccb4e906a46b7565ce36ca7b57f5a18b78f4f1b0f72d9d/shapely-2.1.2.tar.gz", hash = "sha256:2ed4ecb28320a433db18a5bf029986aa8afcfd740745e78847e330d5d94922a9", size = 315489, upload-time = "2025-09-24T13:51:41.432Z" }
 wheels = [
@@ -3611,9 +3431,8 @@ name = "slotscheck"
 version = "0.20.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "click", version = "8.3.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "click", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-codeflash' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "click" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/7f/da/1e6218819012774a34c0cde0074f4e217e1e8511f9d8b693a2a13572428c/slotscheck-0.20.0.tar.gz", hash = "sha256:7069653d51578c08239fabe26cb55fa81acfd17ce72cb404e6b957874058a5bd", size = 16410, upload-time = "2026-05-29T08:48:24.737Z" }
 wheels = [
@@ -3643,7 +3462,7 @@ name = "sqlalchemy"
 version = "2.0.50"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "greenlet", marker = "platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "greenlet", marker = "platform_machine == 'AMD64' or platform_machine == 'WIN32' or platform_machine == 'aarch64' or platform_machine == 'amd64' or platform_machine == 'ppc64le' or platform_machine == 'win32' or platform_machine == 'x86_64' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/57/da/6fbf010c8ebb347679d0d100b22fe9ba5e13fd04046c5df7280d2f0bf706/sqlalchemy-2.0.50.tar.gz", hash = "sha256:af5607d11ef90fd6a5c0549fe0045dce1663d427426bcfb506dcb5346a85a3b9", size = 9907424, upload-time = "2026-05-24T19:20:04.018Z" }
@@ -3743,34 +3562,28 @@ pydantic = [
 aiosqlite = [
     { name = "aiosqlite" },
 ]
-build = [
-    { name = "bump-my-version" },
-    { name = "git-cliff" },
-]
 codeflash = [
-    { name = "codeflash", version = "0.6.22", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "codeflash", version = "0.20.6", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "codeflash", version = "0.6.22", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-unasyncd'" },
+    { name = "codeflash", version = "0.20.6", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 dev = [
     { name = "aiosqlite" },
     { name = "asyncmy" },
     { name = "asyncpg" },
-    { name = "bump-my-version" },
     { name = "covdefaults" },
     { name = "cryptography" },
     { name = "debugpy" },
     { name = "diff-cover" },
-    { name = "git-cliff" },
-    { name = "nox", extra = ["uv"], marker = "extra == 'group-10-strawchemy-dev' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "nox", extra = ["uv"], marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
     { name = "nox-uv" },
-    { name = "psycopg", extra = ["binary", "pool"], marker = "extra == 'group-10-strawchemy-dev' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "psycopg", extra = ["binary", "pool"], marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
-    { name = "pytest-databases", extra = ["postgres"], marker = "extra == 'group-10-strawchemy-dev' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "pytest-databases", extra = ["postgres"], marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
-    { name = "pytest-xdist", extra = ["psutil"], marker = "extra == 'group-10-strawchemy-dev' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "pytest-xdist", extra = ["psutil"], marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
     { name = "ruff" },
     { name = "slotscheck" },
     { name = "sqlparse" },
@@ -3779,9 +3592,6 @@ dev = [
     { name = "tombi" },
     { name = "ty" },
     { name = "vulture" },
-]
-doc = [
-    { name = "git-cliff" },
 ]
 lint = [
     { name = "ruff" },
@@ -3808,10 +3618,10 @@ test = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-cov" },
-    { name = "pytest-databases", extra = ["postgres"], marker = "extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "pytest-databases", extra = ["postgres"], marker = "extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "pytest-lazy-fixtures" },
     { name = "pytest-pretty" },
-    { name = "pytest-xdist", extra = ["psutil"], marker = "extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "pytest-xdist", extra = ["psutil"], marker = "extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "sqlparse" },
     { name = "syrupy" },
     { name = "testapp" },
@@ -3835,22 +3645,15 @@ provides-extras = ["geo", "pydantic"]
 
 [package.metadata.requires-dev]
 aiosqlite = [{ name = "aiosqlite" }]
-build = [
-    { name = "bump-my-version" },
-    { name = "git-cliff" },
-]
 codeflash = [{ name = "codeflash" }]
 dev = [
     { name = "aiosqlite" },
     { name = "asyncmy" },
     { name = "asyncpg", specifier = ">=0.29.0" },
-    { name = "bump-my-version" },
     { name = "covdefaults" },
     { name = "cryptography" },
     { name = "debugpy" },
     { name = "diff-cover", specifier = ">=10.3.0" },
-    { name = "git-cliff" },
-    { name = "git-cliff", specifier = ">=2.6.1" },
     { name = "nox", extras = ["uv"] },
     { name = "nox-uv" },
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.3" },
@@ -3870,7 +3673,6 @@ dev = [
     { name = "ty", specifier = ">=0.0.40" },
     { name = "vulture" },
 ]
-doc = [{ name = "git-cliff", specifier = ">=2.6.1" }]
 lint = [
     { name = "ruff" },
     { name = "slotscheck", specifier = ">=0.16.5" },
@@ -3911,7 +3713,7 @@ name = "syrupy"
 version = "5.3.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pytest", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd')" },
+    { name = "pytest" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/de/72/c793cd7c56b09f71be80ee2f4cc64c8e2b6a3dc8abf37fbfb09785aa00a7/syrupy-5.3.2.tar.gz", hash = "sha256:d4c9d4badb165a5694dcd869812717d899a8aa0b6f14f842437cb57c4ce09b3a", size = 85948, upload-time = "2026-06-09T14:46:32.721Z" }
 wheels = [
@@ -3944,12 +3746,12 @@ name = "textual"
 version = "8.2.7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "markdown-it-py", extra = ["linkify"], marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra == 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "mdit-py-plugins", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "platformdirs", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "pygments", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "markdown-it-py", extra = ["linkify"], marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "mdit-py-plugins", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "platformdirs", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "pygments", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "rich", version = "15.0.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9b/7a/c519db0aba5024f86e71e9631810bfdd6866ed2c8695bd7fa34b90e7ef59/textual-8.2.7.tar.gz", hash = "sha256:658f568ff81e30ed43890c3e07520390e5cf1b4763822006e060656b0a88f105", size = 1859249, upload-time = "2026-05-19T10:52:49.531Z" }
 wheels = [
@@ -4281,8 +4083,8 @@ name = "typeshed-client"
 version = "2.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "importlib-resources", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "importlib-resources", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/54/5d/97d6fa8c204b0d42be931e7a568b306cda43f93ff45f8b47537ee61390de/typeshed_client-2.12.0.tar.gz", hash = "sha256:54dcfa25fcff82cedcb1b51c03c1b3c51a614097aab8fe49e4316aff6f79d9c7", size = 529457, upload-time = "2026-06-02T04:00:51.51Z" }
 wheels = [
@@ -4303,8 +4105,8 @@ name = "typing-inspect"
 version = "0.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "mypy-extensions", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
-    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "mypy-extensions", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
+    { name = "typing-extensions", marker = "extra == 'group-10-strawchemy-dev' or extra == 'group-10-strawchemy-test' or extra != 'group-10-strawchemy-unasyncd'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/dc/74/1789779d91f1961fa9438e9a8710cdae6bd138c80d7303996933d117264a/typing_inspect-0.9.0.tar.gz", hash = "sha256:b23fc42ff6f6ef6954e4852c1fb512cdd18dbea03134f91f856a95ccc9461f78", size = 13825, upload-time = "2023-05-24T20:25:47.612Z" }
 wheels = [
@@ -4347,13 +4149,12 @@ version = "0.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
-    { name = "click", version = "8.3.3", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "click", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "click" },
     { name = "libcst" },
     { name = "msgspec" },
     { name = "rich", version = "13.6.0", source = { registry = "https://pypi.org/simple" } },
     { name = "rich-click" },
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash')" },
+    { name = "tomli", marker = "python_full_version < '3.11'" },
     { name = "tomli-w" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9a/7e/56cb4b5684e93fed03282decb38f358f9c6ec70543c2f704aba1b34a9d54/unasyncd-0.10.0.tar.gz", hash = "sha256:7cc430e94d9f804b79a6dbf606a904fdc094ca539d5af38d50e96af00a7d8c6f", size = 62475, upload-time = "2026-01-24T15:29:08.203Z" }
@@ -4422,10 +4223,9 @@ name = "uvicorn"
 version = "0.49.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "click", version = "8.3.3", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-    { name = "click", version = "8.4.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-10-strawchemy-codeflash' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "click" },
     { name = "h11" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c4/1f/fa18009dea8469069cca78a4e877a008ab78f08b064bfc9ab891579077ff/uvicorn-0.49.0.tar.gz", hash = "sha256:ebf4271aa580d9de97f93192d4595176df6e91f9aae919ca73e4fc07df1e66a3", size = 91284, upload-time = "2026-06-03T22:01:30.448Z" }
 wheels = [
@@ -4434,11 +4234,11 @@ wheels = [
 
 [package.optional-dependencies]
 standard = [
-    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "colorama", marker = "sys_platform == 'win32' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "httptools" },
     { name = "python-dotenv" },
     { name = "pyyaml" },
-    { name = "uvloop", marker = "(platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32') or (platform_python_implementation == 'PyPy' and extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (platform_python_implementation == 'PyPy' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (platform_python_implementation == 'PyPy' and extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (platform_python_implementation == 'PyPy' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (sys_platform == 'cygwin' and extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (sys_platform == 'cygwin' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (sys_platform == 'cygwin' and extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (sys_platform == 'cygwin' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (sys_platform == 'win32' and extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (sys_platform == 'win32' and extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (sys_platform == 'win32' and extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (sys_platform == 'win32' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "uvloop", marker = "(platform_python_implementation != 'PyPy' and sys_platform != 'cygwin' and sys_platform != 'win32') or (platform_python_implementation == 'PyPy' and extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (platform_python_implementation == 'PyPy' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (sys_platform == 'cygwin' and extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (sys_platform == 'cygwin' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (sys_platform == 'win32' and extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (sys_platform == 'win32' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "watchfiles" },
     { name = "websockets" },
 ]
@@ -4496,7 +4296,7 @@ dependencies = [
     { name = "filelock" },
     { name = "platformdirs" },
     { name = "python-discovery" },
-    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "typing-extensions", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/4b/50/7564c805bb8966d9771caaba8a143fa5e57c848ce4e7fdf2d55a1feb2ead/virtualenv-21.4.3.tar.gz", hash = "sha256:938ff0fd3f4e0f0d3a025f67a3d2f25e3c3aabbcd5857ea6170619138d72d141", size = 7644454, upload-time = "2026-06-11T16:47:04.843Z" }
 wheels = [
@@ -4508,7 +4308,7 @@ name = "vulture"
 version = "2.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-build' and extra == 'group-10-strawchemy-codeflash') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-dev') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
+    { name = "tomli", marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/66/3e/4d08c5903b2c0c70cad583c170cc4a663fc6a61e2ad00b711fcda61358cd/vulture-2.16.tar.gz", hash = "sha256:f8d9f6e2af03011664a3c6c240c9765b3f392917d3135fddca6d6a68d359f717", size = 52680, upload-time = "2026-03-25T14:41:27.141Z" }
 wheels = [
@@ -4630,18 +4430,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/27/0b/a54103cfd732bb703c7a749222011a0483ef3705948dae3b203158601119/watchfiles-1.2.0-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:094b9b70103d4e963499bdea001ee3c2697b144cd9ae6218a62c0f89ec9e31db", size = 396629, upload-time = "2026-05-18T04:32:03.268Z" },
     { url = "https://files.pythonhosted.org/packages/5e/2c/73f31a3b893886206c3f54d73e8ad8dee58cdb2f69ad2622e0a8a9e07f4e/watchfiles-1.2.0-pp311-pypy311_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b0ef001f8c25ad0fa9529f914c1600647ecd0f542d11c19b7894768c67b6acb7", size = 457318, upload-time = "2026-05-18T04:31:01.932Z" },
     { url = "https://files.pythonhosted.org/packages/e9/f9/45d021e4a5cc7b9dd567f7cbb06d3b75f751a690063fb6cc7ec60f4e46b7/watchfiles-1.2.0-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a88fc94e647bc4eec523f1caa540258eb71d14278b9daf72fa1e2658a98df0f0", size = 457771, upload-time = "2026-05-18T04:30:56.331Z" },
-]
-
-[[package]]
-name = "wcmatch"
-version = "10.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "bracex", marker = "extra == 'group-10-strawchemy-build' or extra == 'group-10-strawchemy-dev' or (extra != 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test') or (extra != 'group-10-strawchemy-codeflash' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-codeflash' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/79/3e/c0bdc27cf06f4e47680bd5803a07cb3dfd17de84cde92dd217dcb9e05253/wcmatch-10.1.tar.gz", hash = "sha256:f11f94208c8c8484a16f4f48638a85d771d9513f4ab3f37595978801cb9465af", size = 117421, upload-time = "2025-06-22T19:14:02.49Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/d8/0d1d2e9d3fabcf5d6840362adcf05f8cf3cd06a73358140c3a97189238ae/wcmatch-10.1-py3-none-any.whl", hash = "sha256:5848ace7dbb0476e5e55ab63c6bbd529745089343427caa5537f230cc01beb8a", size = 39854, upload-time = "2025-06-22T19:14:00.978Z" },
 ]
 
 [[package]]
