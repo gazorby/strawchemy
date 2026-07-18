@@ -62,9 +62,8 @@ from strawchemy.utils.text import camel_to_snake
 if TYPE_CHECKING:
     from collections.abc import Callable, Hashable, Iterator
 
-    from strawberry.types.field import StrawberryField
-
     from sqlalchemy import ColumnElement
+    from strawberry.types.field import StrawberryField
 
     from strawchemy.schema.filters import EqualityComparison, GraphQLComparison
     from strawchemy.schema.filters.fields import CustomFilterApply, JoinStrategy

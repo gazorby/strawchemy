@@ -78,7 +78,7 @@ class MutationFieldBuilder:
         if issubclass(
             field_class, (StrawchemyCreateMutationField, StrawchemyUpdateMutationField, StrawchemyUpsertMutationField)
         ):
-            field_specific_kwargs.setdefault("event_registry", self.event_registry)
+            field_kwargs.setdefault("event_registry", self.event_registry)
 
         field = field_class(
             config=self.config,
