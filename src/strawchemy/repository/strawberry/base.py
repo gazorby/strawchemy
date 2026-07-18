@@ -18,14 +18,7 @@ from strawberry.types.nodes import FragmentSpread, InlineFragment, SelectedField
 
 from strawchemy.constants import JSON_PATH_KEY, ORDER_BY_KEY
 from strawchemy.dto.base import ModelT
-from strawchemy.dto.strawberry import (
-    DTOKey,
-    OrderByRelationFilterDTO,
-    QueryNode,
-    QueryNodeMetadata,
-    RelationFilterDTO,
-    StrawchemyObject,
-)
+from strawchemy.dto.strawberry import OrderByRelationFilterDTO, QueryNodeMetadata, RelationFilterDTO, StrawchemyObject
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.repository.strawberry._node import StrawberryQueryNode
 from strawchemy.schema.mutation import error_type_names
@@ -231,7 +224,6 @@ class StrawchemyRepository(Generic[T]):
             model_field_name = camel_to_snake(selection.name) if self.auto_snake_case else selection.name
             strawberry_field = next(field for field in strawberry_definition.fields if field.name == model_field_name)
             strawberry_field_type = strawberry_contained_user_type(strawberry_field.type)
-            dto_model = dto_model_from_type(selection_type)
 
             if (hooks := self._get_field_hooks(strawberry_field)) is not None:
                 self._add_query_hooks([hooks] if isinstance(hooks, QueryHook) else hooks, node)
@@ -243,9 +235,7 @@ class StrawchemyRepository(Generic[T]):
                 raise StrawchemyError(msg)
             assert issubclass(dto, StrawchemyObject)
 
-            key = DTOKey.from_query_node(QueryNode.root_node(dto_model)) + strawberry_field.name
-
-            field_definition = dto.__strawchemy_definition__.get_field_or_none(key)
+            field_definition = dto.__dto_field_definitions__.get(strawberry_field.name)
             if field_definition is None:
                 continue
 

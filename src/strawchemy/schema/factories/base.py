@@ -34,7 +34,6 @@ from strawchemy import typing as strawchemy_typing
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.strawberry import (
     BooleanFilterDTO,
-    DTOKey,
     EnumDTO,
     GraphQLFieldDefinition,
     MappedStrawberryGraphQLDTO,
@@ -488,16 +487,10 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, GraphQLDTOT], None],
         if_no_fields: Literal["raise", "skip"] = "skip",
-        *,
-        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
-        field_map = field_map if field_map is not None else {}
         for field in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
-            key = DTOKey.from_dto_node(node)
-            graphql_field = GraphQLFieldDefinition.from_field(field)
-            yield graphql_field
-            field_map[key + field.name] = graphql_field
+            yield GraphQLFieldDefinition.from_field(field)
 
     @override
     def factory(
@@ -520,7 +513,6 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         user_defined: bool = False,
         **kwargs: Any,
     ) -> type[GraphQLDTOT]:
-        field_map: dict[DTOKey, GraphQLFieldDefinition] = {}
         if not user_defined and no_cache:
             name = self.root_dto_name(model, dto_config, current_node) if name is None else name
             name = self._mapper.registry.uniquify_name(self.graphql_type(dto_config), name)
@@ -539,11 +531,8 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
             tags=tags,
             backend_kwargs=backend_kwargs,
             no_cache=no_cache,
-            field_map=field_map,
             **kwargs,
         )
-        if not dto.__strawchemy_definition__.field_map:
-            dto.__strawchemy_definition__.field_map = field_map
         dto.__strawchemy_definition__.description = self.type_description()
 
         if register_type:

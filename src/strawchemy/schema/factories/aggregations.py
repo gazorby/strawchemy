@@ -11,11 +11,9 @@ from typing_extensions import Unpack, override
 
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.strawberry import (
-    DTOKey,
     EnumDTO,
     FilterFunctionInfo,
     FunctionArgFieldDefinition,
-    GraphQLFieldDefinition,
     OutputFunctionInfo,
     UnmappedStrawberryGraphQLDTO,
 )
@@ -99,13 +97,10 @@ class _FunctionArgFactory(GraphQLFactory[UnmappedStrawberryGraphQLDTO[Declarativ
         node: Node[Relation[DeclarativeBase, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None],
         if_no_fields: Literal["raise", "skip"] = "skip",
         *,
-        field_map: dict[DTOKey, GraphQLFieldDefinition] | None = None,
         function: FunctionInfo | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
-        for field_def in super().iter_field_definitions(
-            name, model, dto_config, base, node, if_no_fields, field_map=field_map, **kwargs
-        ):
+        for field_def in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
             yield (
                 FunctionArgFieldDefinition.from_field(field_def, function=function)
                 if function is not None

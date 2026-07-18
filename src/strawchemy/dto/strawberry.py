@@ -60,7 +60,7 @@ from strawchemy.utils.graph import AnyNode, GraphMetadata, MatchOn, Node, NodeMe
 from strawchemy.utils.text import camel_to_snake
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Hashable, Iterable, Iterator, Sequence
+    from collections.abc import Callable, Hashable, Iterator
 
     from sqlalchemy import ColumnElement
 
@@ -112,32 +112,11 @@ class QueryNodeMetadata:
 class StrawchemyDefinition:
     description: str = "GraphQL type"
     is_root_aggregation_type: bool = False
-    field_map: dict[DTOKey, GraphQLFieldDefinition] = dataclasses.field(default_factory=dict)
     query_hook: QueryHook[Any] | list[QueryHook[Any]] | None = None
     filter: type[Any] | None = None
     order_by: type[Any] | None = None
     distinct_on: type[Any] | None = None
     purpose: GraphQLPurpose | None = None
-
-    def __copy__(self) -> StrawchemyDefinition:
-        return dataclasses.replace(self, field_map=dict(self.field_map))
-
-    def populate_fields(
-        self,
-        key_source: type[Any] | DTOKey,
-        fields: Iterable[GraphQLFieldDefinition],
-    ) -> Self:
-        key = key_source if isinstance(key_source, DTOKey) else DTOKey([key_source])
-        self.field_map = {key + f.name: f for f in fields}
-        return self
-
-    def get_field(self, key: DTOKey, name: str | None = None) -> GraphQLFieldDefinition:
-        full_key = key + name if name else key
-        return self.field_map[full_key]
-
-    def get_field_or_none(self, key: DTOKey, name: str | None = None) -> GraphQLFieldDefinition | None:
-        full_key = key + name if name else key
-        return self.field_map.get(full_key)
 
     @property
     def query_hooks(self) -> list[QueryHook[Any]]:
@@ -154,6 +133,7 @@ class StrawchemyDefinition:
 
 class StrawchemyObject:
     __strawchemy_definition__: ClassVar[StrawchemyDefinition]
+    __dto_field_definitions__: ClassVar[dict[str, GraphQLFieldDefinition]]
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)
@@ -162,89 +142,6 @@ class StrawchemyObject:
             cls.__strawchemy_definition__ = StrawchemyDefinition()
         else:
             cls.__strawchemy_definition__ = copy(existing)
-
-
-class _Key(Generic[T]):
-    """A class to represent a key with multiple components.
-
-    The key is a sequence of components joined by a separator (default: ":").
-    It can be constructed from a sequence of components or a single string.
-    Components can be of any type, but must be convertible to a string.
-
-    The key can be extended with additional components using the `extend` or
-    `append` methods. The key can also be concatenated with another key or a
-    string using the `+` operator.
-
-    The key can be converted to a string using the `str` function or the
-    `to_str` method.
-
-    Subclasses should implement the `to_str` method to convert a component to a
-    string.
-    """
-
-    __slots__ = ("_key",)
-
-    separator: ClassVar[str] = ":"
-
-    def __init__(self, components: Sequence[T | str] | str | None = None) -> None:
-        self._key: str = ""
-        if isinstance(components, str):
-            self._key = components
-        elif components:
-            self._key = str(self.extend(components))
-
-    def _components_to_str(self, objects: Sequence[T | str]) -> Sequence[str]:
-        return [obj if isinstance(obj, str) else self.to_str(obj) for obj in objects]
-
-    def to_str(self, obj: T) -> str:
-        raise NotImplementedError
-
-    def append(self, component: T | str) -> Self:
-        return self.extend([component])
-
-    def extend(self, components: Sequence[T | str]) -> Self:
-        str_components = self._components_to_str(components)
-        self._key = self.separator.join([self._key, *str_components] if self._key else str_components)
-        return self
-
-    def __add__(self, other: Self | str) -> Self:
-        if isinstance(other, str):
-            return self.__class__((self._key, other))
-        return self.__class__((self._key, other._key))
-
-    @override
-    def __str__(self) -> str:
-        return self._key
-
-    @override
-    def __hash__(self) -> int:
-        return hash(str(self))
-
-    @override
-    def __eq__(self, other: object) -> bool:
-        return hash(self) == hash(other)
-
-    @override
-    def __ne__(self, other: object) -> bool:
-        return hash(self) != hash(other)
-
-
-class DTOKey(_Key[type[Any]]):
-    @override
-    def to_str(self, obj: type[Any]) -> str:
-        return obj.__name__
-
-    @classmethod
-    def from_dto_node(cls, node: Node[Any, Any]) -> Self:
-        return cls([node.value.model])
-
-    @classmethod
-    def from_query_node(cls, node: QueryNodeType) -> Self:
-        if node.is_root:
-            return cls([node.value.model])
-        if node.value.related_model:
-            return cls([node.value.related_model])
-        return cls([node.value.model])
 
 
 class OrderByRelationFilterDTO(RelationFilterDTO, Generic[OrderByDTOT], frozen=True):
@@ -604,11 +501,10 @@ class AggregationFunctionFilterDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]
 class OrderByDTO(GraphQLFilterDTO):
     def tree(self, _node: QueryNodeType | None = None) -> QueryNodeType:
         node = _node or QueryNode.root_node(self.__dto_model__)
-        key = DTOKey.from_query_node(node)
 
         for name in self.dto_set_fields:
             value: OrderByDTO | OrderByEnum = getattr(self, name)
-            field = self.__strawchemy_definition__.get_field(key, name)
+            field = self.__dto_field_definitions__[name]
             if isinstance(field, FunctionFieldDefinition) and not field.has_model_field:
                 field.model_field = node.value.model_field
             if isinstance(value, OrderByDTO):
@@ -627,7 +523,6 @@ class BooleanFilterDTO(GraphQLFilterDTO):
 
     def filters_tree(self, _node: QueryNodeType | None = None) -> tuple[QueryNodeType, Filter]:
         node = _node or QueryNode.root_node(self.__dto_model__)
-        key = DTOKey.from_query_node(node)
         query = Filter(
             and_=[and_val.filters_tree(node)[1] for and_val in self.and_],
             or_=[or_val.filters_tree(node)[1] for or_val in self.or_],
@@ -635,7 +530,7 @@ class BooleanFilterDTO(GraphQLFilterDTO):
         )
         for name in self.dto_set_fields:
             value: EqualityComparison[Any] | BooleanFilterDTO | AggregateFilterDTO = getattr(self, name)
-            field = self.__strawchemy_definition__.get_field(key, name)
+            field = self.__dto_field_definitions__[name]
             if isinstance(value, BooleanFilterDTO):
                 child, _ = node.upsert_child(field, match_on="value_equality")
                 _, sub_query = value.filters_tree(child)

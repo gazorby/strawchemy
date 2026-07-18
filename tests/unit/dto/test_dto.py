@@ -5,14 +5,11 @@ from typing import Any, Optional, get_args
 from uuid import UUID, uuid4
 
 import pytest
-from sqlalchemy import Integer
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from typing_extensions import Self
 
 from strawchemy import ALL, RELATIONSHIPS, SCALARS, StrawchemyConfig
 from strawchemy.dto import DTOConfig, Purpose, PurposeConfig, config, field
 from strawchemy.dto.constants import DTO_INFO_KEY
-from strawchemy.dto.strawberry import DTOKey, GraphQLFieldDefinition, StrawchemyDefinition
 from strawchemy.dto.types import FieldSpec
 from strawchemy.dto.utils import DTOFieldConfig, read_all_config, write_all_config
 from strawchemy.exceptions import EmptyDTOError
@@ -27,15 +24,6 @@ from tests.unit.dc_models import (
 )
 from tests.unit.models import Admin, Book, Color, Fruit, SponsoredUser, Tag, Tomato, UserWithGreeting
 from tests.utils import DTOInspect, factory_iterator
-
-
-class _PopulateFieldsBase(DeclarativeBase):
-    pass
-
-
-class _PopulateFieldsModel(_PopulateFieldsBase):
-    __tablename__ = "populate_fields_model"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
 
 
 @pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
@@ -331,27 +319,6 @@ def test_named_exclude_with_include_all(factory: AnyFactory, model: type[Fruit |
     """Test that excluded fields are dropped from the DTO even when include='all'."""
     dto = factory.factory(model, DTOConfig(Purpose.READ, include="all", exclude={"color", "color_id"}))
     assert set(DTOInspect(dto).annotations()) == {"name", "sweetness", "id"}
-
-
-@pytest.mark.parametrize(
-    "key_source",
-    [_PopulateFieldsModel, DTOKey([_PopulateFieldsModel])],
-    ids=["model-type", "dto-key"],
-)
-def test_strawchemy_definition_populate_fields(key_source: type[DeclarativeBase] | DTOKey) -> None:
-    field_def = GraphQLFieldDefinition(
-        config=DTOFieldConfig(),
-        dto_config=DTOConfig(Purpose.READ),
-        model=_PopulateFieldsModel,
-        model_field_name="id",
-        type_hint=int,
-    )
-
-    definition = StrawchemyDefinition()
-    result = definition.populate_fields(key_source, [field_def])
-
-    assert result is definition
-    assert definition.field_map == {DTOKey([_PopulateFieldsModel]) + "id": field_def}
 
 
 @pytest.mark.parametrize(
