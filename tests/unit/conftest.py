@@ -1,50 +1,18 @@
-"""Shared DB-free fixtures for transpiler optimization tests."""
-
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import MagicMock
 
 import pytest
-from sqlalchemy import Dialect, Engine, Result
-from sqlalchemy.dialects import mysql, postgresql, sqlite
-from sqlalchemy.orm import Session
+from sqlalchemy import Result
 
-from strawchemy.transpiler._executor import AsyncQueryExecutor, SyncQueryExecutor
+from strawchemy.transpiler import AsyncQueryExecutor, SyncQueryExecutor
 
 if TYPE_CHECKING:
     from sqlalchemy import Select
 
-    from strawchemy.typing import SupportedDialect
 
-REAL_DIALECTS: dict[str, Dialect] = {
-    "postgresql": postgresql.dialect(),
-    "sqlite": sqlite.dialect(),
-    "mysql": mysql.dialect(),
-}
-"""Real dialect objects used to compile captured statements (no DB connection)."""
-
-
-@dataclass
-class DialectContext:
-    """Strawberry context whose fake session reports the requested dialect name.
-
-    Only ``get_bind().dialect.name`` is read during planning, so the session is a
-    ``MagicMock`` and never executes anything.
-    """
-
-    dialect_name: SupportedDialect
-    session: MagicMock = field(init=False)
-
-    def __post_init__(self) -> None:
-        dialect = MagicMock(spec=Dialect, name="DialectMock")
-        dialect.name = self.dialect_name
-        engine = MagicMock(spec=Engine, name="EngineMock", dialect=dialect)
-        self.session = MagicMock(spec=Session, name="SessionMock", get_bind=MagicMock(return_value=engine))
-
-
-def _empty_result() -> MagicMock:
+def empty_query_result() -> MagicMock:
     """Builds a mock ``Result`` that yields no rows for any access pattern.
 
     Returns:
@@ -77,11 +45,11 @@ def captured_statements(monkeypatch: pytest.MonkeyPatch) -> list[Select[Any]]:
         # This DB-free path always emits a Select (plan.emit()); the executor's
         # StatementLambdaElement branch is never taken here, so narrowing is safe.
         captured.append(cast("Select[Any]", self.statement()))
-        return _empty_result()
+        return empty_query_result()
 
     async def _async_execute(self: AsyncQueryExecutor[Any], session: Any) -> MagicMock:  # noqa: ARG001
         captured.append(cast("Select[Any]", self.statement()))
-        return _empty_result()
+        return empty_query_result()
 
     monkeypatch.setattr(SyncQueryExecutor[Any], "execute", _execute)
     monkeypatch.setattr(AsyncQueryExecutor[Any], "execute", _async_execute)

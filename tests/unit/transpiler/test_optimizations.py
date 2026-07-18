@@ -8,7 +8,7 @@ import pytest
 from inline_snapshot import snapshot
 
 from tests.unit.schemas.optimizations import schema
-from tests.unit.transpiler.conftest import REAL_DIALECTS, DialectContext
+from tests.unit.utils import SQLA_DIALECTS, DialectContext
 from tests.utils import format_sql
 
 if TYPE_CHECKING:
@@ -554,7 +554,7 @@ def test_aggregation_computation_is_reused(
     assert result.data
 
     assert len(captured_statements) == 1
-    compiled = str(captured_statements[0].compile(dialect=REAL_DIALECTS[dialect_name]))
+    compiled = str(captured_statements[0].compile(dialect=SQLA_DIALECTS[dialect_name]))
     assert format_sql(compiled).splitlines() == AGGREGATION_SQL[request.node.callspec.id]
 
 
@@ -598,5 +598,5 @@ def test_inner_join_rewriting(
     assert result.data
     assert len(captured_statements) == 1
 
-    statement_str = str(captured_statements[0].compile(dialect=REAL_DIALECTS[dialect_name]))
+    statement_str = str(captured_statements[0].compile(dialect=SQLA_DIALECTS[dialect_name]))
     assert format_sql(statement_str).splitlines() == INNER_JOIN_SQL[request.node.callspec.id]
