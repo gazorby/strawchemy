@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 from unittest.mock import MagicMock
 
+import pytest
+from inline_snapshot import snapshot
 from sqlalchemy import Select, func, select
 from sqlalchemy.dialects import postgresql, sqlite
 from sqlalchemy.orm import aliased, load_only
@@ -15,6 +17,7 @@ from strawchemy.transpiler._plan import FilterSemiJoin, HookSpec, QueryPlan
 from strawchemy.transpiler._query import HookApplier
 from strawchemy.transpiler.hook import QueryHook
 from tests.unit.models import Fruit
+from tests.utils import format_sql
 
 if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
@@ -28,6 +31,7 @@ class _SweetnessFilterHook(QueryHook[Fruit]):
         return statement.where(alias.sweetness > 5)
 
 
+@pytest.mark.inline_snapshot
 def test_emit_assembles_select_where_order() -> None:
     """QueryPlan.emit builds SELECT/WHERE/ORDER BY from plan leaf fragments."""
     fruit = aliased(Fruit)
@@ -40,14 +44,18 @@ def test_emit_assembles_select_where_order() -> None:
         order_by=(fruit.name.asc(),),
     )
 
-    compiled = str(plan.emit().compile(dialect=sqlite.dialect()))
+    assert format_sql(str(plan.emit().compile(dialect=sqlite.dialect()))).splitlines() == snapshot(
+        [
+            "SELECT fruit_1.name,",
+            "       fruit_1.id",
+            "  FROM fruit AS fruit_1",
+            " WHERE fruit_1.sweetness > ?",
+            " ORDER BY fruit_1.name ASC",
+        ]
+    )
 
-    assert "FROM fruit" in compiled
-    assert "WHERE" in compiled
-    assert "sweetness" in compiled
-    assert "ORDER BY" in compiled
 
-
+@pytest.mark.inline_snapshot
 def test_emit_without_where_or_order() -> None:
     """A plan with no predicates or ordering emits a bare SELECT."""
     fruit = aliased(Fruit)
@@ -60,13 +68,19 @@ def test_emit_without_where_or_order() -> None:
         order_by=(),
     )
 
-    compiled = str(plan.emit().compile(dialect=sqlite.dialect()))
+    assert format_sql(str(plan.emit().compile(dialect=sqlite.dialect()))).splitlines() == snapshot(
+        [
+            "SELECT fruit_1.name,",
+            "       fruit_1.color_id,",
+            "       fruit_1.sweetness,",
+            "       fruit_1.id,",
+            "       fruit_1.private",
+            "  FROM fruit AS fruit_1",
+        ]
+    )
 
-    assert "FROM fruit" in compiled
-    assert "WHERE" not in compiled
-    assert "ORDER BY" not in compiled
 
-
+@pytest.mark.inline_snapshot
 def test_emit_applies_filter_semijoin() -> None:
     """A filter_semijoin renders as a JOIN on the PK-equality onclause."""
     fruit = aliased(Fruit)
@@ -84,12 +98,24 @@ def test_emit_applies_filter_semijoin() -> None:
         order_by=(),
     )
 
-    compiled = str(plan.emit().compile(dialect=sqlite.dialect()))
+    assert format_sql(str(plan.emit().compile(dialect=sqlite.dialect()))).splitlines() == snapshot(
+        [
+            "SELECT fruit_1.name,",
+            "       fruit_1.color_id,",
+            "       fruit_1.sweetness,",
+            "       fruit_1.id,",
+            "       fruit_1.private",
+            "  FROM fruit AS fruit_1",
+            "  JOIN (",
+            "        SELECT fruit.id AS id",
+            "          FROM fruit",
+            "       ) AS anon_1",
+            "    ON fruit_1.id = anon_1.id",
+        ]
+    )
 
-    assert "JOIN" in compiled
-    assert "FROM fruit" in compiled
 
-
+@pytest.mark.inline_snapshot
 def test_emit_appends_root_aggregation_columns() -> None:
     """Root aggregation function columns are added to the projection."""
     fruit = aliased(Fruit)
@@ -104,12 +130,20 @@ def test_emit_appends_root_aggregation_columns() -> None:
         root_aggregation_functions=(total,),
     )
 
-    compiled = str(plan.emit().compile(dialect=sqlite.dialect()))
+    assert format_sql(str(plan.emit().compile(dialect=sqlite.dialect()))).splitlines() == snapshot(
+        [
+            "SELECT fruit_1.name,",
+            "       fruit_1.color_id,",
+            "       fruit_1.sweetness,",
+            "       fruit_1.id,",
+            "       fruit_1.private,",
+            "       count(*) OVER () AS total_count",
+            "  FROM fruit AS fruit_1",
+        ]
+    )
 
-    assert "count(*) OVER ()" in compiled
-    assert "total_count" in compiled
 
-
+@pytest.mark.inline_snapshot
 def test_emit_applies_limit_and_offset() -> None:
     """limit/offset render on the emitted statement."""
     fruit = aliased(Fruit)
@@ -123,11 +157,22 @@ def test_emit_applies_limit_and_offset() -> None:
         limit=5,
         offset=10,
     )
-    compiled = str(plan.emit().compile(dialect=sqlite.dialect()))
-    assert "LIMIT" in compiled
-    assert "OFFSET" in compiled
+
+    assert format_sql(str(plan.emit().compile(dialect=sqlite.dialect()))).splitlines() == snapshot(
+        [
+            "SELECT fruit_1.name,",
+            "       fruit_1.color_id,",
+            "       fruit_1.sweetness,",
+            "       fruit_1.id,",
+            "       fruit_1.private",
+            "  FROM fruit AS fruit_1",
+            " LIMIT ?",
+            "OFFSET ?",
+        ]
+    )
 
 
+@pytest.mark.inline_snapshot
 def test_emit_applies_native_distinct_on() -> None:
     """use_distinct_on renders DISTINCT ON and pulls order-by columns into the SELECT list."""
     fruit = aliased(Fruit)
@@ -141,11 +186,22 @@ def test_emit_applies_native_distinct_on() -> None:
         distinct_on=(fruit.color_id,),  # ty: ignore[invalid-argument-type]
         use_distinct_on=True,
     )
-    compiled = str(plan.emit().compile(dialect=postgresql.dialect()))
-    assert "DISTINCT ON" in compiled
-    assert "color_id" in compiled
+
+    assert format_sql(str(plan.emit().compile(dialect=postgresql.dialect()))).splitlines() == snapshot(
+        [
+            "SELECT DISTINCT",
+            "    ON (fruit_1.color_id) fruit_1.name,",
+            "       fruit_1.color_id,",
+            "       fruit_1.sweetness,",
+            "       fruit_1.id,",
+            "       fruit_1.private",
+            "  FROM fruit AS fruit_1",
+            " ORDER BY fruit_1.color_id ASC",
+        ]
+    )
 
 
+@pytest.mark.inline_snapshot
 def test_emit_replays_hook_specs() -> None:
     """QueryPlan.emit replays hook specs via HookApplier, applying apply_hook to the statement.
 
@@ -173,10 +229,17 @@ def test_emit_replays_hook_specs() -> None:
         hook_applier=applier,
     )
 
-    compiled = str(plan.emit().compile(dialect=sqlite.dialect()))
-
-    assert "WHERE" in compiled
-    assert "sweetness" in compiled
+    assert format_sql(str(plan.emit().compile(dialect=sqlite.dialect()))).splitlines() == snapshot(
+        [
+            "SELECT fruit_1.name,",
+            "       fruit_1.color_id,",
+            "       fruit_1.sweetness,",
+            "       fruit_1.id,",
+            "       fruit_1.private",
+            "  FROM fruit AS fruit_1",
+            " WHERE fruit_1.sweetness > ?",
+        ]
+    )
 
 
 def test_query_plan_emit_is_a_method() -> None:

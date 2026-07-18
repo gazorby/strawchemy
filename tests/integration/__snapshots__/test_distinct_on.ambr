@@ -6,8 +6,6 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 user.name AS name__1,
-                 user.id AS id__1,
                  row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
             FROM USER AS USER
            ORDER BY user.name ASC,
@@ -25,8 +23,6 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 user.name AS name__1,
-                 user.id AS id__1,
                  row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
             FROM USER AS USER
            ORDER BY user.name ASC,
@@ -39,57 +35,30 @@
 # ---
 # name: test_distinct_and_order_by[session-tracked-async-asyncpg_engine]
   '''
-  SELECT "user".name,
+  SELECT DISTINCT
+      ON ("user".name) "user".name,
          "user".id
-    FROM (
-          SELECT "user".id AS id,
-                 "user".name AS name,
-                 "user".name AS name__1,
-                 "user".id AS id__1,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS anon_1
-            FROM "user" AS "user"
-           ORDER BY "user".name ASC,
-                    "user".id DESC
-         ) AS "user"
-   WHERE "user".anon_1 = $1::INTEGER
+    FROM "user" AS "user"
    ORDER BY "user".name ASC,
             "user".id DESC
   '''
 # ---
 # name: test_distinct_and_order_by[session-tracked-async-psycopg_async_engine]
   '''
-  SELECT "user".name,
+  SELECT DISTINCT
+      ON ("user".name) "user".name,
          "user".id
-    FROM (
-          SELECT "user".id AS id,
-                 "user".name AS name,
-                 "user".name AS name__1,
-                 "user".id AS id__1,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS anon_1
-            FROM "user" AS "user"
-           ORDER BY "user".name ASC,
-                    "user".id DESC
-         ) AS "user"
-   WHERE "user".anon_1 = %(param_1)s::INTEGER
+    FROM "user" AS "user"
    ORDER BY "user".name ASC,
             "user".id DESC
   '''
 # ---
 # name: test_distinct_and_order_by[session-tracked-sync-psycopg_engine]
   '''
-  SELECT "user".name,
+  SELECT DISTINCT
+      ON ("user".name) "user".name,
          "user".id
-    FROM (
-          SELECT "user".id AS id,
-                 "user".name AS name,
-                 "user".name AS name__1,
-                 "user".id AS id__1,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".name ASC, "user".id DESC) AS anon_1
-            FROM "user" AS "user"
-           ORDER BY "user".name ASC,
-                    "user".id DESC
-         ) AS "user"
-   WHERE "user".anon_1 = %(param_1)s::INTEGER
+    FROM "user" AS "user"
    ORDER BY "user".name ASC,
             "user".id DESC
   '''
@@ -101,8 +70,6 @@
     FROM (
           SELECT user.id AS id,
                  user.name AS name,
-                 user.name AS name__1,
-                 user.id AS id__1,
                  row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
             FROM USER AS USER
            ORDER BY user.name ASC,

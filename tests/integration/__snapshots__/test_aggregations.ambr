@@ -1752,8 +1752,7 @@
          avg(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT ?
@@ -1769,8 +1768,7 @@
          avg(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %s,
@@ -1786,8 +1784,7 @@
          avg(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
@@ -1803,8 +1800,7 @@
          avg(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
@@ -2066,8 +2062,7 @@
          sum(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT ?
@@ -2083,8 +2078,7 @@
          sum(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %s,
@@ -2100,8 +2094,7 @@
          sum(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
@@ -2117,8 +2110,7 @@
          sum(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
@@ -2363,8 +2355,7 @@
          avg(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT ?
@@ -2380,8 +2371,7 @@
          avg(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %s,
@@ -2397,8 +2387,7 @@
          avg(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
@@ -2414,8 +2403,7 @@
          avg(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
@@ -2677,8 +2665,7 @@
          sum(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT ?
@@ -2694,8 +2681,7 @@
          sum(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %s,
@@ -2711,8 +2697,7 @@
          sum(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT $1::INTEGER
@@ -2728,8 +2713,7 @@
          sum(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
@@ -3239,8 +3223,7 @@
          avg(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
@@ -3256,8 +3239,7 @@
          avg(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT ?
@@ -3369,8 +3351,7 @@
          sum(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
@@ -3386,8 +3367,7 @@
          sum(fruit.sweetness) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.sweetness AS sweetness,
-                 fruit.sweetness AS sweetness__1
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT ?
@@ -3499,8 +3479,7 @@
          avg(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
@@ -3516,8 +3495,7 @@
          avg(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT ?
@@ -3629,8 +3607,7 @@
          sum(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
@@ -3646,8 +3623,7 @@
          sum(fruit.water_percent) OVER () AS anon_1
     FROM (
           SELECT fruit.id AS id,
-                 fruit.water_percent AS water_percent,
-                 fruit.water_percent AS water_percent__1
+                 fruit.water_percent AS water_percent
             FROM fruit AS fruit
            ORDER BY fruit.id ASC
            LIMIT ?

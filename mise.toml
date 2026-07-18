@@ -191,10 +191,21 @@ description = "Run snapshot-based tests and update snapshots"
 depends = "uv:install"
 run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update"
 
-[tasks."test:add-new-snapshots"]
+[tasks."test:add-new-snapshots:inline"]
 description = "Run snapshot-based tests and add new snapshots"
 depends = "uv:install"
+wait_for = "uv:install"
+run = "uv run pytest {{vars.local_pytest_options}} -n=0 -m inline_snapshot --inline-snapshot=create"
+
+[tasks."test:add-new-snapshots:file"]
+description = "Run snapshot-based tests and add new snapshots"
+depends = "uv:install"
+wait_for = "uv:install"
 run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update-new-only"
+
+[tasks."test:add-new-snapshots"]
+description = "Run snapshot-based tests and add new snapshots"
+depends = ["test:add-new-snapshots:inline", "test:add-new-snapshots:file"]
 
 # ###############
 # CI

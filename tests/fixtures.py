@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING
 
 import pytest
 import strawberry
-from syrupy.assertion import SnapshotAssertion
 from syrupy.extensions.amber import AmberSnapshotExtension
 
 from strawchemy import Strawchemy, StrawchemyConfig
