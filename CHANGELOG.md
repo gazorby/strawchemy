@@ -1,15 +1,27 @@
-## Unreleased ([b9171fd..1a36ec1](https://github.com/gazorby/strawchemy/compare/b9171fd..1a36ec1))
+## Unreleased ([b9171fd..3b36909](https://github.com/gazorby/strawchemy/compare/b9171fd..3b36909))
 #### 🚀 Features
 - add per-field default order by ([#196](https://github.com/gazorby/strawchemy/pull/196)) - ([227bc21](https://github.com/gazorby/strawchemy/commit/227bc2111b4b426f613b05fd3d8e584a5331266e)) - [@gazorby](https://github.com/gazorby)
 - add field-level alias ([#194](https://github.com/gazorby/strawchemy/pull/194)) - ([e8ef6a3](https://github.com/gazorby/strawchemy/commit/e8ef6a34087708f3118050380ad839217c395459)) - [@gazorby](https://github.com/gazorby)
-#### ⚙️ Miscellaneous Tasks
-- (**deps**) extract unasyncd in its own group - ([c3cb4d1](https://github.com/gazorby/strawchemy/commit/c3cb4d18a8e45171af0161369dca581d56e94f82)) - [@gazorby](https://github.com/gazorby)
-- (**workflows**) remove redundant generate_release_notes option from release action configuration - ([40e080d](https://github.com/gazorby/strawchemy/commit/40e080d0abb255ce3422a773ba7a36303669f7aa)) - [@gazorby](https://github.com/gazorby)
-- drop bump-my-version and git-cliff in favour of cocogitto - ([1a36ec1](https://github.com/gazorby/strawchemy/commit/1a36ec1dc5c9f8432e6a36bed1eaf93d81893bee)) - [@gazorby](https://github.com/gazorby)
-- publish before release to enable immutable releases ([#195](https://github.com/gazorby/strawchemy/pull/195)) - ([2b578bd](https://github.com/gazorby/strawchemy/commit/2b578bd47f37288424824703f8ebf5154de9e240)) - [@gazorby](https://github.com/gazorby)
+#### 🐛 Bug Fixes
+- (**mutation**) only register sqla events once per mapper ([#201](https://github.com/gazorby/strawchemy/pull/201)) - ([c663958](https://github.com/gazorby/strawchemy/commit/c663958b02b8b894f15aa96a8bdfbc793f784cce)) - [@gazorby](https://github.com/gazorby)
+#### ⚡ Performance
+- (**transpiler**) small improvements  ([#205](https://github.com/gazorby/strawchemy/pull/205)) - ([f8f03a5](https://github.com/gazorby/strawchemy/commit/f8f03a5d80528d5bf4914ca3019546ddfc7b5830)) - [@gazorby](https://github.com/gazorby)
 #### 🚜 Refactor
 - (**inspector**) remove sqla private usages ([#203](https://github.com/gazorby/strawchemy/pull/203)) - ([6ca2f19](https://github.com/gazorby/strawchemy/commit/6ca2f19540d09974811fa1d800162cd9fca3383c)) - [@gazorby](https://github.com/gazorby)
+- (**schema**) remove duplicated field_map on strawchemy types  ([#200](https://github.com/gazorby/strawchemy/pull/200)) - ([2f67a26](https://github.com/gazorby/strawchemy/commit/2f67a26b0136a6e77b8ef6ab1f44b7b366aa9151)) - [@gazorby](https://github.com/gazorby)
 - new transpiler ([#202](https://github.com/gazorby/strawchemy/pull/202)) - ([e000a8e](https://github.com/gazorby/strawchemy/commit/e000a8eca47287c8bb48d03ea822707b9023b92a)) - [@gazorby](https://github.com/gazorby)
+#### ⚙️ Miscellaneous Tasks
+- (**deps**) extract unasyncd in its own group - ([c3cb4d1](https://github.com/gazorby/strawchemy/commit/c3cb4d18a8e45171af0161369dca581d56e94f82)) - [@gazorby](https://github.com/gazorby)
+- (**labelers**) fix quoting - ([ff38da3](https://github.com/gazorby/strawchemy/commit/ff38da3fc409ba99e7f6915f1b91ae51baeedfe3)) - [@gazorby](https://github.com/gazorby)
+- (**labelers**) support scope - ([06e701f](https://github.com/gazorby/strawchemy/commit/06e701fb48958abcdc6557cfa0e94120b3be9cb3)) - [@gazorby](https://github.com/gazorby)
+- (**labelers**) add perf  tag - ([8c6bc63](https://github.com/gazorby/strawchemy/commit/8c6bc63ff0362b67d47ec326f2d37f1110f43a93)) - [@gazorby](https://github.com/gazorby)
+- (**labelers**) fix paths - ([5c29f01](https://github.com/gazorby/strawchemy/commit/5c29f0130c1a2dd37f64642bdfe5897a136a1599)) - [@gazorby](https://github.com/gazorby)
+- (**labelers**) fix config paths - ([05492c8](https://github.com/gazorby/strawchemy/commit/05492c8d225554edfe1cb3f64cde6a9264ef2127)) - [@gazorby](https://github.com/gazorby)
+- (**pr-labeler**) only take pr title into account - ([3b36909](https://github.com/gazorby/strawchemy/commit/3b36909e4c38fc44288339c44e26034d580173ed)) - [@gazorby](https://github.com/gazorby)
+- (**workflows**) remove redundant generate_release_notes option from release action configuration - ([40e080d](https://github.com/gazorby/strawchemy/commit/40e080d0abb255ce3422a773ba7a36303669f7aa)) - [@gazorby](https://github.com/gazorby)
+- add issue/pr labeler - ([a01a527](https://github.com/gazorby/strawchemy/commit/a01a52708bff361cc695aba39efbf706f1c0be29)) - [@gazorby](https://github.com/gazorby)
+- drop bump-my-version and git-cliff in favour of cocogitto ([#206](https://github.com/gazorby/strawchemy/pull/206)) - ([84f0a82](https://github.com/gazorby/strawchemy/commit/84f0a82e00cf4b58c26a64d319008e714d1b5485)) - [@gazorby](https://github.com/gazorby)
+- publish before release to enable immutable releases ([#195](https://github.com/gazorby/strawchemy/pull/195)) - ([2b578bd](https://github.com/gazorby/strawchemy/commit/2b578bd47f37288424824703f8ebf5154de9e240)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -17,15 +29,6 @@
 - - -
 
 ## [v0.22.0](https://github.com/gazorby/strawchemy/compare/v0.21.0..v0.22.0) - 2026-06-10
-#### 🚜 Refactor
-- (**lint**) update pre-commit ruff config - ([5049268](https://github.com/gazorby/strawchemy/commit/50492687f81ea3325e113a8523832e9e375834b0)) - [@gazorby](https://github.com/gazorby)
-- (**lint**) upgrade ruff - ([7251dc2](https://github.com/gazorby/strawchemy/commit/7251dc2fb09b1e050691241be16b5628d188a69a)) - [@gazorby](https://github.com/gazorby)
-- (**pre-commit**) upgrade - ([44db5f9](https://github.com/gazorby/strawchemy/commit/44db5f942fdc9fc8d468a1eba4fe1a8113d53d04)) - [@gazorby](https://github.com/gazorby)
-- upgrade strawberry ([#155](https://github.com/gazorby/strawchemy/pull/155)) - ([83b2658](https://github.com/gazorby/strawchemy/commit/83b26582b6f50965138f559ba5b04580f049ac2c)) - [@gazorby](https://github.com/gazorby)
-- mapper api overhaul ([#147](https://github.com/gazorby/strawchemy/pull/147)) - ([54392fd](https://github.com/gazorby/strawchemy/commit/54392fd84a1e074f59f04b1355aba850b8f43433)) - [@gazorby](https://github.com/gazorby)
-- update configuration files - ([8dd16b5](https://github.com/gazorby/strawchemy/commit/8dd16b5b27927fa7a4f47a60908ddf0ee1db2df2)) - [@gazorby](https://github.com/gazorby)
-- remove ignored files - ([79c22bc](https://github.com/gazorby/strawchemy/commit/79c22bcb33fa0777bcbc29326c02963edf9709ef)) - [@gazorby](https://github.com/gazorby)
-- new project structure ([#140](https://github.com/gazorby/strawchemy/pull/140)) - ([1cd116a](https://github.com/gazorby/strawchemy/commit/1cd116a71038c628370ef2f7fb1756ccb13b46bc)) - [@gazorby](https://github.com/gazorby)
 #### 🚀 Features
 - (**dto**) make database-resolved defaults optional in GraphQL inputs ([#193](https://github.com/gazorby/strawchemy/pull/193)) - ([4c20ba3](https://github.com/gazorby/strawchemy/commit/4c20ba3df7cf65263fb7ac5a34fea5f705371610)) - [@gazorby](https://github.com/gazorby)
 - add field groups ([#168](https://github.com/gazorby/strawchemy/pull/168)) - ([6b936da](https://github.com/gazorby/strawchemy/commit/6b936da340017d3353885a0eea9e0ce0e48cfe8a)) - [@gazorby](https://github.com/gazorby)
@@ -37,6 +40,15 @@
 - (**transpiler**) apply `filter_statement` before pagination ([#166](https://github.com/gazorby/strawchemy/pull/166)) - ([3e9bc2b](https://github.com/gazorby/strawchemy/commit/3e9bc2b98920f7c3710beabc96e29cac84a9adf8)) - [@gazorby](https://github.com/gazorby)
 - using strawberry.lazy(...) break circular refs ([#169](https://github.com/gazorby/strawchemy/pull/169)) - ([a3aecc2](https://github.com/gazorby/strawchemy/commit/a3aecc2a86e07dd7e66697fbadece5f7099aae31)) - [@gazorby](https://github.com/gazorby)
 - ensure user-defined relation fiels take precedence over strawchemy generated ones ([#167](https://github.com/gazorby/strawchemy/pull/167)) - ([580eac9](https://github.com/gazorby/strawchemy/commit/580eac94eafa68887a75c76fa5c84fde6a981903)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- (**lint**) update pre-commit ruff config - ([5049268](https://github.com/gazorby/strawchemy/commit/50492687f81ea3325e113a8523832e9e375834b0)) - [@gazorby](https://github.com/gazorby)
+- (**lint**) upgrade ruff - ([7251dc2](https://github.com/gazorby/strawchemy/commit/7251dc2fb09b1e050691241be16b5628d188a69a)) - [@gazorby](https://github.com/gazorby)
+- (**pre-commit**) upgrade - ([44db5f9](https://github.com/gazorby/strawchemy/commit/44db5f942fdc9fc8d468a1eba4fe1a8113d53d04)) - [@gazorby](https://github.com/gazorby)
+- upgrade strawberry ([#155](https://github.com/gazorby/strawchemy/pull/155)) - ([83b2658](https://github.com/gazorby/strawchemy/commit/83b26582b6f50965138f559ba5b04580f049ac2c)) - [@gazorby](https://github.com/gazorby)
+- mapper api overhaul ([#147](https://github.com/gazorby/strawchemy/pull/147)) - ([54392fd](https://github.com/gazorby/strawchemy/commit/54392fd84a1e074f59f04b1355aba850b8f43433)) - [@gazorby](https://github.com/gazorby)
+- update configuration files - ([8dd16b5](https://github.com/gazorby/strawchemy/commit/8dd16b5b27927fa7a4f47a60908ddf0ee1db2df2)) - [@gazorby](https://github.com/gazorby)
+- remove ignored files - ([79c22bc](https://github.com/gazorby/strawchemy/commit/79c22bcb33fa0777bcbc29326c02963edf9709ef)) - [@gazorby](https://github.com/gazorby)
+- new project structure ([#140](https://github.com/gazorby/strawchemy/pull/140)) - ([1cd116a](https://github.com/gazorby/strawchemy/commit/1cd116a71038c628370ef2f7fb1756ccb13b46bc)) - [@gazorby](https://github.com/gazorby)
 #### 📚 Documentation
 - (**readme**) update - ([7c26ae8](https://github.com/gazorby/strawchemy/commit/7c26ae8272f943e2f421542233562978ebf90133)) - [@gazorby](https://github.com/gazorby)
 #### ⚙️ Miscellaneous Tasks
@@ -52,11 +64,11 @@
 - - -
 
 ## [v0.21.0](https://github.com/gazorby/strawchemy/compare/v0.20.0..v0.21.0) - 2025-12-18
+#### 🚀 Features
+- support multiple columns unique constraints ([#135](https://github.com/gazorby/strawchemy/pull/135)) - ([19d8bb6](https://github.com/gazorby/strawchemy/commit/19d8bb6d5869c2b3d9afb51cfdce736bd4148aa2)) - [@gazorby](https://github.com/gazorby)
 #### 🚜 Refactor
 - (**ruff**) disallow relative imports ([#136](https://github.com/gazorby/strawchemy/pull/136)) - ([f7ac6df](https://github.com/gazorby/strawchemy/commit/f7ac6df3500c0261a0bff44997a48811b1958d2d)) - [@gazorby](https://github.com/gazorby)
 - small refactors ([#138](https://github.com/gazorby/strawchemy/pull/138)) - ([0be5a15](https://github.com/gazorby/strawchemy/commit/0be5a1511c108e3d4f779fab9a467ea3c687a967)) - [@gazorby](https://github.com/gazorby)
-#### 🚀 Features
-- support multiple columns unique constraints ([#135](https://github.com/gazorby/strawchemy/pull/135)) - ([19d8bb6](https://github.com/gazorby/strawchemy/commit/19d8bb6d5869c2b3d9afb51cfdce736bd4148aa2)) - [@gazorby](https://github.com/gazorby)
 #### ⚙️ Miscellaneous Tasks
 - (**cd**) use pat to commit changelog - ([f137678](https://github.com/gazorby/strawchemy/commit/f137678ff018462ffc31bc6c414268605e6ea9d6)) - [@gazorby](https://github.com/gazorby)
 - (**release**) bump to v0.21.0 - ([e5819e4](https://github.com/gazorby/strawchemy/commit/e5819e4756db269d62773f3202cd965f6ecfdd59)) - [@gazorby](https://github.com/gazorby)
@@ -67,15 +79,15 @@
 - - -
 
 ## [v0.20.0](https://github.com/gazorby/strawchemy/compare/v0.19.0..v0.20.0) - 2025-12-14
-#### 🚜 Refactor
-- improve session getter ([#103](https://github.com/gazorby/strawchemy/pull/103)) - ([dae8768](https://github.com/gazorby/strawchemy/commit/dae876831ab9835accc19409311f25edbc66c626)) - [@gazorby](https://github.com/gazorby)
 #### 🚀 Features
 - add secondary table support ([#106](https://github.com/gazorby/strawchemy/pull/106)) - ([819ee39](https://github.com/gazorby/strawchemy/commit/819ee3976519fc7f797d7572aaad353ecd926deb)) - [@gazorby](https://github.com/gazorby)
 #### 🐛 Bug Fixes
 - add override=True to PostType, PostFilter, and PostOrderBy to prevent automatic generation ([#98](https://github.com/gazorby/strawchemy/pull/98)) - ([36c75b8](https://github.com/gazorby/strawchemy/commit/36c75b89d7bf92e2ecece014157858c7ce4a5fc9)) - Luis Gustavo
+#### 🚜 Refactor
+- improve session getter ([#103](https://github.com/gazorby/strawchemy/pull/103)) - ([dae8768](https://github.com/gazorby/strawchemy/commit/dae876831ab9835accc19409311f25edbc66c626)) - [@gazorby](https://github.com/gazorby)
 #### ⚙️ Miscellaneous Tasks
-- (**deps**) bump astral-sh/setup-uv from 6 to 7 ([#110](https://github.com/gazorby/strawchemy/pull/110)) - ([259926b](https://github.com/gazorby/strawchemy/commit/259926b9eeb93ba7f9afd56151bf3ce171f268bf)) - dependabot[bot], dependabot[bot]
-- (**deps**) bump github/codeql-action from 3 to 4 ([#109](https://github.com/gazorby/strawchemy/pull/109)) - ([56a31e9](https://github.com/gazorby/strawchemy/commit/56a31e9cfc690aed2a1404609c46e2de48cf318a)) - dependabot[bot], dependabot[bot]
+- (**deps**) bump astral-sh/setup-uv from 6 to 7 ([#110](https://github.com/gazorby/strawchemy/pull/110)) - ([259926b](https://github.com/gazorby/strawchemy/commit/259926b9eeb93ba7f9afd56151bf3ce171f268bf)) - [@dependabot[bot]](https://github.com/dependabot[bot]), dependabot[bot]
+- (**deps**) bump github/codeql-action from 3 to 4 ([#109](https://github.com/gazorby/strawchemy/pull/109)) - ([56a31e9](https://github.com/gazorby/strawchemy/commit/56a31e9cfc690aed2a1404609c46e2de48cf318a)) - [@dependabot[bot]](https://github.com/dependabot[bot]), dependabot[bot]
 - (**deps**) remove nox from main dependencies ([#99](https://github.com/gazorby/strawchemy/pull/99)) - ([39951ba](https://github.com/gazorby/strawchemy/commit/39951ba5da0ab167584be31812bd574df608d504)) - [@gazorby](https://github.com/gazorby)
 - (**pre-commit**) autoupdate ([#102](https://github.com/gazorby/strawchemy/pull/102)) - ([26eb9df](https://github.com/gazorby/strawchemy/commit/26eb9df87b336ed2944ae35c92c086d5960c95f5)) - [@gazorby](https://github.com/gazorby)
 - (**python**) add 3.14 to test matrix ([#126](https://github.com/gazorby/strawchemy/pull/126)) - ([8d097e4](https://github.com/gazorby/strawchemy/commit/8d097e432ca9cd8f4c9c4f10a3ce193a1edde947)) - [@gazorby](https://github.com/gazorby)
@@ -85,6 +97,9 @@
 - move coderabbit ([#105](https://github.com/gazorby/strawchemy/pull/105)) - ([806d0c1](https://github.com/gazorby/strawchemy/commit/806d0c1ad06147b57028492296827d034541fafd)) - [@gazorby](https://github.com/gazorby), coderabbitai[bot], coderabbitai[bot]
 
 #### 🤝️ Contributors
+- Luis Gustavo
+- [@coderabbitai[bot]](https://github.com/coderabbitai[bot])
+- [@dependabot[bot]](https://github.com/dependabot[bot])
 - [@gazorby](https://github.com/gazorby)
 
 - - -
@@ -102,15 +117,23 @@
 - (**schema**) use UNSET rather than None as default on aggregation filters - ([3c925e4](https://github.com/gazorby/strawchemy/commit/3c925e4295a642640d72f405ced09accbcfcced4)) - [@gazorby](https://github.com/gazorby)
 - real support and test for python 3.9 - ([997c2e0](https://github.com/gazorby/strawchemy/commit/997c2e087160ce2b953ade58894f8431144a6bb9)) - [@gazorby](https://github.com/gazorby)
 - add missing files - ([9871e80](https://github.com/gazorby/strawchemy/commit/9871e809eea8264d145105b985fbdbff006aa2a6)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- (**pyright**) update - ([ae35cfe](https://github.com/gazorby/strawchemy/commit/ae35cfead7f8efc154216b0de5b993fee523560c)) - [@gazorby](https://github.com/gazorby)
+- (**schema**) focus on schema scope - ([d9ebc79](https://github.com/gazorby/strawchemy/commit/d9ebc79028a74df0c8f666eba42db22b561f3cc8)) - [@gazorby](https://github.com/gazorby)
+- wip - ([8698285](https://github.com/gazorby/strawchemy/commit/86982859e6ef4ec1769913b5b4fd48294771cecb)) - [@gazorby](https://github.com/gazorby)
+- fix rebase - ([39139ff](https://github.com/gazorby/strawchemy/commit/39139fff6d59638645777e80df51f2c448a0f878)) - [@gazorby](https://github.com/gazorby)
+- update pyproject.toml - ([77c1ce0](https://github.com/gazorby/strawchemy/commit/77c1ce05b15063bcdadfbcb82643e84ebe31050e)) - [@gazorby](https://github.com/gazorby)
+- update sentinel types - ([36bf5ad](https://github.com/gazorby/strawchemy/commit/36bf5ad0dfd8a14a832d163ef3adf41c082e51db)) - [@gazorby](https://github.com/gazorby)
+- wip - ([e9eb3bb](https://github.com/gazorby/strawchemy/commit/e9eb3bb08e037f0b77d82b8e4b9e2e5bd3e5c790)) - [@gazorby](https://github.com/gazorby)
 #### 📚 Documentation
 - (**readme**) document type scope feature - ([49ad491](https://github.com/gazorby/strawchemy/commit/49ad491019408ce6148333450d68b72e4e872f3c)) - [@gazorby](https://github.com/gazorby)
 - add docstrings to improve code documentation - ([2548771](https://github.com/gazorby/strawchemy/commit/2548771d3082afabd1ccab4dc5e6aa52439f4fb3)) - [@gazorby](https://github.com/gazorby)
 #### ⚙️ Miscellaneous Tasks
 - (**codeflash**) use uv to run codeflash - ([89b17a9](https://github.com/gazorby/strawchemy/commit/89b17a989204e09876f57d4030d4c2997906d4ba)) - [@gazorby](https://github.com/gazorby)
-- (**deps**) bump actions/download-artifact from 4 to 5 ([#90](https://github.com/gazorby/strawchemy/pull/90)) - ([0137dd7](https://github.com/gazorby/strawchemy/commit/0137dd7a77d4a54c3e869b86a8c217a4beab7147)) - dependabot[bot], dependabot[bot]
-- (**deps**) bump actions/setup-python from 5 to 6 ([#93](https://github.com/gazorby/strawchemy/pull/93)) - ([cf50e17](https://github.com/gazorby/strawchemy/commit/cf50e177bf5e0e8f2f9e8e47289dba2e238e22d7)) - dependabot[bot], dependabot[bot]
-- (**deps**) bump actions/checkout from 4 to 5 ([#91](https://github.com/gazorby/strawchemy/pull/91)) - ([e0f06e3](https://github.com/gazorby/strawchemy/commit/e0f06e3388a6aaf0a316902c3499cb984a515550)) - dependabot[bot], dependabot[bot]
-- (**deps**) bump jdx/mise-action from 2 to 3 ([#92](https://github.com/gazorby/strawchemy/pull/92)) - ([7f7e95d](https://github.com/gazorby/strawchemy/commit/7f7e95db97c456d499fb75714848bf5f255d4d1d)) - dependabot[bot], dependabot[bot]
+- (**deps**) bump actions/download-artifact from 4 to 5 ([#90](https://github.com/gazorby/strawchemy/pull/90)) - ([0137dd7](https://github.com/gazorby/strawchemy/commit/0137dd7a77d4a54c3e869b86a8c217a4beab7147)) - [@dependabot[bot]](https://github.com/dependabot[bot]), dependabot[bot]
+- (**deps**) bump actions/setup-python from 5 to 6 ([#93](https://github.com/gazorby/strawchemy/pull/93)) - ([cf50e17](https://github.com/gazorby/strawchemy/commit/cf50e177bf5e0e8f2f9e8e47289dba2e238e22d7)) - [@dependabot[bot]](https://github.com/dependabot[bot]), dependabot[bot]
+- (**deps**) bump actions/checkout from 4 to 5 ([#91](https://github.com/gazorby/strawchemy/pull/91)) - ([e0f06e3](https://github.com/gazorby/strawchemy/commit/e0f06e3388a6aaf0a316902c3499cb984a515550)) - [@dependabot[bot]](https://github.com/dependabot[bot]), dependabot[bot]
+- (**deps**) bump jdx/mise-action from 2 to 3 ([#92](https://github.com/gazorby/strawchemy/pull/92)) - ([7f7e95d](https://github.com/gazorby/strawchemy/commit/7f7e95db97c456d499fb75714848bf5f255d4d1d)) - [@dependabot[bot]](https://github.com/dependabot[bot]), dependabot[bot]
 - (**lint**) move to basedpyright - ([d3abcf4](https://github.com/gazorby/strawchemy/commit/d3abcf475e2bbf387653159f1f2f9e1a627ba0ff)) - [@gazorby](https://github.com/gazorby)
 - (**mise**) update vulture task - ([2d1daaf](https://github.com/gazorby/strawchemy/commit/2d1daafde542e0f666b9a2aaec712265980ddedd)) - [@gazorby](https://github.com/gazorby)
 - (**mise**) allow passing python version to mise test targets - ([d286e63](https://github.com/gazorby/strawchemy/commit/d286e63b9cbb0a07e1f226044248b7dae6767b8f)) - [@gazorby](https://github.com/gazorby)
@@ -129,16 +152,9 @@
 - update .gitignore - ([09d69af](https://github.com/gazorby/strawchemy/commit/09d69afd3f08abfc66837627614d333e6826494d)) - [@gazorby](https://github.com/gazorby)
 - add codeflash - ([e8dfdfb](https://github.com/gazorby/strawchemy/commit/e8dfdfbf93ddaa235bf56e5f4be2d329ac08f621)) - [@gazorby](https://github.com/gazorby)
 - update .editorconfig - ([0ae1c7a](https://github.com/gazorby/strawchemy/commit/0ae1c7a778d70a36bf825dcd345cc796ecf697d2)) - [@gazorby](https://github.com/gazorby)
-#### 🚜 Refactor
-- (**pyright**) update - ([ae35cfe](https://github.com/gazorby/strawchemy/commit/ae35cfead7f8efc154216b0de5b993fee523560c)) - [@gazorby](https://github.com/gazorby)
-- (**schema**) focus on schema scope - ([d9ebc79](https://github.com/gazorby/strawchemy/commit/d9ebc79028a74df0c8f666eba42db22b561f3cc8)) - [@gazorby](https://github.com/gazorby)
-- wip - ([8698285](https://github.com/gazorby/strawchemy/commit/86982859e6ef4ec1769913b5b4fd48294771cecb)) - [@gazorby](https://github.com/gazorby)
-- fix rebase - ([39139ff](https://github.com/gazorby/strawchemy/commit/39139fff6d59638645777e80df51f2c448a0f878)) - [@gazorby](https://github.com/gazorby)
-- update pyproject.toml - ([77c1ce0](https://github.com/gazorby/strawchemy/commit/77c1ce05b15063bcdadfbcb82643e84ebe31050e)) - [@gazorby](https://github.com/gazorby)
-- update sentinel types - ([36bf5ad](https://github.com/gazorby/strawchemy/commit/36bf5ad0dfd8a14a832d163ef3adf41c082e51db)) - [@gazorby](https://github.com/gazorby)
-- wip - ([e9eb3bb](https://github.com/gazorby/strawchemy/commit/e9eb3bb08e037f0b77d82b8e4b9e2e5bd3e5c790)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
+- [@dependabot[bot]](https://github.com/dependabot[bot])
 - [@gazorby](https://github.com/gazorby)
 
 - - -
@@ -148,6 +164,10 @@
 - (**mutation**) initial upsert support - ([b45272e](https://github.com/gazorby/strawchemy/commit/b45272e7c12afc6fbc34598bf81830071e6c54f6)) - [@gazorby](https://github.com/gazorby)
 #### 🐛 Bug Fixes
 - do not rely on literal_column to reference computed column in some distinct on scenarios - ([5ac834f](https://github.com/gazorby/strawchemy/commit/5ac834f5b50441c6f899c6bd4fda5210484c8605)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- (**testapp**) disable enable_touch_updated_timestamp_listener as it mess up with integration tests - ([1c4c2c4](https://github.com/gazorby/strawchemy/commit/1c4c2c4ba076d7d4b0097e919864708dba9ddc58)) - [@gazorby](https://github.com/gazorby)
+- (**transpiler**) use literal_column less often and use a more reliable method when necessary - ([e0f047f](https://github.com/gazorby/strawchemy/commit/e0f047fe4d125e369c26667ef9dc7c727d5bd6d1)) - [@gazorby](https://github.com/gazorby)
+- (**upsert**) restrict conflict constraints to pk, unique and exclude constraints - ([338543b](https://github.com/gazorby/strawchemy/commit/338543b587592ac1d3a37897a917e1cbfbccdc75)) - [@gazorby](https://github.com/gazorby)
 #### 📚 Documentation
 - (**readme**) add section for upsert mutations - ([99b7096](https://github.com/gazorby/strawchemy/commit/99b709619a38cdef600ec8dd19444371de524007)) - [@gazorby](https://github.com/gazorby)
 - (**readme**) update database support - ([7c55100](https://github.com/gazorby/strawchemy/commit/7c55100d2cff009ddae6eb5b52b9ec74ee7679ab)) - [@gazorby](https://github.com/gazorby)
@@ -155,10 +175,6 @@
 - (**release**) bump to v0.18.0 - ([56c2238](https://github.com/gazorby/strawchemy/commit/56c22380db2f8324178e9c7f122c14ccf57bf01a)) - [@gazorby](https://github.com/gazorby)
 - (**testapp**) add pydantic - ([48980a2](https://github.com/gazorby/strawchemy/commit/48980a291aab590b96179e85666f4d385aafc18b)) - [@gazorby](https://github.com/gazorby)
 - (**uv**) include testapp in dev dependancies - ([79567b6](https://github.com/gazorby/strawchemy/commit/79567b67813233d6e862c178cf36012c1352335c)) - [@gazorby](https://github.com/gazorby)
-#### 🚜 Refactor
-- (**testapp**) disable enable_touch_updated_timestamp_listener as it mess up with integration tests - ([1c4c2c4](https://github.com/gazorby/strawchemy/commit/1c4c2c4ba076d7d4b0097e919864708dba9ddc58)) - [@gazorby](https://github.com/gazorby)
-- (**transpiler**) use literal_column less often and use a more reliable method when necessary - ([e0f047f](https://github.com/gazorby/strawchemy/commit/e0f047fe4d125e369c26667ef9dc7c727d5bd6d1)) - [@gazorby](https://github.com/gazorby)
-- (**upsert**) restrict conflict constraints to pk, unique and exclude constraints - ([338543b](https://github.com/gazorby/strawchemy/commit/338543b587592ac1d3a37897a917e1cbfbccdc75)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -175,14 +191,14 @@
 #### 🐛 Bug Fixes
 - (**interval**) output serialization - ([7e6e822](https://github.com/gazorby/strawchemy/commit/7e6e822937a598ff25b470282ec9b6a0f9bdb1bd)) - [@gazorby](https://github.com/gazorby)
 - (**update-by-id**) do not pass empty where filter to the resolver - ([393970f](https://github.com/gazorby/strawchemy/commit/393970fe4ef469450093e468e8131ab4a1591946)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- (**sqlite**) minor fixes - ([387356f](https://github.com/gazorby/strawchemy/commit/387356f15174c8705e0d5ac08abbf4e823a2aad2)) - [@gazorby](https://github.com/gazorby)
+- (**typing**) remove unused types - ([cc39392](https://github.com/gazorby/strawchemy/commit/cc393929f76c653b3b7f0e20c87e678ba4ce655b)) - [@gazorby](https://github.com/gazorby)
 #### 📚 Documentation
 - mention sqlite in the readme - ([46acbec](https://github.com/gazorby/strawchemy/commit/46acbec7c78d4c84f72db66296ad8bd799f90080)) - [@gazorby](https://github.com/gazorby)
 #### ⚙️ Miscellaneous Tasks
 - (**release**) bump to v0.17.0 - ([cda53ea](https://github.com/gazorby/strawchemy/commit/cda53ea2d2e32f6c772a9e46306203069c600ec2)) - [@gazorby](https://github.com/gazorby)
 - upgrade dependencies - ([d8a9dd1](https://github.com/gazorby/strawchemy/commit/d8a9dd1bc2e57ca12d088b0ec58407449a6f865b)) - [@gazorby](https://github.com/gazorby)
-#### 🚜 Refactor
-- (**sqlite**) minor fixes - ([387356f](https://github.com/gazorby/strawchemy/commit/387356f15174c8705e0d5ac08abbf4e823a2aad2)) - [@gazorby](https://github.com/gazorby)
-- (**typing**) remove unused types - ([cc39392](https://github.com/gazorby/strawchemy/commit/cc393929f76c653b3b7f0e20c87e678ba4ce655b)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -200,11 +216,6 @@
 #### 🐛 Bug Fixes
 - (**mysql**) do not generate the distinct column when no distinct args is passed - ([8524902](https://github.com/gazorby/strawchemy/commit/852490215b9d6a3536ca48bed35d9fcaed2a7add)) - [@gazorby](https://github.com/gazorby)
 - (**ordering**) join ordering not propagated into the root query - ([16e4e30](https://github.com/gazorby/strawchemy/commit/16e4e3058eefe532b189728e9076870053e4a239)) - [@gazorby](https://github.com/gazorby)
-#### 📚 Documentation
-- (**readme**) update - ([b1f7b99](https://github.com/gazorby/strawchemy/commit/b1f7b9917c985589c641589db4da540f6e37127e)) - [@gazorby](https://github.com/gazorby)
-- update readme - ([d20b2ae](https://github.com/gazorby/strawchemy/commit/d20b2ae8c29b62eb58488d9a2a22fdb49a88c362)) - [@gazorby](https://github.com/gazorby)
-#### ⚙️ Miscellaneous Tasks
-- (**release**) bump to v0.16.0 - ([58a3bda](https://github.com/gazorby/strawchemy/commit/58a3bdaed9a516f5fd1a556dec784bf0da4b9d19)) - [@gazorby](https://github.com/gazorby)
 #### 🚜 Refactor
 - (**config**) require dialect when instantiating strawchemy instance - ([f127fbf](https://github.com/gazorby/strawchemy/commit/f127fbf4dee0a47bab139984d83ed8a8b707a029)) - [@gazorby](https://github.com/gazorby)
 - (**config**) restrict aggregation filters to those supported by the database - ([66872d9](https://github.com/gazorby/strawchemy/commit/66872d9db5a35b1aa24716903bf8a268fd700ad5)) - [@gazorby](https://github.com/gazorby)
@@ -217,6 +228,11 @@
 - simplify project structure - ([bae73d9](https://github.com/gazorby/strawchemy/commit/bae73d9eb1263af30a45dd0fc094959771bf6a2f)) - [@gazorby](https://github.com/gazorby)
 - make pydantic an optional dependency - ([82df05d](https://github.com/gazorby/strawchemy/commit/82df05dce587f318d66cfdc8273cf47db797074a)) - [@gazorby](https://github.com/gazorby)
 - wip - ([5e957c0](https://github.com/gazorby/strawchemy/commit/5e957c047f8a8dea19170c66c19ae85462258ffb)) - [@gazorby](https://github.com/gazorby)
+#### 📚 Documentation
+- (**readme**) update - ([b1f7b99](https://github.com/gazorby/strawchemy/commit/b1f7b9917c985589c641589db4da540f6e37127e)) - [@gazorby](https://github.com/gazorby)
+- update readme - ([d20b2ae](https://github.com/gazorby/strawchemy/commit/d20b2ae8c29b62eb58488d9a2a22fdb49a88c362)) - [@gazorby](https://github.com/gazorby)
+#### ⚙️ Miscellaneous Tasks
+- (**release**) bump to v0.16.0 - ([58a3bda](https://github.com/gazorby/strawchemy/commit/58a3bdaed9a516f5fd1a556dec784bf0da4b9d19)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -237,11 +253,11 @@
 ## [v0.15.5](https://github.com/gazorby/strawchemy/compare/v0.15.4..v0.15.5) - 2025-04-29
 #### 🐛 Bug Fixes
 - (**input**) fields on update input were not partial - ([3f94f2e](https://github.com/gazorby/strawchemy/commit/3f94f2e0bd44d079ba3f254951982a1166bb9f84)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- (**formatting**) apply ruff - ([8d3375f](https://github.com/gazorby/strawchemy/commit/8d3375f5b63fe36292f9956909c93606581b042a)) - [@gazorby](https://github.com/gazorby)
 #### ⚙️ Miscellaneous Tasks
 - (**release**) bump to v0.15.5 - ([83487ca](https://github.com/gazorby/strawchemy/commit/83487ca24114bfe7d44fdb10e2218c87f49452e0)) - [@gazorby](https://github.com/gazorby)
 - (**uv**) upgrade - ([c973d96](https://github.com/gazorby/strawchemy/commit/c973d96fd0d1dc9ea46cd9f82e453f86cf04309c)) - [@gazorby](https://github.com/gazorby)
-#### 🚜 Refactor
-- (**formatting**) apply ruff - ([8d3375f](https://github.com/gazorby/strawchemy/commit/8d3375f5b63fe36292f9956909c93606581b042a)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -304,15 +320,16 @@
 #### 🐛 Bug Fixes
 - (**mutation-input**) override would not be applied in certain cases - ([bbe75a8](https://github.com/gazorby/strawchemy/commit/bbe75a8165d38f21ae9ff4c5195513534f804373)) - [@gazorby](https://github.com/gazorby)
 - (**mutation-input**) override would not be applied in certain cases - ([a70791f](https://github.com/gazorby/strawchemy/commit/a70791f09c5bdff38baf14e36943c726d7297407)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- update _StrawberryQueryNode method names - ([783855d](https://github.com/gazorby/strawchemy/commit/783855d2add7a155db0ed5c58fd57edc79f7292d)) - [@gazorby](https://github.com/gazorby)
 #### ⚙️ Miscellaneous Tasks
-- (**deps**) bump astral-sh/setup-uv from 5 to 6 - ([a820ea7](https://github.com/gazorby/strawchemy/commit/a820ea7e9a2b02926c55a8b0b5f41b77f87ab14f)) - dependabot[bot]
+- (**deps**) bump astral-sh/setup-uv from 5 to 6 - ([a820ea7](https://github.com/gazorby/strawchemy/commit/a820ea7e9a2b02926c55a8b0b5f41b77f87ab14f)) - [@dependabot[bot]](https://github.com/dependabot[bot])
 - (**release**) bump to v0.14.2 - ([d5c6038](https://github.com/gazorby/strawchemy/commit/d5c6038bac18959f5ad0d1e5998bddfa410b044b)) - [@gazorby](https://github.com/gazorby)
 - run tests in renovate/dependabot branches - ([9e137f5](https://github.com/gazorby/strawchemy/commit/9e137f5e334241b66164fa49edcfaca440acb82a)) - [@gazorby](https://github.com/gazorby)
 - run tests in renovate/dependabot branches - ([17b761f](https://github.com/gazorby/strawchemy/commit/17b761f95af77cf209a803b3e7c95e51b89bafe9)) - [@gazorby](https://github.com/gazorby)
-#### 🚜 Refactor
-- update _StrawberryQueryNode method names - ([783855d](https://github.com/gazorby/strawchemy/commit/783855d2add7a155db0ed5c58fd57edc79f7292d)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
+- [@dependabot[bot]](https://github.com/dependabot[bot])
 - [@gazorby](https://github.com/gazorby)
 
 - - -
@@ -320,11 +337,11 @@
 ## [v0.14.1](https://github.com/gazorby/strawchemy/compare/v0.14.0..v0.14.1) - 2025-04-24
 #### 🐛 Bug Fixes
 - (**dto**) override params passed to .to_mapped() would not apply if they were excluded in dto - ([eb39a92](https://github.com/gazorby/strawchemy/commit/eb39a929249e6a758989cc9539aa7888238e542d)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- (**strawchemy-repository**) update `root_type` param to `type` - ([4354c51](https://github.com/gazorby/strawchemy/commit/4354c510c216f42a88bf6b4649aecedcbd17ddfc)) - [@gazorby](https://github.com/gazorby)
 #### ⚙️ Miscellaneous Tasks
 - (**release**) bump to v0.14.1 - ([cf2c732](https://github.com/gazorby/strawchemy/commit/cf2c73266a3e004f3122098b0e15bfeb1493ff60)) - [@gazorby](https://github.com/gazorby)
 - (**renovate**) extend config:semverAllMonthly config - ([063b476](https://github.com/gazorby/strawchemy/commit/063b476c46c1019526cf5f2d0e28f39288069afb)) - [@gazorby](https://github.com/gazorby)
-#### 🚜 Refactor
-- (**strawchemy-repository**) update `root_type` param to `type` - ([4354c51](https://github.com/gazorby/strawchemy/commit/4354c510c216f42a88bf6b4649aecedcbd17ddfc)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -337,16 +354,16 @@
 - (**schema**) add pydantic input validation - ([580bbef](https://github.com/gazorby/strawchemy/commit/580bbefd610468f8aba47f20198e8331130d1753)) - [@gazorby](https://github.com/gazorby)
 #### 🐛 Bug Fixes
 - (**validation**) handle nested models - ([1fa7e14](https://github.com/gazorby/strawchemy/commit/1fa7e14b60e7e7de52ae91645036611cbffe1f0b)) - [@gazorby](https://github.com/gazorby)
-#### 📚 Documentation
-- (**readme**) add a section for input validation - ([fea65c5](https://github.com/gazorby/strawchemy/commit/fea65c5fda2afebf0663e50a76c52e83f7c487de)) - [@gazorby](https://github.com/gazorby)
-- (**readme**) update - ([2ade51e](https://github.com/gazorby/strawchemy/commit/2ade51eb1645c79198af327ec3cc25e678e2eba5)) - [@gazorby](https://github.com/gazorby)
-#### ⚙️ Miscellaneous Tasks
-- (**release**) bump to v0.14.0 - ([ada7bcb](https://github.com/gazorby/strawchemy/commit/ada7bcb5a5e778599f878bc1619d3e015f1e480d)) - [@gazorby](https://github.com/gazorby)
 #### 🚜 Refactor
 - (**factory**) remove type/input decorators on _StrawberryFactory - ([de5a75d](https://github.com/gazorby/strawchemy/commit/de5a75d7c3c923b18ec37fae6b65a1f5cd67701b)) - [@gazorby](https://github.com/gazorby)
 - (**repository**) move common logic in a base class for sync/async strawchemy repositories - ([4b31d3a](https://github.com/gazorby/strawchemy/commit/4b31d3ab5c8ebf9f9f185f5fc49fdbdcb2ba444c)) - [@gazorby](https://github.com/gazorby)
 - (**validation**) update mapper api - ([299fb0a](https://github.com/gazorby/strawchemy/commit/299fb0a32f870482db0aef32260dccffaf677d65)) - [@gazorby](https://github.com/gazorby)
 - wip - ([a3b6aef](https://github.com/gazorby/strawchemy/commit/a3b6aef4ea15d7bc355c8c62f4fea756e796279e)) - [@gazorby](https://github.com/gazorby)
+#### 📚 Documentation
+- (**readme**) add a section for input validation - ([fea65c5](https://github.com/gazorby/strawchemy/commit/fea65c5fda2afebf0663e50a76c52e83f7c487de)) - [@gazorby](https://github.com/gazorby)
+- (**readme**) update - ([2ade51e](https://github.com/gazorby/strawchemy/commit/2ade51eb1645c79198af327ec3cc25e678e2eba5)) - [@gazorby](https://github.com/gazorby)
+#### ⚙️ Miscellaneous Tasks
+- (**release**) bump to v0.14.0 - ([ada7bcb](https://github.com/gazorby/strawchemy/commit/ada7bcb5a5e778599f878bc1619d3e015f1e480d)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -365,10 +382,10 @@
 - - -
 
 ## [v0.13.6](https://github.com/gazorby/strawchemy/compare/v0.13.5..v0.13.6) - 2025-04-15
-#### ⚙️ Miscellaneous Tasks
-- (**release**) bump to v0.13.6 - ([ac39d47](https://github.com/gazorby/strawchemy/commit/ac39d47bf85a5134c93d1b4fb13f83ee3ae88c8d)) - [@gazorby](https://github.com/gazorby)
 #### 🚜 Refactor
 - (**mapper**) more factory reuse - ([1c00afc](https://github.com/gazorby/strawchemy/commit/1c00afce6f1795b11a4e3c30b47560fbaa1f3f70)) - [@gazorby](https://github.com/gazorby)
+#### ⚙️ Miscellaneous Tasks
+- (**release**) bump to v0.13.6 - ([ac39d47](https://github.com/gazorby/strawchemy/commit/ac39d47bf85a5134c93d1b4fb13f83ee3ae88c8d)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -410,10 +427,10 @@
 - - -
 
 ## [v0.13.2](https://github.com/gazorby/strawchemy/compare/v0.13.1..v0.13.2) - 2025-04-14
-#### ⚙️ Miscellaneous Tasks
-- (**release**) bump to v0.13.2 - ([80021fa](https://github.com/gazorby/strawchemy/commit/80021facb7bcb582a9a997ede45f9f2bc21e0ebe)) - [@gazorby](https://github.com/gazorby)
 #### 🚜 Refactor
 - (**pydantic**) remove defer_build=True on base config - ([4457996](https://github.com/gazorby/strawchemy/commit/445799619b6dbc617b65c3b643b592e001991a4c)) - [@gazorby](https://github.com/gazorby)
+#### ⚙️ Miscellaneous Tasks
+- (**release**) bump to v0.13.2 - ([80021fa](https://github.com/gazorby/strawchemy/commit/80021facb7bcb582a9a997ede45f9f2bc21e0ebe)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -443,10 +460,6 @@
 - (**mapping**) exclude foreign keys from inputs - ([17678f2](https://github.com/gazorby/strawchemy/commit/17678f21578675d8f16100208756b9bb934f542c)) - [@gazorby](https://github.com/gazorby)
 - (**mapping**) respect nullability when generating input types - ([f87f3b6](https://github.com/gazorby/strawchemy/commit/f87f3b6d6df840540077d079d28bd2d095c57016)) - [@gazorby](https://github.com/gazorby)
 - (**schema**) do not allow removing to-many relations if remote fk is not nullable - ([c7203bc](https://github.com/gazorby/strawchemy/commit/c7203bccd4912e2c923515d12bde2097a806dd98)) - [@gazorby](https://github.com/gazorby)
-#### 📚 Documentation
-- (**readme**) add mutation documention - ([5de832a](https://github.com/gazorby/strawchemy/commit/5de832a3d7868f5c544a8c40f6683df9ac045cfd)) - [@gazorby](https://github.com/gazorby)
-#### ⚙️ Miscellaneous Tasks
-- (**release**) bump to v0.13.0 - ([fd1d725](https://github.com/gazorby/strawchemy/commit/fd1d7257c906f2e2131c079840e33abd3af8d681)) - [@gazorby](https://github.com/gazorby)
 #### 🚜 Refactor
 - (**cud**) merge create and update transaction logic - ([769e4ef](https://github.com/gazorby/strawchemy/commit/769e4efa78e9140bab0f0d7d18caba5151d65cff)) - [@gazorby](https://github.com/gazorby)
 - (**cud**) implement update repository method - ([1080c25](https://github.com/gazorby/strawchemy/commit/1080c25bf134a7ae509be0194367f7d7dff0dc4e)) - [@gazorby](https://github.com/gazorby)
@@ -456,6 +469,10 @@
 - (**repository**) update code documentation - ([ae39957](https://github.com/gazorby/strawchemy/commit/ae3995739fbb5d60ac11077e00618943eb695b4a)) - [@gazorby](https://github.com/gazorby)
 - (**update-input**) make all fields partial, except pks - ([64a6f3e](https://github.com/gazorby/strawchemy/commit/64a6f3e58108e9b7f5e1419b759747f7f01a6a68)) - [@gazorby](https://github.com/gazorby)
 - (**utils**) remove unused function - ([68a970b](https://github.com/gazorby/strawchemy/commit/68a970b8a7da0baa4d37ba084dcacd806ad90b2c)) - [@gazorby](https://github.com/gazorby)
+#### 📚 Documentation
+- (**readme**) add mutation documention - ([5de832a](https://github.com/gazorby/strawchemy/commit/5de832a3d7868f5c544a8c40f6683df9ac045cfd)) - [@gazorby](https://github.com/gazorby)
+#### ⚙️ Miscellaneous Tasks
+- (**release**) bump to v0.13.0 - ([fd1d725](https://github.com/gazorby/strawchemy/commit/fd1d7257c906f2e2131c079840e33abd3af8d681)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -494,16 +511,16 @@
 - (**mapping**) override type fields would not be retracked - ([98f3375](https://github.com/gazorby/strawchemy/commit/98f33756547fd9a5773e67ae3cdbb6b1d037182a)) - [@gazorby](https://github.com/gazorby)
 - (**mapping**) do not enable aggregations on input types - ([24cd763](https://github.com/gazorby/strawchemy/commit/24cd763af01d02d6abcbd174d346f2c938955d51)) - [@gazorby](https://github.com/gazorby)
 - (**resolver**) rely on sqlalchemy session type to use choose between sync/async resolver - ([92eabda](https://github.com/gazorby/strawchemy/commit/92eabdaf613e39787bfadb6361b11d11a3149120)) - [@gazorby](https://github.com/gazorby)
-#### ⚙️ Miscellaneous Tasks
-- (**gitignore**) ignore .sqlite files - ([49928b3](https://github.com/gazorby/strawchemy/commit/49928b395f7f57395e9a9f9f59493d8a5b4c94e7)) - [@gazorby](https://github.com/gazorby)
-- (**release**) bump to v0.12.0 - ([66ff56b](https://github.com/gazorby/strawchemy/commit/66ff56b8a2fa8dd1948d069333fdeaa57f10d55c)) - [@gazorby](https://github.com/gazorby)
-- (**renovate**) enable lock file maintenance - ([5ab6f8e](https://github.com/gazorby/strawchemy/commit/5ab6f8e1dad7da666c9b593b241282814f9240b9)) - [@gazorby](https://github.com/gazorby)
 #### 🚜 Refactor
 - (**doc**) fix typo in license - ([57cf88d](https://github.com/gazorby/strawchemy/commit/57cf88d1545589a13bff87952110a08b2a842d23)) - [@gazorby](https://github.com/gazorby)
 - (**dto**) improve dto caching reliability - ([ffa2ab1](https://github.com/gazorby/strawchemy/commit/ffa2ab1dc4d0a18ba98bdd4ae316f6b09731f64e)) - [@gazorby](https://github.com/gazorby)
 - (**dx**) add an example app - ([ed3e5d6](https://github.com/gazorby/strawchemy/commit/ed3e5d635f42c7ddcf7b6d2195c2ef1bad434e91)) - [@gazorby](https://github.com/gazorby)
 - (**mapping**) add foreign key inputs for relation - ([fda6b60](https://github.com/gazorby/strawchemy/commit/fda6b60e879697d85d62a0c6a311bf5f75ac9ac7)) - [@gazorby](https://github.com/gazorby)
 - (**transpiler**) remove unused function - ([1636803](https://github.com/gazorby/strawchemy/commit/1636803ae724753afde977a5e95eb0eaaa8edda8)) - [@gazorby](https://github.com/gazorby)
+#### ⚙️ Miscellaneous Tasks
+- (**gitignore**) ignore .sqlite files - ([49928b3](https://github.com/gazorby/strawchemy/commit/49928b395f7f57395e9a9f9f59493d8a5b4c94e7)) - [@gazorby](https://github.com/gazorby)
+- (**release**) bump to v0.12.0 - ([66ff56b](https://github.com/gazorby/strawchemy/commit/66ff56b8a2fa8dd1948d069333fdeaa57f10d55c)) - [@gazorby](https://github.com/gazorby)
+- (**renovate**) enable lock file maintenance - ([5ab6f8e](https://github.com/gazorby/strawchemy/commit/5ab6f8e1dad7da666c9b593b241282814f9240b9)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -518,6 +535,9 @@
 - (**hook**) hook would not be correctly applied if triggered by a type - ([0de25a0](https://github.com/gazorby/strawchemy/commit/0de25a058787d5e4d80af558e048a63f6ed71939)) - [@gazorby](https://github.com/gazorby)
 - (**mapping**) type annotation override on a list field - ([6f56744](https://github.com/gazorby/strawchemy/commit/6f567441ba708feaa1854223c257de69e29eaf47)) - [@gazorby](https://github.com/gazorby)
 - (**order-by**) order by on relation not working properly - ([acf1a8c](https://github.com/gazorby/strawchemy/commit/acf1a8cefd7513eeb2dec9450ae75608c8080a58)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- (**hook**) simplify query hook interface - ([5f84532](https://github.com/gazorby/strawchemy/commit/5f84532e630b84c8aa85a4b703bc5b6bf0ed5959)) - [@gazorby](https://github.com/gazorby)
+- (**typing**) remove unused type - ([f242ce5](https://github.com/gazorby/strawchemy/commit/f242ce5d1b1a87eaff604bde3e0f20fede939620)) - [@gazorby](https://github.com/gazorby)
 #### ⚙️ Miscellaneous Tasks
 - (**coverage**) append the coverage session name as file extension - ([7046c63](https://github.com/gazorby/strawchemy/commit/7046c634cfc2ea8a2af7005b2ff9088690196609)) - [@gazorby](https://github.com/gazorby)
 - (**coverage**) remove .xml extension in coverage filenames - ([a4c1fda](https://github.com/gazorby/strawchemy/commit/a4c1fda35faf83d9d6cb123245547e133b3652aa)) - [@gazorby](https://github.com/gazorby)
@@ -527,9 +547,6 @@
 - (**coverage**) use merge-multiple - ([dfa12d6](https://github.com/gazorby/strawchemy/commit/dfa12d65f6e440927a4d36d81ca2bfe06b0baf9c)) - [@gazorby](https://github.com/gazorby)
 - (**coverage**) use coverage combine - ([05b772d](https://github.com/gazorby/strawchemy/commit/05b772d873059391f5026ba9e3ff969818665805)) - [@gazorby](https://github.com/gazorby)
 - (**release**) bump to v0.11.0 - ([bd27b8e](https://github.com/gazorby/strawchemy/commit/bd27b8e8a8545557879a7de22f9b5483cd751fb6)) - [@gazorby](https://github.com/gazorby)
-#### 🚜 Refactor
-- (**hook**) simplify query hook interface - ([5f84532](https://github.com/gazorby/strawchemy/commit/5f84532e630b84c8aa85a4b703bc5b6bf0ed5959)) - [@gazorby](https://github.com/gazorby)
-- (**typing**) remove unused type - ([f242ce5](https://github.com/gazorby/strawchemy/commit/f242ce5d1b1a87eaff604bde3e0f20fede939620)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -553,6 +570,8 @@
 - (**filters**) add insensitive regexp variants - ([27706d5](https://github.com/gazorby/strawchemy/commit/27706d5a9a26f909f2027145992e47d4a264f7f8)) - [@gazorby](https://github.com/gazorby)
 - (**filters**) add order filters to string - ([d76c950](https://github.com/gazorby/strawchemy/commit/d76c9509e96cb2300e87bcc87d6aa23ad2215742)) - [@gazorby](https://github.com/gazorby)
 - support postgres `Interval` type (mapping and filtering) - ([355994f](https://github.com/gazorby/strawchemy/commit/355994f6747d9b5aa6799708aa0e0063636e8019)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- (**graphql**) rename in_, nin_ filters to in, nin - ([d19b061](https://github.com/gazorby/strawchemy/commit/d19b061eb5e9af15affc29aed343adb57a58a39c)) - [@gazorby](https://github.com/gazorby)
 #### 📚 Documentation
 - (**readme**) update filters section - ([83f43d3](https://github.com/gazorby/strawchemy/commit/83f43d3bc20da1e5d5eeac7f794789e8e18e099a)) - [@gazorby](https://github.com/gazorby)
 - (**readme**) add type override documentation - ([5d34539](https://github.com/gazorby/strawchemy/commit/5d34539f5f7078a7935deb47d652de78481adebd)) - [@gazorby](https://github.com/gazorby)
@@ -560,8 +579,6 @@
 - (**readme**) clarify supported filters - ([91a52b5](https://github.com/gazorby/strawchemy/commit/91a52b5cfd5218569cde02c54dae831ae843fdf0)) - [@gazorby](https://github.com/gazorby)
 #### ⚙️ Miscellaneous Tasks
 - (**release**) bump to v0.9.0 - ([36ac3b6](https://github.com/gazorby/strawchemy/commit/36ac3b6dee86a62a7d729619920b72f6046d67d8)) - [@gazorby](https://github.com/gazorby)
-#### 🚜 Refactor
-- (**graphql**) rename in_, nin_ filters to in, nin - ([d19b061](https://github.com/gazorby/strawchemy/commit/d19b061eb5e9af15affc29aed343adb57a58a39c)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -598,6 +615,9 @@
 - (**strawberry-type**) model instance passed on types not declaring it - ([06c1c1f](https://github.com/gazorby/strawchemy/commit/06c1c1f7eefaa2c5e1fe2f03f7ef3e854dafe7ea)) - [@gazorby](https://github.com/gazorby)
 - (**transpiler**) adding an aggregation column to an existing lateral join would not be properly aliased, leading to a cartesian product on the same table - ([f365120](https://github.com/gazorby/strawchemy/commit/f365120ba9f5c110de9417b725ca32de4ce07d69)) - [@gazorby](https://github.com/gazorby)
 - import errors when geo extras is not installed - ([f28f2ea](https://github.com/gazorby/strawchemy/commit/f28f2eaee54b2658cdc294d0cdce6325f54e69c6)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- remove the default strawchemy instance - ([b766374](https://github.com/gazorby/strawchemy/commit/b7663745ab49f6415ccc1277421559945f7fcfb0)) - [@gazorby](https://github.com/gazorby)
+- remove unused stuff - ([9bd2d1b](https://github.com/gazorby/strawchemy/commit/9bd2d1b0b0738aac5e4dfb4db52a343a72ae363a)) - [@gazorby](https://github.com/gazorby)
 #### 📚 Documentation
 - (**readme**) make code examples expandable - ([4da85a1](https://github.com/gazorby/strawchemy/commit/4da85a119dcc03a92ce24ad8ebbf4c6791784e6b)) - [@gazorby](https://github.com/gazorby)
 - (**readme**) update repository doc - ([d930468](https://github.com/gazorby/strawchemy/commit/d930468ddbe47980ec9cc9de4f8a6524f7b83a88)) - [@gazorby](https://github.com/gazorby)
@@ -613,9 +633,6 @@
 - (**pyproject**) remove multiprocessing from coverage config - ([b8cfe46](https://github.com/gazorby/strawchemy/commit/b8cfe46a0f51f32269ea5a969855235f2f94408c)) - [@gazorby](https://github.com/gazorby)
 - (**pyproject**) fix syntax - ([8cd111b](https://github.com/gazorby/strawchemy/commit/8cd111b468caa314d6597e40e5d91a28d435ca9b)) - [@gazorby](https://github.com/gazorby)
 - (**release**) bump to v0.5.3 - ([dcb17d7](https://github.com/gazorby/strawchemy/commit/dcb17d7fa9ce83c40c6e3d92e9aa87abcca96dc1)) - [@gazorby](https://github.com/gazorby)
-#### 🚜 Refactor
-- remove the default strawchemy instance - ([b766374](https://github.com/gazorby/strawchemy/commit/b7663745ab49f6415ccc1277421559945f7fcfb0)) - [@gazorby](https://github.com/gazorby)
-- remove unused stuff - ([9bd2d1b](https://github.com/gazorby/strawchemy/commit/9bd2d1b0b0738aac5e4dfb4db52a343a72ae363a)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -650,6 +667,9 @@
 - (**transpiler**) remove caching property on resolved tree - ([6b11dcc](https://github.com/gazorby/strawchemy/commit/6b11dccab751a1e390adb6dc612c16c0321756ff)) - [@gazorby](https://github.com/gazorby)
 - (**typing**) session_getter - ([af2edaa](https://github.com/gazorby/strawchemy/commit/af2edaa02d50d93879b1137068d60f3e97d08e9b)) - [@gazorby](https://github.com/gazorby)
 - update - ([c334738](https://github.com/gazorby/strawchemy/commit/c33473829fa8976f31242828e7294543ef738044)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- (**dx**) update .editorconfig - ([89c9ac2](https://github.com/gazorby/strawchemy/commit/89c9ac202218e5d06e3da956ba7b91e7844219fb)) - [@gazorby](https://github.com/gazorby)
+- (**transpiler**) minor changes - ([dafa2f5](https://github.com/gazorby/strawchemy/commit/dafa2f5549c1a4f81eaff9cd71bdb57aca24c85b)) - [@gazorby](https://github.com/gazorby)
 #### 📚 Documentation
 - (**contributing**) add tasks.md reference - ([c75b043](https://github.com/gazorby/strawchemy/commit/c75b043625a0c30f33a358d63d7bd1edc4d22be6)) - [@gazorby](https://github.com/gazorby)
 - update CONTRIBUTING.md - ([447e529](https://github.com/gazorby/strawchemy/commit/447e5295c4b6d434669f5aabe5e17825d231f6a9)) - [@gazorby](https://github.com/gazorby)
@@ -671,9 +691,6 @@
 - (**pre-commit**) run pre-commit lint check in mise task - ([6c7b017](https://github.com/gazorby/strawchemy/commit/6c7b0170259d650b426039b4336f25db0f7fb446)) - [@gazorby](https://github.com/gazorby)
 - (**release**) bump to v0.5.1 - ([d1b30ca](https://github.com/gazorby/strawchemy/commit/d1b30cae2022e51b74aa91f5742fe1f25049c252)) - [@gazorby](https://github.com/gazorby)
 - (**test**) call mise task to generate test matrix - ([43a0308](https://github.com/gazorby/strawchemy/commit/43a0308697661080c2b30758ec40eef178ac9f49)) - [@gazorby](https://github.com/gazorby)
-#### 🚜 Refactor
-- (**dx**) update .editorconfig - ([89c9ac2](https://github.com/gazorby/strawchemy/commit/89c9ac202218e5d06e3da956ba7b91e7844219fb)) - [@gazorby](https://github.com/gazorby)
-- (**transpiler**) minor changes - ([dafa2f5](https://github.com/gazorby/strawchemy/commit/dafa2f5549c1a4f81eaff9cd71bdb57aca24c85b)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)
@@ -707,13 +724,6 @@
 - (**sqlalchemy-inspector**) mapped classes map not updated - ([6667447](https://github.com/gazorby/strawchemy/commit/66674477a8c222aa40ff38e400149983b72b3026)) - [@gazorby](https://github.com/gazorby)
 - (**strawchemy-field**) python name for filter input - ([73cca8b](https://github.com/gazorby/strawchemy/commit/73cca8bba6197a2325a1530bf2363e132b009f6b)) - [@gazorby](https://github.com/gazorby)
 - forgot some partial default updates - ([4df92dd](https://github.com/gazorby/strawchemy/commit/4df92dd621ca6cc0b84d9ef3da4271267cc452b3)) - [@gazorby](https://github.com/gazorby)
-#### ⚙️ Miscellaneous Tasks
-- (**lint**) execute lint sessions on a single default python version - ([60ac239](https://github.com/gazorby/strawchemy/commit/60ac239cb5d59c683f1a03ec240b6a83ba61503f)) - [@gazorby](https://github.com/gazorby)
-- (**lint**) add sourcery config - ([0ee4bde](https://github.com/gazorby/strawchemy/commit/0ee4bde598781611c9cae9aa135ce3197bd1e76b)) - [@gazorby](https://github.com/gazorby)
-- (**mise**) add auto-bump task - ([545f3c4](https://github.com/gazorby/strawchemy/commit/545f3c434138413b873ec8c3224fc71fcc4d98dc)) - [@gazorby](https://github.com/gazorby)
-- (**release**) bump to v0.4.0 - ([ebdbd58](https://github.com/gazorby/strawchemy/commit/ebdbd5877c78642bdaa11786d19eaf30fb41431a)) - [@gazorby](https://github.com/gazorby)
-- (**test**) fix array membership test - ([25e5672](https://github.com/gazorby/strawchemy/commit/25e567299d5dfdcda2e9cc97087d4c104fa4e0de)) - [@gazorby](https://github.com/gazorby)
-- (**tests**) upload coverage artifacts - ([bc72252](https://github.com/gazorby/strawchemy/commit/bc72252c1453a015f60f70d7facf57fd3fc7c3d6)) - [@gazorby](https://github.com/gazorby)
 #### 🚜 Refactor
 - (**dto**) streamline arguments of factory decorator method - ([33557b1](https://github.com/gazorby/strawchemy/commit/33557b1abf5a014a8948cc11ce93412c95580be4)) - [@gazorby](https://github.com/gazorby)
 - (**dto**) add shortcut utilities - ([a3b3a53](https://github.com/gazorby/strawchemy/commit/a3b3a53ffb201df8dbba250b0440daaed460db79)) - [@gazorby](https://github.com/gazorby)
@@ -721,6 +731,13 @@
 - (**mapping**) child options - ([e2277ab](https://github.com/gazorby/strawchemy/commit/e2277ab742041429181be152ffca9f3f20337cea)) - [@gazorby](https://github.com/gazorby)
 - (**pre-commit**) update config - ([a08c121](https://github.com/gazorby/strawchemy/commit/a08c1216fa065bad1959998d5fdfd433e9e37d00)) - [@gazorby](https://github.com/gazorby)
 - wip - ([9817a95](https://github.com/gazorby/strawchemy/commit/9817a9574e05cadea46f5bcf1f1ff8d075579758)) - [@gazorby](https://github.com/gazorby)
+#### ⚙️ Miscellaneous Tasks
+- (**lint**) execute lint sessions on a single default python version - ([60ac239](https://github.com/gazorby/strawchemy/commit/60ac239cb5d59c683f1a03ec240b6a83ba61503f)) - [@gazorby](https://github.com/gazorby)
+- (**lint**) add sourcery config - ([0ee4bde](https://github.com/gazorby/strawchemy/commit/0ee4bde598781611c9cae9aa135ce3197bd1e76b)) - [@gazorby](https://github.com/gazorby)
+- (**mise**) add auto-bump task - ([545f3c4](https://github.com/gazorby/strawchemy/commit/545f3c434138413b873ec8c3224fc71fcc4d98dc)) - [@gazorby](https://github.com/gazorby)
+- (**release**) bump to v0.4.0 - ([ebdbd58](https://github.com/gazorby/strawchemy/commit/ebdbd5877c78642bdaa11786d19eaf30fb41431a)) - [@gazorby](https://github.com/gazorby)
+- (**test**) fix array membership test - ([25e5672](https://github.com/gazorby/strawchemy/commit/25e567299d5dfdcda2e9cc97087d4c104fa4e0de)) - [@gazorby](https://github.com/gazorby)
+- (**tests**) upload coverage artifacts - ([bc72252](https://github.com/gazorby/strawchemy/commit/bc72252c1453a015f60f70d7facf57fd3fc7c3d6)) - [@gazorby](https://github.com/gazorby)
 
 #### 🤝️ Contributors
 - [@gazorby](https://github.com/gazorby)

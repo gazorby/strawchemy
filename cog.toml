@@ -5,12 +5,12 @@ ignore_merge_commits = true
 # so we can do our own skip logic in workflow
 skip_ci = "[ci-skip]"
 pre_bump_hooks = [
-  "uv version --no-sync {{version}}",
-  "git add :pyproject.toml :uv.lock"
+    "uv version --no-sync {{version}}",
+    "git add :pyproject.toml :uv.lock"
 ]
 post_bump_hooks = [
-  "git push",
-  "git push origin {{version_tag}}",
+    "git push",
+    "git push origin {{version_tag}}",
 ]
 
 [changelog]
@@ -21,29 +21,29 @@ owner = "gazorby"
 repository = "strawchemy"
 
 authors = [
-  { signature = "gazorby", username = "gazorby" },
-  { signature = "Matthieu", username = "gazorby" }
+    { signature = "gazorby", username = "gazorby" },
+    { signature = "Matthieu", username = "gazorby" }
 ]
 
 [commit_types]
-feat = { changelog_title = "🚀 Features" }
-fix = { changelog_title = "🐛 Bug Fixes" }
-docs = { changelog_title = "📚 Documentation" }
-perf = { changelog_title = "⚡ Performance" }
-refactor = { changelog_title = "🚜 Refactor" }
-ref = { changelog_title = "🚜 Refactor" }
-style = { changelog_title = "🎨 Styling" }
-build = { changelog_title = "⚙️ Miscellaneous Tasks" }
-ci = { changelog_title = "⚙️ Miscellaneous Tasks" }
-revert = { changelog_title = "◀️ Revert" }
+feat = { changelog_title = "🚀 Features", order = 1 }
+fix = { changelog_title = "🐛 Bug Fixes", order = 2 }
+perf = { changelog_title = "⚡ Performance", order = 3 }
+refactor = { changelog_title = "🚜 Refactor", order = 4 }
+ref = { changelog_title = "🚜 Refactor", order = 4 }
+revert = { changelog_title = "◀️ Revert", order = 5 }
+docs = { changelog_title = "📚 Documentation", order = 6 }
+build = { changelog_title = "⚙️ Miscellaneous Tasks", order = 7 }
+ci = { changelog_title = "⚙️ Miscellaneous Tasks", order = 7 }
+style = { changelog_title = "🎨 Styling", order = 8 }
 
 chore = { omit_from_changelog = true }
 test = { omit_from_changelog = true }
 
 [bump_profiles.manual]
 pre_bump_hooks = [
-  "uv version --no-sync {{version}}",
-  "mise run lint",
+    "uv version --no-sync {{version}}",
+    "mise run lint",
 ]
 
 post_bump_hooks = ["echo 'Manual bump from {{latest}} to {{version}}.'"]
