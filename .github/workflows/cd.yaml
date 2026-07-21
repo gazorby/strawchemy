@@ -17,17 +17,17 @@ jobs:
           fetch-depth: 0
           persist-credentials: 'false'
 
-      - name: Setup mise
-        uses: jdx/mise-action@dba19683ed58901619b14f395a24841710cb4925 # v4
+      - name: Install cocogitto
+        uses: cocogitto/cocogitto-action@52d0023b4396897f1815648e553db2ab8d782f3a # v4
+        with:
+          install-only: true
 
-      - name: Generate changelog
+      - name: Generate release notes
         id: notes
         run: |
-          echo "tag=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
-          mise run release:changelog > RELEASE_CHANGELOG.md
-        env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
+          tag="$(git describe --tags --abbrev=0)"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          cog changelog --at "$tag" > RELEASE_CHANGELOG.md
 
       - name: Install uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0

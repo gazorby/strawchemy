@@ -1,9 +1,3 @@
-# Changelog
-
-All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
-
-- - -
-
 ## Unreleased ([b9171fd..3b36909](https://github.com/gazorby/strawchemy/compare/b9171fd..3b36909))
 #### 🚀 Features
 - add per-field default order by ([#196](https://github.com/gazorby/strawchemy/pull/196)) - ([227bc21](https://github.com/gazorby/strawchemy/commit/227bc2111b4b426f613b05fd3d8e584a5331266e)) - [@gazorby](https://github.com/gazorby)
