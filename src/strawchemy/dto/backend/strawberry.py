@@ -50,6 +50,13 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         }
 
     def _construct_field_info(self, field_def: DTOFieldDefinition[ModelT, ModelFieldT]) -> FieldInfo:
+        # A field definition may carry a prebuilt strawberry field (e.g. from ``filter_field``);
+        # it already encodes the default and any explicit field config, so use it as-is.
+        # Local import: dto.strawberry imports this module at top, so a module-level import cycles.
+        from strawchemy.dto.strawberry import GraphQLFieldDefinition  # noqa: PLC0415
+
+        if isinstance(field_def, GraphQLFieldDefinition) and field_def.graphql_field is not None:
+            return FieldInfo(field_def.name, field_def.type_, field_def.graphql_field)
         strawberry_field: StrawberryField | None = None
         if field_def.default_factory is not DTOMissing:
             if isinstance(field_def.default_factory(), (list, tuple)):

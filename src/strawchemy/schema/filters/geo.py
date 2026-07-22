@@ -11,7 +11,7 @@ from sqlalchemy.orm import QueryableAttribute
 from strawberry import UNSET
 from typing_extensions import override
 
-from strawchemy.schema.filters import FilterProtocol, GraphQLComparison
+from strawchemy.schema.filters import FilterProtocol, GraphQLComparison, _StrawchemyComparison
 from strawchemy.schema.scalars.geo import GeoJSON
 
 __all__ = ("GeoComparison",)
@@ -62,7 +62,7 @@ class GeoComparison(GraphQLComparison):
         within_geometry: Filters for geometries that are within this geometry.
     """
 
-    __strawchemy_filter__ = GeoFilter
+    __strawchemy_comparison__ = _StrawchemyComparison(filter=GeoFilter)
 
     contains_geometry: GeoJSON | None = UNSET
     within_geometry: GeoJSON | None = UNSET

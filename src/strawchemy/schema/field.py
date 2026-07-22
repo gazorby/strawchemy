@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import dataclasses
+from collections.abc import Callable, Mapping, Sequence
 from functools import cached_property
 from inspect import isclass
-from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypedDict, TypeVar, cast
 
 from sqlalchemy.orm import InstrumentedAttribute
 from sqlalchemy.sql.elements import UnaryExpression
 from strawberry.annotation import StrawberryAnnotation
+from strawberry.extensions import FieldExtension
 from strawberry.types import get_object_definition
 from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.base import StrawberryOptional
@@ -66,6 +68,40 @@ if TYPE_CHECKING:
 __all__ = ("StrawchemyField",)
 
 T = TypeVar("T", bound="DeclarativeBase")
+
+
+class StrawberryFieldKwargs(TypedDict, total=False):
+    """Input-relevant ``strawberry.field`` args (keys match ``strawberry.field`` for spreading).
+
+    Used by ``Strawchemy.filter_field`` to forward field metadata onto the generated GraphQL
+    input field. Output/resolver-only args are intentionally excluded.
+    """
+
+    name: str | None
+    description: str | None
+    metadata: Mapping[Any, Any] | None
+    deprecation_reason: str | None
+    directives: Sequence[object]
+    graphql_type: Any | None
+
+
+class OutputFieldKwargs(StrawberryFieldKwargs, total=False):
+    """``strawberry.field`` args for output / resolver fields (superset of the input subset).
+
+    Adds the args excluded from input fields: permissions, default value handling, and field
+    extensions. Used by ``Strawchemy.field`` and the mutation methods.
+    """
+
+    permission_classes: list[type[BasePermission]] | None
+    default: Any
+    default_factory: Callable[..., object] | object
+    extensions: list[FieldExtension] | None
+
+
+class MutationFieldKwargs(OutputFieldKwargs, total=False):
+    """Common ``strawberry.field`` + repository args shared by every ``Strawchemy`` mutation method."""
+
+    repository_type: AnyRepositoryType | None
 
 
 class StrawchemyField(StrawberryField):

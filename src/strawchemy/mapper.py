@@ -6,12 +6,14 @@ from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast, overload
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.schema.config import StrawberryConfig
+from typing_extensions import Unpack
 
 from strawchemy.config.base import StrawchemyConfig
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import TYPING_NS
 from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
 from strawchemy.dto.utils import read_all_config
+from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.factories import (
     AggregateFilterFactory,
     AggregateRootTypeFactory,
@@ -25,7 +27,8 @@ from strawchemy.schema.factories import (
     UpsertConflictEnumBackend,
     UpsertConflictEnumFactory,
 )
-from strawchemy.schema.field import StrawchemyField
+from strawchemy.schema.field import MutationFieldKwargs, OutputFieldKwargs, StrawberryFieldKwargs, StrawchemyField
+from strawchemy.schema.filters.fields import VALID_JOINS, FilterFieldMarker
 from strawchemy.schema.mutation import types as mutation_types
 from strawchemy.schema.mutation.field_builder import MutationFieldBuilder
 from strawchemy.schema.mutation.fields import (
@@ -38,15 +41,14 @@ from strawchemy.schema.mutation.input import EventRegistry
 from strawchemy.utils.registry import StrawberryRegistry
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Sequence
 
     from sqlalchemy.orm import DeclarativeBase
-    from strawberry import BasePermission
-    from strawberry.extensions.field_extension import FieldExtension
     from strawberry.types.arguments import StrawberryArgument
 
     from strawchemy.dto.types import FieldSpec
     from strawchemy.repository.typing import QueryHookCallable
+    from strawchemy.schema.filters.fields import CustomFilterApply, JoinStrategy
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import (
@@ -201,17 +203,8 @@ class Strawchemy:
         execution_options: dict[str, Any] | None = None,
         query_hook: QueryHook[Any] | Sequence[QueryHook[Any]] | None = None,
         repository_type: AnyRepositoryType | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        permission_classes: list[type[BasePermission]] | None = None,
-        deprecation_reason: str | None = None,
-        default: Any = dataclasses.MISSING,
-        default_factory: Callable[..., object] | object = dataclasses.MISSING,
-        metadata: Mapping[Any, Any] | None = None,
-        directives: Sequence[object] = (),
-        graphql_type: Any | None = None,
-        extensions: list[FieldExtension] | None = None,
         root_field: bool = True,
+        **field_kwargs: Unpack[OutputFieldKwargs],
     ) -> StrawchemyField: ...
 
     @overload
@@ -231,17 +224,8 @@ class Strawchemy:
         execution_options: dict[str, Any] | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
         repository_type: AnyRepositoryType | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        permission_classes: list[type[BasePermission]] | None = None,
-        deprecation_reason: str | None = None,
-        default: Any = dataclasses.MISSING,
-        default_factory: Callable[..., object] | object = dataclasses.MISSING,
-        metadata: Mapping[Any, Any] | None = None,
-        directives: Sequence[object] = (),
-        graphql_type: Any | None = None,
-        extensions: list[FieldExtension] | None = None,
         root_field: bool = True,
+        **field_kwargs: Unpack[OutputFieldKwargs],
     ) -> Any: ...
 
     def field(
@@ -261,17 +245,8 @@ class Strawchemy:
         execution_options: dict[str, Any] | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
         repository_type: AnyRepositoryType | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        permission_classes: list[type[BasePermission]] | None = None,
-        deprecation_reason: str | None = None,
-        default: Any = dataclasses.MISSING,
-        default_factory: Callable[..., object] | object = dataclasses.MISSING,
-        metadata: Mapping[Any, Any] | None = None,
-        directives: Sequence[object] = (),
-        graphql_type: Any | None = None,
-        extensions: list[FieldExtension] | None = None,
         root_field: bool = True,
+        **field_kwargs: Unpack[OutputFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL field with enhanced SQLAlchemy capabilities.
 
@@ -303,22 +278,15 @@ class Strawchemy:
             execution_options: SQLAlchemy execution options for the query.
             query_hook: A callable or sequence of callables to modify the SQLAlchemy query.
             repository_type: A custom strawberry class for data fetching logic.
-            name: The name of the GraphQL field.
-            description: The description of the GraphQL field.
-            permission_classes: A list of permission classes for the field.
-            deprecation_reason: The reason for deprecating the field.
-            default: The default value for the field.
-            default_factory: A factory function to generate the default value.
-            metadata: Additional metadata for the field.
-            directives: A sequence of directives for the field.
-            graphql_type: The GraphQL type of the field. If not provided, it's inferred.
-            extensions: A list of Strawberry FieldExtensions.
             root_field: Indicates if this is a root-level field.
+            **field_kwargs: ``strawberry.field`` arguments forwarded to the generated field
+                (see ``OutputFieldKwargs``). ``name`` maps to the GraphQL field name.
 
         Returns:
             A StrawchemyField instance, which is a specialized StrawberryField.
         """
         namespace = self._annotation_namespace()
+        graphql_type = field_kwargs.get("graphql_type")
         type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
 
         if model_field is not None:
@@ -340,18 +308,18 @@ class Strawchemy:
             query_hook=query_hook,
             model_field=model_field,
             python_name=None,
-            graphql_name=name,
+            graphql_name=field_kwargs.get("name"),
             type_annotation=type_annotation,
             is_subscription=False,
-            permission_classes=permission_classes or [],
-            deprecation_reason=deprecation_reason,
-            default=default,
-            default_factory=default_factory,
-            metadata=metadata,
-            directives=directives,
-            extensions=extensions or [],
+            permission_classes=field_kwargs.get("permission_classes") or [],
+            deprecation_reason=field_kwargs.get("deprecation_reason"),
+            default=field_kwargs.get("default", dataclasses.MISSING),
+            default_factory=field_kwargs.get("default_factory", dataclasses.MISSING),
+            metadata=field_kwargs.get("metadata"),
+            directives=field_kwargs.get("directives", ()),
+            extensions=field_kwargs.get("extensions") or [],
             registry_namespace=namespace,
-            description=description,
+            description=field_kwargs.get("description"),
             arguments=arguments,
             order_by_factory=self.order_by_factory,
             filter_factory=self.filter_factory,
@@ -359,23 +327,53 @@ class Strawchemy:
         )
         return field(resolver) if resolver else field
 
+    def filter_field(
+        self,
+        *,
+        ops: Sequence[str] | None = None,
+        apply: CustomFilterApply | None = None,
+        join: JoinStrategy = "exists",
+        **field_kwargs: Unpack[StrawberryFieldKwargs],
+    ) -> Any:
+        """Declares a fine-grained filter field default.
+
+        The field's annotation supplies the comparison data type. With ``ops`` the field exposes
+        only those GraphQL operators; with ``apply`` it becomes a custom virtual scalar input;
+        with neither it force-includes the column's full default comparison.
+
+        Args:
+            ops: GraphQL operator names to expose (restricted field). Mutually exclusive with ``apply``.
+            apply: Custom filter callable ``(statement, value, *, dialect, model)`` returning a
+                mutated ``Select``.
+            join: Fold-back strategy when ``apply`` is set (``"exists"`` or ``"in"``).
+            **field_kwargs: ``strawberry.field`` arguments applied to the generated GraphQL field
+                (``name``, ``description``, ``metadata``, ``deprecation_reason``, ``directives``,
+                ``graphql_type``).
+
+        Returns:
+            A ``FilterFieldMarker`` consumed by the filter factory. Typed ``Any`` so it can sit as
+            a default under any annotation.
+
+        Raises:
+            StrawchemyFieldError: If ``ops`` and ``apply`` are both given, or ``join`` is unsupported.
+        """
+        if ops is not None and apply is not None:
+            msg = "filter_field() arguments 'ops' and 'apply' are mutually exclusive"
+            raise StrawchemyFieldError(msg)
+        if join not in VALID_JOINS:
+            msg = f"Invalid join strategy {join!r}; expected one of {sorted(VALID_JOINS)}"
+            raise StrawchemyFieldError(msg)
+        return FilterFieldMarker(
+            ops=tuple(ops) if ops is not None else None, apply=apply, join=join, field_kwargs=field_kwargs
+        )
+
     def create(
         self,
         input_type: type[MappedGraphQLDTO[T]],
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepositoryType | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        permission_classes: list[type[BasePermission]] | None = None,
-        deprecation_reason: str | None = None,
-        default: Any = dataclasses.MISSING,
-        default_factory: Callable[..., object] | object = dataclasses.MISSING,
-        metadata: Mapping[Any, Any] | None = None,
-        directives: Sequence[object] = (),
-        graphql_type: Any | None = None,
-        extensions: list[FieldExtension] | None = None,
         validation: ValidationProtocol[T] | None = None,
+        **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for creating new model instances.
 
@@ -389,22 +387,11 @@ class Strawchemy:
                 a new model instance. This should be a `MappedGraphQLDTO`.
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            repository_type: An optional custom strawberry class for data fetching
-                and persistence logic. Defaults to the strawberry configured in
-                `StrawchemyConfig`.
-            name: The name of the GraphQL mutation field.
-            description: The description of the GraphQL mutation field.
-            permission_classes: A list of permission classes for the field.
-            deprecation_reason: The reason for deprecating the field.
-            default: The default value for the field (typically not used for mutations).
-            default_factory: A factory function to generate the default value.
-            metadata: Additional metadata for the field.
-            directives: A sequence of directives for the field.
-            graphql_type: The GraphQL return type of the mutation. If not provided,
-                it's inferred, typically to be the corresponding output type of the model.
-            extensions: A list of Strawberry FieldExtensions.
             validation: An optional validation protocol instance to validate
                 the input data before creation.
+            **field_kwargs: Common ``strawberry.field`` / repository arguments
+                (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
+                return type.
 
         Returns:
             A `StrawchemyCreateMutationField` instance, which is a specialized
@@ -413,19 +400,9 @@ class Strawchemy:
         return self._mutation_builder.build(
             StrawchemyCreateMutationField,
             resolver,
-            repository_type=repository_type,
-            graphql_type=graphql_type,
-            name=name,
-            description=description,
-            permission_classes=permission_classes,
-            deprecation_reason=deprecation_reason,
-            default=default,
-            default_factory=default_factory,
-            metadata=metadata,
-            directives=directives,
-            extensions=extensions,
             input_type=input_type,
             validation=validation,
+            **field_kwargs,
         )
 
     def upsert(
@@ -435,18 +412,8 @@ class Strawchemy:
         conflict_fields: type[EnumDTO],
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepositoryType | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        permission_classes: list[type[BasePermission]] | None = None,
-        deprecation_reason: str | None = None,
-        default: Any = dataclasses.MISSING,
-        default_factory: Callable[..., object] | object = dataclasses.MISSING,
-        metadata: Mapping[Any, Any] | None = None,
-        directives: Sequence[object] = (),
-        graphql_type: Any | None = None,
-        extensions: list[FieldExtension] | None = None,
         validation: ValidationProtocol[T] | None = None,
+        **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for upserting model instances.
 
@@ -465,22 +432,11 @@ class Strawchemy:
                 conflict detection (e.g., primary key or unique constraints).
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            repository_type: An optional custom strawberry class for data fetching
-                and persistence logic. Defaults to the strawberry configured in
-                `StrawchemyConfig`.
-            name: The name of the GraphQL mutation field.
-            description: The description of the GraphQL mutation field.
-            permission_classes: A list of permission classes for the field.
-            deprecation_reason: The reason for deprecating the field.
-            default: The default value for the field (typically not used for mutations).
-            default_factory: A factory function to generate the default value.
-            metadata: Additional metadata for the field.
-            directives: A sequence of directives for the field.
-            graphql_type: The GraphQL return type of the mutation. If not provided,
-                it's inferred, typically to be the corresponding output type of the model.
-            extensions: A list of Strawberry FieldExtensions.
             validation: An optional validation protocol instance to validate
                 the input data before the upsert operation.
+            **field_kwargs: Common ``strawberry.field`` / repository arguments
+                (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
+                return type.
 
         Returns:
             A `StrawchemyUpsertMutationField` instance, which is a specialized
@@ -489,21 +445,11 @@ class Strawchemy:
         return self._mutation_builder.build(
             StrawchemyUpsertMutationField,
             resolver,
-            repository_type=repository_type,
-            graphql_type=graphql_type,
-            name=name,
-            description=description,
-            permission_classes=permission_classes,
-            deprecation_reason=deprecation_reason,
-            default=default,
-            default_factory=default_factory,
-            metadata=metadata,
-            directives=directives,
-            extensions=extensions,
             input_type=input_type,
             update_fields_enum=update_fields,
             conflict_fields_enum=conflict_fields,
             validation=validation,
+            **field_kwargs,
         )
 
     def update(
@@ -512,18 +458,8 @@ class Strawchemy:
         filter_input: type[BooleanFilterDTO],
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepositoryType | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        permission_classes: list[type[BasePermission]] | None = None,
-        deprecation_reason: str | None = None,
-        default: Any = dataclasses.MISSING,
-        default_factory: Callable[..., object] | object = dataclasses.MISSING,
-        metadata: Mapping[Any, Any] | None = None,
-        directives: Sequence[object] = (),
-        graphql_type: Any | None = None,
-        extensions: list[FieldExtension] | None = None,
         validation: ValidationProtocol[T] | None = None,
+        **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for updating model instances.
 
@@ -540,23 +476,11 @@ class Strawchemy:
                 instances should be updated. This should be a `BooleanFilterDTO`.
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            repository_type: An optional custom strawberry class for data fetching
-                and persistence logic. Defaults to the strawberry configured in
-                `StrawchemyConfig`.
-            name: The name of the GraphQL mutation field.
-            description: The description of the GraphQL mutation field.
-            permission_classes: A list of permission classes for the field.
-            deprecation_reason: The reason for deprecating the field.
-            default: The default value for the field (typically not used for mutations).
-            default_factory: A factory function to generate the default value.
-            metadata: Additional metadata for the field.
-            directives: A sequence of directives for the field.
-            graphql_type: The GraphQL return type of the mutation. If not provided,
-                it's inferred, typically to be a list of the corresponding output
-                type of the model or a success/failure indicator.
-            extensions: A list of Strawberry FieldExtensions.
             validation: An optional validation protocol instance to validate
                 the input data before the update operation.
+            **field_kwargs: Common ``strawberry.field`` / repository arguments
+                (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
+                return type.
 
         Returns:
             A `StrawchemyUpdateMutationField` instance, which is a specialized
@@ -565,20 +489,10 @@ class Strawchemy:
         return self._mutation_builder.build(
             StrawchemyUpdateMutationField,
             resolver,
-            repository_type=repository_type,
-            graphql_type=graphql_type,
-            name=name,
-            description=description,
-            permission_classes=permission_classes,
-            deprecation_reason=deprecation_reason,
-            default=default,
-            default_factory=default_factory,
-            metadata=metadata,
-            directives=directives,
-            extensions=extensions,
             input_type=input_type,
             filter_type=filter_input,
             validation=validation,
+            **field_kwargs,
         )
 
     def update_by_ids(
@@ -586,18 +500,8 @@ class Strawchemy:
         input_type: type[MappedGraphQLDTO[T]],
         resolver: Any | None = None,
         *,
-        repository_type: AnyRepositoryType | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        permission_classes: list[type[BasePermission]] | None = None,
-        deprecation_reason: str | None = None,
-        default: Any = dataclasses.MISSING,
-        default_factory: Callable[..., object] | object = dataclasses.MISSING,
-        metadata: Mapping[Any, Any] | None = None,
-        directives: Sequence[object] = (),
-        graphql_type: Any | None = None,
-        extensions: list[FieldExtension] | None = None,
         validation: ValidationProtocol[T] | None = None,
+        **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for updating model instances by IDs.
 
@@ -613,23 +517,11 @@ class Strawchemy:
                 generated by `pk_update_input`, which includes primary key fields.
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            repository_type: An optional custom strawberry class for data fetching
-                and persistence logic. Defaults to the strawberry configured in
-                `StrawchemyConfig`.
-            name: The name of the GraphQL mutation field.
-            description: The description of the GraphQL mutation field.
-            permission_classes: A list of permission classes for the field.
-            deprecation_reason: The reason for deprecating the field.
-            default: The default value for the field (typically not used for mutations).
-            default_factory: A factory function to generate the default value.
-            metadata: Additional metadata for the field.
-            directives: A sequence of directives for the field.
-            graphql_type: The GraphQL return type of the mutation. If not provided,
-                it's inferred, typically to be the corresponding output type of the
-                model or a list thereof.
-            extensions: A list of Strawberry FieldExtensions.
             validation: An optional validation protocol instance to validate
                 the input data before the update operation.
+            **field_kwargs: Common ``strawberry.field`` / repository arguments
+                (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
+                return type.
 
         Returns:
             A `StrawchemyUpdateMutationField` instance, specialized for updates
@@ -638,37 +530,16 @@ class Strawchemy:
         return self._mutation_builder.build(
             StrawchemyUpdateMutationField,
             resolver,
-            repository_type=repository_type,
-            graphql_type=graphql_type,
-            name=name,
-            description=description,
-            permission_classes=permission_classes,
-            deprecation_reason=deprecation_reason,
-            default=default,
-            default_factory=default_factory,
-            metadata=metadata,
-            directives=directives,
-            extensions=extensions,
             input_type=input_type,
             validation=validation,
+            **field_kwargs,
         )
 
     def delete(
         self,
         filter_input: type[BooleanFilterDTO] | None = None,
         resolver: Any | None = None,
-        *,
-        repository_type: AnyRepositoryType | None = None,
-        name: str | None = None,
-        description: str | None = None,
-        permission_classes: list[type[BasePermission]] | None = None,
-        deprecation_reason: str | None = None,
-        default: Any = dataclasses.MISSING,
-        default_factory: Callable[..., object] | object = dataclasses.MISSING,
-        metadata: Mapping[Any, Any] | None = None,
-        directives: Sequence[object] = (),
-        graphql_type: Any | None = None,
-        extensions: list[FieldExtension] | None = None,
+        **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for deleting model instances.
 
@@ -686,21 +557,9 @@ class Strawchemy:
                 record based on an ID passed directly (implementation dependent).
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            repository_type: An optional custom strawberry class for data fetching
-                and persistence logic. Defaults to the strawberry configured in
-                `StrawchemyConfig`.
-            name: The name of the GraphQL mutation field.
-            description: The description of the GraphQL mutation field.
-            permission_classes: A list of permission classes for the field.
-            deprecation_reason: The reason for deprecating the field.
-            default: The default value for the field (typically not used for mutations).
-            default_factory: A factory function to generate the default value.
-            metadata: Additional metadata for the field.
-            directives: A sequence of directives for the field.
-            graphql_type: The GraphQL return type of the mutation. If not provided,
-                it's inferred, often to indicate success/failure or the number
-                of records deleted.
-            extensions: A list of Strawberry FieldExtensions.
+            **field_kwargs: Common ``strawberry.field`` / repository arguments
+                (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
+                return type.
 
         Returns:
             A `StrawchemyDeleteMutationField` instance, which is a specialized
@@ -709,16 +568,6 @@ class Strawchemy:
         return self._mutation_builder.build(
             StrawchemyDeleteMutationField,
             resolver,
-            repository_type=repository_type,
-            graphql_type=graphql_type,
-            name=name,
-            description=description,
-            permission_classes=permission_classes,
-            deprecation_reason=deprecation_reason,
-            default=default,
-            default_factory=default_factory,
-            metadata=metadata,
-            directives=directives,
-            extensions=extensions,
             input_type=filter_input,
+            **field_kwargs,
         )

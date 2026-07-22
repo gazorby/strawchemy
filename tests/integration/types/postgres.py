@@ -17,6 +17,7 @@ from strawchemy import (
     Strawchemy,
     StrawchemyAsyncRepository,
     StrawchemySyncRepository,
+    TextComparison,
     ValidationErrorType,
 )
 from strawchemy.schema.pagination import DefaultOffsetPagination
@@ -165,6 +166,17 @@ class FruitTypeWithPaginationAndOrderBy: ...
 
 @strawchemy.filter(Fruit, include="all")
 class FruitFilter: ...
+
+
+def _fruit_sweeter_than(statement: Select[tuple[Fruit]], value: int, **_ctx: Any) -> Select[tuple[Fruit]]:
+    return statement.where(Fruit.sweetness >= value)
+
+
+@strawchemy.filter(Fruit, include=["id", "name", "sweetness"], name="FruitFineGrainedFilter")
+class FruitFineGrainedFilter:
+    name: TextComparison = strawchemy.filter_field(ops=["eq", "like"])
+    sweeter_than: int = strawchemy.filter_field(apply=_fruit_sweeter_than)
+    sweeter_than_in: int = strawchemy.filter_field(apply=_fruit_sweeter_than, join="in")
 
 
 @strawchemy.order(Fruit, include="all", scope="schema")
@@ -322,6 +334,9 @@ class AsyncQuery:
     fruits: list[FruitType] = strawchemy.field(
         filter_input=FruitFilter, order_by_input=FruitOrderBy, repository_type=StrawchemyAsyncRepository
     )
+    fruits_fine_grained: list[FruitType] = strawchemy.field(
+        filter_input=FruitFineGrainedFilter, repository_type=StrawchemyAsyncRepository
+    )
     fruits_paginated: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
         filter_input=FruitFilter,
         pagination=True,
@@ -445,6 +460,9 @@ class SyncQuery:
     # Fruit
     fruits: list[FruitType] = strawchemy.field(
         filter_input=FruitFilter, order_by_input=FruitOrderBy, repository_type=StrawchemySyncRepository
+    )
+    fruits_fine_grained: list[FruitType] = strawchemy.field(
+        filter_input=FruitFineGrainedFilter, repository_type=StrawchemySyncRepository
     )
     fruits_paginated: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
         filter_input=FruitFilter,
