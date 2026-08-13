@@ -95,6 +95,29 @@ Lint the code
 
 Run pre-commit checks
 
+## `release:authors:sync`
+
+- **Usage**: `release:authors:sync`
+
+Resolve GitHub usernames for commit authors into cog config
+
+## `release:bump`
+
+- Depends: release:authors:sync
+
+- **Usage**: `release:bump`
+
+Resolve author handles, then bump the version and changelog
+
+## `release:changelog`
+
+- Depends: release:authors:sync
+
+- **Usage**: `release:changelog`
+- **Aliases**: `cl`
+
+Print release notes for the latest tag
+
 ## `render:usage`
 
 - **Usage**: `render:usage`

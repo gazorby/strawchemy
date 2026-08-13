@@ -8,6 +8,9 @@ jq = "latest"
 pre-commit = "latest"
 actionlint = "latest"
 cocogitto = "latest"
+tombi = "latest"
+yq = "latest"
+gh = "latest"
 
 [vars]
 local_pytest_options = "-n=auto -vv"
@@ -83,7 +86,7 @@ flag "--fail-under <fail_under>" default="100"
 arg "[test]" var=#true
 '''
 run = [
-  "{{vars.uv_run}} diff-cover coverage.xml --compare-branch=${usage_branch} --fail-under=${usage_fail_under}",
+    "{{vars.uv_run}} diff-cover coverage.xml --compare-branch=${usage_branch} --fail-under=${usage_fail_under}",
 ]
 
 [tasks."test:unit"]
@@ -302,12 +305,12 @@ run = '''
 description = "Lint the code"
 alias = "l"
 depends = [
-  "vulture",
-  "ty",
-  "ruff:check",
-  "ruff:format:check",
-  "slotscheck",
-  "unasyncd:check"
+    "vulture",
+    "ty",
+    "ruff:check",
+    "ruff:format:check",
+    "slotscheck",
+    "unasyncd:check"
 ]
 
 [tasks.pre-commit]
@@ -318,6 +321,39 @@ run = "pre-commit run --color=always --all-files"
 [tasks.slotscheck]
 description = "Run slotscheck"
 run = "uv run slotscheck --version && uv run slotscheck"
+
+# ###############
+# Release
+# ###############
+
+[tasks."release:changelog"]
+description = "Print release notes for the latest tag"
+alias = "cl"
+depends = ["release:authors:sync"]
+run = '''
+    #!/usr/bin/env bash
+    cog changelog --at "$(git describe --tags --abbrev=0)" "$@"
+'''
+
+[tasks."release:bump"]
+description = "Resolve author handles, then bump the version and changelog"
+depends = ["release:authors:sync"]
+run = '''
+    #!/usr/bin/env bash
+    cog bump --skip-untracked --annotated "{% raw %}bump from {{latest}} to {{version}}{% endraw %}" "$@
+    tombi format cog.toml
+'''
+
+[tasks."release:authors:sync"]
+description = "Resolve GitHub usernames for commit authors into cog config"
+run = '''
+    #!/usr/bin/env bash
+    gh api --paginate "repos/{owner}/{repo}/commits?per_page=100" \
+        --jq '.[] | [.commit.author.name, (.author.login // "")] | @tsv' \
+        | awk -F'\t' '$2 != "" && !seen[$1]++' \
+        | jq -R -s 'split("\n") | map(select(length > 0) | split("\t") | {signature: .[0], username: .[1]})' \
+        | yq -p toml -o toml -i '.changelog.authors = ((.changelog.authors + load("/dev/stdin")) | unique_by(.signature))' cog.toml
+'''
 
 # ###############
 # Tools
@@ -334,14 +370,14 @@ description = "Clean working directory"
 alias = "c"
 confirm = "Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files."
 run = [
-  "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
-  "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
-  "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
-  "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
-  "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
+    "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
+    "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
+    "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
+    "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
+    "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
 ]
 
 [tasks."render:usage"]

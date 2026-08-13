@@ -5,12 +5,9 @@ ignore_merge_commits = true
 # so we can do our own skip logic in workflow
 skip_ci = "[ci-skip]"
 pre_bump_hooks = [
+    "git restore cog.toml",
     "uv version --no-sync {{version}}",
     "git add :pyproject.toml :uv.lock"
-]
-post_bump_hooks = [
-    "git push",
-    "git push origin {{version_tag}}",
 ]
 
 [changelog]
@@ -19,11 +16,6 @@ template = ".github/changelog.tera"
 remote = "github.com"
 owner = "gazorby"
 repository = "strawchemy"
-
-authors = [
-    { signature = "gazorby", username = "gazorby" },
-    { signature = "Matthieu", username = "gazorby" }
-]
 
 [commit_types]
 feat = { changelog_title = "🚀 Features", order = 1 }
@@ -36,14 +28,15 @@ docs = { changelog_title = "📚 Documentation", order = 6 }
 build = { changelog_title = "⚙️ Miscellaneous Tasks", order = 7 }
 ci = { changelog_title = "⚙️ Miscellaneous Tasks", order = 7 }
 style = { changelog_title = "🎨 Styling", order = 8 }
-
 chore = { omit_from_changelog = true }
 test = { omit_from_changelog = true }
 
-[bump_profiles.manual]
+[bump_profiles.ci]
 pre_bump_hooks = [
+    "git restore cog.toml",
     "uv version --no-sync {{version}}",
-    "mise run lint",
+    "git add :pyproject.toml :uv.lock",
+    "git config user.name 'github-actions[bot]'",
+    "git config user.email 'github-actions[bot]@users.noreply.github.com'"
 ]
-
-post_bump_hooks = ["echo 'Manual bump from {{latest}} to {{version}}.'"]
+post_bump_hooks = ["git push", "git push origin {{version_tag}}"]

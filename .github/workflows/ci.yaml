@@ -51,6 +51,7 @@ jobs:
         with:
           cache: true
           log_level: debug
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
@@ -106,6 +107,7 @@ jobs:
         with:
           cache: true
           log_level: debug
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run tests
         run: mise run ci:test "${{ matrix.session.session }}"
@@ -210,6 +212,7 @@ jobs:
         with:
           cache: true
           log_level: debug
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
