@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union
+import inspect
+from typing import TYPE_CHECKING, Any, Literal, Optional, TypeVar, Union, cast
 
+import strawberry
 from strawberry import UNSET
 from typing_extensions import Unpack, override
 
@@ -11,6 +13,7 @@ from strawchemy.dto.strawberry import (
     AggregateFilterDTO,
     AggregationFunctionFilterDTO,
     BooleanFilterDTO,
+    CustomFilterFieldDefinition,
     FilterFunctionInfo,
     FunctionArgFieldDefinition,
     FunctionFieldDefinition,
@@ -19,14 +22,19 @@ from strawchemy.dto.strawberry import (
     OrderByEnum,
 )
 from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
+from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.factories import AggregationInspector, StrawchemyUnMappedFactory, UnmappedGraphQLDTOT
+from strawchemy.schema.filters import GraphQLComparison
+from strawchemy.schema.filters.fields import FilterFieldMarker
 from strawchemy.typing import AggregationFunction, GraphQLFilterDTOT, GraphQLPurpose, GraphQLType
+from strawchemy.utils.annotation import get_origin_or_self
 from strawchemy.utils.text import snake_to_camel
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator
+    from collections.abc import Callable, Generator, Sequence
 
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+    from strawberry.types.field import StrawberryField
 
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, Relation
@@ -62,6 +70,33 @@ class _BaseFilterFactory(StrawchemyUnMappedFactory[UnmappedGraphQLDTOT]):
     ) -> Callable[[type[Any]], type[UnmappedGraphQLDTOT]]:
         return self._input_wrapper(model=model, name=name, purpose=purpose, mode=mode, **kwargs)
 
+    @staticmethod
+    def parse_declared_filter_fields(base: type[Any]) -> dict[str, tuple[FilterFieldMarker, Any]]:
+        """Extracts user-declared filter fields from a decorated filter class.
+
+        A declared field is a class attribute whose value is a ``FilterFieldMarker`` (from
+        ``strawchemy.filter_field()``). Its annotation supplies the comparison data type.
+
+        Args:
+            base: The decorated filter class.
+
+        Returns:
+            Mapping of field name to ``(marker, annotation_type)``.
+
+        Raises:
+            StrawchemyFieldError: If a restricted (``ops``) or custom (``apply``) field has no annotation.
+        """
+        # Resolve string annotations (modules using `from __future__ import annotations`).
+        annotations = inspect.get_annotations(base, eval_str=True)
+        declared: dict[str, tuple[FilterFieldMarker, Any]] = {}
+        for name, marker in inspect.getmembers(base, lambda v: isinstance(v, FilterFieldMarker)):
+            annotation = annotations.get(name)
+            if annotation is None and (marker.ops is not None or marker.apply is not None):
+                msg = f"Filter field {name!r} needs a type annotation to determine its data type"
+                raise StrawchemyFieldError(msg)
+            declared[name] = (marker, annotation)
+        return declared
+
 
 class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
     def __init__(
@@ -77,7 +112,7 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
         self._aggregation_filter_factory = aggregation_filter_factory or AggregateFilterFactory(mapper)
 
     def _filter_type(self, field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]) -> type[GraphQLFilter]:
-        return self.inspector.get_field_comparison(field)
+        return self.inspector.get_comparison(field)
 
     def _aggregation_field(
         self, field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
@@ -95,6 +130,94 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
             default=UNSET,
         )
 
+    @staticmethod
+    def _validate_declared_columns(
+        declared: dict[str, tuple[FilterFieldMarker, Any]], matched: set[str], model: type[Any]
+    ) -> None:
+        """Validates that non-custom declared filter fields map to real model columns.
+
+        Restricted (``ops``) and bare declared fields must name an actual column; relationship
+        targets and unknown names are out of scope and raise. Custom-apply fields (``apply`` set)
+        are virtual and skip this check.
+
+        Args:
+            declared: User-declared filter fields keyed by attribute name.
+            matched: Names of declared fields that matched a real model column.
+            model: The SQLAlchemy model the filter targets.
+
+        Raises:
+            StrawchemyFieldError: If a non-custom declared field does not map to a column.
+        """
+        for field_name, (marker, _annotation) in declared.items():
+            if marker.apply is None and field_name not in matched:
+                msg = f"Filter field {field_name!r} is not a column on {model.__name__}"
+                raise StrawchemyFieldError(msg)
+
+    def _restricted_comparison(
+        self, field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], annotation: Any, ops: Sequence[str]
+    ) -> type[GraphQLComparison]:
+        """Builds the operator-restricted comparison for a declared filter field.
+
+        The comparison shape is derived from the column; the field annotation is documentary and
+        may be the scalar type or a comparison type (e.g. ``TextComparison``) reflecting the shape.
+
+        Args:
+            field: The model column the filter targets.
+            annotation: The declared field annotation (scalar or comparison type).
+            ops: Selected GraphQL operator names.
+
+        Returns:
+            The restricted comparison input type for the column.
+
+        Raises:
+            StrawchemyFieldError: If a comparison-type annotation does not match the column.
+        """
+        comparison_cls = self.inspector.get_comparison(field, subscribed=False)
+        annotation_origin = get_origin_or_self(annotation)
+        if (
+            isinstance(annotation_origin, type)
+            and issubclass(annotation_origin, GraphQLComparison)
+            and annotation_origin is not comparison_cls
+        ):
+            msg = (
+                f"Filter field {field.model_field_name!r} is annotated with "
+                f"{annotation_origin.__name__} but its column resolves to {comparison_cls.__name__}"
+            )
+            raise StrawchemyFieldError(msg)
+        return comparison_cls.restricted(self.inspector.model_field_type(field), tuple(ops))
+
+    def _iter_custom_filter_fields(
+        self,
+        declared_filters: dict[str, tuple[FilterFieldMarker, Any]],
+        model: type[DeclarativeT],
+        dto_config: DTOConfig,
+    ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
+        """Yields custom-apply virtual filter fields (those declared with ``apply``).
+
+        These are not backed by a model column; each becomes a ``CustomFilterFieldDefinition``
+        whose value the transpiler folds into the query via the callable.
+        """
+        for field_name, (declared_filter, annotation) in declared_filters.items():
+            if declared_filter.apply is None:
+                continue
+            custom_field = CustomFilterFieldDefinition(
+                dto_config=dto_config,
+                model=model,
+                model_field_name=field_name,
+                type_hint=Optional[annotation],
+                apply=declared_filter.apply,
+                join=declared_filter.join,
+                graphql_field=self._declared_strawberry_field(declared_filter),
+                default=UNSET,
+                default_factory=DTOMissing,
+            )
+            yield custom_field
+
+    @staticmethod
+    def _declared_strawberry_field(marker: FilterFieldMarker) -> StrawberryField:
+        """Builds the strawberry field for a declared filter field from its ``field_kwargs``."""
+        return strawberry.field(default=UNSET, **marker.field_kwargs)
+
     @override
     def iter_field_definitions(
         self,
@@ -108,6 +231,8 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
         aggregate_filters: bool = False,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
+        declared_filters = self.parse_declared_filter_fields(base) if base is not None else {}
+        matched_fields: set[str] = set()  # restricted-op declared fields matched to a real column
         for field in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
             if field.is_relation:
                 field.type_ = Union[field.type_, None]
@@ -116,12 +241,46 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
                 if aggregate_filters:
                     yield self._aggregation_field(field, dto_config.copy_with(partial_default=UNSET, partial=True))
             else:
-                comparison_type = self._filter_type(field)
+                declared_entry = declared_filters.get(field.model_field_name)
+                declared_filter = declared_entry[0] if declared_entry is not None else None
+                annotation = declared_entry[1] if declared_entry is not None else None
+                if declared_filter is not None and declared_filter.apply is not None:
+                    # Custom-apply field overrides this real column; skip the default
+                    # comparison and let the injection loop below emit the custom field once.
+                    continue
+                if declared_filter is not None and declared_filter.ops is not None:
+                    comparison_type = self._restricted_comparison(field, annotation, declared_filter.ops)
+                    matched_fields.add(field.model_field_name)
+                elif declared_filter is not None:
+                    # bare filter_field(): force-include this column's full default comparison
+                    comparison_type = self._filter_type(field)
+                    matched_fields.add(field.model_field_name)
+                else:
+                    comparison_type = self._filter_type(field)
                 field.type_ = Optional[comparison_type]  # ty: ignore[invalid-type-form]
+                if declared_filter is not None:
+                    # super() yields GraphQLFieldDefinition (carries graphql_field), though typed as the base.
+                    cast("GraphQLFieldDefinition", field).graphql_field = self._declared_strawberry_field(
+                        declared_filter
+                    )
 
             field.default = UNSET
             field.default_factory = DTOMissing
             yield field
+
+        self._validate_declared_columns(declared_filters, matched_fields, model)
+
+        yield from self._iter_custom_filter_fields(declared_filters, model, dto_config)
+
+        if base is not None and declared_filters:
+            # Declared filter fields supply only a data type, not a final GraphQL type.
+            # Drop their annotations from the base so the strawberry backend does not treat
+            # them as verbatim type overrides; the comparison/custom types injected above win.
+            base.__annotations__ = {
+                annotation_name: annotation_type
+                for annotation_name, annotation_type in inspect.get_annotations(base).items()
+                if annotation_name not in declared_filters
+            }
 
     @override
     def dto_name(

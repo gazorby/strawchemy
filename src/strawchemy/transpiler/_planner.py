@@ -11,7 +11,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Generic, cast
 
-from sqlalchemy import and_, func, inspect, not_, null, or_, select, true
+from sqlalchemy import and_, exists, func, inspect, not_, null, or_, select, true, tuple_
 from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
 from sqlalchemy.sql.util import ClauseAdapter
 
@@ -20,6 +20,7 @@ from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.dto.strawberry import (
     AggregationFilter,
+    CustomFilter,
     Filter,
     OrderByEnum,
     OrderByRelationFilterDTO,
@@ -419,6 +420,53 @@ class FilterPlan:
         return expressions
 
     @staticmethod
+    def _custom_filter_expression(custom: CustomFilter, context: PlanContext[Any]) -> ColumnElement[bool]:
+        """Folds a custom-apply filter into a correlated EXISTS/IN predicate.
+
+        Builds an isolated ``select(model)``, lets the callback mutate it, then correlates it to
+        the outer query on primary-key equality so the result is a single boolean predicate that
+        composes under AND/OR/NOT.
+
+        Args:
+            custom: The set custom filter value (callable, value, strategy, model node).
+            context: The shared planning context (``aliases``, ``dialect`` read here).
+
+        Returns:
+            A boolean SQLAlchemy expression.
+        """
+        model = custom.field_node.value.model
+        mapper = class_mapper(model)
+        inner_pks = SQLAlchemyInspector.pk_attributes(mapper)
+        outer_pks = context.aliases.aliased_id_attributes(custom.field_node)
+
+        isolated = custom.apply(select(model), custom.value, dialect=context.dialect, model=model)
+
+        if custom.join == "in":
+            inner_select = isolated.with_only_columns(*inner_pks)
+            if len(outer_pks) == 1:
+                # Scalar IN is more portable/optimizable than a single-element tuple IN.
+                return outer_pks[0].in_(inner_select)
+            return tuple_(*outer_pks).in_(inner_select)
+
+        outer_alias = (
+            context.aliases.root_alias
+            if custom.field_node.is_root
+            else context.aliases.alias_from_relation_node(custom.field_node, "target")
+        )
+
+        # The outer query aliases the root model to a name equal to its table name, so the inner
+        # subquery must use a distinct alias; otherwise the PK-equality correlation collapses to a
+        # tautology against the same table and the EXISTS matches every outer row. An unnamed alias
+        # lets SQLAlchemy generate a guaranteed-unique name (also safe for repeated/nested filters).
+        inner_alias = aliased(mapper, flat=True)
+        adapter = ClauseAdapter(inspect(inner_alias).selectable)
+        adapted_pks = [adapter.traverse(pk.__clause_element__()) for pk in inner_pks]
+        adapted_select = adapter.traverse(isolated.with_only_columns(*adapted_pks))
+
+        correlation = and_(*[inner == outer for inner, outer in zip(adapted_pks, outer_pks, strict=True)])
+        return exists(adapted_select.where(correlation)).correlate(outer_alias)
+
+    @staticmethod
     def _aggregation_filter(
         aggregation: AggregationFilter,
         context: PlanContext[Any],
@@ -457,7 +505,7 @@ class FilterPlan:
 
     @staticmethod
     def _gather_conjunctions(
-        query: Sequence[Filter | AggregationFilter | GraphQLComparison],
+        query: Sequence[Filter | AggregationFilter | GraphQLComparison | CustomFilter],
         context: PlanContext[Any],
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
@@ -495,6 +543,9 @@ class FilterPlan:
             elif isinstance(value, GraphQLComparison):
                 node_path = value.field_node.path_from_root()
                 bool_expressions.extend(FilterPlan._to_expressions(context, value, not_null_check=not_null_check))
+            elif isinstance(value, CustomFilter):
+                node_path = value.field_node.path_from_root()
+                bool_expressions.append(FilterPlan._custom_filter_expression(value, context))
             else:
                 conjunction = FilterPlan._conjunctions(
                     value, context, agg_plan, emitted_agg_joins, where_function_nodes, not_null_check

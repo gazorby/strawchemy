@@ -1,0 +1,151 @@
+# serializer version: 1
+# name: test_custom_apply_filter_in_strategy[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (
+          SELECT fruit.id
+            FROM fruit
+           WHERE fruit.sweetness >= ?
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_in_strategy[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (
+          SELECT fruit.id
+            FROM fruit
+           WHERE fruit.sweetness >= %s
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_in_strategy[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (
+          SELECT fruit.id
+            FROM fruit
+           WHERE fruit.sweetness >= $1::INTEGER
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_in_strategy[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (
+          SELECT fruit.id
+            FROM fruit
+           WHERE fruit.sweetness >= %(sweetness_1)s::INTEGER
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_in_strategy[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (
+          SELECT fruit.id
+            FROM fruit
+           WHERE fruit.sweetness >= %(sweetness_1)s::INTEGER
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_in_strategy[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (
+          SELECT fruit.id
+            FROM fruit
+           WHERE fruit.sweetness >= ?
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_sweeter_than[session-tracked-async-aiosqlite_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE EXISTS (
+          SELECT fruit_1.id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.sweetness >= ?
+             AND fruit_1.id = fruit.id
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_sweeter_than[session-tracked-async-asyncmy_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE EXISTS (
+          SELECT fruit_1.id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.sweetness >= %s
+             AND fruit_1.id = fruit.id
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_sweeter_than[session-tracked-async-asyncpg_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE EXISTS (
+          SELECT fruit_1.id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.sweetness >= $1::INTEGER
+             AND fruit_1.id = fruit.id
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_sweeter_than[session-tracked-async-psycopg_async_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE EXISTS (
+          SELECT fruit_1.id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.sweetness >= %(sweetness_1)s::INTEGER
+             AND fruit_1.id = fruit.id
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_sweeter_than[session-tracked-sync-psycopg_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE EXISTS (
+          SELECT fruit_1.id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.sweetness >= %(sweetness_1)s::INTEGER
+             AND fruit_1.id = fruit.id
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_custom_apply_filter_sweeter_than[session-tracked-sync-sqlite_engine]
+  '''
+  SELECT fruit.id
+    FROM fruit AS fruit
+   WHERE EXISTS (
+          SELECT fruit_1.id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.sweetness >= ?
+             AND fruit_1.id = fruit.id
+         )
+   ORDER BY fruit.id ASC
+  '''
+# ---

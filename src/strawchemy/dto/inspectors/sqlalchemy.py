@@ -61,7 +61,7 @@ from strawchemy.schema.filters import (
     make_full_json_comparison_input,
     make_sqlite_json_comparison_input,
 )
-from strawchemy.utils.annotation import is_type_hint_optional
+from strawchemy.utils.annotation import get_origin_or_self, is_type_hint_optional
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Generator, Iterable
@@ -665,8 +665,8 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
         """
         return sqlalchemy_filter if cls._is_specialized(sqlalchemy_filter) else sqlalchemy_filter[type_]  # ty: ignore[not-subscriptable]  # runtime generic specialization with a dynamic type argument
 
-    def get_field_comparison(
-        self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]
+    def get_comparison(
+        self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], subscribed: bool = True
     ) -> type[GraphQLComparison]:
         """Determines the GraphQL comparison filter type for a DTO field.
 
@@ -678,14 +678,18 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
         Args:
             field_definition: The DTO field definition, which contains information
                 about the model attribute and its type.
+            subscribed: When `False`, return the unsubscripted comparison class
+                (e.g. `OrderComparison` instead of `OrderComparison[int]`).
 
         Returns:
             The GraphQL comparison filter type suitable for the field.
         """
         field_type = field_definition.model_field.type
         if isinstance(field_type, ARRAY) and self.db_features.dialect == "postgresql":
-            return ArrayComparison[field_type.item_type.python_type]
-        return self.get_type_comparison(self.model_field_type(field_definition))
+            comparison: type[GraphQLComparison] = ArrayComparison[field_type.item_type.python_type]
+        else:
+            comparison = self.get_type_comparison(self.model_field_type(field_definition))
+        return comparison if subscribed else get_origin_or_self(comparison)
 
     def get_type_comparison(self, type_: type[Any]) -> type[GraphQLComparison]:
         """Determines the GraphQL comparison filter type for a Python type.

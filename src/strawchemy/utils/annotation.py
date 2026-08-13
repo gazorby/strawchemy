@@ -55,6 +55,14 @@ def get_annotations(obj: Any) -> dict[str, Any]:
     return inspect.get_annotations(obj)
 
 
+def get_origin_or_self(annotation: Any) -> Any:
+    """Returns the unsubscripted origin of a parametrized type, or the object itself.
+
+    ``OrderComparison[int]`` -> ``OrderComparison``; ``TextComparison`` -> ``TextComparison``.
+    """
+    return get_origin(annotation) or annotation
+
+
 def inner_types(annotation: Any) -> tuple[Any, ...]:
     """Flatten a generic annotation to its innermost leaf types.
 
