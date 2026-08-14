@@ -78,7 +78,7 @@ def integration_tests(session: Session) -> None:
 )
 def integration_postgres_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
-    args: list[str] = ["-m=asyncpg or psycopg_async or psycopg_sync", *session.posargs]
+    args: list[str] = ["-m=asyncpg or psycopg_async or psycopg_sync", "--snapshot-warn-unused", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
 
@@ -91,7 +91,7 @@ def integration_postgres_tests(session: Session) -> None:
 )
 def integration_mysql_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
-    args: list[str] = ["-m=asyncmy", *session.posargs]
+    args: list[str] = ["-m=asyncmy", "--snapshot-warn-unused", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
 
@@ -104,5 +104,5 @@ def integration_mysql_tests(session: Session) -> None:
 )
 def integration_sqlite_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
-    args: list[str] = ["-m aiosqlite or sqlite", *session.posargs]
+    args: list[str] = ["-m aiosqlite or sqlite", "--snapshot-warn-unused", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
