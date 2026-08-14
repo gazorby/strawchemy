@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_default_order_multi_column[session-tracked-async-aiosqlite_engine]
+# name: test_default_order_multi_column[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -10,7 +10,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_multi_column[session-tracked-async-asyncmy_engine]
+# name: test_default_order_multi_column[session-async-tracked-asyncmy_engine]
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -21,7 +21,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_multi_column[session-tracked-async-asyncpg_engine]
+# name: test_default_order_multi_column[session-async-tracked-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -32,7 +32,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_multi_column[session-tracked-async-psycopg_async_engine]
+# name: test_default_order_multi_column[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -43,7 +43,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_multi_column[session-tracked-sync-psycopg_engine]
+# name: test_default_order_multi_column[session-sync-tracked-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -54,7 +54,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_multi_column[session-tracked-sync-sqlite_engine]
+# name: test_default_order_multi_column[session-sync-tracked-sqlite_engine]
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -65,7 +65,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_under_pagination[session-tracked-async-aiosqlite_engine]
+# name: test_default_order_under_pagination[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -82,7 +82,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_under_pagination[session-tracked-async-asyncmy_engine]
+# name: test_default_order_under_pagination[session-async-tracked-asyncmy_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -99,7 +99,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_under_pagination[session-tracked-async-asyncpg_engine]
+# name: test_default_order_under_pagination[session-async-tracked-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -116,7 +116,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_under_pagination[session-tracked-async-psycopg_async_engine]
+# name: test_default_order_under_pagination[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -133,7 +133,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_under_pagination[session-tracked-sync-psycopg_engine]
+# name: test_default_order_under_pagination[session-sync-tracked-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -150,7 +150,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_under_pagination[session-tracked-sync-sqlite_engine]
+# name: test_default_order_under_pagination[session-sync-tracked-sqlite_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -167,7 +167,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_distinct_on[session-tracked-async-aiosqlite_engine]
+# name: test_default_order_with_distinct_on[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -184,7 +184,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_distinct_on[session-tracked-async-asyncmy_engine]
+# name: test_default_order_with_distinct_on[session-async-tracked-asyncmy_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -201,7 +201,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_distinct_on[session-tracked-async-asyncpg_engine]
+# name: test_default_order_with_distinct_on[session-async-tracked-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -218,7 +218,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_distinct_on[session-tracked-async-psycopg_async_engine]
+# name: test_default_order_with_distinct_on[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -235,7 +235,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_distinct_on[session-tracked-sync-psycopg_engine]
+# name: test_default_order_with_distinct_on[session-sync-tracked-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -252,7 +252,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_distinct_on[session-tracked-sync-sqlite_engine]
+# name: test_default_order_with_distinct_on[session-sync-tracked-sqlite_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -269,7 +269,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_pk_tiebreaker[session-tracked-async-aiosqlite_engine]
+# name: test_default_order_with_pk_tiebreaker[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -278,7 +278,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_pk_tiebreaker[session-tracked-async-asyncmy_engine]
+# name: test_default_order_with_pk_tiebreaker[session-async-tracked-asyncmy_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -287,7 +287,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_pk_tiebreaker[session-tracked-async-asyncpg_engine]
+# name: test_default_order_with_pk_tiebreaker[session-async-tracked-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -296,7 +296,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_pk_tiebreaker[session-tracked-async-psycopg_async_engine]
+# name: test_default_order_with_pk_tiebreaker[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -305,7 +305,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_pk_tiebreaker[session-tracked-sync-psycopg_engine]
+# name: test_default_order_with_pk_tiebreaker[session-sync-tracked-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -314,7 +314,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_with_pk_tiebreaker[session-tracked-sync-sqlite_engine]
+# name: test_default_order_with_pk_tiebreaker[session-sync-tracked-sqlite_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -323,7 +323,7 @@
             fruit.id ASC
   '''
 # ---
-# name: test_default_order_without_pk_tiebreaker[session-tracked-async-aiosqlite_engine]
+# name: test_default_order_without_pk_tiebreaker[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -331,7 +331,7 @@
    ORDER BY fruit.name ASC
   '''
 # ---
-# name: test_default_order_without_pk_tiebreaker[session-tracked-async-asyncmy_engine]
+# name: test_default_order_without_pk_tiebreaker[session-async-tracked-asyncmy_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -339,7 +339,7 @@
    ORDER BY fruit.name ASC
   '''
 # ---
-# name: test_default_order_without_pk_tiebreaker[session-tracked-async-asyncpg_engine]
+# name: test_default_order_without_pk_tiebreaker[session-async-tracked-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -347,7 +347,7 @@
    ORDER BY fruit.name ASC
   '''
 # ---
-# name: test_default_order_without_pk_tiebreaker[session-tracked-async-psycopg_async_engine]
+# name: test_default_order_without_pk_tiebreaker[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -355,7 +355,7 @@
    ORDER BY fruit.name ASC
   '''
 # ---
-# name: test_default_order_without_pk_tiebreaker[session-tracked-sync-psycopg_engine]
+# name: test_default_order_without_pk_tiebreaker[session-sync-tracked-psycopg_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -363,7 +363,7 @@
    ORDER BY fruit.name ASC
   '''
 # ---
-# name: test_default_order_without_pk_tiebreaker[session-tracked-sync-sqlite_engine]
+# name: test_default_order_without_pk_tiebreaker[session-sync-tracked-sqlite_engine]
   '''
   SELECT fruit.name,
          fruit.id

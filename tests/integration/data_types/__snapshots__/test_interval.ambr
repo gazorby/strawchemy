@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_timedelta_components[session-tracked-async-days-aiosqlite_engine]
+# name: test_timedelta_components[session-async-tracked-days-aiosqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -8,7 +8,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-days-asyncmy_engine]
+# name: test_timedelta_components[session-async-tracked-days-asyncmy_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -17,7 +17,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-days-asyncpg_engine]
+# name: test_timedelta_components[session-async-tracked-days-asyncpg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -26,7 +26,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-days-psycopg_async_engine]
+# name: test_timedelta_components[session-async-tracked-days-psycopg_async_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -35,7 +35,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-hours-aiosqlite_engine]
+# name: test_timedelta_components[session-async-tracked-hours-aiosqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -44,7 +44,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-hours-asyncmy_engine]
+# name: test_timedelta_components[session-async-tracked-hours-asyncmy_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -53,7 +53,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-hours-asyncpg_engine]
+# name: test_timedelta_components[session-async-tracked-hours-asyncpg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -62,7 +62,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-hours-psycopg_async_engine]
+# name: test_timedelta_components[session-async-tracked-hours-psycopg_async_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -71,7 +71,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-minutes-aiosqlite_engine]
+# name: test_timedelta_components[session-async-tracked-minutes-aiosqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -80,7 +80,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-minutes-asyncmy_engine]
+# name: test_timedelta_components[session-async-tracked-minutes-asyncmy_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -89,7 +89,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-minutes-asyncpg_engine]
+# name: test_timedelta_components[session-async-tracked-minutes-asyncpg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -98,7 +98,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-minutes-psycopg_async_engine]
+# name: test_timedelta_components[session-async-tracked-minutes-psycopg_async_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -107,7 +107,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-totalSeconds-aiosqlite_engine]
+# name: test_timedelta_components[session-async-tracked-totalSeconds-aiosqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -116,7 +116,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-totalSeconds-asyncmy_engine]
+# name: test_timedelta_components[session-async-tracked-totalSeconds-asyncmy_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -125,7 +125,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-totalSeconds-asyncpg_engine]
+# name: test_timedelta_components[session-async-tracked-totalSeconds-asyncpg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -134,7 +134,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-async-totalSeconds-psycopg_async_engine]
+# name: test_timedelta_components[session-async-tracked-totalSeconds-psycopg_async_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -143,7 +143,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-sync-days-psycopg_engine]
+# name: test_timedelta_components[session-sync-tracked-days-psycopg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -152,7 +152,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-sync-days-sqlite_engine]
+# name: test_timedelta_components[session-sync-tracked-days-sqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -161,7 +161,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-sync-hours-psycopg_engine]
+# name: test_timedelta_components[session-sync-tracked-hours-psycopg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -170,7 +170,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-sync-hours-sqlite_engine]
+# name: test_timedelta_components[session-sync-tracked-hours-sqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -179,7 +179,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-sync-minutes-psycopg_engine]
+# name: test_timedelta_components[session-sync-tracked-minutes-psycopg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -188,7 +188,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-sync-minutes-sqlite_engine]
+# name: test_timedelta_components[session-sync-tracked-minutes-sqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -197,7 +197,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-sync-totalSeconds-psycopg_engine]
+# name: test_timedelta_components[session-sync-tracked-totalSeconds-psycopg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -206,7 +206,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-tracked-sync-totalSeconds-sqlite_engine]
+# name: test_timedelta_components[session-sync-tracked-totalSeconds-sqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -215,7 +215,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_output[session-tracked-async-aiosqlite_engine]
+# name: test_timedelta_output[session-async-tracked-aiosqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -223,7 +223,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_output[session-tracked-async-asyncmy_engine]
+# name: test_timedelta_output[session-async-tracked-asyncmy_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -231,7 +231,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_output[session-tracked-async-asyncpg_engine]
+# name: test_timedelta_output[session-async-tracked-asyncpg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -239,7 +239,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_output[session-tracked-async-psycopg_async_engine]
+# name: test_timedelta_output[session-async-tracked-psycopg_async_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -247,7 +247,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_output[session-tracked-sync-psycopg_engine]
+# name: test_timedelta_output[session-sync-tracked-psycopg_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id
@@ -255,7 +255,7 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_output[session-tracked-sync-sqlite_engine]
+# name: test_timedelta_output[session-sync-tracked-sqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id

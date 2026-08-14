@@ -151,7 +151,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         order_config: DTOConfig,
         pagination_config: DTOConfig,
         distinct_on_config: DTOConfig,
-        default_pagination: None | DefaultOffsetPagination,
+        default_pagination: DefaultOffsetPagination | None,
     ) -> tuple[StrawberryField, Any]:
         """Build the pagination/order/distinct_on argument field for a to-many relation."""
         related = Self if field.related_dto is dto else field.related_dto
@@ -178,7 +178,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         order: FieldSpec | None = None,
         paginate: FieldSpec | None = None,
         distinct_on: FieldSpec | None = None,
-        default_pagination: None | DefaultOffsetPagination = None,
+        default_pagination: DefaultOffsetPagination | None = None,
     ) -> type[GraphQLDTOT]:
         """Add pagination and ordering arguments to a GraphQL DTO type.
 

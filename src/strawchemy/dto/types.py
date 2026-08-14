@@ -369,7 +369,7 @@ class DTOConfig:
         global_include: FieldSpec | None = None,
         exclude: FieldSpec | None = None,
         global_exclude: FieldSpec | None = None,
-        partial: bool | None | type[DTOUnset] = DTOUnset,
+        partial: bool | type[DTOUnset] | None = DTOUnset,
         unset_sentinel: Any | type[DTOUnset] = DTOUnset,
         type_overrides: Mapping[Any, Any] | type[DTOUnset] = DTOUnset,
         annotation_overrides: dict[str, Any] | type[DTOUnset] = DTOUnset,

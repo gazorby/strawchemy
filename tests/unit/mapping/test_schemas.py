@@ -323,6 +323,7 @@ def test_query_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:
     "path", [pytest.param("geo.geo_filters.Query", id="geo_filters"), pytest.param("geo.geo.Query", id="geo_type")]
 )
 @pytest.mark.geo
+@pytest.mark.extras
 @pytest.mark.snapshot
 @pytest.mark.skipif(not find_spec("geoalchemy2"), reason="geoalchemy2 is not installed")
 def test_geo_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> None:

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_get_one[session-tracked-async-aiosqlite_engine]
+# name: test_get_one[session-async-tracked-aiosqlite_engine]
   '''
   SELECT color.name,
          color.id
@@ -7,7 +7,7 @@
    WHERE color.name = ?
   '''
 # ---
-# name: test_get_one[session-tracked-async-asyncmy_engine]
+# name: test_get_one[session-async-tracked-asyncmy_engine]
   '''
   SELECT color.name,
          color.id
@@ -15,7 +15,7 @@
    WHERE color.name = %s
   '''
 # ---
-# name: test_get_one[session-tracked-async-asyncpg_engine]
+# name: test_get_one[session-async-tracked-asyncpg_engine]
   '''
   SELECT color.name,
          color.id
@@ -23,7 +23,7 @@
    WHERE color.name = $1::VARCHAR
   '''
 # ---
-# name: test_get_one[session-tracked-async-psycopg_async_engine]
+# name: test_get_one[session-async-tracked-psycopg_async_engine]
   '''
   SELECT color.name,
          color.id
@@ -31,7 +31,7 @@
    WHERE color.name = %(name_1)s::VARCHAR
   '''
 # ---
-# name: test_get_one[session-tracked-sync-psycopg_engine]
+# name: test_get_one[session-sync-tracked-psycopg_engine]
   '''
   SELECT color.name,
          color.id
@@ -39,7 +39,7 @@
    WHERE color.name = %(name_1)s::VARCHAR
   '''
 # ---
-# name: test_get_one[session-tracked-sync-sqlite_engine]
+# name: test_get_one[session-sync-tracked-sqlite_engine]
   '''
   SELECT color.name,
          color.id

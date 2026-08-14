@@ -380,8 +380,7 @@ class BookType:
 
 # This will cause an error because Strawchemy has already created `AuthorType` when generating `BookType`
 @strawchemy.type(Book, include="all")
-class AuthorType:
-    ...
+class AuthorType: ...
 ```
 
 You would see an error like: `Type 'AuthorType' cannot be auto generated because it's already declared.`
@@ -451,8 +450,9 @@ class Query:
     # Simple field that returns a list of users
     users: list[UserType] = strawchemy.field()
     # Field with filtering, ordering, and pagination
-    filtered_users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by_input=UserOrderBy,
-                                                      pagination=True)
+    filtered_users: list[UserType] = strawchemy.field(
+        filter_input=UserFilter, order_by_input=UserOrderBy, pagination=True
+    )
     # Field that returns a single user by ID
     user: UserType = strawchemy.field()
 ```
@@ -649,9 +649,7 @@ class Query:
     users: list[UserType] = strawchemy.field(pagination=True)
 
     # Customize pagination defaults for this specific field
-    users_custom: list[UserType] = strawchemy.field(
-        pagination=DefaultOffsetPagination(limit=20, offset=10)
-    )
+    users_custom: list[UserType] = strawchemy.field(pagination=DefaultOffsetPagination(limit=20, offset=10))
 ```
 
 In your GraphQL queries, you can use the `offset` and `limit` parameters:
@@ -958,7 +956,6 @@ class GeoFieldsFilter: ...
 @strawberry.type
 class Query:
     geo: list[GeoType] = strawchemy.field(filter_input=GeoFieldsFilter)
-
 ```
 
 Then you can use the following geo filter operations in your GraphQL queries:
@@ -1893,16 +1890,12 @@ class FruitUpsertConflictFields:
 class Mutation:
     # Single entity upsert
     upsert_fruit: FruitType = strawchemy.upsert(
-        FruitCreateInput,
-        update_fields=FruitUpsertFields,
-        conflict_fields=FruitUpsertConflictFields
+        FruitCreateInput, update_fields=FruitUpsertFields, conflict_fields=FruitUpsertConflictFields
     )
 
     # Batch upsert
     upsert_fruits: list[FruitType] = strawchemy.upsert(
-        FruitCreateInput,
-        update_fields=FruitUpsertFields,
-        conflict_fields=FruitUpsertConflictFields
+        FruitCreateInput, update_fields=FruitUpsertFields, conflict_fields=FruitUpsertConflictFields
     )
 ```
 
@@ -2035,8 +2028,9 @@ class UserCreateValidation:
 
 @strawberry.type
 class Mutation:
-    create_user: UserType | ValidationErrorType = strawchemy.create(UserCreate,
-                                                                    validation=PydanticValidation(UserCreateValidation))
+    create_user: UserType | ValidationErrorType = strawchemy.create(
+        UserCreate, validation=PydanticValidation(UserCreateValidation)
+    )
 ```
 
 > To get the validation errors exposed in the schema, you need to add `ValidationErrorType` in the field union type
@@ -2139,19 +2133,13 @@ async def get_color(self, info: strawberry.Info, color: str) -> ColorType | None
 # Synchronous mutation
 @strawberry.type
 class Mutation:
-    create_user: UserType = strawchemy.create(
-        UserCreateInput,
-        repository_type=StrawchemySyncRepository
-    )
+    create_user: UserType = strawchemy.create(UserCreateInput, repository_type=StrawchemySyncRepository)
 
 
 # Asynchronous mutation
 @strawberry.type
 class AsyncMutation:
-    create_user: UserType = strawchemy.create(
-        UserCreateInput,
-        repository_type=StrawchemyAsyncRepository
-    )
+    create_user: UserType = strawchemy.create(UserCreateInput, repository_type=StrawchemyAsyncRepository)
 ```
 
 By default, Strawchemy uses the StrawchemySyncRepository as its repository type. You can override this behavior by

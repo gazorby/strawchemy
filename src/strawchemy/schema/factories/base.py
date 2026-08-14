@@ -340,7 +340,7 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         alias_generator: Callable[[str], str] | None = None,
         paginate: FieldSpec | None = None,
         distinct_on: FieldSpec | None = None,
-        default_pagination: None | DefaultOffsetPagination = None,
+        default_pagination: DefaultOffsetPagination | None = None,
         filter_input: type[BooleanFilterDTO] | None = None,
         order: FieldSpec | type[OrderByDTO] | None = None,
         name: str | None = None,

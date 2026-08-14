@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_deterministic_ordering[session-tracked-async-aiosqlite_engine]
+# name: test_deterministic_ordering[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -10,7 +10,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering[session-tracked-async-asyncmy_engine]
+# name: test_deterministic_ordering[session-async-tracked-asyncmy_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -21,7 +21,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering[session-tracked-async-asyncpg_engine]
+# name: test_deterministic_ordering[session-async-tracked-asyncpg_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -32,7 +32,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering[session-tracked-async-psycopg_async_engine]
+# name: test_deterministic_ordering[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -43,7 +43,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering[session-tracked-sync-psycopg_engine]
+# name: test_deterministic_ordering[session-sync-tracked-psycopg_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -54,7 +54,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering[session-tracked-sync-sqlite_engine]
+# name: test_deterministic_ordering[session-sync-tracked-sqlite_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -65,7 +65,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering_mixed_with_user_ordering[session-tracked-async-aiosqlite_engine]
+# name: test_deterministic_ordering_mixed_with_user_ordering[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -76,7 +76,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering_mixed_with_user_ordering[session-tracked-async-asyncmy_engine]
+# name: test_deterministic_ordering_mixed_with_user_ordering[session-async-tracked-asyncmy_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -87,7 +87,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering_mixed_with_user_ordering[session-tracked-async-asyncpg_engine]
+# name: test_deterministic_ordering_mixed_with_user_ordering[session-async-tracked-asyncpg_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -98,7 +98,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering_mixed_with_user_ordering[session-tracked-async-psycopg_async_engine]
+# name: test_deterministic_ordering_mixed_with_user_ordering[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -109,7 +109,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering_mixed_with_user_ordering[session-tracked-sync-psycopg_engine]
+# name: test_deterministic_ordering_mixed_with_user_ordering[session-sync-tracked-psycopg_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -120,7 +120,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_deterministic_ordering_mixed_with_user_ordering[session-tracked-sync-sqlite_engine]
+# name: test_deterministic_ordering_mixed_with_user_ordering[session-sync-tracked-sqlite_engine]
   '''
   SELECT fruit_1.id,
          color.id AS id_1
@@ -131,7 +131,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_nulls[session-tracked-async-ASC_NULLS_FIRST-aiosqlite_engine]
+# name: test_nulls[session-async-tracked-ASC_NULLS_FIRST-aiosqlite_engine]
   '''
   SELECT user.bio,
          user.id
@@ -139,7 +139,7 @@
    ORDER BY user.bio IS NULL DESC, user.bio ASC
   '''
 # ---
-# name: test_nulls[session-tracked-async-ASC_NULLS_FIRST-asyncmy_engine]
+# name: test_nulls[session-async-tracked-ASC_NULLS_FIRST-asyncmy_engine]
   '''
   SELECT user.bio,
          user.id
@@ -147,7 +147,7 @@
    ORDER BY user.bio IS NULL DESC, user.bio ASC
   '''
 # ---
-# name: test_nulls[session-tracked-async-ASC_NULLS_FIRST-asyncpg_engine]
+# name: test_nulls[session-async-tracked-ASC_NULLS_FIRST-asyncpg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -155,7 +155,7 @@
    ORDER BY "user".bio ASC NULLS FIRST
   '''
 # ---
-# name: test_nulls[session-tracked-async-ASC_NULLS_FIRST-psycopg_async_engine]
+# name: test_nulls[session-async-tracked-ASC_NULLS_FIRST-psycopg_async_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -163,7 +163,7 @@
    ORDER BY "user".bio ASC NULLS FIRST
   '''
 # ---
-# name: test_nulls[session-tracked-async-ASC_NULLS_LAST-aiosqlite_engine]
+# name: test_nulls[session-async-tracked-ASC_NULLS_LAST-aiosqlite_engine]
   '''
   SELECT user.bio,
          user.id
@@ -171,7 +171,7 @@
    ORDER BY user.bio IS NULL ASC, user.bio ASC
   '''
 # ---
-# name: test_nulls[session-tracked-async-ASC_NULLS_LAST-asyncmy_engine]
+# name: test_nulls[session-async-tracked-ASC_NULLS_LAST-asyncmy_engine]
   '''
   SELECT user.bio,
          user.id
@@ -179,7 +179,7 @@
    ORDER BY user.bio IS NULL ASC, user.bio ASC
   '''
 # ---
-# name: test_nulls[session-tracked-async-ASC_NULLS_LAST-asyncpg_engine]
+# name: test_nulls[session-async-tracked-ASC_NULLS_LAST-asyncpg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -187,7 +187,7 @@
    ORDER BY "user".bio ASC NULLS LAST
   '''
 # ---
-# name: test_nulls[session-tracked-async-ASC_NULLS_LAST-psycopg_async_engine]
+# name: test_nulls[session-async-tracked-ASC_NULLS_LAST-psycopg_async_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -195,7 +195,7 @@
    ORDER BY "user".bio ASC NULLS LAST
   '''
 # ---
-# name: test_nulls[session-tracked-async-DESC_NULLS_FIRST-aiosqlite_engine]
+# name: test_nulls[session-async-tracked-DESC_NULLS_FIRST-aiosqlite_engine]
   '''
   SELECT user.bio,
          user.id
@@ -203,7 +203,7 @@
    ORDER BY user.bio IS NULL DESC, user.bio DESC
   '''
 # ---
-# name: test_nulls[session-tracked-async-DESC_NULLS_FIRST-asyncmy_engine]
+# name: test_nulls[session-async-tracked-DESC_NULLS_FIRST-asyncmy_engine]
   '''
   SELECT user.bio,
          user.id
@@ -211,7 +211,7 @@
    ORDER BY user.bio IS NULL DESC, user.bio DESC
   '''
 # ---
-# name: test_nulls[session-tracked-async-DESC_NULLS_FIRST-asyncpg_engine]
+# name: test_nulls[session-async-tracked-DESC_NULLS_FIRST-asyncpg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -219,7 +219,7 @@
    ORDER BY "user".bio DESC NULLS FIRST
   '''
 # ---
-# name: test_nulls[session-tracked-async-DESC_NULLS_FIRST-psycopg_async_engine]
+# name: test_nulls[session-async-tracked-DESC_NULLS_FIRST-psycopg_async_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -227,7 +227,7 @@
    ORDER BY "user".bio DESC NULLS FIRST
   '''
 # ---
-# name: test_nulls[session-tracked-async-DESC_NULLS_LAST-aiosqlite_engine]
+# name: test_nulls[session-async-tracked-DESC_NULLS_LAST-aiosqlite_engine]
   '''
   SELECT user.bio,
          user.id
@@ -235,7 +235,7 @@
    ORDER BY user.bio IS NULL ASC, user.bio DESC
   '''
 # ---
-# name: test_nulls[session-tracked-async-DESC_NULLS_LAST-asyncmy_engine]
+# name: test_nulls[session-async-tracked-DESC_NULLS_LAST-asyncmy_engine]
   '''
   SELECT user.bio,
          user.id
@@ -243,7 +243,7 @@
    ORDER BY user.bio IS NULL ASC, user.bio DESC
   '''
 # ---
-# name: test_nulls[session-tracked-async-DESC_NULLS_LAST-asyncpg_engine]
+# name: test_nulls[session-async-tracked-DESC_NULLS_LAST-asyncpg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -251,7 +251,7 @@
    ORDER BY "user".bio DESC NULLS LAST
   '''
 # ---
-# name: test_nulls[session-tracked-async-DESC_NULLS_LAST-psycopg_async_engine]
+# name: test_nulls[session-async-tracked-DESC_NULLS_LAST-psycopg_async_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -259,7 +259,7 @@
    ORDER BY "user".bio DESC NULLS LAST
   '''
 # ---
-# name: test_nulls[session-tracked-sync-ASC_NULLS_FIRST-psycopg_engine]
+# name: test_nulls[session-sync-tracked-ASC_NULLS_FIRST-psycopg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -267,7 +267,7 @@
    ORDER BY "user".bio ASC NULLS FIRST
   '''
 # ---
-# name: test_nulls[session-tracked-sync-ASC_NULLS_FIRST-sqlite_engine]
+# name: test_nulls[session-sync-tracked-ASC_NULLS_FIRST-sqlite_engine]
   '''
   SELECT user.bio,
          user.id
@@ -275,7 +275,7 @@
    ORDER BY user.bio IS NULL DESC, user.bio ASC
   '''
 # ---
-# name: test_nulls[session-tracked-sync-ASC_NULLS_LAST-psycopg_engine]
+# name: test_nulls[session-sync-tracked-ASC_NULLS_LAST-psycopg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -283,7 +283,7 @@
    ORDER BY "user".bio ASC NULLS LAST
   '''
 # ---
-# name: test_nulls[session-tracked-sync-ASC_NULLS_LAST-sqlite_engine]
+# name: test_nulls[session-sync-tracked-ASC_NULLS_LAST-sqlite_engine]
   '''
   SELECT user.bio,
          user.id
@@ -291,7 +291,7 @@
    ORDER BY user.bio IS NULL ASC, user.bio ASC
   '''
 # ---
-# name: test_nulls[session-tracked-sync-DESC_NULLS_FIRST-psycopg_engine]
+# name: test_nulls[session-sync-tracked-DESC_NULLS_FIRST-psycopg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -299,7 +299,7 @@
    ORDER BY "user".bio DESC NULLS FIRST
   '''
 # ---
-# name: test_nulls[session-tracked-sync-DESC_NULLS_FIRST-sqlite_engine]
+# name: test_nulls[session-sync-tracked-DESC_NULLS_FIRST-sqlite_engine]
   '''
   SELECT user.bio,
          user.id
@@ -307,7 +307,7 @@
    ORDER BY user.bio IS NULL DESC, user.bio DESC
   '''
 # ---
-# name: test_nulls[session-tracked-sync-DESC_NULLS_LAST-psycopg_engine]
+# name: test_nulls[session-sync-tracked-DESC_NULLS_LAST-psycopg_engine]
   '''
   SELECT "user".bio,
          "user".id
@@ -315,7 +315,7 @@
    ORDER BY "user".bio DESC NULLS LAST
   '''
 # ---
-# name: test_nulls[session-tracked-sync-DESC_NULLS_LAST-sqlite_engine]
+# name: test_nulls[session-sync-tracked-DESC_NULLS_LAST-sqlite_engine]
   '''
   SELECT user.bio,
          user.id
@@ -323,7 +323,7 @@
    ORDER BY user.bio IS NULL ASC, user.bio DESC
   '''
 # ---
-# name: test_order_by[session-tracked-async-ASC-aiosqlite_engine]
+# name: test_order_by[session-async-tracked-ASC-aiosqlite_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -331,7 +331,7 @@
    ORDER BY fruit.sweetness ASC
   '''
 # ---
-# name: test_order_by[session-tracked-async-ASC-asyncmy_engine]
+# name: test_order_by[session-async-tracked-ASC-asyncmy_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -339,7 +339,7 @@
    ORDER BY fruit.sweetness ASC
   '''
 # ---
-# name: test_order_by[session-tracked-async-ASC-asyncpg_engine]
+# name: test_order_by[session-async-tracked-ASC-asyncpg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -347,7 +347,7 @@
    ORDER BY fruit.sweetness ASC
   '''
 # ---
-# name: test_order_by[session-tracked-async-ASC-psycopg_async_engine]
+# name: test_order_by[session-async-tracked-ASC-psycopg_async_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -355,7 +355,7 @@
    ORDER BY fruit.sweetness ASC
   '''
 # ---
-# name: test_order_by[session-tracked-async-DESC-aiosqlite_engine]
+# name: test_order_by[session-async-tracked-DESC-aiosqlite_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -363,7 +363,7 @@
    ORDER BY fruit.sweetness DESC
   '''
 # ---
-# name: test_order_by[session-tracked-async-DESC-asyncmy_engine]
+# name: test_order_by[session-async-tracked-DESC-asyncmy_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -371,7 +371,7 @@
    ORDER BY fruit.sweetness DESC
   '''
 # ---
-# name: test_order_by[session-tracked-async-DESC-asyncpg_engine]
+# name: test_order_by[session-async-tracked-DESC-asyncpg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -379,7 +379,7 @@
    ORDER BY fruit.sweetness DESC
   '''
 # ---
-# name: test_order_by[session-tracked-async-DESC-psycopg_async_engine]
+# name: test_order_by[session-async-tracked-DESC-psycopg_async_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -387,7 +387,7 @@
    ORDER BY fruit.sweetness DESC
   '''
 # ---
-# name: test_order_by[session-tracked-sync-ASC-psycopg_engine]
+# name: test_order_by[session-sync-tracked-ASC-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -395,7 +395,7 @@
    ORDER BY fruit.sweetness ASC
   '''
 # ---
-# name: test_order_by[session-tracked-sync-ASC-sqlite_engine]
+# name: test_order_by[session-sync-tracked-ASC-sqlite_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -403,7 +403,7 @@
    ORDER BY fruit.sweetness ASC
   '''
 # ---
-# name: test_order_by[session-tracked-sync-DESC-psycopg_engine]
+# name: test_order_by[session-sync-tracked-DESC-psycopg_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
@@ -411,12 +411,924 @@
    ORDER BY fruit.sweetness DESC
   '''
 # ---
-# name: test_order_by[session-tracked-sync-DESC-sqlite_engine]
+# name: test_order_by[session-sync-tracked-DESC-sqlite_engine]
   '''
   SELECT fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
    ORDER BY fruit.sweetness DESC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-avg-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_2.water_percent) AS avg_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-avg-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_2.water_percent) AS avg_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-avg-asyncpg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_2.water_percent) AS avg_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-avg-psycopg_async_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_2.water_percent) AS avg_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-max-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT max(fruit_2.water_percent) AS max_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-max-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT max(fruit_2.water_percent) AS max_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-max-asyncpg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_2.water_percent) AS max_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-max-psycopg_async_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_2.water_percent) AS max_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-min-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT min(fruit_2.water_percent) AS min_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-min-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT min(fruit_2.water_percent) AS min_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-min-asyncpg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_2.water_percent) AS min_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-min-psycopg_async_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_2.water_percent) AS min_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-sum-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT sum(fruit_2.water_percent) AS sum_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-sum-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT sum(fruit_2.water_percent) AS sum_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-sum-asyncpg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_2.water_percent) AS sum_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-ASC-sum-psycopg_async_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_2.water_percent) AS sum_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-avg-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_2.water_percent) AS avg_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-avg-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_2.water_percent) AS avg_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-avg-asyncpg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_2.water_percent) AS avg_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-avg-psycopg_async_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_2.water_percent) AS avg_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-max-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT max(fruit_2.water_percent) AS max_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-max-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT max(fruit_2.water_percent) AS max_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-max-asyncpg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_2.water_percent) AS max_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-max-psycopg_async_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_2.water_percent) AS max_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-min-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT min(fruit_2.water_percent) AS min_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-min-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT min(fruit_2.water_percent) AS min_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-min-asyncpg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_2.water_percent) AS min_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-min-psycopg_async_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_2.water_percent) AS min_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-sum-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT sum(fruit_2.water_percent) AS sum_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-sum-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT sum(fruit_2.water_percent) AS sum_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+   INNER JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-sum-asyncpg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_2.water_percent) AS sum_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-async-tracked-DESC-sum-psycopg_async_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_2.water_percent) AS sum_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-ASC-avg-psycopg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_2.water_percent) AS avg_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-ASC-avg-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_2.water_percent) AS avg_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-ASC-max-psycopg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_2.water_percent) AS max_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-ASC-max-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT max(fruit_2.water_percent) AS max_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-ASC-min-psycopg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_2.water_percent) AS min_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-ASC-min-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT min(fruit_2.water_percent) AS min_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-ASC-sum-psycopg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_2.water_percent) AS sum_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-ASC-sum-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT sum(fruit_2.water_percent) AS sum_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-DESC-avg-psycopg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_2.water_percent) AS avg_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-DESC-avg-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_2.water_percent) AS avg_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.avg_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-DESC-max-psycopg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT max(fruit_2.water_percent) AS max_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-DESC-max-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT max(fruit_2.water_percent) AS max_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.max_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-DESC-min-psycopg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT min(fruit_2.water_percent) AS min_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-DESC-min-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT min(fruit_2.water_percent) AS min_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.min_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-DESC-sum-psycopg_engine]
+  '''
+  SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_2.water_percent) AS sum_1
+            FROM fruit AS fruit_2
+           WHERE color.id = fruit_2.color_id
+         ) AS anon_1
+      ON TRUE
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 DESC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_order_by_aggregations[session-sync-tracked-DESC-sum-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT sum(fruit_2.water_percent) AS sum_1,
+                 fruit_2.color_id AS color_id
+            FROM fruit AS fruit_2
+           WHERE fruit_2.color_id IS NOT NULL
+           GROUP BY fruit_2.color_id
+         ) SELECT fruit_1.water_percent,
+         fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY anon_1.sum_1 DESC,
+            fruit_1.id ASC
   '''
 # ---
 # name: test_order_by_aggregations[session-tracked-async-ASC-avg-aiosqlite_engine]
@@ -2203,7 +3115,7 @@
    ORDER BY aggregation_0.variance_fruits__variance_water_percent DESC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-async-ASC-aiosqlite_engine]
+# name: test_relation_order_by[session-async-tracked-ASC-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT fruit_1.sweetness AS sweetness,
@@ -2226,7 +3138,7 @@
             anon_1.sweetness ASC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-async-ASC-asyncmy_engine]
+# name: test_relation_order_by[session-async-tracked-ASC-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT fruit_1.sweetness AS sweetness,
@@ -2249,7 +3161,7 @@
             anon_1.sweetness ASC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-async-ASC-asyncpg_engine]
+# name: test_relation_order_by[session-async-tracked-ASC-asyncpg_engine]
   '''
   SELECT anon_1.sweetness,
          anon_1.id,
@@ -2267,7 +3179,7 @@
             anon_1.sweetness ASC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-async-ASC-psycopg_async_engine]
+# name: test_relation_order_by[session-async-tracked-ASC-psycopg_async_engine]
   '''
   SELECT anon_1.sweetness,
          anon_1.id,
@@ -2285,7 +3197,7 @@
             anon_1.sweetness ASC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-async-DESC-aiosqlite_engine]
+# name: test_relation_order_by[session-async-tracked-DESC-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT fruit_1.sweetness AS sweetness,
@@ -2308,7 +3220,7 @@
             anon_1.sweetness DESC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-async-DESC-asyncmy_engine]
+# name: test_relation_order_by[session-async-tracked-DESC-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT fruit_1.sweetness AS sweetness,
@@ -2331,7 +3243,7 @@
             anon_1.sweetness DESC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-async-DESC-asyncpg_engine]
+# name: test_relation_order_by[session-async-tracked-DESC-asyncpg_engine]
   '''
   SELECT anon_1.sweetness,
          anon_1.id,
@@ -2349,7 +3261,7 @@
             anon_1.sweetness DESC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-async-DESC-psycopg_async_engine]
+# name: test_relation_order_by[session-async-tracked-DESC-psycopg_async_engine]
   '''
   SELECT anon_1.sweetness,
          anon_1.id,
@@ -2367,7 +3279,7 @@
             anon_1.sweetness DESC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-sync-ASC-psycopg_engine]
+# name: test_relation_order_by[session-sync-tracked-ASC-psycopg_engine]
   '''
   SELECT anon_1.sweetness,
          anon_1.id,
@@ -2385,7 +3297,7 @@
             anon_1.sweetness ASC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-sync-ASC-sqlite_engine]
+# name: test_relation_order_by[session-sync-tracked-ASC-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT fruit_1.sweetness AS sweetness,
@@ -2408,7 +3320,7 @@
             anon_1.sweetness ASC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-sync-DESC-psycopg_engine]
+# name: test_relation_order_by[session-sync-tracked-DESC-psycopg_engine]
   '''
   SELECT anon_1.sweetness,
          anon_1.id,
@@ -2426,7 +3338,7 @@
             anon_1.sweetness DESC
   '''
 # ---
-# name: test_relation_order_by[session-tracked-sync-DESC-sqlite_engine]
+# name: test_relation_order_by[session-sync-tracked-DESC-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT fruit_1.sweetness AS sweetness,

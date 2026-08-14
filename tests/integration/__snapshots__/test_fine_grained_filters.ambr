@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_custom_apply_filter_in_strategy[session-tracked-async-aiosqlite_engine]
+# name: test_custom_apply_filter_in_strategy[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -11,7 +11,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_in_strategy[session-tracked-async-asyncmy_engine]
+# name: test_custom_apply_filter_in_strategy[session-async-tracked-asyncmy_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -23,7 +23,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_in_strategy[session-tracked-async-asyncpg_engine]
+# name: test_custom_apply_filter_in_strategy[session-async-tracked-asyncpg_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -35,7 +35,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_in_strategy[session-tracked-async-psycopg_async_engine]
+# name: test_custom_apply_filter_in_strategy[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -47,7 +47,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_in_strategy[session-tracked-sync-psycopg_engine]
+# name: test_custom_apply_filter_in_strategy[session-sync-tracked-psycopg_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -59,7 +59,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_in_strategy[session-tracked-sync-sqlite_engine]
+# name: test_custom_apply_filter_in_strategy[session-sync-tracked-sqlite_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -71,7 +71,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_sweeter_than[session-tracked-async-aiosqlite_engine]
+# name: test_custom_apply_filter_sweeter_than[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -84,7 +84,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_sweeter_than[session-tracked-async-asyncmy_engine]
+# name: test_custom_apply_filter_sweeter_than[session-async-tracked-asyncmy_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -97,7 +97,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_sweeter_than[session-tracked-async-asyncpg_engine]
+# name: test_custom_apply_filter_sweeter_than[session-async-tracked-asyncpg_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -110,7 +110,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_sweeter_than[session-tracked-async-psycopg_async_engine]
+# name: test_custom_apply_filter_sweeter_than[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -123,7 +123,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_sweeter_than[session-tracked-sync-psycopg_engine]
+# name: test_custom_apply_filter_sweeter_than[session-sync-tracked-psycopg_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit
@@ -136,7 +136,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_apply_filter_sweeter_than[session-tracked-sync-sqlite_engine]
+# name: test_custom_apply_filter_sweeter_than[session-sync-tracked-sqlite_engine]
   '''
   SELECT fruit.id
     FROM fruit AS fruit

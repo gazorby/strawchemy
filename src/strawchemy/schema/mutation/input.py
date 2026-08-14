@@ -73,7 +73,7 @@ class _UnboundRelationInput:
     attribute: MapperProperty[Any]
     related: type[DeclarativeBase]
     relation_type: RelationType
-    set_: list[DeclarativeBase] | None | type[_Unset] = _Unset
+    set_: list[DeclarativeBase] | type[_Unset] | None = _Unset
     add: list[DeclarativeBase] = field(default_factory=list)
     remove: list[DeclarativeBase] = field(default_factory=list)
     create: list[DeclarativeBase] = field(default_factory=list)

@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.base import DTOFieldDefinition
     from strawchemy.dto.types import DTOConfig
 
-__all__ = ("AnnotatedDTOT", "MappedStrawberryDTO", "StrawberrryDTOBackend", "StrawberryDTO", "StrawberryDTO")
+__all__ = ("AnnotatedDTOT", "MappedStrawberryDTO", "StrawberrryDTOBackend", "StrawberryDTO")
 
 AnnotatedDTOT = TypeVar("AnnotatedDTOT", bound="StrawberryDTO[Any] | MappedStrawberryDTO[Any]")
 

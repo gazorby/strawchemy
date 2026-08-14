@@ -86,7 +86,7 @@ flag "--fail-under <fail_under>" default="100"
 arg "[test]" var=#true
 '''
 run = [
-    "{{vars.uv_run}} diff-cover coverage.xml --compare-branch=${usage_branch} --fail-under=${usage_fail_under}",
+  "{{vars.uv_run}} diff-cover coverage.xml --compare-branch=${usage_branch} --fail-under=${usage_fail_under}",
 ]
 
 [tasks."test:unit"]
@@ -97,7 +97,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -t unit -- tests/unit {{vars.local_pytest_options}} ${usage_test-}"
+run = "uv run nox -r -P ${usage_python-} -t unit -- {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:unit:no-extras"]
 description = "Run unit tests without extras dependencies"
@@ -107,7 +107,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -s unit-no-extras -- tests/unit {{vars.local_pytest_options}} ${usage_test-}"
+run = "uv run nox -r -P ${usage_python-} -s unit-no-extras -- {{vars.local_pytest_options}} ${usage_test-}"
 
 [tasks."test:unit:coverage"]
 description = "Run unit tests with coverage"
@@ -117,7 +117,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -t unit -- tests/unit {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
+run = "uv run nox -r -P ${usage_python-} -t unit -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
 
 [tasks."test:integration"]
 description = "Run integration tests"
@@ -305,12 +305,12 @@ run = '''
 description = "Lint the code"
 alias = "l"
 depends = [
-    "vulture",
-    "ty",
-    "ruff:check",
-    "ruff:format:check",
-    "slotscheck",
-    "unasyncd:check"
+  "vulture",
+  "ty",
+  "ruff:check",
+  "ruff:format:check",
+  "slotscheck",
+  "unasyncd:check"
 ]
 
 [tasks.pre-commit]
@@ -370,14 +370,14 @@ description = "Clean working directory"
 alias = "c"
 confirm = "Are you sure you want to clean the working directory? This will remove test caches, build artifacts, and other temporary files."
 run = [
-    "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
-    "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
-    "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
-    "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
-    "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
+  "rm -rf {{vars.cleanable_paths}} >/dev/null 2>&1",
+  "find . -name '*.egg-info' -exec rm -rf {} + >/dev/null 2>&1",
+  "find . -type f -name '*.egg' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*.pyc' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*.pyo' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '*~' -exec rm -f {} + >/dev/null 2>&1",
+  "find . -name '__pycache__' -exec rm -rf {} + >/dev/null 2>&1",
+  "find . -name '.ipynb_checkpoints' -exec rm -rf {} + >/dev/null 2>&1",
 ]
 
 [tasks."render:usage"]

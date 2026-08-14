@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_distinct_and_order_by[session-tracked-async-aiosqlite_engine]
+# name: test_distinct_and_order_by[session-async-tracked-aiosqlite_engine]
   '''
   SELECT user.name,
          user.id
@@ -16,7 +16,7 @@
             user.id DESC
   '''
 # ---
-# name: test_distinct_and_order_by[session-tracked-async-asyncmy_engine]
+# name: test_distinct_and_order_by[session-async-tracked-asyncmy_engine]
   '''
   SELECT user.name,
          user.id
@@ -33,7 +33,7 @@
             user.id DESC
   '''
 # ---
-# name: test_distinct_and_order_by[session-tracked-async-asyncpg_engine]
+# name: test_distinct_and_order_by[session-async-tracked-asyncpg_engine]
   '''
   SELECT DISTINCT
       ON ("user".name) "user".name,
@@ -43,7 +43,7 @@
             "user".id DESC
   '''
 # ---
-# name: test_distinct_and_order_by[session-tracked-async-psycopg_async_engine]
+# name: test_distinct_and_order_by[session-async-tracked-psycopg_async_engine]
   '''
   SELECT DISTINCT
       ON ("user".name) "user".name,
@@ -53,7 +53,7 @@
             "user".id DESC
   '''
 # ---
-# name: test_distinct_and_order_by[session-tracked-sync-psycopg_engine]
+# name: test_distinct_and_order_by[session-sync-tracked-psycopg_engine]
   '''
   SELECT DISTINCT
       ON ("user".name) "user".name,
@@ -63,7 +63,7 @@
             "user".id DESC
   '''
 # ---
-# name: test_distinct_and_order_by[session-tracked-sync-sqlite_engine]
+# name: test_distinct_and_order_by[session-sync-tracked-sqlite_engine]
   '''
   SELECT user.name,
          user.id
@@ -80,37 +80,7 @@
             user.id DESC
   '''
 # ---
-# name: test_distinct_on[session-tracked-async-asyncmy_engine]
-  '''
-  SELECT color.name,
-         color.id
-    FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.id ASC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = %s
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_distinct_on[session-tracked-async-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id
-    FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.id ASC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = $1::INTEGER
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_distinct_on[session-tracked-async-deterministic-ordering-aiosqlite_engine]
+# name: test_distinct_on[session-async-tracked-deterministic-ordering-aiosqlite_engine]
   '''
   SELECT user.name,
          user.id
@@ -125,7 +95,7 @@
    ORDER BY user.id ASC
   '''
 # ---
-# name: test_distinct_on[session-tracked-async-deterministic-ordering-asyncmy_engine]
+# name: test_distinct_on[session-async-tracked-deterministic-ordering-asyncmy_engine]
   '''
   SELECT user.name,
          user.id
@@ -140,7 +110,7 @@
    ORDER BY user.id ASC
   '''
 # ---
-# name: test_distinct_on[session-tracked-async-deterministic-ordering-asyncpg_engine]
+# name: test_distinct_on[session-async-tracked-deterministic-ordering-asyncpg_engine]
   '''
   SELECT "user".name,
          "user".id
@@ -155,7 +125,7 @@
    ORDER BY "user".id ASC
   '''
 # ---
-# name: test_distinct_on[session-tracked-async-deterministic-ordering-psycopg_async_engine]
+# name: test_distinct_on[session-async-tracked-deterministic-ordering-psycopg_async_engine]
   '''
   SELECT "user".name,
          "user".id
@@ -170,7 +140,7 @@
    ORDER BY "user".id ASC
   '''
 # ---
-# name: test_distinct_on[session-tracked-async-non-deterministic-ordering-aiosqlite_engine]
+# name: test_distinct_on[session-async-tracked-non-deterministic-ordering-aiosqlite_engine]
   '''
   SELECT user.name,
          user.id
@@ -183,7 +153,7 @@
    WHERE user.anon_1 = ?
   '''
 # ---
-# name: test_distinct_on[session-tracked-async-non-deterministic-ordering-asyncmy_engine]
+# name: test_distinct_on[session-async-tracked-non-deterministic-ordering-asyncmy_engine]
   '''
   SELECT user.name,
          user.id
@@ -196,7 +166,7 @@
    WHERE user.anon_1 = %s
   '''
 # ---
-# name: test_distinct_on[session-tracked-async-non-deterministic-ordering-asyncpg_engine]
+# name: test_distinct_on[session-async-tracked-non-deterministic-ordering-asyncpg_engine]
   '''
   SELECT DISTINCT
       ON ("user".name) "user".name,
@@ -204,7 +174,7 @@
     FROM "user" AS "user"
   '''
 # ---
-# name: test_distinct_on[session-tracked-async-non-deterministic-ordering-psycopg_async_engine]
+# name: test_distinct_on[session-async-tracked-non-deterministic-ordering-psycopg_async_engine]
   '''
   SELECT DISTINCT
       ON ("user".name) "user".name,
@@ -212,22 +182,7 @@
     FROM "user" AS "user"
   '''
 # ---
-# name: test_distinct_on[session-tracked-async-psycopg_async_engine]
-  '''
-  SELECT color.name,
-         color.id
-    FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.id ASC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = %(param_1)s::INTEGER
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_distinct_on[session-tracked-sync-deterministic-ordering-psycopg_engine]
+# name: test_distinct_on[session-sync-tracked-deterministic-ordering-psycopg_engine]
   '''
   SELECT "user".name,
          "user".id
@@ -242,7 +197,7 @@
    ORDER BY "user".id ASC
   '''
 # ---
-# name: test_distinct_on[session-tracked-sync-deterministic-ordering-sqlite_engine]
+# name: test_distinct_on[session-sync-tracked-deterministic-ordering-sqlite_engine]
   '''
   SELECT user.name,
          user.id
@@ -257,7 +212,7 @@
    ORDER BY user.id ASC
   '''
 # ---
-# name: test_distinct_on[session-tracked-sync-non-deterministic-ordering-psycopg_engine]
+# name: test_distinct_on[session-sync-tracked-non-deterministic-ordering-psycopg_engine]
   '''
   SELECT DISTINCT
       ON ("user".name) "user".name,
@@ -265,7 +220,7 @@
     FROM "user" AS "user"
   '''
 # ---
-# name: test_distinct_on[session-tracked-sync-non-deterministic-ordering-sqlite_engine]
+# name: test_distinct_on[session-sync-tracked-non-deterministic-ordering-sqlite_engine]
   '''
   SELECT user.name,
          user.id
@@ -276,20 +231,5 @@
             FROM USER AS USER
          ) AS USER
    WHERE user.anon_1 = ?
-  '''
-# ---
-# name: test_distinct_on[session-tracked-sync-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id
-    FROM (
-          SELECT color.id AS id,
-                 color.name AS name,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS __strawchemy_distinct_on_rank_0
-            FROM color AS color
-           ORDER BY color.id ASC
-         ) AS color
-   WHERE color.__strawchemy_distinct_on_rank_0 = %(param_1)s::INTEGER
-   ORDER BY color.id ASC
   '''
 # ---

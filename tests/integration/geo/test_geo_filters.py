@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from tests.integration.typing import RawRecordData
 
 
-pytestmark = [pytest.mark.integration, pytest.mark.geo]
+pytestmark = [pytest.mark.integration, pytest.mark.geo, pytest.mark.extras]
 
 
 @pytest.fixture

@@ -32,6 +32,7 @@ nox.options.error_on_missing_interpreters = True
     tags=["tests", "unit", "ci"],
     uv_groups=["test"],
     uv_no_groups=["dev"],
+    uv_all_extras=True,
     uv_sync_locked=False,
 )
 def unit_tests(session: Session) -> None:
@@ -50,7 +51,7 @@ def unit_tests(session: Session) -> None:
 )
 def unit_tests_no_extras(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
-    args: list[str] = ["-m=not integration", "tests/unit", *session.posargs]
+    args: list[str] = ["-m=not integration and not extras", "tests/unit", *session.posargs]
     session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
 
 
