@@ -65,11 +65,15 @@ class _FunctionArgFactory(GraphQLFactory[UnmappedStrawberryGraphQLDTO[Declarativ
         self,
         mapper: Strawchemy,
         backend: DTOBackend[UnmappedStrawberryGraphQLDTO[DeclarativeBase]] | None = None,
+        *,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
         super().__init__(
-            mapper, backend or StrawberrryDTOBackend(UnmappedStrawberryGraphQLDTO), handle_cycles, type_map
+            mapper,
+            backend or StrawberrryDTOBackend(UnmappedStrawberryGraphQLDTO),
+            handle_cycles=handle_cycles,
+            type_map=type_map,
         )
         self._enum_backend = EnumBackend()
 
@@ -95,12 +99,14 @@ class _FunctionArgFactory(GraphQLFactory[UnmappedStrawberryGraphQLDTO[Declarativ
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, UnmappedStrawberryGraphQLDTO[DeclarativeBase]], None],
-        if_no_fields: Literal["raise", "skip"] = "skip",
         *,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         function: FunctionInfo | None = None,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
-        for field_def in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
+        for field_def in super().iter_field_definitions(
+            name, model, dto_config, base, node, if_no_fields=if_no_fields, **kwargs
+        ):
             yield (
                 FunctionArgFieldDefinition.from_field(field_def, function=function)
                 if function is not None

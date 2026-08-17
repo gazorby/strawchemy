@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_to_many_upsert_create_new[session-tracked-async-aiosqlite_engine]
+# name: test_to_many_upsert_create_new[session-async-tracked-aiosqlite_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -12,7 +12,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-aiosqlite_engine].1
+# name: test_to_many_upsert_create_new[session-async-tracked-aiosqlite_engine].1
   '''
   UPDATE color
      SET name = ?,
@@ -20,7 +20,7 @@
    WHERE color.id = ?
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-aiosqlite_engine].2
+# name: test_to_many_upsert_create_new[session-async-tracked-aiosqlite_engine].2
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -34,7 +34,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-asyncmy_engine]
+# name: test_to_many_upsert_create_new[session-async-tracked-asyncmy_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s, %s) AS NEW
@@ -46,7 +46,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-asyncmy_engine].1
+# name: test_to_many_upsert_create_new[session-async-tracked-asyncmy_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s, %s) AS NEW
@@ -58,7 +58,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-asyncmy_engine].2
+# name: test_to_many_upsert_create_new[session-async-tracked-asyncmy_engine].2
   '''
   UPDATE color
      SET name = %s,
@@ -66,7 +66,7 @@
    WHERE color.id = %s
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-asyncmy_engine].3
+# name: test_to_many_upsert_create_new[session-async-tracked-asyncmy_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -80,7 +80,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-asyncpg_engine]
+# name: test_to_many_upsert_create_new[session-async-tracked-asyncpg_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -93,7 +93,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-asyncpg_engine].1
+# name: test_to_many_upsert_create_new[session-async-tracked-asyncpg_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -106,7 +106,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-asyncpg_engine].2
+# name: test_to_many_upsert_create_new[session-async-tracked-asyncpg_engine].2
   '''
   UPDATE color
      SET name = $1::VARCHAR,
@@ -115,7 +115,7 @@
    WHERE color.id = $3::INTEGER
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-asyncpg_engine].3
+# name: test_to_many_upsert_create_new[session-async-tracked-asyncpg_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -129,7 +129,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-psycopg_async_engine]
+# name: test_to_many_upsert_create_new[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -142,7 +142,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-psycopg_async_engine].1
+# name: test_to_many_upsert_create_new[session-async-tracked-psycopg_async_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -155,7 +155,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-psycopg_async_engine].2
+# name: test_to_many_upsert_create_new[session-async-tracked-psycopg_async_engine].2
   '''
   UPDATE color
      SET name = %(name)s::VARCHAR,
@@ -164,7 +164,7 @@
    WHERE color.id = %(color_id)s::INTEGER
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-async-psycopg_async_engine].3
+# name: test_to_many_upsert_create_new[session-async-tracked-psycopg_async_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -178,7 +178,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-sync-psycopg_engine]
+# name: test_to_many_upsert_create_new[session-sync-tracked-psycopg_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -191,7 +191,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-sync-psycopg_engine].1
+# name: test_to_many_upsert_create_new[session-sync-tracked-psycopg_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -204,7 +204,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-sync-psycopg_engine].2
+# name: test_to_many_upsert_create_new[session-sync-tracked-psycopg_engine].2
   '''
   UPDATE color
      SET name = %(name)s::VARCHAR,
@@ -213,7 +213,7 @@
    WHERE color.id = %(color_id)s::INTEGER
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-sync-psycopg_engine].3
+# name: test_to_many_upsert_create_new[session-sync-tracked-psycopg_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -227,7 +227,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-sync-sqlite_engine]
+# name: test_to_many_upsert_create_new[session-sync-tracked-sqlite_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -240,7 +240,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-sync-sqlite_engine].1
+# name: test_to_many_upsert_create_new[session-sync-tracked-sqlite_engine].1
   '''
   UPDATE color
      SET name = ?,
@@ -248,7 +248,7 @@
    WHERE color.id = ?
   '''
 # ---
-# name: test_to_many_upsert_create_new[session-tracked-sync-sqlite_engine].2
+# name: test_to_many_upsert_create_new[session-sync-tracked-sqlite_engine].2
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -262,7 +262,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-aiosqlite_engine]
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-aiosqlite_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -275,7 +275,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-aiosqlite_engine].1
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-aiosqlite_engine].1
   '''
   UPDATE color
      SET name = ?,
@@ -283,7 +283,7 @@
    WHERE color.id = ?
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-aiosqlite_engine].2
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-aiosqlite_engine].2
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -297,7 +297,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-asyncmy_engine]
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-asyncmy_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s, %s) AS NEW
@@ -309,7 +309,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-asyncmy_engine].1
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-asyncmy_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s, %s) AS NEW
@@ -321,7 +321,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-asyncmy_engine].2
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-asyncmy_engine].2
   '''
   UPDATE color
      SET name = %s,
@@ -329,7 +329,7 @@
    WHERE color.id = %s
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-asyncmy_engine].3
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-asyncmy_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -343,7 +343,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-asyncpg_engine]
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-asyncpg_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -356,7 +356,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-asyncpg_engine].1
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-asyncpg_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -369,7 +369,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-asyncpg_engine].2
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-asyncpg_engine].2
   '''
   UPDATE color
      SET name = $1::VARCHAR,
@@ -378,7 +378,7 @@
    WHERE color.id = $3::INTEGER
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-asyncpg_engine].3
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-asyncpg_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -392,7 +392,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-psycopg_async_engine]
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -405,7 +405,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-psycopg_async_engine].1
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-psycopg_async_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -418,7 +418,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-psycopg_async_engine].2
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-psycopg_async_engine].2
   '''
   UPDATE color
      SET name = %(name)s::VARCHAR,
@@ -427,7 +427,7 @@
    WHERE color.id = %(color_id)s::INTEGER
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-async-psycopg_async_engine].3
+# name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-psycopg_async_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -441,7 +441,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-sync-psycopg_engine]
+# name: test_to_many_upsert_mixed_create_and_update[session-sync-tracked-psycopg_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -454,7 +454,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-sync-psycopg_engine].1
+# name: test_to_many_upsert_mixed_create_and_update[session-sync-tracked-psycopg_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -467,7 +467,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-sync-psycopg_engine].2
+# name: test_to_many_upsert_mixed_create_and_update[session-sync-tracked-psycopg_engine].2
   '''
   UPDATE color
      SET name = %(name)s::VARCHAR,
@@ -476,7 +476,7 @@
    WHERE color.id = %(color_id)s::INTEGER
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-sync-psycopg_engine].3
+# name: test_to_many_upsert_mixed_create_and_update[session-sync-tracked-psycopg_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -490,7 +490,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-sync-sqlite_engine]
+# name: test_to_many_upsert_mixed_create_and_update[session-sync-tracked-sqlite_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -503,7 +503,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-sync-sqlite_engine].1
+# name: test_to_many_upsert_mixed_create_and_update[session-sync-tracked-sqlite_engine].1
   '''
   UPDATE color
      SET name = ?,
@@ -511,7 +511,7 @@
    WHERE color.id = ?
   '''
 # ---
-# name: test_to_many_upsert_mixed_create_and_update[session-tracked-sync-sqlite_engine].2
+# name: test_to_many_upsert_mixed_create_and_update[session-sync-tracked-sqlite_engine].2
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -525,7 +525,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-aiosqlite_engine]
+# name: test_to_many_upsert_update_existing[session-async-tracked-aiosqlite_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -538,7 +538,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-aiosqlite_engine].1
+# name: test_to_many_upsert_update_existing[session-async-tracked-aiosqlite_engine].1
   '''
   UPDATE color
      SET name = ?,
@@ -546,7 +546,7 @@
    WHERE color.id = ?
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-aiosqlite_engine].2
+# name: test_to_many_upsert_update_existing[session-async-tracked-aiosqlite_engine].2
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -560,7 +560,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-asyncmy_engine]
+# name: test_to_many_upsert_update_existing[session-async-tracked-asyncmy_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s, %s) AS NEW
@@ -572,7 +572,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-asyncmy_engine].1
+# name: test_to_many_upsert_update_existing[session-async-tracked-asyncmy_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s, %s) AS NEW
@@ -584,7 +584,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-asyncmy_engine].2
+# name: test_to_many_upsert_update_existing[session-async-tracked-asyncmy_engine].2
   '''
   UPDATE color
      SET name = %s,
@@ -592,7 +592,7 @@
    WHERE color.id = %s
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-asyncmy_engine].3
+# name: test_to_many_upsert_update_existing[session-async-tracked-asyncmy_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -606,7 +606,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-asyncpg_engine]
+# name: test_to_many_upsert_update_existing[session-async-tracked-asyncpg_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -619,7 +619,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-asyncpg_engine].1
+# name: test_to_many_upsert_update_existing[session-async-tracked-asyncpg_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -632,7 +632,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-asyncpg_engine].2
+# name: test_to_many_upsert_update_existing[session-async-tracked-asyncpg_engine].2
   '''
   UPDATE color
      SET name = $1::VARCHAR,
@@ -641,7 +641,7 @@
    WHERE color.id = $3::INTEGER
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-asyncpg_engine].3
+# name: test_to_many_upsert_update_existing[session-async-tracked-asyncpg_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -655,7 +655,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-psycopg_async_engine]
+# name: test_to_many_upsert_update_existing[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -668,7 +668,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-psycopg_async_engine].1
+# name: test_to_many_upsert_update_existing[session-async-tracked-psycopg_async_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -681,7 +681,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-psycopg_async_engine].2
+# name: test_to_many_upsert_update_existing[session-async-tracked-psycopg_async_engine].2
   '''
   UPDATE color
      SET name = %(name)s::VARCHAR,
@@ -690,7 +690,7 @@
    WHERE color.id = %(color_id)s::INTEGER
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-async-psycopg_async_engine].3
+# name: test_to_many_upsert_update_existing[session-async-tracked-psycopg_async_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -704,7 +704,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-sync-psycopg_engine]
+# name: test_to_many_upsert_update_existing[session-sync-tracked-psycopg_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -717,7 +717,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-sync-psycopg_engine].1
+# name: test_to_many_upsert_update_existing[session-sync-tracked-psycopg_engine].1
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -730,7 +730,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-sync-psycopg_engine].2
+# name: test_to_many_upsert_update_existing[session-sync-tracked-psycopg_engine].2
   '''
   UPDATE color
      SET name = %(name)s::VARCHAR,
@@ -739,7 +739,7 @@
    WHERE color.id = %(color_id)s::INTEGER
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-sync-psycopg_engine].3
+# name: test_to_many_upsert_update_existing[session-sync-tracked-psycopg_engine].3
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -753,7 +753,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-sync-sqlite_engine]
+# name: test_to_many_upsert_update_existing[session-sync-tracked-sqlite_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -766,7 +766,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-sync-sqlite_engine].1
+# name: test_to_many_upsert_update_existing[session-sync-tracked-sqlite_engine].1
   '''
   UPDATE color
      SET name = ?,
@@ -774,7 +774,7 @@
    WHERE color.id = ?
   '''
 # ---
-# name: test_to_many_upsert_update_existing[session-tracked-sync-sqlite_engine].2
+# name: test_to_many_upsert_update_existing[session-sync-tracked-sqlite_engine].2
   '''
   SELECT fruit_1.name,
          fruit_1.id,
@@ -788,7 +788,7 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-aiosqlite_engine]
+# name: test_to_one_upsert_create_new[session-async-tracked-aiosqlite_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
   VALUES (?, ?, ?)
@@ -797,7 +797,7 @@
      SET name = excluded.name RETURNING id
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-aiosqlite_engine].1
+# name: test_to_one_upsert_create_new[session-async-tracked-aiosqlite_engine].1
   '''
   UPDATE fruit
      SET name = ?,
@@ -808,7 +808,7 @@
    WHERE fruit.id = ?
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-aiosqlite_engine].2
+# name: test_to_one_upsert_create_new[session-async-tracked-aiosqlite_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -822,7 +822,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-asyncmy_engine]
+# name: test_to_one_upsert_create_new[session-async-tracked-asyncmy_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
   VALUES (%s, %s, %s) AS NEW
@@ -830,7 +830,7 @@
          id = last_insert_id(color.id)
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-asyncmy_engine].1
+# name: test_to_one_upsert_create_new[session-async-tracked-asyncmy_engine].1
   '''
   UPDATE fruit
      SET name = %s,
@@ -841,7 +841,7 @@
    WHERE fruit.id = %s
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-asyncmy_engine].2
+# name: test_to_one_upsert_create_new[session-async-tracked-asyncmy_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -855,7 +855,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-asyncpg_engine]
+# name: test_to_one_upsert_create_new[session-async-tracked-asyncpg_engine]
   '''
   INSERT INTO color (name, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq'))
@@ -864,7 +864,7 @@
      SET name = excluded.name RETURNING color.id
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-asyncpg_engine].1
+# name: test_to_one_upsert_create_new[session-async-tracked-asyncpg_engine].1
   '''
   UPDATE fruit
      SET name = $1::VARCHAR,
@@ -876,7 +876,7 @@
    WHERE fruit.id = $6::INTEGER
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-asyncpg_engine].2
+# name: test_to_one_upsert_create_new[session-async-tracked-asyncpg_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -890,7 +890,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-psycopg_async_engine]
+# name: test_to_one_upsert_create_new[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO color (name, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq'))
@@ -899,7 +899,7 @@
      SET name = excluded.name RETURNING color.id
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-psycopg_async_engine].1
+# name: test_to_one_upsert_create_new[session-async-tracked-psycopg_async_engine].1
   '''
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
@@ -911,7 +911,7 @@
    WHERE fruit.id = %(fruit_id)s::INTEGER
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-async-psycopg_async_engine].2
+# name: test_to_one_upsert_create_new[session-async-tracked-psycopg_async_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -925,7 +925,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-sync-psycopg_engine]
+# name: test_to_one_upsert_create_new[session-sync-tracked-psycopg_engine]
   '''
   INSERT INTO color (name, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq'))
@@ -934,7 +934,7 @@
      SET name = excluded.name RETURNING color.id
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-sync-psycopg_engine].1
+# name: test_to_one_upsert_create_new[session-sync-tracked-psycopg_engine].1
   '''
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
@@ -946,7 +946,7 @@
    WHERE fruit.id = %(fruit_id)s::INTEGER
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-sync-psycopg_engine].2
+# name: test_to_one_upsert_create_new[session-sync-tracked-psycopg_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -960,7 +960,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-sync-sqlite_engine]
+# name: test_to_one_upsert_create_new[session-sync-tracked-sqlite_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
   VALUES (?, ?, ?)
@@ -969,7 +969,7 @@
      SET name = excluded.name RETURNING id
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-sync-sqlite_engine].1
+# name: test_to_one_upsert_create_new[session-sync-tracked-sqlite_engine].1
   '''
   UPDATE fruit
      SET name = ?,
@@ -980,7 +980,7 @@
    WHERE fruit.id = ?
   '''
 # ---
-# name: test_to_one_upsert_create_new[session-tracked-sync-sqlite_engine].2
+# name: test_to_one_upsert_create_new[session-sync-tracked-sqlite_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -994,7 +994,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-aiosqlite_engine]
+# name: test_to_one_upsert_update_existing[session-async-tracked-aiosqlite_engine]
   '''
   UPDATE fruit
      SET name = ?,
@@ -1003,7 +1003,7 @@
    WHERE fruit.id = ?
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-aiosqlite_engine].1
+# name: test_to_one_upsert_update_existing[session-async-tracked-aiosqlite_engine].1
   '''
   UPDATE fruit
      SET name = ?,
@@ -1012,7 +1012,7 @@
    WHERE fruit.id = ?
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-aiosqlite_engine].2
+# name: test_to_one_upsert_update_existing[session-async-tracked-aiosqlite_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -1026,7 +1026,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-asyncmy_engine]
+# name: test_to_one_upsert_update_existing[session-async-tracked-asyncmy_engine]
   '''
   UPDATE fruit
      SET name = %s,
@@ -1035,7 +1035,7 @@
    WHERE fruit.id = %s
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-asyncmy_engine].1
+# name: test_to_one_upsert_update_existing[session-async-tracked-asyncmy_engine].1
   '''
   UPDATE fruit
      SET name = %s,
@@ -1044,7 +1044,7 @@
    WHERE fruit.id = %s
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-asyncmy_engine].2
+# name: test_to_one_upsert_update_existing[session-async-tracked-asyncmy_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -1058,7 +1058,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-asyncpg_engine]
+# name: test_to_one_upsert_update_existing[session-async-tracked-asyncpg_engine]
   '''
   UPDATE fruit
      SET name = $1::VARCHAR,
@@ -1068,7 +1068,7 @@
    WHERE fruit.id = $4::INTEGER
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-asyncpg_engine].1
+# name: test_to_one_upsert_update_existing[session-async-tracked-asyncpg_engine].1
   '''
   UPDATE fruit
      SET name = $1::VARCHAR,
@@ -1078,7 +1078,7 @@
    WHERE fruit.id = $4::INTEGER
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-asyncpg_engine].2
+# name: test_to_one_upsert_update_existing[session-async-tracked-asyncpg_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -1092,7 +1092,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-psycopg_async_engine]
+# name: test_to_one_upsert_update_existing[session-async-tracked-psycopg_async_engine]
   '''
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
@@ -1102,7 +1102,7 @@
    WHERE fruit.id = %(fruit_id)s::INTEGER
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-psycopg_async_engine].1
+# name: test_to_one_upsert_update_existing[session-async-tracked-psycopg_async_engine].1
   '''
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
@@ -1112,7 +1112,7 @@
    WHERE fruit.id = %(fruit_id)s::INTEGER
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-async-psycopg_async_engine].2
+# name: test_to_one_upsert_update_existing[session-async-tracked-psycopg_async_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -1126,7 +1126,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-sync-psycopg_engine]
+# name: test_to_one_upsert_update_existing[session-sync-tracked-psycopg_engine]
   '''
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
@@ -1136,7 +1136,7 @@
    WHERE fruit.id = %(fruit_id)s::INTEGER
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-sync-psycopg_engine].1
+# name: test_to_one_upsert_update_existing[session-sync-tracked-psycopg_engine].1
   '''
   UPDATE fruit
      SET name = %(name)s::VARCHAR,
@@ -1146,7 +1146,7 @@
    WHERE fruit.id = %(fruit_id)s::INTEGER
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-sync-psycopg_engine].2
+# name: test_to_one_upsert_update_existing[session-sync-tracked-psycopg_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -1160,7 +1160,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-sync-sqlite_engine]
+# name: test_to_one_upsert_update_existing[session-sync-tracked-sqlite_engine]
   '''
   UPDATE fruit
      SET name = ?,
@@ -1169,7 +1169,7 @@
    WHERE fruit.id = ?
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-sync-sqlite_engine].1
+# name: test_to_one_upsert_update_existing[session-sync-tracked-sqlite_engine].1
   '''
   UPDATE fruit
      SET name = ?,
@@ -1178,7 +1178,7 @@
    WHERE fruit.id = ?
   '''
 # ---
-# name: test_to_one_upsert_update_existing[session-tracked-sync-sqlite_engine].2
+# name: test_to_one_upsert_update_existing[session-sync-tracked-sqlite_engine].2
   '''
   SELECT color_1.name,
          color_1.id,
@@ -1192,7 +1192,7 @@
             color_1.id ASC
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-aiosqlite_engine]
+# name: test_upsert_many_new[session-async-tracked-aiosqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?)
@@ -1204,7 +1204,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-aiosqlite_engine].1
+# name: test_upsert_many_new[session-async-tracked-aiosqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1215,7 +1215,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-asyncmy_engine]
+# name: test_upsert_many_new[session-async-tracked-asyncmy_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s) AS NEW
@@ -1226,7 +1226,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-asyncmy_engine].1
+# name: test_upsert_many_new[session-async-tracked-asyncmy_engine].1
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s) AS NEW
@@ -1237,7 +1237,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-asyncmy_engine].2
+# name: test_upsert_many_new[session-async-tracked-asyncmy_engine].2
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1248,7 +1248,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-asyncpg_engine]
+# name: test_upsert_many_new[session-async-tracked-asyncpg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1260,7 +1260,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-asyncpg_engine].1
+# name: test_upsert_many_new[session-async-tracked-asyncpg_engine].1
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1272,7 +1272,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-asyncpg_engine].2
+# name: test_upsert_many_new[session-async-tracked-asyncpg_engine].2
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1283,7 +1283,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-psycopg_async_engine]
+# name: test_upsert_many_new[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1295,7 +1295,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-psycopg_async_engine].1
+# name: test_upsert_many_new[session-async-tracked-psycopg_async_engine].1
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1307,7 +1307,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-async-psycopg_async_engine].2
+# name: test_upsert_many_new[session-async-tracked-psycopg_async_engine].2
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1318,7 +1318,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-sync-psycopg_engine]
+# name: test_upsert_many_new[session-sync-tracked-psycopg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1330,7 +1330,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-sync-psycopg_engine].1
+# name: test_upsert_many_new[session-sync-tracked-psycopg_engine].1
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1342,7 +1342,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-sync-psycopg_engine].2
+# name: test_upsert_many_new[session-sync-tracked-psycopg_engine].2
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1353,7 +1353,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-sync-sqlite_engine]
+# name: test_upsert_many_new[session-sync-tracked-sqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?)
@@ -1365,7 +1365,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_upsert_many_new[session-tracked-sync-sqlite_engine].1
+# name: test_upsert_many_new[session-sync-tracked-sqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1376,7 +1376,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-aiosqlite_engine]
+# name: test_upsert_many_new_and_existing[session-async-tracked-aiosqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?)
@@ -1388,7 +1388,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-aiosqlite_engine].1
+# name: test_upsert_many_new_and_existing[session-async-tracked-aiosqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1399,7 +1399,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-asyncmy_engine]
+# name: test_upsert_many_new_and_existing[session-async-tracked-asyncmy_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s) AS NEW
@@ -1410,7 +1410,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-asyncmy_engine].1
+# name: test_upsert_many_new_and_existing[session-async-tracked-asyncmy_engine].1
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s) AS NEW
@@ -1421,7 +1421,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-asyncmy_engine].2
+# name: test_upsert_many_new_and_existing[session-async-tracked-asyncmy_engine].2
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1432,7 +1432,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-asyncpg_engine]
+# name: test_upsert_many_new_and_existing[session-async-tracked-asyncpg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1444,7 +1444,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-asyncpg_engine].1
+# name: test_upsert_many_new_and_existing[session-async-tracked-asyncpg_engine].1
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1456,7 +1456,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-asyncpg_engine].2
+# name: test_upsert_many_new_and_existing[session-async-tracked-asyncpg_engine].2
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1467,7 +1467,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-psycopg_async_engine]
+# name: test_upsert_many_new_and_existing[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1479,7 +1479,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-psycopg_async_engine].1
+# name: test_upsert_many_new_and_existing[session-async-tracked-psycopg_async_engine].1
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1491,7 +1491,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-async-psycopg_async_engine].2
+# name: test_upsert_many_new_and_existing[session-async-tracked-psycopg_async_engine].2
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1502,7 +1502,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-sync-psycopg_engine]
+# name: test_upsert_many_new_and_existing[session-sync-tracked-psycopg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1514,7 +1514,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-sync-psycopg_engine].1
+# name: test_upsert_many_new_and_existing[session-sync-tracked-psycopg_engine].1
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1526,7 +1526,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-sync-psycopg_engine].2
+# name: test_upsert_many_new_and_existing[session-sync-tracked-psycopg_engine].2
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1537,7 +1537,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-sync-sqlite_engine]
+# name: test_upsert_many_new_and_existing[session-sync-tracked-sqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?)
@@ -1549,7 +1549,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_upsert_many_new_and_existing[session-tracked-sync-sqlite_engine].1
+# name: test_upsert_many_new_and_existing[session-sync-tracked-sqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1560,7 +1560,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-aiosqlite_engine]
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-aiosqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -1573,7 +1573,7 @@
          id = excluded.id RETURNING id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-aiosqlite_engine].1
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-aiosqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1584,7 +1584,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-asyncmy_engine]
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-asyncmy_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%s, %s, %s, %s, %s, %s, %s) AS NEW
@@ -1595,7 +1595,7 @@
          id = new.id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-asyncmy_engine].1
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-asyncmy_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1606,7 +1606,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-asyncpg_engine]
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-asyncpg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::INTEGER)
@@ -1619,7 +1619,7 @@
          id = excluded.id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-asyncpg_engine].1
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-asyncpg_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1630,7 +1630,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-psycopg_async_engine]
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, %(id)s::INTEGER)
@@ -1643,7 +1643,7 @@
          id = excluded.id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-psycopg_async_engine].1
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-psycopg_async_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1654,7 +1654,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-update-fields-aiosqlite_engine]
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-update-fields-aiosqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -1663,7 +1663,7 @@
      SET name = excluded.name RETURNING id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-update-fields-aiosqlite_engine].1
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-update-fields-aiosqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1674,7 +1674,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-update-fields-asyncmy_engine]
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-update-fields-asyncmy_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%s, %s, %s, %s, %s, %s, %s) AS NEW
@@ -1682,7 +1682,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-update-fields-asyncmy_engine].1
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-update-fields-asyncmy_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1693,7 +1693,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-update-fields-asyncpg_engine]
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-update-fields-asyncpg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::INTEGER)
@@ -1702,7 +1702,7 @@
      SET name = excluded.name
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-update-fields-asyncpg_engine].1
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-update-fields-asyncpg_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1713,7 +1713,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-update-fields-psycopg_async_engine]
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-update-fields-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, %(id)s::INTEGER)
@@ -1722,7 +1722,7 @@
      SET name = excluded.name
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-pk-constraint-update-fields-psycopg_async_engine].1
+# name: test_upsert_one_existing[session-async-tracked-pk-constraint-update-fields-psycopg_async_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1733,7 +1733,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-aiosqlite_engine]
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-aiosqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?)
@@ -1745,7 +1745,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-aiosqlite_engine].1
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-aiosqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1756,7 +1756,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-asyncmy_engine]
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-asyncmy_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s) AS NEW
@@ -1767,7 +1767,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-asyncmy_engine].1
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-asyncmy_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1778,7 +1778,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-asyncpg_engine]
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-asyncpg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1790,7 +1790,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-asyncpg_engine].1
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-asyncpg_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1801,7 +1801,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-multi-columns-aiosqlite_engine]
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-multi-columns-aiosqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?)
@@ -1813,7 +1813,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-multi-columns-aiosqlite_engine].1
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-multi-columns-aiosqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1824,7 +1824,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-multi-columns-asyncmy_engine]
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-multi-columns-asyncmy_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s) AS NEW
@@ -1835,7 +1835,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-multi-columns-asyncmy_engine].1
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-multi-columns-asyncmy_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1846,7 +1846,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-multi-columns-asyncpg_engine]
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-multi-columns-asyncpg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1858,7 +1858,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-multi-columns-asyncpg_engine].1
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-multi-columns-asyncpg_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1869,7 +1869,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-multi-columns-psycopg_async_engine]
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-multi-columns-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1881,7 +1881,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-multi-columns-psycopg_async_engine].1
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-multi-columns-psycopg_async_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1892,7 +1892,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-psycopg_async_engine]
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -1904,7 +1904,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-async-unique-constraint-psycopg_async_engine].1
+# name: test_upsert_one_existing[session-async-tracked-unique-constraint-psycopg_async_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1915,7 +1915,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-psycopg_engine]
+# name: test_upsert_one_existing[session-sync-tracked-pk-constraint-psycopg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, %(id)s::INTEGER)
@@ -1928,7 +1928,7 @@
          id = excluded.id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-psycopg_engine].1
+# name: test_upsert_one_existing[session-sync-tracked-pk-constraint-psycopg_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1939,7 +1939,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-sqlite_engine]
+# name: test_upsert_one_existing[session-sync-tracked-pk-constraint-sqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -1952,7 +1952,7 @@
          id = excluded.id RETURNING id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-sqlite_engine].1
+# name: test_upsert_one_existing[session-sync-tracked-pk-constraint-sqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1963,7 +1963,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-update-fields-psycopg_engine]
+# name: test_upsert_one_existing[session-sync-tracked-pk-constraint-update-fields-psycopg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, %(id)s::INTEGER)
@@ -1972,7 +1972,7 @@
      SET name = excluded.name
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-update-fields-psycopg_engine].1
+# name: test_upsert_one_existing[session-sync-tracked-pk-constraint-update-fields-psycopg_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -1983,7 +1983,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-update-fields-sqlite_engine]
+# name: test_upsert_one_existing[session-sync-tracked-pk-constraint-update-fields-sqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -1992,7 +1992,7 @@
      SET name = excluded.name RETURNING id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-pk-constraint-update-fields-sqlite_engine].1
+# name: test_upsert_one_existing[session-sync-tracked-pk-constraint-update-fields-sqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -2003,7 +2003,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-multi-columns-psycopg_engine]
+# name: test_upsert_one_existing[session-sync-tracked-unique-constraint-multi-columns-psycopg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -2015,7 +2015,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-multi-columns-psycopg_engine].1
+# name: test_upsert_one_existing[session-sync-tracked-unique-constraint-multi-columns-psycopg_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -2026,7 +2026,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-multi-columns-sqlite_engine]
+# name: test_upsert_one_existing[session-sync-tracked-unique-constraint-multi-columns-sqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?)
@@ -2038,7 +2038,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-multi-columns-sqlite_engine].1
+# name: test_upsert_one_existing[session-sync-tracked-unique-constraint-multi-columns-sqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -2049,7 +2049,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-psycopg_engine]
+# name: test_upsert_one_existing[session-sync-tracked-unique-constraint-psycopg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -2061,7 +2061,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-psycopg_engine].1
+# name: test_upsert_one_existing[session-sync-tracked-unique-constraint-psycopg_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -2072,7 +2072,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-sqlite_engine]
+# name: test_upsert_one_existing[session-sync-tracked-unique-constraint-sqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?)
@@ -2084,7 +2084,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_upsert_one_existing[session-tracked-sync-unique-constraint-sqlite_engine].1
+# name: test_upsert_one_existing[session-sync-tracked-unique-constraint-sqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -2095,7 +2095,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-async-aiosqlite_engine]
+# name: test_upsert_one_new[session-async-tracked-aiosqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?)
@@ -2107,7 +2107,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-async-aiosqlite_engine].1
+# name: test_upsert_one_new[session-async-tracked-aiosqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -2118,7 +2118,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-async-asyncmy_engine]
+# name: test_upsert_one_new[session-async-tracked-asyncmy_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (%s, %s, %s, %s, %s, %s) AS NEW
@@ -2129,7 +2129,7 @@
          id = last_insert_id(fruit.id)
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-async-asyncmy_engine].1
+# name: test_upsert_one_new[session-async-tracked-asyncmy_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -2140,7 +2140,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-async-asyncpg_engine]
+# name: test_upsert_one_new[session-async-tracked-asyncpg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -2152,7 +2152,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-async-asyncpg_engine].1
+# name: test_upsert_one_new[session-async-tracked-asyncpg_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -2163,7 +2163,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-async-psycopg_async_engine]
+# name: test_upsert_one_new[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -2175,7 +2175,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-async-psycopg_async_engine].1
+# name: test_upsert_one_new[session-async-tracked-psycopg_async_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -2186,7 +2186,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-sync-psycopg_engine]
+# name: test_upsert_one_new[session-sync-tracked-psycopg_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq'))
@@ -2198,7 +2198,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING fruit.id
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-sync-psycopg_engine].1
+# name: test_upsert_one_new[session-sync-tracked-psycopg_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,
@@ -2209,7 +2209,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-sync-sqlite_engine]
+# name: test_upsert_one_new[session-sync-tracked-sqlite_engine]
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
   VALUES (?, ?, ?, ?, ?, ?)
@@ -2221,7 +2221,7 @@
          best_time_to_pick = excluded.best_time_to_pick RETURNING id
   '''
 # ---
-# name: test_upsert_one_new[session-tracked-sync-sqlite_engine].1
+# name: test_upsert_one_new[session-sync-tracked-sqlite_engine].1
   '''
   SELECT fruit.name,
          fruit.sweetness,

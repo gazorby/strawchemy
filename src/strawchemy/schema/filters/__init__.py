@@ -45,7 +45,6 @@ __all__ = (
     "EqualityComparison",
     "EqualityFilter",
     "FilterProtocol",
-    "FilterProtocol",
     "GraphQLComparison",
     "GraphQLComparisonT",
     "GraphQLFilter",

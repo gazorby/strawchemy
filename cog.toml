@@ -5,9 +5,9 @@ ignore_merge_commits = true
 # so we can do our own skip logic in workflow
 skip_ci = "[ci-skip]"
 pre_bump_hooks = [
-    "git restore cog.toml",
-    "uv version --no-sync {{version}}",
-    "git add :pyproject.toml :uv.lock"
+  "git restore cog.toml",
+  "uv version --no-sync {{version}}",
+  "git add :pyproject.toml :uv.lock"
 ]
 
 [changelog]
@@ -33,10 +33,10 @@ test = { omit_from_changelog = true }
 
 [bump_profiles.ci]
 pre_bump_hooks = [
-    "git restore cog.toml",
-    "uv version --no-sync {{version}}",
-    "git add :pyproject.toml :uv.lock",
-    "git config user.name 'github-actions[bot]'",
-    "git config user.email 'github-actions[bot]@users.noreply.github.com'"
+  "git restore cog.toml",
+  "uv version --no-sync {{version}}",
+  "git add :pyproject.toml :uv.lock",
+  "git config user.name 'github-actions[bot]'",
+  "git config user.email 'github-actions[bot]@users.noreply.github.com'"
 ]
 post_bump_hooks = ["git push", "git push origin {{version_tag}}"]

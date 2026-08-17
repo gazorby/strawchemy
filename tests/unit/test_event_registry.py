@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 def _fruits_prop() -> RelationshipProperty[Any]:
     """The Color.fruits relationship MapperProperty (to-many)."""
-    return inspect(Color).attrs["fruits"]
+    return inspect(Color).relationships["fruits"]
 
 
 def _make_relation(registry: EventRegistry, parent: Color) -> RelationInput:
@@ -31,7 +31,7 @@ def _make_relation(registry: EventRegistry, parent: Color) -> RelationInput:
 
 def _color_prop() -> RelationshipProperty[Any]:
     """The Fruit.color relationship MapperProperty (to-one)."""
-    return inspect(Fruit).attrs["color"]
+    return inspect(Fruit).relationships["color"]
 
 
 def _make_to_one_relation(registry: EventRegistry, parent: Fruit) -> RelationInput:

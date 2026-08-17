@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
 
-from strawchemy.repository.sqlalchemy._base import InsertData, MutationData, SQLAlchemyGraphQLRepository
+from strawchemy.repository.sqlalchemy._base import InsertData, MutationData, SQLAlchemyGraphQLRepository, dml_target
 from strawchemy.repository.typing import AnySyncSession, DeclarativeT
 from strawchemy.schema.mutation import RelationType, UpsertData
 from strawchemy.transpiler import QueryResult, SyncQueryExecutor, Transpiler
@@ -77,12 +77,12 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         alias_insp = inspect(alias)
         model_pks = [getattr(alias, pk.key) for pk in alias_insp.mapper.primary_key if pk.key]
         if self._dialect.delete_returning:
-            statement = delete(alias_insp).returning(*model_pks)
+            statement = delete(dml_target(alias)).returning(*model_pks)
             if where:
                 statement = statement.where(*where)
             result = self.session.execute(statement, execution_options=execution_options or {})
             return result.all()
-        affected_statement, delete_statement = select(*model_pks), delete(alias_insp)
+        affected_statement, delete_statement = select(*model_pks), delete(dml_target(alias))
         if where:
             affected_statement, delete_statement = affected_statement.where(*where), delete_statement.where(*where)
         affected_rows = (self.session.execute(affected_statement)).all()
@@ -100,13 +100,13 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         alias_insp = inspect(alias)
         model_pks = [getattr(alias, pk.key) for pk in alias_insp.mapper.primary_key if pk.key]
         if self._dialect.update_returning:
-            statement = update(alias_insp).values(**values).returning(*model_pks)
+            statement = update(dml_target(alias)).values(**values).returning(*model_pks)
             if where:
                 statement = statement.where(*where)
             result = self.session.execute(statement, execution_options=execution_options or {})
             return result.all()
 
-        affected_statement, update_statement = select(*model_pks), update(alias_insp).values(**values)
+        affected_statement, update_statement = select(*model_pks), update(dml_target(alias)).values(**values)
         if where:
             affected_statement, update_statement = affected_statement.where(*where), update_statement.where(*where)
         affected_rows = (self.session.execute(affected_statement)).all()
@@ -267,6 +267,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     def list(
         self,
         selection: QueryNodeType | None = None,
+        *,
         dto_filter: BooleanFilterDTO | None = None,
         order_by: builtins.list[OrderByDTO] | None = None,
         limit: int | None = None,
@@ -320,6 +321,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
     def get_one(
         self,
         selection: QueryNodeType | None = None,
+        *,
         dto_filter: BooleanFilterDTO | None = None,
         order_by: builtins.list[OrderByDTO] | None = None,
         limit: int | None = None,

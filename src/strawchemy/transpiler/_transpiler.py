@@ -36,6 +36,7 @@ class Transpiler(Generic[DeclarativeT]):
         self,
         model: type[DeclarativeT],
         dialect: Dialect,
+        *,
         statement: Select[tuple[DeclarativeT]] | None = None,
         query_hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] | None = None,
         deterministic_ordering: bool = False,
@@ -63,6 +64,7 @@ class Transpiler(Generic[DeclarativeT]):
     def select_executor(
         self,
         selection_tree: QueryNodeType | None = None,
+        *,
         dto_filter: BooleanFilterDTO | None = None,
         order_by: list[OrderByDTO] | None = None,
         limit: int | None = None,

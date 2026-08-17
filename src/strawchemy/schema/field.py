@@ -145,8 +145,7 @@ class StrawchemyField(StrawberryField):
         python_name: str | None = None,
         graphql_name: str | None = None,
         type_annotation: StrawberryAnnotation | None = None,
-        origin: None
-        | (builtins.type | Callable[..., Any] | staticmethod[Any, Any] | classmethod[Any, Any, Any]) = None,
+        origin: builtins.type | Callable[..., Any] | staticmethod[Any, Any] | classmethod[Any, Any, Any] | None = None,
         is_subscription: bool = False,
         description: str | None = None,
         base_resolver: StrawberryResolver[Any] | None = None,
@@ -237,6 +236,14 @@ class StrawchemyField(StrawberryField):
     ) -> TypeIs[StrawchemyAsyncRepository[Any]]:
         return repository.is_async
 
+    def _sync_repo(self, repository: AnyRepository) -> StrawchemySyncRepository[Any]:
+        """Counterpart of ``_is_repo_async`` for its negative branch.
+
+        Narrowing cannot subtract ``Any``-parameterized generics from a union, so the async
+        member survives ``not _is_repo_async(...)`` and must be discarded explicitly.
+        """
+        return cast("StrawchemySyncRepository[Any]", repository)
+
     async def _list_result_async(self, repository_call: Awaitable[GraphQLResult[Any, Any]]) -> ListResolverResult:
         return (await repository_call).graphql_list(root_aggregations=self.root_aggregations)
 
@@ -258,11 +265,12 @@ class StrawchemyField(StrawberryField):
         repository = self._get_repository(info)
         if self._is_repo_async(repository):
             return self._get_by_id_result_async(repository.get_by_id(**kwargs))
-        return self._get_by_id_result_sync(repository.get_by_id(**kwargs))
+        return self._get_by_id_result_sync(self._sync_repo(repository).get_by_id(**kwargs))
 
     def _list_resolver(
         self,
         info: Info,
+        *,
         filter_input: BooleanFilterDTO | None = None,
         order_by: list[OrderByDTO] | None = None,
         distinct_on: list[EnumDTO] | None = None,
@@ -272,7 +280,9 @@ class StrawchemyField(StrawberryField):
         repository = self._get_repository(info)
         if self._is_repo_async(repository):
             return self._list_result_async(repository.list(filter_input, order_by, distinct_on, limit, offset))
-        return self._list_result_sync(repository.list(filter_input, order_by, distinct_on, limit, offset))
+        return self._list_result_sync(
+            self._sync_repo(repository).list(filter_input, order_by, distinct_on, limit, offset)
+        )
 
     def _validate_type(self, type_: StrawberryType | builtins.type[WithStrawberryObjectDefinition] | Any) -> None:
         """Validates the resolved field type against ``root_aggregations`` and ``default_order_by``.

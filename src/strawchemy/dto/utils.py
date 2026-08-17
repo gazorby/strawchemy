@@ -36,6 +36,7 @@ __all__ = (
 
 def config(
     purpose: Purpose,
+    *,
     include: FieldSpec | None = None,
     exclude: FieldSpec | None = None,
     global_include: FieldSpec | None = None,

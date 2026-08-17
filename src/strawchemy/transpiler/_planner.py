@@ -153,11 +153,11 @@ class PlanContext(Generic[DeclarativeT]):
         relationship = node.value.model_field.property
         assert isinstance(relationship, RelationshipProperty)
         target_mapper: Mapper[Any] = relationship.mapper.mapper
-        target_alias: AliasedClass[Any] = cast("AliasedClass[Any]", aliased(target_mapper, flat=True))
+        target_alias: AliasedClass[Any] = aliased(target_mapper, flat=True)
         order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else []
 
         sub_context = replace(self, aliases=self.aliases.sub(target_mapper.class_, target_alias), statement=None)
-        query_graph = QueryGraph(sub_context.aliases, order_by=order_by)  # ty:ignore[invalid-argument-type]
+        query_graph = QueryGraph(sub_context.aliases, order_by=order_by)
         plan = plan_query(query_graph, sub_context, limit=relation_filter.limit, offset=relation_filter.offset)
         join = self.join_strategy.relation_join(self.aliases, node, target_alias, plan, is_outer)
         join.order_nodes = query_graph.order_by_nodes
@@ -387,7 +387,12 @@ class FilterPlan:
         where_function_nodes: set[QueryNodeType] = set()
 
         where = cls._where(
-            query_graph.query_filter, context, agg_plan, emitted_agg_joins, where_function_nodes, allow_null
+            query_graph.query_filter,
+            context,
+            agg_plan=agg_plan,
+            emitted_agg_joins=emitted_agg_joins,
+            where_function_nodes=where_function_nodes,
+            allow_null=allow_null,
         )
         return cls(
             where=tuple(where.expressions),
@@ -507,6 +512,7 @@ class FilterPlan:
     def _gather_conjunctions(
         query: Sequence[Filter | AggregationFilter | GraphQLComparison | CustomFilter],
         context: PlanContext[Any],
+        *,
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
         where_function_nodes: set[QueryNodeType],
@@ -548,7 +554,12 @@ class FilterPlan:
                 bool_expressions.append(FilterPlan._custom_filter_expression(value, context))
             else:
                 conjunction = FilterPlan._conjunctions(
-                    value, context, agg_plan, emitted_agg_joins, where_function_nodes, not_null_check
+                    value,
+                    context,
+                    agg_plan=agg_plan,
+                    emitted_agg_joins=emitted_agg_joins,
+                    where_function_nodes=where_function_nodes,
+                    allow_null=not_null_check,
                 )
                 common_join_path = QueryNode.common_path(common_join_path, conjunction.common_join_path)
                 joins.extend(conjunction.joins)
@@ -565,6 +576,7 @@ class FilterPlan:
     def _conjunctions(
         query: Filter,
         context: PlanContext[Any],
+        *,
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
         where_function_nodes: set[QueryNodeType],
@@ -585,10 +597,20 @@ class FilterPlan:
         """
         bool_expressions: list[ColumnElement[bool]] = []
         and_conjunction = FilterPlan._gather_conjunctions(
-            query.and_, context, agg_plan, emitted_agg_joins, where_function_nodes, allow_null
+            query.and_,
+            context,
+            agg_plan=agg_plan,
+            emitted_agg_joins=emitted_agg_joins,
+            where_function_nodes=where_function_nodes,
+            not_null_check=allow_null,
         )
         or_conjunction = FilterPlan._gather_conjunctions(
-            query.or_, context, agg_plan, emitted_agg_joins, where_function_nodes, allow_null
+            query.or_,
+            context,
+            agg_plan=agg_plan,
+            emitted_agg_joins=emitted_agg_joins,
+            where_function_nodes=where_function_nodes,
+            not_null_check=allow_null,
         )
         common_path = QueryNode.common_path(and_conjunction.common_join_path, or_conjunction.common_join_path)
         joins = [*and_conjunction.joins, *or_conjunction.joins]
@@ -597,9 +619,9 @@ class FilterPlan:
             not_conjunction = FilterPlan._gather_conjunctions(
                 [query.not_],
                 context,
-                agg_plan,
-                emitted_agg_joins,
-                where_function_nodes,
+                agg_plan=agg_plan,
+                emitted_agg_joins=emitted_agg_joins,
+                where_function_nodes=where_function_nodes,
                 not_null_check=True,
             )
             common_path = [
@@ -623,6 +645,7 @@ class FilterPlan:
     def _where(
         query_filter: Filter,
         context: PlanContext[Any],
+        *,
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
         where_function_nodes: set[QueryNodeType],
@@ -642,7 +665,12 @@ class FilterPlan:
             A Where containing expressions and required joins.
         """
         conjunction = FilterPlan._conjunctions(
-            query_filter, context, agg_plan, emitted_agg_joins, where_function_nodes, allow_null
+            query_filter,
+            context,
+            agg_plan=agg_plan,
+            emitted_agg_joins=emitted_agg_joins,
+            where_function_nodes=where_function_nodes,
+            allow_null=allow_null,
         )
         return Where(
             conjunction,
@@ -701,12 +729,12 @@ class OrderPlan:
             cls._build_node(
                 node,
                 context,
-                agg_plan,
-                seen_aggregation_nodes,
-                emitted_agg_joins,
-                order_by_function_nodes,
-                columns,
-                joins,
+                agg_plan=agg_plan,
+                seen_aggregation_nodes=seen_aggregation_nodes,
+                emitted_agg_joins=emitted_agg_joins,
+                order_by_function_nodes=order_by_function_nodes,
+                columns=columns,
+                joins=joins,
             )
 
         no_user_columns = not columns
@@ -762,6 +790,7 @@ class OrderPlan:
     def _build_node(
         node: QueryNodeType,
         context: PlanContext[Any],
+        *,
         agg_plan: AggregationPlan,
         seen_aggregation_nodes: set[QueryNodeType],
         emitted_agg_joins: set[QueryNodeType],
@@ -1433,7 +1462,7 @@ def _plan_subquery(
 
     # Phase 0: re-root onto a fresh inner alias so all inner passes and the
     # build_join (which closes over the scope) build against the subquery's FROM.
-    inner_alias = cast("AliasedClass[Any]", aliased(class_mapper(model), name=name, flat=True))
+    inner_alias = aliased(class_mapper(model), name=name, flat=True)
     context.aliases.replace(alias=inner_alias)
 
     distinct_on = DistinctOn(query_graph)
@@ -1469,7 +1498,7 @@ def _plan_subquery(
     )
 
     subquery = inner_statement.subquery(name)
-    outer_alias = cast("AliasedClass[Any]", aliased(class_mapper(model), subquery, name=name))
+    outer_alias = aliased(class_mapper(model), subquery, name=name)
 
     # Phase 3: re-root onto the materialized subquery and build the outer query.
     context.aliases.replace(alias=outer_alias)

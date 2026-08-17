@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_count_aggregation[session-tracked-async-aiosqlite_engine]
+# name: test_count_aggregation[session-async-tracked-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT count(*) AS count_1,
@@ -16,7 +16,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_count_aggregation[session-tracked-async-asyncmy_engine]
+# name: test_count_aggregation[session-async-tracked-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT count(*) AS count_1,
@@ -33,7 +33,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_count_aggregation[session-tracked-async-asyncpg_engine]
+# name: test_count_aggregation[session-async-tracked-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.count_1
@@ -48,7 +48,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_count_aggregation[session-tracked-async-psycopg_async_engine]
+# name: test_count_aggregation[session-async-tracked-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.count_1
@@ -63,7 +63,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_count_aggregation[session-tracked-sync-psycopg_engine]
+# name: test_count_aggregation[session-sync-tracked-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.count_1
@@ -78,7 +78,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_count_aggregation[session-tracked-sync-sqlite_engine]
+# name: test_count_aggregation[session-sync-tracked-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT count(*) AS count_1,
@@ -95,7 +95,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-aiosqlite_engine]
+# name: test_max_aggregation[session-async-tracked-bestTimeToPick-best_time_to_pick-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.best_time_to_pick) AS max_1,
@@ -112,7 +112,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncmy_engine]
+# name: test_max_aggregation[session-async-tracked-bestTimeToPick-best_time_to_pick-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.best_time_to_pick) AS max_1,
@@ -129,7 +129,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncpg_engine]
+# name: test_max_aggregation[session-async-tracked-bestTimeToPick-best_time_to_pick-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -144,7 +144,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-psycopg_async_engine]
+# name: test_max_aggregation[session-async-tracked-bestTimeToPick-best_time_to_pick-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -159,7 +159,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-createdAt-created_at-aiosqlite_engine]
+# name: test_max_aggregation[session-async-tracked-createdAt-created_at-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.created_at) AS max_1,
@@ -176,7 +176,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-createdAt-created_at-asyncmy_engine]
+# name: test_max_aggregation[session-async-tracked-createdAt-created_at-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.created_at) AS max_1,
@@ -193,7 +193,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-createdAt-created_at-asyncpg_engine]
+# name: test_max_aggregation[session-async-tracked-createdAt-created_at-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -208,7 +208,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-createdAt-created_at-psycopg_async_engine]
+# name: test_max_aggregation[session-async-tracked-createdAt-created_at-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -223,7 +223,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-name-name-aiosqlite_engine]
+# name: test_max_aggregation[session-async-tracked-name-name-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.name) AS max_1,
@@ -240,7 +240,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-name-name-asyncmy_engine]
+# name: test_max_aggregation[session-async-tracked-name-name-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.name) AS max_1,
@@ -257,7 +257,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-name-name-asyncpg_engine]
+# name: test_max_aggregation[session-async-tracked-name-name-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -272,7 +272,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-name-name-psycopg_async_engine]
+# name: test_max_aggregation[session-async-tracked-name-name-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -287,7 +287,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-sweetness-sweetness-aiosqlite_engine]
+# name: test_max_aggregation[session-async-tracked-sweetness-sweetness-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.sweetness) AS max_1,
@@ -304,7 +304,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-sweetness-sweetness-asyncmy_engine]
+# name: test_max_aggregation[session-async-tracked-sweetness-sweetness-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.sweetness) AS max_1,
@@ -321,7 +321,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-sweetness-sweetness-asyncpg_engine]
+# name: test_max_aggregation[session-async-tracked-sweetness-sweetness-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -336,7 +336,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-sweetness-sweetness-psycopg_async_engine]
+# name: test_max_aggregation[session-async-tracked-sweetness-sweetness-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -351,7 +351,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-waterPercent-water_percent-aiosqlite_engine]
+# name: test_max_aggregation[session-async-tracked-waterPercent-water_percent-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.water_percent) AS max_1,
@@ -368,7 +368,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-waterPercent-water_percent-asyncmy_engine]
+# name: test_max_aggregation[session-async-tracked-waterPercent-water_percent-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.water_percent) AS max_1,
@@ -385,7 +385,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-waterPercent-water_percent-asyncpg_engine]
+# name: test_max_aggregation[session-async-tracked-waterPercent-water_percent-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -400,7 +400,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-async-waterPercent-water_percent-psycopg_async_engine]
+# name: test_max_aggregation[session-async-tracked-waterPercent-water_percent-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -415,7 +415,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sync-bestTimeToPick-best_time_to_pick-psycopg_engine]
+# name: test_max_aggregation[session-sync-tracked-bestTimeToPick-best_time_to_pick-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -430,7 +430,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sync-bestTimeToPick-best_time_to_pick-sqlite_engine]
+# name: test_max_aggregation[session-sync-tracked-bestTimeToPick-best_time_to_pick-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.best_time_to_pick) AS max_1,
@@ -447,7 +447,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sync-createdAt-created_at-psycopg_engine]
+# name: test_max_aggregation[session-sync-tracked-createdAt-created_at-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -462,7 +462,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sync-createdAt-created_at-sqlite_engine]
+# name: test_max_aggregation[session-sync-tracked-createdAt-created_at-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.created_at) AS max_1,
@@ -479,7 +479,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sync-name-name-psycopg_engine]
+# name: test_max_aggregation[session-sync-tracked-name-name-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -494,7 +494,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sync-name-name-sqlite_engine]
+# name: test_max_aggregation[session-sync-tracked-name-name-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.name) AS max_1,
@@ -511,7 +511,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sync-sweetness-sweetness-psycopg_engine]
+# name: test_max_aggregation[session-sync-tracked-sweetness-sweetness-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -526,7 +526,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sync-sweetness-sweetness-sqlite_engine]
+# name: test_max_aggregation[session-sync-tracked-sweetness-sweetness-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.sweetness) AS max_1,
@@ -543,7 +543,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
+# name: test_max_aggregation[session-sync-tracked-waterPercent-water_percent-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.max_1
@@ -558,7 +558,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_max_aggregation[session-tracked-sync-waterPercent-water_percent-sqlite_engine]
+# name: test_max_aggregation[session-sync-tracked-waterPercent-water_percent-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT max(fruit_1.water_percent) AS max_1,
@@ -575,7 +575,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-aiosqlite_engine]
+# name: test_min_aggregation[session-async-tracked-bestTimeToPick-best_time_to_pick-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.best_time_to_pick) AS min_1,
@@ -592,7 +592,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncmy_engine]
+# name: test_min_aggregation[session-async-tracked-bestTimeToPick-best_time_to_pick-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.best_time_to_pick) AS min_1,
@@ -609,7 +609,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-asyncpg_engine]
+# name: test_min_aggregation[session-async-tracked-bestTimeToPick-best_time_to_pick-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -624,7 +624,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-bestTimeToPick-best_time_to_pick-psycopg_async_engine]
+# name: test_min_aggregation[session-async-tracked-bestTimeToPick-best_time_to_pick-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -639,7 +639,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-createdAt-created_at-aiosqlite_engine]
+# name: test_min_aggregation[session-async-tracked-createdAt-created_at-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.created_at) AS min_1,
@@ -656,7 +656,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-createdAt-created_at-asyncmy_engine]
+# name: test_min_aggregation[session-async-tracked-createdAt-created_at-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.created_at) AS min_1,
@@ -673,7 +673,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-createdAt-created_at-asyncpg_engine]
+# name: test_min_aggregation[session-async-tracked-createdAt-created_at-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -688,7 +688,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-createdAt-created_at-psycopg_async_engine]
+# name: test_min_aggregation[session-async-tracked-createdAt-created_at-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -703,7 +703,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-name-name-aiosqlite_engine]
+# name: test_min_aggregation[session-async-tracked-name-name-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.name) AS min_1,
@@ -720,7 +720,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-name-name-asyncmy_engine]
+# name: test_min_aggregation[session-async-tracked-name-name-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.name) AS min_1,
@@ -737,7 +737,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-name-name-asyncpg_engine]
+# name: test_min_aggregation[session-async-tracked-name-name-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -752,7 +752,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-name-name-psycopg_async_engine]
+# name: test_min_aggregation[session-async-tracked-name-name-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -767,7 +767,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-sweetness-sweetness-aiosqlite_engine]
+# name: test_min_aggregation[session-async-tracked-sweetness-sweetness-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.sweetness) AS min_1,
@@ -784,7 +784,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-sweetness-sweetness-asyncmy_engine]
+# name: test_min_aggregation[session-async-tracked-sweetness-sweetness-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.sweetness) AS min_1,
@@ -801,7 +801,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-sweetness-sweetness-asyncpg_engine]
+# name: test_min_aggregation[session-async-tracked-sweetness-sweetness-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -816,7 +816,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-sweetness-sweetness-psycopg_async_engine]
+# name: test_min_aggregation[session-async-tracked-sweetness-sweetness-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -831,7 +831,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-waterPercent-water_percent-aiosqlite_engine]
+# name: test_min_aggregation[session-async-tracked-waterPercent-water_percent-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.water_percent) AS min_1,
@@ -848,7 +848,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-waterPercent-water_percent-asyncmy_engine]
+# name: test_min_aggregation[session-async-tracked-waterPercent-water_percent-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.water_percent) AS min_1,
@@ -865,7 +865,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-waterPercent-water_percent-asyncpg_engine]
+# name: test_min_aggregation[session-async-tracked-waterPercent-water_percent-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -880,7 +880,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-async-waterPercent-water_percent-psycopg_async_engine]
+# name: test_min_aggregation[session-async-tracked-waterPercent-water_percent-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -895,7 +895,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sync-bestTimeToPick-best_time_to_pick-psycopg_engine]
+# name: test_min_aggregation[session-sync-tracked-bestTimeToPick-best_time_to_pick-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -910,7 +910,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sync-bestTimeToPick-best_time_to_pick-sqlite_engine]
+# name: test_min_aggregation[session-sync-tracked-bestTimeToPick-best_time_to_pick-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.best_time_to_pick) AS min_1,
@@ -927,7 +927,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sync-createdAt-created_at-psycopg_engine]
+# name: test_min_aggregation[session-sync-tracked-createdAt-created_at-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -942,7 +942,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sync-createdAt-created_at-sqlite_engine]
+# name: test_min_aggregation[session-sync-tracked-createdAt-created_at-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.created_at) AS min_1,
@@ -959,7 +959,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sync-name-name-psycopg_engine]
+# name: test_min_aggregation[session-sync-tracked-name-name-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -974,7 +974,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sync-name-name-sqlite_engine]
+# name: test_min_aggregation[session-sync-tracked-name-name-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.name) AS min_1,
@@ -991,7 +991,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sync-sweetness-sweetness-psycopg_engine]
+# name: test_min_aggregation[session-sync-tracked-sweetness-sweetness-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -1006,7 +1006,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sync-sweetness-sweetness-sqlite_engine]
+# name: test_min_aggregation[session-sync-tracked-sweetness-sweetness-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.sweetness) AS min_1,
@@ -1023,7 +1023,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
+# name: test_min_aggregation[session-sync-tracked-waterPercent-water_percent-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.min_1
@@ -1038,7 +1038,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_min_aggregation[session-tracked-sync-waterPercent-water_percent-sqlite_engine]
+# name: test_min_aggregation[session-sync-tracked-waterPercent-water_percent-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT min(fruit_1.water_percent) AS min_1,
@@ -1053,6 +1053,606 @@
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-avg-no-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-avg-no-pagination-asyncmy_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-avg-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-avg-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-avg-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-avg-pagination-asyncmy_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %s,
+                 %s
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-avg-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-avg-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-sum-no-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-sum-no-pagination-asyncmy_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-sum-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-sum-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-sum-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-sum-pagination-asyncmy_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %s,
+                 %s
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-sum-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-sweetness-sweetness-sum-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-avg-no-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-avg-no-pagination-asyncmy_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-avg-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-avg-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-avg-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-avg-pagination-asyncmy_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %s,
+                 %s
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-avg-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-avg-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-sum-no-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-sum-no-pagination-asyncmy_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-sum-no-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-sum-no-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-sum-pagination-aiosqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-sum-pagination-asyncmy_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %s,
+                 %s
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-sum-pagination-asyncpg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-async-tracked-waterPercent-water_percent-sum-pagination-psycopg_async_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-sweetness-sweetness-avg-no-pagination-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-sweetness-sweetness-avg-no-pagination-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-sweetness-sweetness-avg-pagination-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-sweetness-sweetness-avg-pagination-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         avg(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-sweetness-sweetness-sum-no-pagination-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-sweetness-sweetness-sum-no-pagination-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-sweetness-sweetness-sum-pagination-psycopg_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-sweetness-sweetness-sum-pagination-sqlite_engine]
+  '''
+  SELECT fruit.sweetness,
+         fruit.id,
+         sum(fruit.sweetness) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.sweetness AS sweetness
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-waterPercent-water_percent-avg-no-pagination-psycopg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-waterPercent-water_percent-avg-no-pagination-sqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-waterPercent-water_percent-avg-pagination-psycopg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-waterPercent-water_percent-avg-pagination-sqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         avg(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-waterPercent-water_percent-sum-no-pagination-psycopg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-waterPercent-water_percent-sum-no-pagination-sqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-waterPercent-water_percent-sum-pagination-psycopg_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_aggregation[session-sync-tracked-waterPercent-water_percent-sum-pagination-sqlite_engine]
+  '''
+  SELECT fruit.water_percent,
+         fruit.id,
+         sum(fruit.water_percent) OVER () AS anon_1
+    FROM (
+          SELECT fruit.id AS id,
+                 fruit.water_percent AS water_percent
+            FROM fruit AS fruit
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.id ASC
   '''
 # ---
 # name: test_root_aggregation[session-tracked-async-rarity-rarity-avg-no-pagination-aiosqlite_engine]
@@ -3710,6 +4310,198 @@
    LIMIT %(param_3)s::INTEGER
   '''
 # ---
+# name: test_statistical_aggregation[session-async-tracked-sweetness-sweetness-avg-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_1.sweetness) AS avg_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-async-tracked-sweetness-sweetness-avg-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_1.sweetness) AS avg_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+   INNER JOIN anon_1
+      ON color.id = anon_1.color_id
+   WHERE color.id = %s
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-async-tracked-sweetness-sweetness-avg-asyncpg_engine]
+  '''
+  SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.sweetness) AS avg_1
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-async-tracked-sweetness-sweetness-avg-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.sweetness) AS avg_1
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-async-tracked-waterPercent-water_percent-avg-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_1.water_percent) AS avg_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-async-tracked-waterPercent-water_percent-avg-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_1.water_percent) AS avg_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+   INNER JOIN anon_1
+      ON color.id = anon_1.color_id
+   WHERE color.id = %s
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-async-tracked-waterPercent-water_percent-avg-asyncpg_engine]
+  '''
+  SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.water_percent) AS avg_1
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   WHERE color.id = $1::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-async-tracked-waterPercent-water_percent-avg-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.water_percent) AS avg_1
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-sync-tracked-sweetness-sweetness-avg-psycopg_engine]
+  '''
+  SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.sweetness) AS avg_1
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-sync-tracked-sweetness-sweetness-avg-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_1.sweetness) AS avg_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-sync-tracked-waterPercent-water_percent-avg-psycopg_engine]
+  '''
+  SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT avg(fruit_1.water_percent) AS avg_1
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   WHERE color.id = %(id_1)s::INTEGER
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_statistical_aggregation[session-sync-tracked-waterPercent-water_percent-avg-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT avg(fruit_1.water_percent) AS avg_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.id,
+         anon_1.avg_1
+    FROM color AS color
+    JOIN anon_1
+      ON color.id = anon_1.color_id
+   WHERE color.id = ?
+   ORDER BY color.id ASC
+  '''
+# ---
 # name: test_statistical_aggregation[session-tracked-async-rarity-rarity-avg-aiosqlite_engine]
   '''
   WITH __strawchemy_aggregation_0 AS (
@@ -4994,7 +5786,7 @@
    WHERE color.id = %(id_1)s::INTEGER
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-aiosqlite_engine]
+# name: test_sum_aggregation[session-async-tracked-sweetness-sweetness-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT sum(fruit_1.sweetness) AS sum_1,
@@ -5011,7 +5803,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-asyncmy_engine]
+# name: test_sum_aggregation[session-async-tracked-sweetness-sweetness-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT sum(fruit_1.sweetness) AS sum_1,
@@ -5028,7 +5820,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-asyncpg_engine]
+# name: test_sum_aggregation[session-async-tracked-sweetness-sweetness-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.sum_1
@@ -5043,7 +5835,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-async-sweetness-sweetness-psycopg_async_engine]
+# name: test_sum_aggregation[session-async-tracked-sweetness-sweetness-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.sum_1
@@ -5058,7 +5850,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-async-waterPercent-water_percent-aiosqlite_engine]
+# name: test_sum_aggregation[session-async-tracked-waterPercent-water_percent-aiosqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT sum(fruit_1.water_percent) AS sum_1,
@@ -5075,7 +5867,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-async-waterPercent-water_percent-asyncmy_engine]
+# name: test_sum_aggregation[session-async-tracked-waterPercent-water_percent-asyncmy_engine]
   '''
   WITH anon_1 AS (
           SELECT sum(fruit_1.water_percent) AS sum_1,
@@ -5092,7 +5884,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-async-waterPercent-water_percent-asyncpg_engine]
+# name: test_sum_aggregation[session-async-tracked-waterPercent-water_percent-asyncpg_engine]
   '''
   SELECT color.id,
          anon_1.sum_1
@@ -5107,7 +5899,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-async-waterPercent-water_percent-psycopg_async_engine]
+# name: test_sum_aggregation[session-async-tracked-waterPercent-water_percent-psycopg_async_engine]
   '''
   SELECT color.id,
          anon_1.sum_1
@@ -5122,7 +5914,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-sync-sweetness-sweetness-psycopg_engine]
+# name: test_sum_aggregation[session-sync-tracked-sweetness-sweetness-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.sum_1
@@ -5137,7 +5929,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-sync-sweetness-sweetness-sqlite_engine]
+# name: test_sum_aggregation[session-sync-tracked-sweetness-sweetness-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT sum(fruit_1.sweetness) AS sum_1,
@@ -5154,7 +5946,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-sync-waterPercent-water_percent-psycopg_engine]
+# name: test_sum_aggregation[session-sync-tracked-waterPercent-water_percent-psycopg_engine]
   '''
   SELECT color.id,
          anon_1.sum_1
@@ -5169,7 +5961,7 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_sum_aggregation[session-tracked-sync-waterPercent-water_percent-sqlite_engine]
+# name: test_sum_aggregation[session-sync-tracked-waterPercent-water_percent-sqlite_engine]
   '''
   WITH anon_1 AS (
           SELECT sum(fruit_1.water_percent) AS sum_1,
