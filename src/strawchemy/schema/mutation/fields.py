@@ -76,7 +76,7 @@ class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
             return error.graphql_type()
         if self._is_repo_async(repository):
             return self._input_result_async(repository.create(input_data), input_data)
-        return self._input_result_sync(repository.create(input_data), input_data)
+        return self._input_result_sync(self._sync_repo(repository).create(input_data), input_data)
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -122,7 +122,7 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
                 repository.upsert(input_data, filter_input, update_fields, conflict_fields), input_data
             )
         return self._input_result_sync(
-            repository.upsert(input_data, filter_input, update_fields, conflict_fields), input_data
+            self._sync_repo(repository).upsert(input_data, filter_input, update_fields, conflict_fields), input_data
         )
 
     @override
@@ -175,7 +175,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
 
         if self._is_repo_async(repository):
             return self._input_result_async(repository.update_by_id(input_data), input_data)
-        return self._input_result_sync(repository.update_by_id(input_data), input_data)
+        return self._input_result_sync(self._sync_repo(repository).update_by_id(input_data), input_data)
 
     def _update_by_filter_resolver(
         self, info: Info, data: AnyMappedDTO, filter_input: BooleanFilterDTO
@@ -187,7 +187,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
             return [error.graphql_type()]
         if self._is_repo_async(repository):
             return self._list_result_async(repository.update_by_filter(input_data, filter_input))
-        return self._list_result_sync(repository.update_by_filter(input_data, filter_input))
+        return self._list_result_sync(self._sync_repo(repository).update_by_filter(input_data, filter_input))
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
@@ -233,7 +233,7 @@ class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
         repository = self._get_repository(info)
         if self._is_repo_async(repository):
             return self._list_result_async(repository.delete(filter_input))
-        return self._list_result_sync(repository.delete(filter_input))
+        return self._list_result_sync(self._sync_repo(repository).delete(filter_input))
 
     @override
     def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:

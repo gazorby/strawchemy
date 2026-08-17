@@ -153,11 +153,11 @@ class PlanContext(Generic[DeclarativeT]):
         relationship = node.value.model_field.property
         assert isinstance(relationship, RelationshipProperty)
         target_mapper: Mapper[Any] = relationship.mapper.mapper
-        target_alias: AliasedClass[Any] = cast("AliasedClass[Any]", aliased(target_mapper, flat=True))
+        target_alias: AliasedClass[Any] = aliased(target_mapper, flat=True)
         order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else []
 
         sub_context = replace(self, aliases=self.aliases.sub(target_mapper.class_, target_alias), statement=None)
-        query_graph = QueryGraph(sub_context.aliases, order_by=order_by)  # ty:ignore[invalid-argument-type]
+        query_graph = QueryGraph(sub_context.aliases, order_by=order_by)
         plan = plan_query(query_graph, sub_context, limit=relation_filter.limit, offset=relation_filter.offset)
         join = self.join_strategy.relation_join(self.aliases, node, target_alias, plan, is_outer)
         join.order_nodes = query_graph.order_by_nodes
@@ -1462,7 +1462,7 @@ def _plan_subquery(
 
     # Phase 0: re-root onto a fresh inner alias so all inner passes and the
     # build_join (which closes over the scope) build against the subquery's FROM.
-    inner_alias = cast("AliasedClass[Any]", aliased(class_mapper(model), name=name, flat=True))
+    inner_alias = aliased(class_mapper(model), name=name, flat=True)
     context.aliases.replace(alias=inner_alias)
 
     distinct_on = DistinctOn(query_graph)
@@ -1498,7 +1498,7 @@ def _plan_subquery(
     )
 
     subquery = inner_statement.subquery(name)
-    outer_alias = cast("AliasedClass[Any]", aliased(class_mapper(model), subquery, name=name))
+    outer_alias = aliased(class_mapper(model), subquery, name=name)
 
     # Phase 3: re-root onto the materialized subquery and build the outer query.
     context.aliases.replace(alias=outer_alias)

@@ -445,7 +445,8 @@ class StrawberryRegistry:
         )
         self._check_conflicts(type_info)
         if has_object_definition(dto):
-            return dto
+            # ``TypeGuard`` replaces the type instead of intersecting it, dropping the DTO type var.
+            return cast("type[StrawchemyDTOT]", dto)
         if existing := self._get(type_info):
             return existing
 

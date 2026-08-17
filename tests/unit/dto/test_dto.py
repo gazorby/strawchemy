@@ -97,7 +97,7 @@ def test_to_mapped(
         **{  # noqa: PIE804
             "name": "foo",
             "id": fruit_uuid,
-            "color": color_dto(id=color_uuid, name="red", fruits=[]),  # ty: ignore[unknown-argument]
+            "color": color_dto(id=color_uuid, name="red", fruits=[]),  # ty: ignore[pydantic-discarded-extra-argument]
             "color_id": color_uuid,
             "sweetness": 1,
         }
@@ -190,7 +190,7 @@ def test_field_validator(factory: AnyFactory, model: type[Tomato | TomatoDatacla
     tomato_dto = factory.factory(model, write_all_config)
 
     with pytest.raises(ValueError, match=re.escape("We do not allow rotten tomato.")):
-        tomato_dto(name="rotten", weight=1, sugarness=1, popularity=1)  # ty: ignore[unknown-argument]
+        tomato_dto(name="rotten", weight=1, sugarness=1, popularity=1)  # ty: ignore[pydantic-discarded-extra-argument]
 
 
 @pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
@@ -198,7 +198,7 @@ def test_field_validator(factory: AnyFactory, model: type[Tomato | TomatoDatacla
 def test_field_alias(factory: AnyFactory, model: type[Tomato | TomatoDataclass]) -> None:
     tomato_dto = factory.factory(model, write_all_config)
 
-    tomato = tomato_dto(name="good", weight=1, sugarness=1.25, popularity=1)  # ty: ignore[unknown-argument]
+    tomato = tomato_dto(name="good", weight=1, sugarness=1.25, popularity=1)  # ty: ignore[pydantic-discarded-extra-argument]
 
     assert tomato.sugarness == 1.25  # ty: ignore[unresolved-attribute]
     assert tomato.to_mapped().sweetness == 1.25

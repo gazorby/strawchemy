@@ -316,7 +316,7 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         return config
 
     @classmethod
-    def _resolve_model_type_hint(cls, type_: type[Any]) -> Any:
+    def _resolve_model_type_hint(cls, type_: Any) -> Any:
         type_hint = type_
         if get_origin(type_hint) is Mapped:
             (type_hint,) = get_args(type_hint)

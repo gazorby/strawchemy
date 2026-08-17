@@ -160,7 +160,7 @@ class AggregationSpec:
             A new spec whose ``alias`` is an aliased target class the function
             expressions are adapted to.
         """
-        alias = cast("AliasedClass[Any]", aliased(scope.inspect(node).mapper))
+        alias = aliased(scope.inspect(node).mapper)
         return cls(node=node, alias=alias)
 
 

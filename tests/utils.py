@@ -149,6 +149,8 @@ class FactoryType(Enum):
 class DTOInspectProtocol(Protocol):
     dto: type[Any]
 
+    def __init__(self, dto: type[Any]) -> None: ...
+
     @classmethod
     def is_class(cls, dto: type[Any]) -> bool: ...
 
