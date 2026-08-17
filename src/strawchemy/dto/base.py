@@ -365,6 +365,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self,
         inspector: ModelInspector[ModelT, ModelFieldT],
         backend: DTOBackend[DTOBaseT],
+        *,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
@@ -524,6 +525,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         model: type[ModelT],
         dto_config: DTOConfig,
         node: Node[Relation[Any, DTOBaseT], None],
+        *,
         base: type[Any] | None = None,
         parent_field_def: DTOFieldDefinition[ModelT, ModelFieldT] | None = None,
         if_no_fields: Literal["raise", "skip"] = "skip",
@@ -582,6 +584,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         dto_config: DTOConfig,
         base: type[DTOBase[ModelT]] | None,
         node: Node[Relation[ModelT, DTOBaseT], None],
+        *,
         if_no_fields: Literal["raise", "skip"] = "skip",
         **factory_kwargs: Any,
     ) -> Generator[DTOFieldDefinition[ModelT, ModelFieldT]]:
@@ -653,10 +656,10 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             model,
             dto_config,
             node,
-            base,
-            parent_field_def,
-            if_no_fields,
-            backend_kwargs,
+            base=base,
+            parent_field_def=parent_field_def,
+            if_no_fields=if_no_fields,
+            backend_kwargs=backend_kwargs,
             **kwargs,
         )
 

@@ -125,6 +125,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         self,
         model: type[DeclarativeT],
         session: SessionT,
+        *,
         statement: Select[tuple[DeclarativeT]] | None = None,
         execution_options: dict[str, Any] | None = None,
         deterministic_ordering: bool = False,
@@ -165,6 +166,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
     def _get_query_executor(
         self,
         executor_type: type[QueryExecutorT],
+        *,
         selection: QueryNodeType | None = None,
         dto_filter: BooleanFilterDTO | None = None,
         order_by: list[OrderByDTO] | None = None,

@@ -540,6 +540,7 @@ class AliasContext(Generic[DeclarativeT]):
         self,
         model: type[DeclarativeT],
         dialect: SupportedDialect,
+        *,
         root_alias: AliasedClass[DeclarativeBase] | None = None,
         parent: AliasContext[Any] | None = None,
         alias_map: dict[tuple[QueryNodeType, RelationshipSide], AliasedClass[Any]] | None = None,

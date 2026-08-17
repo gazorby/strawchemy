@@ -104,11 +104,14 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
         self,
         mapper: Strawchemy,
         backend: DTOBackend[EnumDTO] | None = None,
+        *,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
         self._mapper = mapper
-        super().__init__(mapper.config.inspector, backend or EnumBackend(), handle_cycles, type_map)
+        super().__init__(
+            mapper.config.inspector, backend or EnumBackend(), handle_cycles=handle_cycles, type_map=type_map
+        )
 
     @override
     def dto_name(
@@ -134,10 +137,13 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, EnumDTO], None],
+        *,
         if_no_fields: Literal["raise", "skip"] = "skip",
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
-        for field in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
+        for field in super().iter_field_definitions(
+            name, model, dto_config, base, node, if_no_fields=if_no_fields, **kwargs
+        ):
             yield GraphQLFieldDefinition.from_field(field)
 
     @override

@@ -365,6 +365,7 @@ class DTOConfig:
     def copy_with(
         self,
         purpose: Purpose | type[DTOUnset] = DTOUnset,
+        *,
         include: FieldSpec | None = None,
         global_include: FieldSpec | None = None,
         exclude: FieldSpec | None = None,

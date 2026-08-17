@@ -145,8 +145,7 @@ class StrawchemyField(StrawberryField):
         python_name: str | None = None,
         graphql_name: str | None = None,
         type_annotation: StrawberryAnnotation | None = None,
-        origin: None
-        | (builtins.type | Callable[..., Any] | staticmethod[Any, Any] | classmethod[Any, Any, Any]) = None,
+        origin: builtins.type | Callable[..., Any] | staticmethod[Any, Any] | classmethod[Any, Any, Any] | None = None,
         is_subscription: bool = False,
         description: str | None = None,
         base_resolver: StrawberryResolver[Any] | None = None,
@@ -263,6 +262,7 @@ class StrawchemyField(StrawberryField):
     def _list_resolver(
         self,
         info: Info,
+        *,
         filter_input: BooleanFilterDTO | None = None,
         order_by: list[OrderByDTO] | None = None,
         distinct_on: list[EnumDTO] | None = None,

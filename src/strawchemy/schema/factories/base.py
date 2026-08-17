@@ -91,11 +91,12 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         self,
         mapper: Strawchemy,
         backend: DTOBackend[GraphQLDTOT],
+        *,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(mapper.config.inspector, backend, handle_cycles, type_map, **kwargs)
+        super().__init__(mapper.config.inspector, backend, handle_cycles=handle_cycles, type_map=type_map, **kwargs)
         self._mapper = mapper
 
     def _check_model_instance_attribute(self, base: type[Any]) -> None:
@@ -243,6 +244,7 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
     def _config(
         self,
         purpose: Purpose,
+        *,
         include: FieldSpec | None = None,
         exclude: FieldSpec | None = None,
         partial: bool | None = None,
@@ -486,10 +488,13 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, GraphQLDTOT], None],
+        *,
         if_no_fields: Literal["raise", "skip"] = "skip",
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
-        for field in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
+        for field in super().iter_field_definitions(
+            name, model, dto_config, base, node, if_no_fields=if_no_fields, **kwargs
+        ):
             yield GraphQLFieldDefinition.from_field(field)
 
     @override

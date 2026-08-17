@@ -79,6 +79,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         self,
         mapper: Strawchemy,
         backend: DTOBackend[MappedGraphQLDTOT],
+        *,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
         aggregation_factory: AggregateFieldsFactory[AggregateDTOT] | None = None,
@@ -86,7 +87,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         distinct_on_factory: DistinctOnEnumFactory | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
+        super().__init__(mapper, backend, handle_cycles=handle_cycles, type_map=type_map, **kwargs)
         self._aggregation_factory = aggregation_factory or AggregateFieldsFactory(
             mapper, StrawberrryDTOBackend(AggregateDTO)
         )
@@ -148,6 +149,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         self,
         field: GraphQLFieldDefinition,
         dto: type[GraphQLDTOT],
+        *,
         order_config: DTOConfig,
         pagination_config: DTOConfig,
         distinct_on_config: DTOConfig,
@@ -175,6 +177,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         self,
         dto: type[GraphQLDTOT],
         base: type[Any] | None,
+        *,
         order: FieldSpec | None = None,
         paginate: FieldSpec | None = None,
         distinct_on: FieldSpec | None = None,
@@ -245,7 +248,12 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             # Add pagination, distinct_on and ordering arguments for relations
             if field.is_relation and field.uselist:
                 attributes[field.name], annotations[field.name] = self._relation_field(
-                    field, dto, order_config, pagination_config, distinct_on_config, default_pagination
+                    field,
+                    dto,
+                    order_config=order_config,
+                    pagination_config=pagination_config,
+                    distinct_on_config=distinct_on_config,
+                    default_pagination=default_pagination,
                 )
             # Add path filtering argument for JSON fields
             elif (
@@ -276,12 +284,14 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
-        if_no_fields: Literal["raise", "skip"] = "skip",
         *,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         aggregations: bool = False,
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
-        for field in super().iter_field_definitions(name, model, dto_config, base, node, if_no_fields, **kwargs):
+        for field in super().iter_field_definitions(
+            name, model, dto_config, base, node, if_no_fields=if_no_fields, **kwargs
+        ):
             if field.is_relation and field.uselist and aggregations:
                 yield self._aggregation_field(field, dto_config)
             yield field
@@ -344,13 +354,14 @@ class AggregateRootTypeFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         self,
         mapper: Strawchemy,
         backend: DTOBackend[MappedGraphQLDTOT],
+        *,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
         type_factory: ObjectTypeFactory[MappedGraphQLDTOT] | None = None,
         aggregation_factory: AggregateFieldsFactory[AggregateDTOT] | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
+        super().__init__(mapper, backend, handle_cycles=handle_cycles, type_map=type_map, **kwargs)
         self._type_factory = type_factory or ObjectTypeFactory(mapper, backend)
         self._aggregation_factory = aggregation_factory or AggregateFieldsFactory(
             mapper, StrawberrryDTOBackend(AggregateDTO)
@@ -370,6 +381,7 @@ class AggregateRootTypeFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
+        *,
         if_no_fields: Literal["raise", "skip"] = "skip",
         aggregations: bool = False,
         **kwargs: Any,
@@ -413,12 +425,13 @@ class AggregateFieldsFactory(GraphQLFactory[AggregateDTOT]):
         self,
         mapper: Strawchemy,
         backend: DTOBackend[AggregateDTOT],
+        *,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
         aggregation_builder: AggregationInspector | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
+        super().__init__(mapper, backend, handle_cycles=handle_cycles, type_map=type_map, **kwargs)
         self._aggregation_builder = aggregation_builder or AggregationInspector(mapper)
 
     @override
@@ -438,6 +451,7 @@ class AggregateFieldsFactory(GraphQLFactory[AggregateDTOT]):
         model: type[DeclarativeT],
         dto_config: DTOConfig,
         node: Node[Relation[Any, AggregateDTOT], None],
+        *,
         base: type[Any] | None = None,
         parent_field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]] | None = None,
         if_no_fields: Literal["raise", "skip"] = "skip",
@@ -487,10 +501,16 @@ class UpsertConflictEnumFactory(EnumFactory):
         self,
         mapper: Strawchemy,
         backend: UpsertConflictEnumBackend | None = None,
+        *,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
     ) -> None:
-        super().__init__(mapper, backend or UpsertConflictEnumBackend(mapper.config.inspector), handle_cycles, type_map)
+        super().__init__(
+            mapper,
+            backend or UpsertConflictEnumBackend(mapper.config.inspector),
+            handle_cycles=handle_cycles,
+            type_map=type_map,
+        )
 
     @override
     def dto_name(
@@ -506,6 +526,7 @@ class UpsertConflictEnumFactory(EnumFactory):
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, EnumDTO], None],
+        *,
         if_no_fields: Literal["raise", "skip"] = "skip",
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
@@ -550,11 +571,12 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         self,
         mapper: Strawchemy,
         backend: DTOBackend[MappedGraphQLDTOT],
+        *,
         handle_cycles: bool = True,
         type_map: dict[Any, Any] | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(mapper, backend, handle_cycles, type_map, **kwargs)
+        super().__init__(mapper, backend, handle_cycles=handle_cycles, type_map=type_map, **kwargs)
         self._identifier_input_dto_builder = StrawberrryDTOBackend(MappedStrawberryGraphQLDTO[DeclarativeBase])
         self._identifier_input_dto_factory = DTOFactory(self.inspector, self.backend)
         self._upsert_update_fields_enum_factory = EnumFactory(self._mapper)
@@ -717,8 +739,8 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         dto_config: DTOConfig,
         base: type[DTOBase[DeclarativeBase]] | None,
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
-        if_no_fields: Literal["raise", "skip"] = "skip",
         *,
+        if_no_fields: Literal["raise", "skip"] = "skip",
         aggregations: bool = False,
         **factory_kwargs: Unpack[_HasModeKwargs],
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
@@ -729,7 +751,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             dto_config,
             base,
             node,
-            if_no_fields,
+            if_no_fields=if_no_fields,
             mode=mode,
             aggregations=aggregations,
             **factory_kwargs,

@@ -347,6 +347,7 @@ class StrawberryRegistry:
         graphql_type: GraphQLType,
         dto_config: DTOConfig,
         current_node: Node[Relation[Any, Any], None] | None,
+        *,
         override: bool = False,
         user_defined: bool = False,
         paginate: FieldSpec | None = None,
@@ -415,6 +416,7 @@ class StrawberryRegistry:
     def register_type(
         self,
         dto: type[StrawchemyDTOT],
+        *,
         graphql_type: GraphQLType,
         dto_config: DTOConfig,
         current_node: Node[Relation[Any, Any], None] | None = None,
@@ -464,6 +466,7 @@ class StrawberryRegistry:
     def register_enum(
         self,
         enum_type: type[EnumT],
+        *,
         dto_config: DTOConfig,
         override: bool = False,
         user_defined: bool = False,
