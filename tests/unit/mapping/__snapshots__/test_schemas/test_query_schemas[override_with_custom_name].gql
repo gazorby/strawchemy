@@ -4,8 +4,8 @@ type ColorType {
   name: Int!
   fruitsAggregate: FruitAggregate!
 
-  """Fetch objects from the FruitType collection"""
-  fruits: [FruitType!]!
+  """Fetch objects from the FruitTypeCustomName collection"""
+  fruits: [FruitTypeCustomName!]!
   id: UUID!
 }
 
@@ -37,15 +37,6 @@ type FruitNumericFields {
 type FruitSumFields {
   name: String
   sweetness: Int
-}
-
-"""GraphQL type"""
-type FruitType {
-  color: ColorType!
-  name: Int!
-  colorId: UUID
-  sweetness: Int!
-  id: UUID!
 }
 
 """GraphQL type"""
