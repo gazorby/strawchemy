@@ -1,6 +1,6 @@
 [project]
 name = "strawchemy"
-version = "0.23.0"
+version = "0.23.1"
 description = "Generate GraphQL API from SQLAlchemy models"
 readme = "README.md"
 requires-python = ">=3.10"

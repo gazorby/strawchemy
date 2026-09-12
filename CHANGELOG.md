@@ -3,6 +3,15 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.23.1](https://github.com/gazorby/strawchemy/compare/bdfbc5d76ab130e88ef1111eb1e6a897e63ea49b..v0.23.1) - 2026-09-12
+#### ⚙️ Miscellaneous Tasks
+- (**bump**) install uv before bumping - ([37b3073](https://github.com/gazorby/strawchemy/commit/37b3073fbf4985813584ad068189c582ca8a6883)) - [@gazorby](https://github.com/gazorby)
+
+#### 🤝️ Contributors
+- [@gazorby](https://github.com/gazorby)
+
+- - -
+
 ## [v0.23.0](https://github.com/gazorby/strawchemy/compare/9169f2053e00f036dfe38f8c55436fa8608e8664..v0.23.0) - 2026-09-12
 #### 🚀 Features
 - fine-grained aggregation filters ([#208](https://github.com/gazorby/strawchemy/pull/208)) - ([4919af1](https://github.com/gazorby/strawchemy/commit/4919af1b492d648d04d271caf0bbfb0d96c3b9d8)) - [@gazorby](https://github.com/gazorby)
