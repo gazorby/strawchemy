@@ -2,19 +2,19 @@
 
 - Depends: uv:install
 
-- **Usage**: `auto-bump`
+- **Usage:** `auto-bump`
 
 Auto bump the version
 
 ## `ci:install`
 
-- **Usage**: `ci:install`
+- **Usage:** `ci:install`
 
 Install dependencies and pre-commit hooks
 
 ## `ci:lint`
 
-- **Usage**: `ci:lint`
+- **Usage:** `ci:lint`
 
 Lint CI yaml files
 
@@ -25,17 +25,16 @@ Run tests in CI
 
 - Depends: ci:install
 
-- **Usage**: `ci:test <session>`
+- **Usage:** `ci:test <session>`
 
 ### Arguments
-
-#### `<session>`
+- **`<session>`**
 
 ## `ci:test-matrix`
 
 - Depends: ci:install
 
-- **Usage**: `ci:test-matrix`
+- **Usage:** `ci:test-matrix`
 
 Output test matrix for CI
 
@@ -43,14 +42,14 @@ Output test matrix for CI
 
 - Depends: ci:install
 
-- **Usage**: `ci:test-sessions`
+- **Usage:** `ci:test-sessions`
 
 Output test session names for CI
 
 ## `clean`
 
-- **Usage**: `clean`
-- **Aliases**: `c`
+- **Usage:** `clean`
+- **Aliases:** `c`
 
 Clean working directory
 
@@ -58,8 +57,8 @@ Clean working directory
 
 - Depends: ruff:format, tombi
 
-- **Usage**: `format`
-- **Aliases**: `f`
+- **Usage:** `format`
+- **Aliases:** `f`
 
 Lint the code
 
@@ -67,14 +66,14 @@ Lint the code
 
 - Depends: install:pre-commit, uv:install
 
-- **Usage**: `install`
-- **Aliases**: `i`
+- **Usage:** `install`
+- **Aliases:** `i`
 
 Install dependencies and pre-commit hooks
 
 ## `install:pre-commit`
 
-- **Usage**: `install:pre-commit`
+- **Usage:** `install:pre-commit`
 
 Install pre-commit hooks
 
@@ -82,8 +81,8 @@ Install pre-commit hooks
 
 - Depends: vulture, ty, ruff:check, ruff:format:check, slotscheck, unasyncd:check
 
-- **Usage**: `lint`
-- **Aliases**: `l`
+- **Usage:** `lint`
+- **Aliases:** `l`
 
 Lint the code
 
@@ -91,13 +90,13 @@ Lint the code
 
 - Depends: install:pre-commit
 
-- **Usage**: `pre-commit`
+- **Usage:** `pre-commit`
 
 Run pre-commit checks
 
 ## `release:authors:sync`
 
-- **Usage**: `release:authors:sync`
+- **Usage:** `release:authors:sync`
 
 Resolve GitHub usernames for commit authors into cog config
 
@@ -105,7 +104,7 @@ Resolve GitHub usernames for commit authors into cog config
 
 - Depends: release:authors:sync
 
-- **Usage**: `release:bump`
+- **Usage:** `release:bump`
 
 Resolve author handles, then bump the version and changelog
 
@@ -113,44 +112,44 @@ Resolve author handles, then bump the version and changelog
 
 - Depends: release:authors:sync
 
-- **Usage**: `release:changelog`
-- **Aliases**: `cl`
+- **Usage:** `release:changelog`
+- **Aliases:** `cl`
 
 Print release notes for the latest tag
 
 ## `render:usage`
 
-- **Usage**: `render:usage`
+- **Usage:** `render:usage`
 
 Generate tasks documentation
 
 ## `ruff:check`
 
-- **Usage**: `ruff:check`
+- **Usage:** `ruff:check`
 
 Check ruff formatting
 
 ## `ruff:fix`
 
-- **Usage**: `ruff:fix`
+- **Usage:** `ruff:fix`
 
 Fix ruff errors
 
 ## `ruff:format`
 
-- **Usage**: `ruff:format`
+- **Usage:** `ruff:format`
 
 Format code
 
 ## `ruff:format:check`
 
-- **Usage**: `ruff:format:check`
+- **Usage:** `ruff:format:check`
 
 Format code
 
 ## `slotscheck`
 
-- **Usage**: `slotscheck`
+- **Usage:** `slotscheck`
 
 Run slotscheck
 
@@ -161,18 +160,17 @@ Run tests
 
 - Depends: uv:install
 
-- **Usage**: `test [test]…`
-- **Aliases**: `t`
+- **Usage:** `test [test]…`
+- **Aliases:** `t`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ## `test:add-new-snapshots`
 
 - Depends: test:add-new-snapshots:inline, test:add-new-snapshots:file
 
-- **Usage**: `test:add-new-snapshots`
+- **Usage:** `test:add-new-snapshots`
 
 Run snapshot-based tests and add new snapshots
 
@@ -180,7 +178,7 @@ Run snapshot-based tests and add new snapshots
 
 - Depends: uv:install
 
-- **Usage**: `test:add-new-snapshots:file`
+- **Usage:** `test:add-new-snapshots:file`
 
 Run snapshot-based tests and add new snapshots
 
@@ -188,7 +186,7 @@ Run snapshot-based tests and add new snapshots
 
 - Depends: uv:install
 
-- **Usage**: `test:add-new-snapshots:inline`
+- **Usage:** `test:add-new-snapshots:inline`
 
 Run snapshot-based tests and add new snapshots
 
@@ -199,12 +197,11 @@ Run tests with coverage
 
 - Depends: uv:install
 
-- **Usage**: `test:coverage [test]…`
-- **Aliases**: `tc`
+- **Usage:** `test:coverage [test]…`
+- **Aliases:** `tc`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ## `test:integration`
 
@@ -213,18 +210,16 @@ Run integration tests
 
 - Depends: uv:install
 
-- **Usage**: `test:integration [--python <python>] [test]…`
-- **Aliases**: `ti`
+- **Usage:** `test:integration [--python <python>] [test]…`
+- **Aliases:** `ti`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--python <python>`**
 
-#### `--python <python>`
-
-**Default:** `3.13`
+  **Default:** `3.13`
 
 ## `test:integration-all`
 
@@ -233,18 +228,16 @@ Run integration tests on all supported python versions
 
 - Depends: uv:install
 
-- **Usage**: `test:integration-all [--python <python>] [test]…`
-- **Aliases**: `tia`
+- **Usage:** `test:integration-all [--python <python>] [test]…`
+- **Aliases:** `tia`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--python <python>`**
 
-#### `--python <python>`
-
-**Default:** `3.13`
+  **Default:** `3.13`
 
 ## `test:integration-mysql`
 
@@ -253,18 +246,16 @@ Run integration tests
 
 - Depends: uv:install
 
-- **Usage**: `test:integration-mysql [--python <python>] [test]…`
-- **Aliases**: `ti-mysql`
+- **Usage:** `test:integration-mysql [--python <python>] [test]…`
+- **Aliases:** `ti-mysql`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--python <python>`**
 
-#### `--python <python>`
-
-**Default:** `3.13`
+  **Default:** `3.13`
 
 ## `test:integration-postgres`
 
@@ -273,18 +264,16 @@ Run integration tests
 
 - Depends: uv:install
 
-- **Usage**: `test:integration-postgres [--python <python>] [test]…`
-- **Aliases**: `ti-postgres`
+- **Usage:** `test:integration-postgres [--python <python>] [test]…`
+- **Aliases:** `ti-postgres`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--python <python>`**
 
-#### `--python <python>`
-
-**Default:** `3.13`
+  **Default:** `3.13`
 
 ## `test:integration-sqlite`
 
@@ -293,18 +282,16 @@ Run integration tests
 
 - Depends: uv:install
 
-- **Usage**: `test:integration-sqlite [--python <python>] [test]…`
-- **Aliases**: `ti-sqlite`
+- **Usage:** `test:integration-sqlite [--python <python>] [test]…`
+- **Aliases:** `ti-sqlite`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--python <python>`**
 
-#### `--python <python>`
-
-**Default:** `3.13`
+  **Default:** `3.13`
 
 ## `test:integration:coverage`
 
@@ -313,18 +300,16 @@ Run integration tests with coverage
 
 - Depends: uv:install
 
-- **Usage**: `test:integration:coverage [--python <python>] [test]…`
-- **Aliases**: `tic`
+- **Usage:** `test:integration:coverage [--python <python>] [test]…`
+- **Aliases:** `tic`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--python <python>`**
 
-#### `--python <python>`
-
-**Default:** `3.13`
+  **Default:** `3.13`
 
 ## `test:patch-coverage`
 
@@ -333,22 +318,19 @@ Run tests and report coverage on changed lines only (vs a branch)
 
 - Depends: uv:install
 
-- **Usage**: `test:patch-coverage [--branch <branch>] [--fail-under <fail_under>] [test]…`
-- **Aliases**: `tpc`
+- **Usage:** `test:patch-coverage [--branch <branch>] [--fail-under <fail_under>] [test]…`
+- **Aliases:** `tpc`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--branch <branch>`**
 
-#### `--branch <branch>`
+  **Default:** `main`
+- **`--fail-under <fail_under>`**
 
-**Default:** `main`
-
-#### `--fail-under <fail_under>`
-
-**Default:** `100`
+  **Default:** `100`
 
 ## `test:unit`
 
@@ -357,18 +339,16 @@ Run unit tests
 
 - Depends: uv:install
 
-- **Usage**: `test:unit [--python <python>] [test]…`
-- **Aliases**: `tu`
+- **Usage:** `test:unit [--python <python>] [test]…`
+- **Aliases:** `tu`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--python <python>`**
 
-#### `--python <python>`
-
-**Default:** `3.13`
+  **Default:** `3.13`
 
 ## `test:unit-all`
 
@@ -377,18 +357,16 @@ Run unit tests on all supported python versions
 
 - Depends: uv:install
 
-- **Usage**: `test:unit-all [--python <python>] [test]…`
-- **Aliases**: `tua`
+- **Usage:** `test:unit-all [--python <python>] [test]…`
+- **Aliases:** `tua`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--python <python>`**
 
-#### `--python <python>`
-
-**Default:** `3.13`
+  **Default:** `3.13`
 
 ## `test:unit:coverage`
 
@@ -397,18 +375,16 @@ Run unit tests with coverage
 
 - Depends: uv:install
 
-- **Usage**: `test:unit:coverage [--python <python>] [test]…`
-- **Aliases**: `tuc`
+- **Usage:** `test:unit:coverage [--python <python>] [test]…`
+- **Aliases:** `tuc`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--python <python>`**
 
-#### `--python <python>`
-
-**Default:** `3.13`
+  **Default:** `3.13`
 
 ## `test:unit:no-extras`
 
@@ -417,59 +393,57 @@ Run unit tests without extras dependencies
 
 - Depends: uv:install
 
-- **Usage**: `test:unit:no-extras [--python <python>] [test]…`
-- **Aliases**: `tug`
+- **Usage:** `test:unit:no-extras [--python <python>] [test]…`
+- **Aliases:** `tug`
 
 ### Arguments
-
-#### `[test]…`
+- **`[test]…`**
 
 ### Flags
+- **`--python <python>`**
 
-#### `--python <python>`
-
-**Default:** `3.13`
+  **Default:** `3.13`
 
 ## `test:update-snapshots`
 
 - Depends: uv:install
 
-- **Usage**: `test:update-snapshots`
+- **Usage:** `test:update-snapshots`
 
 Run snapshot-based tests and update snapshots
 
 ## `tombi`
 
-- **Usage**: `tombi`
+- **Usage:** `tombi`
 
 Run tombi
 
 ## `ty`
 
-- **Usage**: `ty`
+- **Usage:** `ty`
 
 Run ty
 
 ## `unasyncd`
 
-- **Usage**: `unasyncd`
+- **Usage:** `unasyncd`
 
 Generate synchronous code from asynchronous version
 
 ## `unasyncd:check`
 
-- **Usage**: `unasyncd:check`
+- **Usage:** `unasyncd:check`
 
 Check synchronous code from asynchronous version
 
 ## `uv:install`
 
-- **Usage**: `uv:install`
+- **Usage:** `uv:install`
 
 Install dependencies
 
 ## `vulture`
 
-- **Usage**: `vulture`
+- **Usage:** `vulture`
 
 Run vulture
