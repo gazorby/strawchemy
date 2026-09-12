@@ -3,6 +3,41 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## [v0.23.0](https://github.com/gazorby/strawchemy/compare/9169f2053e00f036dfe38f8c55436fa8608e8664..v0.23.0) - 2026-09-12
+#### 🚀 Features
+- fine-grained aggregation filters ([#208](https://github.com/gazorby/strawchemy/pull/208)) - ([4919af1](https://github.com/gazorby/strawchemy/commit/4919af1b492d648d04d271caf0bbfb0d96c3b9d8)) - [@gazorby](https://github.com/gazorby)
+- fine grained filters ([#199](https://github.com/gazorby/strawchemy/pull/199)) - ([b4e8617](https://github.com/gazorby/strawchemy/commit/b4e861704ef1ffc0a9b286bd34f3cf6cd0241081)) - [@gazorby](https://github.com/gazorby)
+- add per-field default order by ([#196](https://github.com/gazorby/strawchemy/pull/196)) - ([227bc21](https://github.com/gazorby/strawchemy/commit/227bc2111b4b426f613b05fd3d8e584a5331266e)) - [@gazorby](https://github.com/gazorby)
+- add field-level alias ([#194](https://github.com/gazorby/strawchemy/pull/194)) - ([e8ef6a3](https://github.com/gazorby/strawchemy/commit/e8ef6a34087708f3118050380ad839217c395459)) - [@gazorby](https://github.com/gazorby)
+#### 🐛 Bug Fixes
+- (**mutation**) only register sqla events once per mapper ([#201](https://github.com/gazorby/strawchemy/pull/201)) - ([c663958](https://github.com/gazorby/strawchemy/commit/c663958b02b8b894f15aa96a8bdfbc793f784cce)) - [@gazorby](https://github.com/gazorby)
+#### ⚡ Performance
+- (**transpiler**) small improvements  ([#205](https://github.com/gazorby/strawchemy/pull/205)) - ([f8f03a5](https://github.com/gazorby/strawchemy/commit/f8f03a5d80528d5bf4914ca3019546ddfc7b5830)) - [@gazorby](https://github.com/gazorby)
+#### 🚜 Refactor
+- (**inspector**) remove sqla private usages ([#203](https://github.com/gazorby/strawchemy/pull/203)) - ([6ca2f19](https://github.com/gazorby/strawchemy/commit/6ca2f19540d09974811fa1d800162cd9fca3383c)) - [@gazorby](https://github.com/gazorby)
+- (**schema**) remove duplicated field_map on strawchemy types  ([#200](https://github.com/gazorby/strawchemy/pull/200)) - ([2f67a26](https://github.com/gazorby/strawchemy/commit/2f67a26b0136a6e77b8ef6ab1f44b7b366aa9151)) - [@gazorby](https://github.com/gazorby)
+- new transpiler ([#202](https://github.com/gazorby/strawchemy/pull/202)) - ([e000a8e](https://github.com/gazorby/strawchemy/commit/e000a8eca47287c8bb48d03ea822707b9023b92a)) - [@gazorby](https://github.com/gazorby)
+#### ⚙️ Miscellaneous Tasks
+- (**ci**) annotate tags - ([bb5398f](https://github.com/gazorby/strawchemy/commit/bb5398f802e6ec651f72a0db05dd99456cb614e9)) - [@gazorby](https://github.com/gazorby)
+- (**deps**) extract unasyncd in its own group - ([c3cb4d1](https://github.com/gazorby/strawchemy/commit/c3cb4d18a8e45171af0161369dca581d56e94f82)) - [@gazorby](https://github.com/gazorby)
+- (**labelers**) fix quoting - ([ff38da3](https://github.com/gazorby/strawchemy/commit/ff38da3fc409ba99e7f6915f1b91ae51baeedfe3)) - [@gazorby](https://github.com/gazorby)
+- (**labelers**) support scope - ([06e701f](https://github.com/gazorby/strawchemy/commit/06e701fb48958abcdc6557cfa0e94120b3be9cb3)) - [@gazorby](https://github.com/gazorby)
+- (**labelers**) add perf  tag - ([8c6bc63](https://github.com/gazorby/strawchemy/commit/8c6bc63ff0362b67d47ec326f2d37f1110f43a93)) - [@gazorby](https://github.com/gazorby)
+- (**labelers**) fix paths - ([5c29f01](https://github.com/gazorby/strawchemy/commit/5c29f0130c1a2dd37f64642bdfe5897a136a1599)) - [@gazorby](https://github.com/gazorby)
+- (**labelers**) fix config paths - ([05492c8](https://github.com/gazorby/strawchemy/commit/05492c8d225554edfe1cb3f64cde6a9264ef2127)) - [@gazorby](https://github.com/gazorby)
+- (**mise**) add uv in tools - ([c7cdc85](https://github.com/gazorby/strawchemy/commit/c7cdc850fb2af0a41ab11c85c2b21f598fc96354)) - [@gazorby](https://github.com/gazorby)
+- (**pr-labeler**) only take pr title into account - ([3b36909](https://github.com/gazorby/strawchemy/commit/3b36909e4c38fc44288339c44e26034d580173ed)) - [@gazorby](https://github.com/gazorby)
+- (**workflows**) remove redundant generate_release_notes option from release action configuration - ([40e080d](https://github.com/gazorby/strawchemy/commit/40e080d0abb255ce3422a773ba7a36303669f7aa)) - [@gazorby](https://github.com/gazorby)
+- update changelog template - ([66e1337](https://github.com/gazorby/strawchemy/commit/66e13377603f1573476a74d18199601e09f037d6)) - [@gazorby](https://github.com/gazorby)
+- add issue/pr labeler - ([a01a527](https://github.com/gazorby/strawchemy/commit/a01a52708bff361cc695aba39efbf706f1c0be29)) - [@gazorby](https://github.com/gazorby)
+- drop bump-my-version and git-cliff in favour of cocogitto ([#206](https://github.com/gazorby/strawchemy/pull/206)) - ([84f0a82](https://github.com/gazorby/strawchemy/commit/84f0a82e00cf4b58c26a64d319008e714d1b5485)) - [@gazorby](https://github.com/gazorby)
+- publish before release to enable immutable releases ([#195](https://github.com/gazorby/strawchemy/pull/195)) - ([2b578bd](https://github.com/gazorby/strawchemy/commit/2b578bd47f37288424824703f8ebf5154de9e240)) - [@gazorby](https://github.com/gazorby)
+
+#### 🤝️ Contributors
+- [@gazorby](https://github.com/gazorby)
+
+- - -
+
 
 ## Unreleased ([b9171fd..3b36909](https://github.com/gazorby/strawchemy/compare/b9171fd..3b36909))
 #### 🚀 Features
