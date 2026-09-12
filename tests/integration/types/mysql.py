@@ -171,6 +171,15 @@ class FruitFineGrainedFilter:
     sweeter_than_in: int = strawchemy.filter_field(apply=_fruit_sweeter_than, join="in")
 
 
+# `sweetness` is included so `sum`'s `arguments=["sweetness"]` stays within the decorator's scope.
+@strawchemy.aggregate_filter(
+    Fruit, include=["id", "sweetness"], functions=["count", "sum"], name="FruitFineGrainedAggregateFilter"
+)
+class FruitFineGrainedAggregateFilter:
+    count: int = strawchemy.filter_field(ops=["gt"])
+    sum: float = strawchemy.filter_field(arguments=["sweetness"], ops=["gte"])
+
+
 @strawchemy.order(Fruit, include="all", scope="schema")
 class FruitOrderBy: ...
 
@@ -255,6 +264,11 @@ class ColorPartial: ...
 
 @strawchemy.filter(Color, include="all")
 class ColorFilter: ...
+
+
+@strawchemy.filter(Color, include=["name", "fruits"], name="ColorFineGrainedFilter")
+class ColorFineGrainedFilter:
+    fruits_aggregate: FruitFineGrainedAggregateFilter  # ty: ignore[invalid-type-form]
 
 
 # Ranked User
@@ -415,6 +429,9 @@ class AsyncQuery:
     colors_hooks_paginated: list[ColorTypeHooks] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
+    colors_fine_grained: list[ColorType] = strawchemy.field(
+        filter_input=ColorFineGrainedFilter, repository_type=StrawchemyAsyncRepository
+    )
     # User
     user: UserType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
     users: list[UserType] = strawchemy.field(
@@ -540,6 +557,9 @@ class SyncQuery:
     colors_hooks: list[ColorTypeHooks] = strawchemy.field(repository_type=StrawchemySyncRepository)
     colors_hooks_paginated: list[ColorTypeHooks] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
+    )
+    colors_fine_grained: list[ColorType] = strawchemy.field(
+        filter_input=ColorFineGrainedFilter, repository_type=StrawchemySyncRepository
     )
     # User
     user: UserType = strawchemy.field(repository_type=StrawchemySyncRepository)

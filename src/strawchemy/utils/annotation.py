@@ -63,6 +63,11 @@ def get_origin_or_self(annotation: Any) -> Any:
     return get_origin(annotation) or annotation
 
 
+def annotation_name(annotation: Any) -> str:
+    """Renders an annotation for an error message, tolerating typing special forms."""
+    return getattr(annotation, "__name__", None) or str(annotation)
+
+
 def inner_types(annotation: Any) -> tuple[Any, ...]:
     """Flatten a generic annotation to its innermost leaf types.
 

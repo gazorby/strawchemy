@@ -165,12 +165,20 @@ class OutputFunctionInfo:
 @dataclass
 class FilterFunctionInfo:
     function: AggregationFunction
+    """SQL aggregate this filter applies."""
     enum_fields: type[EnumDTO]
+    """Enum of the columns the function may aggregate, exposed as its ``arguments``."""
     aggregation_type: AggregationType
+    """Type filter selecting the candidate columns; several functions can share one."""
     comparison_type: type[GraphQLComparison]
+    """Comparison input the ``predicate`` exposes, stored subscripted (``OrderComparison[int]``)."""
+    comparison_data_type: type[Any]
+    """Scalar the predicate compares against, used to build restricted comparisons."""
     require_arguments: bool = True
+    """Whether ``arguments`` is mandatory; ``count`` aggregates rows and needs none."""
 
     field_name_: str | None = None
+    """Generated field name when it differs from ``function`` (e.g. ``min_datetime``)."""
 
     @property
     def field_name(self) -> str:
