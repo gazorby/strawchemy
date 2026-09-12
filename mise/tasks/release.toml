@@ -1,0 +1,28 @@
+["release:changelog"]
+description = "Print release notes for the latest tag"
+alias = "cl"
+depends = ["release:authors:sync"]
+run = '''
+    #!/usr/bin/env bash
+    cog changelog --at "$(git describe --tags --abbrev=0)" "$@"
+'''
+
+["release:bump"]
+description = "Resolve author handles, then bump the version and changelog"
+depends = ["release:authors:sync"]
+run = '''
+    #!/usr/bin/env bash
+    cog bump --skip-untracked --annotated "{% raw %}bump from {{latest}} to {{version}}{% endraw %}" "$@"
+    tombi format cog.toml
+'''
+
+["release:authors:sync"]
+description = "Resolve GitHub usernames for commit authors into cog config"
+run = '''
+    #!/usr/bin/env bash
+    gh api --paginate "repos/{owner}/{repo}/commits?per_page=100" \
+        --jq '.[] | [.commit.author.name, (.author.login // "")] | @tsv' \
+        | awk -F'\t' '$2 != "" && !seen[$1]++' \
+        | jq -R -s 'split("\n") | map(select(length > 0) | split("\t") | {signature: .[0], username: .[1]})' \
+        | yq -p toml -o toml -i '.changelog.authors = ((.changelog.authors + load("/dev/stdin")) | unique_by(.signature))' cog.toml
+'''

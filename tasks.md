@@ -10,7 +10,7 @@ Auto bump the version
 
 - **Usage:** `ci:install`
 
-Install dependencies and pre-commit hooks
+Create the CI virtualenv
 
 ## `ci:lint`
 
@@ -60,7 +60,7 @@ Clean working directory
 - **Usage:** `format`
 - **Aliases:** `f`
 
-Lint the code
+Format the code
 
 ## `install`
 
@@ -127,7 +127,7 @@ Generate tasks documentation
 
 - **Usage:** `ruff:check`
 
-Check ruff formatting
+Run ruff lint checks
 
 ## `ruff:fix`
 
@@ -145,7 +145,7 @@ Format code
 
 - **Usage:** `ruff:format:check`
 
-Format code
+Check code formatting
 
 ## `slotscheck`
 
@@ -172,7 +172,7 @@ Run tests
 
 - **Usage:** `test:add-new-snapshots`
 
-Run snapshot-based tests and add new snapshots
+Run snapshot-based tests and add new inline and file snapshots
 
 ## `test:add-new-snapshots:file`
 
@@ -180,7 +180,7 @@ Run snapshot-based tests and add new snapshots
 
 - **Usage:** `test:add-new-snapshots:file`
 
-Run snapshot-based tests and add new snapshots
+Run snapshot-based tests and add new file snapshots
 
 ## `test:add-new-snapshots:inline`
 
@@ -188,7 +188,7 @@ Run snapshot-based tests and add new snapshots
 
 - **Usage:** `test:add-new-snapshots:inline`
 
-Run snapshot-based tests and add new snapshots
+Run snapshot-based tests and add new inline snapshots
 
 ## `test:coverage`
 
@@ -228,20 +228,15 @@ Run integration tests on all supported python versions
 
 - Depends: uv:install
 
-- **Usage:** `test:integration-all [--python <python>] [test]…`
+- **Usage:** `test:integration-all [test]…`
 - **Aliases:** `tia`
 
 ### Arguments
 - **`[test]…`**
 
-### Flags
-- **`--python <python>`**
-
-  **Default:** `3.13`
-
 ## `test:integration-mysql`
 
-Run integration tests
+Run MySQL integration tests
 
 
 - Depends: uv:install
@@ -259,7 +254,7 @@ Run integration tests
 
 ## `test:integration-postgres`
 
-Run integration tests
+Run PostgreSQL integration tests
 
 
 - Depends: uv:install
@@ -277,7 +272,7 @@ Run integration tests
 
 ## `test:integration-sqlite`
 
-Run integration tests
+Run SQLite integration tests
 
 
 - Depends: uv:install
@@ -357,16 +352,11 @@ Run unit tests on all supported python versions
 
 - Depends: uv:install
 
-- **Usage:** `test:unit-all [--python <python>] [test]…`
+- **Usage:** `test:unit-all [test]…`
 - **Aliases:** `tua`
 
 ### Arguments
 - **`[test]…`**
-
-### Flags
-- **`--python <python>`**
-
-  **Default:** `3.13`
 
 ## `test:unit:coverage`
 

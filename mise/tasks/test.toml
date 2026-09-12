@@ -1,0 +1,141 @@
+[test]
+description = "Run tests"
+depends = "uv:install"
+alias = "t"
+usage = 'arg "[test]" var=#true'
+run = "uv run pytest {{vars.local_pytest_options}} ${usage_test-}"
+
+["test:coverage"]
+description = "Run tests with coverage"
+depends = "uv:install"
+alias = "tc"
+usage = 'arg "[test]" var=#true'
+run = "uv run pytest {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
+
+["test:patch-coverage"]
+description = "Run tests and report coverage on changed lines only (vs a branch)"
+depends = "uv:install"
+alias = "tpc"
+usage = '''
+flag "--branch <branch>" default="main"
+flag "--fail-under <fail_under>" default="100"
+arg "[test]" var=#true
+'''
+run = [
+  "{{vars.uv_run}} diff-cover coverage.xml --compare-branch=${usage_branch} --fail-under=${usage_fail_under}",
+]
+
+["test:unit"]
+description = "Run unit tests"
+depends = "uv:install"
+alias = "tu"
+usage = '''
+flag "--python <python>" default="3.13"
+arg "[test]" var=#true
+'''
+run = "uv run nox -r -P ${usage_python-} -s unit -- {{vars.local_pytest_options}} ${usage_test-}"
+
+["test:unit-all"]
+description = "Run unit tests on all supported python versions"
+depends = "uv:install"
+alias = "tua"
+usage = 'arg "[test]" var=#true'
+run = "uv run nox -r -s unit -- {{vars.local_pytest_options}} ${usage_test-}"
+
+["test:unit:no-extras"]
+description = "Run unit tests without extras dependencies"
+depends = "uv:install"
+alias = "tug"
+usage = '''
+flag "--python <python>" default="3.13"
+arg "[test]" var=#true
+'''
+run = "uv run nox -r -P ${usage_python-} -s unit-no-extras -- {{vars.local_pytest_options}} ${usage_test-}"
+
+["test:unit:coverage"]
+description = "Run unit tests with coverage"
+depends = "uv:install"
+alias = "tuc"
+usage = '''
+flag "--python <python>" default="3.13"
+arg "[test]" var=#true
+'''
+run = "uv run nox -r -P ${usage_python-} -s unit -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
+
+["test:integration"]
+description = "Run integration tests"
+depends = "uv:install"
+alias = "ti"
+usage = '''
+flag "--python <python>" default="3.13"
+arg "[test]" var=#true
+'''
+run = "uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_options}} ${usage_test-}"
+
+["test:integration-postgres"]
+description = "Run PostgreSQL integration tests"
+depends = "uv:install"
+alias = "ti-postgres"
+usage = '''
+flag "--python <python>" default="3.13"
+arg "[test]" var=#true
+'''
+run = "uv run nox -r -P ${usage_python-} -t postgres -- {{vars.local_pytest_options}} ${usage_test-}"
+
+["test:integration-mysql"]
+description = "Run MySQL integration tests"
+depends = "uv:install"
+alias = "ti-mysql"
+usage = '''
+flag "--python <python>" default="3.13"
+arg "[test]" var=#true
+'''
+run = "uv run nox -r -P ${usage_python-} -t mysql -- {{vars.local_pytest_options}} ${usage_test-}"
+
+["test:integration-sqlite"]
+description = "Run SQLite integration tests"
+depends = "uv:install"
+alias = "ti-sqlite"
+usage = '''
+flag "--python <python>" default="3.13"
+arg "[test]" var=#true
+'''
+run = "uv run nox -r -P ${usage_python-} -t sqlite -- {{vars.local_pytest_options}} ${usage_test-}"
+
+["test:integration:coverage"]
+description = "Run integration tests with coverage"
+depends = "uv:install"
+alias = "tic"
+usage = '''
+flag "--python <python>" default="3.13"
+arg "[test]" var=#true
+'''
+run = "uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
+
+["test:integration-all"]
+description = "Run integration tests on all supported python versions"
+depends = "uv:install"
+alias = "tia"
+usage = 'arg "[test]" var=#true'
+run = "uv run nox -r -s integration -- {{vars.local_pytest_options}} ${usage_test-}"
+
+["test:update-snapshots"]
+description = "Run snapshot-based tests and update snapshots"
+depends = "uv:install"
+run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update"
+
+["test:add-new-snapshots:inline"]
+description = "Run snapshot-based tests and add new inline snapshots"
+depends = "uv:install"
+wait_for = "uv:install"
+run = "uv run pytest {{vars.local_pytest_options}} -n=0 -m inline_snapshot --inline-snapshot=create"
+
+["test:add-new-snapshots:file"]
+description = "Run snapshot-based tests and add new file snapshots"
+depends = "uv:install"
+wait_for = "uv:install"
+run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update-new-only"
+
+["test:add-new-snapshots"]
+description = "Run snapshot-based tests and add new inline and file snapshots"
+depends = ["test:add-new-snapshots:inline", "test:add-new-snapshots:file"]

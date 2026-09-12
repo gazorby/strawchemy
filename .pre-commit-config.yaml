@@ -85,7 +85,7 @@ repos:
         name: Tasks documentation
         entry: mise run render:usage
         language: system
-        files: ^mise.toml$
+        files: ^(mise\.toml|mise/tasks/.*\.toml)$
         pass_filenames: false
         require_serial: true
 

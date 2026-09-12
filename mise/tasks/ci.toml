@@ -1,0 +1,35 @@
+["ci:install"]
+description = "Create the CI virtualenv"
+run = "uv venv --allow-existing"
+
+["ci:test"]
+description = "Run tests in CI"
+usage = 'arg "<session>"'
+depends = "ci:install"
+env = { UV_PYTHON_PREFERENCE = "only-managed" }
+run = "uv run {{vars.ci_uv_run_options}} nox -s \"${usage_session-}\" -- -n=2 {{vars.ci_pytest_coverage_options}}"
+
+["ci:lint"]
+description = "Lint CI yaml files"
+run = "actionlint -shellcheck ''"
+
+["ci:test-matrix"]
+description = "Output test matrix for CI"
+depends = "ci:install"
+run = '''
+    uv run {{vars.ci_uv_run_options}} nox --json -t tests -t ci -l |
+    jq 'map(
+        {
+        session,
+        tags,
+        python,
+        name,
+        job_name: "\( .name ) on \( .python )\( if .call_spec != {} then " (\(.call_spec | to_entries | map("\(.key)=\(.value)") | join(", ")))" else "" end )"
+        }
+    )'
+'''
+
+["ci:test-sessions"]
+description = "Output test session names for CI"
+depends = "ci:install"
+run = "uv run {{vars.ci_uv_run_options}} nox --json -t tests -l | jq 'map(.name) | unique'"

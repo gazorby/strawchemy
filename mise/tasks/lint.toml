@@ -1,0 +1,67 @@
+["ruff:check"]
+description = "Run ruff lint checks"
+run = "{{vars.uv_run}} ruff --version  && {{vars.uv_run}} ruff check"
+
+["ruff:fix"]
+description = "Fix ruff errors"
+run = "{{vars.uv_run}} ruff check --fix --unsafe-fixes"
+
+["ruff:format"]
+description = "Format code"
+run = "{{vars.uv_run}} ruff format"
+
+["ruff:format:check"]
+description = "Check code formatting"
+run = "{{vars.uv_run}} ruff --version && {{vars.uv_run}} ruff format --check"
+
+[tombi]
+description = "Run tombi"
+run = "{{vars.uv_run}} tombi format"
+
+[ty]
+description = "Run ty"
+run = "{{vars.uv_run}} ty --version && {{vars.uv_run}} ty check"
+
+[vulture]
+description = "Run vulture"
+run = "{{vars.uv_run}} vulture --version && uv run vulture"
+
+[format]
+description = "Format the code"
+alias = "f"
+depends = ["ruff:format", "tombi"]
+
+[unasyncd]
+description = "Generate synchronous code from asynchronous version"
+wait_for = ["slotscheck"]
+run = '''
+  uv run --quiet --only-group unasyncd unasyncd
+'''
+
+["unasyncd:check"]
+description = "Check synchronous code from asynchronous version"
+wait_for = ["slotscheck"]
+run = '''
+  uv run --quiet --only-group unasyncd unasyncd --check
+'''
+
+[lint]
+description = "Lint the code"
+alias = "l"
+depends = [
+  "vulture",
+  "ty",
+  "ruff:check",
+  "ruff:format:check",
+  "slotscheck",
+  "unasyncd:check"
+]
+
+[pre-commit]
+description = "Run pre-commit checks"
+depends = "install:pre-commit"
+run = "pre-commit run --color=always --all-files"
+
+[slotscheck]
+description = "Run slotscheck"
+run = "uv run slotscheck --version && uv run slotscheck"
