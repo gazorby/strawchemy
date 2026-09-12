@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from datetime import datetime as _dt
 from typing import TYPE_CHECKING, Any, cast, get_args
 
 import pytest
 import strawberry
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, Select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from strawberry import UNSET
 from strawberry.types import get_object_definition
 
 from strawchemy import Strawchemy
-from strawchemy.dto.strawberry import CustomFilter, CustomFilterFieldDefinition, Filter
+from strawchemy.dto.strawberry import CustomFilter, CustomFilterFieldDefinition, Filter, QueryNode
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.filters.fields import FilterFieldMarker
@@ -76,6 +76,11 @@ def _argument_enum(dto: type[Any], function_name: str) -> type[Any]:
     list_type = getattr(argument_type, "of_type", argument_type)
     # strawberry represents an enum field type as a StrawberryEnumDefinition; unwrap to the actual Enum class.
     return cast("type[Any]", getattr(list_type, "wrapped_cls", list_type))
+
+
+def _published_after(statement: Select[Any], value: Any, **_ctx: Any) -> Select[Any]:
+    """Custom-apply callable for the tests declaring a virtual filter field."""
+    return statement.where(_Ticket.published_at >= value)
 
 
 class _Base(DeclarativeBase): ...
@@ -251,7 +256,7 @@ def test_restricted_over_int_carries_int() -> None:
 
 
 def test_custom_filter_is_filter_member() -> None:
-    cf = CustomFilter(apply=lambda s, _v, **_k: s, value=5, join="exists", field_node=None)  # ty: ignore[invalid-argument-type]
+    cf = CustomFilter(apply=lambda s, _v, **_k: s, value=5, join="exists", field_node=QueryNode.root_node(_Ticket))
     f = Filter(and_=[cf])
     assert f.and_ == [cf]
 
@@ -262,7 +267,7 @@ def test_custom_filter_field_definition_carries_marker_data() -> None:
 
     field_def = CustomFilterFieldDefinition(
         dto_config=DTOConfig(Purpose.READ),
-        model=object,  # ty: ignore[invalid-argument-type]
+        model=_Ticket,
         model_field_name="published_after",
         type_hint=datetime,
         apply=_apply,
@@ -358,9 +363,6 @@ def test_restricted_field_comparison_annotation_mismatch_raises() -> None:
 def test_custom_apply_field_injected_as_scalar() -> None:
     strawchemy = Strawchemy("sqlite")
 
-    def _published_after(statement, value, **_ctx):  # noqa: ANN001, ANN003, ANN202
-        return statement.where(_Ticket.published_at >= value)
-
     @strawchemy.filter(_Ticket, include=["name"])
     class TicketFilter:
         published_after: datetime = filter_field(apply=_published_after)
@@ -374,29 +376,23 @@ def test_custom_apply_field_injected_as_scalar() -> None:
 def test_filters_tree_wraps_custom_field() -> None:
     strawchemy = Strawchemy("sqlite")
 
-    def _published_after(statement, value, **_ctx):  # noqa: ANN001, ANN003, ANN202
-        return statement.where(_Ticket.published_at >= value)
-
     @strawchemy.filter(_Ticket, include=["name"])
     class TicketFilter:
         published_after: datetime = filter_field(apply=_published_after)
 
-    instance = TicketFilter()
-    instance.published_after = datetime(2024, 1, 1)  # ty: ignore[unresolved-attribute]  # noqa: DTZ001
+    instance: Any = TicketFilter()
+    instance.published_after = datetime(2024, 1, 1, tzinfo=timezone.utc)
     _node, query = instance.filters_tree()
 
     assert any(isinstance(item, CustomFilter) for item in query.and_)
     custom = next(item for item in query.and_ if isinstance(item, CustomFilter))
     assert custom.apply is _published_after
-    assert custom.value == datetime(2024, 1, 1)  # noqa: DTZ001
+    assert custom.value == datetime(2024, 1, 1, tzinfo=timezone.utc)
 
 
 def test_public_surface_end_to_end() -> None:
     sc = Strawchemy("sqlite")
     assert callable(sc.filter_field)
-
-    def _published_after(statement, value, **_ctx):  # noqa: ANN001, ANN003, ANN202
-        return statement.where(_Ticket.published_at >= value)
 
     @sc.filter(_Ticket, include=["name"])
     class TicketFilter:
@@ -434,9 +430,6 @@ def test_invalid_operator_raises_at_definition() -> None:
 @pytest.mark.snapshot
 def test_fine_grained_schema(graphql_snapshot: SnapshotAssertion) -> None:
     sc = Strawchemy("sqlite")
-
-    def _published_after(statement: Any, value: Any, **_ctx: Any) -> Any:
-        return statement.where(_Ticket.published_at >= value)
 
     @sc.type(_Ticket, include=["name", "published_at"])
     class TicketType: ...
@@ -960,9 +953,6 @@ def test_column_bare_marker_needs_no_annotation() -> None:
 def test_custom_apply_annotation_is_the_input_type() -> None:
     """On an apply field the annotation IS the generated input scalar, so it is not column-checked."""
     sc = Strawchemy("sqlite")
-
-    def _published_after(statement: Any, value: Any, **_ctx: Any) -> Any:
-        return statement.where(_Ticket.published_at >= value)
 
     @sc.filter(_Ticket, include=["name"])
     class TicketFilter:
