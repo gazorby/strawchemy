@@ -1012,6 +1012,95 @@ These filters work with all geometry types supported by PostGIS, including:
 - `MultiPolygon`
 - `Geometry` (generic geometry type)
 
+### Fine-grained filters
+
+By default, `@strawchemy.filter` exposes every operator for every included column. Adding a class body lets you
+override what the decorator generated, field by field: restrict a column to specific operators, replace it with a
+custom virtual filter, or force-include a field the decorator's `include`/`exclude` would otherwise drop.
+
+<details>
+<summary>Fine-grained filter example</summary>
+
+```python
+from typing import Any
+
+from sqlalchemy import Select
+from strawchemy import TextComparison
+
+
+def _fruit_sweeter_than(statement: Select[tuple[Fruit]], value: int, **_ctx: Any) -> Select[tuple[Fruit]]:
+    return statement.where(Fruit.sweetness >= value)
+
+
+@strawchemy.filter(Fruit, include=["id", "name", "sweetness"], name="FruitFineGrainedFilter")
+class FruitFineGrainedFilter:
+    # Only `eq` and `like` are exposed; every other TextComparison operator (`contains`, `gt`, ...) is dropped.
+    name: TextComparison = strawchemy.filter_field(ops=["eq", "like"])
+    # A virtual filter: no `sweeter_than` column exists on `Fruit`.
+    sweeter_than: int = strawchemy.filter_field(apply=_fruit_sweeter_than)
+    # Same callable, folded back with an `IN` on the primary key instead of the default correlated `EXISTS`.
+    sweeter_than_in: int = strawchemy.filter_field(apply=_fruit_sweeter_than, join="in")
+
+
+@strawberry.type
+class Query:
+    fruits_fine_grained: list[FruitType] = strawchemy.field(filter_input=FruitFineGrainedFilter)
+```
+
+```graphql
+{
+    fruitsFineGrained(filter: { name: { eq: "Apple" } }) {
+        id
+        name
+    }
+
+    fruitsFineGrained(filter: { sweeterThan: 5 }) {
+        id
+        sweetness
+    }
+}
+```
+
+</details>
+
+`strawchemy.filter_field()` accepts:
+
+- **`ops`**: restricts the field to the given comparison operators. Operators left out are absent from the generated
+  GraphQL input, so using one is a GraphQL validation error rather than a runtime one.
+- **`apply`**: replaces the field with a custom virtual scalar filter. The callable's signature is
+  `(statement, value, *, dialect, model) -> Select`: it receives an isolated `select(model)` statement and the
+  GraphQL-supplied value, and must only add `.where(...)` predicates to it. It must not join or subquery against
+  the same model — the statement is later re-aliased and correlated back to the outer query by primary key, and a
+  self-join there could be rewritten ambiguously. `join` picks that correlation strategy: `"exists"` (the default)
+  wraps it in a correlated `EXISTS`; `"in"` folds it back with an `IN` against the primary key instead.
+- A bare `strawchemy.filter_field()`, with neither `ops` nor `apply`, force-includes a field the decorator's
+  `include`/`exclude` would otherwise have left out, with its full default comparison.
+
+`ops` and `apply` are mutually exclusive on the same field.
+
+`ops` values are typed: `strawchemy` exports one operator alias per comparison input — `EqualityOperator`,
+`OrderOperator`, `TextOperator`, `ArrayOperator`, `DateOperator`, `TimeOperator`, `DateTimeOperator`,
+`TimeDeltaOperator` — plus `ComparisonOperator` for their union, which is what `ops=` accepts. A typo is a type
+error, and you can name a vocabulary yourself (`MY_OPS: list[TextOperator] = ["eq", "like"]`). Which operators a
+given field actually accepts still depends on its column or aggregation function, and that narrower check happens
+when the filter class is built. `ops=` does not apply to JSON or geo columns: their comparisons declare operators
+outside the registry these aliases mirror.
+
+On an `ops` or bare field the annotation names either the column's data type (`str` for `name`) or the column's
+comparison input (`TextComparison`); anything else — including `Any` — raises `StrawchemyFieldError` at import time.
+An `apply` field is different: it has no column, so its annotation *defines* the generated GraphQL input type
+(`sweeter_than: int` above) and is used verbatim. A bare `strawchemy.filter_field()` needs no annotation at all.
+
+Any `strawberry.field` keyword argument — `name`, `description`, `deprecation_reason`, `metadata`, `directives` —
+passes straight through to the generated field:
+
+```python
+class FruitFineGrainedFilter:
+    name: TextComparison = strawchemy.filter_field(
+        ops=["eq"], name="fruitName", description="Filter by fruit name", deprecation_reason="use `id` instead"
+    )
+```
+
 ## Aggregations
 
 Strawchemy automatically exposes aggregation fields for list relationships.
@@ -1176,6 +1265,75 @@ You can also use the `distinct` parameter to count only distinct values:
 This would find users who have posts in more than 2 distinct categories.
 
 </details>
+
+#### Fine-grained aggregation filters
+
+`@strawchemy.aggregate_filter` declares a dedicated aggregation filter input for a relationship, the same way
+`@strawchemy.filter` declares a column filter. It has two independent axes: `functions=` selects which aggregation
+functions the input exposes, while `include`/`exclude` keep their usual column meaning and narrow which columns
+*every* selected function is allowed to aggregate over.
+
+<details>
+<summary>Fine-grained aggregation filter example</summary>
+
+```python
+@strawchemy.aggregate_filter(
+    Fruit, include=["id", "sweetness"], functions=["count", "sum"], name="FruitFineGrainedAggregateFilter"
+)
+class FruitFineGrainedAggregateFilter:
+    # `count`'s predicate only exposes `gt`; its `arguments` enum still offers every column `include` allows.
+    # The annotation is the value the predicate compares — `count` counts rows, so `int`.
+    count: int = strawchemy.filter_field(ops=["gt"])
+    # `sum` can only aggregate `sweetness`, and only accepts `gte` on its predicate.
+    sum: float = strawchemy.filter_field(arguments=["sweetness"], ops=["gte"])
+
+
+@strawchemy.filter(Color, include=["name", "fruits"], name="ColorFineGrainedFilter")
+class ColorFineGrainedFilter:
+    # Swaps the generated aggregate bool exp on `fruits_aggregate` for the declared one above.
+    # Any other list relationship on `Color` would keep its full generated aggregate bool exp untouched.
+    fruits_aggregate: FruitFineGrainedAggregateFilter
+
+
+@strawberry.type
+class Query:
+    colors_fine_grained: list[ColorType] = strawchemy.field(filter_input=ColorFineGrainedFilter)
+```
+
+```graphql
+{
+    colorsFineGrained(
+        filter: { fruitsAggregate: { count: { arguments: [id], predicate: { gt: 1 } } } }
+    ) {
+        id
+    }
+}
+```
+
+</details>
+
+Inside the class body, `strawchemy.filter_field()` refines one function at a time:
+
+- **`ops`**: restricts that function's `predicate` to the given operators, the same way it does on a column filter.
+- **`arguments`**: restricts that function's `arguments` enum to the given columns. These columns must already be
+  within the decorator's own `include`/`exclude`; naming one outside that scope raises `StrawchemyFieldError` at
+  definition time.
+- A bare `strawchemy.filter_field()` force-includes a function that `functions=` left out — e.g. adding
+  `avg = strawchemy.filter_field()` to the class above exposes `avg` even though
+  `functions=["count", "sum"]` doesn't name it.
+
+The annotation on a declared function names either the value its predicate compares (`int` for `count`, `float` for
+`sum`, `avg` and the statistical functions, `datetime`/`date`/`time`/`str` for the typed `min`/`max` variants) or the
+comparison input itself (`OrderComparison`). Anything else — including `Any` — raises `StrawchemyFieldError` at
+import time, so an annotation always states something the factory has verified. A bare marker needs no annotation,
+having nothing to describe.
+
+Custom `apply=` filters are column-only: putting one on a function inside a class decorated with
+`aggregate_filter` raises `StrawchemyFieldError`.
+
+`functions=` values are the aggregation function's snake_case `field_name` (`count`, `sum`, `min`, `max`, `avg`,
+`min_datetime`, `max_string`, ...), typed as `strawchemy.typing.AggregationFilterFunction` for editor completion.
+The generated GraphQL *field* is camelCased as usual (e.g. `min_datetime` becomes `minDatetime`).
 
 ### Root aggregations
 

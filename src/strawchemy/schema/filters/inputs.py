@@ -33,7 +33,7 @@ from strawchemy.schema.filters import (
     TimeDeltaFilter,
     TimeFilter,
 )
-from strawchemy.typing import QueryNodeType
+from strawchemy.typing import ComparisonOperator, QueryNodeType
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -83,7 +83,7 @@ def _seq(t: Any) -> Any:
 class Op:
     """A filter operator: its GraphQL name and how its input value type depends on the data type."""
 
-    graphql_name: str
+    graphql_name: ComparisonOperator
     """Name as exposed in the schema (e.g. ``in``)."""
     value_type: Callable[[Any], Any] = _scalar
     """``data_type -> annotation`` builder; defaults to scalar ``T | None``."""
@@ -227,7 +227,7 @@ class GraphQLComparison:
         return tuple(collected)
 
     @classmethod
-    def restricted(cls, data_type: Any, ops: tuple[str, ...]) -> type[Self]:
+    def restricted(cls, data_type: Any, ops: tuple[ComparisonOperator, ...]) -> type[Self]:
         """Builds (and caches) a comparison input over ``data_type`` exposing only ``ops``.
 
         The result is a standalone strawberry input carrying every operator attribute (unselected
