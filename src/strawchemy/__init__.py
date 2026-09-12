@@ -29,6 +29,17 @@ from strawchemy.schema.mutation import (
     ValidationErrorType,
 )
 from strawchemy.transpiler.hook import QueryHook
+from strawchemy.typing import (
+    ArrayOperator,
+    ComparisonOperator,
+    DateOperator,
+    DateTimeOperator,
+    EqualityOperator,
+    OrderOperator,
+    TextOperator,
+    TimeDeltaOperator,
+    TimeOperator,
+)
 from strawchemy.validation import InputValidationError
 
 __all__ = (
@@ -36,9 +47,14 @@ __all__ = (
     "RELATIONSHIPS",
     "SCALARS",
     "ArrayComparison",
+    "ArrayOperator",
+    "ComparisonOperator",
     "DateComparison",
+    "DateOperator",
     "DateTimeComparison",
+    "DateTimeOperator",
     "EqualityComparison",
+    "EqualityOperator",
     "ErrorType",
     "FieldGroup",
     "GraphQLComparison",
@@ -46,6 +62,7 @@ __all__ = (
     "InputValidationError",
     "ModelInstance",
     "OrderComparison",
+    "OrderOperator",
     "QueryHook",
     "RequiredToManyUpdateInput",
     "RequiredToOneInput",
@@ -54,8 +71,11 @@ __all__ = (
     "StrawchemyConfig",
     "StrawchemySyncRepository",
     "TextComparison",
+    "TextOperator",
     "TimeComparison",
     "TimeDeltaComparison",
+    "TimeDeltaOperator",
+    "TimeOperator",
     "ToManyCreateInput",
     "ToManyUpdateInput",
     "ToOneInput",

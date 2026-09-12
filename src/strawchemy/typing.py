@@ -31,13 +31,19 @@ if TYPE_CHECKING:
 __all__ = (
     "UNION_TYPES",
     "AggregateDTOT",
+    "AggregationFilterFunction",
     "AggregationFunction",
     "AggregationType",
     "AnyMappedDTO",
     "AnyRepository",
     "AnyRepositoryType",
+    "ArrayOperator",
+    "ComparisonOperator",
     "CreateOrUpdateResolverResult",
     "DataclassProtocol",
+    "DateOperator",
+    "DateTimeOperator",
+    "EqualityOperator",
     "FilterStatementCallable",
     "FunctionInfo",
     "GetByIdResolverResult",
@@ -51,11 +57,15 @@ __all__ = (
     "OneOrManyResult",
     "OrderByDTOT",
     "OrderByExpr",
+    "OrderOperator",
     "QueryNodeType",
     "QueryObject",
     "StrawberryGraphQLDTO",
     "StrawchemyObjectWithStrawberryObjectDefinition",
     "SupportedDialect",
+    "TextOperator",
+    "TimeDeltaOperator",
+    "TimeOperator",
 )
 
 UNION_TYPES = (Union, UnionType)
@@ -75,9 +85,71 @@ SupportedDialect: TypeAlias = Literal["postgresql", "mysql", "sqlite"]
 """Must match SQLAlchemy dialect."""
 
 AggregationFunction = Literal["min", "max", "sum", "avg", "count", "stddev_samp", "stddev_pop", "var_samp", "var_pop"]
+AggregationFilterFunction: TypeAlias = Union[
+    AggregationFunction,
+    Literal[
+        "min_datetime",
+        "max_datetime",
+        "min_date",
+        "max_date",
+        "min_string",
+        "max_string",
+        "min_time",
+        "max_time",
+    ],
+]
+"""Name of a generated aggregation filter field, i.e. ``FilterFunctionInfo.field_name``."""
 AggregationType = Literal[
     "sum", "numeric", "min_max_datetime", "min_max_date", "min_max_time", "min_max_string", "min_max_numeric"
 ]
+
+# Operator vocabularies, one alias per comparison input, composed the way the comparison classes
+# themselves compose. Values are the operator's snake_case name; the generated GraphQL field is
+# camelCased as usual (``is_null`` becomes ``isNull``).
+EqualityOperator: TypeAlias = Literal["eq", "neq", "in", "nin", "is_null"]
+"""Operators every comparison input offers."""
+OrderOperator: TypeAlias = Union[EqualityOperator, Literal["gt", "gte", "lt", "lte"]]
+"""Operators on an orderable column."""
+TextOperator: TypeAlias = Union[
+    OrderOperator,
+    Literal[
+        "like",
+        "nlike",
+        "ilike",
+        "nilike",
+        "regexp",
+        "nregexp",
+        "iregexp",
+        "inregexp",
+        "contains",
+        "icontains",
+        "startswith",
+        "istartswith",
+        "endswith",
+        "iendswith",
+    ],
+]
+"""Operators on a text column."""
+ArrayOperator: TypeAlias = Union[EqualityOperator, Literal["contains", "contained_in", "overlap"]]
+"""Operators on an array column."""
+DateOperator: TypeAlias = Union[
+    OrderOperator, Literal["year", "quarter", "month", "week", "week_day", "iso_week_day", "iso_year", "day"]
+]
+"""Operators on a date column, including its extractable parts."""
+TimeOperator: TypeAlias = Union[OrderOperator, Literal["hour", "minute", "second"]]
+"""Operators on a time column, including its extractable parts."""
+DateTimeOperator: TypeAlias = Union[DateOperator, TimeOperator]
+"""Operators on a datetime column: every date part and every time part."""
+TimeDeltaOperator: TypeAlias = Union[OrderOperator, Literal["days", "hours", "minutes", "seconds"]]
+"""Operators on an interval column."""
+ComparisonOperator: TypeAlias = Union[TextOperator, ArrayOperator, DateTimeOperator, TimeDeltaOperator]
+"""Any operator accepted by ``filter_field(ops=...)``.
+
+Which operators a given field actually accepts depends on the column or aggregation function it
+refines; that narrower check happens when the filter class is built. JSON and geo comparisons
+declare their operators outside the registry these aliases mirror, so ``ops=`` does not apply to
+them.
+"""
 GraphQLType = Literal["input", "object", "interface", "enum"]
 
 AnyRepository: TypeAlias = "StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]"

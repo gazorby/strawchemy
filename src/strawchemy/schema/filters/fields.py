@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase
 
     from strawchemy.schema.field import StrawberryFieldKwargs
+    from strawchemy.typing import ComparisonOperator
 
 __all__ = ("VALID_JOINS", "CustomFilterApply", "FilterFieldMarker", "JoinStrategy")
 
@@ -51,8 +52,10 @@ class CustomFilterApply(Protocol):
 class FilterFieldMarker:
     """Sentinel describing one declared filter field."""
 
-    ops: tuple[str, ...] | None = None
+    ops: tuple[ComparisonOperator, ...] | None = None
     """Selected GraphQL operator names for a restricted field, or ``None``."""
+    arguments: tuple[str, ...] | None = None
+    """Selected argument column names for an aggregation function field, or ``None``."""
     apply: CustomFilterApply | None = None
     """Optional custom filter callable (see :class:`CustomFilterApply`)."""
     join: JoinStrategy = "exists"

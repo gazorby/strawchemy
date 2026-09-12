@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import (
         AnyRepositoryType,
+        ComparisonOperator,
         FilterStatementCallable,
         MappedGraphQLDTO,
         OrderByExpr,
@@ -330,7 +331,8 @@ class Strawchemy:
     def filter_field(
         self,
         *,
-        ops: Sequence[str] | None = None,
+        ops: Sequence[ComparisonOperator] | None = None,
+        arguments: Sequence[str] | None = None,
         apply: CustomFilterApply | None = None,
         join: JoinStrategy = "exists",
         **field_kwargs: Unpack[StrawberryFieldKwargs],
@@ -343,6 +345,8 @@ class Strawchemy:
 
         Args:
             ops: GraphQL operator names to expose (restricted field). Mutually exclusive with ``apply``.
+            arguments: Argument column names to expose on an aggregation function field. Only valid
+                inside a class decorated with ``aggregate_filter``. Mutually exclusive with ``apply``.
             apply: Custom filter callable ``(statement, value, *, dialect, model)`` returning a
                 mutated ``Select``.
             join: Fold-back strategy when ``apply`` is set (``"exists"`` or ``"in"``).
@@ -355,16 +359,24 @@ class Strawchemy:
             a default under any annotation.
 
         Raises:
-            StrawchemyFieldError: If ``ops`` and ``apply`` are both given, or ``join`` is unsupported.
+            StrawchemyFieldError: If ``ops`` and ``apply`` are both given, if ``arguments`` and
+                ``apply`` are both given, or if ``join`` is unsupported.
         """
         if ops is not None and apply is not None:
             msg = "filter_field() arguments 'ops' and 'apply' are mutually exclusive"
+            raise StrawchemyFieldError(msg)
+        if arguments is not None and apply is not None:
+            msg = "filter_field() arguments 'arguments' and 'apply' are mutually exclusive"
             raise StrawchemyFieldError(msg)
         if join not in VALID_JOINS:
             msg = f"Invalid join strategy {join!r}; expected one of {sorted(VALID_JOINS)}"
             raise StrawchemyFieldError(msg)
         return FilterFieldMarker(
-            ops=tuple(ops) if ops is not None else None, apply=apply, join=join, field_kwargs=field_kwargs
+            ops=tuple(ops) if ops is not None else None,
+            arguments=tuple(arguments) if arguments is not None else None,
+            apply=apply,
+            join=join,
+            field_kwargs=field_kwargs,
         )
 
     def create(

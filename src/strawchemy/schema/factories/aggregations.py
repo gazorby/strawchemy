@@ -17,12 +17,14 @@ from strawchemy.dto.strawberry import (
     OutputFunctionInfo,
     UnmappedStrawberryGraphQLDTO,
 )
-from strawchemy.exceptions import DTOError
+from strawchemy.dto.types import FieldGroup
+from strawchemy.exceptions import DTOError, StrawchemyFieldError
 from strawchemy.schema.factories.base import GraphQLFactory
 from strawchemy.schema.factories.enum import EnumBackend, EnumFactory
+from strawchemy.utils.text import snake_to_camel
 
 if TYPE_CHECKING:
-    from collections.abc import Generator
+    from collections.abc import Generator, Sequence
 
     from sqlalchemy.orm import QueryableAttribute
 
@@ -233,12 +235,14 @@ class AggregationInspector:
                         function="min",
                         aggregation_type="numeric",
                         comparison_type=self._inspector.get_type_comparison(float),
+                        comparison_data_type=float,
                     ),
                     FilterFunctionInfo(
                         enum_fields=min_max_numeric_fields,
                         function="max",
                         aggregation_type="numeric",
                         comparison_type=self._inspector.get_type_comparison(float),
+                        comparison_data_type=float,
                     ),
                 )
             )
@@ -250,6 +254,7 @@ class AggregationInspector:
                         function="min",
                         aggregation_type="min_max_datetime",
                         comparison_type=self._inspector.get_type_comparison(datetime),
+                        comparison_data_type=datetime,
                         field_name_="min_datetime",
                     ),
                     FilterFunctionInfo(
@@ -257,6 +262,7 @@ class AggregationInspector:
                         function="max",
                         aggregation_type="min_max_datetime",
                         comparison_type=self._inspector.get_type_comparison(datetime),
+                        comparison_data_type=datetime,
                         field_name_="max_datetime",
                     ),
                 )
@@ -269,6 +275,7 @@ class AggregationInspector:
                         function="min",
                         aggregation_type="min_max_date",
                         comparison_type=self._inspector.get_type_comparison(date),
+                        comparison_data_type=date,
                         field_name_="min_date",
                     ),
                     FilterFunctionInfo(
@@ -276,6 +283,7 @@ class AggregationInspector:
                         function="max",
                         aggregation_type="min_max_date",
                         comparison_type=self._inspector.get_type_comparison(date),
+                        comparison_data_type=date,
                         field_name_="max_date",
                     ),
                 )
@@ -288,6 +296,7 @@ class AggregationInspector:
                         function="min",
                         aggregation_type="min_max_time",
                         comparison_type=self._inspector.get_type_comparison(time),
+                        comparison_data_type=time,
                         field_name_="min_time",
                     ),
                     FilterFunctionInfo(
@@ -295,6 +304,7 @@ class AggregationInspector:
                         function="max",
                         aggregation_type="min_max_time",
                         comparison_type=self._inspector.get_type_comparison(time),
+                        comparison_data_type=time,
                         field_name_="max_time",
                     ),
                 )
@@ -307,6 +317,7 @@ class AggregationInspector:
                         function="min",
                         aggregation_type="min_max_string",
                         comparison_type=self._inspector.get_type_comparison(str),
+                        comparison_data_type=str,
                         field_name_="min_string",
                     ),
                     FilterFunctionInfo(
@@ -314,6 +325,7 @@ class AggregationInspector:
                         function="max",
                         aggregation_type="min_max_string",
                         comparison_type=self._inspector.get_type_comparison(str),
+                        comparison_data_type=str,
                         field_name_="max_string",
                     ),
                 )
@@ -321,15 +333,139 @@ class AggregationInspector:
         return aggregations
 
     def arguments_type(
-        self, model: type[DeclarativeBase], dto_config: DTOConfig, aggregation: AggregationType
+        self,
+        model: type[DeclarativeBase],
+        dto_config: DTOConfig,
+        aggregation: AggregationType,
+        *,
+        name: str | None = None,
     ) -> type[EnumDTO] | None:
         try:
             factory = self._type_filtered_factories.get(aggregation)
             if factory is None:
                 return None
-            dto = factory.enum_factory(model, dto_config, if_no_fields="raise")
+            dto = factory.enum_factory(model, dto_config, name=name, if_no_fields="raise")
         except DTOError:
             return None
+        return dto
+
+    @staticmethod
+    def _validate_columns_in_scope(
+        scope_config: DTOConfig,
+        model: type[DeclarativeBase],
+        aggregation: FilterFunctionInfo,
+        columns: Sequence[str],
+    ) -> None:
+        """Rejects columns the enclosing decorator's include/exclude already puts out of scope.
+
+        ``scope_config`` is the enclosing aggregate filter's user-supplied config captured before
+        ``DTOConfig.with_base_annotations`` merges the declared class's own attribute names into
+        ``include`` (those attributes are aggregation *function* names, e.g. ``count``, not model
+        columns, so checking against the post-merge config would misattribute a real column that
+        happens to share a function's name). A ``scope_config`` with no restriction at all (bare,
+        no ``include``/``exclude`` given) imposes nothing here -- only an explicit
+        ``include``/``exclude`` on the enclosing decorator narrows the columns ``arguments=`` may
+        name.
+
+        Args:
+            scope_config: The enclosing aggregate filter's config, from before base-class
+                annotations were merged into it.
+            model: The model being aggregated.
+            aggregation: The function whose arguments are narrowed.
+            columns: Selected column names.
+
+        Raises:
+            StrawchemyFieldError: If a column falls outside the enclosing include/exclude.
+        """
+        if not scope_config.included_fields and not scope_config.excluded_fields:
+            return
+        outside = sorted(column for column in columns if not scope_config.is_field_included(column))
+        if outside:
+            msg = (
+                f"Column(s) {outside} are excluded by {model.__name__}'s aggregate filter "
+                f"include/exclude and cannot be selected by {aggregation.field_name!r}'s arguments"
+            )
+            raise StrawchemyFieldError(msg)
+
+    @staticmethod
+    def scope_restricts_columns(scope_config: DTOConfig) -> bool:
+        """Whether the declaring aggregate filter's include/exclude actually narrows columns.
+
+        True for an explicit ``include`` other than the "all" field group, or any ``exclude``;
+        false for a bare decorator or an explicit ``include="all"``, both of which leave every
+        function free to aggregate over every model column.
+
+        Args:
+            scope_config: The enclosing aggregate filter's user-supplied config, from before
+                base-class annotations were merged into it.
+
+        Returns:
+            True if the scope narrows which columns can be aggregated.
+        """
+        if scope_config.excluded_fields:
+            return True
+        included = scope_config.included_fields
+        return bool(included) and FieldGroup.ALL not in included.field_set
+
+    def narrowed_arguments_type(
+        self,
+        model: type[DeclarativeBase],
+        dto_config: DTOConfig,
+        aggregation: FilterFunctionInfo,
+        columns: Sequence[str],
+        *,
+        scope_config: DTOConfig,
+        dto_name: str,
+    ) -> type[EnumDTO]:
+        """Builds the argument enum of one aggregation function, limited to ``columns``.
+
+        ``scope_config`` predates the merge of base-class annotations into ``dto_config``, so
+        ``columns`` is validated without the declared attribute names as noise. ``dto_name`` scopes
+        the enum's own name away from the shared, unnarrowed enum and from another class narrowing
+        the same function.
+
+        Returns:
+            An enum named ``{dto_name}{Function}FieldsEnum`` holding only the selected columns.
+
+        Raises:
+            StrawchemyFieldError: If a column is unknown, excluded by the enclosing decorator, or
+                cannot be aggregated by this function.
+        """
+        self._validate_columns_in_scope(scope_config, model, aggregation, columns)
+        narrowed = dto_config.copy_with(include=set(columns))
+        name = f"{dto_name}{snake_to_camel(aggregation.field_name).capitalize()}FieldsEnum"
+        if aggregation.function == "count":
+            # `_count_fields_factory.factory` goes through the shared DTO cache, whose cache key
+            # conflates `include`/`exclude` (see `DTOFactory._root_cache_key`); `no_cache=True`
+            # keeps this narrowed, per-function build from reading back an unrelated dto that
+            # happens to collide on that key.
+            dto = self._count_fields_factory.factory(model=model, dto_config=narrowed, name=name, no_cache=True)
+        else:
+            # `sum`'s own `FilterFunctionInfo.aggregation_type` is "numeric" (matching its float
+            # comparison), but its *candidate columns* are built from the wider "sum" type filter
+            # (which also allows `str`/`timedelta`); narrowing must use that same wider filter, not
+            # the comparison-oriented "numeric" one, or a legitimately narrowed str/timedelta column
+            # gets wrongly rejected.
+            type_filter = "sum" if aggregation.function == "sum" else aggregation.aggregation_type
+            dto = self.arguments_type(model, narrowed, type_filter, name=name)
+        kept = {field.name for field in dto.__field_definitions__.values()} if dto is not None else set()
+        missing = sorted(set(columns) - kept)
+        if not kept and not missing:
+            # `columns` came out empty, so nothing is "missing" and the specific error below cannot
+            # fire. An empty enum is invalid GraphQL, and building it would defer the failure to
+            # schema construction with nothing pointing back at the declaration.
+            msg = (
+                f"{aggregation.field_name!r} on {model.__name__} has no column left to aggregate; "
+                f"the aggregate filter's include/exclude leaves it no candidate column"
+            )
+            raise StrawchemyFieldError(msg)
+        if dto is None or missing:
+            msg = (
+                f"Column(s) {missing or sorted(columns)} cannot be aggregated by "
+                f"{aggregation.field_name!r} on {model.__name__}; "
+                f"check the column exists and its type is supported by this function"
+            )
+            raise StrawchemyFieldError(msg)
         return dto
 
     def numeric_field_type(
@@ -410,6 +546,7 @@ class AggregationInspector:
                     function="count",
                     aggregation_type="numeric",
                     comparison_type=self._inspector.get_type_comparison(int),
+                    comparison_data_type=int,
                     require_arguments=False,
                 )
             )
@@ -420,6 +557,7 @@ class AggregationInspector:
                     function="sum",
                     aggregation_type="numeric",
                     comparison_type=self._inspector.get_type_comparison(float),
+                    comparison_data_type=float,
                 )
             )
 
@@ -435,6 +573,7 @@ class AggregationInspector:
                         function=function,
                         aggregation_type="numeric",
                         comparison_type=comparison,
+                        comparison_data_type=float,
                     )
                     for function in self._statistical_aggregations
                 ]
