@@ -54,7 +54,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           enable-cache: true
 
@@ -98,7 +98,7 @@ jobs:
             ${{ runner.os }}-nox-${{ matrix.session.session }}
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           enable-cache: true
 
@@ -215,7 +215,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           enable-cache: true
 
