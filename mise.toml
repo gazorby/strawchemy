@@ -11,6 +11,7 @@ cocogitto = "latest"
 tombi = "latest"
 yq = "latest"
 gh = "latest"
+usage = "latest"
 
 [vars]
 local_pytest_options = "-n=auto -vv"
