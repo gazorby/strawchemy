@@ -265,6 +265,43 @@ class ArrayFilter(EqualityFilter):
 class BaseDateFilter(FilterProtocol):
     comparison: DateComparison | DateTimeComparison
 
+    @staticmethod
+    def _sqlite_iso_week_day(model_attribute: ColumnElement[date] | QueryableAttribute[date]) -> ColumnElement[int]:
+        """Return the ISO weekday, Monday as 1 through Sunday as 7."""
+        return (sqla_cast(func.strftime("%w", model_attribute), Integer) + 6) % 7 + 1
+
+    @staticmethod
+    def _sqlite_iso_week_thursday(
+        model_attribute: ColumnElement[date] | QueryableAttribute[date],
+    ) -> ColumnElement[str]:
+        """Return the Thursday of the ISO week the date belongs to.
+
+        An ISO week is numbered by the calendar year holding its Thursday, so that single date carries both the
+        ISO year and the ISO week number: the year is its ``%Y`` and the week is its day of year divided into
+        seven day blocks. Reading them off the Thursday is what makes a week spanning a year boundary come out
+        right, where the plain calendar year and week of the original date disagree with ISO 8601.
+
+        The shift is expressed as two SQLite date modifiers rather than one so the day count always carries a
+        sign SQLite accepts: ``1 - isoweekday`` lands in 0 to -6, walking back to Monday, and ``+3 days`` then
+        moves forward to Thursday.
+        """
+        return func.date(
+            model_attribute,
+            sqla_cast(1 - BaseDateFilter._sqlite_iso_week_day(model_attribute), Text).concat(" days"),
+            "+3 days",
+        )
+
+    @staticmethod
+    def _sqlite_iso_year(model_attribute: ColumnElement[date] | QueryableAttribute[date]) -> ColumnElement[int]:
+        """Return the ISO week-numbering year."""
+        return sqla_cast(func.strftime("%Y", BaseDateFilter._sqlite_iso_week_thursday(model_attribute)), Integer)
+
+    @staticmethod
+    def _sqlite_iso_week(model_attribute: ColumnElement[date] | QueryableAttribute[date]) -> ColumnElement[int]:
+        """Return the ISO week number, 1 through 53."""
+        day_of_year = sqla_cast(func.strftime("%j", BaseDateFilter._sqlite_iso_week_thursday(model_attribute)), Integer)
+        return sqla_cast((day_of_year - 1) / 7, Integer) + 1
+
     def _sqlite_date(
         self, dialect: Dialect, model_attribute: ColumnElement[date] | QueryableAttribute[date]
     ) -> list[ColumnElement[bool]]:
@@ -280,12 +317,10 @@ class BaseDateFilter(FilterProtocol):
             )
         if self.comparison.day is not UNSET and self.comparison.day:
             expressions.extend(
-                self.comparison.day.to_expressions(dialect, sqla_cast(func.strftime("%e", model_attribute), Integer))
+                self.comparison.day.to_expressions(dialect, sqla_cast(func.strftime("%d", model_attribute), Integer))
             )
         if self.comparison.week is not UNSET and self.comparison.week:
-            expressions.extend(
-                self.comparison.week.to_expressions(dialect, sqla_cast(func.strftime("%V", model_attribute), Integer))
-            )
+            expressions.extend(self.comparison.week.to_expressions(dialect, self._sqlite_iso_week(model_attribute)))
         if self.comparison.week_day is not UNSET and self.comparison.week_day:
             expressions.extend(
                 self.comparison.week_day.to_expressions(
@@ -301,16 +336,10 @@ class BaseDateFilter(FilterProtocol):
             )
         if self.comparison.iso_week_day is not UNSET and self.comparison.iso_week_day:
             expressions.extend(
-                self.comparison.iso_week_day.to_expressions(
-                    dialect, sqla_cast(func.strftime("%u", model_attribute), Integer)
-                )
+                self.comparison.iso_week_day.to_expressions(dialect, self._sqlite_iso_week_day(model_attribute))
             )
         if self.comparison.iso_year is not UNSET and self.comparison.iso_year:
-            expressions.extend(
-                self.comparison.iso_year.to_expressions(
-                    dialect, sqla_cast(func.strftime("%G", model_attribute), Integer)
-                )
-            )
+            expressions.extend(self.comparison.iso_year.to_expressions(dialect, self._sqlite_iso_year(model_attribute)))
 
         return expressions
 

@@ -40,7 +40,7 @@
   SELECT date_time_model.date_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.date_col) AS INTEGER) = ?
+   WHERE (CAST(strftime(?, date_time_model.date_col) AS INTEGER) + ?) % ? + ? = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -76,7 +76,7 @@
   SELECT date_time_model.date_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.date_col) AS INTEGER) = ?
+   WHERE CAST(strftime(?, date(date_time_model.date_col, CAST(? - ((CAST(strftime(?, date_time_model.date_col) AS INTEGER) + ?) % ? + ?) AS TEXT) || ?, ?)) AS INTEGER) = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -184,7 +184,7 @@
   SELECT date_time_model.date_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.date_col) AS INTEGER) = ?
+   WHERE CAST((CAST(strftime(?, date(date_time_model.date_col, CAST(? - ((CAST(strftime(?, date_time_model.date_col) AS INTEGER) + ?) % ? + ?) AS TEXT) || ?, ?)) AS INTEGER) - ?) / (? + 0.0) AS INTEGER) + ? = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -319,7 +319,7 @@
   SELECT date_time_model.date_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.date_col) AS INTEGER) = ?
+   WHERE (CAST(strftime(?, date_time_model.date_col) AS INTEGER) + ?) % ? + ? = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -337,7 +337,7 @@
   SELECT date_time_model.date_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.date_col) AS INTEGER) = ?
+   WHERE CAST(strftime(?, date(date_time_model.date_col, CAST(? - ((CAST(strftime(?, date_time_model.date_col) AS INTEGER) + ?) % ? + ?) AS TEXT) || ?, ?)) AS INTEGER) = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -391,7 +391,7 @@
   SELECT date_time_model.date_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.date_col) AS INTEGER) = ?
+   WHERE CAST((CAST(strftime(?, date(date_time_model.date_col, CAST(? - ((CAST(strftime(?, date_time_model.date_col) AS INTEGER) + ?) % ? + ?) AS TEXT) || ?, ?)) AS INTEGER) - ?) / (? + 0.0) AS INTEGER) + ? = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -508,7 +508,7 @@
   SELECT date_time_model.datetime_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) = ?
+   WHERE (CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) + ?) % ? + ? = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -544,7 +544,7 @@
   SELECT date_time_model.datetime_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) = ?
+   WHERE CAST(strftime(?, date(date_time_model.datetime_col, CAST(? - ((CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) + ?) % ? + ?) AS TEXT) || ?, ?)) AS INTEGER) = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -724,7 +724,7 @@
   SELECT date_time_model.datetime_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) = ?
+   WHERE CAST((CAST(strftime(?, date(date_time_model.datetime_col, CAST(? - ((CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) + ?) % ? + ?) AS TEXT) || ?, ?)) AS INTEGER) - ?) / (? + 0.0) AS INTEGER) + ? = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -877,7 +877,7 @@
   SELECT date_time_model.datetime_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) = ?
+   WHERE (CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) + ?) % ? + ? = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -895,7 +895,7 @@
   SELECT date_time_model.datetime_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) = ?
+   WHERE CAST(strftime(?, date(date_time_model.datetime_col, CAST(? - ((CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) + ?) % ? + ?) AS TEXT) || ?, ?)) AS INTEGER) = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---
@@ -985,7 +985,7 @@
   SELECT date_time_model.datetime_col,
          date_time_model.id
     FROM date_time_model AS date_time_model
-   WHERE CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) = ?
+   WHERE CAST((CAST(strftime(?, date(date_time_model.datetime_col, CAST(? - ((CAST(strftime(?, date_time_model.datetime_col) AS INTEGER) + ?) % ? + ?) AS TEXT) || ?, ?)) AS INTEGER) - ?) / (? + 0.0) AS INTEGER) + ? = ?
    ORDER BY date_time_model.id ASC
   '''
 # ---

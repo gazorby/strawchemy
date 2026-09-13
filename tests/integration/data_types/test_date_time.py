@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -20,6 +21,20 @@ if TYPE_CHECKING:
     from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
+
+
+def _iso_boundary_records() -> RawRecordData:
+    start, end = date(2019, 12, 20), date(2021, 1, 10)
+    days = [start + timedelta(days=offset) for offset in range((end - start).days + 1)]
+    return [
+        {
+            "id": index + 1,
+            "date_col": day,
+            "time_col": time(12, 0),
+            "datetime_col": datetime.combine(day, time(12, 0)),
+        }
+        for index, day in enumerate(days)
+    ]
 
 
 @pytest.fixture
@@ -174,3 +189,32 @@ async def test_datetime_components(
         assert result.data["dateTimes"][i]["id"] == raw_date_times[expected_id]["id"]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize("raw_date_times", [_iso_boundary_records()], ids=["iso-boundaries"])
+@pytest.mark.parametrize(
+    ("component", "attribute", "value"),
+    [
+        pytest.param("isoYear", "year", 2020, id="isoYear"),
+        pytest.param("week", "week", 1, id="week"),
+        pytest.param("week", "week", 53, id="week-53"),
+        pytest.param("isoWeekDay", "weekday", 7, id="isoWeekDay"),
+    ],
+)
+async def test_iso_components_match_isocalendar(
+    component: str, attribute: str, value: int, any_query: AnyQueryExecutor, raw_date_times: RawRecordData
+) -> None:
+    """Test that an ISO component filter selects exactly the rows isocalendar() agrees with."""
+    query = f"""
+        {{
+            dateTimes(filter: {{ dateCol: {{ {component}: {{ eq: {value} }} }} }}) {{
+                id
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    expected = [row["id"] for row in raw_date_times if getattr(row["date_col"].isocalendar(), attribute) == value]
+
+    assert not result.errors
+    assert result.data
+    assert sorted(row["id"] for row in result.data["dateTimes"]) == expected
