@@ -21,6 +21,9 @@ else:
 here = Path(__file__).parent
 
 nox.options.default_venv_backend = "uv"
+# Discovery would otherwise prefer whatever interpreter the host happens to expose, and a distro python
+# carries the distro's libsqlite3 with it.
+nox.options.download_python = "always"
 nox.options.reuse_venv = "yes"
 nox.options.error_on_external_run = True
 nox.options.error_on_missing_interpreters = True
