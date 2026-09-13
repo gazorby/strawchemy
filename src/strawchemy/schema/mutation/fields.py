@@ -46,10 +46,27 @@ class _StrawchemyInputMutationField(StrawchemyField):
         **kwargs: Any,
     ) -> None:
         super().__init__(*args, **kwargs)
+        if validation is not None:
+            self._validate_model_match(input_type, validation)
         self.is_root_field = True
         self._input_type = input_type
         self._validation = validation
         self._event_registry = event_registry
+
+    @staticmethod
+    def _validate_model_match(input_type: type[MappedGraphQLDTO[T]], validation: ValidationProtocol[T]) -> None:
+        """Check that the input type and the validation type map the same model.
+
+        Raises:
+            StrawchemyFieldError: If they map different models.
+        """
+        if input_type.__dto_model__ is validation.model.__dto_model__:
+            return
+        msg = (
+            f"{validation.model.__name__} validates {validation.model.__dto_model__.__name__}, "
+            f"but {input_type.__name__} maps {input_type.__dto_model__.__name__}"
+        )
+        raise StrawchemyFieldError(msg)
 
     def _data_argument(self, *, as_list: bool = False) -> StrawberryArgument:
         """Builds the ``data`` argument, wrapping the input type in a list for batch mutations."""

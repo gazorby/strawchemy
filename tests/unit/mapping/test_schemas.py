@@ -673,6 +673,12 @@ def test_default_order_by_wrong_model_column_raises() -> None:
         import_module("tests.unit.schemas.default_order_by_invalid")
 
 
+def test_validation_for_another_model_raises() -> None:
+    """Test that a validation type mapping a different model than the input type raises."""
+    with pytest.raises(StrawchemyFieldError, match="GroupCreateValidation validates Group, but UserCreate maps User"):
+        import_module("tests.unit.schemas.pydantic.validation_model_mismatch")
+
+
 def test_aggregation_order_by_aliased_column_no_key_error() -> None:
     """Schema build must not raise KeyError for aggregatable columns with a field-level alias.
 
