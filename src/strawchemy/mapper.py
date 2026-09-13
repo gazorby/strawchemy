@@ -55,7 +55,6 @@ if TYPE_CHECKING:
         AnyRepositoryType,
         ComparisonOperator,
         FilterStatementCallable,
-        MappedGraphQLDTO,
         OrderByExpr,
         SupportedDialect,
     )
@@ -381,7 +380,7 @@ class Strawchemy:
 
     def create(
         self,
-        input_type: type[MappedGraphQLDTO[T]],
+        input_type: type[Any],
         resolver: Any | None = None,
         *,
         validation: ValidationProtocol[T] | None = None,
@@ -419,7 +418,7 @@ class Strawchemy:
 
     def upsert(
         self,
-        input_type: type[MappedGraphQLDTO[T]],
+        input_type: type[Any],
         update_fields: type[EnumDTO],
         conflict_fields: type[EnumDTO],
         resolver: Any | None = None,
@@ -466,7 +465,7 @@ class Strawchemy:
 
     def update(
         self,
-        input_type: type[MappedGraphQLDTO[T]],
+        input_type: type[Any],
         filter_input: type[BooleanFilterDTO],
         resolver: Any | None = None,
         *,
@@ -509,7 +508,7 @@ class Strawchemy:
 
     def update_by_ids(
         self,
-        input_type: type[MappedGraphQLDTO[T]],
+        input_type: type[Any],
         resolver: Any | None = None,
         *,
         validation: ValidationProtocol[T] | None = None,

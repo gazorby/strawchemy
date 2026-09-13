@@ -28,7 +28,6 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 
     from strawchemy.dto.strawberry import EnumDTO
-    from strawchemy.typing import MappedGraphQLDTO
     from strawchemy.validation.base import ValidationProtocol
 
 __all__ = ("EventRegistry", "Input", "InputModel", "LevelInput", "RelationInput", "RelationType")
@@ -38,6 +37,10 @@ DeclarativeBaseT = TypeVar("DeclarativeBaseT", bound="DeclarativeBase")
 InputModel = TypeVar("InputModel", bound="DeclarativeBase")
 RelationInputT = TypeVar("RelationInputT", bound=MappedDTO[Any])
 RelationInputType: TypeAlias = Literal["set", "create", "add", "remove", "upsert"]
+#: An instance of a class decorated with an input decorator. Such a class keeps its own
+#: identity for type checkers -- the `MappedGraphQLDTO` base is only added at runtime --
+#: so no static type describes it.
+AnyInputDTO: TypeAlias = Any
 
 
 @final
@@ -303,7 +306,7 @@ class LevelInput:
 class Input(Generic[InputModel]):
     def __init__(
         self,
-        dtos: MappedGraphQLDTO[InputModel] | Sequence[MappedGraphQLDTO[InputModel]],
+        dtos: AnyInputDTO | Sequence[AnyInputDTO],
         _validation_: ValidationProtocol[InputModel] | None = None,
         *,
         registry: EventRegistry | None = None,

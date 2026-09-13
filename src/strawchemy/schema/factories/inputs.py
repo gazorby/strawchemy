@@ -527,9 +527,10 @@ class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
         scope: TypeScope | None = None,
         functions: Sequence[AggregationFilterFunction] | None = None,
         **kwargs: Unpack[InputDecoratorKwargs],
-    ) -> Callable[[type[Any]], type[AggregateFilterDTO]]:
+    ) -> Callable[[type[Any]], type[AggregateFilterDTO]]:  # ty: ignore[invalid-method-override]
         # `_input_wrapper` is called directly: `functions` is not part of `InputDecoratorKwargs`,
-        # so routing it through `super().input()` would break the TypedDict contract.
+        # so routing it through `super().input()` would break the TypedDict contract. Declaring it
+        # narrows what the base accepts through `**kwargs`, which is what the suppression covers.
         return self._input_wrapper(
             model=model,
             name=name,

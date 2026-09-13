@@ -19,7 +19,7 @@ def test_add_non_input_relationships(
     @strawchemy.create_input(color_model, include="all")
     class ColorInput: ...
 
-    color = ColorInput(name="Blue")
+    color = ColorInput(name="Blue")  # ty: ignore[unknown-argument]
     color_input = Input(color)
     assert len(color_input.relations) == 0
     color_input.instances[0].fruits.append(fruit_model(name="Apple", color_id=uuid4(), sweetness=1, color=None))

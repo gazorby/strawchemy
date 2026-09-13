@@ -22,6 +22,8 @@ __all__ = (
 
 
 class StrawchemyError(Exception):
+    """Base class for every error raised by strawchemy."""
+
     detail: str
 
     def __init__(self, *args: Any, detail: str = "") -> None:
@@ -51,19 +53,24 @@ class StrawchemyError(Exception):
         return " ".join((*self.args, self.detail)).strip()
 
 
-class SessionNotFoundError(StrawchemyError): ...
+class SessionNotFoundError(StrawchemyError):
+    """Raised when no session can be resolved from the GraphQL context."""
 
 
-class StrawchemyFieldError(StrawchemyError): ...
+class StrawchemyFieldError(StrawchemyError):
+    """Raised when a schema field is declared with an unusable configuration."""
 
 
-class DTOError(StrawchemyError): ...
+class DTOError(StrawchemyError):
+    """Raised when an error occurs while generating or using a DTO."""
 
 
-class EmptyDTOError(DTOError): ...
+class EmptyDTOError(DTOError):
+    """Raised when a DTO would be generated without any field."""
 
 
-class ModelInspectorError(DTOError): ...
+class ModelInspectorError(DTOError):
+    """Raised when a model field cannot be inspected as requested."""
 
 
 class TranspilingError(StrawchemyError):
@@ -78,4 +85,5 @@ class QueryHookError(StrawchemyError):
     """Raised when an error occurs within a query hook's execution."""
 
 
-class GraphError(StrawchemyError): ...
+class GraphError(StrawchemyError):
+    """Raised when a query graph node is missing an expected relative or metadata."""

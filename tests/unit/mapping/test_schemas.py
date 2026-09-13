@@ -39,7 +39,7 @@ def test_type_instance(strawchemy: Strawchemy) -> None:
         id: auto
         name: auto
 
-    user = UserType(id=1, name="user")
+    user = UserType(id=1, name="user")  # ty: ignore[unknown-argument]
     assert user.id == 1
     assert user.name == "user"
 
@@ -65,8 +65,8 @@ def test_override_same_name_does_not_leak_fields(strawchemy: Strawchemy) -> None
     class ColorSlim:
         pass
 
-    wide_fields = {f.name for f in ColorWide.__strawberry_definition__.fields}
-    slim_fields = {f.name for f in ColorSlim.__strawberry_definition__.fields}
+    wide_fields = {f.name for f in get_object_definition(ColorWide, strict=True).fields}
+    slim_fields = {f.name for f in get_object_definition(ColorSlim, strict=True).fields}
 
     assert wide_fields == {"fruits_aggregate", "fruits", "id", "name"}
     assert slim_fields == {"id"}
@@ -78,7 +78,7 @@ def test_type_instance_auto_as_str(strawchemy: Strawchemy) -> None:
         id: auto
         name: auto
 
-    user = UserType(id=1, name="user")
+    user = UserType(id=1, name="user")  # ty: ignore[unknown-argument]
     assert user.id == 1
     assert user.name == "user"
 
@@ -89,7 +89,7 @@ def test_input_instance(strawchemy: Strawchemy) -> None:
         id: auto
         name: auto
 
-    user = InputType(id=1, name="user")
+    user = InputType(id=1, name="user")  # ty: ignore[unknown-argument]
     assert user.id == 1
     assert user.name == "user"
 
@@ -671,6 +671,12 @@ def test_default_order_by_on_non_list_field_raises() -> None:
 def test_default_order_by_wrong_model_column_raises() -> None:
     with pytest.raises(StrawchemyFieldError, match="not a column"):
         import_module("tests.unit.schemas.default_order_by_invalid")
+
+
+def test_validation_for_another_model_raises() -> None:
+    """Test that a validation type mapping a different model than the input type raises."""
+    with pytest.raises(StrawchemyFieldError, match="GroupCreateValidation validates Group, but UserCreate maps User"):
+        import_module("tests.unit.schemas.pydantic.validation_model_mismatch")
 
 
 def test_aggregation_order_by_aliased_column_no_key_error() -> None:

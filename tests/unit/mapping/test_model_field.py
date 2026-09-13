@@ -6,11 +6,13 @@ from importlib import import_module
 from typing import TYPE_CHECKING
 
 import pytest
+from strawberry.types import get_object_definition
 
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.field import StrawchemyField
 from tests.unit.models import Color, Fruit
+from tests.utils import as_dto
 
 if TYPE_CHECKING:
     from strawchemy.mapper import Strawchemy
@@ -90,13 +92,13 @@ def test_type_renames_field_to_schema_name(strawchemy: Strawchemy) -> None:
     class FruitType:
         full_name: str = strawchemy.field(model_field="name")
 
-    field_names = {f.name for f in FruitType.__strawberry_definition__.fields}
+    field_names = {f.name for f in get_object_definition(FruitType, strict=True).fields}
     assert "full_name" in field_names
     # The original model field name is not exposed.
     assert "name" not in field_names
     # The schema field must be genuinely linked to the model column `name`,
     # not an unlinked standalone field.
-    field_defs = FruitType.__dto_field_definitions__
+    field_defs = as_dto(FruitType).__dto_field_definitions__
     assert "full_name" in field_defs
     assert field_defs["full_name"].model_field_name == "name"
 
@@ -108,11 +110,11 @@ def test_type_declared_annotation_overrides_inferred_type(strawchemy: Strawchemy
     class FruitType:
         sweetness_label: str = strawchemy.field(model_field="sweetness")  # sweetness is int on the model
 
-    field = next(f for f in FruitType.__strawberry_definition__.fields if f.name == "sweetness_label")
+    field = next(f for f in get_object_definition(FruitType, strict=True).fields if f.name == "sweetness_label")
     # The declared `str` annotation wins over the model's int column type.
     assert field.type is str
     # The schema field is genuinely linked to the model column `sweetness`.
-    assert FruitType.__dto_field_definitions__["sweetness_label"].model_field_name == "sweetness"
+    assert as_dto(FruitType).__dto_field_definitions__["sweetness_label"].model_field_name == "sweetness"
 
 
 def test_input_maps_and_round_trips(strawchemy: Strawchemy) -> None:
@@ -123,15 +125,15 @@ def test_input_maps_and_round_trips(strawchemy: Strawchemy) -> None:
         full_name: str = strawchemy.field(model_field="name")
         sweetness: int
 
-    field_names = {f.name for f in FruitCreate.__strawberry_definition__.fields}
+    field_names = {f.name for f in get_object_definition(FruitCreate, strict=True).fields}
     assert "full_name" in field_names
     assert "name" not in field_names
 
-    instance = FruitCreate(full_name="apple", sweetness=3)
-    mapped = instance.to_mapped()
+    instance = FruitCreate(full_name="apple", sweetness=3)  # ty: ignore[unknown-argument]
+    mapped = instance.to_mapped()  # ty: ignore[unresolved-attribute]
     assert mapped.name == "apple"
     # The input field definition links back to the real model column.
-    assert FruitCreate.__dto_field_definitions__["full_name"].model_field_name == "name"
+    assert as_dto(FruitCreate).__dto_field_definitions__["full_name"].model_field_name == "name"
 
 
 def test_model_field_maps_relationship(strawchemy: Strawchemy) -> None:
@@ -145,10 +147,10 @@ def test_model_field_maps_relationship(strawchemy: Strawchemy) -> None:
     class ColorType:
         items: list[FruitType] = strawchemy.field(model_field="fruits")
 
-    field_names = {f.name for f in ColorType.__strawberry_definition__.fields}
+    field_names = {f.name for f in get_object_definition(ColorType, strict=True).fields}
     assert "items" in field_names
     assert "fruits" not in field_names
-    assert ColorType.__dto_field_definitions__["items"].model_field_name == "fruits"
+    assert as_dto(ColorType).__dto_field_definitions__["items"].model_field_name == "fruits"
 
 
 def test_missing_model_field_raises_on_import() -> None:
@@ -171,10 +173,10 @@ def test_type_aliases_param_deprecated(strawchemy: Strawchemy) -> None:
         class FruitType:
             pass
 
-    field_names = {f.name for f in FruitType.__strawberry_definition__.fields}
+    field_names = {f.name for f in get_object_definition(FruitType, strict=True).fields}
     assert "full_name" in field_names
     assert "name" not in field_names
-    assert FruitType.__dto_field_definitions__["full_name"].model_field_name == "name"
+    assert as_dto(FruitType).__dto_field_definitions__["full_name"].model_field_name == "name"
 
 
 def test_input_aliases_param_deprecated(strawchemy: Strawchemy) -> None:
@@ -185,11 +187,11 @@ def test_input_aliases_param_deprecated(strawchemy: Strawchemy) -> None:
         class FruitCreate:
             pass
 
-    field_names = {f.name for f in FruitCreate.__strawberry_definition__.fields}
+    field_names = {f.name for f in get_object_definition(FruitCreate, strict=True).fields}
     assert "full_name" in field_names
     assert "name" not in field_names
 
-    mapped = FruitCreate(full_name="apple", sweetness=3).to_mapped()
+    mapped = FruitCreate(full_name="apple", sweetness=3).to_mapped()  # ty: ignore[unknown-argument, unresolved-attribute]
     assert mapped.name == "apple"
 
 
@@ -203,7 +205,7 @@ def test_alias_generator_not_deprecated(strawchemy: Strawchemy) -> None:
             pass
 
     assert not [w for w in caught if issubclass(w.category, DeprecationWarning)]
-    field_names = {f.name for f in FruitType.__strawberry_definition__.fields}
+    field_names = {f.name for f in get_object_definition(FruitType, strict=True).fields}
     assert "NAME" in field_names
 
 
@@ -217,6 +219,6 @@ def test_type_level_aliases_declared_annotation_overrides_inferred_type(strawche
         class FruitType:
             sweetness_label: str  # `sweetness` is an int column on the model
 
-    field = next(f for f in FruitType.__strawberry_definition__.fields if f.name == "sweetness_label")
+    field = next(f for f in get_object_definition(FruitType, strict=True).fields if f.name == "sweetness_label")
     assert field.type is str
-    assert FruitType.__dto_field_definitions__["sweetness_label"].model_field_name == "sweetness"
+    assert as_dto(FruitType).__dto_field_definitions__["sweetness_label"].model_field_name == "sweetness"

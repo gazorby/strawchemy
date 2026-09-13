@@ -50,4 +50,4 @@ class ExecutableQuery:
 
     @strawberry.field
     def overridden_json(self) -> OverriddenJSONType:
-        return OverriddenJSONType(id=uuid4())
+        return OverriddenJSONType(id=uuid4())  # ty: ignore[unknown-argument]

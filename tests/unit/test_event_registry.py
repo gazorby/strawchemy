@@ -142,7 +142,7 @@ def test_strawchemy_reuses_one_registry_across_inputs(monkeypatch: pytest.Monkey
     monkeypatch.setattr(input_module.event, "listens_for", counting_listens_for)
 
     for _ in range(2):
-        color_input = Input(ColorInput(name="Blue"), registry=registry)
+        color_input = Input(ColorInput(name="Blue"), registry=registry)  # ty: ignore[unknown-argument]
         color_input.instances[0].fruits.append(Fruit(name="Apple", color_id=uuid4(), sweetness=1, color=None))
         color_input.add_non_input_relations()
 

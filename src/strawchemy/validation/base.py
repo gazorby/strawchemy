@@ -54,6 +54,9 @@ class ValidationProtocol(Protocol, Generic[T]):
     to be compatible with Strawchemy's validation system.
     """
 
+    model: type[MappedDTO[T]]
+    """The DTO validated input is loaded into, not the SQLAlchemy model it maps."""
+
     def validate(self, **kwargs: Any) -> MappedDTO[T]:
         """Validate the input data and return a mapped DTO if successful.
 
