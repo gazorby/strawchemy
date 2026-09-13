@@ -51,6 +51,11 @@ class _StrawchemyInputMutationField(StrawchemyField):
         self._validation = validation
         self._event_registry = event_registry
 
+    def _data_argument(self, *, as_list: bool = False) -> StrawberryArgument:
+        """Builds the ``data`` argument, wrapping the input type in a list for batch mutations."""
+        annotation = list[self._input_type] if as_list else self._input_type  # ty: ignore[invalid-type-form]
+        return StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(annotation))
+
 
 class _StrawchemyMutationField:
     async def _input_result_async(
@@ -80,9 +85,7 @@ class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
-        if self.is_list:
-            return [StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(list[self._input_type]))]
-        return [StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(self._input_type))]
+        return [self._data_argument(as_list=self.is_list)]
 
     @override
     def resolver(
@@ -141,12 +144,7 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
                 default=None,
             ),
         ]
-        if self.is_list:
-            arguments.append(
-                StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(list[self._input_type]))
-            )
-        else:
-            arguments.append(StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(self._input_type)))
+        arguments.append(self._data_argument(as_list=self.is_list))
         return arguments
 
     @override
@@ -193,7 +191,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
     def auto_arguments(self) -> list[StrawberryArgument]:
         if self.filter:
             return [
-                StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(self._input_type)),
+                self._data_argument(),
                 StrawberryArgument(
                     python_name="filter_input",
                     graphql_name=FILTER_KEY,
@@ -201,9 +199,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
                     default=None,
                 ),
             ]
-        if self.is_list:
-            return [StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(list[self._input_type]))]
-        return [StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(self._input_type))]
+        return [self._data_argument(as_list=self.is_list)]
 
     @override
     def resolver(

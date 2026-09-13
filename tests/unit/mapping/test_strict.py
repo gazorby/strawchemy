@@ -16,6 +16,7 @@ from typing_extensions import Self
 from strawchemy import Strawchemy, StrawchemyConfig
 from strawchemy.schema.factories.base import GraphQLFactory
 from strawchemy.schema.scalars import DateTime
+from tests.utils import as_dto
 
 
 class _Unmappable:
@@ -165,7 +166,7 @@ def test_strict_false_skips_unmappable_in_order_by_input() -> None:
             name: strawberry.auto
             data: strawberry.auto
 
-    order_by_input = OrderableType.__strawchemy_definition__.order_by
+    order_by_input = as_dto(OrderableType).__strawchemy_definition__.order_by
     assert order_by_input is not None
     names = _field_names(order_by_input)
     assert "name" in names

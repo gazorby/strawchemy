@@ -19,7 +19,7 @@ import warnings
 from enum import Enum
 from functools import cached_property
 from inspect import getmembers
-from typing import TYPE_CHECKING, Any, ForwardRef, Literal, Optional, TypeAlias, TypeVar, get_type_hints
+from typing import TYPE_CHECKING, Any, ForwardRef, Literal, Optional, TypeAlias, TypeVar, cast, get_type_hints
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import UNSET
@@ -68,6 +68,9 @@ if TYPE_CHECKING:
     from strawchemy.validation.pydantic import MappedPydanticGraphQLDTO
 
 __all__ = ("GraphQLFactory", "StrawchemyMappedFactory", "StrawchemyUnMappedFactory")
+
+#: The class a ``type()``/``input()`` decorator is applied to.
+_DecoratedT = TypeVar("_DecoratedT")
 
 T = TypeVar("T", bound="DeclarativeBase")
 PydanticGraphQLDTOT = TypeVar("PydanticGraphQLDTOT", bound="MappedPydanticGraphQLDTO[Any]")
@@ -602,14 +605,20 @@ class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
         scope: TypeScope | None = None,
         mode: GraphQLPurpose = "type",
         **kwargs: Unpack[TypeDecoratorKwargs],
-    ) -> Callable[[builtins.type[Any]], builtins.type[MappedGraphQLDTO[T]]]:
-        return self._type_wrapper(
-            model=model,
-            name=name,
-            purpose=purpose,
-            scope=self._type_scope_to_dto_scope(scope) if scope else None,
-            mode=mode,
-            **kwargs,
+    ) -> Callable[[builtins.type[_DecoratedT]], builtins.type[_DecoratedT]]:
+        # The generated DTO subclasses the decorated class, so the decorated name is
+        # typed as itself: a `type[...]` return would demote it to a variable, making it
+        # unusable in type expressions such as `list[MyType]`.
+        return cast(
+            "Callable[[builtins.type[_DecoratedT]], builtins.type[_DecoratedT]]",
+            self._type_wrapper(
+                model=model,
+                name=name,
+                purpose=purpose,
+                scope=self._type_scope_to_dto_scope(scope) if scope else None,
+                mode=mode,
+                **kwargs,
+            ),
         )
 
     @dataclass_transform(order_default=True, kw_only_default=True)
@@ -622,14 +631,20 @@ class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
         purpose: Purpose = Purpose.WRITE,
         scope: TypeScope | None = None,
         **kwargs: Unpack[InputDecoratorKwargs],
-    ) -> Callable[[builtins.type[Any]], builtins.type[MappedGraphQLDTO[T]]]:
-        return self._input_wrapper(
-            model=model,
-            name=name,
-            purpose=purpose,
-            mode=mode,
-            scope=self._type_scope_to_dto_scope(scope) if scope else None,
-            **kwargs,
+    ) -> Callable[[builtins.type[_DecoratedT]], builtins.type[_DecoratedT]]:
+        # The generated DTO subclasses the decorated class, so the decorated name is
+        # typed as itself: a `type[...]` return would demote it to a variable, making it
+        # unusable in type expressions such as `list[MyType]`.
+        return cast(
+            "Callable[[builtins.type[_DecoratedT]], builtins.type[_DecoratedT]]",
+            self._input_wrapper(
+                model=model,
+                name=name,
+                purpose=purpose,
+                mode=mode,
+                scope=self._type_scope_to_dto_scope(scope) if scope else None,
+                **kwargs,
+            ),
         )
 
     @override

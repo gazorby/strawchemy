@@ -39,7 +39,7 @@ def test_type_instance(strawchemy: Strawchemy) -> None:
         id: auto
         name: auto
 
-    user = UserType(id=1, name="user")
+    user = UserType(id=1, name="user")  # ty: ignore[unknown-argument]
     assert user.id == 1
     assert user.name == "user"
 
@@ -65,8 +65,8 @@ def test_override_same_name_does_not_leak_fields(strawchemy: Strawchemy) -> None
     class ColorSlim:
         pass
 
-    wide_fields = {f.name for f in ColorWide.__strawberry_definition__.fields}
-    slim_fields = {f.name for f in ColorSlim.__strawberry_definition__.fields}
+    wide_fields = {f.name for f in get_object_definition(ColorWide, strict=True).fields}
+    slim_fields = {f.name for f in get_object_definition(ColorSlim, strict=True).fields}
 
     assert wide_fields == {"fruits_aggregate", "fruits", "id", "name"}
     assert slim_fields == {"id"}
@@ -78,7 +78,7 @@ def test_type_instance_auto_as_str(strawchemy: Strawchemy) -> None:
         id: auto
         name: auto
 
-    user = UserType(id=1, name="user")
+    user = UserType(id=1, name="user")  # ty: ignore[unknown-argument]
     assert user.id == 1
     assert user.name == "user"
 
@@ -89,7 +89,7 @@ def test_input_instance(strawchemy: Strawchemy) -> None:
         id: auto
         name: auto
 
-    user = InputType(id=1, name="user")
+    user = InputType(id=1, name="user")  # ty: ignore[unknown-argument]
     assert user.id == 1
     assert user.name == "user"
 

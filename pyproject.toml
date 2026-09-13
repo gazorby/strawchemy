@@ -64,7 +64,7 @@ lint = [
   "ruff",
   "slotscheck>=0.16.5",
   "tombi>=1.1.0",
-  "ty>=0.0.40",
+  "ty>=0.0.80",
   "vulture",
 ]
 mysql = ["asyncmy", "cryptography"]

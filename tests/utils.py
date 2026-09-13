@@ -14,6 +14,7 @@ from typing_extensions import TypeIs, override
 
 from strawchemy.dto.base import DTOFactory
 from strawchemy.dto.inspectors import SQLAlchemyInspector
+from strawchemy.dto.strawberry import MappedStrawberryGraphQLDTO
 from strawchemy.utils.annotation import get_annotations
 from tests.typing import AnyFactory, MappedPydanticFactory
 
@@ -28,10 +29,19 @@ if TYPE_CHECKING:
     from strawchemy.typing import DataclassProtocol
     from tests.typing import AnyQueryExecutor, AsyncQueryExecutor, SyncQueryExecutor
 
-__all__ = ("DTOInspect", "generate_query", "sqlalchemy_pydantic_factory")
+__all__ = ("DTOInspect", "as_dto", "generate_query", "sqlalchemy_pydantic_factory")
 
 
 T = TypeVar("T")
+
+
+def as_dto(type_: type[Any]) -> type[MappedStrawberryGraphQLDTO[Any]]:
+    """Views a decorated class as the DTO it becomes at runtime.
+
+    Classes decorated by ``strawchemy.type()`` / ``.input()`` keep their own identity for type
+    checkers: the generated DTO base is only added at runtime.
+    """
+    return cast("type[MappedStrawberryGraphQLDTO[Any]]", type_)
 
 
 def sqlalchemy_pydantic_factory() -> MappedPydanticFactory:

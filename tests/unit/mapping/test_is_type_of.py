@@ -116,7 +116,7 @@ class TestIsTypeOf:
             # `from __future__ import annotations` when the type is defined locally.
             @strawberry.field(graphql_type=FruitOrTomato)
             def thing(self) -> FruitOrTomato:  # type: ignore[return-value]
-                return _fruit
+                return _fruit  # ty: ignore[invalid-return-type]
 
         schema = strawberry.Schema(query=Query)
         result = schema.execute_sync("{ thing { __typename } }")
