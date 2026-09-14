@@ -28,12 +28,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
   "Typing :: Typed",
 ]
-dependencies = [
-  "msgspec>=0.20.0",
-  "sqlalchemy>=2.0.10",
-  "strawberry-graphql>=0.283.2",
-  "typing-extensions"
-]
+dependencies = ["msgspec>=0.20.0", "sqlalchemy>=2.0.10", "strawberry-graphql>=0.283.2", "typing-extensions"]
 
 [project.urls]
 Changelog = "https://github.com/gazorby/strawchemy/blob/main/CHANGELOG.md"

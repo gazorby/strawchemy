@@ -48,14 +48,7 @@ run = '''
 [lint]
 description = "Lint the code"
 alias = "l"
-depends = [
-  "vulture",
-  "ty",
-  "ruff:check",
-  "ruff:format:check",
-  "slotscheck",
-  "unasyncd:check"
-]
+depends = ["vulture", "ty", "ruff:check", "ruff:format:check", "slotscheck", "unasyncd:check"]
 
 [pre-commit]
 description = "Run pre-commit checks"
