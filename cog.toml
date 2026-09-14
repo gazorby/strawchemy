@@ -4,11 +4,7 @@ ignore_merge_commits = true
 # Use a non-native marker (not one of GitHub's [skip ci]/[ci skip]/... strings)
 # so we can do our own skip logic in workflow
 skip_ci = "[ci-skip]"
-pre_bump_hooks = [
-  "git restore cog.toml",
-  "uv version --no-sync {{version}}",
-  "git add :pyproject.toml :uv.lock"
-]
+pre_bump_hooks = ["git restore cog.toml", "uv version --no-sync {{version}}", "git add :pyproject.toml :uv.lock"]
 
 [changelog]
 path = "CHANGELOG.md"
@@ -32,11 +28,5 @@ chore = { omit_from_changelog = true }
 test = { omit_from_changelog = true }
 
 [bump_profiles.ci]
-pre_bump_hooks = [
-  "git restore cog.toml",
-  "uv version --no-sync {{version}}",
-  "git add :pyproject.toml :uv.lock",
-  "git config user.name 'github-actions[bot]'",
-  "git config user.email 'github-actions[bot]@users.noreply.github.com'"
-]
+pre_bump_hooks = ["git restore cog.toml", "uv version --no-sync {{version}}", "git add :pyproject.toml :uv.lock", "git config user.name 'github-actions[bot]'", "git config user.email 'github-actions[bot]@users.noreply.github.com'"]
 post_bump_hooks = ["git push", "git push origin {{version_tag}}"]

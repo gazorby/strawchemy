@@ -209,11 +209,19 @@ class EventRegistry:
 
 
 @dataclass
+class _DeferredRelations:
+    params: dict[str, Any]
+    relations: list[_UnboundRelationInput]
+
+
+@dataclass
 class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT, InputModel]):
     input_data: Input[InputModel]
     is_update: bool = False
 
     current_relations: list[_UnboundRelationInput] = dataclasses.field(default_factory=list)
+    deferred_relations: dict[int, _DeferredRelations] = dataclasses.field(default_factory=dict)
+    """Relations of nested levels, keyed by the id of the params dict they were collected from."""
 
     @override
     def field_value(
@@ -265,6 +273,36 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
             )
         return value
 
+    def _bind(self, params: dict[str, Any], relations: list[_UnboundRelationInput], model: DeclarativeBase) -> None:
+        for relation in relations:
+            if self.input_data.validation is not None:
+                self._bind_deferred(relation, params, model)
+            self.input_data.add_relation(RelationInput.from_unbound(relation, model, self.input_data.registry))
+
+    def _bind_deferred(self, relation: _UnboundRelationInput, params: dict[str, Any], model: DeclarativeBase) -> None:
+        """Replace the params collected below the root by the instances they stand for.
+
+        Created instances come out of the root validation, upserted ones are mapped
+        independently of it, and both are ordered like the params they were built from.
+        """
+        if relation.create:
+            validated = getattr(model, relation.attribute.key)
+            instances = [
+                instance
+                for instance in (validated if isinstance(validated, (list, tuple)) else [validated])
+                if instance is not None
+            ]
+            relation.create = instances
+        elif relation.upsert is not None:
+            instances = list(relation.upsert)
+        else:
+            return
+        collected = params.get(relation.attribute.key)
+        nested_params = collected if isinstance(collected, list) else [collected]
+        for nested, instance in zip(nested_params, instances, strict=False):
+            if (deferred := self.deferred_relations.pop(id(nested), None)) is not None:
+                self._bind(deferred.params, deferred.relations, instance)
+
     @override
     def model(
         self,
@@ -274,7 +312,14 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
         override: dict[str, Any],
         level: int,
     ) -> Any:
-        if level == 1 and self.input_data.validation is not None:
+        relations, self.current_relations = self.current_relations, []
+        if level > 1 and self.input_data.validation is not None:
+            # Nested params are what .model_validate is called with at root level, and the mapped
+            # instances they stand for only exist once it returned.
+            self.deferred_relations[id(params)] = _DeferredRelations(params, relations)
+            return params
+
+        if self.input_data.validation is not None:
             model = self.input_data.validation.validate(**params).to_mapped(override=override)
         else:
             model = model_cls(**params)
@@ -285,11 +330,8 @@ class _InputVisitor(VisitorProtocol[DeclarativeBaseT], Generic[DeclarativeBaseT,
                 if attribute not in params:
                     delattr(model, attribute)
 
-        for relation in self.current_relations:
-            self.input_data.add_relation(RelationInput.from_unbound(relation, model, self.input_data.registry))
-        self.current_relations.clear()
-        # Return dict because .model_validate will be called at root level
-        return model if level == 1 or self.input_data.validation is None else params
+        self._bind(params, relations, model)
+        return model
 
 
 @dataclass

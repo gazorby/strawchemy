@@ -459,6 +459,95 @@ async def test_create_with_to_many_create_and_nested_set(
     query_tracker.assert_statements(2, "insert", sql_snapshot)
 
 
+async def test_create_validated_with_nested_relations_create(any_query: AnyQueryExecutor) -> None:
+    query = """
+            mutation {
+                createValidatedColor(data: {
+                    name: "white",
+                    fruits: {
+                        create: [
+                            {
+                                name: "Grape",
+                                sweetness: 1,
+                                waterPercent: 0.8,
+                                product: { create: { name: "wine" } }
+                            },
+                            {
+                                name: "Lychee",
+                                sweetness: 1,
+                                waterPercent: 0.7,
+                                farms: { create: [ { name: "Bio farm" } ] }
+                            },
+                        ]
+                    }
+                }) {
+                    ... on ColorType {
+                        name
+                        fruits {
+                            name
+                            product {
+                                name
+                            }
+                            farms {
+                                name
+                            }
+                        }
+                    }
+                }
+            }
+            """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["createValidatedColor"]["name"] == "white"
+    expected_fruits = [
+        {"name": "Lychee", "product": None, "farms": [{"name": "Bio farm"}]},
+        {"name": "Grape", "product": {"name": "wine"}, "farms": []},
+    ]
+    for fruit in expected_fruits:
+        assert fruit in result.data["createValidatedColor"]["fruits"]
+
+
+async def test_create_validated_with_nested_upsert(any_query: AnyQueryExecutor) -> None:
+    query = """
+            mutation {
+                createValidatedColor(data: {
+                    name: "white",
+                    fruits: {
+                        upsert: {
+                            create: [
+                                {
+                                    name: "Plum",
+                                    sweetness: 7,
+                                    waterPercent: 0.87,
+                                    product: { create: { name: "jam" } }
+                                }
+                            ]
+                            conflictFields: name
+                        }
+                    }
+                }) {
+                    ... on ColorType {
+                        name
+                        fruits {
+                            name
+                            product {
+                                name
+                            }
+                        }
+                    }
+                }
+            }
+            """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert result.data["createValidatedColor"] == {
+        "name": "white",
+        "fruits": [{"name": "Plum", "product": {"name": "jam"}}],
+    }
+
+
 @pytest.mark.snapshot
 async def test_create_with_nested_mixed_relations_create(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
