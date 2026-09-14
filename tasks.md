@@ -53,6 +53,43 @@ Output test session names for CI
 
 Clean working directory
 
+## `docs:build`
+
+- Depends: docs:install, docs:reference
+
+- **Usage:** `docs:build`
+
+Build the documentation site
+
+## `docs:dev`
+
+- Depends: docs:install, docs:reference
+
+- **Usage:** `docs:dev`
+- **Aliases:** `d`
+
+Serve the documentation site locally
+
+## `docs:install`
+
+- **Usage:** `docs:install`
+
+Install documentation site dependencies
+
+## `docs:preview`
+
+- Depends: docs:build
+
+- **Usage:** `docs:preview`
+
+Preview the built documentation site
+
+## `docs:reference`
+
+- **Usage:** `docs:reference`
+
+Generate the reference pages from the source tree
+
 ## `format`
 
 - Depends: ruff:format, tombi

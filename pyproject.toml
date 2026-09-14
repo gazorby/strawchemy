@@ -54,6 +54,7 @@ dev = [
   { include-group = "test" },
 ]
 aiosqlite = ["aiosqlite"]
+docs = ["cyclopts", "griffe", "testapp"]
 lint = [
   "ruff",
   "slotscheck>=0.16.5",
@@ -86,7 +87,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.codespell]
-skip = "*.po,*.ts,./src/3rdParty,./src/Test"
+skip = "*.po,*.ts,./src/3rdParty,./src/Test,*.lock"
 ignore-words-list = "nin"
 
 [tool.coverage.run]
@@ -189,6 +190,7 @@ convention = "google"
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["TC001", "UP037", "PLR2004", "PLC0415", "PLR0917"]
 "src/strawchemy/strawberry/factories/*" = ["UP007", "UP045"]
+"tools/*" = ["INP001", "T201"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["strawchemy", "tests"]
