@@ -182,7 +182,7 @@ class ToManyUpdateInput(RequiredToManyUpdateInput[T, RelationInputT, UpdateField
         override: dict[str, Any] | None = None,
         level: int = 0,
     ) -> list[Any] | type[DTOUnset]:
-        if self.set and (self.create or self.add or self.remove):
+        if self.set and (self.create or self.upsert or self.add or self.remove):
             msg = "You cannot use `set` with `create`, `upsert`, `add` or `remove` in a -to-many relation input"
             raise ValueError(msg)
         return super().to_mapped(visitor, level=level, override=override)
