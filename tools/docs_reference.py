@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, get_args
 
 import griffe
 from cyclopts import App
+from griffe2md import ConfigDict, render_object_docs
 from testapp.schema import schema
 
 from strawchemy import typing as strawchemy_typing
@@ -29,6 +31,26 @@ class Emitter(Protocol):
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+_HEADING = re.compile(r"^(#{2,6}) `([A-Za-z_][\w.]*)`$", re.MULTILINE)
+_CROSSREF = re.compile(r"\[([^\]]*)\]\(#([^)]*)\)")
+_ANCHOR = re.compile(r"\{#([^}]+)\}")
+
+RENDER_CONFIG: ConfigDict = {
+    "docstring_style": "google",
+    "show_root_heading": True,
+    "show_root_full_path": True,
+    "show_root_members_full_path": True,
+    "show_object_full_path": True,
+    "summary": False,
+    "show_bases": False,
+    "separate_signature": True,
+    "show_signature_annotations": True,
+    "signature_crossrefs": False,
+    "docstring_section_style": "table",
+    "filters": ["!^_"],
+    "show_if_no_docstring": True,
+}
+
 
 class ReferenceGenerationError(StrawchemyError):
     """Raised when an emitter cannot produce a complete set of reference pages."""
@@ -44,20 +66,13 @@ class Page:
 
 
 @dataclass(frozen=True)
-class ApiPageSpec:
-    """One API page and the exported names it documents."""
+class PageSpec:
+    """One generated page and the objects it documents, addressed inside the loaded package."""
 
     path: str
     title: str
-    exports: tuple[str, ...]
-
-
-@dataclass(frozen=True)
-class ConfigClassSpec:
-    """One configuration class, addressed by its path inside the loaded package."""
-
-    griffe_path: str
-    title: str
+    objects: tuple[str, ...]
+    heading_level: int = 3
 
 
 @dataclass(frozen=True)
@@ -75,220 +90,109 @@ class ReferenceSpec:
 
     repo_root: Path
     layout: SiteLayout
-    api_pages: tuple[ApiPageSpec, ...]
-    config_classes: tuple[ConfigClassSpec, ...]
+    pages: tuple[PageSpec, ...]
     operator_exports: tuple[str, ...]
 
     @property
     def documented_exports(self) -> set[str]:
-        """Every export name claimed by some page."""
-        return {name for page in self.api_pages for name in page.exports} | set(self.operator_exports)
+        """Every name claimed by some page."""
+        return {name for page in self.pages for name in page.objects} | set(self.operator_exports)
 
 
 @dataclass(frozen=True)
-class MarkdownRenderer:
-    """Render griffe objects as the markdown blocks a reference page is built from."""
+class GriffeRenderer:
+    """Render griffe objects through griffe2md, anchored the way VitePress addresses headings."""
 
     source_url: str
     version: str
-
-    def _signature(self, func: griffe.Function) -> str:
-        parts: list[str] = []
-        for parameter in func.parameters:
-            if parameter.name == "self":
-                continue
-            text = parameter.name
-            if parameter.annotation is not None:
-                text = f"{text}: {parameter.annotation}"
-            if parameter.default is not None:
-                text = f"{text} = {parameter.default}"
-            parts.append(text)
-        returns = f" -> {func.returns}" if func.returns is not None else ""
-        return f"{func.name}({', '.join(parts)}){returns}"
-
-    def _parameter_descriptions(self, func: griffe.Function) -> dict[str, str]:
-        if func.docstring is None:
-            return {}
-        descriptions: dict[str, str] = {}
-        for section in func.docstring.parsed:
-            if section.kind is griffe.DocstringSectionKind.parameters:
-                for parameter in section.value:
-                    # Variadic entries keep their stars in the docstring but not in the signature.
-                    descriptions[parameter.name.lstrip("*")] = parameter.description.replace("\n", " ").strip()
-        return descriptions
-
-    def _parameters_table(self, func: griffe.Function) -> str:
-        descriptions = self._parameter_descriptions(func)
-        rows = ["| Parameter | Type | Default | Description |", "| --- | --- | --- | --- |"]
-        documented = False
-        for parameter in func.parameters:
-            if parameter.name == "self":
-                continue
-            documented = True
-            description = descriptions.get(parameter.name, "").replace("|", r"\|")
-            rows.append(
-                f"| `{parameter.name}` | {self.cell(parameter.annotation)} | {self.cell(parameter.default)} | "
-                f"{description} |"
-            )
-        return "\n".join(rows) if documented else ""
-
-    def _render_function(self, func: griffe.Function, level: int) -> str:
-        blocks = [
-            f"{'#' * level} `{self._signature(func)}`",
-            self.source_link(func),
-            self.docstring_text(func),
-            self._parameters_table(func),
-        ]
-        return "\n\n".join(block for block in blocks if block)
-
-    def _public_methods(self, cls: griffe.Class) -> list[griffe.Function]:
-        methods = [
-            resolved
-            for name, member in cls.members.items()
-            if not name.startswith("_") and isinstance(resolved := self.resolve(member), griffe.Function)
-        ]
-        return sorted(methods, key=lambda method: method.name)
-
-    def resolve(self, obj: griffe.Object | griffe.Alias) -> griffe.Object:
-        """Follow an alias to the object it stands for."""
-        return obj.final_target if isinstance(obj, griffe.Alias) else obj
-
-    def cell(self, value: object) -> str:
-        """Render a value as a table cell, escaping the pipes a union annotation contains."""
-        return f"`{value}`".replace("|", r"\|") if value is not None else ""
 
     def source_link(self, obj: griffe.Object | griffe.Alias) -> str:
         """Link to the object's definition line, pinned to the documented version."""
         return f"[source]({self.source_url}/v{self.version}/{obj.relative_filepath}#L{obj.lineno})"
 
-    def docstring_text(self, obj: griffe.Object | griffe.Alias) -> str:
-        """Join the prose sections of an object's docstring, dropping the structured ones."""
-        if obj.docstring is None:
-            return ""
-        return "\n".join(
-            section.value for section in obj.docstring.parsed if section.kind is griffe.DocstringSectionKind.text
-        )
+    def render(self, obj: griffe.Object | griffe.Alias, heading_level: int) -> str:
+        """Render one object as the markdown section a reference page is built from."""
+        target = obj.final_target if isinstance(obj, griffe.Alias) else obj
+        markdown = render_object_docs(target, config=RENDER_CONFIG | {"heading_level": heading_level})
+        return insert_source_link(anchor_headings(markdown), self.source_link(target))
 
-    def attributes(self, cls: griffe.Object | griffe.Alias) -> list[tuple[str, griffe.Attribute]]:
-        """List the public attributes of a class, sorted by name."""
-        return [
-            (name, attribute)
-            for name, member in sorted(self.resolve(cls).members.items())
-            if not name.startswith("_") and isinstance(attribute := self.resolve(member), griffe.Attribute)
-        ]
 
-    def is_read_only(self, attribute: griffe.Attribute) -> bool:
-        """Report whether a user can set the attribute when constructing the class."""
-        # A property has no setter here, and `field(init=False)` is populated in __post_init__.
-        return "property" in attribute.labels or (attribute.value is not None and "init=False" in str(attribute.value))
+def anchor_id(path: str) -> str:
+    """Render a dotted object path as an anchor safe in a url fragment and a css selector."""
+    return path.replace(".", "-")
 
-    def description(self, attribute: griffe.Attribute) -> str:
-        """Render an attribute's docstring as a single table cell."""
-        return self.docstring_text(attribute).replace("\n", " ").replace("|", r"\|").strip()
 
-    def render_object(self, obj: griffe.Object | griffe.Alias) -> str:
-        """Render a section documenting one exported name."""
-        target = self.resolve(obj)
-        blocks = [f"### {obj.name}", self.source_link(target), self.docstring_text(target)]
-        if isinstance(target, griffe.Function):
-            blocks.append(self._parameters_table(target))
-        elif isinstance(target, griffe.Attribute) and target.annotation is not None:
-            blocks.append(f"```python\n{obj.name}: {target.annotation}\n```")
-        elif isinstance(target, griffe.Class):
-            blocks.extend(self._render_function(method, level=4) for method in self._public_methods(target))
-        return "\n\n".join(block for block in blocks if block)
+def anchor_headings(markdown: str) -> str:
+    """Shorten every heading to the object's own name, anchored by its full path."""
+
+    def replace_heading(match: re.Match[str]) -> str:
+        hashes, path = match.groups()
+        return f"{hashes} `{path.rsplit('.', 1)[-1]}` {{#{anchor_id(path)}}}"
+
+    return _HEADING.sub(replace_heading, markdown)
+
+
+def insert_source_link(markdown: str, link: str) -> str:
+    """Place the source link between the heading griffe2md opens with and the body."""
+    heading, _, body = markdown.partition("\n")
+    return f"{heading}\n\n{link}\n{body}"
+
+
+def resolve_crossrefs(pages: Sequence[Page]) -> list[Page]:
+    """Point every reference at the page documenting it, dropping the ones no page documents.
+
+    Raises:
+        ReferenceGenerationError: If two pages define the same anchor.
+    """
+    anchors: dict[str, str] = {}
+    for page in pages:
+        for anchor in _ANCHOR.findall(page.content):
+            if anchor in anchors and anchors[anchor] != page.path:
+                msg = f"`{anchor}` is claimed by both `{anchors[anchor]}` and `{page.path}`."
+                raise ReferenceGenerationError(msg)
+            anchors[anchor] = page.path
+
+    def resolve_page(page: Page) -> Page:
+        def replace_crossref(match: re.Match[str]) -> str:
+            text, target = match.groups()
+            anchor = anchor_id(target)
+            path = anchors.get(anchor)
+            if path is None:
+                return text
+            return f"[{text}](#{anchor})" if path == page.path else f"[{text}](/{path}#{anchor})"
+
+        return replace(page, content=_CROSSREF.sub(replace_crossref, page.content))
+
+    return [resolve_page(page) for page in pages]
 
 
 @dataclass(frozen=True)
-class ApiEmitter:
-    """Emit one page per API page spec."""
+class ObjectPageEmitter:
+    """Emit one page per page specification."""
 
     package: griffe.Module
-    renderer: MarkdownRenderer
+    renderer: GriffeRenderer
     header: str
-    specs: tuple[ApiPageSpec, ...]
+    specs: tuple[PageSpec, ...]
 
     def emit(self) -> list[Page]:
         """Render one page per spec, in declaration order.
 
         Raises:
-            ReferenceGenerationError: If an exported name cannot be resolved by griffe.
+            ReferenceGenerationError: If a documented object cannot be resolved by griffe.
         """
         pages: list[Page] = []
         for spec in self.specs:
             sections = [self.header, f"# {spec.title}"]
-            for name in spec.exports:
-                obj = self.package[name]
-                if obj is None:
-                    msg = f"`{name}` is exported but griffe could not resolve it."
-                    raise ReferenceGenerationError(msg)
-                sections.append(self.renderer.render_object(obj))
+            for path in spec.objects:
+                try:
+                    obj = self.package[path]
+                except KeyError as error:
+                    msg = f"`{path}` is documented but griffe could not resolve it."
+                    raise ReferenceGenerationError(msg) from error
+                sections.append(self.renderer.render(obj, spec.heading_level))
             pages.append(Page(path=spec.path, title=spec.title, content="\n\n".join(sections) + "\n"))
         return pages
-
-
-@dataclass(frozen=True)
-class ConfigEmitter:
-    """Emit the single options page covering every configuration class."""
-
-    package: griffe.Module
-    renderer: MarkdownRenderer
-    header: str
-    specs: tuple[ConfigClassSpec, ...]
-
-    def options_table(self, cls: griffe.Object | griffe.Alias) -> str:
-        """Tabulate the public attributes of a configuration class.
-
-        Raises:
-            ReferenceGenerationError: If the class exposes no attribute to tabulate.
-        """
-        rows = ["| Option | Type | Default | Description |", "| --- | --- | --- | --- |"]
-        documented = False
-        for name, attribute in self.renderer.attributes(cls):
-            if self.renderer.is_read_only(attribute):
-                continue
-            documented = True
-            rows.append(
-                f"| `{name}` | {self.renderer.cell(attribute.annotation)} | "
-                f"{self.renderer.cell(attribute.value)} | {self.renderer.description(attribute)} |"
-            )
-        if not documented:
-            msg = f"`{self.renderer.resolve(cls).name}` exposes no settable attributes; remove its spec."
-            raise ReferenceGenerationError(msg)
-        return "\n".join(rows)
-
-    def read_only_table(self, cls: griffe.Object | griffe.Alias) -> str:
-        """Tabulate the attributes a user cannot set, or return an empty string when there are none."""
-        rows = ["| Attribute | Type | Description |", "| --- | --- | --- |"]
-        documented = False
-        for name, attribute in self.renderer.attributes(cls):
-            if not self.renderer.is_read_only(attribute):
-                continue
-            documented = True
-            rows.append(
-                f"| `{name}` | {self.renderer.cell(attribute.annotation)} | {self.renderer.description(attribute)} |"
-            )
-        return "\n".join(rows) if documented else ""
-
-    def emit(self) -> list[Page]:
-        """Render the options page covering every configuration class."""
-        sections = [self.header, "# Configuration options"]
-        for spec in self.specs:
-            cls = self.renderer.resolve(self.package[spec.griffe_path])
-            read_only = self.read_only_table(cls)
-            sections.extend(
-                block
-                for block in (
-                    f"## {spec.title}",
-                    self.renderer.source_link(cls),
-                    self.renderer.docstring_text(cls),
-                    self.options_table(cls),
-                    "### Read-only attributes" if read_only else "",
-                    read_only,
-                )
-                if block
-            )
-        return [Page(path="reference/config", title="Configuration options", content="\n\n".join(sections) + "\n")]
 
 
 @dataclass(frozen=True)
@@ -360,11 +264,10 @@ class ReferenceGenerator:
     spec: ReferenceSpec
 
     def _emitters(self, package: griffe.Module) -> tuple[Emitter, ...]:
-        renderer = MarkdownRenderer(self.spec.layout.source_url, package_version())
+        renderer = GriffeRenderer(self.spec.layout.source_url, package_version())
         header = self.spec.layout.header
         return (
-            ApiEmitter(package, renderer, header, self.spec.api_pages),
-            ConfigEmitter(package, renderer, header, self.spec.config_classes),
+            ObjectPageEmitter(package, renderer, header, self.spec.pages),
             GraphQLEmitter(header, self.spec.operator_exports),
         )
 
@@ -396,7 +299,7 @@ class ReferenceGenerator:
         if missing:
             msg = (
                 f"Exports missing from the reference: {', '.join(missing)}. "
-                f"Add each name to an api page or to the operator exports in {Path(__file__).name}."
+                f"Add each name to a page spec or to the operator exports in {Path(__file__).name}."
             )
             raise ReferenceGenerationError(msg)
 
@@ -404,7 +307,8 @@ class ReferenceGenerator:
         """Build every reference page, without touching the filesystem."""
         package = self.load_package()
         self.check_exports_covered(package)
-        return [page for emitter in self._emitters(package) for page in emitter.emit()]
+        pages = [page for emitter in self._emitters(package) for page in emitter.emit()]
+        return resolve_crossrefs(pages)
 
 
 @dataclass(frozen=True)
@@ -457,19 +361,19 @@ DEFAULT_SPEC = ReferenceSpec(
             "reference": "Reference",
         },
     ),
-    api_pages=(
-        ApiPageSpec("reference/api/mapper", "Mapper", ("Strawchemy", "ModelInstance")),
-        ApiPageSpec(
+    pages=(
+        PageSpec("reference/api/mapper", "Mapper", ("Strawchemy", "ModelInstance")),
+        PageSpec(
             "reference/api/config",
-            "Configuration types",
-            ("StrawchemyConfig", "FieldGroup", "ALL", "RELATIONSHIPS", "SCALARS"),
+            "Field groups",
+            ("FieldGroup", "ALL", "RELATIONSHIPS", "SCALARS"),
         ),
-        ApiPageSpec(
+        PageSpec(
             "reference/api/repositories",
             "Repositories",
             ("StrawchemyAsyncRepository", "StrawchemySyncRepository"),
         ),
-        ApiPageSpec(
+        PageSpec(
             "reference/api/comparisons",
             "Comparisons",
             (
@@ -484,7 +388,7 @@ DEFAULT_SPEC = ReferenceSpec(
                 "TimeDeltaComparison",
             ),
         ),
-        ApiPageSpec(
+        PageSpec(
             "reference/api/mutation-inputs",
             "Mutation inputs",
             (
@@ -497,12 +401,14 @@ DEFAULT_SPEC = ReferenceSpec(
                 "ValidationErrorType",
             ),
         ),
-        ApiPageSpec("reference/api/hooks", "Hooks", ("QueryHook",)),
-        ApiPageSpec("reference/api/errors", "Errors", ("ErrorType", "InputValidationError")),
-    ),
-    config_classes=(
-        ConfigClassSpec("StrawchemyConfig", "StrawchemyConfig"),
-        ConfigClassSpec("dto.types.DTOConfig", "DTOConfig"),
+        PageSpec("reference/api/hooks", "Hooks", ("QueryHook",)),
+        PageSpec("reference/api/errors", "Errors", ("ErrorType", "InputValidationError")),
+        PageSpec(
+            "reference/config",
+            "Configuration options",
+            ("StrawchemyConfig", "dto.types.DTOConfig"),
+            heading_level=2,
+        ),
     ),
     operator_exports=(
         "ArrayOperator",

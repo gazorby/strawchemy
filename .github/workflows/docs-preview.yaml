@@ -6,7 +6,7 @@ on:
     paths:
       - 'docs/**'
       - 'src/**'
-      - 'tools/docs_reference/**'
+      - 'tools/docs_reference.py'
       - 'README.md'
       - '.github/workflows/docs-preview.yaml'
 

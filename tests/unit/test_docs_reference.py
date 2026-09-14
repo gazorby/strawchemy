@@ -1,3 +1,5 @@
+"""Tests for the griffe2md-backed docs reference generator."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -12,7 +14,7 @@ if TYPE_CHECKING:
     from types import ModuleType
 
     import griffe
-    from tools.docs_reference import ConfigEmitter, GraphQLEmitter, MarkdownRenderer, ReferenceGenerator
+    from tools.docs_reference import GraphQLEmitter, GriffeRenderer, ReferenceGenerator
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERSION = "0.0.1"
@@ -44,24 +46,17 @@ def package(generator: ReferenceGenerator) -> griffe.Module:
 
 
 @pytest.fixture
-def renderer(docs_reference: ModuleType) -> MarkdownRenderer:
+def renderer(docs_reference: ModuleType) -> GriffeRenderer:
     """A renderer pinned to a fixed version, so source links stay stable across releases."""
-    return docs_reference.MarkdownRenderer(docs_reference.DEFAULT_SPEC.layout.source_url, VERSION)
+    return docs_reference.GriffeRenderer(docs_reference.DEFAULT_SPEC.layout.source_url, VERSION)
 
 
 @pytest.fixture
-def api_pages(docs_reference: ModuleType, package: griffe.Module, renderer: MarkdownRenderer) -> dict[str, str]:
-    """The rendered api pages, keyed by path and in declaration order."""
+def pages(docs_reference: ModuleType, package: griffe.Module, renderer: GriffeRenderer) -> dict[str, str]:
+    """The rendered object pages, keyed by path and in declaration order."""
     spec = docs_reference.DEFAULT_SPEC
-    emitter = docs_reference.ApiEmitter(package, renderer, spec.layout.header, spec.api_pages)
+    emitter = docs_reference.ObjectPageEmitter(package, renderer, spec.layout.header, spec.pages)
     return {page.path: page.content for page in emitter.emit()}
-
-
-@pytest.fixture
-def config_emitter(docs_reference: ModuleType, package: griffe.Module, renderer: MarkdownRenderer) -> ConfigEmitter:
-    """An emitter for the options page of the documented configuration classes."""
-    spec = docs_reference.DEFAULT_SPEC
-    return docs_reference.ConfigEmitter(package, renderer, spec.layout.header, spec.config_classes)
 
 
 @pytest.fixture
@@ -69,6 +64,57 @@ def graphql_emitter(docs_reference: ModuleType) -> GraphQLEmitter:
     """An emitter for the operator matrix and the example schema."""
     spec = docs_reference.DEFAULT_SPEC
     return docs_reference.GraphQLEmitter(spec.layout.header, spec.operator_exports)
+
+
+def test_anchor_headings_shortens_the_displayed_name(docs_reference: ModuleType) -> None:
+    """Test that a heading displays the object's own name and anchors its full path."""
+    assert docs_reference.anchor_headings("#### `strawchemy.QueryHook.load`") == (
+        "#### `load` {#strawchemy-QueryHook-load}"
+    )
+
+
+def test_insert_source_link_follows_the_heading(docs_reference: ModuleType) -> None:
+    """Test that the source link is placed between the heading and the body."""
+    rendered = docs_reference.insert_source_link("### `A` {#A}\n\n```python\nA()\n```", "[source](url)")
+    assert rendered.splitlines()[:3] == ["### `A` {#A}", "", "[source](url)"]
+
+
+def test_resolve_crossrefs_links_within_a_page(docs_reference: ModuleType) -> None:
+    """Test that a reference to an object on the same page becomes a bare fragment."""
+    page = docs_reference.Page(
+        "reference/api/hooks",
+        "Hooks",
+        "#### `load` {#strawchemy-QueryHook-load}\n[`load`](#strawchemy.QueryHook.load)",
+    )
+    (resolved,) = docs_reference.resolve_crossrefs([page])
+    assert "[`load`](#strawchemy-QueryHook-load)" in resolved.content
+
+
+def test_resolve_crossrefs_links_across_pages(docs_reference: ModuleType) -> None:
+    """Test that a reference to an object on another page becomes a site-absolute link."""
+    config = docs_reference.Page(
+        "reference/config", "Configuration options", "## `DTOConfig` {#strawchemy-dto-types-DTOConfig}"
+    )
+    hooks = docs_reference.Page(
+        "reference/api/hooks", "Hooks", "<code>[DTOConfig](#strawchemy.dto.types.DTOConfig)</code>"
+    )
+    _, resolved = docs_reference.resolve_crossrefs([config, hooks])
+    assert "[DTOConfig](/reference/config#strawchemy-dto-types-DTOConfig)" in resolved.content
+
+
+def test_resolve_crossrefs_drops_undocumented_targets(docs_reference: ModuleType) -> None:
+    """Test that a reference nothing documents keeps its text and loses its link."""
+    page = docs_reference.Page("reference/api/hooks", "Hooks", "<code>[Any](#typing.Any)</code>")
+    (resolved,) = docs_reference.resolve_crossrefs([page])
+    assert resolved.content == "<code>Any</code>"
+
+
+def test_resolve_crossrefs_reports_an_anchor_claimed_by_two_pages(docs_reference: ModuleType) -> None:
+    """Test that the same anchor on two pages names both of them in the error."""
+    first = docs_reference.Page("reference/api/config", "Configuration types", "## `C` {#pkg-C}")
+    second = docs_reference.Page("reference/config", "Configuration options", "## `C` {#pkg-C}")
+    with pytest.raises(docs_reference.ReferenceGenerationError, match="pkg-C"):
+        docs_reference.resolve_crossrefs([first, second])
 
 
 def test_every_export_is_covered_by_a_page(generator: ReferenceGenerator, package: griffe.Module) -> None:
@@ -86,12 +132,11 @@ def test_uncovered_export_is_reported(
 
 
 def test_spec_claims_the_exports_of_all_its_pages(docs_reference: ModuleType) -> None:
-    """Test that a specification claims the names of its api pages and of its operator aliases, and no others."""
+    """Test that a specification claims the names of its pages and of its operator aliases, and no others."""
     spec = docs_reference.ReferenceSpec(
         repo_root=REPO_ROOT,
         layout=docs_reference.DEFAULT_SPEC.layout,
-        api_pages=(docs_reference.ApiPageSpec("reference/api/mapper", "Mapper", ("Strawchemy",)),),
-        config_classes=(),
+        pages=(docs_reference.PageSpec("reference/api/mapper", "Mapper", ("Strawchemy",)),),
         operator_exports=("EqualityOperator",),
     )
     assert spec.documented_exports == {"Strawchemy", "EqualityOperator"}
@@ -104,100 +149,47 @@ def test_generate_is_deterministic(generator: ReferenceGenerator) -> None:
     assert [(page.path, page.content) for page in first] == [(page.path, page.content) for page in second]
 
 
-def test_api_pages_cover_every_group(docs_reference: ModuleType, api_pages: dict[str, str]) -> None:
-    """Test that one page is emitted per api page specification, in declaration order."""
-    assert list(api_pages) == [spec.path for spec in docs_reference.DEFAULT_SPEC.api_pages]
+def test_pages_cover_every_spec(docs_reference: ModuleType, pages: dict[str, str]) -> None:
+    """Test that one page is emitted per page specification, in declaration order."""
+    assert list(pages) == [spec.path for spec in docs_reference.DEFAULT_SPEC.pages]
 
 
-def test_api_page_documents_each_symbol_with_a_source_link(api_pages: dict[str, str]) -> None:
+def test_every_export_has_a_version_pinned_source_link(pages: dict[str, str]) -> None:
     """Test that a documented symbol carries a version-pinned link to its source line."""
-    mapper = api_pages["reference/api/mapper"]
-    assert "### Strawchemy" in mapper
+    mapper = pages["reference/api/mapper"]
+    assert "### `Strawchemy` {#strawchemy-mapper-Strawchemy}" in mapper
     assert f"blob/v{VERSION}/src/strawchemy/mapper.py#L" in mapper
 
 
-def test_api_page_documents_public_methods(api_pages: dict[str, str]) -> None:
-    """Test that a documented class renders a section per public method."""
-    mapper = api_pages["reference/api/mapper"]
-    for method in ("create", "delete", "field", "filter_field", "update", "update_by_ids", "upsert"):
-        assert f"#### `{method}" in mapper, method
+def test_config_page_documents_both_configuration_classes(pages: dict[str, str]) -> None:
+    """Test that the options page renders each configuration class under its own heading."""
+    config = pages["reference/config"]
+    assert "## `StrawchemyConfig` {#strawchemy-config-base-StrawchemyConfig}" in config
+    assert "## `DTOConfig` {#strawchemy-dto-types-DTOConfig}" in config
 
 
-def test_parameters_table_escapes_pipes_in_annotations(api_pages: dict[str, str]) -> None:
-    """Test that a union annotation does not split its table row into extra cells."""
-    row = next(line for line in api_pages["reference/api/mapper"].splitlines() if line.startswith("| `resolver`"))
-    assert len(re.findall(r"(?<!\\)\|", row)) == 5
-    assert r"Any \| None" in row
+def test_anchor_headings_anchors_every_heading(pages: dict[str, str]) -> None:
+    """Test that every heading griffe2md emits below the page title carries an explicit anchor."""
+    for path, content in pages.items():
+        for line in content.splitlines():
+            if line.startswith("##"):
+                assert re.search(r" \{#[\w-]+\}$", line), f"{path}: {line}"
 
 
-def test_parameters_table_documents_variadic_parameters(api_pages: dict[str, str]) -> None:
-    """Test that a `**kwargs` parameter keeps the description its docstring entry gives it."""
-    row = next(line for line in api_pages["reference/api/mapper"].splitlines() if line.startswith("| `field_kwargs`"))
-    assert "strawberry.field" in row
+def test_no_generated_page_contains_an_unresolved_anchor(generator: ReferenceGenerator) -> None:
+    """Test that no reference survives pointing at an anchor no page defines, and no page risks Vue interpolation."""
+    anchors = {anchor for page in generator.generate() for anchor in re.findall(r"\{#([^}]+)\}", page.content)}
+    for page in generator.generate():
+        for target in re.findall(r"\]\(#([^)]*)\)", page.content):
+            assert target in anchors, f"{page.path}: {target}"
+        assert "{{" not in page.content, page.path
 
 
-def test_generate_produces_no_empty_pages(docs_reference: ModuleType, generator: ReferenceGenerator) -> None:
-    """Test that no emitted page consists of only the generated-file header."""
-    pages = generator.generate()
+def test_generate_produces_pages_with_explicit_anchors(pages: dict[str, str]) -> None:
+    """Test that every object page carries at least one explicit VitePress anchor."""
     assert pages
-    for page in pages:
-        assert page.content.strip() != docs_reference.DEFAULT_SPEC.layout.header, page.path
-
-
-def test_config_page_tabulates_every_documented_field(config_emitter: ConfigEmitter) -> None:
-    """Test that each config class renders a row per documented attribute under its own heading."""
-    (page,) = config_emitter.emit()
-    row = "| `auto_snake_case` | `bool` | `True` | Automatically convert snake cased names to camel case |"
-    assert page.path == "reference/config"
-    assert row in page.content
-    assert "## StrawchemyConfig" in page.content
-    assert "## DTOConfig" in page.content
-
-
-def test_options_table_escapes_pipes_in_annotations(config_emitter: ConfigEmitter) -> None:
-    """Test that a union-typed option does not split its table row into extra cells."""
-    (page,) = config_emitter.emit()
-    row = next(line for line in page.content.splitlines() if line.startswith("| `filter_overrides`"))
-    assert len(re.findall(r"(?<!\\)\|", row)) == 5
-    assert r"FilterMap \| None" in row
-
-
-def test_options_table_rejects_a_class_with_no_fields(
-    docs_reference: ModuleType, config_emitter: ConfigEmitter, package: griffe.Module
-) -> None:
-    """Test that a class exposing no attributes names itself in the error."""
-    with pytest.raises(docs_reference.ReferenceGenerationError, match="QueryHookError"):
-        config_emitter.options_table(package["exceptions.QueryHookError"])
-
-
-def test_options_table_omits_non_settable_attributes(config_emitter: ConfigEmitter, package: griffe.Module) -> None:
-    """Test that properties and `init=False` fields stay out of the settable options table."""
-    table = config_emitter.options_table(package["StrawchemyConfig"])
-    for name in ("field_config", "order_config", "pagination_config", "distinct_on_config", "inspector"):
-        assert f"| `{name}` |" not in table, name
-    assert "| `auto_snake_case` |" in table
-
-
-def test_read_only_table_lists_non_settable_attributes(config_emitter: ConfigEmitter, package: griffe.Module) -> None:
-    """Test that properties and `init=False` fields are tabulated separately, without a default."""
-    table = config_emitter.read_only_table(package["StrawchemyConfig"])
-    assert table.startswith("| Attribute | Type | Description |")
-    for name in ("field_config", "inspector"):
-        assert f"| `{name}` |" in table, name
-    assert "| `auto_snake_case` |" not in table
-
-
-def test_read_only_table_is_empty_without_non_settable_attributes(
-    config_emitter: ConfigEmitter, package: griffe.Module
-) -> None:
-    """Test that a class whose attributes are all settable renders no read-only table."""
-    assert config_emitter.read_only_table(package["dto.base.PurposeConfig"]) == ""
-
-
-def test_config_page_separates_read_only_attributes(config_emitter: ConfigEmitter) -> None:
-    """Test that the options page gives non-settable attributes their own subsection."""
-    (page,) = config_emitter.emit()
-    assert "### Read-only attributes" in page.content
+    for path, content in pages.items():
+        assert "{#" in content, path
 
 
 def test_literal_values_flattens_nested_unions(graphql_emitter: GraphQLEmitter) -> None:

@@ -54,7 +54,12 @@ dev = [
   { include-group = "test" },
 ]
 aiosqlite = ["aiosqlite"]
-docs = ["cyclopts", "griffe", "testapp"]
+docs = [
+  "cyclopts",
+  "griffe",
+  "griffe2md>=1.5.0",
+  "testapp",
+]
 lint = [
   "ruff",
   "slotscheck>=0.16.5",
