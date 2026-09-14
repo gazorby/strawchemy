@@ -1954,7 +1954,7 @@ mutation {
 }
 ```
 
-Note: You cannot use `set` with `add`, `remove`, or `create` in the same operation for to-many relationships.
+Note: You cannot use `set` with `add`, `remove`, `create`, or `upsert` in the same operation for to-many relationships.
 
 </details>
 

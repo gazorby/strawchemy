@@ -1407,6 +1407,32 @@ async def test_update_with_to_many_add_and_create(
         """,
             id="remove",
         ),
+        pytest.param(
+            """
+        mutation {{
+            updateColor(
+                data: {{
+                    id: {color_id_gql},
+                    name: "updated color name",
+                    fruits: {{
+                        set: [ {{ id: {fruit_id_gql} }} ]
+                        upsert: {{
+                            create: [ {{ name: "new fruit 4 during update", sweetness: 1, waterPercent: 0.8 }} ]
+                            conflictFields: name
+                        }}
+                    }}
+                }}
+            ) {{
+                id
+                name
+                fruits {{
+                    id
+                }}
+            }}
+        }}
+        """,
+            id="upsert",
+        ),
     ],
 )
 async def test_update_with_to_many_set_exclusive_with_add_create_remove(
