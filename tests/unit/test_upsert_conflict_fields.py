@@ -27,3 +27,12 @@ def test_upsert_conflict_fields_honors_exclude() -> None:
     class ConflictFields: ...
 
     assert [field.name for field in ConflictFields] == ["id"]
+
+
+def test_upsert_conflict_fields_default_includes_all_constraints() -> None:
+    strawchemy = Strawchemy("sqlite")
+
+    @strawchemy.upsert_conflict_fields(Fruit)
+    class ConflictFields: ...
+
+    assert [field.name for field in ConflictFields] == ["id", "nameAndColorId"]
