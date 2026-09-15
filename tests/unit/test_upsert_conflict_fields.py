@@ -23,6 +23,15 @@ def test_upsert_conflict_fields_rejects_partial_constraint_include() -> None:
         class ConflictFields: ...
 
 
+
+def test_upsert_conflict_fields_rejects_empty_include() -> None:
+    strawchemy = Strawchemy("sqlite")
+
+    with pytest.raises(EmptyDTOError):
+
+        @strawchemy.upsert_conflict_fields(Fruit, include=[])
+        class ConflictFields: ...
+
 def test_upsert_conflict_fields_honors_exclude() -> None:
     strawchemy = Strawchemy("sqlite")
 

@@ -542,7 +542,7 @@ class UpsertConflictEnumFactory(EnumFactory):
             field_names = [mapper.get_property_by_column(column).key for column in constraint.columns]
             if any(
                 field_name not in fields
-                or (dto_config.include and not dto_config.is_field_included(fields[field_name]))
+                or (dto_config.include is not None and not dto_config.is_field_included(fields[field_name]))
                 or field_name in dto_config.excluded_fields
                 for field_name in field_names
             ):
