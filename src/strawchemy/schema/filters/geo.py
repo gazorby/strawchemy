@@ -42,7 +42,7 @@ class GeoFilter(FilterProtocol):
                     model_attribute, geo_func.ST_GeomFromGeoJSON(self.comparison.within_geometry.geo.model_dump_json())
                 )
             )
-        if self.comparison.is_null:
+        if self.comparison.is_null is not UNSET:
             expressions.append(
                 model_attribute.is_(null()) if self.comparison.is_null else model_attribute.is_not(null())
             )
