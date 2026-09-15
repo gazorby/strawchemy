@@ -72,7 +72,9 @@ async def test_count_aggregation_many_to_many(
     assert actual == {user["id"]: expected.get(user["id"], 0) for user in raw_users}
 
 
-async def test_count_aggregation_many_to_many_nested(any_query: AnyQueryExecutor) -> None:
+async def test_count_aggregation_many_to_many_nested(
+    any_query: AnyQueryExecutor, raw_user_departments: RawRecordData
+) -> None:
     result = await maybe_async(
         any_query(
             """
@@ -89,8 +91,11 @@ async def test_count_aggregation_many_to_many_nested(any_query: AnyQueryExecutor
     )
     assert not result.errors
     assert result.data
+    expected = {}
+    for link in raw_user_departments:
+        expected[link["department_id"]] = expected.get(link["department_id"], 0) + 1
     assert all(
-        department["usersAggregate"]["count"] >= 1
+        department["usersAggregate"]["count"] == expected[department["id"]]
         for user in result.data["users"]
         for department in user["departments"]
     )
