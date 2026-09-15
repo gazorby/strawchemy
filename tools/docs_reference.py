@@ -72,7 +72,7 @@ class PageSpec:
     path: str
     title: str
     objects: tuple[str, ...]
-    heading_level: int = 3
+    heading_level: int = 2
 
 
 @dataclass(frozen=True)
@@ -403,12 +403,7 @@ DEFAULT_SPEC = ReferenceSpec(
         ),
         PageSpec("reference/api/hooks", "Hooks", ("QueryHook",)),
         PageSpec("reference/api/errors", "Errors", ("ErrorType", "InputValidationError")),
-        PageSpec(
-            "reference/config",
-            "Configuration options",
-            ("StrawchemyConfig", "dto.types.DTOConfig"),
-            heading_level=2,
-        ),
+        PageSpec("reference/config", "Configuration options", ("StrawchemyConfig", "dto.types.DTOConfig")),
     ),
     operator_exports=(
         "ArrayOperator",

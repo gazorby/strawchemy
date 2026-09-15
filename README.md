@@ -2,32 +2,23 @@
 
 [![🔂 Tests and linting](https://github.com/gazorby/strawchemy/actions/workflows/ci.yaml/badge.svg)](https://github.com/gazorby/strawchemy/actions/workflows/ci.yaml) [![codecov](https://codecov.io/gh/gazorby/strawchemy/graph/badge.svg?token=BCU8SX1MJ7)](https://codecov.io/gh/gazorby/strawchemy) [![PyPI Downloads](https://static.pepy.tech/badge/strawchemy)](https://pepy.tech/projects/strawchemy)
 
-Generates GraphQL types, inputs, queries and resolvers directly from SQLAlchemy models.
+Strawchemy generates GraphQL types, inputs and resolvers from SQLAlchemy models. The models
+already in the application are the schema definition.
+
+Without it, filtering, ordering, pagination and nested selections all need hand-written
+resolvers — boilerplate that also invites N+1 queries.
 
 ## Features
 
 - 🔄 **Type Generation**: Generate strawberry types from SQLAlchemy models
-
 - 🧠 **Smart Resolvers**: Automatically generates single, optimized database queries for a given GraphQL request
-
 - 🔍 **Filtering**: Rich filtering capabilities on most data types, including PostGIS geo columns
-
 - 📄 **Pagination**: Built-in offset-based pagination
-
 - 📊 **Aggregation**: Support for aggregation functions like count, sum, avg, min, max, and statistical functions
-
 - 🔀 **CRUD**: Full support for Create, Read, Update, Delete, and Upsert mutations with relationship handling
-
 - 🪝 **Hooks**: Customize query behavior with query hooks: add filtering, load extra column etc.
-
 - ⚡ **Sync/Async**: Works with both sync and async SQLAlchemy sessions
-
-- 🛢 **Supported databases**:
-    - PostgreSQL (using [asyncpg](https://github.com/MagicStack/asyncpg)
-      or [psycopg3 sync/async](https://www.psycopg.org/psycopg3/))
-    - MySQL (using [asyncmy](https://github.com/long2ice/asyncmy))
-    - SQLite (using [aiosqlite](https://aiosqlite.omnilib.dev/en/stable/)
-      or [sqlite](https://docs.python.org/3/library/sqlite3.html))
+- 🛢 **Supported databases**: PostgreSQL ([asyncpg](https://github.com/MagicStack/asyncpg)/[psycopg3](https://www.psycopg.org/psycopg3/)), MySQL ([asyncmy](https://github.com/long2ice/asyncmy)), SQLite ([aiosqlite](https://aiosqlite.omnilib.dev/en/stable/)/[sqlite3](https://docs.python.org/3/library/sqlite3.html))
 
 > [!Warning]
 >
@@ -38,10 +29,10 @@ Generates GraphQL types, inputs, queries and resolvers directly from SQLAlchemy 
 ## Documentation
 
 Full documentation is at **<https://strawchemy-docs.pages.dev>** — guides for
-[mapping models](https://strawchemy-docs.pages.dev/guide/mapping-models),
-[filtering](https://strawchemy-docs.pages.dev/guide/filtering),
-[aggregations](https://strawchemy-docs.pages.dev/guide/aggregations) and
-[mutations](https://strawchemy-docs.pages.dev/guide/mutations/), plus a generated
+[mapping models](https://strawchemy-docs.pages.dev/learn/mapping-models),
+[filtering](https://strawchemy-docs.pages.dev/learn/filtering),
+[aggregations](https://strawchemy-docs.pages.dev/learn/aggregations) and
+[mutations](https://strawchemy-docs.pages.dev/learn/mutations/), plus a generated
 [API reference](https://strawchemy-docs.pages.dev/reference/api/mapper).
 
 ## Installation
@@ -62,90 +53,50 @@ To install these dependencies along with strawchemy:
 pip install strawchemy[geo]
 ```
 
-## Quick Start
+## A first look
+
+Map a model, derive filter and type classes from it, then expose a query field:
 
 ```python
-import strawberry
-from strawchemy import Strawchemy
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-
-# Initialize the strawchemy mapper
-strawchemy = Strawchemy("postgresql")
-
-
-# Define SQLAlchemy models
-class Base(DeclarativeBase):
-    pass
-
-
 class User(Base):
     __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    posts: Mapped[list["Post"]] = relationship("Post", back_populates="author")
+    posts: Mapped[list[Post]] = relationship("Post", back_populates="author")
 
 
-class Post(Base):
-    __tablename__ = "post"
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    title: Mapped[str]
-    content: Mapped[str]
-    author_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    author: Mapped[User] = relationship("User", back_populates="posts")
+strawchemy = Strawchemy(StrawchemyConfig("sqlite"))
 
 
-# Map models to GraphQL types
-@strawchemy.type(User, include="all")
-class UserType:
-    pass
-
-
-# override=True is needed because strawchemy automatically generates a PostType
-# when mapping UserType due to the relationship between User and Post
-@strawchemy.type(Post, include="all", override=True)
-class PostType:
-    pass
-
-
-# Create filter inputs
 @strawchemy.filter(User, include="all")
-class UserFilter:
-    pass
+class UserFilter: ...
 
 
-# override=True is needed for the same reason as PostType
-@strawchemy.filter(Post, include="all", override=True)
-class PostFilter:
-    pass
+@strawchemy.type(User, include="all")
+class UserType: ...
 
 
-# Create order by inputs
-@strawchemy.order(User, include="all")
-class UserOrderBy:
-    pass
-
-
-@strawchemy.order(Post, include="all", override=True)
-class PostOrderBy:
-    pass
-
-
-# Define GraphQL query fields
 @strawberry.type
 class Query:
-    users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by_input=UserOrderBy, pagination=True)
-    posts: list[PostType] = strawchemy.field(filter_input=PostFilter, order_by_input=PostOrderBy, pagination=True)
-
-
-# Create schema
-schema = strawberry.Schema(query=Query)
+    users: list[UserType] = strawchemy.field(filter_input=UserFilter, pagination=True)
 ```
 
-See the [getting started guide](https://strawchemy-docs.pages.dev/guide/getting-started) for the full walkthrough,
-including the generated GraphQL queries.
+Querying it filters, paginates and resolves the `posts` relationship without any resolver code:
+
+```graphql
+{
+    users(limit: 10, filter: { name: { contains: "Al" } }) {
+        id
+        name
+        posts {
+            title
+        }
+    }
+}
+```
+
+See the [getting started guide](https://strawchemy-docs.pages.dev/learn/getting-started) for the full walkthrough.
 
 ## Contributing
 

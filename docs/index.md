@@ -8,7 +8,7 @@ hero:
   actions:
     - theme: brand
       text: Get started
-      link: /guide/getting-started
+      link: /learn/getting-started
     - theme: alt
       text: GitHub
       link: https://github.com/gazorby/strawchemy
@@ -16,14 +16,14 @@ hero:
 features:
   - title: Generated resolvers
     details: Query, filter, order and paginate mapped models without writing resolver bodies.
-    link: /guide/resolvers
+    link: /learn/architecture#generated-fields
   - title: Rich filtering
     details: Type-aware comparisons for text, dates, times, intervals and arrays, including PostGIS geo columns.
-    link: /guide/filtering
+    link: /learn/filtering
   - title: Aggregations
     details: Aggregate fields and aggregate filters, including over relationships.
-    link: /guide/aggregations
+    link: /learn/aggregations
   - title: Mutations
     details: Create, update, delete and upsert, with nested relationship handling and Pydantic validation.
-    link: /guide/mutations/
+    link: /learn/mutations/
 ---

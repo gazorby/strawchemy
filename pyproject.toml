@@ -45,6 +45,7 @@ pydantic = ["pydantic"]
 [dependency-groups]
 dev = [
   "debugpy",
+  "quickstart",
   "testapp",
   { include-group = "aiosqlite" },
   { include-group = "lint" },
@@ -81,6 +82,7 @@ test = [
   "pytest-lazy-fixtures",
   "pytest-pretty",
   "pytest-xdist[psutil]",
+  "quickstart",
   "sqlparse",
   "syrupy>=6.1.1",
   "testapp",
@@ -275,6 +277,7 @@ conflicts = [[{ group = "test" }, { group = "unasyncd" }]]
 exclude-newer = "3 days"
 
 [tool.uv.sources]
+quickstart = { workspace = true }
 testapp = { workspace = true }
 
 [tool.uv.workspace]

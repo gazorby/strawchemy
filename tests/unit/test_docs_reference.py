@@ -157,7 +157,7 @@ def test_pages_cover_every_spec(docs_reference: ModuleType, pages: dict[str, str
 def test_every_export_has_a_version_pinned_source_link(pages: dict[str, str]) -> None:
     """Test that a documented symbol carries a version-pinned link to its source line."""
     mapper = pages["reference/api/mapper"]
-    assert "### `Strawchemy` {#strawchemy-mapper-Strawchemy}" in mapper
+    assert "## `Strawchemy` {#strawchemy-mapper-Strawchemy}" in mapper
     assert f"blob/v{VERSION}/src/strawchemy/mapper.py#L" in mapper
 
 

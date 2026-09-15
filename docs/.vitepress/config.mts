@@ -9,43 +9,68 @@ export default defineConfig({
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
-      { text: 'Guide', link: '/guide/getting-started' },
+      { text: 'Learn', link: '/learn/' },
       { text: 'Reference', link: '/reference/api/mapper' },
     ],
     sidebar: {
-      '/guide/': [
+      '/learn/': [
         {
-          text: 'Guide',
+          text: 'Introduction',
           collapsed: false,
           items: [
-            { text: 'Getting started', link: '/guide/getting-started' },
-            { text: 'Mapping models', link: '/guide/mapping-models' },
-            { text: 'Resolvers', link: '/guide/resolvers' },
-            { text: 'Pagination', link: '/guide/pagination' },
-            { text: 'Ordering', link: '/guide/ordering' },
-            { text: 'Filtering', link: '/guide/filtering' },
-            { text: 'Aggregations', link: '/guide/aggregations' },
-            { text: 'Async support', link: '/guide/async' },
-            { text: 'Configuration', link: '/guide/configuration' },
+            { text: 'Strawchemy', link: '/learn/' },
+            { text: 'Strawchemy and Strawberry', link: '/learn/strawchemy-and-strawberry' },
+            { text: 'Getting started', link: '/learn/getting-started' },
           ],
         },
         {
-          text: 'Mutations',
+          text: 'Schema',
           collapsed: false,
           items: [
-            { text: 'Overview', link: '/guide/mutations/' },
-            { text: 'Create', link: '/guide/mutations/create' },
-            { text: 'Create with relationships', link: '/guide/mutations/relationships-create' },
-            { text: 'Update', link: '/guide/mutations/update' },
-            { text: 'Update with relationships', link: '/guide/mutations/relationships-update' },
-            { text: 'Delete', link: '/guide/mutations/delete' },
-            { text: 'Upsert', link: '/guide/mutations/upsert' },
-            { text: 'Validation', link: '/guide/mutations/validation' },
+            { text: 'Mapping models', link: '/learn/mapping-models' },
+            { text: 'Configuration', link: '/learn/configuration' },
+          ],
+        },
+        {
+          text: 'Querying',
+          collapsed: false,
+          items: [
+            { text: 'Queries', link: '/learn/queries' },
+            { text: 'Filtering', link: '/learn/filtering' },
+            { text: 'Ordering', link: '/learn/ordering' },
+            { text: 'Pagination', link: '/learn/pagination' },
+            { text: 'Aggregations', link: '/learn/aggregations' },
+            { text: 'Custom resolvers', link: '/learn/resolvers' },
+            { text: 'Query hooks', link: '/learn/query-hooks' },
+          ],
+        },
+        {
+          text: 'Mutating',
+          collapsed: false,
+          items: [
+            { text: 'Mutations', link: '/learn/mutations/' },
+            { text: 'Create', link: '/learn/mutations/create' },
+            { text: 'Nested create', link: '/learn/mutations/relationships-create' },
+            { text: 'Update', link: '/learn/mutations/update' },
+            { text: 'Nested update', link: '/learn/mutations/relationships-update' },
+            { text: 'Delete', link: '/learn/mutations/delete' },
+            { text: 'Upsert', link: '/learn/mutations/upsert' },
+            { text: 'Validation', link: '/learn/mutations/validation' },
+          ],
+        },
+        {
+          text: 'Advanced',
+          collapsed: false,
+          items: [
+            { text: 'Architecture', link: '/learn/architecture' },
+            { text: 'Geometry', link: '/learn/geometry' },
+            { text: 'Async sessions', link: '/learn/async' },
           ],
         },
       ],
       '/reference/': referenceSidebar,
     },
+    outline: { level: [2, 3], label: 'On this page' },
     search: { provider: 'local' },
     socialLinks: [
       { icon: 'github', link: 'https://github.com/gazorby/strawchemy' }
