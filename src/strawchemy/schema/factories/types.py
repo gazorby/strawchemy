@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import warnings
 from typing import TYPE_CHECKING, Any, Literal, Optional, TypedDict, TypeVar, Union
 
 from sqlalchemy import JSON
@@ -532,20 +533,35 @@ class UpsertConflictEnumFactory(EnumFactory):
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         constraints = self.inspector.unique_constraints(model)
         fields = dict(
-            self.inspector.field_definitions(
-                model,
-                dto_config.copy_with(include=[col.key for constraint in constraints for col in constraint.columns]),
-            )
+            self.inspector.field_definitions(model, dto_config.copy_with(purpose=Purpose.COMPLETE, include="all"))
         )
+        mapper = model.__mapper__
+        no_fields = True
+
         for constraint in constraints:
+            field_names = [mapper.get_property_by_column(column).key for column in constraint.columns]
+            if any(
+                field_name not in fields
+                or (dto_config.include is not None and not dto_config.is_field_included(fields[field_name]))
+                or field_name in dto_config.excluded_fields
+                for field_name in field_names
+            ):
+                continue
             field = DTOFieldDefinition(
                 dto_config=dto_config,
                 model=model,
-                model_field_name="_and_".join(fields[column.key].name for column in constraint.columns),
+                model_field_name="_and_".join(fields[field_name].name for field_name in field_names),
                 type_hint=DTOMissing,
                 metadata={"constraint": constraint},
             )
             yield GraphQLFieldDefinition.from_field(field)
+            no_fields = False
+
+        if no_fields:
+            msg = f"{name} DTO generated from {model.__qualname__} have no fields"
+            if if_no_fields == "raise" or dto_config.include is not None:
+                raise EmptyDTOError(msg)
+            warnings.warn(msg, stacklevel=2)
 
     @override
     def should_exclude_field(
