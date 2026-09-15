@@ -531,13 +531,16 @@ class UpsertConflictEnumFactory(EnumFactory):
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
         constraints = self.inspector.unique_constraints(model)
-        fields = dict(
-            self.inspector.field_definitions(
-                model,
-                dto_config.copy_with(include=[col.key for constraint in constraints for col in constraint.columns]),
-            )
-        )
+        constraint_columns = [col.key for constraint in constraints for col in constraint.columns]
+        fields = dict(self.inspector.field_definitions(model, dto_config))
+        eligible_fields = {
+            name
+            for name, field in fields.items()
+            if name in constraint_columns and not self.should_exclude_field(field, dto_config, node, False)
+        }
         for constraint in constraints:
+            if any(column.key not in eligible_fields for column in constraint.columns):
+                continue
             field = DTOFieldDefinition(
                 dto_config=dto_config,
                 model=model,

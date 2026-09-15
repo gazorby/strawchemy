@@ -1,0 +1,29 @@
+from strawchemy import Strawchemy
+from tests.unit.models import Fruit
+
+
+def test_upsert_conflict_fields_honors_include() -> None:
+    strawchemy = Strawchemy("sqlite")
+
+    @strawchemy.upsert_conflict_fields(Fruit, include=["name", "color_id"])
+    class ConflictFields: ...
+
+    assert [field.name for field in ConflictFields] == ["nameAndColorId"]
+
+
+def test_upsert_conflict_fields_rejects_partial_constraint_include() -> None:
+    strawchemy = Strawchemy("sqlite")
+
+    @strawchemy.upsert_conflict_fields(Fruit, include=["name"])
+    class ConflictFields: ...
+
+    assert list(ConflictFields) == []
+
+
+def test_upsert_conflict_fields_honors_exclude() -> None:
+    strawchemy = Strawchemy("sqlite")
+
+    @strawchemy.upsert_conflict_fields(Fruit, include="all", exclude=["name"])
+    class ConflictFields: ...
+
+    assert [field.name for field in ConflictFields] == ["id"]
