@@ -204,7 +204,8 @@ class AggregationPlan:
                     node=aggregation_node, alias=spec.alias, statement=select(*spec.functions.values()), context=context
                 )
             for function_node, inner_label in spec.functions.items():
-                columns[function_node] = require_corresponding_column(join.selectable, inner_label)
+                column = require_corresponding_column(join.selectable, inner_label)
+                columns[function_node] = func.coalesce(column, 0) if inner_label.element.name == "count" else column
             aliases[aggregation_node] = spec.alias
             node_functions[aggregation_node] = tuple(spec.functions.keys())
             joins.append(join)
@@ -320,7 +321,9 @@ class AggregationPlan:
                 .where(and_(*[fk.is_not(null()) for fk in parent_fks]))
                 .cte()
             )
-            parent_insp = inspect(aliases.alias_from_relation_node(node, "parent"))
+            parent_node = node.parent
+            assert parent_node is not None
+            parent_insp = inspect(aliases.alias_from_relation_node(parent_node, "target"))
             onclause = and_(
                 *[
                     parent_insp.mapper.attrs[local.key].class_attribute.adapt_to_entity(parent_insp)
@@ -329,7 +332,7 @@ class AggregationPlan:
                     if local.key is not None and remote.key is not None
                 ]
             )
-            return AggregationJoin(target=cte_statement, onclause=onclause, node=node)
+            return AggregationJoin(target=cte_statement, onclause=onclause, node=node, is_outer=True)
 
         remote_fks = aliases.inspect(node).foreign_key_columns("target", alias)
         cte_statement = (
