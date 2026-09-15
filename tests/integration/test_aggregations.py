@@ -48,6 +48,54 @@ async def test_count_aggregation(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+async def test_count_aggregation_many_to_many(
+    any_query: AnyQueryExecutor, raw_user_departments: RawRecordData, raw_users: RawRecordData
+) -> None:
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                users {
+                    id
+                    departmentsAggregate { count }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    expected = {}
+    for link in raw_user_departments:
+        expected[link["user_id"]] = expected.get(link["user_id"], 0) + 1
+    actual = {user["id"]: user["departmentsAggregate"]["count"] for user in result.data["users"]}
+    assert actual == {user["id"]: expected.get(user["id"], 0) for user in raw_users}
+
+
+async def test_count_aggregation_many_to_many_nested(any_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                users {
+                    departments {
+                        id
+                        usersAggregate { count }
+                    }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert all(
+        department["usersAggregate"]["count"] >= 1
+        for user in result.data["users"]
+        for department in user["departments"]
+    )
+
+
 @pytest.mark.parametrize(
     ("field_name", "raw_field_name"),
     [

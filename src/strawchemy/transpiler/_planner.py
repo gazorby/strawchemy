@@ -204,7 +204,8 @@ class AggregationPlan:
                     node=aggregation_node, alias=spec.alias, statement=select(*spec.functions.values()), context=context
                 )
             for function_node, inner_label in spec.functions.items():
-                columns[function_node] = require_corresponding_column(join.selectable, inner_label)
+                column = require_corresponding_column(join.selectable, inner_label)
+                columns[function_node] = func.coalesce(column, 0) if inner_label.element.name == "count" else column
             aliases[aggregation_node] = spec.alias
             node_functions[aggregation_node] = tuple(spec.functions.keys())
             joins.append(join)
@@ -296,6 +297,43 @@ class AggregationPlan:
             An AggregationJoin backed by a CTE.
         """
         aliases = context.aliases
+        relationship = node.value.model_field.property
+        assert isinstance(relationship, RelationshipProperty)
+
+        if relationship.secondary is not None:
+            parent_pairs = relationship.synchronize_pairs
+            target_pairs = relationship.secondary_synchronize_pairs
+            target_insp = inspect(alias)
+            secondary = relationship.secondary
+            parent_fks = [remote for local, remote in parent_pairs if local.key is not None and remote.key is not None]
+            target_onclause = and_(
+                *[
+                    target_insp.mapper.attrs[local.key].class_attribute.adapt_to_entity(target_insp) == remote
+                    for local, remote in target_pairs
+                    if local.key is not None and remote.key is not None
+                ]
+            )
+            cte_statement = (
+                statement.select_from(alias)
+                .join(secondary, onclause=target_onclause)
+                .add_columns(*parent_fks)
+                .group_by(*parent_fks)
+                .where(and_(*[fk.is_not(null()) for fk in parent_fks]))
+                .cte()
+            )
+            parent_node = node.parent
+            assert parent_node is not None
+            parent_insp = inspect(aliases.alias_from_relation_node(parent_node, "target"))
+            onclause = and_(
+                *[
+                    parent_insp.mapper.attrs[local.key].class_attribute.adapt_to_entity(parent_insp)
+                    == require_corresponding_column(cte_statement, cast("KeyedColumnElement[Any]", remote))
+                    for local, remote in parent_pairs
+                    if local.key is not None and remote.key is not None
+                ]
+            )
+            return AggregationJoin(target=cte_statement, onclause=onclause, node=node, is_outer=True)
+
         remote_fks = aliases.inspect(node).foreign_key_columns("target", alias)
         cte_statement = (
             statement.add_columns(*remote_fks)
