@@ -71,6 +71,7 @@ async def test_pagination_on_aggregation_query(any_query: AnyQueryExecutor) -> N
 
 
 async def test_paginated_aggregate_only_selection(any_query: AnyQueryExecutor) -> None:
+    """Keep aggregate-only selections on the pagination subquery alias."""
     plain = await maybe_async(
         any_query(
             """
@@ -89,6 +90,41 @@ async def test_paginated_aggregate_only_selection(any_query: AnyQueryExecutor) -
             {
                 colorsPaginated {
                     name
+                    fruitsAggregate { count }
+                }
+            }
+            """
+        )
+    )
+    assert not plain.errors
+    assert not paginated.errors
+    assert plain.data
+    assert paginated.data
+    assert paginated.data["colorsPaginated"] == plain.data["colors"]
+
+
+async def test_paginated_relationship_and_aggregate_selection(any_query: AnyQueryExecutor) -> None:
+    """Keep relation loading and its aggregate compatible across pagination."""
+    plain = await maybe_async(
+        any_query(
+            """
+            {
+                colors {
+                    name
+                    fruits { name }
+                    fruitsAggregate { count }
+                }
+            }
+            """
+        )
+    )
+    paginated = await maybe_async(
+        any_query(
+            """
+            {
+                colorsPaginated {
+                    name
+                    fruits { name }
                     fruitsAggregate { count }
                 }
             }
