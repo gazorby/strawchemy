@@ -70,6 +70,38 @@ async def test_pagination_on_aggregation_query(any_query: AnyQueryExecutor) -> N
     assert result.data["fruitAggregationsPaginated"]["nodes"] == [{"name": "Cherry"}]
 
 
+async def test_paginated_aggregate_only_selection(any_query: AnyQueryExecutor) -> None:
+    plain = await maybe_async(
+        any_query(
+            """
+            {
+                colors {
+                    name
+                    fruitsAggregate { count }
+                }
+            }
+            """
+        )
+    )
+    paginated = await maybe_async(
+        any_query(
+            """
+            {
+                colorsPaginated {
+                    name
+                    fruitsAggregate { count }
+                }
+            }
+            """
+        )
+    )
+    assert not plain.errors
+    assert not paginated.errors
+    assert plain.data
+    assert paginated.data
+    assert paginated.data["colorsPaginated"] == plain.data["colors"]
+
+
 async def test_pagination_ordered_by_aggregation(any_query: AnyQueryExecutor) -> None:
     """Test paginating a query ordered by an aggregation of a relation.
 

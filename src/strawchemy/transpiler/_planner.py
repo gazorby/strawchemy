@@ -1503,19 +1503,20 @@ def _plan_subquery(
     # Phase 3: re-root onto the materialized subquery and build the outer query.
     context.aliases.replace(alias=outer_alias)
 
-    # Re-point hoisted aggregation columns onto the subquery and drop their joins from
-    # the outer agg plan: every aggregation lateral/CTE that fed a hoisted column was
-    # emitted inside the subquery and must not be re-joined at the outer level.
+    # Rebuild aggregation joins against the materialized subquery. The inner plan was
+    # built while the scope pointed at ``inner_alias``; reusing a selection-only join
+    # here would pull that alias back into the outer FROM alongside the subquery.
+    outer_base_agg_plan = AggregationPlan.plan(query_graph, context)
     reprojected_agg_columns: dict[QueryNodeType, ColumnElement[Any]] = {
         fn: require_corresponding_column(subquery, cast("KeyedColumnElement[Any]", selected_function_labels[fn]))
         for fn in referenced_functions
     }
     inner_emitted_agg_nodes = {join.node for join in inner_joins if isinstance(join, AggregationJoin)}
     outer_agg_plan = AggregationPlan(
-        columns={**aggregation_plan.columns, **reprojected_agg_columns},
-        joins=tuple(join for join in aggregation_plan.joins if join.node not in inner_emitted_agg_nodes),
-        aliases=aggregation_plan.aliases,
-        node_functions=aggregation_plan.node_functions,
+        columns={**outer_base_agg_plan.columns, **reprojected_agg_columns},
+        joins=tuple(join for join in outer_base_agg_plan.joins if join.node not in inner_emitted_agg_nodes),
+        aliases=outer_base_agg_plan.aliases,
+        node_functions=outer_base_agg_plan.node_functions,
     )
 
     outer_joins = list(_plan_relation_joins(query_graph, context, is_outer=True))
