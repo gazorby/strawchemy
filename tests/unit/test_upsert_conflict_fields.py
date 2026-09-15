@@ -1,4 +1,7 @@
+import pytest
+
 from strawchemy import Strawchemy
+from strawchemy.exceptions import EmptyDTOError
 from tests.unit.models import Fruit
 
 
@@ -14,10 +17,10 @@ def test_upsert_conflict_fields_honors_include() -> None:
 def test_upsert_conflict_fields_rejects_partial_constraint_include() -> None:
     strawchemy = Strawchemy("sqlite")
 
-    @strawchemy.upsert_conflict_fields(Fruit, include=["name"])
-    class ConflictFields: ...
+    with pytest.raises(EmptyDTOError):
 
-    assert list(ConflictFields) == []
+        @strawchemy.upsert_conflict_fields(Fruit, include=["name"])
+        class ConflictFields: ...
 
 
 def test_upsert_conflict_fields_honors_exclude() -> None:

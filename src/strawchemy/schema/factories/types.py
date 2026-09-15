@@ -559,7 +559,7 @@ class UpsertConflictEnumFactory(EnumFactory):
 
         if no_fields:
             msg = f"{name} DTO generated from {model.__qualname__} have no fields"
-            if if_no_fields == "raise":
+            if if_no_fields == "raise" or dto_config.include is not None:
                 raise EmptyDTOError(msg)
             warnings.warn(msg, stacklevel=2)
 
