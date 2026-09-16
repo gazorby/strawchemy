@@ -205,7 +205,7 @@ class AggregationPlan:
                 )
             for function_node, inner_label in spec.functions.items():
                 column = require_corresponding_column(join.selectable, inner_label)
-                columns[function_node] = func.coalesce(column, 0) if inner_label.element.name == "count" else column
+                columns[function_node] = func.coalesce(column, 0) if join.is_outer and inner_label.element.name == "count" else column
             aliases[aggregation_node] = spec.alias
             node_functions[aggregation_node] = tuple(spec.functions.keys())
             joins.append(join)
