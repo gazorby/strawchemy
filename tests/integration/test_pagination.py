@@ -150,6 +150,7 @@ async def test_pagination_ordered_by_aggregation(any_query: AnyQueryExecutor) ->
             {
                 colorsFilteredPaginated(limit: 2, orderBy: { fruitsAggregate: { sum: { sweetness: ASC } } }) {
                     name
+                    fruitsAggregate { count }
                 }
             }
             """
@@ -160,4 +161,7 @@ async def test_pagination_ordered_by_aggregation(any_query: AnyQueryExecutor) ->
     # colorsFilteredPaginated is restricted to {Red, Green, Pink} by its filter_statement.
     # sum(fruit.sweetness) per candidate color: Green=5+0=5, Red=4+9=13, Pink=7+11=18.
     # Ascending, limited to 2 -> Green, Red.
-    assert result.data["colorsFilteredPaginated"] == [{"name": "Green"}, {"name": "Red"}]
+    assert result.data["colorsFilteredPaginated"] == [
+        {"name": "Green", "fruitsAggregate": {"count": 2}},
+        {"name": "Red", "fruitsAggregate": {"count": 2}},
+    ]

@@ -1511,7 +1511,13 @@ def _plan_subquery(
         fn: require_corresponding_column(subquery, cast("KeyedColumnElement[Any]", selected_function_labels[fn]))
         for fn in referenced_functions
     }
-    inner_emitted_agg_nodes = {join.node for join in inner_joins if isinstance(join, AggregationJoin)}
+    inner_emitted_agg_nodes: set[QueryNodeType] = set()
+    for join in inner_joins:
+        if not isinstance(join, AggregationJoin):
+            continue
+        node_functions = outer_base_agg_plan.node_functions.get(join.node, ())
+        if node_functions and all(function in referenced_functions for function in node_functions):
+            inner_emitted_agg_nodes.add(join.node)
     outer_agg_plan = AggregationPlan(
         columns={**outer_base_agg_plan.columns, **reprojected_agg_columns},
         joins=tuple(join for join in outer_base_agg_plan.joins if join.node not in inner_emitted_agg_nodes),
