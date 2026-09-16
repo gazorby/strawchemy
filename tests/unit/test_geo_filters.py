@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import pytest
 from sqlalchemy.dialects.postgresql import dialect
+
+pytest.importorskip("geoalchemy2", reason="geoalchemy2 is not installed")
 
 from strawchemy.schema.filters.geo import GeoComparison, GeoFilter
 from tests.unit.models import GeoModel
