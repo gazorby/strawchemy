@@ -1,7 +1,7 @@
 # Quickstart
 
 The application built step by step in the
-[Getting started guide](https://strawchemy-docs.pages.dev/learn/getting-started).
+[Getting started guide](https://strawchemy.pages.dev/learn/getting-started).
 
 Run it:
 

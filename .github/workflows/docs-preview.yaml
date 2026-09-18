@@ -48,7 +48,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy docs/.vitepress/dist --project-name=strawchemy-docs --branch=pr-${{ github.event.number }}
+          command: pages deploy docs/.vitepress/dist --project-name=strawchemy --branch=pr-${{ github.event.number }}
 
       - name: Comment the preview URL
         if: github.event.pull_request.head.repo.full_name == github.repository
@@ -56,6 +56,6 @@ jobs:
         with:
           header: docs-preview
           message: |
-            📚 Documentation preview: https://pr-${{ github.event.number }}.strawchemy-docs.pages.dev
+            📚 Documentation preview: https://pr-${{ github.event.number }}.strawchemy.pages.dev
 
             Built from ${{ github.event.pull_request.head.sha }}.

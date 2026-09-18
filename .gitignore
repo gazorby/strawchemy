@@ -212,3 +212,4 @@ docs/.vitepress/dist
 docs/.vitepress/cache
 docs/reference/
 docs/.vitepress/reference-sidebar.json
+.wrangler/

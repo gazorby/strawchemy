@@ -28,12 +28,12 @@ resolvers — boilerplate that also invites N+1 queries.
 
 ## Documentation
 
-Full documentation is at **<https://strawchemy-docs.pages.dev>** — guides for
-[mapping models](https://strawchemy-docs.pages.dev/learn/mapping-models),
-[filtering](https://strawchemy-docs.pages.dev/learn/filtering),
-[aggregations](https://strawchemy-docs.pages.dev/learn/aggregations) and
-[mutations](https://strawchemy-docs.pages.dev/learn/mutations/), plus a generated
-[API reference](https://strawchemy-docs.pages.dev/reference/api/mapper).
+Full documentation is at **<https://strawchemy.pages.dev>** — guides for
+[mapping models](https://strawchemy.pages.dev/learn/mapping-models),
+[filtering](https://strawchemy.pages.dev/learn/filtering),
+[aggregations](https://strawchemy.pages.dev/learn/aggregations) and
+[mutations](https://strawchemy.pages.dev/learn/mutations/), plus a generated
+[API reference](https://strawchemy.pages.dev/reference/api/mapper).
 
 ## Installation
 
@@ -96,7 +96,7 @@ Querying it filters, paginates and resolves the `posts` relationship without any
 }
 ```
 
-See the [getting started guide](https://strawchemy-docs.pages.dev/learn/getting-started) for the full walkthrough.
+See the [getting started guide](https://strawchemy.pages.dev/learn/getting-started) for the full walkthrough.
 
 ## Contributing
 
