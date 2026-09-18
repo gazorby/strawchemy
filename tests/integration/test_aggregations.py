@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from typing import TYPE_CHECKING, Literal
 
 import pytest
@@ -51,6 +52,7 @@ async def test_count_aggregation(
 async def test_count_aggregation_many_to_many(
     any_query: AnyQueryExecutor, raw_user_departments: RawRecordData, raw_users: RawRecordData
 ) -> None:
+    """Test that a many-to-many count matches the number of join-table rows of each user."""
     result = await maybe_async(
         any_query(
             """
@@ -65,19 +67,53 @@ async def test_count_aggregation_many_to_many(
     )
     assert not result.errors
     assert result.data
-    expected = {}
-    for link in raw_user_departments:
-        expected[link["user_id"]] = expected.get(link["user_id"], 0) + 1
+    departments_per_user = Counter(link["user_id"] for link in raw_user_departments)
     actual = {user["id"]: user["departmentsAggregate"]["count"] for user in result.data["users"]}
-    assert actual == {user["id"]: expected.get(user["id"], 0) for user in raw_users}
+    assert actual == {user["id"]: departments_per_user[user["id"]] for user in raw_users}
 
 
-async def test_count_aggregation_many_to_many_nested(any_query: AnyQueryExecutor) -> None:
+async def test_count_aggregation_many_to_many_join_predicates(
+    any_query: AnyQueryExecutor,
+    raw_user_departments: RawRecordData,
+    raw_users: RawRecordData,
+    raw_departments: RawRecordData,
+) -> None:
+    """Test that a many-to-many count honours the relationship primaryjoin and secondaryjoin predicates."""
     result = await maybe_async(
         any_query(
             """
             {
                 users {
+                    id
+                    filteredDepartmentsAggregate { count }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    user_names = {user["id"]: user["name"] for user in raw_users}
+    department_names = {department["id"]: department["name"] for department in raw_departments}
+    joined = Counter(
+        link["user_id"]
+        for link in raw_user_departments
+        if user_names[link["user_id"]] != "Bob" and department_names[link["department_id"]] != "IT"
+    )
+    actual = {user["id"]: user["filteredDepartmentsAggregate"]["count"] for user in result.data["users"]}
+    assert actual == {user["id"]: joined[user["id"]] for user in raw_users}
+
+
+async def test_count_aggregation_many_to_many_nested(
+    any_query: AnyQueryExecutor, raw_user_departments: RawRecordData
+) -> None:
+    """Test that a nested many-to-many count matches the number of users of each department."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                users {
+                    id
                     departments {
                         id
                         usersAggregate { count }
@@ -89,11 +125,21 @@ async def test_count_aggregation_many_to_many_nested(any_query: AnyQueryExecutor
     )
     assert not result.errors
     assert result.data
-    assert all(
-        department["usersAggregate"]["count"] >= 1
+    users_per_department = Counter(link["department_id"] for link in raw_user_departments)
+    departments_per_user = Counter(link["user_id"] for link in raw_user_departments)
+    # A nested aggregate rides on the flat result row, so its value can only be attributed
+    # unambiguously to a department when the user holds exactly one.
+    actual = {
+        department["id"]: department["usersAggregate"]["count"]
         for user in result.data["users"]
+        if departments_per_user[user["id"]] == 1
         for department in user["departments"]
-    )
+    }
+    assert actual == {
+        link["department_id"]: users_per_department[link["department_id"]]
+        for link in raw_user_departments
+        if departments_per_user[link["user_id"]] == 1
+    }
 
 
 @pytest.mark.parametrize(

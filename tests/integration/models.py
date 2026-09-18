@@ -180,6 +180,13 @@ class User(Base):
         secondary="user_department_join_table",
         back_populates="users",
     )
+    filtered_departments: Mapped[list[Department]] = relationship(
+        "Department",
+        secondary="user_department_join_table",
+        primaryjoin="and_(User.id == user_department_join_table.c.user_id, User.name != 'Bob')",
+        secondaryjoin="and_(Department.id == user_department_join_table.c.department_id, Department.name != 'IT')",
+        viewonly=True,
+    )
 
     def __init__(self, **kw: Any) -> None:
         super().__init__(**kw)

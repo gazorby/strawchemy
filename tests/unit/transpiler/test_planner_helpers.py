@@ -8,16 +8,20 @@ The filter-statement tests drive the public ``plan_query`` entry point (building
 from __future__ import annotations
 
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 from inline_snapshot import snapshot
-from sqlalchemy import Select, select
+from sqlalchemy import ColumnClause, Join, Select, select
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql import visitors
 
 from strawchemy.transpiler._planner import PlanContext, _dedup_columns, _use_distinct_rank, plan_query
 from strawchemy.transpiler._query import QueryGraph
 from tests.unit.models import Fruit
+from tests.unit.schemas.secondary_table import schema as secondary_table_schema
+from tests.unit.utils import DialectContext
 from tests.utils import format_sql
 
 
@@ -253,3 +257,27 @@ def test_dedup_columns_collapses_distinct_objects_for_same_column() -> None:
     result = _dedup_columns([attr, fruit.name, col])  # ty: ignore[invalid-argument-type]
 
     assert len(result) == 2  # attr and col collapse to one
+
+
+def test_secondary_aggregation_cte_join_is_bound_by_identity(captured_statements: list[Select[Any]]) -> None:
+    """A secondary-table aggregation ON clause references the very objects the join is built on."""
+    result = secondary_table_schema.execute_sync(
+        "{ users { id departmentsAggregate { count } } }",
+        context_value=DialectContext("sqlite"),
+    )
+
+    assert not result.errors
+    assert len(captured_statements) == 1
+    from_elements = captured_statements[0].get_final_froms()
+    # An ON clause bound to a name-alike alias object would surface here as an extra FROM element.
+    assert len(from_elements) == 1
+    join = from_elements[0]
+    assert isinstance(join, Join)
+    tables = [
+        element.table
+        for element in visitors.iterate(join.onclause)
+        if isinstance(element, ColumnClause) and element.table is not None
+    ]
+    assert len(tables) == 2
+    assert any(table is join.left for table in tables)
+    assert any(table.c is join.right.c for table in tables)
