@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from tests.integration.fixtures import QueryTracker
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
@@ -165,3 +166,45 @@ async def test_pagination_ordered_by_aggregation(any_query: AnyQueryExecutor) ->
         {"name": "Green", "fruitsAggregate": {"count": 2}},
         {"name": "Red", "fruitsAggregate": {"count": 2}},
     ]
+
+
+async def test_pagination_ordered_by_unselected_aggregation(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker
+) -> None:
+    """An aggregation used only as an order key is computed once, inside the pagination subquery."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colorsFilteredPaginated(limit: 2, orderBy: { fruitsAggregate: { sum: { sweetness: ASC } } }) {
+                    name
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    # sum(fruit.sweetness) over {Red, Green, Pink}: Green=5, Red=13, Pink=18 -> Green, Red.
+    assert result.data["colorsFilteredPaginated"] == [{"name": "Green"}, {"name": "Red"}]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted.count("sum(") == 1
+
+
+async def test_pagination_with_relation_filter(any_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
+    """A relation filter under pagination selects the filtered rows, without duplicating them."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                fruitsPaginated(limit: 5, filter: { color: { name: { eq: "Red" } } }) {
+                    name
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert result.data["fruitsPaginated"] == [{"name": "Apple"}, {"name": "Cherry"}]
+    assert query_tracker.query_count == 1
