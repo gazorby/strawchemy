@@ -444,7 +444,7 @@ class DTOConfig:
             annotation_overrides[name] = annotation
         return dataclasses.replace(
             self,
-            include="all" if include_all else include,
+            include=("all" if include_all else include) if base_annotations else self.include,
             annotation_overrides=annotation_overrides,
         )
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import warnings
 from typing import TYPE_CHECKING, Any, Literal, Optional, TypedDict, TypeVar, Union
 
 from sqlalchemy import JSON
@@ -530,22 +531,46 @@ class UpsertConflictEnumFactory(EnumFactory):
         if_no_fields: Literal["raise", "skip"] = "skip",
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
+        """Yield one field per unique constraint usable as a conflict target.
+
+        Raises:
+            EmptyDTOError: If no constraint survives an explicit field selection.
+        """
         constraints = self.inspector.unique_constraints(model)
-        fields = dict(
-            self.inspector.field_definitions(
-                model,
-                dto_config.copy_with(include=[col.key for constraint in constraints for col in constraint.columns]),
-            )
-        )
+        fields = dict(self.inspector.field_definitions(model, dto_config))
+        field_names_by_column = {column: prop.key for prop in model.__mapper__.column_attrs for column in prop.columns}
+        # `include=None` together with `global_include=None` means "no selection made", not
+        # "select nothing". Purpose stays out of it: a read-only or private column is still a
+        # legal conflict target.
+        has_selection = dto_config.include is not None or dto_config.global_include is not None
+        no_fields = True
+
         for constraint in constraints:
+            constraint_fields = [
+                fields[field_names_by_column[column]]
+                for column in constraint.columns
+                if column in field_names_by_column
+            ]
+            if len(constraint_fields) != len(constraint.columns) or (
+                has_selection
+                and not all(dto_config.is_field_included(constraint_field) for constraint_field in constraint_fields)
+            ):
+                continue
             field = DTOFieldDefinition(
                 dto_config=dto_config,
                 model=model,
-                model_field_name="_and_".join(fields[column.key].name for column in constraint.columns),
+                model_field_name="_and_".join(constraint_field.name for constraint_field in constraint_fields),
                 type_hint=DTOMissing,
                 metadata={"constraint": constraint},
             )
             yield GraphQLFieldDefinition.from_field(field)
+            no_fields = False
+
+        if no_fields:
+            msg = f"{name} DTO generated from {model.__qualname__} have no fields"
+            if if_no_fields == "raise" or has_selection:
+                raise EmptyDTOError(msg)
+            warnings.warn(msg, stacklevel=2)
 
     @override
     def should_exclude_field(

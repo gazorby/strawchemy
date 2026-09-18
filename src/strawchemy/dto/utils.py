@@ -50,7 +50,7 @@ def config(
 ) -> DTOConfig:
     return DTOConfig(
         purpose,
-        include=include or None,
+        include=include if include is not None else None,
         exclude=exclude or None,
         global_include=global_include or None,
         global_exclude=global_exclude or None,
