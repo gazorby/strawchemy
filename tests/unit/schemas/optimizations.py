@@ -35,6 +35,9 @@ class ColorOrder: ...
 @strawberry.type
 class Query:
     colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter, order_by_input=ColorOrder)
+    colors_paginated: list[ColorType] = strawchemy.field(
+        filter_input=ColorFilter, order_by_input=ColorOrder, pagination=True
+    )
 
 
 schema = strawberry.Schema(query=Query)

@@ -374,6 +374,217 @@ AGGREGATION_SQL = snapshot(
     }
 )
 
+PAGINATION_JOIN_SQL = snapshot(
+    {
+        "all-functions-hoisted-postgresql": [
+            "SELECT color.id",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               anon_1.count_1 AS count_1",
+            "          FROM color AS color",
+            "          JOIN LATERAL (",
+            "                SELECT count(*) AS count_1",
+            "                  FROM fruit AS fruit_1",
+            "                 WHERE color.id = fruit_1.color_id",
+            "               ) AS anon_1",
+            "            ON TRUE",
+            "         ORDER BY anon_1.count_1 ASC",
+            "         LIMIT %(param_1)s",
+            "        OFFSET %(param_2)s",
+            "       ) AS color",
+            " ORDER BY color.count_1 ASC",
+        ],
+        "all-functions-hoisted-sqlite": [
+            "WITH anon_1 AS (",
+            "        SELECT count(*) AS count_1,",
+            "               fruit_1.color_id AS color_id",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.color_id",
+            "       ) SELECT color.id",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               anon_1.count_1 AS count_1",
+            "          FROM color AS color",
+            "          JOIN anon_1",
+            "            ON color.id = anon_1.color_id",
+            "         ORDER BY anon_1.count_1 ASC",
+            "         LIMIT ?",
+            "        OFFSET ?",
+            "       ) AS color",
+            " ORDER BY color.count_1 ASC",
+        ],
+        "all-functions-hoisted-mysql": [
+            "WITH anon_1 AS (",
+            "        SELECT count(*) AS count_1,",
+            "               fruit_1.color_id AS color_id",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.color_id",
+            "       ) SELECT color.id",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               anon_1.count_1 AS count_1",
+            "          FROM color AS color",
+            "         INNER JOIN anon_1",
+            "            ON color.id = anon_1.color_id",
+            "         ORDER BY anon_1.count_1 ASC",
+            "         LIMIT %s,",
+            "               %s",
+            "       ) AS color",
+            " ORDER BY color.count_1 ASC",
+        ],
+        "some-functions-hoisted-postgresql": [
+            "SELECT color.id,",
+            "       color.sum_1,",
+            "       anon_1.count_1",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               anon_2.sum_1 AS sum_1",
+            "          FROM color AS color",
+            "          JOIN LATERAL (",
+            "                SELECT sum(fruit_1.sweetness) AS sum_1,",
+            "                       count(*) AS count_2",
+            "                  FROM fruit AS fruit_1",
+            "                 WHERE color.id = fruit_1.color_id",
+            "               ) AS anon_2",
+            "            ON TRUE",
+            "         ORDER BY anon_2.sum_1 ASC,",
+            "                  anon_2.count_2 ASC",
+            "         LIMIT %(param_1)s",
+            "        OFFSET %(param_2)s",
+            "       ) AS color",
+            "  JOIN LATERAL (",
+            "        SELECT sum(fruit_2.sweetness) AS sum_2,",
+            "               count(*) AS count_1",
+            "          FROM fruit AS fruit_2",
+            "         WHERE color.id = fruit_2.color_id",
+            "       ) AS anon_1",
+            "    ON TRUE",
+            " ORDER BY color.sum_1 ASC,",
+            "          anon_1.count_1 ASC",
+        ],
+        "some-functions-hoisted-sqlite": [
+            "WITH anon_2 AS (",
+            "        SELECT sum(fruit_1.sweetness) AS sum_1,",
+            "               count(*) AS count_2,",
+            "               fruit_1.color_id AS color_id",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.color_id",
+            "       ),",
+            "       anon_1 AS (",
+            "        SELECT sum(fruit_2.sweetness) AS sum_2,",
+            "               count(*) AS count_1,",
+            "               fruit_2.color_id AS color_id",
+            "          FROM fruit AS fruit_2",
+            "         WHERE fruit_2.color_id IS NOT NULL",
+            "         GROUP BY fruit_2.color_id",
+            "       ) SELECT color.id,",
+            "       color.sum_1,",
+            "       anon_1.count_1",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               anon_2.sum_1 AS sum_1",
+            "          FROM color AS color",
+            "          JOIN anon_2",
+            "            ON color.id = anon_2.color_id",
+            "         ORDER BY anon_2.sum_1 ASC,",
+            "                  anon_2.count_2 ASC",
+            "         LIMIT ?",
+            "        OFFSET ?",
+            "       ) AS color",
+            "  JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+            " ORDER BY color.sum_1 ASC,",
+            "          anon_1.count_1 ASC",
+        ],
+        "some-functions-hoisted-mysql": [
+            "WITH anon_2 AS (",
+            "        SELECT sum(fruit_1.sweetness) AS sum_1,",
+            "               count(*) AS count_2,",
+            "               fruit_1.color_id AS color_id",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.color_id",
+            "       ),",
+            "       anon_1 AS (",
+            "        SELECT sum(fruit_2.sweetness) AS sum_2,",
+            "               count(*) AS count_1,",
+            "               fruit_2.color_id AS color_id",
+            "          FROM fruit AS fruit_2",
+            "         WHERE fruit_2.color_id IS NOT NULL",
+            "         GROUP BY fruit_2.color_id",
+            "       ) SELECT color.id,",
+            "       color.sum_1,",
+            "       anon_1.count_1",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               anon_2.sum_1 AS sum_1",
+            "          FROM color AS color",
+            "         INNER JOIN anon_2",
+            "            ON color.id = anon_2.color_id",
+            "         ORDER BY anon_2.sum_1 ASC,",
+            "                  anon_2.count_2 ASC",
+            "         LIMIT %s,",
+            "               %s",
+            "       ) AS color",
+            " INNER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+            " ORDER BY color.sum_1 ASC,",
+            "          anon_1.count_1 ASC",
+        ],
+        "relation-filter-postgresql": [
+            "SELECT color.id",
+            "  FROM (",
+            "        SELECT color.id AS id",
+            "          FROM color AS color",
+            "          JOIN fruit AS fruit_1",
+            "            ON color.id = fruit_1.color_id",
+            "         WHERE fruit_1.sweetness > %(sweetness_1)s",
+            "         ORDER BY color.id ASC",
+            "         LIMIT %(param_1)s",
+            "        OFFSET %(param_2)s",
+            "       ) AS color",
+            "  LEFT OUTER JOIN fruit AS fruit_1",
+            "    ON color.id = fruit_1.color_id",
+            " ORDER BY color.id ASC",
+        ],
+        "relation-filter-sqlite": [
+            "SELECT color.id",
+            "  FROM (",
+            "        SELECT color.id AS id",
+            "          FROM color AS color",
+            "          JOIN fruit AS fruit_1",
+            "            ON color.id = fruit_1.color_id",
+            "         WHERE fruit_1.sweetness > ?",
+            "         ORDER BY color.id ASC",
+            "         LIMIT ?",
+            "        OFFSET ?",
+            "       ) AS color",
+            "  LEFT OUTER JOIN fruit AS fruit_1",
+            "    ON color.id = fruit_1.color_id",
+            " ORDER BY color.id ASC",
+        ],
+        "relation-filter-mysql": [
+            "SELECT color.id",
+            "  FROM (",
+            "        SELECT color.id AS id",
+            "          FROM color AS color",
+            "         INNER JOIN fruit AS fruit_1",
+            "            ON color.id = fruit_1.color_id",
+            "         WHERE fruit_1.sweetness > %s",
+            "         ORDER BY color.id ASC",
+            "         LIMIT %s,",
+            "               %s",
+            "       ) AS color",
+            "  LEFT OUTER JOIN fruit AS fruit_1",
+            "    ON color.id = fruit_1.color_id",
+            " ORDER BY color.id ASC",
+        ],
+    }
+)
+
 INNER_JOIN_SQL = snapshot(
     {
         "inner-join-rewrite-postgresql": [
@@ -600,3 +811,62 @@ def test_inner_join_rewriting(
 
     statement_str = str(captured_statements[0].compile(dialect=SQLA_DIALECTS[dialect_name]))
     assert format_sql(statement_str).splitlines() == INNER_JOIN_SQL[request.node.callspec.id]
+
+
+@pytest.mark.inline_snapshot
+@pytest.mark.parametrize("dialect_name", ["postgresql", "sqlite", "mysql"])
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param(
+            """
+            {
+                colorsPaginated(limit: 2, orderBy: { fruitsAggregate: { count: ASC } }) {
+                    id
+                }
+            }
+            """,
+            id="all-functions-hoisted",
+        ),
+        pytest.param(
+            """
+            {
+                colorsPaginated(limit: 2, orderBy: { fruitsAggregate: { sum: { sweetness: ASC } } }) {
+                    id
+                    fruitsAggregate { count }
+                }
+            }
+            """,
+            id="some-functions-hoisted",
+        ),
+        pytest.param(
+            """
+            {
+                colorsPaginated(limit: 2, filter: { fruits: { sweetness: { gt: 1 } } }) {
+                    id
+                }
+            }
+            """,
+            id="relation-filter",
+        ),
+    ],
+)
+def test_pagination_subquery_outer_joins(
+    query: str, dialect_name: str, captured_statements: list[Select[Any]], request: pytest.FixtureRequest
+) -> None:
+    """Outer joins hang off the pagination subquery, and an aggregation it already computed is not re-joined.
+
+    An aggregation whose functions are all hoisted into the subquery is re-projected from it;
+    one with a function left outside keeps its outer join. A join bound to the discarded inner
+    alias instead of the subquery would surface as a second FROM element.
+    """
+    result = schema.execute_sync(query, context_value=DialectContext(dialect_name))  # ty: ignore[invalid-argument-type]
+
+    assert not result.errors
+    assert result.data
+    assert len(captured_statements) == 1
+
+    statement = captured_statements[0]
+    assert len(statement.get_final_froms()) == 1
+    compiled = str(statement.compile(dialect=SQLA_DIALECTS[dialect_name]))
+    assert format_sql(compiled).splitlines() == PAGINATION_JOIN_SQL[request.node.callspec.id]
