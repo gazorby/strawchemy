@@ -531,26 +531,35 @@ class UpsertConflictEnumFactory(EnumFactory):
         if_no_fields: Literal["raise", "skip"] = "skip",
         **kwargs: Any,
     ) -> Generator[DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]:
+        """Yield one field per unique constraint usable as a conflict target.
+
+        Raises:
+            EmptyDTOError: If no constraint survives an explicit field selection.
+        """
         constraints = self.inspector.unique_constraints(model)
-        fields = dict(
-            self.inspector.field_definitions(model, dto_config.copy_with(purpose=Purpose.COMPLETE, include="all"))
-        )
-        mapper = model.__mapper__
+        fields = dict(self.inspector.field_definitions(model, dto_config))
+        field_names_by_column = {column: prop.key for prop in model.__mapper__.column_attrs for column in prop.columns}
+        # `include=None` together with `global_include=None` means "no selection made", not
+        # "select nothing". Purpose stays out of it: a read-only or private column is still a
+        # legal conflict target.
+        has_selection = dto_config.include is not None or dto_config.global_include is not None
         no_fields = True
 
         for constraint in constraints:
-            field_names = [mapper.get_property_by_column(column).key for column in constraint.columns]
-            if any(
-                field_name not in fields
-                or (dto_config.include is not None and not dto_config.is_field_included(fields[field_name]))
-                or field_name in dto_config.excluded_fields
-                for field_name in field_names
+            constraint_fields = [
+                fields[field_names_by_column[column]]
+                for column in constraint.columns
+                if column in field_names_by_column
+            ]
+            if len(constraint_fields) != len(constraint.columns) or (
+                has_selection
+                and not all(dto_config.is_field_included(constraint_field) for constraint_field in constraint_fields)
             ):
                 continue
             field = DTOFieldDefinition(
                 dto_config=dto_config,
                 model=model,
-                model_field_name="_and_".join(fields[field_name].name for field_name in field_names),
+                model_field_name="_and_".join(constraint_field.name for constraint_field in constraint_fields),
                 type_hint=DTOMissing,
                 metadata={"constraint": constraint},
             )
@@ -559,7 +568,7 @@ class UpsertConflictEnumFactory(EnumFactory):
 
         if no_fields:
             msg = f"{name} DTO generated from {model.__qualname__} have no fields"
-            if if_no_fields == "raise" or dto_config.include is not None:
+            if if_no_fields == "raise" or has_selection:
                 raise EmptyDTOError(msg)
             warnings.warn(msg, stacklevel=2)
 
