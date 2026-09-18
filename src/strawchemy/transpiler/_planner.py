@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Generic, cast
 
 from sqlalchemy import and_, exists, func, inspect, not_, null, or_, select, true, tuple_
 from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
+from sqlalchemy.sql.functions import count as sqla_count
 from sqlalchemy.sql.util import ClauseAdapter
 
 from strawchemy.constants import AGGREGATIONS_KEY
@@ -204,7 +205,9 @@ class AggregationPlan:
                     node=aggregation_node, alias=spec.alias, statement=select(*spec.functions.values()), context=context
                 )
             for function_node, inner_label in spec.functions.items():
-                columns[function_node] = require_corresponding_column(join.selectable, inner_label)
+                column = require_corresponding_column(join.selectable, inner_label)
+                is_count = isinstance(inner_label.element, sqla_count)
+                columns[function_node] = func.coalesce(column, 0) if join.is_outer and is_count else column
             aliases[aggregation_node] = spec.alias
             node_functions[aggregation_node] = tuple(spec.functions.keys())
             joins.append(join)
@@ -296,6 +299,12 @@ class AggregationPlan:
             An AggregationJoin backed by a CTE.
         """
         aliases = context.aliases
+        relationship = node.value.model_field.property
+        assert isinstance(relationship, RelationshipProperty)
+
+        if relationship.secondary is not None:
+            return AggregationPlan._secondary_cte_join(node, alias, statement, context)
+
         remote_fks = aliases.inspect(node).foreign_key_columns("target", alias)
         cte_statement = (
             statement.add_columns(*remote_fks)
@@ -305,6 +314,52 @@ class AggregationPlan:
         )
         cte_alias = aliased(alias, cte_statement)
         return AggregationJoin(target=cte_alias, onclause=aliases.aliased_attribute(node).of_type(cte_alias), node=node)
+
+    @staticmethod
+    def _secondary_cte_join(
+        node: QueryNodeType, alias: Any, statement: Any, context: PlanContext[Any]
+    ) -> AggregationJoin:
+        """Creates a CTE-based aggregation join for a relationship using a secondary table.
+
+        The relationship is traversed from a CTE-private parent alias, so SQLAlchemy emits the
+        configured ``primaryjoin`` and ``secondaryjoin`` in full rather than the foreign-key pairs
+        alone. Grouping on the parent keys of that alias exports them for the outer correlation,
+        which is an outer join because a parent without related rows contributes no group.
+
+        Args:
+            node: The aggregation node.
+            alias: The aliased target class for the aggregation target.
+            statement: The SQLAlchemy select statement selecting the aggregate functions.
+            context: The shared planning context (``aliases`` provides inspect for key resolution).
+
+        Returns:
+            An AggregationJoin backed by a CTE.
+        """
+        aliases = context.aliases
+        node_inspect = aliases.inspect(node)
+        parent_node = node.find_parent(lambda parent: not parent.value.is_computed, strict=True)
+        parent_alias = aliases.alias_from_relation_node(parent_node, "target")
+        cte_parent_alias = aliased(inspect(parent_alias).mapper, flat=True)
+        cte_keys = node_inspect.foreign_key_columns("parent", cte_parent_alias)
+        cte_statement = (
+            statement.select_from(cte_parent_alias)
+            .join(aliases.aliased_attribute(node, cte_parent_alias).of_type(inspect(alias)))
+            .add_columns(*cte_keys)
+            .group_by(*cte_keys)
+            .cte()
+        )
+        cte_alias = aliased(cte_parent_alias, cte_statement)
+        onclause = and_(
+            *[
+                parent_key == cte_key
+                for parent_key, cte_key in zip(
+                    node_inspect.foreign_key_columns("parent", parent_alias),
+                    node_inspect.foreign_key_columns("parent", cte_alias),
+                    strict=True,
+                )
+            ]
+        )
+        return AggregationJoin(target=cte_alias, onclause=onclause, node=node, is_outer=True)
 
     def columns_for(self, node: QueryNodeType) -> list[ColumnElement[Any]]:
         """Returns the function columns for an aggregation node in spec order.
