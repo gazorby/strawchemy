@@ -121,7 +121,7 @@ class StrawchemyField(StrawberryField):
     """
 
     @override
-    def __init__(
+    def __init__(  # ty: ignore[invalid-method-override]  # strawchemy args precede the StrawberryField ones; instances are only built here and copied via __copy__
         self,
         config: StrawchemyConfig,
         order_by_factory: OrderByFactory,
