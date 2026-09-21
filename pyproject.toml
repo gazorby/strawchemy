@@ -54,7 +54,6 @@ dev = [
   { include-group = "test" },
 ]
 aiosqlite = ["aiosqlite"]
-codeflash = ["codeflash"]
 lint = [
   "ruff",
   "slotscheck>=0.16.5",
@@ -85,14 +84,6 @@ unasyncd = ["unasyncd"]
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.codeflash]
-# All paths are relative to this pyproject.toml's directory.
-module-root = "src"
-tests-root = "tests"
-test-framework = "pytest"
-ignore-paths = []
-formatter-cmds = ["ruff check --exit-zero --fix $file", "ruff format $file"]
 
 [tool.codespell]
 skip = "*.po,*.ts,./src/3rdParty,./src/Test"
