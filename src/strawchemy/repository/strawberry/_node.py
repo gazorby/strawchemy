@@ -68,10 +68,10 @@ class StrawberryQueryNode(QueryNode, Generic[T]):
                 value = node_result.value(child)
                 if isinstance(value, (list, tuple)):
                     kwargs[child.value.name] = [
-                        child.node_result_to_strawberry_type(node_result.copy_with(element)) for element in value
+                        child.node_result_to_strawberry_type(node_result.copy_with(child, element)) for element in value
                     ]
                 elif value is not None:
-                    kwargs[child.value.name] = child.node_result_to_strawberry_type(node_result.copy_with(value))
+                    kwargs[child.value.name] = child.node_result_to_strawberry_type(node_result.copy_with(child, value))
                 else:
                     kwargs[child.value.name] = None
             else:

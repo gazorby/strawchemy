@@ -917,6 +917,8 @@ class ProjectionPlan:
     hook_specs: tuple[HookSpec, ...] = ()
     transform_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
     """Maps each transform node to its labelled projection column (for column_map)."""
+    identity_map: Mapping[QueryNodeType, tuple[ColumnElement[Any], ...]] = field(default_factory=dict)
+    """Maps each related level owning computed values to its primary-key projection columns."""
 
     @classmethod
     def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any], agg_plan: AggregationPlan) -> ProjectionPlan:
@@ -963,13 +965,49 @@ class ProjectionPlan:
             hook_specs.extend(child_load.hook_specs)
             transform_map.update(child_load.transform_map)
 
+        identity_map = cls._identity_columns(selection_tree, context)
+        for identity_columns in identity_map.values():
+            projection_columns.extend(identity_columns)
+
         return cls(
             columns=tuple(projection_columns),
             load_options=tuple(load_options),
             aggregation_joins=tuple(aggregation_joins),
             hook_specs=tuple(hook_specs),
             transform_map=transform_map,
+            identity_map=identity_map,
         )
+
+    @staticmethod
+    def _identity_columns(
+        selection_tree: QueryNodeType, context: PlanContext[Any]
+    ) -> dict[QueryNodeType, tuple[ColumnElement[Any], ...]]:
+        """Collects the primary-key columns of every related level that owns computed values.
+
+        A computed value is emitted once per flat result row, so it belongs to the related
+        element the row carries, not to the row's root. Selecting that element's primary key
+        alongside lets the executor attribute the value to it.
+
+        Args:
+            selection_tree: The resolved selection tree to walk.
+            context: The shared planning context (``aliases`` resolves the level's alias).
+
+        Returns:
+            A mapping of relation node to its primary-key columns, in selection order.
+        """
+        identity_map: dict[QueryNodeType, tuple[ColumnElement[Any], ...]] = {}
+        for node in selection_tree.iter_depth_first():
+            if not (node.value.is_computed or node.metadata.data.is_transform):
+                continue
+            owner = node.find_parent(lambda parent: parent.value.is_relation and not parent.value.is_computed)
+            if owner is None or owner in identity_map:
+                continue
+            owner_name = context.aliases.inspect(owner).name
+            identity_map[owner] = tuple(
+                attribute.label(f"{owner_name}__{attribute.key}")
+                for attribute in context.aliases.aliased_id_attributes(owner)
+            )
+        return identity_map
 
     @staticmethod
     def _collect_child_load(node: QueryNodeType, context: PlanContext[Any]) -> ChildLoad:
@@ -1561,6 +1599,7 @@ def _plan_subquery(
         hook_specs=outer_proj.hook_specs,
         hook_applier=context.hook_applier,
         column_map=column_map,
+        identity_columns=outer_proj.identity_map,
     )
 
 
@@ -1658,4 +1697,5 @@ def plan_query(
         hook_specs=projection_plan.hook_specs,
         hook_applier=context.hook_applier,
         column_map=column_map,
+        identity_columns=projection_plan.identity_map,
     )

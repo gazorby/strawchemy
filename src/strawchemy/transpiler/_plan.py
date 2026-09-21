@@ -111,6 +111,10 @@ class QueryPlan:
     """Maps each computed/transform/root-aggregation node to the column object that carries
     its value in the result row. The executor reads values via ``row._mapping[column]`` — so
     the rendered column name is irrelevant to correctness."""
+    identity_columns: Mapping[QueryNodeType, tuple[ColumnElement[Any], ...]] = field(default_factory=dict)
+    """Maps each related level owning computed values to the primary-key columns identifying
+    the element it contributes to a flat result row. Carried in ``projection_columns`` so the
+    executor can attribute a row's computed values to that element rather than to the row."""
 
     def emit(self) -> Select[Any]:
         """Emits the SQLAlchemy Select for this query plan.
