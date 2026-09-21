@@ -1299,11 +1299,9 @@ async def test_update_with_to_many_create_and_nested_set(
             {
                 "name": fruit["name"],
                 "farms": [
-                    {
-                        "id": to_graphql_representation(farm["id"], "output")  # noqa: B035
-                        for farm in raw_farms
-                        if farm["fruit_id"] == fruit["id"]
-                    }
+                    {"id": to_graphql_representation(farm["id"], "output")}
+                    for farm in raw_farms
+                    if farm["fruit_id"] == fruit["id"]
                 ],
             }
             for fruit in raw_fruits
@@ -1600,11 +1598,9 @@ async def test_update_with_nested_mixed_relations_create(
             {
                 "name": fruit["name"],
                 "farms": [
-                    {
-                        "name": to_graphql_representation(farm["name"], "output")  # noqa: B035
-                        for farm in raw_farms
-                        if farm["fruit_id"] == fruit["id"]
-                    }
+                    {"name": to_graphql_representation(farm["name"], "output")}
+                    for farm in raw_farms
+                    if farm["fruit_id"] == fruit["id"]
                 ],
                 "product": None,
             }
