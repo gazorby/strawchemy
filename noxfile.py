@@ -38,7 +38,6 @@ def extras_env(*extras: str) -> dict[str, str]:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "unit", "ci"],
     uv_groups=["test"],
-    uv_no_groups=["dev"],
     uv_all_extras=True,
     uv_sync_locked=False,
 )
@@ -53,7 +52,6 @@ def unit_tests(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "unit", "ci"],
     uv_groups=["test"],
-    uv_no_groups=["dev"],
     uv_sync_locked=False,
 )
 def unit_tests_no_extras(session: Session) -> None:
@@ -66,8 +64,7 @@ def unit_tests_no_extras(session: Session) -> None:
     name="integration",
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration"],
-    uv_groups=["test"],
-    uv_no_groups=["dev"],
+    uv_groups=["test", "postgres", "mysql", "aiosqlite"],
     uv_extras=["geo"],
     uv_sync_locked=False,
 )
