@@ -34,8 +34,8 @@ def metadata() -> MetaData:
 
 
 @pytest.fixture
-def postgres_database_service(postgis_service: PostgresService) -> PostgresService:
-    return postgis_service
+def postgres_database_service(namespaced_postgis_service: PostgresService) -> PostgresService:
+    return namespaced_postgis_service
 
 
 @pytest.fixture

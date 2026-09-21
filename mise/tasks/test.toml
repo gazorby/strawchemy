@@ -139,3 +139,7 @@ run = "uv run pytest {{vars.local_pytest_options}} -m snapshot --snapshot-update
 ["test:add-new-snapshots"]
 description = "Run snapshot-based tests and add new inline and file snapshots"
 depends = ["test:add-new-snapshots:inline", "test:add-new-snapshots:file"]
+
+["test:remove-containers"]
+description = "Remove the database containers integration tests keep running between sessions"
+run = "docker rm -f $(docker ps -aq --filter label=pytest_databases) 2>/dev/null || true"
