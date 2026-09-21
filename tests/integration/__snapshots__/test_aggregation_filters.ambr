@@ -11,11 +11,11 @@
          ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.count_1 > ?
+   WHERE coalesce(anon_1.count_1, ?) > ?
    ORDER BY anon_1.sum_1 ASC,
             fruit_1.id ASC
   '''
@@ -32,11 +32,11 @@
          ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.count_1 > %s
+   WHERE coalesce(anon_1.count_1, %s) > %s
    ORDER BY anon_1.sum_1 ASC,
             fruit_1.id ASC
   '''
@@ -110,11 +110,11 @@
          ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.count_1 > ?
+   WHERE coalesce(anon_1.count_1, ?) > ?
    ORDER BY anon_1.sum_1 ASC,
             fruit_1.id ASC
   '''
@@ -129,7 +129,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 = ?
    ORDER BY color.id ASC
@@ -145,7 +145,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 = %s
    ORDER BY color.id ASC
@@ -189,7 +189,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 > ?
    ORDER BY color.id ASC
@@ -205,7 +205,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 > %s
    ORDER BY color.id ASC
@@ -249,7 +249,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 = ?
    ORDER BY color.id ASC
@@ -265,7 +265,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 = %s
    ORDER BY color.id ASC
@@ -309,7 +309,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 > ?
    ORDER BY color.id ASC
@@ -325,7 +325,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 > %s
    ORDER BY color.id ASC
@@ -383,7 +383,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 = ?
    ORDER BY color.id ASC
@@ -413,7 +413,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 > ?
    ORDER BY color.id ASC
@@ -443,7 +443,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 = ?
    ORDER BY color.id ASC
@@ -473,7 +473,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.avg_1 > ?
    ORDER BY color.id ASC
@@ -489,9 +489,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = ?
+   WHERE coalesce(anon_1.count_1, ?) = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -505,9 +505,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = %s
+   WHERE coalesce(anon_1.count_1, %s) = %s
    ORDER BY color.id ASC
   '''
 # ---
@@ -549,9 +549,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 > ?
+   WHERE coalesce(anon_1.count_1, ?) > ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -565,9 +565,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 > %s
+   WHERE coalesce(anon_1.count_1, %s) > %s
    ORDER BY color.id ASC
   '''
 # ---
@@ -609,9 +609,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 >= ?
+   WHERE coalesce(anon_1.count_1, ?) >= ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -625,9 +625,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 >= %s
+   WHERE coalesce(anon_1.count_1, %s) >= %s
    ORDER BY color.id ASC
   '''
 # ---
@@ -669,9 +669,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 IN (__[POSTCOMPILE_param_1])
+   WHERE coalesce(anon_1.count_1, ?) IN (__[POSTCOMPILE_coalesce_2])
    ORDER BY color.id ASC
   '''
 # ---
@@ -685,9 +685,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 IN (__[POSTCOMPILE_param_1])
+   WHERE coalesce(anon_1.count_1, %s) IN (__[POSTCOMPILE_coalesce_2])
    ORDER BY color.id ASC
   '''
 # ---
@@ -729,9 +729,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 < ?
+   WHERE coalesce(anon_1.count_1, ?) < ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -745,9 +745,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 < %s
+   WHERE coalesce(anon_1.count_1, %s) < %s
    ORDER BY color.id ASC
   '''
 # ---
@@ -789,9 +789,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 <= ?
+   WHERE coalesce(anon_1.count_1, ?) <= ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -805,9 +805,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 <= %s
+   WHERE coalesce(anon_1.count_1, %s) <= %s
    ORDER BY color.id ASC
   '''
 # ---
@@ -849,9 +849,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 != ?
+   WHERE coalesce(anon_1.count_1, ?) != ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -865,9 +865,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 != %s
+   WHERE coalesce(anon_1.count_1, %s) != %s
    ORDER BY color.id ASC
   '''
 # ---
@@ -909,9 +909,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.count_1 NOT IN (__[POSTCOMPILE_param_1]))
+   WHERE (coalesce(anon_1.count_1, ?) NOT IN (__[POSTCOMPILE_coalesce_2]))
    ORDER BY color.id ASC
   '''
 # ---
@@ -925,9 +925,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.count_1 NOT IN (__[POSTCOMPILE_param_1]))
+   WHERE (coalesce(anon_1.count_1, %s) NOT IN (__[POSTCOMPILE_coalesce_2]))
    ORDER BY color.id ASC
   '''
 # ---
@@ -983,9 +983,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = ?
+   WHERE coalesce(anon_1.count_1, ?) = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1013,9 +1013,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 > ?
+   WHERE coalesce(anon_1.count_1, ?) > ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1043,9 +1043,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 >= ?
+   WHERE coalesce(anon_1.count_1, ?) >= ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1073,9 +1073,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 IN (__[POSTCOMPILE_param_1])
+   WHERE coalesce(anon_1.count_1, ?) IN (__[POSTCOMPILE_coalesce_2])
    ORDER BY color.id ASC
   '''
 # ---
@@ -1103,9 +1103,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 < ?
+   WHERE coalesce(anon_1.count_1, ?) < ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1133,9 +1133,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 <= ?
+   WHERE coalesce(anon_1.count_1, ?) <= ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1163,9 +1163,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 != ?
+   WHERE coalesce(anon_1.count_1, ?) != ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1193,9 +1193,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.count_1 NOT IN (__[POSTCOMPILE_param_1]))
+   WHERE (coalesce(anon_1.count_1, ?) NOT IN (__[POSTCOMPILE_coalesce_2]))
    ORDER BY color.id ASC
   '''
 # ---
@@ -1210,11 +1210,11 @@
          ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.count_1 > ?
+   WHERE coalesce(anon_1.count_1, ?) > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1230,11 +1230,11 @@
          ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.count_1 > %s
+   WHERE coalesce(anon_1.count_1, %s) > %s
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1304,11 +1304,11 @@
          ) SELECT fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE anon_1.count_1 > ?
+   WHERE coalesce(anon_1.count_1, ?) > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1323,9 +1323,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = ?
+   WHERE coalesce(anon_1.count_1, ?) = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1339,9 +1339,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = %s
+   WHERE coalesce(anon_1.count_1, %s) = %s
    ORDER BY color.id ASC
   '''
 # ---
@@ -1383,9 +1383,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = ?
+   WHERE coalesce(anon_1.count_1, ?) = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1399,9 +1399,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = %s
+   WHERE coalesce(anon_1.count_1, %s) = %s
    ORDER BY color.id ASC
   '''
 # ---
@@ -1443,9 +1443,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = ?
+   WHERE coalesce(anon_1.count_1, ?) = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1459,9 +1459,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = %s
+   WHERE coalesce(anon_1.count_1, %s) = %s
    ORDER BY color.id ASC
   '''
 # ---
@@ -1517,9 +1517,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = ?
+   WHERE coalesce(anon_1.count_1, ?) = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1547,9 +1547,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = ?
+   WHERE coalesce(anon_1.count_1, ?) = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1577,9 +1577,9 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.count_1 = ?
+   WHERE coalesce(anon_1.count_1, ?) = ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1593,7 +1593,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.max_1 LIKE '%' || ? || '%' ESCAPE '/')
    ORDER BY color.id ASC
@@ -1609,7 +1609,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.max_1 LIKE concat('%%', %s, '%%') ESCAPE '/')
    ORDER BY color.id ASC
@@ -1653,7 +1653,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.max_1 = ?
    ORDER BY color.id ASC
@@ -1669,7 +1669,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.max_1 = %s
    ORDER BY color.id ASC
@@ -1713,7 +1713,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE lower(anon_1.max_1) LIKE lower(?)
    ORDER BY color.id ASC
@@ -1729,7 +1729,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE lower(anon_1.max_1) LIKE lower(%s)
    ORDER BY color.id ASC
@@ -1773,7 +1773,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.max_1 LIKE ?
    ORDER BY color.id ASC
@@ -1789,7 +1789,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.max_1 LIKE %s
    ORDER BY color.id ASC
@@ -1833,7 +1833,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.max_1 LIKE ? || '%' ESCAPE '/')
    ORDER BY color.id ASC
@@ -1849,7 +1849,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.max_1 LIKE concat(%s, '%%') ESCAPE '/')
    ORDER BY color.id ASC
@@ -1907,7 +1907,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.max_1 LIKE '%' || ? || '%' ESCAPE '/')
    ORDER BY color.id ASC
@@ -1937,7 +1937,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.max_1 = ?
    ORDER BY color.id ASC
@@ -1967,7 +1967,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE lower(anon_1.max_1) LIKE lower(?)
    ORDER BY color.id ASC
@@ -1997,7 +1997,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.max_1 LIKE ?
    ORDER BY color.id ASC
@@ -2027,7 +2027,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.max_1 LIKE ? || '%' ESCAPE '/')
    ORDER BY color.id ASC
@@ -2043,7 +2043,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.min_1 LIKE '%' || ? || '%' ESCAPE '/')
    ORDER BY color.id ASC
@@ -2059,7 +2059,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.min_1 LIKE concat('%%', %s, '%%') ESCAPE '/')
    ORDER BY color.id ASC
@@ -2103,7 +2103,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.min_1 = ?
    ORDER BY color.id ASC
@@ -2119,7 +2119,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.min_1 = %s
    ORDER BY color.id ASC
@@ -2163,7 +2163,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE lower(anon_1.min_1) LIKE lower(?)
    ORDER BY color.id ASC
@@ -2179,7 +2179,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE lower(anon_1.min_1) LIKE lower(%s)
    ORDER BY color.id ASC
@@ -2223,7 +2223,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.min_1 LIKE ?
    ORDER BY color.id ASC
@@ -2239,7 +2239,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.min_1 LIKE %s
    ORDER BY color.id ASC
@@ -2283,7 +2283,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.min_1 LIKE ? || '%' ESCAPE '/')
    ORDER BY color.id ASC
@@ -2299,7 +2299,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.min_1 LIKE concat(%s, '%%') ESCAPE '/')
    ORDER BY color.id ASC
@@ -2357,7 +2357,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.min_1 LIKE '%' || ? || '%' ESCAPE '/')
    ORDER BY color.id ASC
@@ -2387,7 +2387,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.min_1 = ?
    ORDER BY color.id ASC
@@ -2417,7 +2417,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE lower(anon_1.min_1) LIKE lower(?)
    ORDER BY color.id ASC
@@ -2447,7 +2447,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.min_1 LIKE ?
    ORDER BY color.id ASC
@@ -2477,7 +2477,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE (anon_1.min_1 LIKE ? || '%' ESCAPE '/')
    ORDER BY color.id ASC
@@ -2493,7 +2493,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 = ?
    ORDER BY color.id ASC
@@ -2509,7 +2509,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 = %s
    ORDER BY color.id ASC
@@ -2553,7 +2553,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 > ?
    ORDER BY color.id ASC
@@ -2569,7 +2569,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 > %s
    ORDER BY color.id ASC
@@ -2613,7 +2613,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 = ?
    ORDER BY color.id ASC
@@ -2629,7 +2629,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 = %s
    ORDER BY color.id ASC
@@ -2673,7 +2673,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 > ?
    ORDER BY color.id ASC
@@ -2689,7 +2689,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 > %s
    ORDER BY color.id ASC
@@ -2747,7 +2747,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 = ?
    ORDER BY color.id ASC
@@ -2777,7 +2777,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 > ?
    ORDER BY color.id ASC
@@ -2807,7 +2807,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 = ?
    ORDER BY color.id ASC
@@ -2837,7 +2837,7 @@
            GROUP BY fruit_1.color_id
          ) SELECT color.id
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE anon_1.sum_1 > ?
    ORDER BY color.id ASC
