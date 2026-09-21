@@ -5,10 +5,9 @@ from typing import TYPE_CHECKING
 
 import pytest
 import strawberry
-from syrupy.extensions.amber import AmberSnapshotExtension
 
 from strawchemy import Strawchemy, StrawchemyConfig
-from tests.syrupy import GraphQLFileExtension
+from tests.syrupy import GraphQLFileExtension, VerifiedAmberSnapshotExtension
 from tests.utils import sqlalchemy_pydantic_factory
 
 if TYPE_CHECKING:
@@ -26,7 +25,7 @@ def graphql_snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
 
 @pytest.fixture
 def sql_snapshot(snapshot: SnapshotAssertion) -> SnapshotAssertion:
-    return snapshot.use_extension(AmberSnapshotExtension)
+    return snapshot.use_extension(VerifiedAmberSnapshotExtension)
 
 
 @pytest.fixture
