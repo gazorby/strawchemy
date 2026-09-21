@@ -121,6 +121,7 @@ markers = [
   "extras: Tests requiring extras dependencies",
 ]
 testpaths = ["tests"]
+filterwarnings = ["error::sqlalchemy.exc.SAWarning"]
 xfail_strict = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
