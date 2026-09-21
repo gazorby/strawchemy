@@ -431,7 +431,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -451,7 +451,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -507,7 +507,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -527,7 +527,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -583,7 +583,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -603,7 +603,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -659,7 +659,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -679,7 +679,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -735,7 +735,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -755,7 +755,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -811,7 +811,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -831,7 +831,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -887,7 +887,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -907,7 +907,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -963,7 +963,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -983,7 +983,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1057,7 +1057,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1095,7 +1095,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1133,7 +1133,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1171,7 +1171,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1209,7 +1209,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1247,7 +1247,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1285,7 +1285,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1323,7 +1323,7 @@
          fruit_1.id,
          color.id AS id_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id

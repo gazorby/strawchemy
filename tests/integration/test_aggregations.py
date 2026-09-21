@@ -49,6 +49,31 @@ async def test_count_aggregation(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+async def test_aggregation_without_related_rows(any_query: AnyQueryExecutor) -> None:
+    """Test that a parent with no related rows is returned with a zero count and null extrema."""
+    created = await maybe_async(any_query('mutation { createColor(data: { name: "Blue" }) { id } }'))
+    assert not created.errors
+
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colors(filter: { name: { eq: "Blue" } }) {
+                    name
+                    fruitsAggregate {
+                        count
+                        max { sweetness }
+                    }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert result.data["colors"] == [{"name": "Blue", "fruitsAggregate": {"count": 0, "max": {"sweetness": None}}}]
+
+
 async def test_count_aggregation_many_to_many(
     any_query: AnyQueryExecutor, raw_user_departments: RawRecordData, raw_users: RawRecordData
 ) -> None:
