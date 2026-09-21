@@ -115,6 +115,16 @@ def test_upsert_conflict_fields_default_includes_all_constraints() -> None:
     assert [field_.name for field_ in ConflictFields] == ["id", "nameAndColorId"]
 
 
+def test_upsert_conflict_fields_skips_relations_and_unconstrained_columns() -> None:
+    """Test that a selected relation or plain column is not a conflict target."""
+    strawchemy = Strawchemy("sqlite")
+
+    @strawchemy.upsert_conflict_fields(Fruit, include="all")
+    class ConflictFields: ...
+
+    assert [field_.name for field_ in ConflictFields] == ["id", "nameAndColorId"]
+
+
 def test_upsert_conflict_fields_honors_global_include() -> None:
     """Test that a constraint outside `global_include` is dropped even when `include` is unset."""
     strawchemy = Strawchemy("sqlite")

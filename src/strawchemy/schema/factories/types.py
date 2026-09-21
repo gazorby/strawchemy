@@ -572,24 +572,6 @@ class UpsertConflictEnumFactory(EnumFactory):
                 raise EmptyDTOError(msg)
             warnings.warn(msg, stacklevel=2)
 
-    @override
-    def should_exclude_field(
-        self,
-        field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
-        dto_config: DTOConfig,
-        node: Node[Relation[Any, EnumDTO], None],
-        has_override: bool,
-    ) -> bool:
-        constraint_columns = {
-            column for constraint in self.inspector.unique_constraints(field.model) for column in constraint.columns
-        }
-        columns = field.model.__mapper__.column_attrs
-        return (
-            super().should_exclude_field(field, dto_config, node, has_override)
-            or field.model_field_name not in columns
-            or any(column not in constraint_columns for column in columns[field.model_field_name].columns)
-        )
-
 
 class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
     def __init__(
