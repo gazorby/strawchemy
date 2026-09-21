@@ -2958,7 +2958,7 @@ dev = [
     { name = "ruff" },
     { name = "slotscheck", specifier = ">=0.16.5" },
     { name = "sqlparse" },
-    { name = "syrupy" },
+    { name = "syrupy", specifier = ">=6.1.1" },
     { name = "testapp", editable = "examples/testapp" },
     { name = "tombi", specifier = ">=1.1.0" },
     { name = "ty", specifier = ">=0.0.80" },
@@ -2995,7 +2995,7 @@ test = [
     { name = "pytest-pretty" },
     { name = "pytest-xdist", extras = ["psutil"] },
     { name = "sqlparse" },
-    { name = "syrupy" },
+    { name = "syrupy", specifier = ">=6.1.1" },
     { name = "testapp", editable = "examples/testapp" },
 ]
 unasyncd = [{ name = "unasyncd" }]

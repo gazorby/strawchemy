@@ -10,8 +10,10 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Generic, Literal
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeAlias
 
+from sqlalchemy import inspect
+from sqlalchemy.exc import MultipleResultsFound
 from typing_extensions import Self
 
 from strawchemy.dto import ModelT
@@ -30,6 +32,9 @@ if TYPE_CHECKING:
 
 __all__ = ("AsyncQueryExecutor", "NodeResult", "QueryExecutor", "QueryResult", "SyncQueryExecutor")
 
+RelatedKey: TypeAlias = "tuple[QueryNodeType, tuple[Any, ...] | None]"
+"""Identifies one element of a related collection: its relation node and its identity key."""
+
 
 @dataclass
 class NodeResult(Generic[ModelT]):
@@ -38,10 +43,13 @@ class NodeResult(Generic[ModelT]):
     Attributes:
         model: The SQLAlchemy model instance.
         computed_values: A mapping of computed values for this node, keyed by query node.
+        related_computed_values: The computed values of every related element of the query,
+            keyed by the relation node it hangs from and its identity key.
     """
 
     model: ModelT
     computed_values: dict[QueryNodeType, Any]
+    related_computed_values: Mapping[RelatedKey, dict[QueryNodeType, Any]] = dataclasses.field(default_factory=dict)
 
     def value(self, key: QueryNodeType) -> Any:
         """Retrieves the value for a given query node type.
@@ -60,16 +68,15 @@ class NodeResult(Generic[ModelT]):
             return self.computed_values[key]
         return getattr(self.model, key.value.model_field_name)
 
-    def copy_with(self, model: Any) -> Self:
-        """Creates a copy of this NodeResult with a new model.
+    def copy_with(self, node: QueryNodeType, model: Any) -> Self:
+        """Creates a copy of this NodeResult for an element of a related collection.
 
         Args:
-            model: The new model instance to use.
-
-        Returns:
-            A new NodeResult instance with the updated model.
+            node: The relation node the element hangs from, keying its computed values.
+            model: The element to use as the copy's model.
         """
-        return dataclasses.replace(self, model=model)
+        computed_values = self.related_computed_values.get((node, inspect(model).identity), self.computed_values)
+        return dataclasses.replace(self, model=model, computed_values=computed_values)
 
 
 @dataclass
@@ -85,6 +92,8 @@ class QueryResult(Generic[ModelT]):
             values for each node.
         query_computed_values: A defaultdict containing computed values for
             the query.
+        related_computed_values: The computed values of every related element of the query,
+            keyed by the relation node it hangs from and its identity key.
     """
 
     nodes: Sequence[ModelT] = dataclasses.field(default_factory=list)
@@ -92,6 +101,7 @@ class QueryResult(Generic[ModelT]):
     query_computed_values: defaultdict[QueryNodeType, Any] = dataclasses.field(
         default_factory=lambda: defaultdict(lambda: None)
     )
+    related_computed_values: Mapping[RelatedKey, dict[QueryNodeType, Any]] = dataclasses.field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.node_computed_values:
@@ -104,7 +114,7 @@ class QueryResult(Generic[ModelT]):
             NodeResult[ModelT]: An individual result node.
         """
         for model, computed_values in zip(self.nodes, self.node_computed_values, strict=False):
-            yield NodeResult(model, computed_values)
+            yield NodeResult(model, computed_values, self.related_computed_values)
 
     def filter_in(self, **kwargs: Sequence[Any]) -> Self:
         """Filters the query results based on attribute values.
@@ -151,7 +161,7 @@ class QueryResult(Generic[ModelT]):
         if len(self.nodes) != 1 or len(self.node_computed_values) != 1:
             msg = f"Expected one item, got {len(self.nodes)}"
             raise QueryResultError(msg)
-        return NodeResult(self.nodes[0], self.node_computed_values[0])
+        return NodeResult(self.nodes[0], self.node_computed_values[0], self.related_computed_values)
 
     def one_or_none(self) -> NodeResult[ModelT] | None:
         """Returns the single result node, or None if there isn't exactly one result.
@@ -192,6 +202,11 @@ class QueryExecutor(Generic[DeclarativeT]):
         return self.plan.column_map
 
     @property
+    def identity_columns(self) -> Mapping[QueryNodeType, tuple[ColumnElement[Any], ...]]:
+        """Mapping from each related level owning computed values to its primary-key columns."""
+        return self.plan.identity_columns
+
+    @property
     def root_aggregation_functions(self) -> list[Label[Any]]:
         """Root aggregation window-function labels carried by the plan."""
         return list(self.plan.root_aggregation_functions)
@@ -217,27 +232,41 @@ class QueryExecutor(Generic[DeclarativeT]):
     ) -> QueryResult[DeclarativeT]:
         """Converts a SQLAlchemy result to a QueryResult object.
 
+        A row carries the computed values of one combination of related elements, so the same
+        root spans as many rows as that combination varies. Rows are folded onto their root and
+        their computed values indexed by the identity of the element each level contributes.
+
         Args:
             result: The SQLAlchemy result to convert.
             fetch: Whether to fetch one or all results.
 
         Returns:
             A QueryResult object containing the nodes and computed values.
+
+        Raises:
+            MultipleResultsFound: If more than one root is returned while fetching one.
         """
         nodes: list[DeclarativeT] = []
         computed: list[dict[QueryNodeType, Any]] = []
+        related: dict[RelatedKey, dict[QueryNodeType, Any]] = {}
+        seen: set[int] = set()
         if self.apply_unique:
             result = result.unique()
-        if fetch == "all":
-            rows = result.all()
-        else:
-            item = result.one_or_none()
-            rows = [] if item is None else [item]
-        for row in rows:
+        for row in result.all():
             obj = row[0]
             mapping = row._mapping  # noqa: SLF001  # Row exposes computed values only via _mapping keyed by Label.
+            row_computed = {node: mapping[label] for node, label in self.column_map.items() if label in mapping}
+            for node, columns in self.identity_columns.items():
+                related[node, tuple(mapping[column] for column in columns)] = row_computed
+            if id(obj) in seen:
+                continue
+            seen.add(id(obj))
             nodes.append(obj)
-            computed.append({node: mapping[label] for node, label in self.column_map.items() if label in mapping})
+            computed.append(row_computed)
+
+        if fetch == "one_or_none" and len(nodes) > 1:
+            msg = "Multiple rows were found when one or none was required"
+            raise MultipleResultsFound(msg)
 
         root_agg_label_set = set(self.root_aggregation_functions)
         root_agg_nodes = {node for node, label in self.column_map.items() if label in root_agg_label_set}
@@ -248,6 +277,7 @@ class QueryExecutor(Generic[DeclarativeT]):
             nodes=nodes,
             node_computed_values=computed,
             query_computed_values=defaultdict(lambda: None) | query_computed_values,
+            related_computed_values=related,
         )
 
     def statement(self) -> Select[tuple[DeclarativeT]] | StatementLambdaElement:

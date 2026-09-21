@@ -421,3 +421,60 @@ async def test_count_aggregation_filter_with_distinct(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_aggregate_filtered_and_selected_on_paginated_field(any_query: AnyQueryExecutor) -> None:
+    """Test that filtering on an aggregate and selecting one leaves the parents uncrossed.
+
+    Regression test for #224: the aggregate join was emitted without correlation to the
+    pagination subquery, so every matching parent came back once per matching parent,
+    carrying the others' counts.
+    """
+    query = """
+        {
+            colorsFilterablePaginated(
+                filter: { fruitsAggregate: { sum: { arguments: [sweetness] predicate: { gt: 5 } } } }
+                orderBy: { name: ASC }
+            ) {
+                name
+                fruitsAggregate { count }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["colorsFilterablePaginated"] == [
+        {"name": "Orange", "fruitsAggregate": {"count": 2}},
+        {"name": "Pink", "fruitsAggregate": {"count": 2}},
+        {"name": "Red", "fruitsAggregate": {"count": 2}},
+        {"name": "Yellow", "fruitsAggregate": {"count": 3}},
+    ]
+
+
+async def test_aggregate_filtered_and_selected_paginates_matching_parents(
+    any_query: AnyQueryExecutor,
+) -> None:
+    """Test that limit and offset index the parents the aggregate filter kept."""
+    query = """
+        {
+            colorsFilterablePaginated(
+                filter: { fruitsAggregate: { sum: { arguments: [sweetness] predicate: { gt: 5 } } } }
+                orderBy: { name: ASC }
+                offset: 1
+                limit: 2
+            ) {
+                name
+                fruitsAggregate { count }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["colorsFilterablePaginated"] == [
+        {"name": "Pink", "fruitsAggregate": {"count": 2}},
+        {"name": "Red", "fruitsAggregate": {"count": 2}},
+    ]

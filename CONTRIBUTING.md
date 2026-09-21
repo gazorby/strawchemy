@@ -20,6 +20,17 @@ This project uses [mise](https://mise.jdx.dev/) to manage tasks used for buildin
 2. Run `mise run install` to install all dependencies and pre-commit hooks
 3. See [tasks](https://github.com/gazorby/strawchemy/blob/main/tasks.md) documentation for more details
 
+## 🧪 Running the tests
+
+Integration tests run against database servers started as Docker containers. The containers are left running
+between sessions, so a run never tears down the databases of another one. `mise run test:remove-containers`
+removes them, which is also how you pick up a change of image.
+
+Set `STRAWCHEMY_TEST_DB_NAMESPACE` (letters, digits and underscores) to give a checkout its own databases inside
+those shared containers. This is what makes it safe to run the integration suite from two clones or git worktrees
+at the same time — put it in the `.env` file of each one. Left unset, the databases keep the names
+`pytest-databases` picks, so a single checkout and CI need nothing.
+
 ## 🤝 Code contributions
 
 1. [Fork](https://github.com/gazorby/strawchemy/fork) the [strawchemy repository](https://github.com/gazorby/strawchemy)

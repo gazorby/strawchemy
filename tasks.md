@@ -327,6 +327,12 @@ Run tests and report coverage on changed lines only (vs a branch)
 
   **Default:** `100`
 
+## `test:remove-containers`
+
+- **Usage:** `test:remove-containers`
+
+Remove the database containers integration tests keep running between sessions
+
 ## `test:unit`
 
 Run unit tests

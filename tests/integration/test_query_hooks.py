@@ -67,12 +67,16 @@ async def test_load_relationships_no_columns(
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
 ) -> None:
     result = await maybe_async(any_query(f"{{ {fruits_query} {{ prettyFarms }} }}"))
 
     assert not result.errors
     assert result.data
-    assert result.data[fruits_query] == [{"prettyFarms": f"Farms are: {fruit['name']} farm"} for fruit in raw_fruits]
+    farm_names = [
+        ", ".join(farm["name"] for farm in raw_farms if farm["fruit_id"] == fruit["id"]) for fruit in raw_fruits
+    ]
+    assert result.data[fruits_query] == [{"prettyFarms": f"Farms are: {name}"} for name in farm_names]
 
     query_tracker.assert_statements(2, "select", sql_snapshot)
 
@@ -86,17 +90,27 @@ async def test_load_relationships_nested(
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
 ) -> None:
     result = await maybe_async(any_query(f"{{ {query} {{ farms }} }}"))
 
     assert not result.errors
     assert result.data
 
+    # The query asks for no ordering, so the farms of a fruit come back in a dialect-dependent order.
     farm_names = [
-        ", ".join(f"{fruit['name']} farm" for fruit in raw_fruits if fruit["color_id"] == color["id"])
+        sorted(
+            farm["name"]
+            for fruit in raw_fruits
+            if fruit["color_id"] == color["id"]
+            for farm in raw_farms
+            if farm["fruit_id"] == fruit["id"]
+        )
         for color in raw_colors
     ]
-    assert result.data[query] == [{"farms": f"Farms are: {name}"} for name in farm_names]
+    assert [
+        sorted(entry["farms"].removeprefix("Farms are: ").split(", ")) for entry in result.data[query]
+    ] == farm_names
 
     query_tracker.assert_statements(2, "select", sql_snapshot)
 

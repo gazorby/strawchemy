@@ -12,25 +12,54 @@ Classes:
 from __future__ import annotations
 
 import dataclasses
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from sqlalchemy import and_, func, inspect, null, select, true
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import RelationshipProperty, aliased
+from sqlalchemy.orm import join as orm_join
 
 from strawchemy.transpiler._query import Join
 
 if TYPE_CHECKING:
-    from sqlalchemy import Label
+    from sqlalchemy import Label, Select
     from sqlalchemy.orm import QueryableAttribute
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement
+    from sqlalchemy.sql.selectable import Join as SQLJoin
 
     from strawchemy.config.databases import DatabaseFeatures
     from strawchemy.transpiler._aliasing import AliasContext
     from strawchemy.transpiler._plan import QueryPlan
     from strawchemy.typing import QueryNodeType
 
-__all__ = ("CteJoinStrategy", "JoinStrategy", "LateralJoinStrategy", "select_join_strategy")
+__all__ = ("CteJoinStrategy", "JoinStrategy", "LateralJoinStrategy", "correlate_relation", "select_join_strategy")
+
+
+def correlate_relation(
+    statement: Select[Any], relation: QueryableAttribute[Any], target: AliasedClass[Any]
+) -> Select[Any]:
+    """Constrains a to-be-lateral statement to the rows related to the enclosing query.
+
+    A secondary table left in the WHERE clause enters the lateral's FROM list unrelated to
+    the target, which SQLAlchemy's linter reports as a cartesian product. Splitting the ORM
+    join built for the relationship keeps the ``secondaryjoin`` structural, and both clauses
+    then reference the same secondary alias.
+
+    Args:
+        statement: The statement to constrain, before ``lateral()``.
+        relation: The relationship attribute, typed onto ``target``.
+        target: The aliased class the relationship targets.
+
+    Returns:
+        The statement constrained to the related rows.
+    """
+    relationship = relation.property
+    if not isinstance(relationship, RelationshipProperty) or relationship.secondary is None:
+        return statement.where(relation)
+    relation_join = orm_join(relation.parent, target, relation)
+    primary_join = cast("SQLJoin", relation_join.left)
+    correlation = cast("ColumnElement[bool]", primary_join.onclause)
+    return statement.select_from(primary_join.right).join(target, relation_join.onclause).where(correlation)
 
 
 class JoinStrategy(Protocol):
@@ -87,7 +116,7 @@ class LateralJoinStrategy:
         node_inspect = scope.inspect(node)
         root_relation = aliased_attribute.of_type(target_insp)
         base_statement = select(target_insp).with_only_columns(*node_inspect.selection(target_alias))
-        statement = plan.apply_clauses(base_statement).where(root_relation).lateral()
+        statement = correlate_relation(plan.apply_clauses(base_statement), root_relation, target_alias).lateral()
         lateral_alias = aliased(target_insp.mapper, statement, flat=True)
         scope.set_relation_alias(node, "target", lateral_alias)
         return Join(statement, node=node, is_outer=is_outer, onclause=true())

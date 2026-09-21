@@ -3,14 +3,19 @@
 from __future__ import annotations
 
 import dataclasses
+import os
 import platform
+import re
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
+from time import sleep
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias, cast
 
+import psycopg
 import pytest
 import sqlparse
+from psycopg.sql import SQL, Identifier
 from pytest_databases.docker.postgres import _provide_postgres_service
 from pytest_lazy_fixtures import lf
 from sqlalchemy import (
@@ -95,6 +100,10 @@ __all__ = (
     "session",
 )
 
+DATABASE_NAMESPACE_ENV_VAR = "STRAWCHEMY_TEST_DB_NAMESPACE"
+
+_DATABASE_NAMESPACE_PATTERN = re.compile(r"[A-Za-z0-9_]+")
+
 FilterableStatement: TypeAlias = Literal["insert", "update", "select", "delete"]
 scalar_overrides: dict[object, Any] = {
     dict[str, Any]: DEFAULT_SCALAR_REGISTRY[JSON],
@@ -170,10 +179,15 @@ def raw_topics(raw_groups: RawRecordData) -> RawRecordData:
 
 @pytest.fixture
 def raw_farms(raw_fruits: RawRecordData) -> RawRecordData:
-    return [
-        {"id": i, "name": f"{fruit['name']} farm", "fruit_id": fruit["id"]}
-        for i, fruit in enumerate(raw_fruits, start=1)
-    ]
+    # Apple and Cherry share a color, so holding a different number of farms each makes an
+    # aggregate over farms differ between two siblings of the same fruit collection.
+    farm_counts = {1: 3, 2: 2}
+    farms: RawRecordData = []
+    for fruit in raw_fruits:
+        for index in range(1, farm_counts.get(fruit["id"], 1) + 1):
+            suffix = "" if index == 1 else f" {index}"
+            farms.append({"id": len(farms) + 1, "name": f"{fruit['name']} farm{suffix}", "fruit_id": fruit["id"]})
+    return farms
 
 
 @pytest.fixture
@@ -416,6 +430,47 @@ def raw_geo(dialect: SupportedDialect, raw_geo_flipped: RawRecordData) -> RawRec
     return GEO_DATA
 
 
+def _namespaced_postgres_service(service: PostgresService, namespace: str) -> PostgresService:
+    if not namespace:
+        return service
+    database = f"{service.database}_{namespace}"
+    with psycopg.connect(
+        dbname="postgres",
+        user=service.user,
+        password=service.password,
+        host=service.host,
+        port=service.port,
+        autocommit=True,
+    ) as connection:
+        if connection.execute("SELECT 1 FROM pg_database WHERE datname = %s", (database,)).fetchone() is None:
+            connection.execute(SQL("CREATE DATABASE {}").format(Identifier(database)))
+    return dataclasses.replace(service, database=database)
+
+
+def _namespaced_mysql_service(service: MySQLService, namespace: str) -> MySQLService:
+    if not namespace:
+        return service
+    database = f"{service.db}_{namespace}"
+    command = [
+        "mysql",
+        f"--user={service.user}",
+        f"--password={service.password}",
+        "-e",
+        f"CREATE DATABASE IF NOT EXISTS {database}",
+    ]
+    # mysqld restarts once it is done initialising, so an exec can land while the server is down
+    # even though the service fixture has just reached it.
+    last_output: object = b""
+    for attempt in range(15):
+        result = service.container.exec_run(command)
+        if result.exit_code == 0:
+            return dataclasses.replace(service, db=database)
+        last_output = result.output
+        sleep(1 + attempt * 0.5)
+    msg = f"Could not create MySQL database {database!r}: {last_output!r}"
+    raise RuntimeError(msg)
+
+
 @pytest.fixture(autouse=False, scope="session")
 def postgis_image() -> str:
     repo = "imresamu/postgis-arm64" if "arm" in platform.processor().lower() else "postgis/postgis"
@@ -443,9 +498,38 @@ def postgis_service(
         yield service
 
 
+@pytest.fixture(scope="session")
+def database_namespace() -> str:
+    """Suffix isolating this checkout's databases from those of any run sharing the containers.
+
+    Raises:
+        pytest.UsageError: If the namespace can't be used in a database name.
+    """
+    namespace = os.environ.get(DATABASE_NAMESPACE_ENV_VAR, "")
+    if namespace and not _DATABASE_NAMESPACE_PATTERN.fullmatch(namespace):
+        msg = f"{DATABASE_NAMESPACE_ENV_VAR} must only contain letters, digits and underscores, got {namespace!r}"
+        raise pytest.UsageError(msg)
+    return namespace
+
+
+@pytest.fixture(scope="session")
+def namespaced_postgres_service(postgres_service: PostgresService, database_namespace: str) -> PostgresService:
+    return _namespaced_postgres_service(postgres_service, database_namespace)
+
+
+@pytest.fixture(scope="session")
+def namespaced_postgis_service(postgis_service: PostgresService, database_namespace: str) -> PostgresService:
+    return _namespaced_postgres_service(postgis_service, database_namespace)
+
+
+@pytest.fixture(scope="session")
+def mysql_service(mysql_84_service: MySQLService, database_namespace: str) -> MySQLService:
+    return _namespaced_mysql_service(mysql_84_service, database_namespace)
+
+
 @pytest.fixture
-def postgres_database_service(postgres_service: PostgresService) -> PostgresService:
-    return postgres_service
+def postgres_database_service(namespaced_postgres_service: PostgresService) -> PostgresService:
+    return namespaced_postgres_service
 
 
 # Sync engines
