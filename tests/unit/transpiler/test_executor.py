@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
+from unittest.mock import MagicMock
 
-from sqlalchemy import Select
+import pytest
+from sqlalchemy import Result, Select
+from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm import aliased, load_only
 
 from strawchemy.transpiler._executor import SyncQueryExecutor
@@ -21,6 +24,24 @@ def _plan() -> QueryPlan:
     return QueryPlan(root=fruit, filter_semijoin=None, load_options=(load_only(fruit.name),))
 
 
+def _result(*models: object) -> MagicMock:
+    """Builds a mock ``Result`` yielding one computed-value-free row per model.
+
+    Returns:
+        A ``MagicMock`` standing in for a SQLAlchemy ``Result``.
+    """
+    rows: list[MagicMock] = []
+    for model in models:
+        row = MagicMock()
+        row.__getitem__.return_value = model
+        row._mapping = {}  # noqa: SLF001  # Row exposes computed values only via _mapping.
+        rows.append(row)
+    result = MagicMock(spec=Result)
+    result.all.return_value = rows
+    result.unique.return_value = result
+    return result
+
+
 def test_executor_emits_plan_in_statement() -> None:
     """statement() emits the held plan into a Select."""
     executor = SyncQueryExecutor(plan=_plan(), id_field_definitions=[])
@@ -33,3 +54,21 @@ def test_executor_add_where_appends_predicate() -> None:
     executor.add_where(executor.plan.root.name == "x")
     compiled = str(executor.statement())
     assert "WHERE" in compiled
+
+
+def test_executor_rejects_several_roots_when_fetching_one() -> None:
+    """get_one_or_none raises when the returned rows fold onto more than one root."""
+    session = MagicMock()
+    session.execute.return_value = _result(Fruit(), Fruit())
+    executor = SyncQueryExecutor(plan=_plan(), id_field_definitions=[])
+    with pytest.raises(MultipleResultsFound):
+        executor.get_one_or_none(session)
+
+
+def test_executor_folds_rows_onto_their_root() -> None:
+    """Rows repeating the same root collapse onto a single node."""
+    session = MagicMock()
+    fruit = Fruit()
+    session.execute.return_value = _result(fruit, fruit)
+    executor = SyncQueryExecutor(plan=_plan(), id_field_definitions=[])
+    assert executor.list(session).nodes == [fruit]

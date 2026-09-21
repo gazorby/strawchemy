@@ -104,6 +104,41 @@ async def test_count_aggregation_many_to_many_join_predicates(
     assert actual == {user["id"]: joined[user["id"]] for user in raw_users}
 
 
+async def test_nested_aggregation_correlates_to_its_own_element(
+    any_query: AnyQueryExecutor,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
+) -> None:
+    """Test that an aggregate nested under a to-many relation reports the value of its own element."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colors {
+                    id
+                    fruits {
+                        id
+                        farmsAggregate { max { id } }
+                    }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert [color["id"] for color in result.data["colors"]] == [color["id"] for color in raw_colors]
+    actual = {
+        fruit["id"]: fruit["farmsAggregate"]["max"]["id"]
+        for color in result.data["colors"]
+        for fruit in color["fruits"]
+    }
+    assert actual == {
+        fruit["id"]: max(farm["id"] for farm in raw_farms if farm["fruit_id"] == fruit["id"]) for fruit in raw_fruits
+    }
+
+
 async def test_count_aggregation_many_to_many_nested(
     any_query: AnyQueryExecutor, raw_user_departments: RawRecordData
 ) -> None:
@@ -126,19 +161,14 @@ async def test_count_aggregation_many_to_many_nested(
     assert not result.errors
     assert result.data
     users_per_department = Counter(link["department_id"] for link in raw_user_departments)
-    departments_per_user = Counter(link["user_id"] for link in raw_user_departments)
-    # A nested aggregate rides on the flat result row, so its value can only be attributed
-    # unambiguously to a department when the user holds exactly one.
     actual = {
-        department["id"]: department["usersAggregate"]["count"]
+        (user["id"], department["id"]): department["usersAggregate"]["count"]
         for user in result.data["users"]
-        if departments_per_user[user["id"]] == 1
         for department in user["departments"]
     }
     assert actual == {
-        link["department_id"]: users_per_department[link["department_id"]]
+        (link["user_id"], link["department_id"]): users_per_department[link["department_id"]]
         for link in raw_user_departments
-        if departments_per_user[link["user_id"]] == 1
     }
 
 

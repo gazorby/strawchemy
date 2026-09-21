@@ -170,10 +170,15 @@ def raw_topics(raw_groups: RawRecordData) -> RawRecordData:
 
 @pytest.fixture
 def raw_farms(raw_fruits: RawRecordData) -> RawRecordData:
-    return [
-        {"id": i, "name": f"{fruit['name']} farm", "fruit_id": fruit["id"]}
-        for i, fruit in enumerate(raw_fruits, start=1)
-    ]
+    # Apple and Cherry share a color, so holding a different number of farms each makes an
+    # aggregate over farms differ between two siblings of the same fruit collection.
+    farm_counts = {1: 3, 2: 2}
+    farms: RawRecordData = []
+    for fruit in raw_fruits:
+        for index in range(1, farm_counts.get(fruit["id"], 1) + 1):
+            suffix = "" if index == 1 else f" {index}"
+            farms.append({"id": len(farms) + 1, "name": f"{fruit['name']} farm{suffix}", "fruit_id": fruit["id"]})
+    return farms
 
 
 @pytest.fixture
