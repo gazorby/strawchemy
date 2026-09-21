@@ -44,7 +44,7 @@ from strawchemy.transpiler._query import (
     QueryGraph,
     Where,
 )
-from strawchemy.transpiler._strategies import select_join_strategy
+from strawchemy.transpiler._strategies import correlate_relation, select_join_strategy
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
@@ -282,7 +282,7 @@ class AggregationPlan:
             An AggregationJoin backed by a lateral subquery.
         """
         root_relation = context.aliases.aliased_attribute(node).of_type(inspect(alias))
-        lateral_statement = select(*function_columns).where(root_relation).lateral()
+        lateral_statement = correlate_relation(select(*function_columns), root_relation, alias).lateral()
         return AggregationJoin(target=lateral_statement, onclause=true(), node=node)
 
     @staticmethod
