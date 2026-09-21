@@ -329,7 +329,9 @@ class AggregationPlan:
             .cte()
         )
         cte_alias = aliased(alias, cte_statement)
-        return AggregationJoin(target=cte_alias, onclause=aliases.aliased_attribute(node).of_type(cte_alias), node=node)
+        return AggregationJoin(
+            target=cte_alias, onclause=aliases.aliased_attribute(node).of_type(cte_alias), node=node, is_outer=True
+        )
 
     @staticmethod
     def _secondary_cte_join(

@@ -107,6 +107,7 @@ packages = ["src/strawchemy"]
 [tool.pytest.ini_options]
 # Serializes the read-modify-write of merged amber files across xdist workers (#245)
 addopts = ["--snapshot-file-lock"]
+filterwarnings = ["error::sqlalchemy.exc.SAWarning"]
 markers = [
   "snapshot: snapshot-based tests using syrupy",
   "inline_snapshot: snapshot-based tests using inline-snapshots",
@@ -121,7 +122,6 @@ markers = [
   "extras: Tests requiring extras dependencies",
 ]
 testpaths = ["tests"]
-filterwarnings = ["error::sqlalchemy.exc.SAWarning"]
 xfail_strict = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"

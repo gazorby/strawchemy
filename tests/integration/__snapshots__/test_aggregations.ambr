@@ -8,9 +8,9 @@
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id
          ) SELECT color.id,
-         anon_1.count_1
+         coalesce(anon_1.count_1, ?) AS coalesce_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -25,9 +25,9 @@
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id
          ) SELECT color.id,
-         anon_1.count_1
+         coalesce(anon_1.count_1, %s) AS coalesce_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -87,9 +87,9 @@
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id
          ) SELECT color.id,
-         anon_1.count_1
+         coalesce(anon_1.count_1, ?) AS coalesce_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -106,7 +106,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -123,7 +123,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -170,7 +170,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -187,7 +187,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -234,7 +234,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -251,7 +251,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -298,7 +298,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -315,7 +315,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -362,7 +362,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -379,7 +379,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -441,7 +441,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -473,7 +473,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -505,7 +505,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -537,7 +537,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -569,7 +569,7 @@
          ) SELECT color.id,
          anon_1.max_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -586,7 +586,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -603,7 +603,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -650,7 +650,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -667,7 +667,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -714,7 +714,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -731,7 +731,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -778,7 +778,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -795,7 +795,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -842,7 +842,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -859,7 +859,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -921,7 +921,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -953,7 +953,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -985,7 +985,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -1017,7 +1017,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -1049,7 +1049,7 @@
          ) SELECT color.id,
          anon_1.min_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -4321,7 +4321,7 @@
          ) SELECT color.id,
          anon_1.avg_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -4338,7 +4338,7 @@
          ) SELECT color.id,
          anon_1.avg_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -4385,7 +4385,7 @@
          ) SELECT color.id,
          anon_1.avg_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -4402,7 +4402,7 @@
          ) SELECT color.id,
          anon_1.avg_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -4464,7 +4464,7 @@
          ) SELECT color.id,
          anon_1.avg_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -4496,7 +4496,7 @@
          ) SELECT color.id,
          anon_1.avg_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -5797,7 +5797,7 @@
          ) SELECT color.id,
          anon_1.sum_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -5814,7 +5814,7 @@
          ) SELECT color.id,
          anon_1.sum_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -5861,7 +5861,7 @@
          ) SELECT color.id,
          anon_1.sum_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -5878,7 +5878,7 @@
          ) SELECT color.id,
          anon_1.sum_1
     FROM color AS color
-   INNER JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = %s
    ORDER BY color.id ASC
@@ -5940,7 +5940,7 @@
          ) SELECT color.id,
          anon_1.sum_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
@@ -5972,7 +5972,7 @@
          ) SELECT color.id,
          anon_1.sum_1
     FROM color AS color
-    JOIN anon_1
+    LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
    WHERE color.id = ?
    ORDER BY color.id ASC
