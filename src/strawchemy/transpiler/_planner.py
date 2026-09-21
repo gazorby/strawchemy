@@ -179,17 +179,26 @@ class AggregationPlan:
     """Aggregation node -> ordered tuple of its function-node keys, in ``spec.functions`` key order."""
 
     @classmethod
-    def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any]) -> AggregationPlan:
+    def plan(
+        cls,
+        query_graph: QueryGraph[Any],
+        context: PlanContext[Any],
+        available_columns: Mapping[QueryNodeType, ColumnElement[Any]] | None = None,
+    ) -> AggregationPlan:
         """Builds aggregation joins and function-column references without mutating scope.
 
         Args:
             query_graph: The graph representation of the query being planned.
             context: The shared planning context (``aliases``, ``db_features`` read here).
+            available_columns: Function columns an earlier stage already materialized; they are
+                referenced as given and left out of the emitted joins, which are skipped entirely
+                for an aggregation node whose functions are all covered.
 
         Returns:
             An ``AggregationPlan`` with columns, joins, aliases, and node_functions.
         """
         specs = cls._accumulate_specs(query_graph, context)
+        available = available_columns or {}
         columns: dict[QueryNodeType, ColumnElement[Any]] = {}
         aliases: dict[QueryNodeType, AliasedClass[Any]] = {}
         node_functions: dict[QueryNodeType, tuple[QueryNodeType, ...]] = {}
@@ -198,19 +207,26 @@ class AggregationPlan:
         for aggregation_node, spec in specs.items():
             if not spec.functions:
                 continue
-            if context.db_features.supports_lateral:
-                join = cls._lateral_join(aggregation_node, spec.functions.values(), spec.alias, context)
-            else:
-                join = cls._cte_join(
-                    node=aggregation_node, alias=spec.alias, statement=select(*spec.functions.values()), context=context
-                )
-            for function_node, inner_label in spec.functions.items():
-                column = require_corresponding_column(join.selectable, inner_label)
-                is_count = isinstance(inner_label.element, sqla_count)
-                columns[function_node] = func.coalesce(column, 0) if join.is_outer and is_count else column
+            pending: dict[QueryNodeType, Label[Any]] = {}
+            for function_node, label in spec.functions.items():
+                if (reused := available.get(function_node)) is not None:
+                    columns[function_node] = reused
+                else:
+                    pending[function_node] = label
+            if pending:
+                if context.db_features.supports_lateral:
+                    join = cls._lateral_join(aggregation_node, pending.values(), spec.alias, context)
+                else:
+                    join = cls._cte_join(
+                        node=aggregation_node, alias=spec.alias, statement=select(*pending.values()), context=context
+                    )
+                for function_node, inner_label in pending.items():
+                    column = require_corresponding_column(join.selectable, inner_label)
+                    is_count = isinstance(inner_label.element, sqla_count)
+                    columns[function_node] = func.coalesce(column, 0) if join.is_outer and is_count else column
+                joins.append(join)
             aliases[aggregation_node] = spec.alias
             node_functions[aggregation_node] = tuple(spec.functions.keys())
-            joins.append(join)
 
         return cls(columns=columns, joins=tuple(joins), aliases=aliases, node_functions=node_functions)
 
@@ -777,7 +793,6 @@ class OrderPlan:
         columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = []
         joins: list[Join] = []
         order_by_function_nodes: set[QueryNodeType] = set()
-        seen_aggregation_nodes: set[QueryNodeType] = set()
         emitted_agg_joins: set[QueryNodeType] = set()
 
         for node in query_graph.order_by_nodes:
@@ -785,7 +800,6 @@ class OrderPlan:
                 node,
                 context,
                 agg_plan=agg_plan,
-                seen_aggregation_nodes=seen_aggregation_nodes,
                 emitted_agg_joins=emitted_agg_joins,
                 order_by_function_nodes=order_by_function_nodes,
                 columns=columns,
@@ -847,7 +861,6 @@ class OrderPlan:
         context: PlanContext[Any],
         *,
         agg_plan: AggregationPlan,
-        seen_aggregation_nodes: set[QueryNodeType],
         emitted_agg_joins: set[QueryNodeType],
         order_by_function_nodes: set[QueryNodeType],
         columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]],
@@ -861,33 +874,22 @@ class OrderPlan:
             node: The order-by node to process.
             context: The shared planning context (``aliases`` read here).
             agg_plan: The pre-built aggregation plan.
-            seen_aggregation_nodes: Mutable set of already-seen aggregation parents.
             emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
             order_by_function_nodes: Mutable set accumulating function nodes in ORDER BY.
             columns: Mutable list accumulating ``(column, order)`` pairs.
             joins: Mutable list accumulating new relation/aggregation joins.
         """
-        if (
-            node.value.is_function_arg
-            and node.find_parent(lambda n: n.value.is_aggregate, strict=True) in seen_aggregation_nodes
-        ):
-            return
-        if node.value.is_function:
-            order_by_function_nodes.add(node)
         if node.metadata.data.order_by is None:
             msg = "Missing order by value"
             raise TranspilingError(msg)
         if node.value.is_function_arg or node.value.is_function:
+            order_by_function_nodes.add(node)
             first_aggregate_parent = node.find_parent(lambda n: n.value.is_aggregate, strict=True)
-            aggregation_join: Join | None = None
             if first_aggregate_parent not in emitted_agg_joins:
                 emitted_agg_joins.add(first_aggregate_parent)
-                aggregation_join = agg_plan.join_for(first_aggregate_parent)
-            agg_columns = agg_plan.columns_for(first_aggregate_parent)
-            columns.extend([(col, node.metadata.data.order_by) for col in agg_columns])
-            seen_aggregation_nodes.add(first_aggregate_parent)
-            if aggregation_join is not None:
-                joins.append(aggregation_join)
+                if (aggregation_join := agg_plan.join_for(first_aggregate_parent)) is not None:
+                    joins.append(aggregation_join)
+            columns.append((agg_plan.columns[node], node.metadata.data.order_by))
         else:
             columns.append((context.aliases.aliased_attribute(node), node.metadata.data.order_by))
 
@@ -1561,24 +1563,11 @@ def _plan_subquery(
     # Rebuild aggregation joins against the materialized subquery. The inner plan was
     # built while the scope pointed at ``inner_alias``; reusing a selection-only join
     # here would pull that alias back into the outer FROM alongside the subquery.
-    outer_base_agg_plan = AggregationPlan.plan(query_graph, context)
     reprojected_agg_columns: dict[QueryNodeType, ColumnElement[Any]] = {
         fn: require_corresponding_column(subquery, cast("KeyedColumnElement[Any]", selected_function_labels[fn]))
         for fn in referenced_functions
     }
-    inner_emitted_agg_nodes: set[QueryNodeType] = set()
-    for join in inner_joins:
-        if not isinstance(join, AggregationJoin):
-            continue
-        node_functions = outer_base_agg_plan.node_functions.get(join.node, ())
-        if node_functions and all(function in referenced_functions for function in node_functions):
-            inner_emitted_agg_nodes.add(join.node)
-    outer_agg_plan = AggregationPlan(
-        columns={**outer_base_agg_plan.columns, **reprojected_agg_columns},
-        joins=tuple(join for join in outer_base_agg_plan.joins if join.node not in inner_emitted_agg_nodes),
-        aliases=outer_base_agg_plan.aliases,
-        node_functions=outer_base_agg_plan.node_functions,
-    )
+    outer_agg_plan = AggregationPlan.plan(query_graph, context, reprojected_agg_columns)
 
     outer_joins = list(_plan_relation_joins(query_graph, context, is_outer=True))
     outer_order = OrderPlan.plan(query_graph, context, outer_agg_plan, outer_joins)

@@ -116,8 +116,7 @@ AGGREGATION_SQL = snapshot(
             "  LEFT OUTER JOIN fruit AS fruit_1",
             "    ON color.id = fruit_1.color_id",
             " WHERE anon_1.count_1 > %(param_1)s",
-            " ORDER BY anon_1.count_1 ASC,",
-            "          anon_1.avg_1 ASC,",
+            " ORDER BY anon_1.avg_1 ASC,",
             "          fruit_1.id ASC",
         ],
         "filter-order-by-sqlite": [
@@ -136,8 +135,7 @@ AGGREGATION_SQL = snapshot(
             "  LEFT OUTER JOIN fruit AS fruit_1",
             "    ON color.id = fruit_1.color_id",
             " WHERE anon_1.count_1 > ?",
-            " ORDER BY anon_1.count_1 ASC,",
-            "          anon_1.avg_1 ASC,",
+            " ORDER BY anon_1.avg_1 ASC,",
             "          fruit_1.id ASC",
         ],
         "filter-order-by-mysql": [
@@ -156,8 +154,7 @@ AGGREGATION_SQL = snapshot(
             "  LEFT OUTER JOIN fruit AS fruit_1",
             "    ON color.id = fruit_1.color_id",
             " WHERE anon_1.count_1 > %s",
-            " ORDER BY anon_1.count_1 ASC,",
-            "          anon_1.avg_1 ASC,",
+            " ORDER BY anon_1.avg_1 ASC,",
             "          fruit_1.id ASC",
         ],
         "filter-order-by-same-aggregation-postgresql": [
@@ -371,6 +368,52 @@ AGGREGATION_SQL = snapshot(
             "          anon_1.sum_1 ASC,",
             "          fruit_1.id ASC",
         ],
+        "order-by-and-selected-functions-postgresql": [
+            "SELECT color.id,",
+            "       anon_1.sum_1,",
+            "       anon_1.count_1",
+            "  FROM color AS color",
+            "  JOIN LATERAL (",
+            "        SELECT sum(fruit_1.sweetness) AS sum_1,",
+            "               count(*) AS count_1",
+            "          FROM fruit AS fruit_1",
+            "         WHERE color.id = fruit_1.color_id",
+            "       ) AS anon_1",
+            "    ON TRUE",
+            " ORDER BY anon_1.sum_1 ASC",
+        ],
+        "order-by-and-selected-functions-sqlite": [
+            "WITH anon_1 AS (",
+            "        SELECT sum(fruit_1.sweetness) AS sum_1,",
+            "               count(*) AS count_1,",
+            "               fruit_1.color_id AS color_id",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.color_id",
+            "       ) SELECT color.id,",
+            "       anon_1.sum_1,",
+            "       anon_1.count_1",
+            "  FROM color AS color",
+            "  JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+            " ORDER BY anon_1.sum_1 ASC",
+        ],
+        "order-by-and-selected-functions-mysql": [
+            "WITH anon_1 AS (",
+            "        SELECT sum(fruit_1.sweetness) AS sum_1,",
+            "               count(*) AS count_1,",
+            "               fruit_1.color_id AS color_id",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.color_id",
+            "       ) SELECT color.id,",
+            "       anon_1.sum_1,",
+            "       anon_1.count_1",
+            "  FROM color AS color",
+            " INNER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+            " ORDER BY anon_1.sum_1 ASC",
+        ],
     }
 )
 
@@ -449,20 +492,17 @@ PAGINATION_JOIN_SQL = snapshot(
             "                 WHERE color.id = fruit_1.color_id",
             "               ) AS anon_2",
             "            ON TRUE",
-            "         ORDER BY anon_2.sum_1 ASC,",
-            "                  anon_2.count_2 ASC",
+            "         ORDER BY anon_2.sum_1 ASC",
             "         LIMIT %(param_1)s",
             "        OFFSET %(param_2)s",
             "       ) AS color",
             "  JOIN LATERAL (",
-            "        SELECT sum(fruit_2.sweetness) AS sum_2,",
-            "               count(*) AS count_1",
+            "        SELECT count(*) AS count_1",
             "          FROM fruit AS fruit_2",
             "         WHERE color.id = fruit_2.color_id",
             "       ) AS anon_1",
             "    ON TRUE",
-            " ORDER BY color.sum_1 ASC,",
-            "          anon_1.count_1 ASC",
+            " ORDER BY color.sum_1 ASC",
         ],
         "some-functions-hoisted-sqlite": [
             "WITH anon_2 AS (",
@@ -474,8 +514,7 @@ PAGINATION_JOIN_SQL = snapshot(
             "         GROUP BY fruit_1.color_id",
             "       ),",
             "       anon_1 AS (",
-            "        SELECT sum(fruit_2.sweetness) AS sum_2,",
-            "               count(*) AS count_1,",
+            "        SELECT count(*) AS count_1,",
             "               fruit_2.color_id AS color_id",
             "          FROM fruit AS fruit_2",
             "         WHERE fruit_2.color_id IS NOT NULL",
@@ -489,15 +528,13 @@ PAGINATION_JOIN_SQL = snapshot(
             "          FROM color AS color",
             "          JOIN anon_2",
             "            ON color.id = anon_2.color_id",
-            "         ORDER BY anon_2.sum_1 ASC,",
-            "                  anon_2.count_2 ASC",
+            "         ORDER BY anon_2.sum_1 ASC",
             "         LIMIT ?",
             "        OFFSET ?",
             "       ) AS color",
             "  JOIN anon_1",
             "    ON color.id = anon_1.color_id",
-            " ORDER BY color.sum_1 ASC,",
-            "          anon_1.count_1 ASC",
+            " ORDER BY color.sum_1 ASC",
         ],
         "some-functions-hoisted-mysql": [
             "WITH anon_2 AS (",
@@ -509,8 +546,7 @@ PAGINATION_JOIN_SQL = snapshot(
             "         GROUP BY fruit_1.color_id",
             "       ),",
             "       anon_1 AS (",
-            "        SELECT sum(fruit_2.sweetness) AS sum_2,",
-            "               count(*) AS count_1,",
+            "        SELECT count(*) AS count_1,",
             "               fruit_2.color_id AS color_id",
             "          FROM fruit AS fruit_2",
             "         WHERE fruit_2.color_id IS NOT NULL",
@@ -524,15 +560,13 @@ PAGINATION_JOIN_SQL = snapshot(
             "          FROM color AS color",
             "         INNER JOIN anon_2",
             "            ON color.id = anon_2.color_id",
-            "         ORDER BY anon_2.sum_1 ASC,",
-            "                  anon_2.count_2 ASC",
+            "         ORDER BY anon_2.sum_1 ASC",
             "         LIMIT %s,",
             "               %s",
             "       ) AS color",
             " INNER JOIN anon_1",
             "    ON color.id = anon_1.color_id",
-            " ORDER BY color.sum_1 ASC,",
-            "          anon_1.count_1 ASC",
+            " ORDER BY color.sum_1 ASC",
         ],
         "relation-filter-postgresql": [
             "SELECT color.id",
@@ -749,6 +783,17 @@ INNER_JOIN_SQL = snapshot(
             """,
             id="order-by-multiple-aggregations",
         ),
+        pytest.param(
+            """
+            {
+                colors(orderBy: { fruitsAggregate: { sum: { sweetness: ASC } } }) {
+                    id
+                    fruitsAggregate { count }
+                }
+            }
+            """,
+            id="order-by-and-selected-functions",
+        ),
     ],
 )
 def test_aggregation_computation_is_reused(
@@ -756,8 +801,8 @@ def test_aggregation_computation_is_reused(
 ) -> None:
     """A single query is emitted with the aggregation computation reused (no duplicate subquery).
 
-    Filtering and ordering by the same aggregation share one subquery; distinct aggregations
-    each get their own. Verified DB-free by compiling the captured statement per dialect.
+    Filtering, ordering and selecting the same aggregation share one subquery, and ORDER BY
+    carries only the functions ordered by. Verified DB-free by compiling the statement per dialect.
     """
     result = schema.execute_sync(query, context_value=DialectContext(dialect_name))  # ty: ignore[invalid-argument-type]
 
@@ -856,9 +901,9 @@ def test_pagination_subquery_outer_joins(
 ) -> None:
     """Outer joins hang off the pagination subquery, and an aggregation it already computed is not re-joined.
 
-    An aggregation whose functions are all hoisted into the subquery is re-projected from it;
-    one with a function left outside keeps its outer join. A join bound to the discarded inner
-    alias instead of the subquery would surface as a second FROM element.
+    A function hoisted into the subquery is re-projected from it; the outer join remains only
+    for the functions left outside, and disappears when none are. A join bound to the discarded
+    inner alias instead of the subquery would surface as a second FROM element.
     """
     result = schema.execute_sync(query, context_value=DialectContext(dialect_name))  # ty: ignore[invalid-argument-type]
 
