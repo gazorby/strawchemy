@@ -429,8 +429,6 @@ class FilterPlan:
 
     where: tuple[ColumnElement[bool], ...] = ()
     joins: tuple[Join, ...] = ()
-    referenced_functions: frozenset[QueryNodeType] = frozenset()
-    """Function nodes referenced in WHERE predicates (for subquery hoist)."""
 
     @classmethod
     def plan(
@@ -449,27 +447,21 @@ class FilterPlan:
             allow_null: Whether to allow null values in filter conditions.
 
         Returns:
-            A FilterPlan with WHERE predicates, joins, and referenced functions.
+            A FilterPlan with WHERE predicates and joins.
         """
         if not query_graph.query_filter:
             return cls()
 
         emitted_agg_joins: set[QueryNodeType] = set()
-        where_function_nodes: set[QueryNodeType] = set()
 
         where = cls._where(
             query_graph.query_filter,
             context,
             agg_plan=agg_plan,
             emitted_agg_joins=emitted_agg_joins,
-            where_function_nodes=where_function_nodes,
             allow_null=allow_null,
         )
-        return cls(
-            where=tuple(where.expressions),
-            joins=tuple(where.joins),
-            referenced_functions=frozenset(where_function_nodes),
-        )
+        return cls(where=tuple(where.expressions), joins=tuple(where.joins))
 
     @staticmethod
     def _to_expressions(
@@ -548,7 +540,7 @@ class FilterPlan:
         context: PlanContext[Any],
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
-    ) -> tuple[Join | None, list[ColumnElement[bool]], QueryNodeType]:
+    ) -> tuple[Join | None, list[ColumnElement[bool]]]:
         """Looks up an aggregation filter's column and builds its filter expressions.
 
         Args:
@@ -558,10 +550,8 @@ class FilterPlan:
             emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
 
         Returns:
-            A tuple of:
-                - The aggregation join the first time it is needed for this node, ``None`` otherwise.
-                - A list of boolean filter expressions.
-                - The function_node referenced in this WHERE predicate.
+            A tuple of the aggregation join the first time it is needed for this node
+            (``None`` otherwise) and the boolean filter expressions.
         """
         aggregation_node = aggregation.field_node.find_parent(lambda node: node.value.is_aggregate, strict=True)
         alias = agg_plan.aliases[aggregation_node]
@@ -577,7 +567,7 @@ class FilterPlan:
             emitted_agg_joins.add(aggregation_node)
             agg_join = agg_plan.join_for(aggregation_node)
 
-        return agg_join, bool_expressions, function_node
+        return agg_join, bool_expressions
 
     @staticmethod
     def _gather_conjunctions(
@@ -586,7 +576,6 @@ class FilterPlan:
         *,
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
-        where_function_nodes: set[QueryNodeType],
         not_null_check: bool = False,
     ) -> Conjunction:
         """Gathers all conjunctions from a sequence of filters.
@@ -596,7 +585,6 @@ class FilterPlan:
             context: The shared planning context (``aliases``, ``dialect``, ``build_join`` read here).
             agg_plan: The pre-built aggregation plan.
             emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
-            where_function_nodes: Mutable set accumulating function nodes in WHERE.
             not_null_check: Whether to add not-null checks.
 
         Returns:
@@ -610,10 +598,9 @@ class FilterPlan:
         for value in query:
             if isinstance(value, AggregationFilter):
                 node_path = value.field_node.path_from_root()
-                aggregation_join, aggregation_expressions, function_node = FilterPlan._aggregation_filter(
+                aggregation_join, aggregation_expressions = FilterPlan._aggregation_filter(
                     value, context, agg_plan, emitted_agg_joins
                 )
-                where_function_nodes.add(function_node)
                 if aggregation_join is not None:
                     joins.append(aggregation_join)
                 bool_expressions.extend(aggregation_expressions)
@@ -629,7 +616,6 @@ class FilterPlan:
                     context,
                     agg_plan=agg_plan,
                     emitted_agg_joins=emitted_agg_joins,
-                    where_function_nodes=where_function_nodes,
                     allow_null=not_null_check,
                 )
                 common_join_path = QueryNode.common_path(common_join_path, conjunction.common_join_path)
@@ -650,7 +636,6 @@ class FilterPlan:
         *,
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
-        where_function_nodes: set[QueryNodeType],
         allow_null: bool = False,
     ) -> Conjunction:
         """Processes a filter's AND, OR, and NOT conditions into a conjunction.
@@ -660,7 +645,6 @@ class FilterPlan:
             context: The shared planning context (``aliases``, ``dialect``, ``build_join`` read here).
             agg_plan: The pre-built aggregation plan.
             emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
-            where_function_nodes: Mutable set accumulating function nodes in WHERE.
             allow_null: Whether to allow null values in the filter conditions.
 
         Returns:
@@ -672,7 +656,6 @@ class FilterPlan:
             context,
             agg_plan=agg_plan,
             emitted_agg_joins=emitted_agg_joins,
-            where_function_nodes=where_function_nodes,
             not_null_check=allow_null,
         )
         or_conjunction = FilterPlan._gather_conjunctions(
@@ -680,7 +663,6 @@ class FilterPlan:
             context,
             agg_plan=agg_plan,
             emitted_agg_joins=emitted_agg_joins,
-            where_function_nodes=where_function_nodes,
             not_null_check=allow_null,
         )
         common_path = QueryNode.common_path(and_conjunction.common_join_path, or_conjunction.common_join_path)
@@ -692,7 +674,6 @@ class FilterPlan:
                 context,
                 agg_plan=agg_plan,
                 emitted_agg_joins=emitted_agg_joins,
-                where_function_nodes=where_function_nodes,
                 not_null_check=True,
             )
             common_path = [
@@ -719,7 +700,6 @@ class FilterPlan:
         *,
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
-        where_function_nodes: set[QueryNodeType],
         allow_null: bool = False,
     ) -> Where:
         """Creates WHERE expressions and joins from a filter.
@@ -729,7 +709,6 @@ class FilterPlan:
             context: The shared planning context (``aliases``, ``dialect``, ``build_join`` read here).
             agg_plan: The pre-built aggregation plan.
             emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
-            where_function_nodes: Mutable set accumulating function nodes in WHERE.
             allow_null: Whether to allow null values in the filter conditions.
 
         Returns:
@@ -740,7 +719,6 @@ class FilterPlan:
             context,
             agg_plan=agg_plan,
             emitted_agg_joins=emitted_agg_joins,
-            where_function_nodes=where_function_nodes,
             allow_null=allow_null,
         )
         return Where(
@@ -762,8 +740,6 @@ class OrderPlan:
 
     expressions: tuple[UnaryExpression[Any], ...] = ()
     joins: tuple[Join, ...] = ()
-    referenced_functions: frozenset[QueryNodeType] = frozenset()
-    """Function nodes referenced in ORDER BY (for subquery hoist)."""
 
     @classmethod
     def plan(
@@ -783,7 +759,7 @@ class OrderPlan:
             existing_joins: The relation joins gathered so far.
 
         Returns:
-            An OrderPlan with expressions, new relation joins, and referenced functions.
+            An OrderPlan with expressions and new relation joins.
         """
         _default_order_by = list(context.default_order_by)
 
@@ -792,7 +768,6 @@ class OrderPlan:
 
         columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = []
         joins: list[Join] = []
-        order_by_function_nodes: set[QueryNodeType] = set()
         emitted_agg_joins: set[QueryNodeType] = set()
 
         for node in query_graph.order_by_nodes:
@@ -801,7 +776,6 @@ class OrderPlan:
                 context,
                 agg_plan=agg_plan,
                 emitted_agg_joins=emitted_agg_joins,
-                order_by_function_nodes=order_by_function_nodes,
                 columns=columns,
                 joins=joins,
             )
@@ -821,11 +795,7 @@ class OrderPlan:
         relation_order_columns = cls._relation_order_by(query_graph, context, existing_joins)
         order_by.columns.extend(relation_order_columns)
 
-        return cls(
-            expressions=tuple(order_by.expressions),
-            joins=tuple(order_by.joins),
-            referenced_functions=frozenset(order_by_function_nodes),
-        )
+        return cls(expressions=tuple(order_by.expressions), joins=tuple(order_by.joins))
 
     @staticmethod
     def _default_order_columns(
@@ -862,7 +832,6 @@ class OrderPlan:
         *,
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
-        order_by_function_nodes: set[QueryNodeType],
         columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]],
         joins: list[Join],
     ) -> None:
@@ -875,7 +844,6 @@ class OrderPlan:
             context: The shared planning context (``aliases`` read here).
             agg_plan: The pre-built aggregation plan.
             emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
-            order_by_function_nodes: Mutable set accumulating function nodes in ORDER BY.
             columns: Mutable list accumulating ``(column, order)`` pairs.
             joins: Mutable list accumulating new relation/aggregation joins.
         """
@@ -883,7 +851,6 @@ class OrderPlan:
             msg = "Missing order by value"
             raise TranspilingError(msg)
         if node.value.is_function_arg or node.value.is_function:
-            order_by_function_nodes.add(node)
             first_aggregate_parent = node.find_parent(lambda n: n.value.is_aggregate, strict=True)
             if first_aggregate_parent not in emitted_agg_joins:
                 emitted_agg_joins.add(first_aggregate_parent)
@@ -948,8 +915,6 @@ class ProjectionPlan:
     load_options: tuple[_AbstractLoad, ...] = ()
     aggregation_joins: tuple[Join, ...] = ()
     hook_specs: tuple[HookSpec, ...] = ()
-    referenced_functions: frozenset[QueryNodeType] = frozenset()
-    """Function nodes referenced in the projection selection (for subquery hoist)."""
     transform_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
     """Maps each transform node to its labelled projection column (for column_map)."""
 
@@ -964,7 +929,7 @@ class ProjectionPlan:
 
         Returns:
             A ProjectionPlan with columns, load options, aggregation joins, hooks,
-            referenced functions, and the transform map.
+            and the transform map.
         """
         selection_tree = query_graph.resolved_selection_tree()
 
@@ -986,10 +951,6 @@ class ProjectionPlan:
                 if new_join is not None:
                     aggregation_joins.append(new_join)
 
-        referenced_functions = frozenset(
-            node for node in selection_tree.leaves(iteration_mode="breadth_first") if node.value.is_function
-        )
-
         load_options: list[_AbstractLoad] = [load_only(*root_columns)] if root_columns else []
         load_options.extend(context.hook_applier.collect_load_options(selection_tree.root, context.aliases.root_alias))
 
@@ -1007,7 +968,6 @@ class ProjectionPlan:
             load_options=tuple(load_options),
             aggregation_joins=tuple(aggregation_joins),
             hook_specs=tuple(hook_specs),
-            referenced_functions=referenced_functions,
             transform_map=transform_map,
         )
 
@@ -1314,27 +1274,28 @@ def _dedup_columns(columns: Sequence[ColumnElement[Any]]) -> list[ColumnElement[
     return unique
 
 
-def _referenced_function_nodes(filter_plan: FilterPlan, order: OrderPlan, proj: ProjectionPlan) -> list[QueryNodeType]:
+def _referenced_function_nodes(agg_plan: AggregationPlan, inner_joins: Sequence[Join]) -> list[QueryNodeType]:
     """Computes the function nodes hoisted into the pagination/distinct subquery.
 
-    The hoisted set is the function nodes appearing in both WHERE and the selection,
-    plus every function node used in ORDER BY.  Order is deterministic —
-    WHERE∩selection first (in selection traversal order), then the remaining ORDER BY
-    nodes — so the columns selected into the subquery and the columns re-projected from
-    it agree on membership and order.
+    Hoisting is all-or-nothing per aggregation node: a node the subquery already joins
+    materializes every one of its functions anyway, so all of them are selected out and
+    re-projected, and the outer query drops the join instead of computing the same
+    aggregate twice. A node with no inner join stays outside, where it is computed over
+    the page rather than over the whole filtered set.
 
     Args:
-        filter_plan: The inner filter pass (WHERE function references).
-        order: The inner order pass (ORDER BY function references).
-        proj: The inner projection pass (selection function references).
+        agg_plan: The inner aggregation pass, mapping each node to its function nodes.
+        inner_joins: The deduplicated inner joins, in emission order.
 
     Returns:
         The ordered list of referenced function nodes.
     """
-    where_and_selection = filter_plan.referenced_functions & proj.referenced_functions
-    referenced: list[QueryNodeType] = [node for node in proj.referenced_functions if node in where_and_selection]
-    referenced.extend(node for node in order.referenced_functions if node not in where_and_selection)
-    return referenced
+    return [
+        function
+        for join in inner_joins
+        if isinstance(join, AggregationJoin)
+        for function in agg_plan.node_functions.get(join.node, ())
+    ]
 
 
 def _assemble_inner_statement(
@@ -1385,7 +1346,8 @@ def _assemble_inner_statement(
             for child in aggregation_tree.leaves()
             if child.value.is_function_arg
         )
-    only_columns.extend(selected_function_columns)
+    # Hoisted columns skip the dedup: unique by function node, and two anonymous columns of one join compare equal.
+    projected: list[Any] = [*_dedup_columns(only_columns), *selected_function_columns]
 
     rank_label: KeyedColumnElement[Any] | None = None
     if distinct_on and not use_distinct_on:
@@ -1394,11 +1356,9 @@ def _assemble_inner_statement(
             .over(partition_by=distinct_on.expressions, order_by=list(order_expressions) or None)
             .label(None)
         )
-        only_columns.append(rank_label)
+        projected.append(rank_label)
 
-    inner_statement = (
-        select(inspect(inner_alias)).options(raiseload("*")).with_only_columns(*_dedup_columns(only_columns))
-    )
+    inner_statement = select(inspect(inner_alias)).options(raiseload("*")).with_only_columns(*projected)
     # Filtered + paginated gets: restrict the subquery to filter-visible rows; a trivial
     # statement inlines the WHERE directly, otherwise a PK semi-join is used.
     if context.statement is not None:
@@ -1532,13 +1492,9 @@ def _plan_subquery(
 
     inner_order = OrderPlan.plan(query_graph, context, aggregation_plan, [*filter_plan.joins, *subquery_tree_joins])
 
-    # Inner projection: needed only for the set of selection function references so the
-    # right aggregation columns are hoisted into the subquery (its columns are discarded).
-    inner_proj = ProjectionPlan.plan(query_graph, context, aggregation_plan)
-    referenced_functions = _referenced_function_nodes(filter_plan, inner_order, inner_proj)
-
     # Phase 2: assemble the inner subquery statement.
     inner_joins = _dedup_agg_joins([*filter_plan.joins, *inner_order.joins, *subquery_tree_joins])
+    referenced_functions = _referenced_function_nodes(aggregation_plan, inner_joins)
     selected_function_labels = {fn: aggregation_plan.columns[fn] for fn in referenced_functions}
     inner_statement, rank_label = _assemble_inner_statement(
         query_graph,

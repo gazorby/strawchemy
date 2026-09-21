@@ -402,6 +402,12 @@ class AsyncQuery:
     colors_paginated: list[ColorTypeWithPagination] = strawchemy.field(
         pagination=True, repository_type=StrawchemyAsyncRepository
     )
+    colors_filterable_paginated: list[ColorType] = strawchemy.field(
+        filter_input=ColorFilter,
+        order_by_input=ColorOrder,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+    )
 
     colors_filtered: list[ColorType] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
@@ -531,6 +537,12 @@ class SyncQuery:
     )
     colors_paginated: list[ColorTypeWithPagination] = strawchemy.field(
         pagination=True, repository_type=StrawchemySyncRepository
+    )
+    colors_filterable_paginated: list[ColorType] = strawchemy.field(
+        filter_input=ColorFilter,
+        order_by_input=ColorOrder,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
     )
     colors_filtered: list[ColorType] = strawchemy.field(
         repository_type=StrawchemySyncRepository, filter_statement=lambda _: select(Color).where(Color.name == "Red")
