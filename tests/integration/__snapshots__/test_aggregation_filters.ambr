@@ -16,8 +16,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE anon_1.count_1 > ?
-   ORDER BY anon_1.count_1 ASC,
-            anon_1.sum_1 ASC,
+   ORDER BY anon_1.sum_1 ASC,
             fruit_1.id ASC
   '''
 # ---
@@ -38,8 +37,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE anon_1.count_1 > %s
-   ORDER BY anon_1.count_1 ASC,
-            anon_1.sum_1 ASC,
+   ORDER BY anon_1.sum_1 ASC,
             fruit_1.id ASC
   '''
 # ---
@@ -58,8 +56,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE anon_1.count_1 > $1::INTEGER
-   ORDER BY anon_1.count_1 ASC,
-            anon_1.sum_1 ASC,
+   ORDER BY anon_1.sum_1 ASC,
             fruit_1.id ASC
   '''
 # ---
@@ -78,8 +75,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE anon_1.count_1 > %(param_1)s::INTEGER
-   ORDER BY anon_1.count_1 ASC,
-            anon_1.sum_1 ASC,
+   ORDER BY anon_1.sum_1 ASC,
             fruit_1.id ASC
   '''
 # ---
@@ -98,8 +94,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE anon_1.count_1 > %(param_1)s::INTEGER
-   ORDER BY anon_1.count_1 ASC,
-            anon_1.sum_1 ASC,
+   ORDER BY anon_1.sum_1 ASC,
             fruit_1.id ASC
   '''
 # ---
@@ -120,8 +115,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE anon_1.count_1 > ?
-   ORDER BY anon_1.count_1 ASC,
-            anon_1.sum_1 ASC,
+   ORDER BY anon_1.sum_1 ASC,
             fruit_1.id ASC
   '''
 # ---
