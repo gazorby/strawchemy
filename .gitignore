@@ -195,6 +195,10 @@ mise.local.toml
 # Example apps
 *.sqlite
 
+# Snapshot write sidecars
+*.ambr.lock
+*.ambr.tmp
+
 # AI
 CLAUDE.md
 .claude

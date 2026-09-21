@@ -76,7 +76,7 @@ test = [
   "pytest-pretty",
   "pytest-xdist[psutil]",
   "sqlparse",
-  "syrupy",
+  "syrupy>=6.1.1",
   "testapp",
 ]
 unasyncd = ["unasyncd"]
@@ -105,6 +105,8 @@ fail_under = 50
 packages = ["src/strawchemy"]
 
 [tool.pytest.ini_options]
+# Serializes the read-modify-write of merged amber files across xdist workers (#245)
+addopts = ["--snapshot-file-lock"]
 markers = [
   "snapshot: snapshot-based tests using syrupy",
   "inline_snapshot: snapshot-based tests using inline-snapshots",
