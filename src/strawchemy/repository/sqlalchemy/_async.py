@@ -226,8 +226,9 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         return await self._update_where(transpiler.context.aliases.root_alias, values[0], where_expressions)
 
     async def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
-        self._connect_to_one_relations(data.input)
         data.input.add_non_input_relations()
+        self._connect_to_one_relations(data.input)
+        self._expire_reverse_relations(data.input)
         async with self.session.begin_nested() as transaction:
             await self._create_nested_to_one_relations(data.input)
             instance_ids = await self._execute_insert_or_update(data)

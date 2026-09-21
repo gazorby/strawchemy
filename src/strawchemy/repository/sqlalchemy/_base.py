@@ -4,6 +4,7 @@ import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
 from inspect import isclass
+from itertools import chain
 from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, TypeAlias, TypeVar, cast
 
 from sqlalchemy import Column, Function, Insert, Row, Table, func, insert, inspect
@@ -245,6 +246,23 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                 # We take the first input as it's a *ToOne relation
                 value = getattr(relation.set[0], remote.key) if relation.set else None
                 setattr(relation.parent, local.key, value)
+
+    def _expire_reverse_relations(self, data: Input[DeclarativeT]) -> None:
+        """Drop the backref changes that assigning an input instance left on session held models.
+
+        Relationships are written with plain DML here, and input instances never join the
+        session. A related model that does belong to one would otherwise carry the backref
+        change into the next flush, where the unit of work warns and skips the cascade it
+        cannot follow.
+        """
+        for relation in data.relations:
+            prop = relation.attribute
+            if not isinstance(prop, RelationshipProperty) or not prop.back_populates:
+                continue
+            for instance in chain(relation.set or (), relation.add, relation.remove, relation.create):
+                state = inspect(instance)
+                if state.session is not None:
+                    state.session.expire(instance, [prop.back_populates])
 
     def _rows_to_filter_dict(self, rows: Sequence[Row[Any]]) -> dict[str, list[Any]]:
         filter_dict = defaultdict(list)
