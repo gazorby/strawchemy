@@ -478,3 +478,78 @@ async def test_aggregate_filtered_and_selected_paginates_matching_parents(
         {"name": "Pink", "fruitsAggregate": {"count": 2}},
         {"name": "Red", "fruitsAggregate": {"count": 2}},
     ]
+
+
+def _order_by_keys(statement: str) -> list[str]:
+    return [key.strip() for key in statement.rsplit("ORDER BY", 1)[1].split(",")]
+
+
+@pytest.mark.snapshot
+async def test_aggregation_filter_through_to_many_relation_also_selected(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a relation reached by an aggregation filter and selected is joined and ordered once."""
+    query = """
+        {
+            colors(filter: { fruits: { farmsAggregate: { count: { predicate: { gt: 1 } } } } }) {
+                id
+                fruits { id }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["colors"] == [{"id": 1, "fruits": [{"id": 1}, {"id": 2}]}]
+
+    assert query_tracker.query_count == 1
+    order_by_keys = _order_by_keys(query_tracker[0].statement_str)
+    assert len(order_by_keys) == len(set(order_by_keys))
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_aggregation_filter_through_to_one_relation_also_selected(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a to-one relation reached by an aggregation filter and selected is joined and ordered once."""
+    query = """
+        {
+            fruits(filter: { color: { fruitsAggregate: { count: { predicate: { gt: 2 } } } } }) {
+                id
+                color { id }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert sorted(result.data["fruits"], key=lambda fruit: fruit["id"]) == [
+        {"id": 3, "color": {"id": 2}},
+        {"id": 4, "color": {"id": 2}},
+        {"id": 5, "color": {"id": 2}},
+    ]
+
+    assert query_tracker.query_count == 1
+    order_by_keys = _order_by_keys(query_tracker[0].statement_str)
+    assert len(order_by_keys) == len(set(order_by_keys))
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_aggregation_filter_through_relation_selected_with_its_own_ordering(any_query: AnyQueryExecutor) -> None:
+    """Test that an ordered selection of a relation the filter also reaches keeps its own ordering."""
+    query = """
+        {
+            colors(filter: { fruits: { farmsAggregate: { count: { predicate: { gt: 1 } } } } }) {
+                id
+                fruits(orderBy: { id: DESC }) { id }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["colors"] == [{"id": 1, "fruits": [{"id": 2}, {"id": 1}]}]

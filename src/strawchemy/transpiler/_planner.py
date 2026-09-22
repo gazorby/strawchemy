@@ -1673,8 +1673,8 @@ def plan_query(
 
     phase = _plan_filter_phase(query_graph, context, allow_null)
     aggregation_plan, filter_plan = phase.agg_plan, phase.filter_plan
-    subquery_join_nodes = {join.node for join in filter_plan.joins}
     subquery_tree_joins = list(phase.subquery_tree_joins)
+    subquery_join_nodes = {join.node for join in [*filter_plan.joins, *subquery_tree_joins]}
 
     root_tree_joins: list[Join] = [
         join

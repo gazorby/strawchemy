@@ -119,6 +119,234 @@
             fruit_1.id ASC
   '''
 # ---
+# name: test_aggregation_filter_through_to_many_relation_also_selected[session-async-tracked-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT count(*) AS count_1,
+                 fruit_farm_1.fruit_id AS fruit_id
+            FROM fruit_farm AS fruit_farm_1
+           WHERE fruit_farm_1.fruit_id IS NOT NULL
+           GROUP BY fruit_farm_1.fruit_id
+         ) SELECT fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+    LEFT OUTER JOIN anon_1
+      ON fruit_1.id = anon_1.fruit_id
+   WHERE coalesce(anon_1.count_1, ?) > ?
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_many_relation_also_selected[session-async-tracked-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT count(*) AS count_1,
+                 fruit_farm_1.fruit_id AS fruit_id
+            FROM fruit_farm AS fruit_farm_1
+           WHERE fruit_farm_1.fruit_id IS NOT NULL
+           GROUP BY fruit_farm_1.fruit_id
+         ) SELECT fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+    LEFT OUTER JOIN anon_1
+      ON fruit_1.id = anon_1.fruit_id
+   WHERE coalesce(anon_1.count_1, %s) > %s
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_many_relation_also_selected[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+    JOIN LATERAL (
+          SELECT count(*) AS count_1
+            FROM fruit_farm AS fruit_farm_1
+           WHERE fruit_1.id = fruit_farm_1.fruit_id
+         ) AS anon_1
+      ON TRUE
+   WHERE anon_1.count_1 > $1::INTEGER
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_many_relation_also_selected[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+    JOIN LATERAL (
+          SELECT count(*) AS count_1
+            FROM fruit_farm AS fruit_farm_1
+           WHERE fruit_1.id = fruit_farm_1.fruit_id
+         ) AS anon_1
+      ON TRUE
+   WHERE anon_1.count_1 > %(param_1)s::INTEGER
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_many_relation_also_selected[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+    JOIN LATERAL (
+          SELECT count(*) AS count_1
+            FROM fruit_farm AS fruit_farm_1
+           WHERE fruit_1.id = fruit_farm_1.fruit_id
+         ) AS anon_1
+      ON TRUE
+   WHERE anon_1.count_1 > %(param_1)s::INTEGER
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_many_relation_also_selected[session-sync-tracked-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT count(*) AS count_1,
+                 fruit_farm_1.fruit_id AS fruit_id
+            FROM fruit_farm AS fruit_farm_1
+           WHERE fruit_farm_1.fruit_id IS NOT NULL
+           GROUP BY fruit_farm_1.fruit_id
+         ) SELECT fruit_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+    LEFT OUTER JOIN anon_1
+      ON fruit_1.id = anon_1.fruit_id
+   WHERE coalesce(anon_1.count_1, ?) > ?
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_one_relation_also_selected[session-async-tracked-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT count(*) AS count_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color_1.id,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN anon_1
+      ON color_1.id = anon_1.color_id
+   WHERE coalesce(anon_1.count_1, ?) > ?
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_one_relation_also_selected[session-async-tracked-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT count(*) AS count_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color_1.id,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN anon_1
+      ON color_1.id = anon_1.color_id
+   WHERE coalesce(anon_1.count_1, %s) > %s
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_one_relation_also_selected[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT color_1.id,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    JOIN LATERAL (
+          SELECT count(*) AS count_1
+            FROM fruit AS fruit_1
+           WHERE color_1.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   WHERE anon_1.count_1 > $1::INTEGER
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_one_relation_also_selected[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT color_1.id,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    JOIN LATERAL (
+          SELECT count(*) AS count_1
+            FROM fruit AS fruit_1
+           WHERE color_1.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   WHERE anon_1.count_1 > %(param_1)s::INTEGER
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_one_relation_also_selected[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT color_1.id,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    JOIN LATERAL (
+          SELECT count(*) AS count_1
+            FROM fruit AS fruit_1
+           WHERE color_1.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   WHERE anon_1.count_1 > %(param_1)s::INTEGER
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_aggregation_filter_through_to_one_relation_also_selected[session-sync-tracked-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT count(*) AS count_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color_1.id,
+         fruit.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN anon_1
+      ON color_1.id = anon_1.color_id
+   WHERE coalesce(anon_1.count_1, ?) > ?
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
 # name: test_avg_aggregation_filter[session-async-tracked-float-avg-eq-match-aiosqlite_engine]
   '''
   WITH anon_1 AS (
