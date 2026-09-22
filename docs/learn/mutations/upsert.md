@@ -96,8 +96,8 @@ class Mutation:
         PostUpsertInput, update_fields=PostUpsertFields, conflict_fields=PostConflictFields
     )
     upsert_posts: list[PostType] = strawchemy.upsert(  # [!code ++]
-        PostUpsertInput,
-        update_fields=PostUpsertFields,
+        PostUpsertInput,  # [!code ++]
+        update_fields=PostUpsertFields,  # [!code ++]
         conflict_fields=PostConflictFields,  # [!code ++]
     )  # [!code ++]
 ```
@@ -127,7 +127,7 @@ the existing record untouched:
 ```graphql
 mutation {
     upsertPost(
-        data: { id: 1, title: "Renamed", content: "Updated content", views: 10 }
+        data: { id: 1, title: "Retitled", content: "Updated content", views: 10 }
         conflictFields: id
         updateFields: [content, views]
     ) {
@@ -140,7 +140,7 @@ mutation {
 ```
 
 `title` is part of `data` but not of `updateFields`, so it keeps its stored value instead of
-becoming `"Renamed"`. Only fields declared on `PostUpsertFields` — `content` and `views` here — can
+becoming `"Retitled"`. Only fields declared on `PostUpsertFields` — `content` and `views` here — can
 appear in `updateFields`.
 
 ## Upserting related records

@@ -7,7 +7,7 @@ A mapped type plus a field on `Query` is all a read API needs. The field's argum
 The output type and the two inputs a query field takes. `UserAggregationType` comes from `@strawchemy.aggregate`, declared here so the third field below resolves:
 
 ```python
-@strawchemy.type(User, include="all")
+@strawchemy.type(User, include="all", override=True)
 class UserType: ...
 
 

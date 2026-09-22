@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from datetime import datetime  # noqa: TC003
 
 from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-
-if TYPE_CHECKING:
-    from datetime import datetime
 
 
 class Base(DeclarativeBase):

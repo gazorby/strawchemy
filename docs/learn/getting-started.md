@@ -207,7 +207,7 @@ def create_app() -> Litestar:
 uv run litestar --app quickstart.app:create_app run --reload
 ```
 
-Open `http://127.0.0.1:8000/graphql` to reach GraphiQL.
+Open `http://127.0.0.1:8000` to reach GraphiQL.
 
 ::: tip
 The complete project is in `examples/quickstart` in the repository.

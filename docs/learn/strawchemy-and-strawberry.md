@@ -29,7 +29,7 @@ Both show up on the generated field exactly as passed:
 ```graphql
 type Query {
   """Published posts"""
-  posts: [PostType!]! @deprecated(reason: "use postsConnection instead")
+  posts(filter: PostFilter = null): [PostType!]! @deprecated(reason: "use postsConnection instead")
 }
 ```
 
@@ -84,12 +84,13 @@ that makes it so.
 
 `strawberry.auto` also changes meaning on a Strawchemy input. In plain Strawberry it means "infer
 this field's type." On a Strawchemy input it means "generate the relationship input for this
-field," built from up to three operations — a to-many field gets all three, a to-one field only
-`set` and `create`:
+field," built from up to four operations — a to-many field gets all four, a to-one field all but
+`add`:
 
 - `set` — link an existing related record by id
 - `add` — attach an existing related record alongside any created here (to-many only)
 - `create` — create a new related record
+- `upsert` — create a new related record, or update the existing one it conflicts with
 
 ```python
 @strawchemy.create_input(Post, include=["title", "content"])

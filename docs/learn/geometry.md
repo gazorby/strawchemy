@@ -20,6 +20,7 @@ from geoalchemy2.elements import WKBElement
 from sqlalchemy.orm import Mapped, mapped_column
 
 from quickstart.models import Base
+from strawchemy.schema.scalars.geo import GEO_SCALAR_OVERRIDES
 
 
 class GeoModel(Base):
@@ -41,6 +42,9 @@ class GeoFieldsFilter: ...
 @strawberry.type
 class Query:
     geo: list[GeoType] = strawchemy.field(filter_input=GeoFieldsFilter)
+
+
+schema = strawberry.Schema(query=Query, scalar_overrides=GEO_SCALAR_OVERRIDES)
 ```
 
 ```graphql
@@ -78,7 +82,7 @@ Strawchemy supports the following geo filter operations:
 
 - **containsGeometry**: Filters for geometries that contain the specified GeoJSON geometry
 - **withinGeometry**: Filters for geometries that are within the specified GeoJSON geometry
-- **isNull**: Filters for null geometry values
+- **isNull**: Filters for null (`true`) or non-null (`false`) geometry values
 
 These filters work with all geometry types supported by PostGIS, including:
 
@@ -88,4 +92,5 @@ These filters work with all geometry types supported by PostGIS, including:
 - `MultiPoint`
 - `MultiLineString`
 - `MultiPolygon`
+- `GeometryCollection`
 - `Geometry` (generic geometry type)

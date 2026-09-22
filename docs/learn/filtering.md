@@ -80,7 +80,7 @@ Filter a `Date`, `DateTime`, `Time` or `Interval` column by one of its component
 
 ```graphql
 {
-    posts(filter: { publishedAt: { year: 2024, month: 6 } }) {
+    posts(filter: { publishedAt: { year: { eq: 2024 }, month: { eq: 6 } } }) {
         id
         title
         publishedAt
@@ -127,11 +127,11 @@ Field 'contains' is not defined by type 'TextComparisonStrEqLike'.
 On an `ops` field the annotation names either the column's data type (`str` for `title`) or the column's comparison input (`TextComparison`); anything else — including `Any` — raises `StrawchemyFieldError` at import time.
 :::
 
-You can also go the other way: force-include a field the decorator's `include`/`exclude` would otherwise have dropped, with its full default comparison, by leaving `ops` and `apply` both out — and no annotation:
+You can also go the other way: force-include a field the decorator's `include`/`exclude` would otherwise have dropped, with its full default comparison, by leaving `ops` and `apply` both out:
 
 ```python
 class PostFineGrainedFilter:
-    content = strawchemy.filter_field()
+    content: str = strawchemy.filter_field()
 ```
 
 ## Non-column filters

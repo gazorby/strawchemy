@@ -8,7 +8,7 @@ class Query:
     users: list[UserType] = strawchemy.field(pagination=True)
 ```
 
-`users` now takes `offset` and `limit` arguments, falling back to the config's defaults (100 and 0 unless changed) whenever a query omits them:
+`users` now takes `offset` and `limit` arguments, falling back to the config's defaults (limit 100 and offset 0 unless changed) whenever a query omits them:
 
 ```graphql
 {
