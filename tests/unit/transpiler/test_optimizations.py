@@ -726,6 +726,82 @@ PAGINATION_JOIN_SQL = snapshot(
             "    ON color.id = fruit_1.color_id",
             " ORDER BY color.id ASC",
         ],
+        "two-functions-filtered-and-selected-postgresql": [
+            "SELECT color.id,",
+            "       color.count_1,",
+            "       color.sum_1",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               anon_1.count_1 AS count_1,",
+            "               anon_1.sum_1 AS sum_1",
+            "          FROM color AS color",
+            "          JOIN LATERAL (",
+            "                SELECT count(*) AS count_1,",
+            "                       sum(fruit_1.sweetness) AS sum_1",
+            "                  FROM fruit AS fruit_1",
+            "                 WHERE color.id = fruit_1.color_id",
+            "               ) AS anon_1",
+            "            ON TRUE",
+            "         WHERE anon_1.count_1 > %(param_1)s",
+            "           AND anon_1.sum_1 > %(param_2)s",
+            "         ORDER BY color.id ASC",
+            "         LIMIT %(param_3)s",
+            "        OFFSET %(param_4)s",
+            "       ) AS color",
+            " ORDER BY color.id ASC",
+        ],
+        "two-functions-filtered-and-selected-sqlite": [
+            "WITH anon_1 AS (",
+            "        SELECT count(*) AS count_1,",
+            "               sum(fruit_1.sweetness) AS sum_1,",
+            "               fruit_1.color_id AS color_id",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.color_id",
+            "       ) SELECT color.id,",
+            "       color.coalesce_1,",
+            "       color.sum_1",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               coalesce(anon_1.count_1, ?) AS coalesce_1,",
+            "               anon_1.sum_1 AS sum_1",
+            "          FROM color AS color",
+            "          LEFT OUTER JOIN anon_1",
+            "            ON color.id = anon_1.color_id",
+            "         WHERE coalesce(anon_1.count_1, ?) > ?",
+            "           AND anon_1.sum_1 > ?",
+            "         ORDER BY color.id ASC",
+            "         LIMIT ?",
+            "        OFFSET ?",
+            "       ) AS color",
+            " ORDER BY color.id ASC",
+        ],
+        "two-functions-filtered-and-selected-mysql": [
+            "WITH anon_1 AS (",
+            "        SELECT count(*) AS count_1,",
+            "               sum(fruit_1.sweetness) AS sum_1,",
+            "               fruit_1.color_id AS color_id",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.color_id",
+            "       ) SELECT color.id,",
+            "       color.coalesce_1,",
+            "       color.sum_1",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               coalesce(anon_1.count_1, %s) AS coalesce_1,",
+            "               anon_1.sum_1 AS sum_1",
+            "          FROM color AS color",
+            "          LEFT OUTER JOIN anon_1",
+            "            ON color.id = anon_1.color_id",
+            "         WHERE coalesce(anon_1.count_1, %s) > %s",
+            "           AND anon_1.sum_1 > %s",
+            "         ORDER BY color.id ASC",
+            "         LIMIT %s,",
+            "               %s",
+            "       ) AS color",
+            " ORDER BY color.id ASC",
+        ],
     }
 )
 
@@ -1004,6 +1080,19 @@ def test_inner_join_rewriting(
             }
             """,
             id="filtered-function-hoisted",
+        ),
+        pytest.param(
+            """
+            {
+                colorsPaginated(limit: 2, filter: { fruitsAggregate: {
+                      count: { predicate: { gt: 1 } },
+                      sum: { arguments: [sweetness], predicate: { gt: 0 } } } }) {
+                    id
+                    fruitsAggregate { count sum { sweetness } }
+                }
+            }
+            """,
+            id="two-functions-filtered-and-selected",
         ),
         pytest.param(
             """

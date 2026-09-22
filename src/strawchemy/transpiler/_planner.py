@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any, Generic, cast
 
 from sqlalchemy import and_, exists, func, inspect, not_, null, or_, select, true, tuple_
 from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
+from sqlalchemy.sql.elements import _anonymous_label
 from sqlalchemy.sql.functions import count as sqla_count
 from sqlalchemy.sql.util import ClauseAdapter
 
@@ -1292,6 +1293,27 @@ def _clause_element(column: ColumnElement[Any]) -> ColumnElement[Any]:
     return column
 
 
+def _same_column(left: ColumnElement[Any], right: ColumnElement[Any]) -> bool:
+    """Tells whether two projection columns stand for the same expression.
+
+    ``compare()`` ignores an anonymous label's generated name, so the columns a lateral or
+    CTE exports for its ``label(None)`` expressions all compare equal to one another;
+    those are matched by identity instead.
+
+    Args:
+        left: The candidate column.
+        right: A column already kept.
+
+    Returns:
+        Whether the candidate is already projected.
+    """
+    if left is right:
+        return True
+    if any(isinstance(getattr(column, "name", None), _anonymous_label) for column in (left, right)):
+        return False
+    return left.compare(right)
+
+
 def _dedup_columns(columns: Sequence[ColumnElement[Any]]) -> list[ColumnElement[Any]]:
     """Removes structurally duplicate columns, preserving first-seen order.
 
@@ -1309,7 +1331,7 @@ def _dedup_columns(columns: Sequence[ColumnElement[Any]]) -> list[ColumnElement[
     unique: list[ColumnElement[Any]] = []
     for column in columns:
         col_elem = _clause_element(column)
-        if not any(col_elem is _clause_element(seen) or col_elem.compare(_clause_element(seen)) for seen in unique):
+        if not any(_same_column(col_elem, _clause_element(seen)) for seen in unique):
             unique.append(column)
     return unique
 
@@ -1386,8 +1408,7 @@ def _assemble_inner_statement(
             for child in aggregation_tree.leaves()
             if child.value.is_function_arg
         )
-    # Hoisted columns skip the dedup: unique by function node, and two anonymous columns of one join compare equal.
-    projected: list[Any] = [*_dedup_columns(only_columns), *selected_function_columns]
+    projected: list[Any] = _dedup_columns([*only_columns, *selected_function_columns])
 
     rank_label: KeyedColumnElement[Any] | None = None
     if distinct_on and not use_distinct_on:

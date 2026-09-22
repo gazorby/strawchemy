@@ -12,7 +12,7 @@ from typing import Any
 
 import pytest
 from inline_snapshot import snapshot
-from sqlalchemy import ColumnClause, Join, Select, select
+from sqlalchemy import ColumnClause, Join, Select, func, select
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import visitors
@@ -65,6 +65,17 @@ def test_dedup_columns_keeps_distinct_columns() -> None:
     result = _dedup_columns(cols)  # ty: ignore[invalid-argument-type]
 
     assert len(result) == 3
+
+
+def test_dedup_columns_keeps_anonymous_columns_of_one_selectable() -> None:
+    """Anonymously-labelled columns compare equal to each other, yet none of them is a duplicate."""
+    fruit = aliased(Fruit)
+    lateral = select(func.count().label(None), func.sum(fruit.sweetness).label(None)).subquery().lateral()
+    count_col, sum_col = lateral.c
+
+    result = _dedup_columns([count_col, sum_col])
+
+    assert result == [count_col, sum_col]
 
 
 def _distinct_enum(model_field: object) -> SimpleNamespace:
