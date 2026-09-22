@@ -1935,3 +1935,25 @@ async def test_relationship_to_one_override(query_name: str, query: str, any_que
     assert not result.errors
     assert result.data
     assert result.data[query_name] == {"name": "New Apple", "color": {"name": "New Red"}}
+
+
+@pytest.mark.expire_on_commit
+async def test_relationship_to_one_override_expired(any_query: AnyQueryExecutor) -> None:
+    """Test that a to-one override connects when the session expired the related instance."""
+    result = await maybe_async(
+        any_query(
+            """
+            mutation {
+                createFruitForExistingColor(data: { name: "New Apple", sweetness: 1, waterPercent: 0.1 }) {
+                    name
+                    color {
+                        name
+                    }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert result.data["createFruitForExistingColor"] == {"name": "New Apple", "color": {"name": "New Red"}}

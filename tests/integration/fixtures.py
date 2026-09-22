@@ -89,6 +89,7 @@ __all__ = (
     "async_session",
     "asyncpg_engine",
     "engine",
+    "expire_on_commit",
     "no_session_query",
     "psycopg_async_engine",
     "psycopg_engine",
@@ -594,8 +595,14 @@ def engine(request: FixtureRequest) -> Engine:
 
 
 @pytest.fixture
-def session(engine: Engine) -> Generator[Session]:
-    session = sessionmaker(bind=engine, expire_on_commit=False)()
+def expire_on_commit(request: FixtureRequest) -> bool:
+    """Whether the session fixtures keep the SQLAlchemy default expiry, set by the marker of the same name."""
+    return request.node.get_closest_marker("expire_on_commit") is not None
+
+
+@pytest.fixture
+def session(engine: Engine, expire_on_commit: bool) -> Generator[Session]:
+    session = sessionmaker(bind=engine, expire_on_commit=expire_on_commit)()
     try:
         yield session
     finally:
@@ -722,8 +729,8 @@ def async_engine(request: FixtureRequest) -> AsyncEngine:
 
 
 @pytest.fixture
-async def async_session(async_engine: AsyncEngine) -> AsyncGenerator[AsyncSession]:
-    session = async_sessionmaker(bind=async_engine, expire_on_commit=False)()
+async def async_session(async_engine: AsyncEngine, expire_on_commit: bool) -> AsyncGenerator[AsyncSession]:
+    session = async_sessionmaker(bind=async_engine, expire_on_commit=expire_on_commit)()
     try:
         yield session
     finally:

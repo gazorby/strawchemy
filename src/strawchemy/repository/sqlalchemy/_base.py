@@ -230,23 +230,6 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
             if field in SQLAlchemyInspector.loaded_attributes(model)
         }
 
-    def _connect_to_one_relations(self, data: Input[DeclarativeT]) -> None:
-        for relation in data.relations:
-            prop = relation.attribute
-            if (
-                (not relation.set and relation.set is not None)
-                or not isinstance(prop, RelationshipProperty)
-                or relation.relation_type is not RelationType.TO_ONE
-            ):
-                continue
-            assert prop.local_remote_pairs
-            for local, remote in prop.local_remote_pairs:
-                assert local.key
-                assert remote.key
-                # We take the first input as it's a *ToOne relation
-                value = getattr(relation.set[0], remote.key) if relation.set else None
-                setattr(relation.parent, local.key, value)
-
     def _expire_reverse_relations(self, data: Input[DeclarativeT]) -> None:
         """Drop the backref changes that assigning an input instance left on session held models.
 
