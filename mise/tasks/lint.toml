@@ -57,4 +57,4 @@ run = "pre-commit run --color=always --all-files"
 
 [slotscheck]
 description = "Run slotscheck"
-run = "uv run slotscheck --version && uv run slotscheck"
+run = "uv run slotscheck --version && uv run slotscheck -m strawchemy"
