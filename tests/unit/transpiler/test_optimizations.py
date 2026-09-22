@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -370,7 +371,6 @@ AGGREGATION_SQL = snapshot(
         ],
         "order-by-and-selected-functions-postgresql": [
             "SELECT color.id,",
-            "       anon_1.sum_1,",
             "       anon_1.count_1",
             "  FROM color AS color",
             "  JOIN LATERAL (",
@@ -391,7 +391,6 @@ AGGREGATION_SQL = snapshot(
             "         WHERE fruit_1.color_id IS NOT NULL",
             "         GROUP BY fruit_1.color_id",
             "       ) SELECT color.id,",
-            "       anon_1.sum_1,",
             "       coalesce(anon_1.count_1, ?) AS coalesce_1",
             "  FROM color AS color",
             "  LEFT OUTER JOIN anon_1",
@@ -407,7 +406,6 @@ AGGREGATION_SQL = snapshot(
             "         WHERE fruit_1.color_id IS NOT NULL",
             "         GROUP BY fruit_1.color_id",
             "       ) SELECT color.id,",
-            "       anon_1.sum_1,",
             "       coalesce(anon_1.count_1, %s) AS coalesce_1",
             "  FROM color AS color",
             "  LEFT OUTER JOIN anon_1",
@@ -479,7 +477,6 @@ PAGINATION_JOIN_SQL = snapshot(
         ],
         "selected-function-hoisted-postgresql": [
             "SELECT color.id,",
-            "       color.sum_1,",
             "       color.count_1",
             "  FROM (",
             "        SELECT color.id AS id,",
@@ -508,7 +505,6 @@ PAGINATION_JOIN_SQL = snapshot(
             "         WHERE fruit_1.color_id IS NOT NULL",
             "         GROUP BY fruit_1.color_id",
             "       ) SELECT color.id,",
-            "       color.sum_1,",
             "       color.coalesce_1",
             "  FROM (",
             "        SELECT color.id AS id,",
@@ -532,7 +528,6 @@ PAGINATION_JOIN_SQL = snapshot(
             "         WHERE fruit_1.color_id IS NOT NULL",
             "         GROUP BY fruit_1.color_id",
             "       ) SELECT color.id,",
-            "       color.sum_1,",
             "       color.coalesce_1",
             "  FROM (",
             "        SELECT color.id AS id,",
@@ -549,7 +544,6 @@ PAGINATION_JOIN_SQL = snapshot(
         ],
         "filtered-function-hoisted-postgresql": [
             "SELECT color.id,",
-            "       color.count_1,",
             "       color.sum_1",
             "  FROM (",
             "        SELECT color.id AS id,",
@@ -579,7 +573,6 @@ PAGINATION_JOIN_SQL = snapshot(
             "         WHERE fruit_1.color_id IS NOT NULL",
             "         GROUP BY fruit_1.color_id",
             "       ) SELECT color.id,",
-            "       color.coalesce_1,",
             "       color.sum_1",
             "  FROM (",
             "        SELECT color.id AS id,",
@@ -604,7 +597,6 @@ PAGINATION_JOIN_SQL = snapshot(
             "         WHERE fruit_1.color_id IS NOT NULL",
             "         GROUP BY fruit_1.color_id",
             "       ) SELECT color.id,",
-            "       color.coalesce_1,",
             "       color.sum_1",
             "  FROM (",
             "        SELECT color.id AS id,",
@@ -876,6 +868,65 @@ INNER_JOIN_SQL = snapshot(
     }
 )
 
+SELECTED_FUNCTION_COLUMNS = snapshot(
+    {
+        "filter-only-paginated-postgresql": ["color.id", "color.sum_1"],
+        "filter-only-paginated-sqlite": ["color.id", "color.sum_1"],
+        "filter-only-paginated-mysql": ["color.id", "color.sum_1"],
+        "filter-only-postgresql": ["color.id", "anon_1.sum_1"],
+        "filter-only-sqlite": ["color.id", "anon_1.sum_1"],
+        "filter-only-mysql": ["color.id", "anon_1.sum_1"],
+        "order-by-only-postgresql": ["color.id", "anon_1.count_1"],
+        "order-by-only-sqlite": ["color.id", "coalesce(anon_1.count_1, ?) AS coalesce_1"],
+        "order-by-only-mysql": ["color.id", "coalesce(anon_1.count_1, %s) AS coalesce_1"],
+        "filtered-and-selected-postgresql": ["color.id", "anon_1.count_1"],
+        "filtered-and-selected-sqlite": ["color.id", "coalesce(anon_1.count_1, ?) AS coalesce_1"],
+        "filtered-and-selected-mysql": ["color.id", "coalesce(anon_1.count_1, %s) AS coalesce_1"],
+        "nested-filter-only-postgresql": [
+            "color_1.id",
+            '"group".id AS id_1',
+            "anon_1.sum_1",
+            "color_1.id AS group__color__id",
+        ],
+        "nested-filter-only-sqlite": [
+            "color_1.id",
+            '"group".id AS id_1',
+            "anon_1.sum_1",
+            "color_1.id AS group__color__id",
+        ],
+        "nested-filter-only-mysql": [
+            "color_1.id",
+            "`group`.id AS id_1",
+            "anon_1.sum_1",
+            "color_1.id AS group__color__id",
+        ],
+    }
+)
+
+
+def _outer_projection(formatted_sql: str) -> list[str]:
+    """Extracts the top-level SELECT list of a formatted statement, one entry per column.
+
+    The outer SELECT is the only one at the statement's own indentation level: a subquery's
+    is indented and a CTE's is preceded by its closing parenthesis on the same line.
+
+    Args:
+        formatted_sql: The statement as ``format_sql`` renders it.
+
+    Returns:
+        The projected column expressions, in emission order.
+    """
+    columns: list[str] = []
+    for line in formatted_sql.splitlines():
+        if not columns:
+            if (match := re.match(r"(?:\s*\) )?SELECT (.*)", line)) is not None:
+                columns.append(match.group(1).strip().rstrip(","))
+        elif line.startswith("  FROM"):
+            break
+        else:
+            columns.append(line.strip().rstrip(","))
+    return columns
+
 
 @pytest.mark.inline_snapshot
 @pytest.mark.parametrize("dialect_name", ["postgresql", "sqlite", "mysql"])
@@ -1136,3 +1187,84 @@ def test_pagination_subquery_outer_joins(
     assert len(statement.get_final_froms()) == 1
     compiled = str(statement.compile(dialect=SQLA_DIALECTS[dialect_name]))
     assert format_sql(compiled).splitlines() == PAGINATION_JOIN_SQL[request.node.callspec.id]
+
+
+@pytest.mark.inline_snapshot
+@pytest.mark.parametrize("dialect_name", ["postgresql", "sqlite", "mysql"])
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param(
+            """
+            {
+                colorsPaginated(limit: 2, filter: { fruitsAggregate: { count: { predicate: { gt: 1 } } } }) {
+                    id
+                    fruitsAggregate { sum { sweetness } }
+                }
+            }
+            """,
+            id="filter-only-paginated",
+        ),
+        pytest.param(
+            """
+            {
+                colors(filter: { fruitsAggregate: { count: { predicate: { gt: 1 } } } }) {
+                    id
+                    fruitsAggregate { sum { sweetness } }
+                }
+            }
+            """,
+            id="filter-only",
+        ),
+        pytest.param(
+            """
+            {
+                colors(orderBy: { fruitsAggregate: { avg: { sweetness: ASC } } }) {
+                    id
+                    fruitsAggregate { count }
+                }
+            }
+            """,
+            id="order-by-only",
+        ),
+        pytest.param(
+            """
+            {
+                colors(filter: { fruitsAggregate: { count: { predicate: { gt: 1 } } } }) {
+                    id
+                    fruitsAggregate { count }
+                }
+            }
+            """,
+            id="filtered-and-selected",
+        ),
+        pytest.param(
+            """
+            {
+                groups(filter: { color: { fruitsAggregate: { count: { predicate: { gt: 1 } } } } }) {
+                    id
+                    color { id fruitsAggregate { sum { sweetness } } }
+                }
+            }
+            """,
+            id="nested-filter-only",
+        ),
+    ],
+)
+def test_projection_selects_only_requested_functions(
+    query: str, dialect_name: str, captured_statements: list[Select[Any]], request: pytest.FixtureRequest
+) -> None:
+    """Only the aggregation functions the selection asks for reach the projection.
+
+    A function a WHERE predicate or an ORDER BY term needs is still computed by the join and,
+    under pagination, still exported by the subquery; it just is not shipped to the client. A
+    function that is both filtered and selected is projected exactly once.
+    """
+    result = schema.execute_sync(query, context_value=DialectContext(dialect_name))  # ty: ignore[invalid-argument-type]
+
+    assert not result.errors
+    assert result.data
+    assert len(captured_statements) == 1
+
+    compiled = str(captured_statements[0].compile(dialect=SQLA_DIALECTS[dialect_name]))
+    assert _outer_projection(format_sql(compiled)) == SELECTED_FUNCTION_COLUMNS[request.node.callspec.id]
