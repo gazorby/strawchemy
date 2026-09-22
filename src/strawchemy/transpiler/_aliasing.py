@@ -28,6 +28,7 @@ from sqlalchemy import cast as sqla_cast
 from sqlalchemy import distinct as sqla_distinct
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
+from sqlalchemy.sql.elements import _anonymous_label
 from typing_extensions import Self, override
 
 from strawchemy.constants import NODES_KEY
@@ -74,6 +75,20 @@ def require_corresponding_column(selectable: FromClause, label: KeyedColumnEleme
         msg = f"aggregation re-projection: column {label!r} not exported by {selectable!r}"
         raise TranspilingError(msg)
     return column
+
+
+def same_column(left: ColumnElement[Any], right: ColumnElement[Any]) -> bool:
+    """Tells whether two projection columns stand for the same expression.
+
+    ``compare()`` ignores an anonymous label's generated name, so the columns a lateral or
+    CTE exports for its ``label(None)`` expressions all compare equal to one another;
+    those are matched by identity instead.
+    """
+    if left is right:
+        return True
+    if any(isinstance(getattr(column, "name", None), _anonymous_label) for column in (left, right)):
+        return False
+    return left.compare(right)
 
 
 @dataclass

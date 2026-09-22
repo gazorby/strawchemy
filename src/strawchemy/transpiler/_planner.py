@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Any, Generic, cast
 
 from sqlalchemy import and_, exists, func, inspect, not_, null, or_, select, true, tuple_
 from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
-from sqlalchemy.sql.elements import _anonymous_label
 from sqlalchemy.sql.functions import count as sqla_count
 from sqlalchemy.sql.util import ClauseAdapter
 
@@ -32,8 +31,8 @@ from strawchemy.dto.strawberry import (
 from strawchemy.exceptions import StrawchemyFieldError, TranspilingError
 from strawchemy.repository.typing import DeclarativeT
 from strawchemy.schema.filters import GraphQLComparison
-from strawchemy.transpiler._aliasing import AliasContext, require_corresponding_column
-from strawchemy.transpiler._plan import FilterSemiJoin, HookSpec, QueryPlan
+from strawchemy.transpiler._aliasing import AliasContext, require_corresponding_column, same_column
+from strawchemy.transpiler._plan import FilterSemiJoin, HookSpec, QueryPlan, add_missing_columns
 from strawchemy.transpiler._query import (
     AggregationJoin,
     AggregationSpec,
@@ -1113,64 +1112,6 @@ class ProjectionPhase:
     projection_plan: ProjectionPlan
 
 
-def _plan_relation_joins(
-    query_graph: QueryGraph[Any], context: PlanContext[Any], is_outer: bool = True, tree: QueryNodeType | None = None
-) -> tuple[Join, ...]:
-    """Gathers all relation joins needed for a query tree.
-
-    Args:
-        query_graph: The graph representation of the query being planned.
-        context: The shared planning context (provides ``build_join``).
-        is_outer: Whether to create outer joins.
-        tree: The tree to gather joins from. Defaults to ``query_graph.root_join_tree``.
-
-    Returns:
-        A tuple of Join objects for every non-computed relation child, breadth-first.
-    """
-    source_tree = tree if tree is not None else query_graph.root_join_tree
-    joins: list[Join] = [
-        context.build_join(child, is_outer)
-        for child in source_tree.iter_breadth_first()
-        if not child.value.is_computed and child.value.is_relation and not child.is_root
-    ]
-    return tuple(joins)
-
-
-def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any]) -> bool:
-    """Decides whether DISTINCT ON should be emulated via a window rank function.
-
-    On dialects with native ``DISTINCT ON`` (PostgreSQL), emulation is only needed when
-    ordering is present *and* the distinct-on fields are not the leftmost ORDER BY columns.
-    With no ordering, or with a compatible prefix ordering, native DISTINCT ON is used. On
-    dialects without native support, any distinct clause is emulated.
-
-    Args:
-        query_graph: The graph representation of the query being planned.
-        context: The shared planning context (``db_features``, ``deterministic_ordering``,
-            ``default_order_by`` read here).
-
-    Returns:
-        True if a RANK/row_number window emulation should be used, False for native/none.
-    """
-    if not context.db_features.supports_distinct_on:
-        return bool(query_graph.distinct_on)
-    if not query_graph.distinct_on:
-        return False
-    has_ordering = bool(query_graph.order_by_tree or context.deterministic_ordering or context.default_order_by)
-    if not has_ordering:
-        return False
-    # Native DISTINCT ON requires the distinct-on fields to be the leftmost ORDER BY
-    # columns, in order; otherwise fall back to row_number emulation.
-    distinct_fields = [enum.field_definition for enum in query_graph.distinct_on]
-    order_nodes = query_graph.order_by_nodes
-    if len(order_nodes) < len(distinct_fields):
-        return True
-    is_order_prefix = all(
-        order_nodes[index].value.model_field is field.model_field for index, field in enumerate(distinct_fields)
-    )
-    return not is_order_prefix
-
-
 @dataclass(frozen=True)
 class UserStatementPlan:
     """Encapsulates applying a user-provided base ``filter_statement``.
@@ -1262,6 +1203,64 @@ class UserStatementPlan:
         return statement.where(where) if where is not None else statement
 
 
+def _plan_relation_joins(
+    query_graph: QueryGraph[Any], context: PlanContext[Any], is_outer: bool = True, tree: QueryNodeType | None = None
+) -> tuple[Join, ...]:
+    """Gathers all relation joins needed for a query tree.
+
+    Args:
+        query_graph: The graph representation of the query being planned.
+        context: The shared planning context (provides ``build_join``).
+        is_outer: Whether to create outer joins.
+        tree: The tree to gather joins from. Defaults to ``query_graph.root_join_tree``.
+
+    Returns:
+        A tuple of Join objects for every non-computed relation child, breadth-first.
+    """
+    source_tree = tree if tree is not None else query_graph.root_join_tree
+    joins: list[Join] = [
+        context.build_join(child, is_outer)
+        for child in source_tree.iter_breadth_first()
+        if not child.value.is_computed and child.value.is_relation and not child.is_root
+    ]
+    return tuple(joins)
+
+
+def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any]) -> bool:
+    """Decides whether DISTINCT ON should be emulated via a window rank function.
+
+    On dialects with native ``DISTINCT ON`` (PostgreSQL), emulation is only needed when
+    ordering is present *and* the distinct-on fields are not the leftmost ORDER BY columns.
+    With no ordering, or with a compatible prefix ordering, native DISTINCT ON is used. On
+    dialects without native support, any distinct clause is emulated.
+
+    Args:
+        query_graph: The graph representation of the query being planned.
+        context: The shared planning context (``db_features``, ``deterministic_ordering``,
+            ``default_order_by`` read here).
+
+    Returns:
+        True if a RANK/row_number window emulation should be used, False for native/none.
+    """
+    if not context.db_features.supports_distinct_on:
+        return bool(query_graph.distinct_on)
+    if not query_graph.distinct_on:
+        return False
+    has_ordering = bool(query_graph.order_by_tree or context.deterministic_ordering or context.default_order_by)
+    if not has_ordering:
+        return False
+    # Native DISTINCT ON requires the distinct-on fields to be the leftmost ORDER BY
+    # columns, in order; otherwise fall back to row_number emulation.
+    distinct_fields = [enum.field_definition for enum in query_graph.distinct_on]
+    order_nodes = query_graph.order_by_nodes
+    if len(order_nodes) < len(distinct_fields):
+        return True
+    is_order_prefix = all(
+        order_nodes[index].value.model_field is field.model_field for index, field in enumerate(distinct_fields)
+    )
+    return not is_order_prefix
+
+
 def _dedup_agg_joins(joins: list[Join]) -> list[Join]:
     """Deduplicates aggregation joins by node, preserving first-seen order.
 
@@ -1307,27 +1306,6 @@ def _clause_element(column: ColumnElement[Any]) -> ColumnElement[Any]:
     return column
 
 
-def _same_column(left: ColumnElement[Any], right: ColumnElement[Any]) -> bool:
-    """Tells whether two projection columns stand for the same expression.
-
-    ``compare()`` ignores an anonymous label's generated name, so the columns a lateral or
-    CTE exports for its ``label(None)`` expressions all compare equal to one another;
-    those are matched by identity instead.
-
-    Args:
-        left: The candidate column.
-        right: A column already kept.
-
-    Returns:
-        Whether the candidate is already projected.
-    """
-    if left is right:
-        return True
-    if any(isinstance(getattr(column, "name", None), _anonymous_label) for column in (left, right)):
-        return False
-    return left.compare(right)
-
-
 def _dedup_columns(columns: Sequence[ColumnElement[Any]]) -> list[ColumnElement[Any]]:
     """Removes structurally duplicate columns, preserving first-seen order.
 
@@ -1345,7 +1323,7 @@ def _dedup_columns(columns: Sequence[ColumnElement[Any]]) -> list[ColumnElement[
     unique: list[ColumnElement[Any]] = []
     for column in columns:
         col_elem = _clause_element(column)
-        if not any(_same_column(col_elem, _clause_element(seen)) for seen in unique):
+        if not any(same_column(col_elem, _clause_element(seen)) for seen in unique):
             unique.append(column)
     return unique
 
@@ -1447,13 +1425,7 @@ def _assemble_inner_statement(
     if order_expressions:
         inner_statement = inner_statement.order_by(*order_expressions)
     if use_distinct_on and distinct_on:
-        inner_statement = inner_statement.add_columns(
-            *[
-                expression.element
-                for expression in order_expressions
-                if not any(selected.compare(expression.element) for selected in inner_statement.selected_columns)
-            ]
-        )
+        inner_statement = add_missing_columns(inner_statement, [e.element for e in order_expressions])
         inner_statement = inner_statement.distinct(*distinct_on.expressions)
     if limit is not None:
         inner_statement = inner_statement.limit(limit)
