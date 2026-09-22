@@ -404,9 +404,7 @@ class AggregationPlan:
         Returns:
             A list of labelled function columns in ``node_functions`` key order, or empty.
         """
-        selected = self.selection_functions.get(node)
-        if selected is None:
-            return []
+        selected = self.selection_functions[node]
         return [self.columns[fn] for fn in self.node_functions[node] if fn in selected]
 
     def join_for(self, node: QueryNodeType) -> AggregationJoin | None:
