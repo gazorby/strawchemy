@@ -11,6 +11,7 @@ export default defineConfig({
     nav: [
       { text: 'Learn', link: '/learn/' },
       { text: 'Reference', link: '/reference/api/mapper' },
+      { text: 'Changelog', link: '/changelog' },
     ],
     sidebar: {
       '/learn/': [
