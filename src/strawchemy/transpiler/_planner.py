@@ -177,6 +177,8 @@ class AggregationPlan:
     """Aggregation node -> its adaptation alias (spec.alias), needed by filter_function."""
     node_functions: Mapping[QueryNodeType, tuple[QueryNodeType, ...]] = field(default_factory=dict)
     """Aggregation node -> ordered tuple of its function-node keys, in ``spec.functions`` key order."""
+    selection_functions: Mapping[QueryNodeType, frozenset[QueryNodeType]] = field(default_factory=dict)
+    """Aggregation node -> the subset of its function nodes the selection tree asks to project."""
 
     @classmethod
     def plan(
@@ -195,13 +197,14 @@ class AggregationPlan:
                 for an aggregation node whose functions are all covered.
 
         Returns:
-            An ``AggregationPlan`` with columns, joins, aliases, and node_functions.
+            An ``AggregationPlan`` with columns, joins, aliases, and function-node keys.
         """
         specs = cls._accumulate_specs(query_graph, context)
         available = available_columns or {}
         columns: dict[QueryNodeType, ColumnElement[Any]] = {}
         aliases: dict[QueryNodeType, AliasedClass[Any]] = {}
         node_functions: dict[QueryNodeType, tuple[QueryNodeType, ...]] = {}
+        selection_functions: dict[QueryNodeType, frozenset[QueryNodeType]] = {}
         joins: list[AggregationJoin] = []
 
         for aggregation_node, spec in specs.items():
@@ -227,8 +230,15 @@ class AggregationPlan:
                 joins.append(join)
             aliases[aggregation_node] = spec.alias
             node_functions[aggregation_node] = tuple(spec.functions.keys())
+            selection_functions[aggregation_node] = frozenset(spec.selection_functions)
 
-        return cls(columns=columns, joins=tuple(joins), aliases=aliases, node_functions=node_functions)
+        return cls(
+            columns=columns,
+            joins=tuple(joins),
+            aliases=aliases,
+            node_functions=node_functions,
+            selection_functions=selection_functions,
+        )
 
     @staticmethod
     def _accumulate_specs(
@@ -236,8 +246,8 @@ class AggregationPlan:
     ) -> dict[QueryNodeType, AggregationSpec]:
         """Accumulates one AggregationSpec per aggregation node from the query graph.
 
-        Visits sources in fixed order — filter, order-by, selection — and deduplicates
-        function expressions per aggregation node by their function_node key.
+        Visits sources in fixed order — filter, order-by, selection — deduplicating function
+        expressions per aggregation node by their function_node key and marking the selected ones.
 
         Args:
             query_graph: The graph representation of the query being planned.
@@ -271,7 +281,11 @@ class AggregationPlan:
         selection_aggregations = (
             node for node in query_graph.resolved_selection_tree().iter_depth_first() if node.value.is_aggregate
         )
-        for aggregation_node in (*order_by_aggregations, *selection_aggregations):
+        sources = (
+            *((node, False) for node in order_by_aggregations),
+            *((node, True) for node in selection_aggregations),
+        )
+        for aggregation_node, is_selection in sources:
             spec = specs.get(aggregation_node)
             if spec is None:
                 spec = specs[aggregation_node] = AggregationSpec.create(aggregation_node, aliases)
@@ -279,6 +293,8 @@ class AggregationPlan:
                 for function_node, function in child_inspect.output_functions(spec.alias).items():
                     if function_node not in spec.functions:
                         spec.functions[function_node] = function
+                    if is_selection:
+                        spec.selection_functions.add(function_node)
 
         return specs
 
@@ -379,8 +395,8 @@ class AggregationPlan:
         )
         return AggregationJoin(target=cte_alias, onclause=onclause, node=node, is_outer=True)
 
-    def columns_for(self, node: QueryNodeType) -> list[ColumnElement[Any]]:
-        """Returns the function columns for an aggregation node in spec order.
+    def selected_columns_for(self, node: QueryNodeType) -> list[ColumnElement[Any]]:
+        """Returns the function columns an aggregation node's selection asks for, in spec order.
 
         Args:
             node: The aggregation node whose function columns are requested.
@@ -388,10 +404,10 @@ class AggregationPlan:
         Returns:
             A list of labelled function columns in ``node_functions`` key order, or empty.
         """
-        fn_keys = self.node_functions.get(node)
-        if fn_keys is None:
+        selected = self.selection_functions.get(node)
+        if selected is None:
             return []
-        return [self.columns[fn] for fn in fn_keys]
+        return [self.columns[fn] for fn in self.node_functions[node] if fn in selected]
 
     def join_for(self, node: QueryNodeType) -> AggregationJoin | None:
         """Returns the AggregationJoin for an aggregation node, or None if absent.
@@ -408,7 +424,7 @@ class AggregationPlan:
         return None
 
     def upsert(self, node: QueryNodeType, emitted: set[QueryNodeType]) -> tuple[list[ColumnElement[Any]], Join | None]:
-        """Returns the node's function columns, returning its join at most once.
+        """Returns the node's selected function columns, returning its join at most once.
 
         Args:
             node: The aggregation node whose columns are requested.
@@ -417,7 +433,7 @@ class AggregationPlan:
         Returns:
             The resolved function columns and the join (returned at most once per node).
         """
-        function_columns = self.columns_for(node)
+        function_columns = self.selected_columns_for(node)
         new_join: Join | None = None
         if node not in emitted:
             emitted.add(node)

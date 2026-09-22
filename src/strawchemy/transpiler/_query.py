@@ -142,11 +142,13 @@ class AggregationSpec:
         node: The aggregation node this spec builds a join for.
         alias: The aliased target class the function expressions are adapted to.
         functions: Labeled function expressions keyed by their function node.
+        selection_functions: The ``functions`` keys the selection tree asks to project.
     """
 
     node: QueryNodeType
     alias: AliasedClass[Any]
     functions: dict[QueryNodeType, Label[Any]] = dataclasses.field(default_factory=dict)
+    selection_functions: set[QueryNodeType] = dataclasses.field(default_factory=set)
 
     @classmethod
     def create(cls, node: QueryNodeType, scope: AliasContext[Any]) -> Self:
