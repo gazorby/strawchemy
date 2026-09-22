@@ -6,6 +6,7 @@ from collections import defaultdict, namedtuple
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
+from sqlalchemy.orm import RelationshipProperty
 
 from strawchemy.repository.sqlalchemy._base import InsertData, MutationData, SQLAlchemyGraphQLRepository, dml_target
 from strawchemy.repository.typing import AnySyncSession, DeclarativeT
@@ -14,7 +15,7 @@ from strawchemy.transpiler import QueryResult, SyncQueryExecutor, Transpiler
 
 if TYPE_CHECKING:
     import builtins
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.orm.util import AliasedClass
@@ -199,6 +200,35 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             for model_type_or_table, set_values in params.insert_m2m.items():
                 insert_data = InsertData(model_type_or_table, set_values)
                 self.session.execute(self._insert_statement(insert_data).values(*insert_data.values))
+
+    def _load_expired_columns(self, instance: DeclarativeBase, columns: Iterable[ColumnElement[Any]]) -> None:
+        """Reload the given columns when expired, skipping any instance this session does not hold."""
+        state = inspect(instance)
+        if state.key is None or state.key not in self.session.identity_map:
+            return
+        if expired := [column.key for column in columns if column.key and column.key in state.unloaded]:
+            with self.session.no_autoflush:
+                self.session.refresh(instance, expired)
+
+    def _connect_to_one_relations(self, data: Input[DeclarativeT]) -> None:
+        for relation in data.relations:
+            prop = relation.attribute
+            if (
+                (not relation.set and relation.set is not None)
+                or not isinstance(prop, RelationshipProperty)
+                or relation.relation_type is not RelationType.TO_ONE
+            ):
+                continue
+            assert prop.local_remote_pairs
+            # We take the first input as it's a *ToOne relation
+            related = relation.set[0] if relation.set else None
+            if related is not None:
+                self._load_expired_columns(related, (remote for _, remote in prop.local_remote_pairs))
+            for local, remote in prop.local_remote_pairs:
+                assert local.key
+                assert remote.key
+                value = getattr(related, remote.key) if related is not None else None
+                setattr(relation.parent, local.key, value)
 
     def _execute_insert_or_update(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
         values = [self._to_dict(instance) for instance in data.input.instances]

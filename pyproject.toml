@@ -120,6 +120,7 @@ markers = [
   "psycopg_sync: SQLAlchemy Postgres (psycopg sync) Tests",
   "asyncpg: SQLAlchemy Postgres (asyncpg) Tests",
   "extras: Tests requiring extras dependencies",
+  "expire_on_commit: Build session fixtures with the SQLAlchemy default expire_on_commit=True",
 ]
 testpaths = ["tests"]
 xfail_strict = true

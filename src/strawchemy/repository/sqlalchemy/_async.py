@@ -4,6 +4,7 @@ from collections import defaultdict, namedtuple
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
+from sqlalchemy.orm import RelationshipProperty
 
 from strawchemy.repository.sqlalchemy._base import InsertData, MutationData, SQLAlchemyGraphQLRepository, dml_target
 from strawchemy.repository.typing import AnyAsyncSession, DeclarativeT
@@ -12,7 +13,7 @@ from strawchemy.transpiler import AsyncQueryExecutor, QueryResult, Transpiler
 
 if TYPE_CHECKING:
     import builtins
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.orm.util import AliasedClass
@@ -198,6 +199,35 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 insert_data = InsertData(model_type_or_table, set_values)
                 await self.session.execute(self._insert_statement(insert_data).values(*insert_data.values))
 
+    async def _load_expired_columns(self, instance: DeclarativeBase, columns: Iterable[ColumnElement[Any]]) -> None:
+        """Reload the given columns when expired, skipping any instance this session does not hold."""
+        state = inspect(instance)
+        if state.key is None or state.key not in self.session.identity_map:
+            return
+        if expired := [column.key for column in columns if column.key and column.key in state.unloaded]:
+            with self.session.no_autoflush:
+                await self.session.refresh(instance, expired)
+
+    async def _connect_to_one_relations(self, data: Input[DeclarativeT]) -> None:
+        for relation in data.relations:
+            prop = relation.attribute
+            if (
+                (not relation.set and relation.set is not None)
+                or not isinstance(prop, RelationshipProperty)
+                or relation.relation_type is not RelationType.TO_ONE
+            ):
+                continue
+            assert prop.local_remote_pairs
+            # We take the first input as it's a *ToOne relation
+            related = relation.set[0] if relation.set else None
+            if related is not None:
+                await self._load_expired_columns(related, (remote for _, remote in prop.local_remote_pairs))
+            for local, remote in prop.local_remote_pairs:
+                assert local.key
+                assert remote.key
+                value = getattr(related, remote.key) if related is not None else None
+                setattr(relation.parent, local.key, value)
+
     async def _execute_insert_or_update(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
         values = [self._to_dict(instance) for instance in data.input.instances]
         if data.mode == "insert":
@@ -227,7 +257,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
 
     async def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
         data.input.add_non_input_relations()
-        self._connect_to_one_relations(data.input)
+        await self._connect_to_one_relations(data.input)
         self._expire_reverse_relations(data.input)
         async with self.session.begin_nested() as transaction:
             await self._create_nested_to_one_relations(data.input)
