@@ -1,7 +1,7 @@
 """Builds a QueryPlan from a QueryGraph through composable planning passes.
 
-Each pass — AggregationPlan, FilterPlan, OrderPlan, ProjectionPlan — exposes a ``plan()``
-classmethod returning an immutable result; ``plan_query`` composes them into a ``QueryPlan``.
+Each pass — AggregationPlan, FilterPlan, OrderPlan, ProjectionPlan — implements ``Plan``, returning
+an immutable result; ``plan_query`` composes them into a ``QueryPlan``.
 SQLAlchemy statements are assembled only by ``QueryPlan.emit``.
 """
 
@@ -9,12 +9,13 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, Any, Generic, cast
+from typing import TYPE_CHECKING, Any, Generic, Protocol, cast
 
 from sqlalchemy import and_, exists, func, inspect, not_, null, or_, select, true, tuple_
 from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
 from sqlalchemy.sql.functions import count as sqla_count
 from sqlalchemy.sql.util import ClauseAdapter
+from typing_extensions import ParamSpec, Self
 
 from strawchemy.constants import AGGREGATIONS_KEY
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
@@ -61,7 +62,18 @@ if TYPE_CHECKING:
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import OrderByExpr, QueryNodeType, SupportedDialect
 
-__all__ = ("AggregationPlan", "FilterPlan", "OrderPlan", "PlanContext", "ProjectionPlan", "plan_query")
+__all__ = ("AggregationPlan", "FilterPlan", "OrderPlan", "Plan", "PlanContext", "ProjectionPlan", "plan_query")
+
+_P = ParamSpec("_P")
+
+
+class Plan(Protocol[_P]):
+    """A planning pass building an immutable result from a query graph, a context and pass-specific arguments."""
+
+    @classmethod
+    def plan(
+        cls, query_graph: QueryGraph[Any], context: PlanContext[Any], *args: _P.args, **kwargs: _P.kwargs
+    ) -> Self: ...
 
 
 @dataclass(frozen=True)
@@ -186,7 +198,7 @@ class AggregationPlan:
         query_graph: QueryGraph[Any],
         context: PlanContext[Any],
         available_columns: Mapping[QueryNodeType, ColumnElement[Any]] | None = None,
-    ) -> AggregationPlan:
+    ) -> Self:
         """Builds aggregation joins and function-column references without mutating scope.
 
         Args:
@@ -453,7 +465,7 @@ class FilterPlan:
         context: PlanContext[Any],
         agg_plan: AggregationPlan,
         allow_null: bool = False,
-    ) -> FilterPlan:
+    ) -> Self:
         """Builds the WHERE predicates and their relation joins.
 
         Args:
@@ -764,7 +776,7 @@ class OrderPlan:
         context: PlanContext[Any],
         agg_plan: AggregationPlan,
         existing_joins: Sequence[Join],
-    ) -> OrderPlan:
+    ) -> Self:
         """Builds the ORDER BY expressions and their relation joins.
 
         Args:
@@ -937,7 +949,7 @@ class ProjectionPlan:
     """Maps each related level owning computed values to its primary-key projection columns."""
 
     @classmethod
-    def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any], agg_plan: AggregationPlan) -> ProjectionPlan:
+    def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any], agg_plan: AggregationPlan) -> Self:
         """Collects projection columns, ORM load options, aggregation joins, and hook specs.
 
         Args:
@@ -1098,6 +1110,32 @@ class FilterPhase:
     filter_plan: FilterPlan
     subquery_tree_joins: tuple[Join, ...] = ()
 
+    @classmethod
+    def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any], allow_null: bool) -> Self:
+        """Builds the aggregation plan, the WHERE filter plan, and the subquery-tree joins.
+
+        Args:
+            query_graph: The graph representation of the query being planned.
+            context: The shared planning context.
+            allow_null: Whether to allow null values in filter conditions.
+
+        Returns:
+            A FilterPhase with the aggregation plan, filter plan, and filtered subquery-tree joins.
+        """
+        aggregation_plan = AggregationPlan.plan(query_graph, context)
+        filter_plan = FilterPlan.plan(query_graph, context, aggregation_plan, allow_null)
+        filter_join_nodes = {join.node for join in filter_plan.joins}
+        subquery_tree_joins: list[Join] = []
+        if query_graph.subquery_join_tree:
+            subquery_tree_joins = [
+                join
+                for join in _plan_relation_joins(
+                    query_graph, context, is_outer=True, tree=query_graph.subquery_join_tree
+                )
+                if join.node not in filter_join_nodes
+            ]
+        return cls(agg_plan=aggregation_plan, filter_plan=filter_plan, subquery_tree_joins=tuple(subquery_tree_joins))
+
 
 @dataclass(frozen=True)
 class ProjectionPhase:
@@ -1110,6 +1148,32 @@ class ProjectionPhase:
 
     root_aggregations_map: Mapping[QueryNodeType, Label[Any]]
     projection_plan: ProjectionPlan
+
+    @classmethod
+    def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any], agg_plan: AggregationPlan) -> Self:
+        """Builds the root-aggregation window columns and the projection plan.
+
+        Args:
+            query_graph: The graph representation of the query being planned.
+            context: The shared planning context.
+            agg_plan: The aggregation plan supplying function columns.
+
+        Returns:
+            A ProjectionPhase with the root-aggregation column map and the projection plan.
+        """
+        root_aggregations_map: dict[QueryNodeType, Label[Any]] = {}
+        selection_tree = query_graph.selection_tree
+        if selection_tree is not None and selection_tree.graph_metadata.metadata.root_aggregations:
+            aggregation_tree = selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
+            if aggregation_tree:
+                for child in aggregation_tree.children:
+                    root_aggregations_map.update(
+                        context.aliases.inspect(child).output_functions(
+                            context.aliases.root_alias, lambda func: func.over()
+                        )
+                    )
+        projection_plan = ProjectionPlan.plan(query_graph, context, agg_plan)
+        return cls(root_aggregations_map=root_aggregations_map, projection_plan=projection_plan)
 
 
 @dataclass(frozen=True)
@@ -1441,60 +1505,6 @@ def _assemble_inner_statement(
     return inner_statement, rank_label
 
 
-def _plan_filter_phase(query_graph: QueryGraph[Any], context: PlanContext[Any], allow_null: bool) -> FilterPhase:
-    """Builds the aggregation plan, the WHERE filter plan, and the subquery-tree joins.
-
-    Args:
-        query_graph: The graph representation of the query being planned.
-        context: The shared planning context.
-        allow_null: Whether to allow null values in filter conditions.
-
-    Returns:
-        A FilterPhase with the aggregation plan, filter plan, and filtered subquery-tree joins.
-    """
-    aggregation_plan = AggregationPlan.plan(query_graph, context)
-    filter_plan = FilterPlan.plan(query_graph, context, aggregation_plan, allow_null)
-    filter_join_nodes = {join.node for join in filter_plan.joins}
-    subquery_tree_joins: list[Join] = []
-    if query_graph.subquery_join_tree:
-        subquery_tree_joins = [
-            join
-            for join in _plan_relation_joins(query_graph, context, is_outer=True, tree=query_graph.subquery_join_tree)
-            if join.node not in filter_join_nodes
-        ]
-    return FilterPhase(
-        agg_plan=aggregation_plan, filter_plan=filter_plan, subquery_tree_joins=tuple(subquery_tree_joins)
-    )
-
-
-def _plan_projection_phase(
-    query_graph: QueryGraph[Any], context: PlanContext[Any], agg_plan: AggregationPlan
-) -> ProjectionPhase:
-    """Builds the root-aggregation window columns and the projection plan.
-
-    Args:
-        query_graph: The graph representation of the query being planned.
-        context: The shared planning context.
-        agg_plan: The aggregation plan supplying function columns.
-
-    Returns:
-        A ProjectionPhase with the root-aggregation column map and the projection plan.
-    """
-    root_aggregations_map: dict[QueryNodeType, Label[Any]] = {}
-    selection_tree = query_graph.selection_tree
-    if selection_tree is not None and selection_tree.graph_metadata.metadata.root_aggregations:
-        aggregation_tree = selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
-        if aggregation_tree:
-            for child in aggregation_tree.children:
-                root_aggregations_map.update(
-                    context.aliases.inspect(child).output_functions(
-                        context.aliases.root_alias, lambda func: func.over()
-                    )
-                )
-    projection_plan = ProjectionPlan.plan(query_graph, context, agg_plan)
-    return ProjectionPhase(root_aggregations_map=root_aggregations_map, projection_plan=projection_plan)
-
-
 def _plan_subquery(
     query_graph: QueryGraph[Any],
     context: PlanContext[Any],
@@ -1533,7 +1543,7 @@ def _plan_subquery(
     use_distinct_on = not distinct_on_rank
 
     # Phase 1: inner passes against the inner alias.
-    phase = _plan_filter_phase(query_graph, context, allow_null)
+    phase = FilterPhase.plan(query_graph, context, allow_null)
     aggregation_plan, filter_plan = phase.agg_plan, phase.filter_plan
     subquery_tree_joins = list(phase.subquery_tree_joins)
 
@@ -1576,7 +1586,7 @@ def _plan_subquery(
     outer_order = OrderPlan.plan(query_graph, context, outer_agg_plan, outer_joins)
     outer_joins.extend(outer_order.joins)
 
-    projection_phase = _plan_projection_phase(query_graph, context, outer_agg_plan)
+    projection_phase = ProjectionPhase.plan(query_graph, context, outer_agg_plan)
     root_agg_map = projection_phase.root_aggregations_map
     root_aggs = tuple(root_agg_map.values())
     outer_proj = projection_phase.projection_plan
@@ -1643,7 +1653,7 @@ def plan_query(
     distinct_on = DistinctOn(query_graph)
     use_distinct_on = not distinct_on_rank
 
-    phase = _plan_filter_phase(query_graph, context, allow_null)
+    phase = FilterPhase.plan(query_graph, context, allow_null)
     aggregation_plan, filter_plan = phase.agg_plan, phase.filter_plan
     subquery_tree_joins = list(phase.subquery_tree_joins)
     subquery_join_nodes = {join.node for join in [*filter_plan.joins, *subquery_tree_joins]}
@@ -1658,7 +1668,7 @@ def plan_query(
 
     order = OrderPlan.plan(query_graph, context, aggregation_plan, all_relation_joins)
 
-    projection_phase = _plan_projection_phase(query_graph, context, aggregation_plan)
+    projection_phase = ProjectionPhase.plan(query_graph, context, aggregation_plan)
     root_aggregations_map = projection_phase.root_aggregations_map
     root_aggregations: tuple[Label[Any], ...] = tuple(root_aggregations_map.values())
     projection_plan = projection_phase.projection_plan

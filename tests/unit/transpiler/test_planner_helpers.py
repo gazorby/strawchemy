@@ -8,7 +8,7 @@ The filter-statement tests drive the public ``plan_query`` entry point (building
 from __future__ import annotations
 
 from types import SimpleNamespace
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 from inline_snapshot import snapshot
@@ -17,12 +17,29 @@ from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import visitors
 
-from strawchemy.transpiler._planner import PlanContext, _dedup_columns, _use_distinct_rank, plan_query
+from strawchemy.transpiler._planner import (
+    AggregationPlan,
+    FilterPhase,
+    FilterPlan,
+    OrderPlan,
+    Plan,
+    PlanContext,
+    ProjectionPhase,
+    ProjectionPlan,
+    _dedup_columns,
+    _use_distinct_rank,
+    plan_query,
+)
 from strawchemy.transpiler._query import QueryGraph
 from tests.unit.models import Fruit
 from tests.unit.schemas.secondary_table import schema as secondary_table_schema
 from tests.unit.utils import DialectContext
 from tests.utils import format_sql
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from strawchemy.transpiler._query import Join as QueryJoin
 
 
 def _filter_statement_sql(statement: Select[tuple[Fruit]], *, limit: int | None = None) -> str:
@@ -41,6 +58,27 @@ def _filter_statement_sql(statement: Select[tuple[Fruit]], *, limit: int | None 
     context = PlanContext.create(Fruit, sqlite.dialect(), statement=statement)
     plan = plan_query(QueryGraph(context.aliases), context, limit=limit)
     return format_sql(str(plan.emit().compile(dialect=sqlite.dialect())))
+
+
+def test_planning_passes_share_the_plan_signature() -> None:
+    """Every planning pass and phase builds from a query graph, a context and its own arguments through ``Plan``."""
+    context = PlanContext.create(Fruit, sqlite.dialect())
+    query_graph = QueryGraph(context.aliases)
+    aggregation_pass: type[Plan[[]]] = AggregationPlan
+    filter_pass: type[Plan[[AggregationPlan, bool]]] = FilterPlan
+    order_pass: type[Plan[[AggregationPlan, Sequence[QueryJoin]]]] = OrderPlan
+    projection_pass: type[Plan[[AggregationPlan]]] = ProjectionPlan
+    filter_phase: type[Plan[[bool]]] = FilterPhase
+    projection_phase: type[Plan[[AggregationPlan]]] = ProjectionPhase
+
+    agg_plan = aggregation_pass.plan(query_graph, context)
+    assert isinstance(agg_plan, AggregationPlan)
+
+    assert isinstance(filter_pass.plan(query_graph, context, agg_plan, False), FilterPlan)
+    assert isinstance(order_pass.plan(query_graph, context, agg_plan, []), OrderPlan)
+    assert isinstance(projection_pass.plan(query_graph, context, agg_plan), ProjectionPlan)
+    assert isinstance(filter_phase.plan(query_graph, context, False), FilterPhase)
+    assert isinstance(projection_phase.plan(query_graph, context, agg_plan), ProjectionPhase)
 
 
 def test_dedup_columns_removes_structural_duplicates() -> None:
