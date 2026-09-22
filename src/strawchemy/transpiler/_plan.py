@@ -20,8 +20,10 @@ from typing import TYPE_CHECKING, Any
 from sqlalchemy import select
 from sqlalchemy.orm import raiseload
 
+from strawchemy.transpiler._aliasing import same_column
+
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Mapping, Sequence
 
     from sqlalchemy import Label, Select
     from sqlalchemy.orm.strategy_options import _AbstractLoad
@@ -34,10 +36,21 @@ if TYPE_CHECKING:
     from strawchemy.transpiler.hook import ColumnLoadingMode
     from strawchemy.typing import QueryNodeType
 
-__all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan")
+__all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan", "add_missing_columns")
 
 # ``apply_clauses`` is a public method because ``_strategies`` shares the join/where/order
 # assembly with it.
+
+
+def add_missing_columns(statement: Select[Any], columns: Sequence[ColumnElement[Any]]) -> Select[Any]:
+    """Adds to ``statement`` the ``columns`` its SELECT list does not already project."""
+    return statement.add_columns(
+        *[
+            column
+            for column in columns
+            if not any(same_column(column, selected) for selected in statement.selected_columns)
+        ]
+    )
 
 
 @dataclass(frozen=True)
@@ -181,11 +194,5 @@ class QueryPlan:
         """
         if not self.use_distinct_on:
             return statement
-        statement = statement.add_columns(
-            *[
-                expression.element
-                for expression in self.order_by
-                if not any(selected.compare(expression.element) for selected in statement.selected_columns)
-            ]
-        )
+        statement = add_missing_columns(statement, [expression.element for expression in self.order_by])
         return statement.distinct(*self.distinct_on)
