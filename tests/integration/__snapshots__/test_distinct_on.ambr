@@ -233,3 +233,147 @@
    WHERE user.anon_1 = ?
   '''
 # ---
+# name: test_distinct_on_projects_every_aggregation_order_by_column[session-async-tracked-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT sum(fruit_1.sweetness) AS sum_1,
+                 max(fruit_1.sweetness) AS max_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.name,
+         color.id,
+         color.max_1
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id,
+                 anon_1.sum_1 AS sum_1,
+                 anon_1.max_1 AS max_1,
+                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_1.sum_1 ASC) AS anon_2
+            FROM color AS color
+            LEFT OUTER JOIN anon_1
+              ON color.id = anon_1.color_id
+           ORDER BY color.name ASC,
+                    anon_1.sum_1 ASC
+         ) AS color
+   WHERE color.anon_2 = ?
+   ORDER BY color.name ASC,
+            color.sum_1 ASC
+  '''
+# ---
+# name: test_distinct_on_projects_every_aggregation_order_by_column[session-async-tracked-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT sum(fruit_1.sweetness) AS sum_1,
+                 max(fruit_1.sweetness) AS max_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.name,
+         color.id,
+         color.max_1
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id,
+                 anon_1.sum_1 AS sum_1,
+                 anon_1.max_1 AS max_1,
+                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_1.sum_1 ASC) AS anon_2
+            FROM color AS color
+            LEFT OUTER JOIN anon_1
+              ON color.id = anon_1.color_id
+           ORDER BY color.name ASC,
+                    anon_1.sum_1 ASC
+         ) AS color
+   WHERE color.anon_2 = %s
+   ORDER BY color.name ASC,
+            color.sum_1 ASC
+  '''
+# ---
+# name: test_distinct_on_projects_every_aggregation_order_by_column[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id,
+         anon_1.max_1,
+         anon_1.sum_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_1.sweetness) AS sum_1,
+                 max(fruit_1.sweetness) AS max_1
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.name ASC,
+            anon_1.sum_1 ASC
+  '''
+# ---
+# name: test_distinct_on_projects_every_aggregation_order_by_column[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id,
+         anon_1.max_1,
+         anon_1.sum_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_1.sweetness) AS sum_1,
+                 max(fruit_1.sweetness) AS max_1
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.name ASC,
+            anon_1.sum_1 ASC
+  '''
+# ---
+# name: test_distinct_on_projects_every_aggregation_order_by_column[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id,
+         anon_1.max_1,
+         anon_1.sum_1
+    FROM color AS color
+    JOIN LATERAL (
+          SELECT sum(fruit_1.sweetness) AS sum_1,
+                 max(fruit_1.sweetness) AS max_1
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.name ASC,
+            anon_1.sum_1 ASC
+  '''
+# ---
+# name: test_distinct_on_projects_every_aggregation_order_by_column[session-sync-tracked-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT sum(fruit_1.sweetness) AS sum_1,
+                 max(fruit_1.sweetness) AS max_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) SELECT color.name,
+         color.id,
+         color.max_1
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id,
+                 anon_1.sum_1 AS sum_1,
+                 anon_1.max_1 AS max_1,
+                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_1.sum_1 ASC) AS anon_2
+            FROM color AS color
+            LEFT OUTER JOIN anon_1
+              ON color.id = anon_1.color_id
+           ORDER BY color.name ASC,
+                    anon_1.sum_1 ASC
+         ) AS color
+   WHERE color.anon_2 = ?
+   ORDER BY color.name ASC,
+            color.sum_1 ASC
+  '''
+# ---

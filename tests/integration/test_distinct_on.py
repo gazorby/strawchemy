@@ -65,3 +65,27 @@ async def test_distinct_and_order_by(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_distinct_on_projects_every_aggregation_order_by_column(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that an aggregation ORDER BY column is selected even when another aggregation of the node is."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colors(distinctOn: [name], orderBy: [{ name: ASC }, { fruitsAggregate: { sum: { sweetness: ASC } } }]) {
+                    name
+                    fruitsAggregate { max { sweetness } }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
