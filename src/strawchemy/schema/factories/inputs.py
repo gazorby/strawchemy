@@ -22,7 +22,7 @@ from strawchemy.dto.strawberry import (
     OrderByDTO,
     OrderByEnum,
 )
-from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
+from strawchemy.dto.types import DTOAuto, DTOConfig, DTOMissing, Purpose
 from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.factories import AggregationInspector, StrawchemyUnMappedFactory, UnmappedGraphQLDTOT
 from strawchemy.schema.filters.fields import FilterFieldMarker
@@ -188,6 +188,18 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
     def _filter_type(self, field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]) -> type[GraphQLFilter]:
         return self.inspector.get_comparison(field)
 
+    @override
+    def _resolve_config(self, dto_config: DTOConfig, base: type[Any]) -> DTOConfig:
+        # An annotated declared field is force-included through its annotation; an unannotated
+        # one has only its marker, so override it with DTOAuto to keep it past include/exclude.
+        config = super()._resolve_config(dto_config, base)
+        unannotated = {
+            name: DTOAuto for name in self.parse_declared_filter_fields(base) if name not in config.annotation_overrides
+        }
+        if not unannotated:
+            return config
+        return config.copy_with(annotation_overrides=unannotated | config.annotation_overrides)
+
     def _aggregation_field(
         self,
         field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
@@ -217,9 +229,12 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
             default=UNSET,
         )
 
-    @staticmethod
     def _validate_declared_columns(
-        declared: dict[str, tuple[FilterFieldMarker, Any]], matched: set[str], model: type[Any]
+        self,
+        declared: dict[str, tuple[FilterFieldMarker, Any]],
+        matched: set[str],
+        model: type[Any],
+        dto_config: DTOConfig,
     ) -> None:
         """Validates that non-custom declared filter fields map to real model columns.
 
@@ -231,14 +246,22 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
             declared: User-declared filter fields keyed by attribute name.
             matched: Names of declared fields that matched a real model column.
             model: The SQLAlchemy model the filter targets.
+            dto_config: Config used to enumerate the model's columns.
 
         Raises:
-            StrawchemyFieldError: If a non-custom declared field does not map to a column.
+            StrawchemyFieldError: If a non-custom declared field does not map to an emitted column.
         """
+        columns = {name for name, field in self.inspector.field_definitions(model, dto_config) if not field.is_relation}
         for field_name, (marker, _annotation) in declared.items():
-            if marker.apply is None and field_name not in matched:
-                msg = f"Filter field {field_name!r} is not a column on {model.__name__}"
-                raise StrawchemyFieldError(msg)
+            if marker.apply is not None or field_name in matched:
+                continue
+            msg = (
+                f"Filter field {field_name!r} matches column {field_name!r} on {model.__name__}, "
+                "which the filter cannot expose"
+                if field_name in columns
+                else f"Filter field {field_name!r} is not a column on {model.__name__}"
+            )
+            raise StrawchemyFieldError(msg)
 
     def _restricted_comparison(
         self,
@@ -425,7 +448,7 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
             field.default_factory = DTOMissing
             yield field
 
-        self._validate_declared_columns(declared_filters, matched_fields, model)
+        self._validate_declared_columns(declared_filters, matched_fields, model, dto_config)
         self._validate_declared_relations(declared_aggregates, matched_aggregates, model, dto_config)
 
         yield from self._iter_custom_filter_fields(declared_filters, model, dto_config)
