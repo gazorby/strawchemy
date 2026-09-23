@@ -454,14 +454,20 @@
   SELECT fruit.name,
          fruit.id
     FROM (
-          SELECT fruit.id AS id,
-                 fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
-            FROM fruit AS fruit
-           ORDER BY fruit.name ASC,
-                    fruit.id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT fruit.id AS id,
+                         fruit.name AS name,
+                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.name ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC,
+                    anon_1.id ASC
          ) AS fruit
-   WHERE fruit.anon_1 = ?
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
@@ -471,14 +477,20 @@
   SELECT fruit.name,
          fruit.id
     FROM (
-          SELECT fruit.id AS id,
-                 fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
-            FROM fruit AS fruit
-           ORDER BY fruit.name ASC,
-                    fruit.id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT fruit.id AS id,
+                         fruit.name AS name,
+                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.name ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.name ASC,
+                    anon_1.id ASC
          ) AS fruit
-   WHERE fruit.anon_1 = %s
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
@@ -488,14 +500,20 @@
   SELECT fruit.name,
          fruit.id
     FROM (
-          SELECT fruit.id AS id,
-                 fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
-            FROM fruit AS fruit
-           ORDER BY fruit.name ASC,
-                    fruit.id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT fruit.id AS id,
+                         fruit.name AS name,
+                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.name ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.name ASC,
+                    anon_1.id ASC
          ) AS fruit
-   WHERE fruit.anon_1 = $1::INTEGER
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
@@ -505,14 +523,20 @@
   SELECT fruit.name,
          fruit.id
     FROM (
-          SELECT fruit.id AS id,
-                 fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
-            FROM fruit AS fruit
-           ORDER BY fruit.name ASC,
-                    fruit.id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT fruit.id AS id,
+                         fruit.name AS name,
+                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.name ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.name ASC,
+                    anon_1.id ASC
          ) AS fruit
-   WHERE fruit.anon_1 = %(param_1)s::INTEGER
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
@@ -522,14 +546,20 @@
   SELECT fruit.name,
          fruit.id
     FROM (
-          SELECT fruit.id AS id,
-                 fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
-            FROM fruit AS fruit
-           ORDER BY fruit.name ASC,
-                    fruit.id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT fruit.id AS id,
+                         fruit.name AS name,
+                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.name ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.name ASC,
+                    anon_1.id ASC
          ) AS fruit
-   WHERE fruit.anon_1 = %(param_1)s::INTEGER
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''
@@ -539,14 +569,20 @@
   SELECT fruit.name,
          fruit.id
     FROM (
-          SELECT fruit.id AS id,
-                 fruit.name AS name,
-                 row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_1
-            FROM fruit AS fruit
-           ORDER BY fruit.name ASC,
-                    fruit.id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT fruit.id AS id,
+                         fruit.name AS name,
+                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.name ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC,
+                    anon_1.id ASC
          ) AS fruit
-   WHERE fruit.anon_1 = ?
    ORDER BY fruit.name ASC,
             fruit.id ASC
   '''

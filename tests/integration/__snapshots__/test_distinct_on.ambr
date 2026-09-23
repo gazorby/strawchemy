@@ -4,14 +4,20 @@
   SELECT user.name,
          user.id
     FROM (
-          SELECT user.id AS id,
-                 user.name AS name,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
-            FROM USER AS USER
-           ORDER BY user.name ASC,
-                    user.id DESC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.name ASC,
+                            user.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC,
+                    anon_1.id DESC
          ) AS USER
-   WHERE user.anon_1 = ?
    ORDER BY user.name ASC,
             user.id DESC
   '''
@@ -21,14 +27,20 @@
   SELECT user.name,
          user.id
     FROM (
-          SELECT user.id AS id,
-                 user.name AS name,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
-            FROM USER AS USER
-           ORDER BY user.name ASC,
-                    user.id DESC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.name ASC,
+                            user.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.name ASC,
+                    anon_1.id DESC
          ) AS USER
-   WHERE user.anon_1 = %s
    ORDER BY user.name ASC,
             user.id DESC
   '''
@@ -68,14 +80,20 @@
   SELECT user.name,
          user.id
     FROM (
-          SELECT user.id AS id,
-                 user.name AS name,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_1
-            FROM USER AS USER
-           ORDER BY user.name ASC,
-                    user.id DESC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.name ASC,
+                            user.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC,
+                    anon_1.id DESC
          ) AS USER
-   WHERE user.anon_1 = ?
    ORDER BY user.name ASC,
             user.id DESC
   '''
@@ -85,13 +103,18 @@
   SELECT user.name,
          user.id
     FROM (
-          SELECT user.id AS id,
-                 user.name AS name,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_1
-            FROM USER AS USER
-           ORDER BY user.id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.id ASC
          ) AS USER
-   WHERE user.anon_1 = ?
    ORDER BY user.id ASC
   '''
 # ---
@@ -100,13 +123,18 @@
   SELECT user.name,
          user.id
     FROM (
-          SELECT user.id AS id,
-                 user.name AS name,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_1
-            FROM USER AS USER
-           ORDER BY user.id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.id ASC
          ) AS USER
-   WHERE user.anon_1 = %s
    ORDER BY user.id ASC
   '''
 # ---
@@ -115,13 +143,18 @@
   SELECT "user".name,
          "user".id
     FROM (
-          SELECT "user".id AS id,
-                 "user".name AS name,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_1
-            FROM "user" AS "user"
-           ORDER BY "user".id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT "user".id AS id,
+                         "user".name AS name,
+                         row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
+                    FROM "user" AS "user"
+                   ORDER BY "user".id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.id ASC
          ) AS "user"
-   WHERE "user".anon_1 = $1::INTEGER
    ORDER BY "user".id ASC
   '''
 # ---
@@ -130,13 +163,18 @@
   SELECT "user".name,
          "user".id
     FROM (
-          SELECT "user".id AS id,
-                 "user".name AS name,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_1
-            FROM "user" AS "user"
-           ORDER BY "user".id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT "user".id AS id,
+                         "user".name AS name,
+                         row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
+                    FROM "user" AS "user"
+                   ORDER BY "user".id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.id ASC
          ) AS "user"
-   WHERE "user".anon_1 = %(param_1)s::INTEGER
    ORDER BY "user".id ASC
   '''
 # ---
@@ -145,12 +183,16 @@
   SELECT user.name,
          user.id
     FROM (
-          SELECT user.id AS id,
-                 user.name AS name,
-                 row_number() OVER (PARTITION BY user.name) AS anon_1
-            FROM USER AS USER
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name) AS anon_2
+                    FROM USER AS USER
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
          ) AS USER
-   WHERE user.anon_1 = ?
   '''
 # ---
 # name: test_distinct_on[session-async-tracked-non-deterministic-ordering-asyncmy_engine]
@@ -158,12 +200,16 @@
   SELECT user.name,
          user.id
     FROM (
-          SELECT user.id AS id,
-                 user.name AS name,
-                 row_number() OVER (PARTITION BY user.name) AS anon_1
-            FROM USER AS USER
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name) AS anon_2
+                    FROM USER AS USER
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
          ) AS USER
-   WHERE user.anon_1 = %s
   '''
 # ---
 # name: test_distinct_on[session-async-tracked-non-deterministic-ordering-asyncpg_engine]
@@ -187,13 +233,18 @@
   SELECT "user".name,
          "user".id
     FROM (
-          SELECT "user".id AS id,
-                 "user".name AS name,
-                 row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_1
-            FROM "user" AS "user"
-           ORDER BY "user".id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT "user".id AS id,
+                         "user".name AS name,
+                         row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
+                    FROM "user" AS "user"
+                   ORDER BY "user".id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.id ASC
          ) AS "user"
-   WHERE "user".anon_1 = %(param_1)s::INTEGER
    ORDER BY "user".id ASC
   '''
 # ---
@@ -202,13 +253,18 @@
   SELECT user.name,
          user.id
     FROM (
-          SELECT user.id AS id,
-                 user.name AS name,
-                 row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_1
-            FROM USER AS USER
-           ORDER BY user.id ASC
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.id ASC
          ) AS USER
-   WHERE user.anon_1 = ?
    ORDER BY user.id ASC
   '''
 # ---
@@ -225,17 +281,414 @@
   SELECT user.name,
          user.id
     FROM (
-          SELECT user.id AS id,
-                 user.name AS name,
-                 row_number() OVER (PARTITION BY user.name) AS anon_1
-            FROM USER AS USER
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name) AS anon_2
+                    FROM USER AS USER
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
          ) AS USER
-   WHERE user.anon_1 = ?
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-deterministic-ordering-aiosqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-deterministic-ordering-asyncmy_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.id ASC
+           LIMIT %s,
+                 %s
+         ) AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-deterministic-ordering-asyncpg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT "user".id AS id,
+                         "user".name AS name,
+                         row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
+                    FROM "user" AS "user"
+                   ORDER BY "user".id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.id ASC
+           LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
+         ) AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-deterministic-ordering-offset-aiosqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-deterministic-ordering-offset-asyncmy_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.id ASC
+           LIMIT %s,
+                 %s
+         ) AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-deterministic-ordering-offset-asyncpg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT "user".id AS id,
+                         "user".name AS name,
+                         row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
+                    FROM "user" AS "user"
+                   ORDER BY "user".id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.id ASC
+           LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
+         ) AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-deterministic-ordering-offset-psycopg_async_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT "user".id AS id,
+                         "user".name AS name,
+                         row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
+                    FROM "user" AS "user"
+                   ORDER BY "user".id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.id ASC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-deterministic-ordering-psycopg_async_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT "user".id AS id,
+                         "user".name AS name,
+                         row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
+                    FROM "user" AS "user"
+                   ORDER BY "user".id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.id ASC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-order-by-distinct-columns-aiosqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.name ASC,
+                            user.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC,
+                    anon_1.id DESC
+           LIMIT ?
+          OFFSET ?
+         ) AS USER
+   ORDER BY user.name ASC,
+            user.id DESC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-order-by-distinct-columns-asyncmy_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.name ASC,
+                            user.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.name ASC,
+                    anon_1.id DESC
+           LIMIT %s,
+                 %s
+         ) AS USER
+   ORDER BY user.name ASC,
+            user.id DESC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-order-by-distinct-columns-asyncpg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM (
+          SELECT DISTINCT
+              ON ("user".name) "user".id AS id,
+                 "user".name AS name
+            FROM "user" AS "user"
+           ORDER BY "user".name ASC,
+                    "user".id DESC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS "user"
+   ORDER BY "user".name ASC,
+            "user".id DESC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-async-tracked-order-by-distinct-columns-psycopg_async_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM (
+          SELECT DISTINCT
+              ON ("user".name) "user".id AS id,
+                 "user".name AS name
+            FROM "user" AS "user"
+           ORDER BY "user".name ASC,
+                    "user".id DESC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS "user"
+   ORDER BY "user".name ASC,
+            "user".id DESC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-sync-tracked-deterministic-ordering-offset-psycopg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT "user".id AS id,
+                         "user".name AS name,
+                         row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
+                    FROM "user" AS "user"
+                   ORDER BY "user".id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.id ASC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-sync-tracked-deterministic-ordering-offset-sqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-sync-tracked-deterministic-ordering-psycopg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT "user".id AS id,
+                         "user".name AS name,
+                         row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
+                    FROM "user" AS "user"
+                   ORDER BY "user".id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.id ASC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-sync-tracked-deterministic-ordering-sqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-sync-tracked-order-by-distinct-columns-psycopg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM (
+          SELECT DISTINCT
+              ON ("user".name) "user".id AS id,
+                 "user".name AS name
+            FROM "user" AS "user"
+           ORDER BY "user".name ASC,
+                    "user".id DESC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS "user"
+   ORDER BY "user".name ASC,
+            "user".id DESC
+  '''
+# ---
+# name: test_distinct_on_paginates_distinct_rows[session-sync-tracked-order-by-distinct-columns-sqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name
+            FROM (
+                  SELECT user.id AS id,
+                         user.name AS name,
+                         row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
+                    FROM USER AS USER
+                   ORDER BY user.name ASC,
+                            user.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC,
+                    anon_1.id DESC
+           LIMIT ?
+          OFFSET ?
+         ) AS USER
+   ORDER BY user.name ASC,
+            user.id DESC
   '''
 # ---
 # name: test_distinct_on_projects_every_aggregation_order_by_column[session-async-tracked-aiosqlite_engine]
   '''
-  WITH anon_1 AS (
+  WITH anon_2 AS (
           SELECT sum(fruit_1.sweetness) AS sum_1,
                  max(fruit_1.sweetness) AS max_1,
                  fruit_1.color_id AS color_id
@@ -246,25 +699,33 @@
          color.id,
          color.max_1
     FROM (
-          SELECT color.name AS name,
-                 color.id AS id,
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
                  anon_1.sum_1 AS sum_1,
-                 anon_1.max_1 AS max_1,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_1.sum_1 ASC) AS anon_2
-            FROM color AS color
-            LEFT OUTER JOIN anon_1
-              ON color.id = anon_1.color_id
-           ORDER BY color.name ASC,
+                 anon_1.max_1 AS max_1
+            FROM (
+                  SELECT color.name AS name,
+                         color.id AS id,
+                         anon_2.sum_1 AS sum_1,
+                         anon_2.max_1 AS max_1,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_2.sum_1 ASC) AS anon_3
+                    FROM color AS color
+                    LEFT OUTER JOIN anon_2
+                      ON color.id = anon_2.color_id
+                   ORDER BY color.name ASC,
+                            anon_2.sum_1 ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_3 = ?
+           ORDER BY anon_1.name ASC,
                     anon_1.sum_1 ASC
          ) AS color
-   WHERE color.anon_2 = ?
    ORDER BY color.name ASC,
             color.sum_1 ASC
   '''
 # ---
 # name: test_distinct_on_projects_every_aggregation_order_by_column[session-async-tracked-asyncmy_engine]
   '''
-  WITH anon_1 AS (
+  WITH anon_2 AS (
           SELECT sum(fruit_1.sweetness) AS sum_1,
                  max(fruit_1.sweetness) AS max_1,
                  fruit_1.color_id AS color_id
@@ -275,18 +736,26 @@
          color.id,
          color.max_1
     FROM (
-          SELECT color.name AS name,
-                 color.id AS id,
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
                  anon_1.sum_1 AS sum_1,
-                 anon_1.max_1 AS max_1,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_1.sum_1 ASC) AS anon_2
-            FROM color AS color
-            LEFT OUTER JOIN anon_1
-              ON color.id = anon_1.color_id
-           ORDER BY color.name ASC,
+                 anon_1.max_1 AS max_1
+            FROM (
+                  SELECT color.name AS name,
+                         color.id AS id,
+                         anon_2.sum_1 AS sum_1,
+                         anon_2.max_1 AS max_1,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_2.sum_1 ASC) AS anon_3
+                    FROM color AS color
+                    LEFT OUTER JOIN anon_2
+                      ON color.id = anon_2.color_id
+                   ORDER BY color.name ASC,
+                            anon_2.sum_1 ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_3 = %s
+           ORDER BY anon_1.name ASC,
                     anon_1.sum_1 ASC
          ) AS color
-   WHERE color.anon_2 = %s
    ORDER BY color.name ASC,
             color.sum_1 ASC
   '''
@@ -350,7 +819,7 @@
 # ---
 # name: test_distinct_on_projects_every_aggregation_order_by_column[session-sync-tracked-sqlite_engine]
   '''
-  WITH anon_1 AS (
+  WITH anon_2 AS (
           SELECT sum(fruit_1.sweetness) AS sum_1,
                  max(fruit_1.sweetness) AS max_1,
                  fruit_1.color_id AS color_id
@@ -361,18 +830,26 @@
          color.id,
          color.max_1
     FROM (
-          SELECT color.name AS name,
-                 color.id AS id,
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
                  anon_1.sum_1 AS sum_1,
-                 anon_1.max_1 AS max_1,
-                 row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_1.sum_1 ASC) AS anon_2
-            FROM color AS color
-            LEFT OUTER JOIN anon_1
-              ON color.id = anon_1.color_id
-           ORDER BY color.name ASC,
+                 anon_1.max_1 AS max_1
+            FROM (
+                  SELECT color.name AS name,
+                         color.id AS id,
+                         anon_2.sum_1 AS sum_1,
+                         anon_2.max_1 AS max_1,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_2.sum_1 ASC) AS anon_3
+                    FROM color AS color
+                    LEFT OUTER JOIN anon_2
+                      ON color.id = anon_2.color_id
+                   ORDER BY color.name ASC,
+                            anon_2.sum_1 ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_3 = ?
+           ORDER BY anon_1.name ASC,
                     anon_1.sum_1 ASC
          ) AS color
-   WHERE color.anon_2 = ?
    ORDER BY color.name ASC,
             color.sum_1 ASC
   '''

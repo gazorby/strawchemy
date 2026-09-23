@@ -1090,13 +1090,10 @@ def _assemble_inner_statement(
     selected_function_columns: Sequence[ColumnElement[Any]],
     limit: int | None,
     offset: int | None,
-) -> tuple[Select[Any], KeyedColumnElement[Any] | None]:
+) -> Select[Any]:
     """Builds the SELECT of the pagination or DISTINCT ON subquery, from ``inner_alias``.
 
-    Without ``use_distinct_on``, DISTINCT ON is emulated with a ``row_number()`` column.
-
-    Returns:
-        The statement, and its ``row_number()`` column when DISTINCT ON is emulated.
+    Without ``use_distinct_on``, DISTINCT ON is emulated with a ``row_number()`` rank, filtered before pagination.
     """
     only_columns: list[Any] = [
         *context.aliases.inspect(query_graph.root_join_tree).selection(inner_alias),
@@ -1133,10 +1130,6 @@ def _assemble_inner_statement(
     if use_distinct_on and distinct_on:
         inner_statement = add_missing_columns(inner_statement, [e.element for e in order_expressions])
         inner_statement = inner_statement.distinct(*distinct_on.expressions)
-    if limit is not None:
-        inner_statement = inner_statement.limit(limit)
-    if offset is not None:
-        inner_statement = inner_statement.offset(offset)
     inner_statement, _ = context.hook_applier.apply(
         inner_statement,
         node=query_graph.root_join_tree.root,
@@ -1144,7 +1137,27 @@ def _assemble_inner_statement(
         loading_mode="add",
         in_subquery=True,
     )
-    return inner_statement, rank_label
+    if rank_label is not None:
+        inner_statement = _first_ranked_rows(inner_statement, rank_label, order_expressions)
+    if limit is not None:
+        inner_statement = inner_statement.limit(limit)
+    if offset is not None:
+        inner_statement = inner_statement.offset(offset)
+    return inner_statement
+
+
+def _first_ranked_rows(
+    statement: Select[Any], rank: KeyedColumnElement[Any], order_expressions: Sequence[UnaryExpression[Any]]
+) -> Select[Any]:
+    """Keeps the rows of ``statement`` ranked first, ordered by ``order_expressions``."""
+    ranked = add_missing_columns(statement, [expression.element for expression in order_expressions]).subquery()
+    ranked_rank = require_corresponding_column(ranked, rank)
+    adapter = ClauseAdapter(ranked)
+    return (
+        select(*[column for column in ranked.c if column is not ranked_rank])
+        .where(ranked_rank == 1)
+        .order_by(*[adapter.traverse(expression) for expression in order_expressions])
+    )
 
 
 def _plan_subquery(
@@ -1180,7 +1193,7 @@ def _plan_subquery(
     inner_joins = _dedup_agg_joins([*filter_plan.joins, *inner_order.joins, *subquery_tree_joins])
     referenced_functions = _referenced_function_nodes(aggregation_plan, inner_joins)
     selected_function_labels = {fn: aggregation_plan.columns[fn] for fn in referenced_functions}
-    inner_statement, rank_label = _assemble_inner_statement(
+    inner_statement = _assemble_inner_statement(
         query_graph,
         context,
         inner_alias=inner_alias,
@@ -1216,10 +1229,6 @@ def _plan_subquery(
     outer_proj = projection_phase.projection_plan
     outer_joins.extend(outer_proj.aggregation_joins)
 
-    where: tuple[ColumnElement[bool], ...] = ()
-    if distinct_on_rank and rank_label is not None:
-        where = (require_corresponding_column(subquery, rank_label) == 1,)
-
     column_map: dict[QueryNodeType, ColumnElement[Any]] = {
         **outer_agg_plan.columns,
         **outer_proj.transform_map,
@@ -1231,7 +1240,7 @@ def _plan_subquery(
         filter_semijoin=None,
         projection_columns=outer_proj.columns,
         load_options=outer_proj.load_options,
-        where=where,
+        where=(),
         order_by=outer_order.expressions,
         joins=tuple(_dedup_agg_joins(outer_joins)),
         root_aggregation_functions=root_aggs,
