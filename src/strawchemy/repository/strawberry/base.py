@@ -192,10 +192,11 @@ class StrawchemyRepository(Generic[T]):
         return convert(arguments, type=RelationFilterDTO, strict=False)
 
     @classmethod
-    def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]] | None:
+    def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]]:
         from strawchemy.schema.field import StrawchemyField  # noqa: PLC0415
 
-        return field.query_hook if isinstance(field, StrawchemyField) else None
+        hooks = field.query_hook if isinstance(field, StrawchemyField) else None
+        return () if hooks is None else hooks
 
     def _add_query_hooks(self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: QueryNodeType) -> None:
         for hook in [query_hooks] if isinstance(query_hooks, QueryHook) else query_hooks:
@@ -229,9 +230,6 @@ class StrawchemyRepository(Generic[T]):
             strawberry_field = next(field for field in strawberry_definition.fields if field.name == model_field_name)
             strawberry_field_type = strawberry_contained_user_type(strawberry_field.type)
 
-            if (hooks := self._get_field_hooks(strawberry_field)) is not None:
-                self._add_query_hooks(hooks, node)
-
             if has_object_definition(selection_type):
                 dto = selection_type
             else:
@@ -240,7 +238,9 @@ class StrawchemyRepository(Generic[T]):
             assert issubclass(dto, StrawchemyObject)
 
             field_definition = dto.__dto_field_definitions__.get(strawberry_field.name)
+            hooks = self._get_field_hooks(strawberry_field)
             if field_definition is None:
+                self._add_query_hooks(hooks, node)
                 continue
 
             selection_arguments = snake_keys(selection.arguments) if self.auto_snake_case else selection.arguments
@@ -256,5 +256,8 @@ class StrawchemyRepository(Generic[T]):
                 ),
             )
             child = node.insert_node(child_node)
+            # A relation field's hook targets the related model; a column or resolver field's hook the owning one.
+            is_relation_field = field_definition.is_relation and strawberry_field.base_resolver is None
+            self._add_query_hooks(hooks, child if is_relation_field else node)
             if selection.selections:
                 self._build(strawberry_field_type, selection.selections, child)

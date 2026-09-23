@@ -277,3 +277,33 @@ async def test_root_field_query_hook_load(
     assert query_tracker.query_count == 1
     assert "water_percent" in query_tracker[0].statement_str
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize("query", ["colorsWithSweetFruits", "colorsWithSweetFruitsPaginated"])
+@pytest.mark.snapshot
+async def test_query_hook_on_relation_field(
+    query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
+) -> None:
+    """Test that a relation field's `query_hook` applies to the related model, not the parent."""
+    result = await maybe_async(any_query(f"{{ {query} {{ name fruits {{ name }} }} }}"))
+
+    assert not result.errors
+    assert result.data
+    sweet_fruits = {
+        color["name"]: sorted(
+            fruit["name"] for fruit in raw_fruits if fruit["color_id"] == color["id"] and fruit["sweetness"] > 5
+        )
+        for color in raw_colors
+    }
+    # Like a type-level hook on the related type, the hook also drops parents left without related rows.
+    assert {color["name"]: sorted(fruit["name"] for fruit in color["fruits"]) for color in result.data[query]} == {
+        name: fruits for name, fruits in sweet_fruits.items() if fruits
+    }
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
