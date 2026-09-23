@@ -139,6 +139,7 @@ class StrawchemyRepository(Generic[T]):
         info: The GraphQL resolver info object
         root_aggregations: Whether to enable root-level aggregations
         auto_snake_case: Whether to automatically convert field names to snake_case
+        query_hook: Hooks applied to the root node, as a type-level hook would be
 
     Attributes:
         _ignored_field_names: Set of field names to ignore during query building
@@ -154,6 +155,7 @@ class StrawchemyRepository(Generic[T]):
     info: Info[Any, Any]
     root_aggregations: bool = False
     auto_snake_case: bool = True
+    query_hook: QueryHook[Any] | Sequence[QueryHook[Any]] | None = None
 
     _query_hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(list), init=False
@@ -173,6 +175,8 @@ class StrawchemyRepository(Generic[T]):
             root_aggregations=self.root_aggregations,
         )
 
+        if self.query_hook is not None:
+            self._add_query_hooks(self.query_hook, node)
         self._build(inner_root_type, resolver_selection.selections, node)
         self._tree = node.merge_same_children(match_on="value_equality")
 
@@ -193,8 +197,8 @@ class StrawchemyRepository(Generic[T]):
 
         return field.query_hook if isinstance(field, StrawchemyField) else None
 
-    def _add_query_hooks(self, query_hooks: Sequence[QueryHook[Any]], node: QueryNodeType) -> None:
-        for hook in query_hooks:
+    def _add_query_hooks(self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: QueryNodeType) -> None:
+        for hook in [query_hooks] if isinstance(query_hooks, QueryHook) else query_hooks:
             hook.info_var.set(self.info)
             self._query_hooks[node].append(hook)
 
@@ -226,7 +230,7 @@ class StrawchemyRepository(Generic[T]):
             strawberry_field_type = strawberry_contained_user_type(strawberry_field.type)
 
             if (hooks := self._get_field_hooks(strawberry_field)) is not None:
-                self._add_query_hooks([hooks] if isinstance(hooks, QueryHook) else hooks, node)
+                self._add_query_hooks(hooks, node)
 
             if has_object_definition(selection_type):
                 dto = selection_type

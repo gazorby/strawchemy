@@ -204,3 +204,76 @@ async def test_query_hook_on_type(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize("query", ["fieldFilteredFruits", "fieldFilteredFruitsPaginated"])
+@pytest.mark.snapshot
+async def test_root_field_query_hook_where(
+    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a root list field's query hook filters the root rows."""
+    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
+
+    assert not result.errors
+    assert result.data
+    assert result.data[query] == [{"name": "Apple"}]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(("apple", "expected"), [(True, {"name": "Apple"}), (False, None)])
+@pytest.mark.snapshot
+async def test_root_field_query_hook_where_get_by_id(
+    apple: bool,
+    expected: dict[str, str] | None,
+    any_query: AnyQueryExecutor,
+    raw_fruits: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that a root get-by-id field's query hook hides the rows it filters out."""
+    fruit_id = next(fruit["id"] for fruit in raw_fruits if (fruit["name"] == "Apple") is apple)
+    result = await maybe_async(any_query(f"{{ fieldFilteredFruit(id: {fruit_id}) {{ name }} }}"))
+
+    assert not result.errors
+    assert result.data == {"fieldFilteredFruit": expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_root_field_query_hook_where_root_aggregations(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a root aggregation field's query hook filters both nodes and aggregations."""
+    result = await maybe_async(
+        any_query("{ fieldFilteredFruitAggregations { aggregations { count } nodes { name } } }")
+    )
+
+    assert not result.errors
+    assert result.data
+    assert result.data["fieldFilteredFruitAggregations"] == {"aggregations": {"count": 1}, "nodes": [{"name": "Apple"}]}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_root_field_query_hook_load(
+    any_query: AnyQueryExecutor,
+    raw_fruits: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that a root field's query hook loads its columns on the root model."""
+    result = await maybe_async(any_query("{ fieldLoadFruits { name } }"))
+
+    assert not result.errors
+    assert result.data
+    assert result.data["fieldLoadFruits"] == [{"name": fruit["name"]} for fruit in raw_fruits]
+
+    assert query_tracker.query_count == 1
+    assert "water_percent" in query_tracker[0].statement_str
+    assert query_tracker[0].statement_formatted == sql_snapshot

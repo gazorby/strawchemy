@@ -229,6 +229,7 @@ class StrawchemyField(StrawberryField):
             execution_options=self._execution_options,
             deterministic_ordering=self._config.deterministic_ordering,
             default_order_by=self._default_order_by,
+            query_hook=self.query_hook,
         )
 
     def _is_repo_async(

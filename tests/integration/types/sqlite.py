@@ -387,6 +387,21 @@ class AsyncQuery:
     ordered_fruits_paginated: list[OrderedFruitType] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
+    field_filtered_fruits: list[FruitType] = strawchemy.field(
+        query_hook=FruitFilterHook(), repository_type=StrawchemyAsyncRepository
+    )
+    field_filtered_fruits_paginated: list[FruitType] = strawchemy.field(
+        query_hook=FruitFilterHook(), repository_type=StrawchemyAsyncRepository, pagination=True
+    )
+    field_filtered_fruit: FruitType | None = strawchemy.field(
+        query_hook=FruitFilterHook(), repository_type=StrawchemyAsyncRepository
+    )
+    field_filtered_fruit_aggregations: FruitAggregationType = strawchemy.field(
+        query_hook=FruitFilterHook(), root_aggregations=True, repository_type=StrawchemyAsyncRepository
+    )
+    field_load_fruits: list[FruitType] = strawchemy.field(
+        query_hook=QueryHook(load=[Fruit.water_percent]), repository_type=StrawchemyAsyncRepository
+    )
     fruit_with_extension: FruitTypeHooks = strawchemy.field(
         filter_input=FruitFilter, repository_type=StrawchemyAsyncRepository, extensions=[SomeExtension()]
     )
@@ -522,6 +537,21 @@ class SyncQuery:
     ordered_fruits: list[OrderedFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
     ordered_fruits_paginated: list[OrderedFruitType] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
+    )
+    field_filtered_fruits: list[FruitType] = strawchemy.field(
+        query_hook=FruitFilterHook(), repository_type=StrawchemySyncRepository
+    )
+    field_filtered_fruits_paginated: list[FruitType] = strawchemy.field(
+        query_hook=FruitFilterHook(), repository_type=StrawchemySyncRepository, pagination=True
+    )
+    field_filtered_fruit: FruitType | None = strawchemy.field(
+        query_hook=FruitFilterHook(), repository_type=StrawchemySyncRepository
+    )
+    field_filtered_fruit_aggregations: FruitAggregationType = strawchemy.field(
+        query_hook=FruitFilterHook(), root_aggregations=True, repository_type=StrawchemySyncRepository
+    )
+    field_load_fruits: list[FruitType] = strawchemy.field(
+        query_hook=QueryHook(load=[Fruit.water_percent]), repository_type=StrawchemySyncRepository
     )
     fruit_with_extension: FruitTypeHooks = strawchemy.field(
         filter_input=FruitFilter, repository_type=StrawchemySyncRepository, extensions=[SomeExtension()]
