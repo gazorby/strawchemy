@@ -362,7 +362,6 @@ input MilestoneBoolExp {
   _and: [MilestoneBoolExp!]! = []
   _or: [MilestoneBoolExp!]! = []
   _not: MilestoneBoolExp
-  projectAggregate: ProjectAggregateBoolExp
   project: ProjectBoolExp
   name: TextComparison
   projectId: UUIDGenericComparison
@@ -404,7 +403,6 @@ enum MilestoneMinMaxStringFieldsEnum {
 
 """Ordering input."""
 input MilestoneOrderBy {
-  projectAggregate: ProjectAggregateOrderBy
   project: ProjectOrderBy
   name: OrderByEnum
   projectId: OrderByEnum
@@ -598,7 +596,6 @@ input ProjectBoolExp {
   tickets: TicketFilter
   milestonesAggregate: MilestoneAggregateBoolExp
   milestones: MilestoneBoolExp
-  tagAggregate: TagAggregateBoolExp
   tag: TagBoolExp
   customersAggregate: CustomerAggregateBoolExp
   customers: CustomerBoolExp
@@ -633,7 +630,6 @@ input ProjectFilter {
   tickets: TicketFilter
   milestonesAggregate: MilestoneAggregateBoolExp
   milestones: MilestoneBoolExp
-  tagAggregate: TagAggregateBoolExp
   tag: TagBoolExp
   customersAggregate: CustomerAggregateBoolExp
   customers: CustomerBoolExp
@@ -666,7 +662,6 @@ input ProjectOrder {
   tickets: TicketOrder
   milestonesAggregate: MilestoneAggregateOrderBy
   milestones: MilestoneOrderBy
-  tagAggregate: TagAggregateOrderBy
   tag: TagOrderBy
   customersAggregate: CustomerAggregateOrderBy
   customers: CustomerOrderBy
@@ -683,7 +678,6 @@ input ProjectOrderBy {
   tickets: TicketOrder
   milestonesAggregate: MilestoneAggregateOrderBy
   milestones: MilestoneOrderBy
-  tagAggregate: TagAggregateOrderBy
   tag: TagOrderBy
   customersAggregate: CustomerAggregateOrderBy
   customers: CustomerOrderBy
@@ -743,86 +737,6 @@ type Query {
 }
 
 """
-Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
-"""
-input TagAggregateBoolExp {
-  count: TagAggregateBoolExpCount
-  maxDatetime: TagAggregateBoolExpMaxdatetime
-  maxString: TagAggregateBoolExpMaxstring
-  minDatetime: TagAggregateBoolExpMindatetime
-  minString: TagAggregateBoolExpMinstring
-  sum: TagAggregateBoolExpSum
-}
-
-"""Boolean expression to compare count aggregation."""
-input TagAggregateBoolExpCount {
-  arguments: [TagCountFields!] = []
-  predicate: IntOrderComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare max aggregation."""
-input TagAggregateBoolExpMaxdatetime {
-  arguments: [TagMinMaxDateTimeFieldsEnum!]!
-  predicate: DateTimeComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare max aggregation."""
-input TagAggregateBoolExpMaxstring {
-  arguments: [TagMinMaxStringFieldsEnum!]!
-  predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare min aggregation."""
-input TagAggregateBoolExpMindatetime {
-  arguments: [TagMinMaxDateTimeFieldsEnum!]!
-  predicate: DateTimeComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare min aggregation."""
-input TagAggregateBoolExpMinstring {
-  arguments: [TagMinMaxStringFieldsEnum!]!
-  predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare sum aggregation."""
-input TagAggregateBoolExpSum {
-  arguments: [TagSumFieldsEnum!]!
-  predicate: FloatOrderComparison!
-  distinct: Boolean = false
-}
-
-"""GraphQL type"""
-input TagAggregateMinMaxDatetimeFieldsOrderBy {
-  createdAt: OrderByEnum
-  updatedAt: OrderByEnum
-}
-
-"""GraphQL type"""
-input TagAggregateMinMaxStringFieldsOrderBy {
-  name: OrderByEnum
-}
-
-"""GraphQL type"""
-input TagAggregateNumericFieldsOrderBy {
-  name: OrderByEnum
-}
-
-"""GraphQL type"""
-input TagAggregateOrderBy {
-  count: OrderByEnum
-  maxDatetime: TagAggregateMinMaxDatetimeFieldsOrderBy
-  maxString: TagAggregateMinMaxStringFieldsOrderBy
-  minDatetime: TagAggregateMinMaxDatetimeFieldsOrderBy
-  minString: TagAggregateMinMaxStringFieldsOrderBy
-  sum: TagAggregateNumericFieldsOrderBy
-}
-
-"""
 Boolean expression to compare fields. All fields are combined with logical 'AND'.
 """
 input TagBoolExp {
@@ -835,32 +749,12 @@ input TagBoolExp {
   updatedAt: DateTimeComparison
 }
 
-enum TagCountFields {
-  name
-  id
-  createdAt
-  updatedAt
-}
-
-enum TagMinMaxDateTimeFieldsEnum {
-  createdAt
-  updatedAt
-}
-
-enum TagMinMaxStringFieldsEnum {
-  name
-}
-
 """Ordering input."""
 input TagOrderBy {
   name: OrderByEnum
   id: OrderByEnum
   createdAt: OrderByEnum
   updatedAt: OrderByEnum
-}
-
-enum TagSumFieldsEnum {
-  name
 }
 
 """GraphQL type"""
@@ -1010,7 +904,6 @@ input TicketFilter {
   _and: [TicketFilter!]! = []
   _or: [TicketFilter!]! = []
   _not: TicketFilter
-  projectAggregate: ProjectAggregateBoolExp
   project: ProjectBoolExp
   name: TextComparison
   projectId: UUIDGenericComparison
@@ -1037,7 +930,6 @@ enum TicketMinMaxStringFieldsEnum {
 
 """Ordering input."""
 input TicketOrder {
-  projectAggregate: ProjectAggregateOrderBy
   project: ProjectOrderBy
   name: OrderByEnum
   projectId: OrderByEnum

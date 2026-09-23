@@ -31,21 +31,6 @@ input DateTimeComparison {
 """
 Boolean expression to compare fields supporting order comparisons. All fields are combined with logical 'AND'
 """
-input FloatOrderComparison {
-  eq: Float
-  neq: Float
-  isNull: Boolean
-  in: [Float!]
-  nin: [Float!]
-  gt: Float
-  gte: Float
-  lt: Float
-  lte: Float
-}
-
-"""
-Boolean expression to compare fields supporting order comparisons. All fields are combined with logical 'AND'
-"""
 input IntOrderComparison {
   eq: Int
   neq: Int
@@ -142,63 +127,12 @@ input TicketAggregateFilterMaxdatetime {
 }
 
 """
-Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
-"""
-input _ProjectAggregateBoolExp {
-  count: _ProjectAggregateBoolExpCount
-  maxString: _ProjectAggregateBoolExpMaxstring
-  minString: _ProjectAggregateBoolExpMinstring
-  sum: _ProjectAggregateBoolExpSum
-}
-
-"""Boolean expression to compare count aggregation."""
-input _ProjectAggregateBoolExpCount {
-  arguments: [_ProjectCountFields!] = []
-  predicate: IntOrderComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare max aggregation."""
-input _ProjectAggregateBoolExpMaxstring {
-  arguments: [_ProjectMinMaxStringFieldsEnum!]!
-  predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare min aggregation."""
-input _ProjectAggregateBoolExpMinstring {
-  arguments: [_ProjectMinMaxStringFieldsEnum!]!
-  predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare sum aggregation."""
-input _ProjectAggregateBoolExpSum {
-  arguments: [_ProjectSumFieldsEnum!]!
-  predicate: FloatOrderComparison!
-  distinct: Boolean = false
-}
-
-enum _ProjectCountFields {
-  name
-}
-
-enum _ProjectMinMaxStringFieldsEnum {
-  name
-}
-
-enum _ProjectSumFieldsEnum {
-  name
-}
-
-"""
 Boolean expression to compare fields. All fields are combined with logical 'AND'.
 """
 input _TicketBoolExp {
   _and: [_TicketBoolExp!]! = []
   _or: [_TicketBoolExp!]! = []
   _not: _TicketBoolExp
-  projectAggregate: _ProjectAggregateBoolExp
   project: ProjectFilter
   id: IntOrderComparison
   name: TextComparison
