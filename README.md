@@ -588,6 +588,8 @@ Important notes when implementing `apply_hooks`:
 - You must use the provided `alias` parameter to refer to columns of the model on which the hook is applied. Otherwise,
   the statement may fail.
 - The GraphQL context is available through `self.info` within hook methods.
+- A hook on a related type, or on a relation field, only restricts the related rows: a parent without matching rows is
+  still returned, with an empty list or `null`.
 - You must set a `ModelInstance` typed attribute if you want to access the model instance values.
   The `instance` attribute is matched by the `ModelInstance[Fruit]` type hint, so you can give it any name you want.
 

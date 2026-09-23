@@ -1643,6 +1643,306 @@
    WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
+# name: test_query_hook_joining_on_relation[session-async-tracked-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank
+            FROM fruit AS fruit_1
+            JOIN fruit_farm
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE fruit_1.color_id IS NOT NULL
+             AND (fruit_farm.name LIKE '%' || ?)
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_joining_on_relation[session-async-tracked-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS `rank`
+            FROM fruit AS fruit_1
+           INNER JOIN fruit_farm
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE fruit_1.color_id IS NOT NULL
+             AND (fruit_farm.name LIKE concat('%%', %s))
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_joining_on_relation[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id
+            FROM fruit AS fruit_1
+            JOIN fruit_farm
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE (fruit_farm.name LIKE '%' || $1::VARCHAR)
+             AND color.id = fruit_1.color_id
+           ORDER BY fruit_1.id ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_joining_on_relation[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id
+            FROM fruit AS fruit_1
+            JOIN fruit_farm
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE (fruit_farm.name LIKE '%%' || %(name_2)s::VARCHAR)
+             AND color.id = fruit_1.color_id
+           ORDER BY fruit_1.id ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_joining_on_relation[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id
+            FROM fruit AS fruit_1
+            JOIN fruit_farm
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE (fruit_farm.name LIKE '%%' || %(name_2)s::VARCHAR)
+             AND color.id = fruit_1.color_id
+           ORDER BY fruit_1.id ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_joining_on_relation[session-sync-tracked-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank
+            FROM fruit AS fruit_1
+            JOIN fruit_farm
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE fruit_1.color_id IS NOT NULL
+             AND (fruit_farm.name LIKE '%' || ?)
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_paginated_relation[session-async-tracked-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+             AND fruit_1.sweetness > ?
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.water_percent,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.rank <= ?
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_paginated_relation[session-async-tracked-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS `rank`,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+             AND fruit_1.sweetness > %s
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.water_percent,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.`rank` <= %s
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_paginated_relation[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.water_percent,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.sweetness > $1::INTEGER
+             AND color.id = fruit_1.color_id
+           ORDER BY fruit_1.id ASC
+           LIMIT $2::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_paginated_relation[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.water_percent,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.sweetness > %(sweetness_1)s::INTEGER
+             AND color.id = fruit_1.color_id
+           ORDER BY fruit_1.id ASC
+           LIMIT %(param_1)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_paginated_relation[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.water_percent,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.sweetness > %(sweetness_1)s::INTEGER
+             AND color.id = fruit_1.color_id
+           ORDER BY fruit_1.id ASC
+           LIMIT %(param_1)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_paginated_relation[session-sync-tracked-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+             AND fruit_1.sweetness > ?
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.water_percent,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.rank <= ?
+   ORDER BY color.id ASC,
+            anon_1.id ASC
+  '''
+# ---
 # name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruits-aiosqlite_engine]
   '''
   SELECT fruit_1.name,
@@ -1652,7 +1952,7 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > ?
+     AND fruit_1.sweetness > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1666,7 +1966,7 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > %s
+     AND fruit_1.sweetness > %s
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1680,7 +1980,7 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > $1::INTEGER
+     AND fruit_1.sweetness > $1::INTEGER
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1694,7 +1994,7 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > %(sweetness_1)s::INTEGER
+     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1715,7 +2015,7 @@
          ) AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > ?
+     AND fruit_1.sweetness > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1736,7 +2036,7 @@
          ) AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > %s
+     AND fruit_1.sweetness > %s
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1757,7 +2057,7 @@
          ) AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > $3::INTEGER
+     AND fruit_1.sweetness > $3::INTEGER
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1778,7 +2078,7 @@
          ) AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > %(sweetness_1)s::INTEGER
+     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1792,7 +2092,7 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > %(sweetness_1)s::INTEGER
+     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1806,7 +2106,7 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > ?
+     AND fruit_1.sweetness > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1827,7 +2127,7 @@
          ) AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > %(sweetness_1)s::INTEGER
+     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1848,7 +2148,133 @@
          ) AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.sweetness > ?
+     AND fruit_1.sweetness > ?
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_relation_keeps_parent_page_full[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           ORDER BY color.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+     AND fruit_1.sweetness > ?
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_relation_keeps_parent_page_full[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           ORDER BY color.id ASC
+           LIMIT %s,
+                 %s
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+     AND fruit_1.sweetness > %s
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_relation_keeps_parent_page_full[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           ORDER BY color.id ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+     AND fruit_1.sweetness > $3::INTEGER
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_relation_keeps_parent_page_full[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           ORDER BY color.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_relation_keeps_parent_page_full[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           ORDER BY color.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_query_hook_on_relation_keeps_parent_page_full[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           ORDER BY color.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+     AND fruit_1.sweetness > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1857,11 +2283,12 @@
   '''
   SELECT fruit_1.name,
          fruit_1.id,
+         color.name AS name_1,
          color.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.name = ?
+     AND fruit_1.name = ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1870,11 +2297,12 @@
   '''
   SELECT fruit_1.name,
          fruit_1.id,
+         color.name AS name_1,
          color.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.name = %s
+     AND fruit_1.name = %s
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1883,11 +2311,12 @@
   '''
   SELECT fruit_1.name,
          fruit_1.id,
+         color.name AS name_1,
          color.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.name = $1::VARCHAR
+     AND fruit_1.name = $1::VARCHAR
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1896,11 +2325,12 @@
   '''
   SELECT fruit_1.name,
          fruit_1.id,
+         color.name AS name_1,
          color.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.name = %(name_1)s::VARCHAR
+     AND fruit_1.name = %(name_2)s::VARCHAR
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1909,11 +2339,12 @@
   '''
   SELECT fruit_1.name,
          fruit_1.id,
+         color.name AS name_1,
          color.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.name = %(name_1)s::VARCHAR
+     AND fruit_1.name = %(name_2)s::VARCHAR
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1922,11 +2353,12 @@
   '''
   SELECT fruit_1.name,
          fruit_1.id,
+         color.name AS name_1,
          color.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-   WHERE fruit_1.name = ?
+     AND fruit_1.name = ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''

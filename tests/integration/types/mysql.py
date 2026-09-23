@@ -89,6 +89,12 @@ class SweetFruitHook(QueryHook[Fruit]):
         return statement.where(alias.sweetness > 5)
 
 
+class MultiFarmFruitHook(QueryHook[Fruit]):
+    @override
+    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+        return statement.join(FruitFarm, FruitFarm.fruit_id == alias.id).where(FruitFarm.name.endswith(" 2"))
+
+
 # User
 
 
@@ -250,6 +256,16 @@ class ColorTypeHooks:
 @strawchemy.type(Color, include="all")
 class ColorWithSweetFruits:
     fruits: list[FruitType] = strawchemy.field(query_hook=SweetFruitHook())
+
+
+@strawchemy.type(Color, include="all")
+class ColorWithPaginatedSweetFruits:
+    fruits: list[FruitType] = strawchemy.field(query_hook=SweetFruitHook(load=[Fruit.water_percent]), pagination=True)
+
+
+@strawchemy.type(Color, include="all")
+class ColorWithMultiFarmFruits:
+    fruits: list[FruitType] = strawchemy.field(query_hook=MultiFarmFruitHook())
 
 
 @strawchemy.create_input(Color, include="all")
@@ -465,6 +481,12 @@ class AsyncQuery:
     colors_with_sweet_fruits_paginated: list[ColorWithSweetFruits] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
+    colors_with_paginated_sweet_fruits: list[ColorWithPaginatedSweetFruits] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository
+    )
+    colors_with_multi_farm_fruits: list[ColorWithMultiFarmFruits] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository
+    )
     colors_fine_grained: list[ColorType] = strawchemy.field(
         filter_input=ColorFineGrainedFilter, repository_type=StrawchemyAsyncRepository
     )
@@ -618,6 +640,12 @@ class SyncQuery:
     colors_with_sweet_fruits: list[ColorWithSweetFruits] = strawchemy.field(repository_type=StrawchemySyncRepository)
     colors_with_sweet_fruits_paginated: list[ColorWithSweetFruits] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
+    )
+    colors_with_paginated_sweet_fruits: list[ColorWithPaginatedSweetFruits] = strawchemy.field(
+        repository_type=StrawchemySyncRepository
+    )
+    colors_with_multi_farm_fruits: list[ColorWithMultiFarmFruits] = strawchemy.field(
+        repository_type=StrawchemySyncRepository
     )
     colors_fine_grained: list[ColorType] = strawchemy.field(
         filter_input=ColorFineGrainedFilter, repository_type=StrawchemySyncRepository

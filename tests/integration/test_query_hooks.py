@@ -193,14 +193,18 @@ async def test_custom_query_hook_order_by(
 
 @pytest.mark.snapshot
 async def test_query_hook_on_type(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_colors: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query("{ colorsWithFilteredFruits { fruits { name } } }"))
+    result = await maybe_async(any_query("{ colorsWithFilteredFruits { name fruits { name } } }"))
 
     assert not result.errors
     assert result.data
-    assert len(result.data["colorsWithFilteredFruits"]) == 1
-    assert result.data["colorsWithFilteredFruits"] == [{"fruits": [{"name": "Apple"}]}]
+    assert {
+        color["name"]: [fruit["name"] for fruit in color["fruits"]] for color in result.data["colorsWithFilteredFruits"]
+    } == {color["name"]: ["Apple"] if color["name"] == "Red" else [] for color in raw_colors}
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
@@ -300,10 +304,77 @@ async def test_query_hook_on_relation_field(
         )
         for color in raw_colors
     }
-    # Like a type-level hook on the related type, the hook also drops parents left without related rows.
-    assert {color["name"]: sorted(fruit["name"] for fruit in color["fruits"]) for color in result.data[query]} == {
-        name: fruits for name, fruits in sweet_fruits.items() if fruits
+    assert {
+        color["name"]: sorted(fruit["name"] for fruit in color["fruits"]) for color in result.data[query]
+    } == sweet_fruits
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_query_hook_on_relation_keeps_parent_page_full(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a relation hook does not drop parents from a page, when none of their related rows match it."""
+    result = await maybe_async(any_query("{ colorsWithSweetFruitsPaginated(limit: 2) { name fruits { name } } }"))
+
+    assert not result.errors
+    assert result.data
+    assert result.data["colorsWithSweetFruitsPaginated"] == [
+        {"name": "Red", "fruits": [{"name": "Cherry"}]},
+        {"name": "Yellow", "fruits": []},
+    ]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_query_hook_on_paginated_relation(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
+) -> None:
+    """Test that a relation hook filters the related rows before their pagination applies."""
+    result = await maybe_async(any_query("{ colorsWithPaginatedSweetFruits { name fruits(limit: 1) { name } } }"))
+
+    assert not result.errors
+    assert result.data
+    sweet_fruits = {
+        color["name"]: {
+            fruit["name"] for fruit in raw_fruits if fruit["color_id"] == color["id"] and fruit["sweetness"] > 5
+        }
+        for color in raw_colors
     }
+    fruits_by_color = {
+        color["name"]: [fruit["name"] for fruit in color["fruits"]]
+        for color in result.data["colorsWithPaginatedSweetFruits"]
+    }
+    assert fruits_by_color.keys() == sweet_fruits.keys()
+    for name, fruits in fruits_by_color.items():
+        assert len(fruits) == min(1, len(sweet_fruits[name]))
+        assert set(fruits) <= sweet_fruits[name]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_query_hook_joining_on_relation(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, raw_colors: RawRecordData
+) -> None:
+    """Test that a relation hook adding a join restricts the related rows only."""
+    result = await maybe_async(any_query("{ colorsWithMultiFarmFruits { name fruits { name } } }"))
+
+    assert not result.errors
+    assert result.data
+    assert {
+        color["name"]: sorted(fruit["name"] for fruit in color["fruits"])
+        for color in result.data["colorsWithMultiFarmFruits"]
+    } == {color["name"]: ["Apple", "Cherry"] if color["name"] == "Red" else [] for color in raw_colors}
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

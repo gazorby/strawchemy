@@ -40,7 +40,7 @@ def add_missing_columns(statement: Select[Any], columns: Sequence[ColumnElement[
 
 @dataclass(frozen=True)
 class HookSpec:
-    """Where ``emit`` runs the query hooks of a node, and with which alias."""
+    """Where ``apply_clauses`` runs the query hooks of a node, with which alias and column loading mode."""
 
     node: QueryNodeType
     alias: AliasedClass[Any]
@@ -92,17 +92,19 @@ class QueryPlan:
             statement = statement.join(self.filter_semijoin.alias, onclause=self.filter_semijoin.onclause)
         if self.projection_columns:
             statement = statement.add_columns(*self.projection_columns)
-        if self.hook_applier is not None:
-            for spec in self.hook_specs:
-                statement = self.hook_applier.apply_statement_hooks(statement, spec.node, spec.alias)
         statement = self.apply_clauses(statement)
         return statement.options(raiseload("*"), *self.load_options)
 
     def apply_clauses(self, statement: Select[Any]) -> Select[Any]:
-        """Adds the joins, WHERE, ORDER BY, DISTINCT ON, LIMIT, OFFSET and root aggregations to ``statement``.
+        """Runs the query hooks, then adds the joins, WHERE, ORDER BY, DISTINCT ON, LIMIT, OFFSET and root aggregations.
 
         Also used by the join strategies, which build their own selected columns.
         """
+        if self.hook_applier is not None:
+            for spec in self.hook_specs:
+                statement, _ = self.hook_applier.apply(
+                    statement, spec.node, spec.alias, spec.loading_mode, in_subquery=True
+                )
         for join in sorted(self.joins):
             statement = statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
         if self.where:
