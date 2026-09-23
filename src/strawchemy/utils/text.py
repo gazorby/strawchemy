@@ -44,7 +44,7 @@ def snake_keys(value: dict[str, Any]) -> dict[str, Any]:
     for k, v in value.items():
         to_snake: str = camel_to_snake(k)
         if isinstance(v, (list, tuple)):
-            res[to_snake] = [snake_keys(el) for el in v]
+            res[to_snake] = [snake_keys(el) if isinstance(el, dict) else el for el in v]
         elif isinstance(v, dict):
             res[to_snake] = snake_keys(v)
         else:

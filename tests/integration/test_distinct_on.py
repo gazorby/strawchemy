@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -24,6 +25,34 @@ def raw_users() -> RawRecordData:
         {"id": 4, "name": "Charlie", "group_id": None, "bio": None},
         {"id": 5, "name": "Bob", "group_id": None, "bio": None},
     ]
+
+
+@pytest.fixture
+def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
+    red, yellow, green = raw_colors[0]["id"], raw_colors[1]["id"], raw_colors[3]["id"]
+    fruits = [
+        ("Apple", 4, 0.84, red),
+        ("Cherry", 4, 0.93, red),
+        ("Plum", 9, 0.8, red),
+        ("Banana", 2, 0.75, yellow),
+        ("Lemon", 2, 0.88, yellow),
+        ("Strawberry", 5, 0.91, green),
+    ]
+    return [
+        {
+            "id": index,
+            "created_at": datetime.now().replace(second=index, microsecond=0),  # noqa: DTZ005
+            "name": name,
+            "sweetness": sweetness,
+            "water_percent": water_percent,
+            "color_id": color_id,
+        }
+        for index, (name, sweetness, water_percent, color_id) in enumerate(fruits, start=1)
+    ]
+
+
+def _fruits_by_color(data: dict[str, Any]) -> dict[str, list[Any]]:
+    return {color["name"]: color["fruits"] for color in data["colorsNestedDistinct"]}
 
 
 @pytest.mark.parametrize(
@@ -133,3 +162,123 @@ async def test_distinct_on_paginates_distinct_rows(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    "deterministic_ordering",
+    [pytest.param(True, id="deterministic-ordering"), pytest.param(False, id="non-deterministic-ordering")],
+)
+async def test_nested_distinct_on(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, config: StrawchemyConfig, deterministic_ordering: bool
+) -> None:
+    config.deterministic_ordering = deterministic_ordering
+    result = await maybe_async(
+        any_query("{ colorsNestedDistinct { name fruits(distinctOn: [sweetness]) { sweetness } } }")
+    )
+    assert not result.errors
+    assert result.data
+
+    fruits = _fruits_by_color(result.data)
+    assert {name: sorted(fruit["sweetness"] for fruit in value) for name, value in fruits.items()} == {
+        "Red": [4, 9],
+        "Yellow": [2],
+        "Orange": [],
+        "Green": [5],
+        "Pink": [],
+    }
+    assert query_tracker.query_count == 1
+
+
+@pytest.mark.snapshot
+async def test_nested_distinct_on_and_order_by(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colorsNestedDistinct {
+                    name
+                    fruits(distinctOn: [sweetness], orderBy: [{ sweetness: ASC }, { name: DESC }]) { name }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    fruits = _fruits_by_color(result.data)
+    assert fruits["Red"] == [{"name": "Cherry"}, {"name": "Plum"}]
+    assert fruits["Yellow"] == [{"name": "Lemon"}]
+    assert fruits["Green"] == [{"name": "Strawberry"}]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("pagination", "expected_red", "expected_yellow"),
+    [
+        pytest.param("limit: 2", ["Apple", "Plum"], ["Banana"], id="limit"),
+        pytest.param("limit: 1, offset: 1", ["Plum"], [], id="limit-offset"),
+    ],
+)
+@pytest.mark.snapshot
+async def test_nested_distinct_on_paginated(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    pagination: str,
+    expected_red: list[str],
+    expected_yellow: list[str],
+) -> None:
+    result = await maybe_async(
+        any_query(
+            f"""
+            {{
+                colorsNestedDistinct {{
+                    name
+                    fruits(distinctOn: [sweetness], orderBy: [{{ sweetness: ASC }}, {{ name: ASC }}], {pagination}) {{
+                        name
+                    }}
+                }}
+            }}
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    fruits = _fruits_by_color(result.data)
+    assert [fruit["name"] for fruit in fruits["Red"]] == expected_red
+    assert [fruit["name"] for fruit in fruits["Yellow"]] == expected_yellow
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("pagination", "expected_red", "expected_yellow"),
+    [
+        pytest.param("limit: 1", ["Apple"], ["Banana"], id="limit"),
+        pytest.param("limit: 1, offset: 1", ["Plum"], [], id="limit-offset"),
+    ],
+)
+async def test_nested_distinct_on_paginated_by_primary_key(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    config: StrawchemyConfig,
+    pagination: str,
+    expected_red: list[str],
+    expected_yellow: list[str],
+) -> None:
+    config.deterministic_ordering = True
+    result = await maybe_async(
+        any_query(f"{{ colorsNestedDistinct {{ name fruits(distinctOn: [sweetness], {pagination}) {{ name }} }} }}")
+    )
+    assert not result.errors
+    assert result.data
+
+    fruits = _fruits_by_color(result.data)
+    assert [fruit["name"] for fruit in fruits["Red"]] == expected_red
+    assert [fruit["name"] for fruit in fruits["Yellow"]] == expected_yellow
+    assert query_tracker.query_count == 1

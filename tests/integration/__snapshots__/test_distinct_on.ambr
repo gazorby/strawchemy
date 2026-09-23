@@ -854,3 +854,552 @@
             color.sum_1 ASC
   '''
 # ---
+# name: test_nested_distinct_on_and_order_by[session-async-tracked-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name DESC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name DESC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.sweetness ASC,
+                            fruit_1.name DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_and_order_by[session-async-tracked-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name DESC) AS `rank`
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name DESC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.sweetness ASC,
+                            fruit_1.name DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %s
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_and_order_by[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT DISTINCT
+              ON (fruit_1.sweetness) fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC,
+                    fruit_1.name DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_and_order_by[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT DISTINCT
+              ON (fruit_1.sweetness) fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC,
+                    fruit_1.name DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_and_order_by[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT DISTINCT
+              ON (fruit_1.sweetness) fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC,
+                    fruit_1.name DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_and_order_by[session-sync-tracked-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name DESC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name DESC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.sweetness ASC,
+                            fruit_1.name DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-async-tracked-limit-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.sweetness ASC,
+                            fruit_1.name ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.rank <= ?
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-async-tracked-limit-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS `rank`
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.sweetness ASC,
+                            fruit_1.name ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %s
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.`rank` <= %s
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-async-tracked-limit-asyncpg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT DISTINCT
+              ON (fruit_1.sweetness) fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC,
+                    fruit_1.name ASC
+           LIMIT $1::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-async-tracked-limit-offset-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.sweetness ASC,
+                            fruit_1.name ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.rank > ?
+     AND anon_1.rank <= ?
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-async-tracked-limit-offset-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS `rank`
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.sweetness ASC,
+                            fruit_1.name ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %s
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.`rank` > %s
+     AND anon_1.`rank` <= %s
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-async-tracked-limit-offset-asyncpg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT DISTINCT
+              ON (fruit_1.sweetness) fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC,
+                    fruit_1.name ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-async-tracked-limit-offset-psycopg_async_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT DISTINCT
+              ON (fruit_1.sweetness) fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC,
+                    fruit_1.name ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-async-tracked-limit-psycopg_async_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT DISTINCT
+              ON (fruit_1.sweetness) fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC,
+                    fruit_1.name ASC
+           LIMIT %(param_1)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-sync-tracked-limit-offset-psycopg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT DISTINCT
+              ON (fruit_1.sweetness) fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC,
+                    fruit_1.name ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-sync-tracked-limit-offset-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.sweetness ASC,
+                            fruit_1.name ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.rank > ?
+     AND anon_1.rank <= ?
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-sync-tracked-limit-psycopg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT DISTINCT
+              ON (fruit_1.sweetness) fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC,
+                    fruit_1.name ASC
+           LIMIT %(param_1)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_paginated[session-sync-tracked-limit-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.sweetness ASC,
+                            fruit_1.name ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.rank <= ?
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC,
+            anon_1.name ASC
+  '''
+# ---

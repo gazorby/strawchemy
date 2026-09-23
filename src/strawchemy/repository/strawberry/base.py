@@ -13,12 +13,13 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, over
 
 from msgspec import convert
 from strawberry.types import get_object_definition, has_object_definition
+from strawberry.types.enum import StrawberryEnumDefinition
 from strawberry.types.lazy_type import LazyType
 from strawberry.types.nodes import FragmentSpread, InlineFragment, SelectedField, Selection
 
-from strawchemy.constants import JSON_PATH_KEY, ORDER_BY_KEY
+from strawchemy.constants import DISTINCT_ON_KEY, JSON_PATH_KEY, ORDER_BY_KEY
 from strawchemy.dto.base import ModelT
-from strawchemy.dto.strawberry import OrderByRelationFilterDTO, QueryNodeMetadata, RelationFilterDTO, StrawchemyObject
+from strawchemy.dto.strawberry import QueryNodeMetadata, RelationFilterDTO, StrawchemyObject
 from strawchemy.exceptions import StrawchemyError
 from strawchemy.repository.strawberry._node import StrawberryQueryNode
 from strawchemy.schema.mutation import error_type_names
@@ -182,14 +183,22 @@ class StrawchemyRepository(Generic[T]):
 
     def _relation_filter(
         self, selection: SelectedField, strawberry_field: StrawberryField, arguments: dict[str, Any]
-    ) -> RelationFilterDTO:
+    ) -> RelationFilterDTO[Any, Any]:
         argument_types = {arg.python_name: arg.type for arg in strawberry_field.arguments}
-        if order_by_args := arguments.get(ORDER_BY_KEY):
-            if not isinstance(order_by_args, list):
-                arguments[ORDER_BY_KEY] = [arguments[ORDER_BY_KEY]]
-            order_by_model = strawberry_contained_user_type(argument_types[ORDER_BY_KEY])
-            return convert(arguments, type=OrderByRelationFilterDTO[order_by_model], strict=False)
-        return convert(arguments, type=RelationFilterDTO, strict=False)
+        arguments = {name: value for name, value in arguments.items() if value is not None}
+        for key in (ORDER_BY_KEY, DISTINCT_ON_KEY):
+            if key in arguments and not isinstance(arguments[key], list):
+                arguments[key] = [arguments[key]]
+        order_by_type = self._argument_item_type(argument_types, ORDER_BY_KEY)
+        distinct_on_type = self._argument_item_type(argument_types, DISTINCT_ON_KEY)
+        return convert(arguments, type=RelationFilterDTO[order_by_type, distinct_on_type], strict=False)
+
+    @staticmethod
+    def _argument_item_type(argument_types: dict[str, Any], name: str) -> Any:
+        if name not in argument_types:
+            return Any
+        item_type = strawberry_contained_user_type(argument_types[name])
+        return item_type.wrapped_cls if isinstance(item_type, StrawberryEnumDefinition) else item_type
 
     @classmethod
     def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]]:

@@ -5,15 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import raiseload
+from sqlalchemy.sql.util import ClauseAdapter
 
-from strawchemy.transpiler._aliasing import same_column
+from strawchemy.transpiler._aliasing import require_corresponding_column, same_column
 
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from sqlalchemy import Label, Select
+    from sqlalchemy import Label, Select, SQLColumnExpression
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement
@@ -73,7 +74,7 @@ class QueryPlan:
     """Window function columns, selected last."""
     distinct_on: tuple[ColumnElement[Any], ...] = ()
     use_distinct_on: bool = False
-    """Use native DISTINCT ON; otherwise it was emulated in the pagination subquery."""
+    """Use native DISTINCT ON; otherwise the join strategy of the relation emulates it with ``distinct_rows``."""
     limit: int | None = None
     offset: int | None = None
     hook_specs: tuple[HookSpec, ...] = ()
@@ -128,11 +129,34 @@ class QueryPlan:
             statement = statement.add_columns(*self.root_aggregation_functions)
         return statement
 
-    def _apply_distinct(self, statement: Select[Any]) -> Select[Any]:
-        """Adds native DISTINCT ON, selecting the ORDER BY columns it requires.
+    @property
+    def emulates_distinct_on(self) -> bool:
+        """Whether the DISTINCT ON columns must be applied with ``distinct_rows`` rather than natively."""
+        return bool(self.distinct_on) and not self.use_distinct_on
 
-        Does nothing when DISTINCT ON is emulated: the subquery and a ``rank = 1`` predicate in ``where`` handle it.
+    def distinct_rows(
+        self, statement: Select[Any], partition_by: Sequence[SQLColumnExpression[Any]] = ()
+    ) -> tuple[Select[Any], ClauseAdapter]:
+        """Emulates DISTINCT ON, keeping the first row of each group of ``statement`` by a ``row_number()`` rank.
+
+        Groups are formed on ``partition_by`` then on the DISTINCT ON columns.
+
+        Returns:
+            A SELECT of the kept rows, and an adapter mapping the columns of ``statement`` onto it.
         """
+        rank = (
+            func.row_number()
+            .over(partition_by=[*partition_by, *self.distinct_on], order_by=self.order_by or None)
+            .label(None)
+        )
+        ranked_statement = add_missing_columns(statement, [expression.element for expression in self.order_by])
+        ranked = ranked_statement.add_columns(rank).subquery()
+        ranked_rank = require_corresponding_column(ranked, rank)
+        kept_rows = select(*[column for column in ranked.c if column is not ranked_rank]).where(ranked_rank == 1)
+        return kept_rows, ClauseAdapter(ranked)
+
+    def _apply_distinct(self, statement: Select[Any]) -> Select[Any]:
+        """Adds native DISTINCT ON, selecting the ORDER BY columns it requires; does nothing when it is emulated."""
         if not self.use_distinct_on:
             return statement
         statement = add_missing_columns(statement, [expression.element for expression in self.order_by])
