@@ -83,6 +83,12 @@ class FruitOrderingHook(QueryHook[Fruit]):
         return statement.order_by(alias.water_percent.asc())
 
 
+class SweetFruitHook(QueryHook[Fruit]):
+    @override
+    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+        return statement.where(alias.sweetness > 5)
+
+
 # User
 
 
@@ -239,6 +245,11 @@ class ColorTypeHooks:
     instance: ModelInstance[Color]
 
     fruits: list[FruitTypeHooks]
+
+
+@strawchemy.type(Color, include="all")
+class ColorWithSweetFruits:
+    fruits: list[FruitType] = strawchemy.field(query_hook=SweetFruitHook())
 
 
 @strawchemy.create_input(Color, include="all")
@@ -450,6 +461,10 @@ class AsyncQuery:
     colors_hooks_paginated: list[ColorTypeHooks] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
+    colors_with_sweet_fruits: list[ColorWithSweetFruits] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    colors_with_sweet_fruits_paginated: list[ColorWithSweetFruits] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository, pagination=True
+    )
     colors_fine_grained: list[ColorType] = strawchemy.field(
         filter_input=ColorFineGrainedFilter, repository_type=StrawchemyAsyncRepository
     )
@@ -598,6 +613,10 @@ class SyncQuery:
     )
     colors_hooks: list[ColorTypeHooks] = strawchemy.field(repository_type=StrawchemySyncRepository)
     colors_hooks_paginated: list[ColorTypeHooks] = strawchemy.field(
+        repository_type=StrawchemySyncRepository, pagination=True
+    )
+    colors_with_sweet_fruits: list[ColorWithSweetFruits] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    colors_with_sweet_fruits_paginated: list[ColorWithSweetFruits] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
     )
     colors_fine_grained: list[ColorType] = strawchemy.field(

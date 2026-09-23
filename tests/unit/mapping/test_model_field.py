@@ -3,11 +3,13 @@ from __future__ import annotations
 import re
 import warnings
 from importlib import import_module
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
 from strawberry.types import get_object_definition
 
+from strawchemy import QueryHook
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.field import StrawchemyField
@@ -15,6 +17,8 @@ from tests.unit.models import Color, Fruit
 from tests.utils import as_dto
 
 if TYPE_CHECKING:
+    from strawberry.types.field import StrawberryField
+
     from strawchemy.mapper import Strawchemy
 
 
@@ -222,3 +226,134 @@ def test_type_level_aliases_declared_annotation_overrides_inferred_type(strawche
     field = next(f for f in get_object_definition(FruitType, strict=True).fields if f.name == "sweetness_label")
     assert field.type is str
     assert as_dto(FruitType).__dto_field_definitions__["sweetness_label"].model_field_name == "sweetness"
+
+
+def _field(type_: type, name: str) -> StrawberryField:
+    return next(f for f in get_object_definition(type_, strict=True).fields if f.python_name == name)
+
+
+def test_plain_field_on_relation_keeps_model_type(strawchemy: Strawchemy) -> None:
+    """Test that a plain `field()` over a relation keeps its model-derived type and resolves from the parent."""
+
+    @strawchemy.type(Fruit, include={"id"})
+    class FruitType: ...
+
+    @strawchemy.type(Color, include={"id"})
+    class ColorType:
+        fruits: list[FruitType] = strawchemy.field(description="custom")
+
+    field = _field(ColorType, "fruits")
+    assert isinstance(field, StrawchemyField)
+    assert field.description == "custom"
+    assert field.is_root_field is False
+    assert as_dto(ColorType).__dto_field_definitions__["fruits"].model_field_name == "fruits"
+
+
+def test_model_field_keeps_field_options(strawchemy: Strawchemy) -> None:
+    """Test that options given next to `model_field` are carried onto the finished field."""
+    hook = QueryHook()
+
+    @strawchemy.type(Fruit, include={"id"})
+    class FruitType: ...
+
+    @strawchemy.type(Color, include={"id"})
+    class ColorType:
+        items: list[FruitType] = strawchemy.field(
+            model_field="fruits", pagination=True, description="custom", query_hook=hook
+        )
+
+    field = _field(ColorType, "items")
+    assert isinstance(field, StrawchemyField)
+    assert field.query_hook is hook
+    assert field.description == "custom"
+    assert {argument.python_name for argument in field.arguments} == {"limit", "offset"}
+
+
+def test_body_field_inherits_type_level_pagination(strawchemy: Strawchemy) -> None:
+    """Test that a class-body field without its own `pagination` gets the type-level one."""
+
+    @strawchemy.type(Fruit, include={"id"})
+    class FruitType: ...
+
+    @strawchemy.type(Color, include={"id"}, paginate="all")
+    class ColorType:
+        fruits: list[FruitType] = strawchemy.field(description="custom")
+
+    assert {argument.python_name for argument in _field(ColorType, "fruits").arguments} == {"limit", "offset"}
+
+
+def test_body_field_pagination_overrides_type_level(strawchemy: Strawchemy) -> None:
+    """Test that an explicit field-level `pagination=False` wins over the type-level `paginate`."""
+
+    @strawchemy.type(Fruit, include={"id"})
+    class FruitType: ...
+
+    @strawchemy.type(Color, include={"id"}, paginate="all")
+    class ColorType:
+        fruits: list[FruitType] = strawchemy.field(pagination=False)
+
+    assert _field(ColorType, "fruits").arguments == []
+
+
+def test_to_one_body_field_has_no_arguments(strawchemy: Strawchemy) -> None:
+    """Test that a class-body field over a to-one relation does not get root-field id arguments."""
+
+    @strawchemy.type(Color, include={"id"})
+    class ColorType: ...
+
+    @strawchemy.type(Fruit, include={"id"})
+    class FruitType:
+        shade: ColorType = strawchemy.field(model_field="color")
+
+    assert _field(FruitType, "shade").arguments == []
+
+
+def test_plain_strawberry_field_on_column_keeps_model_type(strawchemy: Strawchemy) -> None:
+    """Test that a resolver-less `strawberry.field()` over a column keeps its annotation."""
+
+    @strawchemy.type(Fruit, include={"id"})
+    class FruitType:
+        name: str = strawberry.field(description="custom")
+
+    field = _field(FruitType, "name")
+    assert field.type is str
+    assert field.description == "custom"
+
+
+@pytest.mark.parametrize(
+    "option",
+    [
+        pytest.param({"filter_input": True}, id="filter_input"),
+        pytest.param({"default_order_by": Fruit.name}, id="default_order_by"),
+        pytest.param({"filter_statement": lambda _: None}, id="filter_statement"),
+        pytest.param({"root_aggregations": True}, id="root_aggregations"),
+    ],
+)
+def test_relation_body_field_root_only_option_raises(strawchemy: Strawchemy, option: dict[str, Any]) -> None:
+    """Test that a root-field-only option on a class-body relation field raises at decoration time."""
+
+    @strawchemy.type(Fruit, include={"id"})
+    class FruitType: ...
+
+    with pytest.raises(StrawchemyFieldError, match=re.escape(f"`{next(iter(option))}`")):
+
+        @strawchemy.type(Color, include={"id"})
+        class ColorType:
+            items: list[FruitType] = strawchemy.field(model_field="fruits", **option)
+
+
+@pytest.mark.parametrize(
+    "option",
+    [
+        pytest.param({"pagination": True}, id="pagination"),
+        pytest.param({"order_by_input": "all"}, id="order_by_input"),
+        pytest.param({"distinct_on": "all"}, id="distinct_on"),
+    ],
+)
+def test_column_body_field_list_option_raises(strawchemy: Strawchemy, option: dict[str, Any]) -> None:
+    """Test that a to-many relation option on a class-body column field raises at decoration time."""
+    with pytest.raises(StrawchemyFieldError, match=re.escape(f"`{next(iter(option))}`")):
+
+        @strawchemy.type(Fruit, include={"id"})
+        class FruitType:
+            name: str = strawchemy.field(**option)
