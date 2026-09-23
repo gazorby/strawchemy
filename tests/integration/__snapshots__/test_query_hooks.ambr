@@ -1721,3 +1721,393 @@
             fruit_1.id ASC
   '''
 # ---
+# name: test_root_field_query_hook_load[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_load[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_load[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_load[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_load[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_load[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.water_percent,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruits-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruits-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %s
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruits-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = $1::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruits-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruitsPaginated-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           WHERE fruit.name = ?
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   WHERE fruit.name = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruitsPaginated-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           WHERE fruit.name = %s
+           ORDER BY fruit.id ASC
+           LIMIT %s,
+                 %s
+         ) AS fruit
+   WHERE fruit.name = %s
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruitsPaginated-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           WHERE fruit.name = $1::VARCHAR
+           ORDER BY fruit.id ASC
+           LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
+         ) AS fruit
+   WHERE fruit.name = $4::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruitsPaginated-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           WHERE fruit.name = %(name_1)s::VARCHAR
+           ORDER BY fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   WHERE fruit.name = %(name_2)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-sync-tracked-fieldFilteredFruits-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-sync-tracked-fieldFilteredFruits-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-sync-tracked-fieldFilteredFruitsPaginated-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           WHERE fruit.name = %(name_1)s::VARCHAR
+           ORDER BY fruit.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS fruit
+   WHERE fruit.name = %(name_2)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where[session-sync-tracked-fieldFilteredFruitsPaginated-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT fruit.name AS name,
+                 fruit.id AS id
+            FROM fruit AS fruit
+           WHERE fruit.name = ?
+           ORDER BY fruit.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   WHERE fruit.name = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-async-tracked-False-None-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = ?
+     AND fruit.id = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-async-tracked-False-None-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %s
+     AND fruit.id = %s
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-async-tracked-False-None-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = $1::VARCHAR
+     AND fruit.id = $2::INTEGER
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-async-tracked-False-None-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
+     AND fruit.id = %(id_1)s::INTEGER
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-async-tracked-True-expected0-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = ?
+     AND fruit.id = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-async-tracked-True-expected0-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %s
+     AND fruit.id = %s
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-async-tracked-True-expected0-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = $1::VARCHAR
+     AND fruit.id = $2::INTEGER
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-async-tracked-True-expected0-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
+     AND fruit.id = %(id_1)s::INTEGER
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-sync-tracked-False-None-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
+     AND fruit.id = %(id_1)s::INTEGER
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-sync-tracked-False-None-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = ?
+     AND fruit.id = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-sync-tracked-True-expected0-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
+     AND fruit.id = %(id_1)s::INTEGER
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_get_by_id[session-sync-tracked-True-expected0-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.name = ?
+     AND fruit.id = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_root_aggregations[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         count(*) OVER () AS anon_1
+    FROM fruit AS fruit
+   WHERE fruit.name = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_root_aggregations[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         count(*) OVER () AS anon_1
+    FROM fruit AS fruit
+   WHERE fruit.name = %s
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_root_aggregations[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         count(*) OVER () AS anon_1
+    FROM fruit AS fruit
+   WHERE fruit.name = $1::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_root_aggregations[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         count(*) OVER () AS anon_1
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_root_aggregations[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         count(*) OVER () AS anon_1
+    FROM fruit AS fruit
+   WHERE fruit.name = %(name_1)s::VARCHAR
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_root_field_query_hook_where_root_aggregations[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         count(*) OVER () AS anon_1
+    FROM fruit AS fruit
+   WHERE fruit.name = ?
+   ORDER BY fruit.id ASC
+  '''
+# ---
