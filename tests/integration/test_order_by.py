@@ -148,6 +148,47 @@ async def test_relation_order_by(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+@pytest.mark.parametrize("order_by", ["ASC", "DESC"])
+@pytest.mark.snapshot
+async def test_relation_order_by_unselected_column(
+    order_by: Literal["ASC", "DESC"],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
+) -> None:
+    result = await maybe_async(
+        any_query(
+            f"""{{
+            colors {{
+                id
+                fruits(orderBy: {{ sweetness: {order_by} }}) {{
+                    name
+                }}
+            }}
+        }}"""
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    for color in result.data["colors"]:
+        expected_order = [
+            fruit["name"]
+            for fruit in sorted(
+                (fruit for fruit in raw_fruits if fruit["color_id"] == color["id"]),
+                key=lambda fruit: fruit["sweetness"],
+                reverse=order_by == "DESC",
+            )
+        ]
+        assert [row["name"] for row in color["fruits"]] == expected_order
+        assert all(set(row) == {"name"} for row in color["fruits"])
+
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
 @pytest.mark.snapshot
 async def test_deterministic_ordering(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
