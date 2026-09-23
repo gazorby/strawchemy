@@ -1,16 +1,4 @@
-"""Explicit query-plan IR and its emitter.
-
-This module introduces the immutable ``QueryPlan`` and its ``emit`` method.
-Covers a root ``SELECT`` with projection, an optional filter semi-join, relation joins
-(LATERAL/CTE), WHERE, ORDER BY, DISTINCT ON, LIMIT/OFFSET, and root aggregation window
-columns. Structure is held as data; leaf predicate/column/order expressions are opaque
-SQLAlchemy fragments.
-
-Classes:
-    FilterSemiJoin: A pre-built PK semi-join to the filter-statement subquery.
-    QueryPlan: The immutable plan for a supported-shape query; ``QueryPlan.emit`` is the
-        emitter method that builds a SQLAlchemy Select.
-"""
+"""The immutable ``QueryPlan`` describing one SELECT, and ``QueryPlan.emit`` that builds it."""
 
 from __future__ import annotations
 
@@ -38,12 +26,9 @@ if TYPE_CHECKING:
 
 __all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan", "add_missing_columns")
 
-# ``apply_clauses`` is a public method because ``_strategies`` shares the join/where/order
-# assembly with it.
-
 
 def add_missing_columns(statement: Select[Any], columns: Sequence[ColumnElement[Any]]) -> Select[Any]:
-    """Adds to ``statement`` the ``columns`` its SELECT list does not already project."""
+    """Adds to ``statement`` the ``columns`` it does not already select."""
     return statement.add_columns(
         *[
             column
@@ -55,13 +40,7 @@ def add_missing_columns(statement: Select[Any], columns: Sequence[ColumnElement[
 
 @dataclass(frozen=True)
 class HookSpec:
-    """A recorded outer query-hook application point, replayed by the emitter.
-
-    Attributes:
-        node: The query node whose registered hooks apply.
-        alias: The aliased entity passed to the hooks.
-        loading_mode: The column loading mode ("undefer" for outer hooks).
-    """
+    """Where ``emit`` runs the query hooks of a node, and with which alias."""
 
     node: QueryNodeType
     alias: AliasedClass[Any]
@@ -70,12 +49,7 @@ class HookSpec:
 
 @dataclass(frozen=True)
 class FilterSemiJoin:
-    """A pre-built primary-key semi-join to the filter-statement subquery.
-
-    Attributes:
-        alias: The filter subquery aliased to its primary-key columns.
-        onclause: The PK-equality predicate joining the root alias to the subquery.
-    """
+    """Join from the root alias to the user filter statement, on the primary key."""
 
     alias: Alias
     onclause: ColumnElement[bool]
@@ -83,60 +57,36 @@ class FilterSemiJoin:
 
 @dataclass(frozen=True)
 class QueryPlan:
-    """Immutable plan for a leaf-shaped SELECT (root + WHERE + ORDER BY).
-
-    Structure is data; leaf expressions are opaque SQLAlchemy fragments.
-
-    Attributes:
-        root: The FROM-clause root alias.
-        filter_semijoin: The PK semi-join to the filter statement, or None.
-        projection_columns: Extra columns added to the projection in selection order
-            (JSON/column transforms and aggregation function columns).
-        load_options: ORM loader options (``load_only`` etc.) excluding ``raiseload``.
-        where: The boolean filter predicates.
-        order_by: The built ORDER BY expressions.
-        joins: Relation joins to apply, ordered by depth at emit time.
-        root_aggregation_functions: Window aggregation columns added last to the projection.
-        distinct_on: DISTINCT ON expressions (empty when no distinct).
-        use_distinct_on: Whether native DISTINCT ON applies (False ⇒ rank-emulation in subquery).
-        limit: Outer LIMIT, or None.
-        offset: Outer OFFSET, or None.
-        hook_specs: Outer query-hook application points, replayed by the emitter.
-        hook_applier: Applies the registered hooks; carried because apply_hook is arbitrary
-            statement-mutating code that cannot be captured as plan data. None when no hooks.
-    """
+    """Everything needed to build one SELECT; the planner makes every decision, ``emit`` only assembles."""
 
     root: AliasedClass[Any]
     filter_semijoin: FilterSemiJoin | None
     projection_columns: tuple[ColumnElement[Any], ...] = ()
+    """Columns selected besides the root model, in selection order."""
     load_options: tuple[_AbstractLoad, ...] = ()
     where: tuple[ColumnElement[bool], ...] = ()
     order_by: tuple[UnaryExpression[Any], ...] = ()
     joins: tuple[Join, ...] = ()
     root_aggregation_functions: tuple[Label[Any], ...] = ()
+    """Window function columns, selected last."""
     distinct_on: tuple[ColumnElement[Any], ...] = ()
     use_distinct_on: bool = False
+    """Use native DISTINCT ON; otherwise it was emulated in the pagination subquery."""
     limit: int | None = None
     offset: int | None = None
     hook_specs: tuple[HookSpec, ...] = ()
     hook_applier: HookApplier | None = None
+    """Runs the query hooks, whose ``apply_hook`` is user code that cannot be stored as plan data."""
     column_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
-    """Maps each computed/transform/root-aggregation node to the column object that carries
-    its value in the result row. The executor reads values via ``row._mapping[column]`` — so
-    the rendered column name is irrelevant to correctness."""
+    """Computed, transform and root aggregation node -> the column holding its value.
+
+    The executor reads values by column object, so column names do not matter.
+    """
     identity_columns: Mapping[QueryNodeType, tuple[ColumnElement[Any], ...]] = field(default_factory=dict)
-    """Maps each related level owning computed values to the primary-key columns identifying
-    the element it contributes to a flat result row. Carried in ``projection_columns`` so the
-    executor can attribute a row's computed values to that element rather than to the row."""
+    """Related level owning computed values -> its primary-key columns, also in ``projection_columns``."""
 
     def emit(self) -> Select[Any]:
-        """Emits the SQLAlchemy Select for this query plan.
-
-        Mechanical assembly only; all decisions live in the planner.
-
-        Returns:
-            The assembled SQLAlchemy Select statement.
-        """
+        """Builds the SELECT of this plan."""
         statement = select(self.root)
         if self.filter_semijoin is not None:
             statement = statement.join(self.filter_semijoin.alias, onclause=self.filter_semijoin.onclause)
@@ -149,18 +99,9 @@ class QueryPlan:
         return statement.options(raiseload("*"), *self.load_options)
 
     def apply_clauses(self, statement: Select[Any]) -> Select[Any]:
-        """Applies the shared join/where/order/distinct/limit/offset/aggregation clauses.
+        """Adds the joins, WHERE, ORDER BY, DISTINCT ON, LIMIT, OFFSET and root aggregations to ``statement``.
 
-        This is the core assembly shared by ``emit`` and the relation-join strategies:
-        sorted joins, WHERE, ORDER BY, DISTINCT ON, LIMIT, OFFSET, and root aggregation
-        columns. It assumes the projection (``select(self.root)`` + filter semi-join +
-        projection columns) has already been applied to ``statement``.
-
-        Args:
-            statement: The statement being assembled (projection already applied).
-
-        Returns:
-            The statement with the shared clauses applied.
+        Also used by the join strategies, which build their own selected columns.
         """
         for join in sorted(self.joins):
             statement = statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
@@ -179,18 +120,9 @@ class QueryPlan:
         return statement
 
     def _apply_distinct(self, statement: Select[Any]) -> Select[Any]:
-        """Applies native DISTINCT ON only.
+        """Adds native DISTINCT ON, selecting the ORDER BY columns it requires.
 
-        When ``use_distinct_on`` is False the distinctness is handled inside the subquery
-        (row_number rank + an outer ``WHERE rank = 1`` already present in ``self.where``), so
-        this is a no-op. When True, ORDER BY columns absent from the SELECT list are added
-        (DISTINCT ON requires them) before applying ``.distinct(*distinct_on)``.
-
-        Args:
-            statement: The statement being assembled.
-
-        Returns:
-            The statement with DISTINCT ON applied, or unchanged.
+        Does nothing when DISTINCT ON is emulated: the subquery and a ``rank = 1`` predicate in ``where`` handle it.
         """
         if not self.use_distinct_on:
             return statement

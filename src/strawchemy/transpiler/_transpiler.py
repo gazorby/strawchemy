@@ -1,8 +1,4 @@
-"""Transpiles a GraphQL query into a SQLAlchemy query.
-
-This module contains the Transpiler class, a thin facade over a
-``PlanContext`` that builds executors and filter expressions via ``plan_query``.
-"""
+"""Entry point turning a GraphQL query into a SQLAlchemy statement and its executor."""
 
 from __future__ import annotations
 
@@ -30,7 +26,7 @@ __all__ = ("Transpiler",)
 
 
 class Transpiler(Generic[DeclarativeT]):
-    """Transpiles a GraphQL query into a SQLAlchemy query."""
+    """Plans the GraphQL queries of one model into SQLAlchemy statements."""
 
     def __init__(
         self,
@@ -42,15 +38,10 @@ class Transpiler(Generic[DeclarativeT]):
         deterministic_ordering: bool = False,
         default_order_by: Sequence[OrderByExpr] | None = None,
     ) -> None:
-        """Initializes the Transpiler.
+        """Creates a transpiler whose root rows are restricted by ``statement``, if given.
 
-        Args:
-            model: The SQLAlchemy model to transpile queries for.
-            dialect: The SQLAlchemy dialect to use.
-            statement: An optional base SQLAlchemy statement to build upon.
-            query_hooks: Optional hooks to apply during query transpilation.
-            deterministic_ordering: Whether to ensure deterministic ordering of results.
-            default_order_by: Default ordering applied when the client supplies no order.
+        ``default_order_by`` applies when the client asks for no ordering; ``deterministic_ordering`` then adds the
+        primary keys so that row order is stable.
         """
         self.context: PlanContext[DeclarativeT] = PlanContext.create(
             model,
@@ -74,22 +65,7 @@ class Transpiler(Generic[DeclarativeT]):
         executor_cls: type[QueryExecutorT] = SyncQueryExecutor,  # ty: ignore[invalid-parameter-default]
         execution_options: dict[str, Any] | None = None,
     ) -> QueryExecutorT:
-        """Creates a QueryExecutor for a selection tree.
-
-        Args:
-            selection_tree: Tree of fields to select and their relationships.
-            dto_filter: Filter conditions to apply.
-            order_by: Fields and directions to sort by.
-            limit: Maximum number of results.
-            offset: Number of results to skip.
-            distinct_on: Fields to apply DISTINCT ON to.
-            allow_null: Whether to allow null values in filter conditions.
-            executor_cls: Executor type to return. Defaults to SyncQueryExecutor.
-            execution_options: Options for statement execution.
-
-        Returns:
-            A QueryExecutor instance that can execute the built query.
-        """
+        """Plans the query into one statement and returns an ``executor_cls`` running it."""
         query_graph = QueryGraph(
             self.context.aliases,
             selection_tree=selection_tree,
@@ -105,14 +81,7 @@ class Transpiler(Generic[DeclarativeT]):
         )
 
     def filter_expressions(self, dto_filter: BooleanFilterDTO) -> list[ColumnElement[bool]]:
-        """Builds the WHERE expressions for a filter DTO.
-
-        Args:
-            dto_filter: The filter conditions to convert.
-
-        Returns:
-            The list of boolean WHERE expressions.
-        """
+        """Returns the WHERE predicates of ``dto_filter`` on the root model."""
         query_graph = QueryGraph(self.context.aliases, dto_filter=dto_filter)
         plan = plan_query(query_graph, self.context)
         return list(plan.where)

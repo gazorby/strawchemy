@@ -1,9 +1,4 @@
-"""Module for executing SQLAlchemy queries and converting results to QueryResult.
-
-This module defines the QueryExecutor class, which provides methods for
-executing SQLAlchemy queries and converting the results into QueryResult
-objects.
-"""
+"""Runs a planned query and groups its rows into models and computed values."""
 
 from __future__ import annotations
 
@@ -38,97 +33,49 @@ RelatedKey: TypeAlias = "tuple[QueryNodeType, tuple[Any, ...] | None]"
 
 @dataclass
 class NodeResult(Generic[ModelT]):
-    """Represents a single node result from a query.
-
-    Attributes:
-        model: The SQLAlchemy model instance.
-        computed_values: A mapping of computed values for this node, keyed by query node.
-        related_computed_values: The computed values of every related element of the query,
-            keyed by the relation node it hangs from and its identity key.
-    """
+    """One model of a query result, with its computed values."""
 
     model: ModelT
     computed_values: dict[QueryNodeType, Any]
     related_computed_values: Mapping[RelatedKey, dict[QueryNodeType, Any]] = dataclasses.field(default_factory=dict)
+    """Computed values of every related object of the query, by relation node and primary key."""
 
     def value(self, key: QueryNodeType) -> Any:
-        """Retrieves the value for a given query node type.
-
-        If the key represents a computed or transformed value, it's fetched
-        from `computed_values`. Otherwise, it's retrieved as an attribute
-        from the `model`.
-
-        Args:
-            key: The query node type representing the desired value.
-
-        Returns:
-            The value corresponding to the key.
-        """
+        """Returns the value of ``key``: a computed value, or else the model attribute."""
         if key.value.is_computed or key.metadata.data.is_transform:
             return self.computed_values[key]
         return getattr(self.model, key.value.model_field_name)
 
     def copy_with(self, node: QueryNodeType, model: Any) -> Self:
-        """Creates a copy of this NodeResult for an element of a related collection.
-
-        Args:
-            node: The relation node the element hangs from, keying its computed values.
-            model: The element to use as the copy's model.
-        """
+        """Returns a copy for ``model``, a related object reached through ``node``, with its own computed values."""
         computed_values = self.related_computed_values.get((node, inspect(model).identity), self.computed_values)
         return dataclasses.replace(self, model=model, computed_values=computed_values)
 
 
 @dataclass
 class QueryResult(Generic[ModelT]):
-    """Represents the result of a GraphQL query.
-
-    This class holds the nodes (data objects) returned by the query,
-    computed values for each node, and computed values for the query itself.
-
-    Attributes:
-        nodes: A sequence of data objects of type ModelT.
-        node_computed_values: A sequence of dictionaries containing computed
-            values for each node.
-        query_computed_values: A defaultdict containing computed values for
-            the query.
-        related_computed_values: The computed values of every related element of the query,
-            keyed by the relation node it hangs from and its identity key.
-    """
+    """Models returned by a query, with their computed values and those of the whole query."""
 
     nodes: Sequence[ModelT] = dataclasses.field(default_factory=list)
     node_computed_values: Sequence[dict[QueryNodeType, Any]] = dataclasses.field(default_factory=list)
+    """Computed values of each model in ``nodes``, in the same order."""
     query_computed_values: defaultdict[QueryNodeType, Any] = dataclasses.field(
         default_factory=lambda: defaultdict(lambda: None)
     )
+    """Values computed over the whole query, such as root aggregations."""
     related_computed_values: Mapping[RelatedKey, dict[QueryNodeType, Any]] = dataclasses.field(default_factory=dict)
+    """Computed values of every related object of the query, by relation node and primary key."""
 
     def __post_init__(self) -> None:
         if not self.node_computed_values:
             self.node_computed_values = [{} for _ in range(len(self.nodes))]
 
     def __iter__(self) -> Generator[NodeResult[ModelT]]:
-        """Iterates over the query results, yielding NodeResult instances.
-
-        Yields:
-            NodeResult[ModelT]: An individual result node.
-        """
         for model, computed_values in zip(self.nodes, self.node_computed_values, strict=False):
             yield NodeResult(model, computed_values, self.related_computed_values)
 
     def filter_in(self, **kwargs: Sequence[Any]) -> Self:
-        """Filters the query results based on attribute values.
-
-        Keeps only the nodes where the specified attributes are present in the
-        provided sequences of values.
-
-        Args:
-            **kwargs: Keyword arguments where keys are attribute names of the
-                model and values are sequences of allowed values for that attribute.
-
-        Returns:
-            A new QueryResult instance with the filtered nodes.
-        """
+        """Returns the results whose attribute named by each keyword is in the given values."""
         filtered = [
             (model, computed_values)
             for model, computed_values in zip(self.nodes, self.node_computed_values, strict=False)
@@ -138,25 +85,14 @@ class QueryResult(Generic[ModelT]):
         return dataclasses.replace(self, nodes=nodes, node_computed_values=computed_values)
 
     def value(self, key: QueryNodeType) -> Any:
-        """Retrieves a query-level computed value.
-
-        Args:
-            key: The query node type representing the desired query-level
-                computed value.
-
-        Returns:
-            The computed value for the query.
-        """
+        """Returns a value computed over the whole query, or ``None``."""
         return self.query_computed_values[key]
 
     def one(self) -> NodeResult[ModelT]:
-        """Returns the single result node.
+        """Returns the only result.
 
         Raises:
-            QueryResultError: If the number of nodes is not exactly one.
-
-        Returns:
-            The single NodeResult.
+            QueryResultError: If there is not exactly one result.
         """
         if len(self.nodes) != 1 or len(self.node_computed_values) != 1:
             msg = f"Expected one item, got {len(self.nodes)}"
@@ -164,11 +100,7 @@ class QueryResult(Generic[ModelT]):
         return NodeResult(self.nodes[0], self.node_computed_values[0], self.related_computed_values)
 
     def one_or_none(self) -> NodeResult[ModelT] | None:
-        """Returns the single result node, or None if there isn't exactly one result.
-
-        Returns:
-            The single NodeResult or None.
-        """
+        """Returns the only result, or ``None`` if there is not exactly one."""
         try:
             return self.one()
         except QueryResultError:
@@ -177,74 +109,49 @@ class QueryResult(Generic[ModelT]):
 
 @dataclass
 class QueryExecutor(Generic[DeclarativeT]):
-    """Executes SQLAlchemy queries and converts the results into QueryResult objects.
-
-    This class provides methods for executing SQLAlchemy queries and converting
-    the results into QueryResult objects. It supports applying unique constraints,
-    handling root aggregations, and fetching results as either a list or a single item.
-
-    Attributes:
-        plan: The query plan emitted into the SQLAlchemy statement to execute.
-        id_field_definitions: Precomputed ID field definitions of the queried model,
-            used by the repository for get/get-by-id WHERE clauses.
-        execution_options: Optional execution options for the statement.
-        extra_where: Additional WHERE predicates applied on top of the emitted statement.
-    """
+    """Runs the statement of a ``QueryPlan`` and turns its rows into a ``QueryResult``."""
 
     plan: QueryPlan
     id_field_definitions: list[GraphQLFieldDefinition]
+    """Primary-key fields of the queried model, used by the repository to fetch by id."""
     execution_options: dict[str, Any] | None = None
     extra_where: list[ColumnElement[bool]] = dataclasses.field(default_factory=list)
+    """WHERE predicates added to the planned statement."""
 
     @property
     def column_map(self) -> Mapping[QueryNodeType, ColumnElement[Any]]:
-        """Mapping from each computed/transform/root-aggregation node to its result column."""
+        """Computed, transform and root aggregation node -> its result column."""
         return self.plan.column_map
 
     @property
     def identity_columns(self) -> Mapping[QueryNodeType, tuple[ColumnElement[Any], ...]]:
-        """Mapping from each related level owning computed values to its primary-key columns."""
+        """Related level owning computed values -> its primary-key columns."""
         return self.plan.identity_columns
 
     @property
     def root_aggregation_functions(self) -> list[Label[Any]]:
-        """Root aggregation window-function labels carried by the plan."""
+        """Window function columns of the root aggregations."""
         return list(self.plan.root_aggregation_functions)
 
     @property
     def apply_unique(self) -> bool:
-        """Whether a uniquing pass is needed (true when any relation join is to-many)."""
+        """Whether rows must be deduplicated, which is the case when a to-many relation is joined."""
         return any(join.to_many for join in self.plan.joins)
 
     def add_where(self, *predicates: ColumnElement[bool]) -> None:
-        """Appends WHERE predicates applied on top of the emitted statement.
-
-        Used by the repository to scope a query to specific primary-key values after the
-        executor is built.
-
-        Args:
-            *predicates: Boolean predicates to AND into the final statement.
-        """
+        """Adds WHERE predicates to the planned statement, such as a primary-key lookup."""
         self.extra_where.extend(predicates)
 
     def _to_query_result(
         self, result: Result[tuple[DeclarativeT, Any]], fetch: Literal["one_or_none", "all"]
     ) -> QueryResult[DeclarativeT]:
-        """Converts a SQLAlchemy result to a QueryResult object.
+        """Groups result rows by root model into a ``QueryResult``.
 
-        A row carries the computed values of one combination of related elements, so the same
-        root spans as many rows as that combination varies. Rows are folded onto their root and
-        their computed values indexed by the identity of the element each level contributes.
-
-        Args:
-            result: The SQLAlchemy result to convert.
-            fetch: Whether to fetch one or all results.
-
-        Returns:
-            A QueryResult object containing the nodes and computed values.
+        A root model spans one row per combination of its related objects, and each row holds the computed values of
+        that combination. Those values are stored under the primary key of the related object they belong to.
 
         Raises:
-            MultipleResultsFound: If more than one root is returned while fetching one.
+            MultipleResultsFound: If more than one root model is returned while fetching one.
         """
         nodes: list[DeclarativeT] = []
         computed: list[dict[QueryNodeType, Any]] = []
@@ -281,11 +188,7 @@ class QueryExecutor(Generic[DeclarativeT]):
         )
 
     def statement(self) -> Select[tuple[DeclarativeT]] | StatementLambdaElement:
-        """Returns the SQLAlchemy statement to execute (plan emit + extra WHERE + options).
-
-        Returns:
-            The SQLAlchemy statement.
-        """
+        """Returns the planned statement with the extra WHERE predicates and execution options."""
         statement = self.plan.emit()
         if self.extra_where:
             statement = statement.where(*self.extra_where)
@@ -296,109 +199,33 @@ class QueryExecutor(Generic[DeclarativeT]):
 
 @dataclass
 class AsyncQueryExecutor(QueryExecutor[DeclarativeT]):
-    """Extends QueryExecutor to provide asynchronous query execution.
-
-    This class inherits the query building capabilities of `QueryExecutor`
-    and adapts them for an asynchronous environment. It uses an `AnyAsyncSession`
-    to execute the SQLAlchemy statements and retrieve results.
-
-    The primary methods `execute`, `list`, and `get_one_or_none` are implemented
-    as asynchronous methods, suitable for use with `async/await`.
-    """
+    """Query executor for async sessions."""
 
     async def execute(self, session: AnyAsyncSession) -> Result[tuple[DeclarativeT, Any]]:
-        """Executes the SQLAlchemy statement.
-
-        The statement to be executed is determined by the `self.statement()`
-        method.
-
-        Args:
-            session: The SQLAlchemy AnyAsyncSession to use.
-
-        Returns:
-            The result of the execution.
-        """
+        """Runs the statement and returns the raw result."""
         return await session.execute(self.statement())
 
     async def list(self, session: AnyAsyncSession) -> QueryResult[DeclarativeT]:
-        """Executes the statement and returns a QueryResult object containing all results.
-
-        The statement to be executed is determined by the `self.statement()`
-        method.
-
-        Args:
-            session: The SQLAlchemy AnyAsyncSession to use.
-
-        Returns:
-            A QueryResult object containing all results.
-        """
+        """Runs the statement and returns all results."""
         return self._to_query_result(await self.execute(session), "all")
 
     async def get_one_or_none(self, session: AnyAsyncSession) -> QueryResult[DeclarativeT]:
-        """Executes the statement and returns a QueryResult object containing at most one result.
-
-        The statement to be executed is determined by the `self.statement()`
-        method.
-
-        Args:
-            session: The SQLAlchemy AnyAsyncSession to use.
-
-        Returns:
-            A QueryResult object containing at most one result.
-        """
+        """Runs the statement and returns at most one result."""
         return self._to_query_result(await self.execute(session), "one_or_none")
 
 
 @dataclass
 class SyncQueryExecutor(QueryExecutor[DeclarativeT]):
-    """Extends QueryExecutor to provide synchronous query execution.
-
-    This class inherits the query building capabilities of `QueryExecutor`
-    and adapts them for a synchronous environment. It uses an `AnySyncSession`
-    to execute the SQLAlchemy statements and retrieve results.
-
-    The primary methods `execute`, `list`, and `get_one_or_none` are implemented
-    as synchronous methods.
-    """
+    """Query executor for sync sessions."""
 
     def execute(self, session: AnySyncSession) -> Result[tuple[DeclarativeT, Any]]:
-        """Executes the SQLAlchemy statement.
-
-        The statement to be executed is determined by the `self.statement()`
-        method.
-
-        Args:
-            session: The SQLAlchemy AnySyncSession to use.
-
-        Returns:
-            The result of the execution.
-        """
+        """Runs the statement and returns the raw result."""
         return session.execute(self.statement())
 
     def list(self, session: AnySyncSession) -> QueryResult[DeclarativeT]:
-        """Executes the statement and returns a QueryResult object containing all results.
-
-        The statement to be executed is determined by the `self.statement()`
-        method.
-
-        Args:
-            session: The SQLAlchemy AnySyncSession to use.
-
-        Returns:
-            A QueryResult object containing all results.
-        """
+        """Runs the statement and returns all results."""
         return self._to_query_result(self.execute(session), "all")
 
     def get_one_or_none(self, session: AnySyncSession) -> QueryResult[DeclarativeT]:
-        """Executes the statement and returns a QueryResult object containing at most one result.
-
-        The statement to be executed is determined by the `self.statement()`
-        method.
-
-        Args:
-            session: The SQLAlchemy AnySyncSession to use.
-
-        Returns:
-            A QueryResult object containing at most one result.
-        """
+        """Runs the statement and returns at most one result."""
         return self._to_query_result(self.execute(session), "one_or_none")

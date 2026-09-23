@@ -1,8 +1,7 @@
-"""Builds a QueryPlan from a QueryGraph through composable planning passes.
+"""Turns a QueryGraph into a QueryPlan.
 
-Each pass — AggregationPlan, FilterPlan, OrderPlan, ProjectionPlan — implements ``Plan``, returning
-an immutable result; ``plan_query`` composes them into a ``QueryPlan``.
-SQLAlchemy statements are assembled only by ``QueryPlan.emit``.
+``plan_query`` runs one planning pass per concern (aggregation, filter, order, projection) and combines their
+immutable results into a ``QueryPlan``. Only ``QueryPlan.emit`` builds the SQLAlchemy statement.
 """
 
 from __future__ import annotations
@@ -68,7 +67,7 @@ _P = ParamSpec("_P")
 
 
 class Plan(Protocol[_P]):
-    """A planning pass building an immutable result from a query graph, a context and pass-specific arguments."""
+    """A planning pass that returns an immutable result for one query graph."""
 
     @classmethod
     def plan(
@@ -78,29 +77,26 @@ class Plan(Protocol[_P]):
 
 @dataclass(frozen=True)
 class PlanContext(Generic[DeclarativeT]):
-    """The shared planning environment threaded through a single query plan.
+    """Settings and helpers shared by every planning pass of one query.
 
-    Carries the long-lived deps that every planning pass needs.  Built once per
-    top-level plan and re-derived for each related-collection sub-plan via
-    ``replace`` (see ``build_join``).
+    Built once for the root query; ``build_join`` derives a copy for each relation that gets its own plan.
     """
 
     aliases: AliasContext[DeclarativeT]
-    """The query scope; re-rooted in place by the subquery path."""
+    """Aliases of the query; ``_plan_subquery`` swaps its root alias in place."""
     db_features: DatabaseFeatures
-    """Database-capability flags (cannot be derived from ``aliases``)."""
+    """Features the target database supports."""
     dialect: Dialect
-    """The SQLAlchemy dialect used for expression building."""
     hook_applier: HookApplier
-    """Applies query hooks and collects load options."""
+    """Applies query hooks and collects their load options."""
     join_strategy: JoinStrategy
-    """Builds relation joins (lateral or CTE), chosen from ``db_features``."""
+    """Builds relation joins as LATERAL or CTE, depending on ``db_features``."""
     default_order_by: tuple[OrderByExpr, ...] = ()
-    """Default ordering applied when the client supplies none."""
+    """Ordering used when the client asks for none."""
     deterministic_ordering: bool = False
-    """Whether to append PK tiebreaker columns to ORDER BY."""
+    """Adds primary-key columns to ORDER BY so that row order is stable."""
     statement: Select[Any] | None = None
-    """Optional base filter Select joined in as a PK semi-join."""
+    """User filter statement restricting the root rows."""
 
     @classmethod
     def create(
@@ -113,19 +109,7 @@ class PlanContext(Generic[DeclarativeT]):
         deterministic_ordering: bool = False,
         default_order_by: Sequence[OrderByExpr] | None = None,
     ) -> PlanContext[DeclarativeT]:
-        """Builds a root planning environment for a model.
-
-        Args:
-            model: The SQLAlchemy model to plan queries for.
-            dialect: The SQLAlchemy dialect to use.
-            statement: An optional base filter Select to build upon.
-            query_hooks: Optional hooks to apply during planning.
-            deterministic_ordering: Whether to ensure deterministic ordering.
-            default_order_by: Default ordering applied when the client supplies none.
-
-        Returns:
-            A root ``PlanContext`` whose ``aliases`` scope is freshly rooted on ``model``.
-        """
+        """Builds the context of a root query on ``model``."""
         supported_dialect = cast("SupportedDialect", dialect.name)
         inspector = SQLAlchemyGraphQLInspector(supported_dialect, [model.registry])
         db_features = inspector.db_features
@@ -142,20 +126,10 @@ class PlanContext(Generic[DeclarativeT]):
         )
 
     def build_join(self, node: QueryNodeType, is_outer: bool = False) -> Join:
-        """Creates a relation join for a query node.
+        """Builds the join from the current query to the relation behind ``node``.
 
-        For a node without a relation filter this is a plain ``Join`` on the
-        aliased attribute.  Otherwise a fresh sub-scope is derived
-        (``replace(self, aliases=self.aliases.sub(...), statement=None)``), its nested
-        plan is built via ``plan_query``, and the configured join strategy turns
-        that plan into the relation join.
-
-        Args:
-            node: The query node to create a join for.
-            is_outer: Whether to create an outer join.
-
-        Returns:
-            A ``Join`` for the node, attached to the parent scope (``self.aliases``).
+        A relation without its own filter, ordering or pagination is a plain join. Otherwise the relation gets a
+        nested plan, which ``join_strategy`` turns into a LATERAL or CTE join.
         """
         aliased_attribute = self.aliases.aliased_attribute(node)
         relation_filter = node.metadata.data.relation_filter
@@ -179,18 +153,18 @@ class PlanContext(Generic[DeclarativeT]):
 
 @dataclass(frozen=True)
 class AggregationPlan:
-    """Aggregation joins and their function-column references, built once and threaded into passes."""
+    """Aggregation joins and the columns holding each aggregate function's result."""
 
     columns: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
-    """Function node -> its built aggregation column (corresponded onto the join selectable)."""
+    """Function node -> its result column, read from the aggregation join."""
     joins: tuple[AggregationJoin, ...] = ()
-    """The aggregation lateral/CTE joins, built once."""
+    """LATERAL or CTE joins computing the aggregates."""
     aliases: Mapping[QueryNodeType, AliasedClass[Any]] = field(default_factory=dict)
-    """Aggregation node -> its adaptation alias (spec.alias), needed by filter_function."""
+    """Aggregation node -> the alias its functions are built against."""
     node_functions: Mapping[QueryNodeType, tuple[QueryNodeType, ...]] = field(default_factory=dict)
-    """Aggregation node -> ordered tuple of its function-node keys, in ``spec.functions`` key order."""
+    """Aggregation node -> its function nodes, in a stable order."""
     selection_functions: Mapping[QueryNodeType, frozenset[QueryNodeType]] = field(default_factory=dict)
-    """Aggregation node -> the subset of its function nodes the selection tree asks to project."""
+    """Aggregation node -> the function nodes the client selected."""
 
     @classmethod
     def plan(
@@ -199,17 +173,10 @@ class AggregationPlan:
         context: PlanContext[Any],
         available_columns: Mapping[QueryNodeType, ColumnElement[Any]] | None = None,
     ) -> Self:
-        """Builds aggregation joins and function-column references without mutating scope.
+        """Builds the aggregation joins and function columns.
 
-        Args:
-            query_graph: The graph representation of the query being planned.
-            context: The shared planning context (``aliases``, ``db_features`` read here).
-            available_columns: Function columns an earlier stage already materialized; they are
-                referenced as given and left out of the emitted joins, which are skipped entirely
-                for an aggregation node whose functions are all covered.
-
-        Returns:
-            An ``AggregationPlan`` with columns, joins, aliases, and function-node keys.
+        Functions found in ``available_columns`` are read from there, and an aggregation node whose functions are all
+        available gets no join.
         """
         specs = cls._accumulate_specs(query_graph, context)
         available = available_columns or {}
@@ -256,22 +223,13 @@ class AggregationPlan:
     def _accumulate_specs(
         query_graph: QueryGraph[Any], context: PlanContext[Any]
     ) -> dict[QueryNodeType, AggregationSpec]:
-        """Accumulates one AggregationSpec per aggregation node from the query graph.
+        """Collects one AggregationSpec per aggregation node used by the filter, the ordering or the selection.
 
-        Visits sources in fixed order — filter, order-by, selection — deduplicating function
-        expressions per aggregation node by their function_node key and marking the selected ones.
-
-        Args:
-            query_graph: The graph representation of the query being planned.
-            context: The shared planning context (``aliases`` used for inspection/alias creation).
-
-        Returns:
-            An ordered mapping of aggregation node to its accumulated spec.
+        Each function is kept once per node; those reached from the selection are marked as selected.
         """
         aliases = context.aliases
         specs: dict[QueryNodeType, AggregationSpec] = {}
 
-        # Filter source
         if query_graph.query_filter is not None:
             for aggregation in query_graph.query_filter.iter_aggregation_filters():
                 aggregation_node = aggregation.field_node.find_parent(lambda node: node.value.is_aggregate, strict=True)
@@ -284,7 +242,6 @@ class AggregationPlan:
                 if function_node not in spec.functions:
                     spec.functions[function_node] = function
 
-        # Order-by then selection sources
         order_by_aggregations = (
             node.find_parent(lambda node: node.value.is_aggregate, strict=True)
             for node in query_graph.order_by_nodes
@@ -314,34 +271,14 @@ class AggregationPlan:
     def _lateral_join(
         node: QueryNodeType, function_columns: Iterable[ColumnElement[Any]], alias: Any, context: PlanContext[Any]
     ) -> AggregationJoin:
-        """Creates a lateral aggregation join for a query node.
-
-        Args:
-            node: The aggregation node.
-            function_columns: The aggregate function columns to include in the lateral.
-            alias: The aliased target class the function expressions are adapted to.
-            context: The shared planning context (``aliases`` provides inspect/aliased_attribute).
-
-        Returns:
-            An AggregationJoin backed by a lateral subquery.
-        """
+        """Builds a LATERAL join computing ``function_columns``, built against ``alias``, for each parent row."""
         root_relation = context.aliases.aliased_attribute(node).of_type(inspect(alias))
         lateral_statement = correlate_relation(select(*function_columns), root_relation, alias).lateral()
         return AggregationJoin(target=lateral_statement, onclause=true(), node=node)
 
     @staticmethod
     def _cte_join(node: QueryNodeType, alias: Any, statement: Any, context: PlanContext[Any]) -> AggregationJoin:
-        """Creates a CTE-based aggregation join for a query node.
-
-        Args:
-            node: The aggregation node.
-            alias: The aliased target class for the aggregation target.
-            statement: The SQLAlchemy select statement selecting the aggregate functions.
-            context: The shared planning context (``aliases`` provides inspect for FK resolution).
-
-        Returns:
-            An AggregationJoin backed by a CTE.
-        """
+        """Builds a CTE join running ``statement``, the aggregates select, grouped by the foreign keys to the parent."""
         aliases = context.aliases
         relationship = node.value.model_field.property
         assert isinstance(relationship, RelationshipProperty)
@@ -365,21 +302,11 @@ class AggregationPlan:
     def _secondary_cte_join(
         node: QueryNodeType, alias: Any, statement: Any, context: PlanContext[Any]
     ) -> AggregationJoin:
-        """Creates a CTE-based aggregation join for a relationship using a secondary table.
+        """Builds a CTE join computing the aggregates of a relationship that goes through a secondary table.
 
-        The relationship is traversed from a CTE-private parent alias, so SQLAlchemy emits the
-        configured ``primaryjoin`` and ``secondaryjoin`` in full rather than the foreign-key pairs
-        alone. Grouping on the parent keys of that alias exports them for the outer correlation,
-        which is an outer join because a parent without related rows contributes no group.
-
-        Args:
-            node: The aggregation node.
-            alias: The aliased target class for the aggregation target.
-            statement: The SQLAlchemy select statement selecting the aggregate functions.
-            context: The shared planning context (``aliases`` provides inspect for key resolution).
-
-        Returns:
-            An AggregationJoin backed by a CTE.
+        The CTE joins from its own copy of the parent, so SQLAlchemy writes the full ``primaryjoin`` and
+        ``secondaryjoin`` conditions, and groups by the parent keys to join back to the query. It is an outer join
+        because a parent without related rows has no group.
         """
         aliases = context.aliases
         node_inspect = aliases.inspect(node)
@@ -408,40 +335,21 @@ class AggregationPlan:
         return AggregationJoin(target=cte_alias, onclause=onclause, node=node, is_outer=True)
 
     def selected_columns_for(self, node: QueryNodeType) -> list[ColumnElement[Any]]:
-        """Returns the function columns an aggregation node's selection asks for, in spec order.
-
-        Args:
-            node: The aggregation node whose function columns are requested.
-
-        Returns:
-            A list of labelled function columns in ``node_functions`` key order, or empty.
-        """
+        """Returns the function columns the client selected for an aggregation node, in a stable order."""
         selected = self.selection_functions[node]
         return [self.columns[fn] for fn in self.node_functions[node] if fn in selected]
 
     def join_for(self, node: QueryNodeType) -> AggregationJoin | None:
-        """Returns the AggregationJoin for an aggregation node, or None if absent.
-
-        Args:
-            node: The aggregation node to look up.
-
-        Returns:
-            The matching AggregationJoin, or None.
-        """
+        """Returns the join computing an aggregation node, if any."""
         for candidate in self.joins:
             if candidate.node is node:
                 return candidate
         return None
 
     def upsert(self, node: QueryNodeType, emitted: set[QueryNodeType]) -> tuple[list[ColumnElement[Any]], Join | None]:
-        """Returns the node's selected function columns, returning its join at most once.
+        """Returns the selected function columns of ``node``, and its join if ``node`` is not yet in ``emitted``.
 
-        Args:
-            node: The aggregation node whose columns are requested.
-            emitted: Mutable set tracking already-returned aggregation joins.
-
-        Returns:
-            The resolved function columns and the join (returned at most once per node).
+        Adds ``node`` to ``emitted``.
         """
         function_columns = self.selected_columns_for(node)
         new_join: Join | None = None
@@ -453,7 +361,7 @@ class AggregationPlan:
 
 @dataclass(frozen=True)
 class FilterPlan:
-    """WHERE predicates and the relation joins they require."""
+    """WHERE predicates and the relation joins they need."""
 
     where: tuple[ColumnElement[bool], ...] = ()
     joins: tuple[Join, ...] = ()
@@ -466,17 +374,7 @@ class FilterPlan:
         agg_plan: AggregationPlan,
         allow_null: bool = False,
     ) -> Self:
-        """Builds the WHERE predicates and their relation joins.
-
-        Args:
-            query_graph: The graph representation of the query being planned.
-            context: The shared planning context (``aliases``, ``dialect``, ``build_join`` read here).
-            agg_plan: The pre-built aggregation plan.
-            allow_null: Whether to allow null values in filter conditions.
-
-        Returns:
-            A FilterPlan with WHERE predicates and joins.
-        """
+        """Builds the WHERE predicates and the relation joins they need."""
         if not query_graph.query_filter:
             return cls()
 
@@ -498,17 +396,7 @@ class FilterPlan:
         override: ColumnElement[Any] | None = None,
         not_null_check: bool = False,
     ) -> list[ColumnElement[bool]]:
-        """Converts a DTO filter comparison to a list of SQLAlchemy expressions.
-
-        Args:
-            context: The shared planning context (``aliases``, ``dialect`` read here).
-            dto_filter: The DTO filter comparison to convert.
-            override: An optional column element to override the filter attribute.
-            not_null_check: Whether to add a not-null check to the expressions.
-
-        Returns:
-            A list of SQLAlchemy boolean expressions.
-        """
+        """Converts a filter comparison to SQL predicates, comparing ``override`` instead of the field if given."""
         attribute = override if override is not None else context.aliases.aliased_attribute(dto_filter.field_node)
         expressions: list[ColumnElement[bool]] = dto_filter.to_expressions(context.dialect, attribute)
         if not_null_check:
@@ -517,18 +405,10 @@ class FilterPlan:
 
     @staticmethod
     def _custom_filter_expression(custom: CustomFilter, context: PlanContext[Any]) -> ColumnElement[bool]:
-        """Folds a custom-apply filter into a correlated EXISTS/IN predicate.
+        """Turns a custom filter into one predicate: a primary-key ``IN`` or a correlated ``EXISTS``.
 
-        Builds an isolated ``select(model)``, lets the callback mutate it, then correlates it to
-        the outer query on primary-key equality so the result is a single boolean predicate that
-        composes under AND/OR/NOT.
-
-        Args:
-            custom: The set custom filter value (callable, value, strategy, model node).
-            context: The shared planning context (``aliases``, ``dialect`` read here).
-
-        Returns:
-            A boolean SQLAlchemy expression.
+        The user callback edits a separate ``select(model)``. Matching its primary keys to the outer query's keeps
+        the result usable under AND, OR and NOT.
         """
         model = custom.field_node.value.model
         mapper = class_mapper(model)
@@ -540,7 +420,7 @@ class FilterPlan:
         if custom.join == "in":
             inner_select = isolated.with_only_columns(*inner_pks)
             if len(outer_pks) == 1:
-                # Scalar IN is more portable/optimizable than a single-element tuple IN.
+                # A plain IN is better supported and optimized than a one-element tuple IN.
                 return outer_pks[0].in_(inner_select)
             return tuple_(*outer_pks).in_(inner_select)
 
@@ -550,10 +430,8 @@ class FilterPlan:
             else context.aliases.alias_from_relation_node(custom.field_node, "target")
         )
 
-        # The outer query aliases the root model to a name equal to its table name, so the inner
-        # subquery must use a distinct alias; otherwise the PK-equality correlation collapses to a
-        # tautology against the same table and the EXISTS matches every outer row. An unnamed alias
-        # lets SQLAlchemy generate a guaranteed-unique name (also safe for repeated/nested filters).
+        # The outer query aliases the root model with its table name. An inner alias with that same name would
+        # compare the table's keys to themselves and match every outer row, so SQLAlchemy picks a unique name.
         inner_alias = aliased(mapper, flat=True)
         adapter = ClauseAdapter(inspect(inner_alias).selectable)
         adapted_pks = [adapter.traverse(pk.__clause_element__()) for pk in inner_pks]
@@ -569,17 +447,11 @@ class FilterPlan:
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
     ) -> tuple[Join | None, list[ColumnElement[bool]]]:
-        """Looks up an aggregation filter's column and builds its filter expressions.
-
-        Args:
-            aggregation: The aggregation filter to process.
-            context: The shared planning context (``aliases``, ``dialect`` read here).
-            agg_plan: The pre-built aggregation plan providing columns and aliases.
-            emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
+        """Builds the predicates of an aggregation filter.
 
         Returns:
-            A tuple of the aggregation join the first time it is needed for this node
-            (``None`` otherwise) and the boolean filter expressions.
+            The aggregation join if its node is not yet in ``emitted_agg_joins`` (``None`` otherwise), and the
+            predicates.
         """
         aggregation_node = aggregation.field_node.find_parent(lambda node: node.value.is_aggregate, strict=True)
         alias = agg_plan.aliases[aggregation_node]
@@ -589,7 +461,6 @@ class FilterPlan:
         function_column = agg_plan.columns[function_node]
         bool_expressions = aggregation.predicate.to_expressions(context.dialect, function_column)
 
-        # Emit the aggregation join at most once.
         agg_join: Join | None = None
         if aggregation_node not in emitted_agg_joins:
             emitted_agg_joins.add(aggregation_node)
@@ -606,18 +477,7 @@ class FilterPlan:
         emitted_agg_joins: set[QueryNodeType],
         not_null_check: bool = False,
     ) -> Conjunction:
-        """Gathers all conjunctions from a sequence of filters.
-
-        Args:
-            query: A sequence of filters to gather conjunctions from.
-            context: The shared planning context (``aliases``, ``dialect``, ``build_join`` read here).
-            agg_plan: The pre-built aggregation plan.
-            emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
-            not_null_check: Whether to add not-null checks.
-
-        Returns:
-            A conjunction of expressions, joins, and common join path.
-        """
+        """Builds the predicates and joins of each filter in ``query``."""
         bool_expressions: list[ColumnElement[bool]] = []
         joins: list[Join] = []
         common_join_path: list[QueryNodeType] = []
@@ -666,18 +526,7 @@ class FilterPlan:
         emitted_agg_joins: set[QueryNodeType],
         allow_null: bool = False,
     ) -> Conjunction:
-        """Processes a filter's AND, OR, and NOT conditions into a conjunction.
-
-        Args:
-            query: The filter to process.
-            context: The shared planning context (``aliases``, ``dialect``, ``build_join`` read here).
-            agg_plan: The pre-built aggregation plan.
-            emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
-            allow_null: Whether to allow null values in the filter conditions.
-
-        Returns:
-            A conjunction of expressions, joins, and common join path.
-        """
+        """Builds the predicates and joins of a filter's AND, OR and NOT branches."""
         bool_expressions: list[ColumnElement[bool]] = []
         and_conjunction = FilterPlan._gather_conjunctions(
             query.and_,
@@ -730,18 +579,7 @@ class FilterPlan:
         emitted_agg_joins: set[QueryNodeType],
         allow_null: bool = False,
     ) -> Where:
-        """Creates WHERE expressions and joins from a filter.
-
-        Args:
-            query_filter: The filter to create expressions from.
-            context: The shared planning context (``aliases``, ``dialect``, ``build_join`` read here).
-            agg_plan: The pre-built aggregation plan.
-            emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
-            allow_null: Whether to allow null values in the filter conditions.
-
-        Returns:
-            A Where containing expressions and required joins.
-        """
+        """Builds the WHERE predicates of a filter and every join they need."""
         conjunction = FilterPlan._conjunctions(
             query_filter,
             context,
@@ -764,7 +602,7 @@ class FilterPlan:
 
 @dataclass(frozen=True)
 class OrderPlan:
-    """Built ORDER BY expressions and the relation joins they require."""
+    """ORDER BY expressions and the relation joins they need."""
 
     expressions: tuple[UnaryExpression[Any], ...] = ()
     joins: tuple[Join, ...] = ()
@@ -777,17 +615,10 @@ class OrderPlan:
         agg_plan: AggregationPlan,
         existing_joins: Sequence[Join],
     ) -> Self:
-        """Builds the ORDER BY expressions and their relation joins.
+        """Builds the ORDER BY expressions and the joins they need.
 
-        Args:
-            query_graph: The graph representation of the query being planned.
-            context: The shared planning context (``aliases``, ``db_features``,
-                ``default_order_by``, ``deterministic_ordering`` read here).
-            agg_plan: The pre-built aggregation plan providing function columns.
-            existing_joins: The relation joins gathered so far.
-
-        Returns:
-            An OrderPlan with expressions and new relation joins.
+        When the client asks for no ordering, uses ``default_order_by`` and, with ``deterministic_ordering``, the
+        primary keys. The own ordering of each join in ``existing_joins`` is appended.
         """
         _default_order_by = list(context.default_order_by)
 
@@ -829,13 +660,7 @@ class OrderPlan:
     def _default_order_columns(
         context: PlanContext[Any],
     ) -> list[tuple[SQLColumnExpression[Any], OrderByEnum]]:
-        """Builds ORDER BY columns from the context's default_order_by expressions.
-
-        Args:
-            context: The shared planning context (``aliases`` root alias, ``default_order_by``).
-
-        Returns:
-            A list of ``(aliased_column, OrderByEnum)`` tuples in declared order.
+        """Resolves ``default_order_by`` against the root alias.
 
         Raises:
             StrawchemyFieldError: If an expression references a column not on the root model.
@@ -863,17 +688,10 @@ class OrderPlan:
         columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]],
         joins: list[Join],
     ) -> None:
-        """Processes a single order-by node, updating columns/joins/tracked sets in place.
+        """Appends the ORDER BY column of one node to ``columns``, and the aggregation join it needs to ``joins``.
 
-        Extracted from ``plan`` to reduce cyclomatic complexity.
-
-        Args:
-            node: The order-by node to process.
-            context: The shared planning context (``aliases`` read here).
-            agg_plan: The pre-built aggregation plan.
-            emitted_agg_joins: Mutable set tracking already-emitted aggregation joins.
-            columns: Mutable list accumulating ``(column, order)`` pairs.
-            joins: Mutable list accumulating new relation/aggregation joins.
+        Raises:
+            TranspilingError: If the node has no order direction.
         """
         if node.metadata.data.order_by is None:
             msg = "Missing order by value"
@@ -894,15 +712,9 @@ class OrderPlan:
         context: PlanContext[Any],
         joins: Sequence[Join],
     ) -> list[tuple[SQLColumnExpression[Any], OrderByEnum]]:
-        """Generates ORDER BY specs for related entities.
+        """Returns the ORDER BY columns of the selected relation joins.
 
-        Args:
-            query_graph: The query graph containing selection and ordering information.
-            context: The shared planning context (``aliases``, ``deterministic_ordering`` read here).
-            joins: The relation joins gathered so far.
-
-        Returns:
-            A list of ``(column, OrderByEnum)`` tuples for relation ordering.
+        Uses each join's own ordering, or its primary keys when it has none and ``deterministic_ordering`` is set.
         """
         aliases = context.aliases
         deterministic_ordering = context.deterministic_ordering
@@ -937,30 +749,20 @@ class OrderPlan:
 
 @dataclass(frozen=True)
 class ProjectionPlan:
-    """Projection columns, ORM load options, selection aggregation joins, and hook specs."""
+    """Selected columns, ORM load options, aggregation joins and query hook positions."""
 
     columns: tuple[ColumnElement[Any], ...] = ()
     load_options: tuple[_AbstractLoad, ...] = ()
     aggregation_joins: tuple[Join, ...] = ()
     hook_specs: tuple[HookSpec, ...] = ()
     transform_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
-    """Maps each transform node to its labelled projection column (for column_map)."""
+    """Transform node -> its labelled column, for the executor's column map."""
     identity_map: Mapping[QueryNodeType, tuple[ColumnElement[Any], ...]] = field(default_factory=dict)
-    """Maps each related level owning computed values to its primary-key projection columns."""
+    """Related level owning computed values -> its primary-key columns."""
 
     @classmethod
     def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any], agg_plan: AggregationPlan) -> Self:
-        """Collects projection columns, ORM load options, aggregation joins, and hook specs.
-
-        Args:
-            query_graph: The graph representation of the query being planned.
-            context: The shared planning context (``aliases``, ``hook_applier`` read here).
-            agg_plan: The pre-built aggregation plan providing function columns.
-
-        Returns:
-            A ProjectionPlan with columns, load options, aggregation joins, hooks,
-            and the transform map.
-        """
+        """Builds the projection of the selection tree."""
         selection_tree = query_graph.resolved_selection_tree()
 
         root_columns, column_transforms = context.aliases.inspect(selection_tree).columns()
@@ -1010,18 +812,10 @@ class ProjectionPlan:
     def _identity_columns(
         selection_tree: QueryNodeType, context: PlanContext[Any]
     ) -> dict[QueryNodeType, tuple[ColumnElement[Any], ...]]:
-        """Collects the primary-key columns of every related level that owns computed values.
+        """Selects the primary keys of every related level that owns computed values.
 
-        A computed value is emitted once per flat result row, so it belongs to the related
-        element the row carries, not to the row's root. Selecting that element's primary key
-        alongside lets the executor attribute the value to it.
-
-        Args:
-            selection_tree: The resolved selection tree to walk.
-            context: The shared planning context (``aliases`` resolves the level's alias).
-
-        Returns:
-            A mapping of relation node to its primary-key columns, in selection order.
+        A result row carries a computed value of one related object, not of the root. Selecting that object's
+        primary key lets the executor attach the value to the right object.
         """
         identity_map: dict[QueryNodeType, tuple[ColumnElement[Any], ...]] = {}
         for node in selection_tree.iter_depth_first():
@@ -1039,16 +833,7 @@ class ProjectionPlan:
 
     @staticmethod
     def _collect_child_load(node: QueryNodeType, context: PlanContext[Any]) -> ChildLoad:
-        """Collects a child relation's transform columns, eager-load option, and hook specs.
-
-        Args:
-            node: The relation node to collect loads for.
-            context: The shared planning context (``aliases``, ``hook_applier`` read here).
-
-        Returns:
-            A ChildLoad with the subtree's transform columns, eager-load option, outer hook specs,
-            and the node->label map for the subtree's transform columns.
-        """
+        """Builds the projection of one selected relation and of its selected sub-relations."""
         aliases = context.aliases
         columns, column_transforms = aliases.inspect(node).columns()
         transform_columns: list[ColumnElement[Any]] = [transform.attribute for transform in column_transforms]
@@ -1080,48 +865,30 @@ class ProjectionPlan:
 
 @dataclass(frozen=True)
 class ChildLoad:
-    """A child relation's collected projection columns, eager-load option, and hook specs.
-
-    Attributes:
-        transform_columns: JSON/column transform columns contributed by this subtree, in selection order.
-        load: The ``contains_eager`` loader option for this relation. Always populated by
-            ``_collect_child_load``; None only for a default-constructed instance.
-        hook_specs: Outer query-hook application points for this subtree.
-        transform_map: Maps each transform node in this subtree to its labelled projection column.
-    """
+    """Projection of one selected relation and of its sub-relations."""
 
     load: _AbstractLoad
+    """``contains_eager`` option loading the relation."""
     transform_columns: tuple[ColumnElement[Any], ...] = ()
+    """Transform columns of the subtree, in selection order."""
     hook_specs: tuple[HookSpec, ...] = ()
+    """Where query hooks apply in the subtree."""
     transform_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
+    """Transform node -> its labelled column."""
 
 
 @dataclass(frozen=True)
 class FilterPhase:
-    """The aggregation plan, filter plan, and subquery-tree relation joins shared by both composers.
-
-    Attributes:
-        agg_plan: The aggregation plan built once for all passes.
-        filter_plan: The WHERE filter plan.
-        subquery_tree_joins: The subquery-tree relation joins, excluding nodes already covered by filter joins.
-    """
+    """Aggregation plan, filter plan and subquery-tree joins, shared by ``plan_query`` and ``_plan_subquery``."""
 
     agg_plan: AggregationPlan
     filter_plan: FilterPlan
     subquery_tree_joins: tuple[Join, ...] = ()
+    """Joins of the subquery tree that the filter does not already make."""
 
     @classmethod
     def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any], allow_null: bool) -> Self:
-        """Builds the aggregation plan, the WHERE filter plan, and the subquery-tree joins.
-
-        Args:
-            query_graph: The graph representation of the query being planned.
-            context: The shared planning context.
-            allow_null: Whether to allow null values in filter conditions.
-
-        Returns:
-            A FilterPhase with the aggregation plan, filter plan, and filtered subquery-tree joins.
-        """
+        """Builds the aggregation plan, the filter plan and the subquery-tree joins."""
         aggregation_plan = AggregationPlan.plan(query_graph, context)
         filter_plan = FilterPlan.plan(query_graph, context, aggregation_plan, allow_null)
         filter_join_nodes = {join.node for join in filter_plan.joins}
@@ -1139,28 +906,15 @@ class FilterPhase:
 
 @dataclass(frozen=True)
 class ProjectionPhase:
-    """The root-aggregation column map and the projection plan shared by both composers.
-
-    Attributes:
-        root_aggregations_map: Maps each root-aggregation node to its labelled window-function column.
-        projection_plan: The projection plan (columns, load options, aggregation joins, hooks).
-    """
+    """Root aggregation columns and projection plan, shared by ``plan_query`` and ``_plan_subquery``."""
 
     root_aggregations_map: Mapping[QueryNodeType, Label[Any]]
+    """Root aggregation node -> its window function column."""
     projection_plan: ProjectionPlan
 
     @classmethod
     def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any], agg_plan: AggregationPlan) -> Self:
-        """Builds the root-aggregation window columns and the projection plan.
-
-        Args:
-            query_graph: The graph representation of the query being planned.
-            context: The shared planning context.
-            agg_plan: The aggregation plan supplying function columns.
-
-        Returns:
-            A ProjectionPhase with the root-aggregation column map and the projection plan.
-        """
+        """Builds the root aggregation window columns and the projection plan."""
         root_aggregations_map: dict[QueryNodeType, Label[Any]] = {}
         selection_tree = query_graph.selection_tree
         if selection_tree is not None and selection_tree.graph_metadata.metadata.root_aggregations:
@@ -1178,33 +932,20 @@ class ProjectionPhase:
 
 @dataclass(frozen=True)
 class UserStatementPlan:
-    """Encapsulates applying a user-provided base ``filter_statement``.
+    """Applies the user filter statement to the query.
 
-    A user statement is applied either by inlining its WHERE predicates directly (when the
-    statement is a plain WHERE-only select of the root model) or, otherwise, via a
-    primary-key semi-join to the statement reduced to its primary-key columns.
-
-    Attributes:
-        statement: The user-provided base filter statement.
-        aliases: The query scope, providing the root model and root alias.
+    A statement that only adds WHERE clauses to ``select(model)`` has its WHERE copied into the query. Any other
+    statement is joined to the query on the primary key.
     """
 
     statement: Select[Any]
     aliases: AliasContext[Any]
 
     def is_trivial(self) -> bool:
-        """Decides whether the statement is a plain WHERE-only select of the root model.
+        """Tells whether the statement is ``select(model)`` with WHERE clauses only.
 
-        Compares the statement (public ``ClauseElement.compare``) against a canonical
-        ``select(model).where(whereclause)``. Any additional clause — join, GROUP BY,
-        DISTINCT, HAVING, LIMIT, OFFSET, ORDER BY — makes the comparison fail, leaving the
-        statement to the semi-join path.
-
-        A statement's ``execution_options`` are not preserved when inlined; the emitted SQL
-        is identical, but non-SQL driver hints attached to the filter statement are dropped.
-
-        Returns:
-            True if the statement can be inlined as direct WHERE predicates.
+        Any other clause, such as a join, GROUP BY or LIMIT, makes it non-trivial. Copying the WHERE of a trivial
+        statement drops its ``execution_options``.
         """
         canonical = select(self.aliases.model)
         where = self.statement.whereclause
@@ -1216,17 +957,7 @@ class UserStatementPlan:
             return False
 
     def inline_where(self, alias: AliasedClass[Any]) -> ColumnElement[bool] | None:
-        """Adapts the statement's WHERE predicate onto ``alias``.
-
-        The base statement references the model's base-table columns; the main query selects
-        from an aliased root, so the predicate is rewritten to bind to that alias.
-
-        Args:
-            alias: The aliased entity the main query selects from.
-
-        Returns:
-            The adapted WHERE predicate, or None when the statement has no WHERE clause.
-        """
+        """Rewrites the statement's WHERE clause to use ``alias`` instead of the model's table."""
         where = self.statement.whereclause
         if where is None:
             return None
@@ -1234,11 +965,7 @@ class UserStatementPlan:
         return adapter.traverse(where)
 
     def semijoin(self) -> FilterSemiJoin:
-        """Builds the PK semi-join from the root alias to the filter-statement subquery.
-
-        Returns:
-            A FilterSemiJoin with the subquery alias and the PK-equality onclause.
-        """
+        """Builds the primary-key join from the root alias to the statement."""
         root_mapper = class_mapper(self.aliases.model)
         pk_attributes = SQLAlchemyInspector.pk_attributes(root_mapper)
         filter_alias = cast("Alias", self.statement.with_only_columns(*pk_attributes).subquery().alias())
@@ -1248,18 +975,7 @@ class UserStatementPlan:
         return FilterSemiJoin(alias=filter_alias, onclause=on_clause)
 
     def apply_to_statement(self, statement: Select[Any], alias: AliasedClass[Any]) -> Select[Any]:
-        """Applies the user statement to a select being assembled (subquery path).
-
-        Owns the inline-vs-semijoin decision so call sites do not branch: a trivial
-        statement's WHERE is inlined onto ``alias``; otherwise the PK semi-join is joined in.
-
-        Args:
-            statement: The select being assembled.
-            alias: The aliased root the statement selects from.
-
-        Returns:
-            The statement with the user filter applied.
-        """
+        """Applies the user statement to ``statement``, copying its WHERE onto ``alias`` or joining it."""
         if not self.is_trivial():
             semijoin = self.semijoin()
             return statement.join(semijoin.alias, onclause=semijoin.onclause)
@@ -1270,17 +986,7 @@ class UserStatementPlan:
 def _plan_relation_joins(
     query_graph: QueryGraph[Any], context: PlanContext[Any], is_outer: bool = True, tree: QueryNodeType | None = None
 ) -> tuple[Join, ...]:
-    """Gathers all relation joins needed for a query tree.
-
-    Args:
-        query_graph: The graph representation of the query being planned.
-        context: The shared planning context (provides ``build_join``).
-        is_outer: Whether to create outer joins.
-        tree: The tree to gather joins from. Defaults to ``query_graph.root_join_tree``.
-
-    Returns:
-        A tuple of Join objects for every non-computed relation child, breadth-first.
-    """
+    """Builds a join for every non-computed relation in ``tree``, or in the root join tree, breadth-first."""
     source_tree = tree if tree is not None else query_graph.root_join_tree
     joins: list[Join] = [
         context.build_join(child, is_outer)
@@ -1291,20 +997,10 @@ def _plan_relation_joins(
 
 
 def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any]) -> bool:
-    """Decides whether DISTINCT ON should be emulated via a window rank function.
+    """Tells whether DISTINCT ON must be emulated with a ``row_number()`` window.
 
-    On dialects with native ``DISTINCT ON`` (PostgreSQL), emulation is only needed when
-    ordering is present *and* the distinct-on fields are not the leftmost ORDER BY columns.
-    With no ordering, or with a compatible prefix ordering, native DISTINCT ON is used. On
-    dialects without native support, any distinct clause is emulated.
-
-    Args:
-        query_graph: The graph representation of the query being planned.
-        context: The shared planning context (``db_features``, ``deterministic_ordering``,
-            ``default_order_by`` read here).
-
-    Returns:
-        True if a RANK/row_number window emulation should be used, False for native/none.
+    Always the case when the database lacks DISTINCT ON. Otherwise only when the query is ordered and the DISTINCT ON
+    fields are not the first ORDER BY columns, which native DISTINCT ON requires.
     """
     if not context.db_features.supports_distinct_on:
         return bool(query_graph.distinct_on)
@@ -1313,8 +1009,6 @@ def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any]) 
     has_ordering = bool(query_graph.order_by_tree or context.deterministic_ordering or context.default_order_by)
     if not has_ordering:
         return False
-    # Native DISTINCT ON requires the distinct-on fields to be the leftmost ORDER BY
-    # columns, in order; otherwise fall back to row_number emulation.
     distinct_fields = [enum.field_definition for enum in query_graph.distinct_on]
     order_nodes = query_graph.order_by_nodes
     if len(order_nodes) < len(distinct_fields):
@@ -1326,18 +1020,7 @@ def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any]) 
 
 
 def _dedup_agg_joins(joins: list[Join]) -> list[Join]:
-    """Deduplicates aggregation joins by node, preserving first-seen order.
-
-    Relation joins (non-AggregationJoin) are kept as-is.  Aggregation joins are
-    included at most once per aggregation node — the first occurrence wins.
-
-    Args:
-        joins: The assembled join list (relation joins + aggregation joins from all
-            passes in order: filter, order, projection).
-
-    Returns:
-        A deduplicated join list with the same relative order.
-    """
+    """Keeps the first aggregation join of each node and drops the others; other joins are kept."""
     seen_agg_nodes: set[QueryNodeType] = set()
     result: list[Join] = []
 
@@ -1351,19 +1034,10 @@ def _dedup_agg_joins(joins: list[Join]) -> list[Join]:
 
 
 def _clause_element(column: ColumnElement[Any]) -> ColumnElement[Any]:
-    """Returns the underlying clause element for a column, unwrapping ORM attributes.
+    """Unwraps an ORM attribute into its column.
 
-    ``InstrumentedAttribute`` wraps a ``ColumnElement`` via ``__clause_element__()``; calling
-    ``.compare()`` on the attribute directly does not delegate to the underlying element, so
-    two attributes that map to the same column but were constructed via different access paths
-    (e.g. ``getattr(alias, key)`` vs ``field.adapt_to_entity(insp)``) incorrectly compare as
-    unequal.  Unwrapping to the ``AnnotatedColumn`` level gives correct structural equality.
-
-    Args:
-        column: A column or ORM attribute to unwrap.
-
-    Returns:
-        The underlying ``ColumnElement``.
+    Two attributes for the same column, reached in different ways such as ``getattr(alias, key)`` and
+    ``field.adapt_to_entity(insp)``, do not compare equal; their columns do.
     """
     if hasattr(column, "__clause_element__"):
         return column.__clause_element__()
@@ -1371,18 +1045,10 @@ def _clause_element(column: ColumnElement[Any]) -> ColumnElement[Any]:
 
 
 def _dedup_columns(columns: Sequence[ColumnElement[Any]]) -> list[ColumnElement[Any]]:
-    """Removes structurally duplicate columns, preserving first-seen order.
+    """Removes the columns equal to an earlier one.
 
-    The inner subquery accumulates projection columns from several sources (selection,
-    order-by nodes, root-aggregation arguments). A column reached through more than one
-    source is the same expression but a distinct object, which SQLAlchemy would otherwise
-    emit twice with an auto-suffixed label (``id`` and ``id__1``).
-
-    Args:
-        columns: The assembled projection columns, in selection order.
-
-    Returns:
-        The columns with later structural duplicates dropped.
+    The subquery collects columns from the selection, the ordering and the root aggregations. The same column reached
+    twice is a different object, which SQLAlchemy would select twice (``id`` and ``id__1``).
     """
     unique: list[ColumnElement[Any]] = []
     for column in columns:
@@ -1393,20 +1059,10 @@ def _dedup_columns(columns: Sequence[ColumnElement[Any]]) -> list[ColumnElement[
 
 
 def _referenced_function_nodes(agg_plan: AggregationPlan, inner_joins: Sequence[Join]) -> list[QueryNodeType]:
-    """Computes the function nodes hoisted into the pagination/distinct subquery.
+    """Lists the aggregate functions the subquery computes and the outer query reads from it.
 
-    Hoisting is all-or-nothing per aggregation node: a node the subquery already joins
-    materializes every one of its functions anyway, so all of them are selected out and
-    re-projected, and the outer query drops the join instead of computing the same
-    aggregate twice. A node with no inner join stays outside, where it is computed over
-    the page rather than over the whole filtered set.
-
-    Args:
-        agg_plan: The inner aggregation pass, mapping each node to its function nodes.
-        inner_joins: The deduplicated inner joins, in emission order.
-
-    Returns:
-        The ordered list of referenced function nodes.
+    An aggregation node joined in the subquery has all its functions read from there, so the outer query does not
+    compute them again. A node the subquery does not join stays in the outer query, computed over the page only.
     """
     return [
         function
@@ -1430,29 +1086,12 @@ def _assemble_inner_statement(
     limit: int | None,
     offset: int | None,
 ) -> tuple[Select[Any], KeyedColumnElement[Any] | None]:
-    """Assembles the inner pagination/distinct subquery SELECT.
+    """Builds the SELECT of the pagination or DISTINCT ON subquery, from ``inner_alias``.
 
-    Selects the root selection columns, order-by columns, root-aggregation argument
-    columns and the hoisted aggregation function columns, then applies the optional
-    filter semi-join, joins, WHERE, ORDER BY, native DISTINCT ON, and LIMIT/OFFSET,
-    finally replaying the in-subquery hooks.
-
-    Args:
-        query_graph: The graph representation of the query being planned.
-        context: The shared planning context (``aliases``, ``hook_applier``, ``statement`` read here).
-        inner_alias: The fresh root alias the subquery selects from.
-        distinct_on: The DISTINCT ON configuration for the subquery.
-        use_distinct_on: Whether native DISTINCT ON applies (False ⇒ rank emulation).
-        inner_joins: The deduplicated inner joins (relation + aggregation).
-        where: The inner WHERE predicates.
-        order_expressions: The built inner ORDER BY expressions.
-        selected_function_columns: The hoisted aggregation function columns.
-        limit: Optional pagination limit.
-        offset: Optional pagination offset.
+    Without ``use_distinct_on``, DISTINCT ON is emulated with a ``row_number()`` column.
 
     Returns:
-        A tuple of the assembled inner statement and the anonymous rank-column label
-        (``None`` when DISTINCT ON is not emulated via a window rank).
+        The statement, and its ``row_number()`` column when DISTINCT ON is emulated.
     """
     only_columns: list[Any] = [
         *context.aliases.inspect(query_graph.root_join_tree).selection(inner_alias),
@@ -1476,8 +1115,6 @@ def _assemble_inner_statement(
         projected.append(rank_label)
 
     inner_statement = select(inspect(inner_alias)).options(raiseload("*")).with_only_columns(*projected)
-    # Filtered + paginated gets: restrict the subquery to filter-visible rows; a trivial
-    # statement inlines the WHERE directly, otherwise a PK semi-join is used.
     if context.statement is not None:
         inner_statement = UserStatementPlan(context.statement, context.aliases).apply_to_statement(
             inner_statement, inner_alias
@@ -1514,42 +1151,27 @@ def _plan_subquery(
     allow_null: bool,
     distinct_on_rank: bool,
 ) -> QueryPlan:
-    """Plans the root pagination/distinct-rank subquery boundary.
+    """Plans a root query whose pagination or DISTINCT ON runs in a subquery.
 
-    The inner statement is assembled selecting from a fresh root alias
-    (pagination/distinct happen inside it); the outer query joins the materialized
-    subquery and re-projects the hoisted aggregation columns onto it.
-
-    Args:
-        query_graph: The graph representation of the query being planned.
-        context: The shared planning context.
-        limit: Optional pagination limit (consumed inside the subquery).
-        offset: Optional pagination offset (consumed inside the subquery).
-        allow_null: Whether to allow null values in filter conditions.
-        distinct_on_rank: Whether DISTINCT ON is emulated via a window rank column.
-
-    Returns:
-        The flat outer ``QueryPlan`` selecting from the materialized subquery.
+    The subquery filters, orders and paginates the root rows. The outer query selects from it, joins the relations,
+    and reads the aggregates the subquery already computed.
     """
     model = context.aliases.model
     name = model.__tablename__
 
-    # Phase 0: re-root onto a fresh inner alias so all inner passes and the
-    # build_join (which closes over the scope) build against the subquery's FROM.
+    # Every inner pass, ``build_join`` included, reads the root alias from ``context.aliases``.
     inner_alias = aliased(class_mapper(model), name=name, flat=True)
     context.aliases.replace(alias=inner_alias)
 
     distinct_on = DistinctOn(query_graph)
     use_distinct_on = not distinct_on_rank
 
-    # Phase 1: inner passes against the inner alias.
     phase = FilterPhase.plan(query_graph, context, allow_null)
     aggregation_plan, filter_plan = phase.agg_plan, phase.filter_plan
     subquery_tree_joins = list(phase.subquery_tree_joins)
 
     inner_order = OrderPlan.plan(query_graph, context, aggregation_plan, [*filter_plan.joins, *subquery_tree_joins])
 
-    # Phase 2: assemble the inner subquery statement.
     inner_joins = _dedup_agg_joins([*filter_plan.joins, *inner_order.joins, *subquery_tree_joins])
     referenced_functions = _referenced_function_nodes(aggregation_plan, inner_joins)
     selected_function_labels = {fn: aggregation_plan.columns[fn] for fn in referenced_functions}
@@ -1570,12 +1192,9 @@ def _plan_subquery(
     subquery = inner_statement.subquery(name)
     outer_alias = aliased(class_mapper(model), subquery, name=name)
 
-    # Phase 3: re-root onto the materialized subquery and build the outer query.
     context.aliases.replace(alias=outer_alias)
 
-    # Rebuild aggregation joins against the materialized subquery. The inner plan was
-    # built while the scope pointed at ``inner_alias``; reusing a selection-only join
-    # here would pull that alias back into the outer FROM alongside the subquery.
+    # Inner aggregation joins reference ``inner_alias``; reusing one would add it to the outer FROM.
     reprojected_agg_columns: dict[QueryNodeType, ColumnElement[Any]] = {
         fn: require_corresponding_column(subquery, cast("KeyedColumnElement[Any]", selected_function_labels[fn]))
         for fn in referenced_functions
@@ -1630,17 +1249,9 @@ def plan_query(
     offset: int | None = None,
     allow_null: bool = False,
 ) -> QueryPlan:
-    """Composes the planning passes into a QueryPlan.
+    """Plans ``query_graph`` into one ``QueryPlan``.
 
-    Args:
-        query_graph: The graph representation of the query being planned.
-        context: The shared planning context.
-        limit: Optional pagination limit.
-        offset: Optional pagination offset.
-        allow_null: Whether to allow null values in filter conditions.
-
-    Returns:
-        The assembled ``QueryPlan``.
+    A root query that is paginated, or needs DISTINCT ON emulation, is planned by ``_plan_subquery``.
     """
     distinct_on_rank = _use_distinct_rank(query_graph, context)
 

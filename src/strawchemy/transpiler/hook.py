@@ -1,10 +1,4 @@
-"""Defines the QueryHook interface and related utilities for customizing SQLAlchemy query generation.
-
-This module provides the `QueryHook` base class, which allows developers to
-intercept and modify SQLAlchemy `Select` statements at various stages of the
-query building process. It also defines type aliases like `ColumnLoadingMode`
-and `LoadType` used in conjunction with query hooks.
-"""
+"""``QueryHook``, the base class for loading extra columns and relations or editing the generated SELECT."""
 
 from __future__ import annotations
 
@@ -35,23 +29,18 @@ LoadType: TypeAlias = "InstrumentedAttribute[Any] | RelationshipLoadSpec"
 
 @dataclass
 class QueryHook(Generic[DeclarativeT]):
-    """Base class for defining custom query modifications and data loading strategies.
+    """Loads extra columns and relations, or edits the SELECT, for the field it is attached to.
 
-    `QueryHook` instances are used to dynamically alter SQLAlchemy queries,
-    primarily for specifying which columns and relationships should be eagerly
-    loaded. This is often driven by the fields requested in a GraphQL query,
-    made available via the `info` context variable.
-
-    Attributes:
-        load: A sequence defining which attributes (columns or relationships)
-            to load. Relationships can be specified with nested load options.
-            Example: `[User.name, (User.addresses, [Address.street])]`
-        info_var: A class-level `ContextVar` to access the Strawberry `Info`
-            object, providing context about the current GraphQL request.
+    Override ``apply_hook`` to edit the statement; read the current request from ``info``.
     """
 
     info_var: ClassVar[ContextVar[Info[Any, Any] | None]] = ContextVar("info", default=None)
+    """Strawberry ``Info`` of the current request."""
     load: Sequence[LoadType] = field(default_factory=list)
+    """Columns and relations to load, a relation with its own list.
+
+    Example: ``[User.name, (User.addresses, [Address.street])]``
+    """
 
     _columns: list[InstrumentedAttribute[Any]] = field(init=False, default_factory=list)
     _relationships: list[tuple[InstrumentedAttribute[Any], Sequence[LoadType]]] = field(
@@ -73,18 +62,10 @@ class QueryHook(Generic[DeclarativeT]):
     def _check_relationship_load_spec(
         self, load_spec: list[tuple[InstrumentedAttribute[Any], Sequence[LoadType]]]
     ) -> None:
-        """Recursively validates relationship load specifications.
-
-        Ensures that the primary attribute in each part of a relationship
-        load specification is indeed a SQLAlchemy `RelationshipProperty`.
-
-        Args:
-            load_spec: The relationship load specification to validate,
-                typically `self._relationships` or a nested part of it.
+        """Checks that every key of ``load_spec``, nested ones included, is a relationship.
 
         Raises:
-            QueryHookError: If an attribute intended to specify a relationship
-                is not a `RelationshipProperty`.
+            QueryHookError: If a key is not a relationship attribute.
         """
         for key, attributes in load_spec:
             for attribute in attributes:
@@ -97,21 +78,9 @@ class QueryHook(Generic[DeclarativeT]):
     def _load_relationships(
         self, load_spec: RelationshipLoadSpec, parent_alias: AliasedClass[Any] | None = None
     ) -> _AbstractLoad:
-        """Constructs SQLAlchemy loader options for a relationship.
+        """Builds the loader option of one relation and its listed columns and sub-relations.
 
-        Generates `joinedload` or `selectinload` options based on the
-        `load_spec`. It supports loading specific columns of the related
-        model (`load_only`) and applying further nested loader options.
-
-        Args:
-            load_spec: A tuple containing the relationship attribute
-                and a sequence of attributes or nested relationships to load for it.
-            parent_alias: The aliased class of the parent entity.
-                If `None`, `joinedload` is used for the relationship.
-                Otherwise, `selectinload` is used from the `parent_alias`.
-
-        Returns:
-            A SQLAlchemy `_AbstractLoad` object representing the loader strategy.
+        Uses ``selectinload`` from ``parent_alias`` when given, ``joinedload`` otherwise.
         """
         relationship, attributes = load_spec
         alias_relationship = getattr(parent_alias, relationship.key) if parent_alias else relationship
@@ -131,17 +100,10 @@ class QueryHook(Generic[DeclarativeT]):
 
     @property
     def info(self) -> Info[Any, Any]:
-        """Provides access to the Strawberry GraphQL Info object.
-
-        Retrieves the `Info` object from the `info_var` context variable.
-        This object contains details about the current GraphQL request,
-        which can be used to tailor the query.
-
-        Returns:
-            The Strawberry `Info` object.
+        """Strawberry ``Info`` of the current request.
 
         Raises:
-            QueryHookError: If the `Info` object is not set in the context.
+            QueryHookError: If no request is being resolved.
         """
         if info := self.info_var.get():
             return info
@@ -149,52 +111,17 @@ class QueryHook(Generic[DeclarativeT]):
         raise QueryHookError(msg)
 
     def load_relationships(self, alias: AliasedClass[Any]) -> list[_AbstractLoad]:
-        """Generates loader options for all configured relationships.
-
-        Iterates over `self._relationships` and calls `_load_relationships`
-        for each to create the appropriate SQLAlchemy loader options.
-
-        Args:
-            alias: The `AliasedClass` representing the entity to which these
-                relationships are attached and should be loaded from.
-
-        Returns:
-            A list of SQLAlchemy `_AbstractLoad` objects.
-        """
+        """Returns the loader options of the relations in ``load``, loaded from ``alias``."""
         return [self._load_relationships(load_spec, alias) for load_spec in self._relationships]
 
     def column_load_options(self, alias: AliasedClass[Any]) -> list[_AbstractLoad]:
-        """Returns ``undefer`` loader options for this hook's columns.
-
-        Args:
-            alias: The aliased entity the columns belong to.
-
-        Returns:
-            A list of ``undefer`` options for the configured columns.
-        """
+        """Returns ``undefer`` options for the columns in ``load``, read from ``alias``."""
         return [undefer(getattr(alias, column.key)) for column in self._columns]
 
     def load_columns(
         self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[Any], mode: ColumnLoadingMode
     ) -> tuple[Select[tuple[DeclarativeT]], list[_AbstractLoad]]:
-        """Applies column loading strategies to the SELECT statement.
-
-        Modifies the given SQLAlchemy `Select` statement to ensure specified
-        columns (from `self._columns`) are loaded.
-
-        If `mode` is "undefer", it generates `undefer` options for the columns.
-        If `mode` is "add", it adds the columns directly to the statement's
-        selected entities.
-
-        Args:
-            statement: The SQLAlchemy `Select` statement to modify.
-            alias: The `AliasedClass` of the entity from which columns are loaded.
-            mode: The column loading mode, either "undefer" or "add".
-
-        Returns:
-            A tuple containing the potentially modified `Select` statement
-            and a list of SQLAlchemy `_AbstractLoad` options (e.g., `undefer` options).
-        """
+        """Loads the columns in ``load``, as ``undefer`` options or, in ``"add"`` mode, as selected columns."""
         load_options: list[_AbstractLoad] = []
         if mode == "undefer":
             load_options = self.column_load_options(alias)
@@ -206,19 +133,8 @@ class QueryHook(Generic[DeclarativeT]):
     def apply_hook(
         self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[DeclarativeT]
     ) -> Select[tuple[DeclarativeT]]:
-        """Applies custom modifications to the SELECT statement.
+        """Returns ``statement`` edited, for instance with a filter or a join; unchanged by default.
 
-        This method is intended to be overridden by subclasses to implement
-        specific query alteration logic beyond column and relationship loading,
-        such as adding filters, joins, or other clauses.
-
-        By default, this base implementation returns the statement unchanged.
-
-        Args:
-            statement: The SQLAlchemy `Select` statement to modify.
-            alias: The `AliasedClass` for the primary entity of the query.
-
-        Returns:
-            The (potentially) modified `Select` statement.
+        ``alias`` is the alias of the model the hook's field belongs to.
         """
         return statement

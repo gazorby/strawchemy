@@ -1,13 +1,4 @@
-"""Join strategies for relation joins.
-
-This module defines the strategies used to build relation joins, selecting
-between LATERAL joins and CTE-based joins depending on database capabilities.
-
-Classes:
-    JoinStrategy: Structural type for relation join strategies.
-    LateralJoinStrategy: Builds relation joins using LATERAL subqueries.
-    CteJoinStrategy: Builds relation joins using Common Table Expressions.
-"""
+"""Builds the join of a relation that has its own plan, as a LATERAL subquery or, when unsupported, a CTE."""
 
 from __future__ import annotations
 
@@ -38,20 +29,10 @@ __all__ = ("CteJoinStrategy", "JoinStrategy", "LateralJoinStrategy", "correlate_
 def correlate_relation(
     statement: Select[Any], relation: QueryableAttribute[Any], target: AliasedClass[Any]
 ) -> Select[Any]:
-    """Constrains a to-be-lateral statement to the rows related to the enclosing query.
+    """Restricts ``statement``, a future LATERAL subquery, to the rows related to the outer query's row.
 
-    A secondary table left in the WHERE clause enters the lateral's FROM list unrelated to
-    the target, which SQLAlchemy's linter reports as a cartesian product. Splitting the ORM
-    join built for the relationship keeps the ``secondaryjoin`` structural, and both clauses
-    then reference the same secondary alias.
-
-    Args:
-        statement: The statement to constrain, before ``lateral()``.
-        relation: The relationship attribute, typed onto ``target``.
-        target: The aliased class the relationship targets.
-
-    Returns:
-        The statement constrained to the related rows.
+    With a secondary table, the ``secondaryjoin`` becomes a JOIN rather than a WHERE predicate. In the WHERE clause
+    the secondary table would sit in FROM unjoined to ``target``, which SQLAlchemy reports as a cartesian product.
     """
     relationship = relation.property
     if not isinstance(relationship, RelationshipProperty) or relationship.secondary is None:
@@ -63,7 +44,7 @@ def correlate_relation(
 
 
 class JoinStrategy(Protocol):
-    """Structural type for relation-join construction (lateral or CTE)."""
+    """Builds the join of a relation from the relation's own plan."""
 
     def relation_join(
         self,
@@ -73,18 +54,7 @@ class JoinStrategy(Protocol):
         plan: QueryPlan,
         is_outer: bool,
     ) -> Join:
-        """Builds the subquery join for a related collection.
-
-        Args:
-            scope: The query scope used to resolve aliases and inspections.
-            node: The query node representing the relation to join.
-            target_alias: The aliased class for the target of the join.
-            plan: The query plan for the join's nested subquery.
-            is_outer: Whether to perform an outer join.
-
-        Returns:
-            A Join object representing the relation join.
-        """
+        """Builds the join of the relation behind ``node``, running ``plan`` against ``target_alias``."""
         ...
 
 
@@ -99,18 +69,7 @@ class LateralJoinStrategy:
         plan: QueryPlan,
         is_outer: bool,
     ) -> Join:
-        """Creates a LATERAL join for a given node.
-
-        Args:
-            scope: The query scope used to resolve aliases and inspections.
-            node: The query node representing the relation to join.
-            target_alias: The aliased class for the target of the join.
-            plan: The query plan for the lateral subquery.
-            is_outer: Whether to perform an outer join.
-
-        Returns:
-            A Join object representing the lateral join.
-        """
+        """Builds a LATERAL join running ``plan`` for each row of the outer query."""
         target_insp = inspect(target_alias)
         aliased_attribute = scope.aliased_attribute(node)
         node_inspect = scope.inspect(node)
@@ -123,10 +82,7 @@ class LateralJoinStrategy:
 
 
 class CteJoinStrategy:
-    """Builds relation joins using Common Table Expressions.
-
-    This is used when LATERAL joins are not supported by the database.
-    """
+    """Builds relation joins as CTEs, for databases without LATERAL."""
 
     def relation_join(
         self,
@@ -136,23 +92,12 @@ class CteJoinStrategy:
         plan: QueryPlan,
         is_outer: bool,
     ) -> Join:
-        """Creates a CTE-based join for a given node.
+        """Builds a CTE join running ``plan`` over all parents at once.
 
-        This is used when LATERAL joins are not supported by the database.
-
-        Args:
-            scope: The query scope used to resolve aliases and inspections.
-            node: The query node representing the relation to join.
-            target_alias: The aliased class for the target of the join.
-            plan: The query plan for the CTE subquery.
-            is_outer: Whether to perform an outer join.
-
-        Returns:
-            A Join object representing the CTE-based join.
+        The CTE ranks rows per parent; the join condition applies the limit and offset on that rank.
         """
         remote_fks = scope.inspect(node).foreign_key_columns("target", target_alias)
         rank_column = self._rank_column(remote_fks, plan)
-        # Remove limit/offset in CTE as it's applied in the WHERE clause of the main query
         plan_wihtout_limit_offset = dataclasses.replace(plan, limit=None, offset=None)
         node_inspect = scope.inspect(node)
         remote_fks = node_inspect.foreign_key_columns("target", target_alias)
@@ -167,8 +112,7 @@ class CteJoinStrategy:
         statement = plan_wihtout_limit_offset.apply_clauses(base_statement).cte()
         cte_alias = aliased(target_alias, statement)
         scope.set_relation_alias(node, "target", cte_alias)
-        # Resolve the relationship expression AFTER registering the CTE alias so the ON
-        # clause binds to the CTE in the FROM, not a separate plain alias.
+        # Read after registering the CTE alias, so that the ON clause targets the CTE rather than a new alias.
         aliased_attribute = scope.aliased_attribute(node)
         limit_offset_condition: list[ColumnElement[bool]] = []
         if rank_column is not None:
@@ -178,14 +122,9 @@ class CteJoinStrategy:
 
     @staticmethod
     def _rank_column(remote_fks: list[QueryableAttribute[Any]], plan: QueryPlan) -> Label[int] | None:
-        """Builds the ``dense_rank()`` column used to emulate limit/offset per partition.
+        """Builds the ``dense_rank()`` column, per parent, that limit and offset are applied on.
 
-        Args:
-            remote_fks: The remote foreign key columns to partition the ranking by.
-            plan: The query plan providing the ordering and limit/offset settings.
-
-        Returns:
-            A labeled rank column, or None when neither ordering nor limit/offset apply.
+        Returns ``None`` when the plan has no ordering, limit or offset.
         """
         if not (plan.order_by or plan.limit is not None or plan.offset is not None):
             return None
@@ -193,15 +132,7 @@ class CteJoinStrategy:
 
     @staticmethod
     def _limit_offset_condition(rank_column: ColumnElement[Any], plan: QueryPlan) -> list[ColumnElement[bool]]:
-        """Builds the rank-based predicates emulating the plan's limit/offset.
-
-        Args:
-            rank_column: The scoped rank column resolved against the built CTE.
-            plan: The query plan providing the limit and offset settings.
-
-        Returns:
-            The list of boolean predicates restricting rows to the requested window.
-        """
+        """Builds the predicates on ``rank_column`` that apply the plan's limit and offset."""
         condition: list[ColumnElement[bool]] = []
         if plan.offset is not None:
             condition.append(rank_column > plan.offset)
@@ -211,14 +142,7 @@ class CteJoinStrategy:
 
 
 def select_join_strategy(db_features: DatabaseFeatures) -> JoinStrategy:
-    """Selects the relation join strategy for the given database features.
-
-    Args:
-        db_features: The database features describing dialect capabilities.
-
-    Returns:
-        A LateralJoinStrategy if LATERAL joins are supported, a CteJoinStrategy otherwise.
-    """
+    """Returns the LATERAL strategy if the database supports it, the CTE strategy otherwise."""
     if db_features.supports_lateral:
         return LateralJoinStrategy()
     return CteJoinStrategy()
