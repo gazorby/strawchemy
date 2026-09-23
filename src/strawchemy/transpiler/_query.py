@@ -203,6 +203,17 @@ class QueryGraph(Generic[DeclarativeT]):
             max_order = max(orders) + 1
         return merged_tree
 
+    @cached_property
+    def filter_relation_nodes(self) -> list[QueryNodeType]:
+        """Relations the filter joins."""
+        if self.where_join_tree is None:
+            return []
+        return [
+            node
+            for node in self.where_join_tree.iter_breadth_first()
+            if not node.is_root and node.value.is_relation and not node.value.is_computed
+        ]
+
     def root_aggregation_tree(self) -> QueryNodeType | None:
         if self.selection_tree:
             return self.selection_tree.find_child(lambda child: child.value.name == AGGREGATIONS_KEY)
@@ -334,6 +345,15 @@ class HookApplier:
     hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] = dataclasses.field(
         default_factory=lambda: defaultdict(list)
     )
+
+    def has_hooks(self, node: QueryNodeType) -> bool:
+        return bool(self.hooks.get(node))
+
+    def without(self, nodes: Sequence[QueryNodeType]) -> HookApplier:
+        """Returns a copy that runs no hook of ``nodes``."""
+        return HookApplier(
+            self.scope, defaultdict(list, {node: hooks for node, hooks in self.hooks.items() if node not in nodes})
+        )
 
     def apply(
         self,

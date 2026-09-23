@@ -591,6 +591,7 @@ Important notes when implementing `apply_hooks`:
 - A hook on a related type, or on a relation field, only restricts the related rows: a parent without matching rows is
   still returned, with an empty list or `null`.
 - An `ORDER BY` added by such a hook orders the related rows, ahead of the client's `orderBy`.
+- A filter on a relation ignores the hooks of that relation: it tests every related row, hidden or not.
 - You must set a `ModelInstance` typed attribute if you want to access the model instance values.
   The `instance` attribute is matched by the `ModelInstance[Fruit]` type hint, so you can give it any name you want.
 
