@@ -138,7 +138,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             distinct_on_input = None
         return distinct_on_input
 
-    def _json_field(self) -> StrawberryField:
+    def _json_field(self) -> StrawchemyField:
         return self._mapper.field(
             root_field=False,
             arguments=[
@@ -155,7 +155,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         pagination_config: DTOConfig,
         distinct_on_config: DTOConfig,
         default_pagination: DefaultOffsetPagination | None,
-    ) -> tuple[StrawberryField, Any]:
+    ) -> tuple[StrawchemyField, Any]:
         """Build the pagination/order/distinct_on argument field for a to-many relation."""
         related = Self if field.related_dto is dto else field.related_dto
         type_annotation = list[related] if related is not None else field.type_  # ty: ignore[invalid-type-form]
@@ -227,28 +227,25 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         pagination_config = DTOConfig.from_include(paginate)
         distinct_on_config = DTOConfig.from_include(distinct_on)
 
-        # Make sure Class-body `@strawberry.field` resolvers take precedence over auto-derived
-        # JSON-path projection and relation arguments. Exclude model_field alias declarations
-        # — those are alias mappings, not resolvers, and must keep their annotations.
-        body_fields = (
-            {
-                name
-                for name, field_ in inspect.getmembers(base, lambda v: isinstance(v, StrawberryField))
-                if not (isinstance(field_, StrawchemyField) and field_.model_field is not None)
-            }
-            if base is not None
-            else set()
+        # A class-body resolver drives its own type, so the model-derived annotation is dropped and
+        # nothing is generated for it. A resolver-less `StrawchemyField` maps the model field instead:
+        # it keeps the annotation and takes the generated arguments for the options it leaves unset.
+        body_fields: dict[str, StrawberryField] = (
+            dict(inspect.getmembers(base, lambda v: isinstance(v, StrawberryField))) if base is not None else {}
         )
 
         for field in dto.__dto_field_definitions__.values():
-            if field.name in body_fields:
-                # Drop the model-derived annotation so the resolver's own return type
-                # drives the field type, rather than the column type.
+            body_field = body_fields.get(field.name)
+            if body_field is not None and body_field.base_resolver is not None:
                 dto.__annotations__.pop(field.name, None)
                 continue
+            if body_field is not None and not isinstance(body_field, StrawchemyField):
+                continue
+            generated: StrawchemyField | None = None
+            to_many = field.is_relation and field.uselist
             # Add pagination, distinct_on and ordering arguments for relations
-            if field.is_relation and field.uselist:
-                attributes[field.name], annotations[field.name] = self._relation_field(
+            if to_many:
+                generated, annotations[field.name] = self._relation_field(
                     field,
                     dto,
                     order_config=order_config,
@@ -262,8 +259,12 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 and field.has_model_field
                 and self.inspector.model_field_type(field) in {JSON, dict}
             ):
-                attributes[field.name] = self._json_field()
+                generated = self._json_field()
                 annotations[field.name] = Union[field.type_, None]
+            if body_field is not None:
+                attributes[field.name] = body_field.map_model_field(field.name, generated, to_many=to_many)
+            elif generated is not None:
+                attributes[field.name] = generated
 
         dto.__annotations__ |= annotations
         for name, value in attributes.items():

@@ -248,6 +248,7 @@ def test_update_mutation_by_filter_type_not_list_fail() -> None:
         pytest.param("resolver.primary_key_resolver.Query", id="primary_key_resolver"),
         pytest.param("resolver.list_resolver.Query", id="list_resolver"),
         pytest.param("resolver.class_body_resolver_override.Query", id="class_body_resolver_override"),
+        pytest.param("model_field.field_options.Query", id="model_field_options"),
         pytest.param("override.override_argument.Query", id="argument_override"),
         pytest.param("override.override_auto_type.Query", id="override_auto_type"),
         pytest.param("override.override_with_custom_name.Query", id="override_with_custom_name"),

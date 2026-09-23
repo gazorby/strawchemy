@@ -466,7 +466,7 @@ class StrawchemyField(StrawberryField):
                         default=None,
                     )
                 )
-        elif issubclass(inner_type, MappedDTO):
+        elif self.is_root_field and issubclass(inner_type, MappedDTO):
             model = dto_model_from_type(inner_type)
             id_fields = list(self._config.inspector.id_field_definitions(model, DTOConfig(Purpose.READ)))
             if len(id_fields) == 1:
@@ -482,6 +482,50 @@ class StrawchemyField(StrawberryField):
                     ]
                 )
         return arguments
+
+    def map_model_field(self, name: str, generated: StrawchemyField | None, *, to_many: bool) -> Self:
+        """Turn this class-body field into the field resolving model field ``name`` from its parent.
+
+        Args:
+            name: Schema name of the field, used in error messages.
+            generated: The field strawchemy generates for the model field; its pagination, ordering,
+                distinct on and arguments fill the options this field leaves unset.
+            to_many: Allows pagination, ordering and distinct on, which only apply to to-many relations.
+
+        Raises:
+            StrawchemyFieldError: If an option is set that the model field cannot honour.
+        """
+        root_only = {
+            "filter_input": self._filter not in (None, False),
+            "default_order_by": bool(self._default_order_by),
+            "filter_statement": self._filter_statement is not None,
+            "root_aggregations": self.root_aggregations,
+        }
+        to_many_only = {
+            "pagination": bool(self._pagination),
+            "order_by_input": self._order_by not in (None, False),
+            "distinct_on": self._distinct_on not in (None, False),
+        }
+        for option, is_set in root_only.items():
+            if is_set:
+                msg = f"`{option}` cannot be set on `{name}`: it only applies to root fields"
+                raise StrawchemyFieldError(msg)
+        for option, is_set in to_many_only.items():
+            if is_set and not to_many:
+                msg = f"`{option}` cannot be set on `{name}`: it only applies to to-many relation fields"
+                raise StrawchemyFieldError(msg)
+
+        self.is_root_field = False
+        if generated is not None:
+            if self._pagination is None:
+                self._pagination = generated._pagination  # noqa: SLF001
+            if self._order_by is None:
+                self._order_by = generated._order_by  # noqa: SLF001
+            if self._distinct_on is None:
+                self._distinct_on = generated._distinct_on  # noqa: SLF001
+            if self._arguments is None:
+                self._arguments = generated._arguments  # noqa: SLF001
+        return self
 
     def filter_statement(self, info: Info[Any, Any]) -> Select[tuple[DeclarativeBase]] | None:
         return self._filter_statement(info) if self._filter_statement else None
