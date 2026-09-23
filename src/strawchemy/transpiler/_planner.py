@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     from sqlalchemy.sql.selectable import Alias
 
     from strawchemy.config.databases import DatabaseFeatures
+    from strawchemy.repository.typing import OrderBySpec
     from strawchemy.transpiler._strategies import JoinStrategy
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import OrderByExpr, QueryNodeType, SupportedDialect
@@ -164,17 +165,16 @@ class PlanContext(Generic[DeclarativeT]):
             order_by=(*hook_order_by, *plan.order_by),
             hook_specs=(HookSpec(node=node, alias=target_alias, loading_mode="add", export_order_by=True),),
         )
-        selection = self.aliases.inspect(node).selection(target_alias)
-        selected_keys = {attribute.key for attribute in selection}
-        selection.extend(
-            sub_context.aliases.aliased_attribute(order_node, target_alias)
-            for order_node in query_graph.order_by_nodes
-            if order_node.level == 1 and order_node.value.model_field_name not in selected_keys
-        )
+        order_columns: list[Any] = [column for column, _ in plan.order_keys]
+        selection: list[Any] = [*self.aliases.inspect(node).selection(target_alias), *order_columns]
+        selection = _dedup_columns(selection)
         join = self.join_strategy.relation_join(
             self.aliases, node, target_alias, plan, selection=selection, is_outer=is_outer
         )
-        join.order_nodes = query_graph.order_by_nodes
+        join.order_by = [
+            (require_corresponding_column(join.selectable, column), order_by)
+            for column, (_, order_by) in zip(order_columns, plan.order_keys, strict=True)
+        ]
         adapter = ClauseAdapter(join.selectable)
         join.hook_order_by = tuple(adapter.traverse(clause) for clause in hook_order_by)
         return join
@@ -663,6 +663,8 @@ class OrderPlan:
 
     expressions: tuple[UnaryExpression[Any], ...] = ()
     joins: tuple[Join, ...] = ()
+    keys: tuple[OrderBySpec, ...] = ()
+    """Columns and directions of the client ordering."""
 
     @classmethod
     def plan(
@@ -697,6 +699,7 @@ class OrderPlan:
                 joins=joins,
             )
 
+        keys = tuple(columns)
         no_user_columns = not columns
         if no_user_columns and _default_order_by:
             columns.extend(cls._default_order_columns(context))
@@ -708,7 +711,7 @@ class OrderPlan:
             columns.extend([(id_col, OrderByEnum.ASC) for id_col in pk_aliases])
 
         order_by = OrderBy(context.db_features, columns, joins)
-        return cls(expressions=(*order_by.expressions, *relation_expressions), joins=tuple(order_by.joins))
+        return cls(expressions=(*order_by.expressions, *relation_expressions), joins=tuple(order_by.joins), keys=keys)
 
     @staticmethod
     def _default_order_columns(
@@ -784,14 +787,10 @@ class OrderPlan:
             ):
                 continue
             order_by_spec: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = []
-            if not join.order_nodes and deterministic_ordering:
+            if not join.order_by and deterministic_ordering:
                 order_by_spec = [(attribute, OrderByEnum.ASC) for attribute in aliases.aliased_id_attributes(join.node)]
-            elif join.order_nodes:
-                order_by_spec = [
-                    (aliases.scoped_column(join.selectable, node.value.model_field_name), node.metadata.data.order_by)
-                    for node in join.order_nodes
-                    if node.metadata.data.order_by
-                ]
+            else:
+                order_by_spec = list(join.order_by)
             expressions.extend([*join.hook_order_by, *OrderBy(context.db_features, order_by_spec).expressions])
         return expressions
 
@@ -1375,6 +1374,7 @@ def plan_query(
         load_options=projection_plan.load_options,
         where=where_predicates,
         order_by=order.expressions,
+        order_keys=order.keys,
         joins=tuple(deduped_joins),
         root_aggregation_functions=root_aggregations,
         distinct_on=(cast("tuple[ColumnElement[Any], ...]", tuple(distinct_on.expressions)) if distinct_on else ()),
