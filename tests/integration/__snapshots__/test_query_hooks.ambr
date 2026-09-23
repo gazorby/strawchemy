@@ -1793,35 +1793,34 @@
 # name: test_query_hook_joining_on_relation_ignored_by_filter[session-async-tracked-aiosqlite_engine]
   '''
   WITH anon_1 AS (
-          SELECT fruit_2.name AS name,
-                 fruit_2.id AS id,
-                 fruit_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_2.color_id ORDER BY fruit_2.id ASC) AS rank
-            FROM fruit AS fruit_2
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank
+            FROM fruit AS fruit_1
             JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_2.id
-           WHERE fruit_2.color_id IS NOT NULL
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE fruit_1.color_id IS NOT NULL
              AND (fruit_farm.name LIKE '%' || ?)
-           GROUP BY fruit_2.color_id,
-                    fruit_2.name,
-                    fruit_2.id
-           ORDER BY fruit_2.id ASC
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.id ASC
          ) SELECT anon_1.name,
          anon_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.name IN (__[POSTCOMPILE_name_2])
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.name IN (__[POSTCOMPILE_name_3])
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             anon_1.id ASC
   '''
@@ -1829,35 +1828,34 @@
 # name: test_query_hook_joining_on_relation_ignored_by_filter[session-async-tracked-asyncmy_engine]
   '''
   WITH anon_1 AS (
-          SELECT fruit_2.name AS name,
-                 fruit_2.id AS id,
-                 fruit_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_2.color_id ORDER BY fruit_2.id ASC) AS `rank`
-            FROM fruit AS fruit_2
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS `rank`
+            FROM fruit AS fruit_1
            INNER JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_2.id
-           WHERE fruit_2.color_id IS NOT NULL
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE fruit_1.color_id IS NOT NULL
              AND (fruit_farm.name LIKE concat('%%', %s))
-           GROUP BY fruit_2.color_id,
-                    fruit_2.name,
-                    fruit_2.id
-           ORDER BY fruit_2.id ASC
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.id ASC
          ) SELECT anon_1.name,
          anon_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           INNER JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.name IN (__[POSTCOMPILE_name_2])
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+           INNER JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.name IN (__[POSTCOMPILE_name_3])
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             anon_1.id ASC
   '''
@@ -1868,27 +1866,26 @@
          anon_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.name IN (__[POSTCOMPILE_name_2])
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN LATERAL (
-          SELECT fruit_2.name AS name,
-                 fruit_2.id AS id
-            FROM fruit AS fruit_2
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id
+            FROM fruit AS fruit_1
             JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_2.id
+              ON fruit_farm.fruit_id = fruit_1.id
            WHERE (fruit_farm.name LIKE '%' || $1::VARCHAR)
-             AND color.id = fruit_2.color_id
-           ORDER BY fruit_2.id ASC
+             AND color.id = fruit_1.color_id
+           ORDER BY fruit_1.id ASC
          ) AS anon_1
       ON TRUE
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.name IN (__[POSTCOMPILE_name_3])
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             anon_1.id ASC
   '''
@@ -1899,27 +1896,26 @@
          anon_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.name IN (__[POSTCOMPILE_name_2])
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN LATERAL (
-          SELECT fruit_2.name AS name,
-                 fruit_2.id AS id
-            FROM fruit AS fruit_2
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id
+            FROM fruit AS fruit_1
             JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_2.id
-           WHERE (fruit_farm.name LIKE '%%' || %(name_3)s::VARCHAR)
-             AND color.id = fruit_2.color_id
-           ORDER BY fruit_2.id ASC
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE (fruit_farm.name LIKE '%%' || %(name_2)s::VARCHAR)
+             AND color.id = fruit_1.color_id
+           ORDER BY fruit_1.id ASC
          ) AS anon_1
       ON TRUE
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.name IN (__[POSTCOMPILE_name_3])
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             anon_1.id ASC
   '''
@@ -1930,27 +1926,26 @@
          anon_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.name IN (__[POSTCOMPILE_name_2])
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN LATERAL (
-          SELECT fruit_2.name AS name,
-                 fruit_2.id AS id
-            FROM fruit AS fruit_2
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id
+            FROM fruit AS fruit_1
             JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_2.id
-           WHERE (fruit_farm.name LIKE '%%' || %(name_3)s::VARCHAR)
-             AND color.id = fruit_2.color_id
-           ORDER BY fruit_2.id ASC
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE (fruit_farm.name LIKE '%%' || %(name_2)s::VARCHAR)
+             AND color.id = fruit_1.color_id
+           ORDER BY fruit_1.id ASC
          ) AS anon_1
       ON TRUE
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.name IN (__[POSTCOMPILE_name_3])
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             anon_1.id ASC
   '''
@@ -1958,35 +1953,34 @@
 # name: test_query_hook_joining_on_relation_ignored_by_filter[session-sync-tracked-sqlite_engine]
   '''
   WITH anon_1 AS (
-          SELECT fruit_2.name AS name,
-                 fruit_2.id AS id,
-                 fruit_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_2.color_id ORDER BY fruit_2.id ASC) AS rank
-            FROM fruit AS fruit_2
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank
+            FROM fruit AS fruit_1
             JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_2.id
-           WHERE fruit_2.color_id IS NOT NULL
+              ON fruit_farm.fruit_id = fruit_1.id
+           WHERE fruit_1.color_id IS NOT NULL
              AND (fruit_farm.name LIKE '%' || ?)
-           GROUP BY fruit_2.color_id,
-                    fruit_2.name,
-                    fruit_2.id
-           ORDER BY fruit_2.id ASC
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.id ASC
          ) SELECT anon_1.name,
          anon_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.name IN (__[POSTCOMPILE_name_2])
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.name IN (__[POSTCOMPILE_name_3])
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             anon_1.id ASC
   '''
@@ -2360,19 +2354,18 @@
          fruit_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= ?
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
      AND fruit_1.sweetness > ?
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.sweetness <= ?
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -2383,19 +2376,18 @@
          fruit_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           INNER JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= %s
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
      AND fruit_1.sweetness > %s
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+           INNER JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.sweetness <= %s
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -2406,19 +2398,18 @@
          fruit_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= $1::INTEGER
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > $2::INTEGER
+     AND fruit_1.sweetness > $1::INTEGER
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.sweetness <= $2::INTEGER
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -2429,19 +2420,18 @@
          fruit_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= %(sweetness_1)s::INTEGER
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > %(sweetness_2)s::INTEGER
+     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.sweetness <= %(sweetness_2)s::INTEGER
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -2456,11 +2446,15 @@
           SELECT color.name AS name,
                  color.id AS id
             FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= ?
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
+           WHERE EXISTS (
+                  SELECT 1
+                    FROM color AS color_1
+                    JOIN fruit AS fruit_2
+                      ON color_1.id = fruit_2.color_id
+                   WHERE fruit_2.sweetness <= ?
+                     AND color_1.id = color.id
+                 )
+           ORDER BY color.id ASC
            LIMIT ?
           OFFSET ?
          ) AS color
@@ -2481,11 +2475,15 @@
           SELECT color.name AS name,
                  color.id AS id
             FROM color AS color
-           INNER JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= %s
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
+           WHERE EXISTS (
+                  SELECT 1
+                    FROM color AS color_1
+                   INNER JOIN fruit AS fruit_2
+                      ON color_1.id = fruit_2.color_id
+                   WHERE fruit_2.sweetness <= %s
+                     AND color_1.id = color.id
+                 )
+           ORDER BY color.id ASC
            LIMIT %s,
                  %s
          ) AS color
@@ -2506,11 +2504,15 @@
           SELECT color.name AS name,
                  color.id AS id
             FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= $1::INTEGER
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
+           WHERE EXISTS (
+                  SELECT 1
+                    FROM color AS color_1
+                    JOIN fruit AS fruit_2
+                      ON color_1.id = fruit_2.color_id
+                   WHERE fruit_2.sweetness <= $1::INTEGER
+                     AND color_1.id = color.id
+                 )
+           ORDER BY color.id ASC
            LIMIT $2::INTEGER
           OFFSET $3::INTEGER
          ) AS color
@@ -2531,11 +2533,15 @@
           SELECT color.name AS name,
                  color.id AS id
             FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= %(sweetness_1)s::INTEGER
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
+           WHERE EXISTS (
+                  SELECT 1
+                    FROM color AS color_1
+                    JOIN fruit AS fruit_2
+                      ON color_1.id = fruit_2.color_id
+                   WHERE fruit_2.sweetness <= %(sweetness_1)s::INTEGER
+                     AND color_1.id = color.id
+                 )
+           ORDER BY color.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS color
@@ -2552,19 +2558,18 @@
          fruit_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= %(sweetness_1)s::INTEGER
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > %(sweetness_2)s::INTEGER
+     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.sweetness <= %(sweetness_2)s::INTEGER
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -2575,19 +2580,18 @@
          fruit_1.id,
          color.name AS name_1,
          color.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= ?
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
-         ) AS color
+    FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
      AND fruit_1.sweetness > ?
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+           WHERE fruit_2.sweetness <= ?
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -2602,11 +2606,15 @@
           SELECT color.name AS name,
                  color.id AS id
             FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= %(sweetness_1)s::INTEGER
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
+           WHERE EXISTS (
+                  SELECT 1
+                    FROM color AS color_1
+                    JOIN fruit AS fruit_2
+                      ON color_1.id = fruit_2.color_id
+                   WHERE fruit_2.sweetness <= %(sweetness_1)s::INTEGER
+                     AND color_1.id = color.id
+                 )
+           ORDER BY color.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS color
@@ -2627,11 +2635,15 @@
           SELECT color.name AS name,
                  color.id AS id
             FROM color AS color
-            JOIN fruit AS fruit_1
-              ON color.id = fruit_1.color_id
-           WHERE fruit_1.sweetness <= ?
-           ORDER BY color.id ASC,
-                    fruit_1.id ASC
+           WHERE EXISTS (
+                  SELECT 1
+                    FROM color AS color_1
+                    JOIN fruit AS fruit_2
+                      ON color_1.id = fruit_2.color_id
+                   WHERE fruit_2.sweetness <= ?
+                     AND color_1.id = color.id
+                 )
+           ORDER BY color.id ASC
            LIMIT ?
           OFFSET ?
          ) AS color

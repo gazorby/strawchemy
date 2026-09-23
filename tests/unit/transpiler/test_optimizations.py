@@ -675,15 +675,18 @@ PAGINATION_JOIN_SQL = snapshot(
             "  FROM (",
             "        SELECT color.id AS id",
             "          FROM color AS color",
-            "          JOIN fruit AS fruit_1",
-            "            ON color.id = fruit_1.color_id",
-            "         WHERE fruit_1.sweetness > %(sweetness_1)s",
+            "         WHERE EXISTS (",
+            "                SELECT 1",
+            "                  FROM color AS color_1",
+            "                  JOIN fruit AS fruit_1",
+            "                    ON color_1.id = fruit_1.color_id",
+            "                 WHERE fruit_1.sweetness > %(sweetness_1)s",
+            "                   AND color_1.id = color.id",
+            "               )",
             "         ORDER BY color.id ASC",
             "         LIMIT %(param_1)s",
             "        OFFSET %(param_2)s",
             "       ) AS color",
-            "  LEFT OUTER JOIN fruit AS fruit_1",
-            "    ON color.id = fruit_1.color_id",
             " ORDER BY color.id ASC",
         ],
         "relation-filter-sqlite": [
@@ -691,15 +694,18 @@ PAGINATION_JOIN_SQL = snapshot(
             "  FROM (",
             "        SELECT color.id AS id",
             "          FROM color AS color",
-            "          JOIN fruit AS fruit_1",
-            "            ON color.id = fruit_1.color_id",
-            "         WHERE fruit_1.sweetness > ?",
+            "         WHERE EXISTS (",
+            "                SELECT 1",
+            "                  FROM color AS color_1",
+            "                  JOIN fruit AS fruit_1",
+            "                    ON color_1.id = fruit_1.color_id",
+            "                 WHERE fruit_1.sweetness > ?",
+            "                   AND color_1.id = color.id",
+            "               )",
             "         ORDER BY color.id ASC",
             "         LIMIT ?",
             "        OFFSET ?",
             "       ) AS color",
-            "  LEFT OUTER JOIN fruit AS fruit_1",
-            "    ON color.id = fruit_1.color_id",
             " ORDER BY color.id ASC",
         ],
         "relation-filter-mysql": [
@@ -707,15 +713,18 @@ PAGINATION_JOIN_SQL = snapshot(
             "  FROM (",
             "        SELECT color.id AS id",
             "          FROM color AS color",
-            "         INNER JOIN fruit AS fruit_1",
-            "            ON color.id = fruit_1.color_id",
-            "         WHERE fruit_1.sweetness > %s",
+            "         WHERE EXISTS (",
+            "                SELECT 1",
+            "                  FROM color AS color_1",
+            "                 INNER JOIN fruit AS fruit_1",
+            "                    ON color_1.id = fruit_1.color_id",
+            "                 WHERE fruit_1.sweetness > %s",
+            "                   AND color_1.id = color.id",
+            "               )",
             "         ORDER BY color.id ASC",
             "         LIMIT %s,",
             "               %s",
             "       ) AS color",
-            "  LEFT OUTER JOIN fruit AS fruit_1",
-            "    ON color.id = fruit_1.color_id",
             " ORDER BY color.id ASC",
         ],
         "two-functions-filtered-and-selected-postgresql": [
@@ -800,37 +809,37 @@ PAGINATION_JOIN_SQL = snapshot(
 INNER_JOIN_SQL = snapshot(
     {
         "inner-join-rewrite-postgresql": [
-            "SELECT fruit_1.sweetness,",
-            "       fruit_1.id,",
-            "       color.id AS id_1",
-            "  FROM color AS color",
-            "  JOIN fruit AS fruit_1",
-            "    ON color.id = fruit_1.color_id",
-            " WHERE fruit_1.sweetness > %(sweetness_1)s",
-            " ORDER BY color.id ASC,",
-            "          fruit_1.id ASC",
+            "SELECT color_1.name,",
+            "       color_1.id,",
+            '       "group".id AS id_1',
+            '  FROM "group" AS "group"',
+            "  JOIN color AS color_1",
+            '    ON color_1.id = "group".color_id',
+            " WHERE color_1.name = %(name_1)s",
+            ' ORDER BY "group".id ASC,',
+            "          color_1.id ASC",
         ],
         "inner-join-rewrite-sqlite": [
-            "SELECT fruit_1.sweetness,",
-            "       fruit_1.id,",
-            "       color.id AS id_1",
-            "  FROM color AS color",
-            "  JOIN fruit AS fruit_1",
-            "    ON color.id = fruit_1.color_id",
-            " WHERE fruit_1.sweetness > ?",
-            " ORDER BY color.id ASC,",
-            "          fruit_1.id ASC",
+            "SELECT color_1.name,",
+            "       color_1.id,",
+            '       "group".id AS id_1',
+            '  FROM "group" AS "group"',
+            "  JOIN color AS color_1",
+            '    ON color_1.id = "group".color_id',
+            " WHERE color_1.name = ?",
+            ' ORDER BY "group".id ASC,',
+            "          color_1.id ASC",
         ],
         "inner-join-rewrite-mysql": [
-            "SELECT fruit_1.sweetness,",
-            "       fruit_1.id,",
-            "       color.id AS id_1",
-            "  FROM color AS color",
-            " INNER JOIN fruit AS fruit_1",
-            "    ON color.id = fruit_1.color_id",
-            " WHERE fruit_1.sweetness > %s",
-            " ORDER BY color.id ASC,",
-            "          fruit_1.id ASC",
+            "SELECT color_1.name,",
+            "       color_1.id,",
+            "       `group`.id AS id_1",
+            "  FROM `group` AS `group`",
+            " INNER JOIN color AS color_1",
+            "    ON color_1.id = `group`.color_id",
+            " WHERE color_1.name = %s",
+            " ORDER BY `group`.id ASC,",
+            "          color_1.id ASC",
         ],
         "no-inner-join-rewrite-postgresql": [
             "SELECT fruit_1.sweetness,",
@@ -862,6 +871,60 @@ INNER_JOIN_SQL = snapshot(
             "  LEFT OUTER JOIN fruit AS fruit_1",
             "    ON color.id = fruit_1.color_id",
             " WHERE color.name = %s",
+            " ORDER BY color.id ASC,",
+            "          fruit_1.id ASC",
+        ],
+        "to-many-no-inner-join-rewrite-postgresql": [
+            "SELECT fruit_1.sweetness,",
+            "       fruit_1.id,",
+            "       color.id AS id_1",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN fruit AS fruit_1",
+            "    ON color.id = fruit_1.color_id",
+            " WHERE EXISTS (",
+            "        SELECT 1",
+            "          FROM color AS color_1",
+            "          JOIN fruit AS fruit_2",
+            "            ON color_1.id = fruit_2.color_id",
+            "         WHERE fruit_2.sweetness > %(sweetness_1)s",
+            "           AND color_1.id = color.id",
+            "       )",
+            " ORDER BY color.id ASC,",
+            "          fruit_1.id ASC",
+        ],
+        "to-many-no-inner-join-rewrite-sqlite": [
+            "SELECT fruit_1.sweetness,",
+            "       fruit_1.id,",
+            "       color.id AS id_1",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN fruit AS fruit_1",
+            "    ON color.id = fruit_1.color_id",
+            " WHERE EXISTS (",
+            "        SELECT 1",
+            "          FROM color AS color_1",
+            "          JOIN fruit AS fruit_2",
+            "            ON color_1.id = fruit_2.color_id",
+            "         WHERE fruit_2.sweetness > ?",
+            "           AND color_1.id = color.id",
+            "       )",
+            " ORDER BY color.id ASC,",
+            "          fruit_1.id ASC",
+        ],
+        "to-many-no-inner-join-rewrite-mysql": [
+            "SELECT fruit_1.sweetness,",
+            "       fruit_1.id,",
+            "       color.id AS id_1",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN fruit AS fruit_1",
+            "    ON color.id = fruit_1.color_id",
+            " WHERE EXISTS (",
+            "        SELECT 1",
+            "          FROM color AS color_1",
+            "         INNER JOIN fruit AS fruit_2",
+            "            ON color_1.id = fruit_2.color_id",
+            "         WHERE fruit_2.sweetness > %s",
+            "           AND color_1.id = color.id",
+            "       )",
             " ORDER BY color.id ASC,",
             "          fruit_1.id ASC",
         ],
@@ -1059,12 +1122,22 @@ def test_aggregation_computation_is_reused(
         pytest.param(
             """
             {
+                groups(filter: { color: { name: { eq: "x" } } }) {
+                    color { name }
+                }
+            }
+            """,
+            id="inner-join-rewrite",
+        ),
+        pytest.param(
+            """
+            {
                 colors(filter: { fruits: { sweetness: { gt: 1 } } }) {
                     fruits { sweetness }
                 }
             }
             """,
-            id="inner-join-rewrite",
+            id="to-many-no-inner-join-rewrite",
         ),
         pytest.param(
             """
@@ -1081,9 +1154,9 @@ def test_aggregation_computation_is_reused(
 def test_inner_join_rewriting(
     query: str, dialect_name: str, captured_statements: list[Select[Any]], request: pytest.FixtureRequest
 ) -> None:
-    """A WHERE that only references the null-supplying side rewrites the LEFT OUTER JOIN to INNER.
+    """A to-one filter on the null-supplying side rewrites the LEFT OUTER JOIN to INNER.
 
-    When the filter references the parent's own column instead, the outer join is preserved.
+    A filter on the parent's own column, or on a to-many relation tested in EXISTS, keeps the outer join.
     """
     result = schema.execute_sync(query, context_value=DialectContext(dialect_name))  # ty: ignore[invalid-argument-type]
 

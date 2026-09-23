@@ -10,7 +10,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Generic, Protocol, cast
 
-from sqlalchemy import and_, exists, func, inspect, not_, null, or_, select, true, tuple_
+from sqlalchemy import and_, exists, func, inspect, literal_column, not_, null, or_, select, true, tuple_
 from sqlalchemy.orm import Mapper, RelationshipProperty, aliased, class_mapper, contains_eager, load_only, raiseload
 from sqlalchemy.sql.functions import count as sqla_count
 from sqlalchemy.sql.util import ClauseAdapter
@@ -21,6 +21,7 @@ from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
 from strawchemy.dto.strawberry import (
     AggregationFilter,
+    BooleanFilterDTO,
     CustomFilter,
     Filter,
     OrderByEnum,
@@ -403,6 +404,8 @@ class FilterPlan:
         allow_null: bool = False,
     ) -> Self:
         """Builds the WHERE predicates and the relation joins they need."""
+        if query_graph.exists_filter is not None:
+            return cls._exists(query_graph.exists_filter, context, allow_null)
         if not query_graph.query_filter:
             return cls()
 
@@ -416,6 +419,32 @@ class FilterPlan:
             allow_null=allow_null,
         )
         return cls(where=tuple(where.expressions), joins=tuple(where.joins))
+
+    @classmethod
+    def _exists(cls, dto_filter: BooleanFilterDTO, context: PlanContext[Any], allow_null: bool) -> Self:
+        """Tests ``dto_filter`` in an EXISTS subquery on a copy of the root, matched to the root on its primary keys.
+
+        A root row passes when one combination of its related rows passes, as with a join, but is not repeated.
+        """
+        model = context.aliases.model
+        inner_alias = aliased(class_mapper(model), flat=True)
+        inner_aliases = context.aliases.detached(inner_alias)
+        inner_context = replace(context, aliases=inner_aliases, hook_applier=HookApplier(inner_aliases), statement=None)
+        phase = FilterPhase.plan(
+            QueryGraph(inner_aliases, dto_filter=dto_filter, join_to_many_filter=True), inner_context, allow_null
+        )
+        correlation = [
+            getattr(inner_alias, attribute.key) == getattr(context.aliases.root_alias, attribute.key)
+            for attribute in SQLAlchemyInspector.pk_attributes(class_mapper(model))
+        ]
+        plan = QueryPlan(
+            root=inner_alias,
+            filter_semijoin=None,
+            where=(*phase.filter_plan.where, *correlation),
+            joins=(*phase.filter_plan.joins, *phase.subquery_tree_joins),
+        )
+        subquery = plan.apply_clauses(select(literal_column("1")).select_from(inner_alias))
+        return cls(where=(subquery.exists().correlate(context.aliases.root_alias),))
 
     @staticmethod
     def _to_expressions(

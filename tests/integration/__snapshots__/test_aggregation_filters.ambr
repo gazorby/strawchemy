@@ -132,9 +132,16 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN anon_1
-      ON fruit_1.id = anon_1.fruit_id
-   WHERE coalesce(anon_1.count_1, ?) > ?
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            LEFT OUTER JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+            LEFT OUTER JOIN anon_1
+              ON fruit_2.id = anon_1.fruit_id
+           WHERE coalesce(anon_1.count_1, ?) > ?
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -152,9 +159,16 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN anon_1
-      ON fruit_1.id = anon_1.fruit_id
-   WHERE coalesce(anon_1.count_1, %s) > %s
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            LEFT OUTER JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+            LEFT OUTER JOIN anon_1
+              ON fruit_2.id = anon_1.fruit_id
+           WHERE coalesce(anon_1.count_1, %s) > %s
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -166,13 +180,20 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-    JOIN LATERAL (
-          SELECT count(*) AS count_1
-            FROM fruit_farm AS fruit_farm_1
-           WHERE fruit_1.id = fruit_farm_1.fruit_id
-         ) AS anon_1
-      ON TRUE
-   WHERE anon_1.count_1 > $1::INTEGER
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            LEFT OUTER JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+            JOIN LATERAL (
+                  SELECT count(*) AS count_1
+                    FROM fruit_farm AS fruit_farm_1
+                   WHERE fruit_2.id = fruit_farm_1.fruit_id
+                 ) AS anon_1
+              ON TRUE
+           WHERE anon_1.count_1 > $1::INTEGER
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -184,13 +205,20 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-    JOIN LATERAL (
-          SELECT count(*) AS count_1
-            FROM fruit_farm AS fruit_farm_1
-           WHERE fruit_1.id = fruit_farm_1.fruit_id
-         ) AS anon_1
-      ON TRUE
-   WHERE anon_1.count_1 > %(param_1)s::INTEGER
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            LEFT OUTER JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+            JOIN LATERAL (
+                  SELECT count(*) AS count_1
+                    FROM fruit_farm AS fruit_farm_1
+                   WHERE fruit_2.id = fruit_farm_1.fruit_id
+                 ) AS anon_1
+              ON TRUE
+           WHERE anon_1.count_1 > %(param_1)s::INTEGER
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -202,13 +230,20 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-    JOIN LATERAL (
-          SELECT count(*) AS count_1
-            FROM fruit_farm AS fruit_farm_1
-           WHERE fruit_1.id = fruit_farm_1.fruit_id
-         ) AS anon_1
-      ON TRUE
-   WHERE anon_1.count_1 > %(param_1)s::INTEGER
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            LEFT OUTER JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+            JOIN LATERAL (
+                  SELECT count(*) AS count_1
+                    FROM fruit_farm AS fruit_farm_1
+                   WHERE fruit_2.id = fruit_farm_1.fruit_id
+                 ) AS anon_1
+              ON TRUE
+           WHERE anon_1.count_1 > %(param_1)s::INTEGER
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -226,9 +261,16 @@
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN anon_1
-      ON fruit_1.id = anon_1.fruit_id
-   WHERE coalesce(anon_1.count_1, ?) > ?
+   WHERE EXISTS (
+          SELECT 1
+            FROM color AS color_1
+            LEFT OUTER JOIN fruit AS fruit_2
+              ON color_1.id = fruit_2.color_id
+            LEFT OUTER JOIN anon_1
+              ON fruit_2.id = anon_1.fruit_id
+           WHERE coalesce(anon_1.count_1, ?) > ?
+             AND color_1.id = color.id
+         )
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
