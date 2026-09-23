@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING, Any, cast, get_args
 
 import pytest
 import strawberry
-from sqlalchemy import ForeignKey, Select
+from sqlalchemy import JSON, ForeignKey, Select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from strawberry import UNSET
 from strawberry.types import get_object_definition
 
-from strawchemy import Strawchemy
+from strawchemy import Strawchemy, StrawchemyConfig
 from strawchemy.dto.strawberry import CustomFilter, CustomFilterFieldDefinition, Filter, QueryNode
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.exceptions import StrawchemyFieldError
@@ -40,6 +40,8 @@ from strawchemy.typing import (
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
+
+    from strawchemy.dto.types import FieldSpec
 
 # Module-level convenience: `filter_field` is a Strawchemy method, but markers are
 # mapper-agnostic, so a shared alias keeps the rest of the tests terse. Tests that
@@ -110,6 +112,16 @@ class _TicketCountCol(_Base):
     name: Mapped[str] = mapped_column()
     count: Mapped[int] = mapped_column()
     published_at: Mapped[datetime] = mapped_column()
+
+
+class _Unmappable:
+    """A plain class with no GraphQL mapping."""
+
+
+class _TicketUnmappable(_Base):
+    __tablename__ = "fgf_ticket_unmappable"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    data: Mapped[_Unmappable] = mapped_column(JSON)
 
 
 # Declared aggregate filter classes referenced as annotations by another declared filter class
@@ -948,6 +960,77 @@ def test_column_bare_marker_needs_no_annotation() -> None:
 
     definition = get_object_definition(TicketFilter, strict=True)
     assert "name" in {f.graphql_name or f.name for f in definition.fields}
+
+
+@pytest.mark.parametrize(
+    ("include", "exclude"),
+    [
+        pytest.param(["id", "published_at"], None, id="include"),
+        pytest.param(None, ["name"], id="exclude"),
+    ],
+)
+def test_column_bare_marker_force_includes_out_of_scope_column(
+    include: FieldSpec | None, exclude: FieldSpec | None
+) -> None:
+    """A bare marker without annotation force-includes a column left out by include/exclude."""
+    sc = Strawchemy("sqlite")
+
+    @sc.filter(_Ticket, include=include, exclude=exclude)
+    class TicketFilter:
+        name = sc.filter_field()
+
+    name_field = next(
+        f for f in get_object_definition(TicketFilter, strict=True).fields if (f.graphql_name or f.name) == "name"
+    )
+    assert getattr(name_field.type, "of_type", name_field.type) is TextComparison
+
+
+def test_column_bare_marker_not_served_from_cache_of_same_scope_filter() -> None:
+    """A bare marker is not dropped when a filter with the same include/exclude was built first."""
+    sc = Strawchemy("sqlite")
+
+    @sc.filter(_Ticket, exclude=["name"])
+    class TicketFilter: ...
+
+    @sc.filter(_Ticket, exclude=["name"])
+    class TicketNameFilter:
+        name = sc.filter_field()
+
+    assert "name" not in {f.graphql_name or f.name for f in get_object_definition(TicketFilter, strict=True).fields}
+    assert "name" in {f.graphql_name or f.name for f in get_object_definition(TicketNameFilter, strict=True).fields}
+
+
+def test_column_bare_marker_on_unknown_column_raises() -> None:
+    """A bare marker naming no model column raises an error saying so."""
+    sc = Strawchemy("sqlite")
+    with pytest.raises(StrawchemyFieldError, match="'nonexistent' is not a column on _Ticket"):
+
+        @sc.filter(_Ticket, include=["name"])
+        class TicketFilter:
+            nonexistent = sc.filter_field()
+
+
+def test_column_bare_marker_on_relation_raises() -> None:
+    """A bare marker naming a relation raises: only columns take a bare marker."""
+    sc = Strawchemy("sqlite")
+    with pytest.raises(StrawchemyFieldError, match="'project' is not a column on _Ticket"):
+
+        @sc.filter(_Ticket, include=["name"])
+        class TicketFilter:
+            project = sc.filter_field()
+
+
+def test_column_bare_marker_on_unexposed_column_does_not_claim_it_is_missing() -> None:
+    """An existing column the filter cannot expose is reported as such, never as "not a column"."""
+    sc = Strawchemy(StrawchemyConfig("sqlite", strict=False))
+    with (
+        pytest.warns(UserWarning, match="no GraphQL mapping"),
+        pytest.raises(StrawchemyFieldError, match="column 'data' on _TicketUnmappable"),
+    ):
+
+        @sc.filter(_TicketUnmappable, include=["id"])
+        class TicketFilter:
+            data = sc.filter_field()
 
 
 def test_custom_apply_annotation_is_the_input_type() -> None:
