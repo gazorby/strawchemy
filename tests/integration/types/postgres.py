@@ -432,6 +432,12 @@ class AsyncQuery:
         pagination=False,
         repository_type=StrawchemyAsyncRepository,
     )
+    fruits_default_order_sweetness: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
+        default_order_by=Fruit.sweetness.desc(), repository_type=StrawchemyAsyncRepository
+    )
+    colors_default_order: list[ColorTypeWithPagination] = strawchemy.field(
+        default_order_by=Color.name.desc(), repository_type=StrawchemyAsyncRepository
+    )
     fruits_hooks: list[FruitTypeHooks] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
     fruits_paginated_hooks: list[FruitTypeHooks] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
@@ -600,6 +606,12 @@ class SyncQuery:
         order_by_input=FruitOrderBy,
         pagination=False,
         repository_type=StrawchemySyncRepository,
+    )
+    fruits_default_order_sweetness: list[FruitTypeWithPaginationAndOrderBy] = strawchemy.field(
+        default_order_by=Fruit.sweetness.desc(), repository_type=StrawchemySyncRepository
+    )
+    colors_default_order: list[ColorTypeWithPagination] = strawchemy.field(
+        default_order_by=Color.name.desc(), repository_type=StrawchemySyncRepository
     )
     fruits_hooks: list[FruitTypeHooks] = strawchemy.field(repository_type=StrawchemySyncRepository)
     fruits_paginated_hooks: list[FruitTypeHooks] = strawchemy.field(
