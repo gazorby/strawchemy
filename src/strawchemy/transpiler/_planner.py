@@ -149,7 +149,12 @@ class PlanContext(Generic[DeclarativeT]):
         target_alias: AliasedClass[Any] = aliased(target_mapper, flat=True)
         order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else []
 
-        sub_context = replace(self, aliases=self.aliases.sub(target_mapper.class_, target_alias), statement=None)
+        sub_context = replace(
+            self,
+            aliases=self.aliases.sub(target_mapper.class_, target_alias),
+            statement=None,
+            default_order_by=(),
+        )
         query_graph = QueryGraph(sub_context.aliases, order_by=order_by)
         plan = plan_query(query_graph, sub_context, limit=relation_filter.limit, offset=relation_filter.offset)
         hook_order_by = self.hook_applier.order_by(node, target_alias)

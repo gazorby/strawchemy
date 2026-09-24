@@ -134,3 +134,35 @@ async def test_default_order_with_distinct_on(
     assert len(result.data["fruitsDefaultOrderDistinct"]) > 0
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_default_order_not_applied_to_nested_same_named_column(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """A root default ordering on ``name`` leaves nested rows ordered by their primary key, not their own ``name``."""
+    result = await maybe_async(any_query("{ colorsDefaultOrder { name fruits(limit: 1) { id name } } }"))
+    assert not result.errors
+    assert result.data
+    red = next(color for color in result.data["colorsDefaultOrder"] if color["name"] == "Red")
+    assert [fruit["name"] for fruit in red["fruits"]] == ["Apple"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_default_order_not_applied_to_nested_missing_column(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """A root default ordering on a column the nested model lacks does not fail the nested plan."""
+    result = await maybe_async(any_query("{ fruitsDefaultOrderSweetness { name farms(limit: 10) { name } } }"))
+    assert not result.errors
+    assert result.data
+    apple = next(fruit for fruit in result.data["fruitsDefaultOrderSweetness"] if fruit["name"] == "Apple")
+    assert [farm["name"] for farm in apple["farms"]] == ["Apple farm", "Apple farm 2", "Apple farm 3"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
