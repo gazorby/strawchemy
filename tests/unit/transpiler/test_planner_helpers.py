@@ -27,6 +27,7 @@ from strawchemy.transpiler._planner import (
     ProjectionPhase,
     ProjectionPlan,
     _dedup_columns,
+    _is_where_only,
     _use_distinct_rank,
     plan_query,
 )
@@ -114,6 +115,29 @@ def test_dedup_columns_keeps_anonymous_columns_of_one_selectable() -> None:
     result = _dedup_columns([count_col, sum_col])
 
     assert result == [count_col, sum_col]
+
+
+def _fruit_select_edits() -> dict[str, tuple[Select[Any], Select[Any]]]:
+    fruit = aliased(Fruit)
+    base = select(fruit)
+    return {
+        "unchanged": (base, base),
+        "where": (base, base.where(fruit.sweetness > 5)),
+        "join": (base, base.join(fruit.color)),
+        "order_by": (base, base.order_by(fruit.name)),
+        "uncomparable": (base, base.with_hint(fruit, "INDEX(fruit)")),
+    }
+
+
+@pytest.mark.parametrize(
+    ("edit", "expected"),
+    [("unchanged", True), ("where", True), ("join", False), ("order_by", False), ("uncomparable", False)],
+)
+def test_is_where_only(edit: str, expected: bool) -> None:
+    """Only a statement differing from its base by WHERE clauses is a WHERE-only edit."""
+    base, statement = _fruit_select_edits()[edit]
+
+    assert _is_where_only(statement, base) is expected
 
 
 def _distinct_enum(model_field: object) -> SimpleNamespace:

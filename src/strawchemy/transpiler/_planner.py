@@ -128,14 +128,20 @@ class PlanContext(Generic[DeclarativeT]):
     def build_join(self, node: QueryNodeType, is_outer: bool = False) -> Join:
         """Builds the join from the current query to the relation behind ``node``.
 
-        A relation without its own filter, ordering or pagination is a plain join. Otherwise the relation gets a
-        nested plan, which ``join_strategy`` turns into a LATERAL or CTE join.
+        A relation without its own filter, ordering or pagination, whose query hooks only filter, is a plain join
+        with the hook filters in its ON clause. Otherwise the relation gets a nested plan running its query hooks,
+        which ``join_strategy`` turns into a LATERAL or CTE join.
         """
         aliased_attribute = self.aliases.aliased_attribute(node)
         relation_filter = node.metadata.data.relation_filter
+        node_alias = self.aliases.alias_from_relation_node(node, "target")
+        node_select = select(node_alias)
+        hooked_select = self.hook_applier.apply_statement_hooks(node_select, node, node_alias)
 
-        if not relation_filter:
-            return Join(aliased_attribute, node=node, is_outer=is_outer)
+        if not relation_filter and _is_where_only(hooked_select, node_select):
+            hook_where = hooked_select.whereclause
+            target = aliased_attribute if hook_where is None else aliased_attribute.and_(hook_where)
+            return Join(target, node=node, is_outer=is_outer)
 
         relationship = node.value.model_field.property
         assert isinstance(relationship, RelationshipProperty)
@@ -146,6 +152,7 @@ class PlanContext(Generic[DeclarativeT]):
         sub_context = replace(self, aliases=self.aliases.sub(target_mapper.class_, target_alias), statement=None)
         query_graph = QueryGraph(sub_context.aliases, order_by=order_by)
         plan = plan_query(query_graph, sub_context, limit=relation_filter.limit, offset=relation_filter.offset)
+        plan = replace(plan, hook_specs=(HookSpec(node=node, alias=target_alias, loading_mode="add"),))
         join = self.join_strategy.relation_join(self.aliases, node, target_alias, plan, is_outer)
         join.order_nodes = query_graph.order_by_nodes
         return join
@@ -770,9 +777,6 @@ class ProjectionPlan:
         transform_map: dict[QueryNodeType, ColumnElement[Any]] = {
             transform.node: transform.attribute for transform in column_transforms
         }
-        hook_specs: list[HookSpec] = [
-            HookSpec(node=selection_tree.root, alias=context.aliases.root_alias, loading_mode="undefer")
-        ]
         aggregation_joins: list[Join] = []
         emitted_agg_joins: set[QueryNodeType] = set()
 
@@ -792,7 +796,6 @@ class ProjectionPlan:
             child_load = cls._collect_child_load(child, context)
             projection_columns.extend(child_load.transform_columns)
             load_options.append(child_load.load)
-            hook_specs.extend(child_load.hook_specs)
             transform_map.update(child_load.transform_map)
 
         identity_map = cls._identity_columns(selection_tree, context)
@@ -803,7 +806,7 @@ class ProjectionPlan:
             columns=tuple(projection_columns),
             load_options=tuple(load_options),
             aggregation_joins=tuple(aggregation_joins),
-            hook_specs=tuple(hook_specs),
+            hook_specs=(HookSpec(node=selection_tree.root, alias=context.aliases.root_alias, loading_mode="undefer"),),
             transform_map=transform_map,
             identity_map=identity_map,
         )
@@ -844,7 +847,6 @@ class ProjectionPlan:
         node_alias = aliases.alias_from_relation_node(node, "target")
         eager_options.extend(context.hook_applier.collect_load_options(node, node_alias))
         load = contains_eager(aliases.aliased_attribute(node)).options(*eager_options)
-        hook_specs: list[HookSpec] = [HookSpec(node=node, alias=node_alias, loading_mode="undefer")]
 
         for child in node.children:
             if not child.value.is_relation or child.value.is_computed:
@@ -852,15 +854,9 @@ class ProjectionPlan:
             child_load = ProjectionPlan._collect_child_load(child, context)
             transform_columns.extend(child_load.transform_columns)
             load = load.options(child_load.load)
-            hook_specs.extend(child_load.hook_specs)
             transform_map.update(child_load.transform_map)
 
-        return ChildLoad(
-            transform_columns=tuple(transform_columns),
-            load=load,
-            hook_specs=tuple(hook_specs),
-            transform_map=transform_map,
-        )
+        return ChildLoad(transform_columns=tuple(transform_columns), load=load, transform_map=transform_map)
 
 
 @dataclass(frozen=True)
@@ -871,8 +867,6 @@ class ChildLoad:
     """``contains_eager`` option loading the relation."""
     transform_columns: tuple[ColumnElement[Any], ...] = ()
     """Transform columns of the subtree, in selection order."""
-    hook_specs: tuple[HookSpec, ...] = ()
-    """Where query hooks apply in the subtree."""
     transform_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
     """Transform node -> its labelled column."""
 
@@ -947,14 +941,7 @@ class UserStatementPlan:
         Any other clause, such as a join, GROUP BY or LIMIT, makes it non-trivial. Copying the WHERE of a trivial
         statement drops its ``execution_options``.
         """
-        canonical = select(self.aliases.model)
-        where = self.statement.whereclause
-        if where is not None:
-            canonical = canonical.where(where)
-        try:
-            return self.statement.compare(canonical)
-        except AttributeError:  # uncomparable statement → fall back to the semi-join path
-            return False
+        return _is_where_only(self.statement, select(self.aliases.model))
 
     def inline_where(self, alias: AliasedClass[Any]) -> ColumnElement[bool] | None:
         """Rewrites the statement's WHERE clause to use ``alias`` instead of the model's table."""
@@ -981,6 +968,16 @@ class UserStatementPlan:
             return statement.join(semijoin.alias, onclause=semijoin.onclause)
         where = self.inline_where(alias)
         return statement.where(where) if where is not None else statement
+
+
+def _is_where_only(statement: Select[Any], base: Select[Any]) -> bool:
+    """Tells whether ``statement`` is ``base`` with WHERE clauses only."""
+    where = statement.whereclause
+    expected = base if where is None else base.where(where)
+    try:
+        return statement.compare(expected)
+    except AttributeError:  # uncomparable statement → not a WHERE-only edit
+        return False
 
 
 def _plan_relation_joins(
