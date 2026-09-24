@@ -276,6 +276,16 @@ class ColorWithMultiFarmFruits:
     fruits: list[FruitType] = strawchemy.field(query_hook=MultiFarmFruitHook())
 
 
+@strawchemy.type(Color, include="all")
+class ColorWithOrderedFruits:
+    fruits: list[OrderedFruitType] = strawchemy.field(order_by_input=FruitOrderBy)
+
+
+@strawchemy.type(Color, include="all")
+class ColorWithPaginatedOrderedFruits:
+    fruits: list[OrderedFruitType] = strawchemy.field(pagination=True)
+
+
 @strawchemy.create_input(Color, include="all")
 class ColorCreateInput: ...
 
@@ -506,6 +516,12 @@ class AsyncQuery:
     colors_with_multi_farm_fruits: list[ColorWithMultiFarmFruits] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository
     )
+    colors_with_ordered_fruits: list[ColorWithOrderedFruits] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository
+    )
+    colors_with_paginated_ordered_fruits: list[ColorWithPaginatedOrderedFruits] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository
+    )
     colors_fine_grained: list[ColorType] = strawchemy.field(
         filter_input=ColorFineGrainedFilter, repository_type=StrawchemyAsyncRepository
     )
@@ -664,6 +680,12 @@ class SyncQuery:
         repository_type=StrawchemySyncRepository
     )
     colors_with_multi_farm_fruits: list[ColorWithMultiFarmFruits] = strawchemy.field(
+        repository_type=StrawchemySyncRepository
+    )
+    colors_with_ordered_fruits: list[ColorWithOrderedFruits] = strawchemy.field(
+        repository_type=StrawchemySyncRepository
+    )
+    colors_with_paginated_ordered_fruits: list[ColorWithPaginatedOrderedFruits] = strawchemy.field(
         repository_type=StrawchemySyncRepository
     )
     colors_fine_grained: list[ColorType] = strawchemy.field(

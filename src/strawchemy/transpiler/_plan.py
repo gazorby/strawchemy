@@ -45,6 +45,8 @@ class HookSpec:
     node: QueryNodeType
     alias: AliasedClass[Any]
     loading_mode: ColumnLoadingMode
+    export_order_by: bool = False
+    """Leaves the hooks' ORDER BY to the plan's ``order_by``, selecting the columns it reads."""
 
 
 @dataclass(frozen=True)
@@ -103,7 +105,12 @@ class QueryPlan:
         if self.hook_applier is not None:
             for spec in self.hook_specs:
                 statement, _ = self.hook_applier.apply(
-                    statement, spec.node, spec.alias, spec.loading_mode, in_subquery=True
+                    statement,
+                    spec.node,
+                    spec.alias,
+                    spec.loading_mode,
+                    in_subquery=True,
+                    export_order_by=spec.export_order_by,
                 )
         for join in sorted(self.joins):
             statement = statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
