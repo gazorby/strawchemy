@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -482,5 +482,125 @@ async def test_filter_on_paginated_query(
         fruit["id"] for fruit in expected
     }
 
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+def _names_by_color(colors: list[dict[str, Any]]) -> dict[str, list[str]]:
+    return {color["name"]: sorted(fruit["name"] for fruit in color["fruits"]) for color in colors}
+
+
+@pytest.mark.snapshot
+async def test_to_many_filter_keeps_every_selected_related_row(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a filter on a to-many relation selects parents without restricting the selected relation.
+
+    Regression test for #290: the filter join was reused to load the selection, which only kept the matching rows.
+    """
+    query = """
+        {
+            colors(filter: { fruits: { sweetness: { lte: 5 } } }) {
+                name
+                fruits { name }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert _names_by_color(result.data["colors"]) == {
+        "Red": ["Apple", "Cherry"],
+        "Yellow": ["Banana", "Lemon", "Quince"],
+        "Green": ["Cantaloupe", "Strawberry"],
+    }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_to_many_filter_on_paginated_field_keeps_every_selected_related_row(any_query: AnyQueryExecutor) -> None:
+    """Test that a paginated field and a plain one return the same related rows under a to-many filter."""
+    query = """
+        {
+            colorsFilterablePaginated(filter: { fruits: { sweetness: { lte: 5 } } }) {
+                name
+                fruits { name }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert _names_by_color(result.data["colorsFilterablePaginated"]) == {
+        "Red": ["Apple", "Cherry"],
+        "Yellow": ["Banana", "Lemon", "Quince"],
+        "Green": ["Cantaloupe", "Strawberry"],
+    }
+
+
+@pytest.mark.snapshot
+async def test_to_many_filter_paginates_distinct_parents(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a parent matching a to-many filter through several rows takes one slot of the page.
+
+    Regression test for #291: the pagination subquery joined the relation, so LIMIT counted each matching row.
+    """
+    query = """
+        {
+            colorsFilterablePaginated(limit: 3, filter: { fruits: { sweetness: { lte: 5 } } }, orderBy: { name: ASC }) {
+                name
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["colorsFilterablePaginated"] == [{"name": "Green"}, {"name": "Red"}, {"name": "Yellow"}]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_to_many_filter_in_or_branch_keeps_every_selected_related_row(any_query: AnyQueryExecutor) -> None:
+    """Test that a to-many filter under ``_or`` selects parents without restricting the selected relation."""
+    query = """
+        {
+            colors(filter: { _or: [{ fruits: { name: { eq: "Apple" } } }, { name: { eq: "Pink" } }] }) {
+                name
+                fruits { name }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert _names_by_color(result.data["colors"]) == {"Red": ["Apple", "Cherry"], "Pink": ["Pears", "Watermelon"]}
+
+
+@pytest.mark.snapshot
+async def test_to_many_filter_behind_to_one_keeps_every_selected_related_row(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a to-many filter reached through a to-one relation leaves the selected relations whole."""
+    query = """
+        {
+            fruits(filter: { color: { fruits: { name: { eq: "Apple" } } } }) {
+                name
+                color { name fruits { name } }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert sorted(
+        (fruit["name"], fruit["color"]["name"], sorted(sibling["name"] for sibling in fruit["color"]["fruits"]))
+        for fruit in result.data["fruits"]
+    ) == [("Apple", "Red", ["Apple", "Cherry"]), ("Cherry", "Red", ["Apple", "Cherry"])]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

@@ -137,6 +137,12 @@ class AggregationSpec:
         return cls(node=node, alias=alias)
 
 
+def _has_to_many_relation(tree: QueryNodeType) -> bool:
+    return any(
+        node.value.uselist and not node.value.is_computed for node in tree.iter_breadth_first() if not node.is_root
+    )
+
+
 @dataclass
 class QueryGraph(Generic[DeclarativeT]):
     """What a GraphQL query selects, filters and orders by, and the relations each part must join."""
@@ -146,8 +152,12 @@ class QueryGraph(Generic[DeclarativeT]):
     order_by: Sequence[OrderByDTO] = dataclasses.field(default_factory=list)
     distinct_on: list[EnumDTO] = dataclasses.field(default_factory=list)
     dto_filter: BooleanFilterDTO | None = None
+    join_to_many_filter: bool = False
+    """Joins a filter on a to-many relation into the query rather than moving it to ``exists_filter``."""
 
     query_filter: Filter | None = dataclasses.field(init=False, default=None)
+    exists_filter: BooleanFilterDTO | None = dataclasses.field(init=False, default=None)
+    """Filter on a to-many relation, tested in an EXISTS subquery so that it does not repeat the root rows."""
     where_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
     """Relations the filter uses."""
     subquery_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
@@ -160,7 +170,12 @@ class QueryGraph(Generic[DeclarativeT]):
     def __post_init__(self) -> None:
         self.root_join_tree = self.resolved_selection_tree()
         if self.dto_filter is not None:
-            self.where_join_tree, self.query_filter = self.dto_filter.filters_tree()
+            where_join_tree, query_filter = self.dto_filter.filters_tree()
+            if not self.join_to_many_filter and _has_to_many_relation(where_join_tree):
+                self.exists_filter = self.dto_filter
+            else:
+                self.where_join_tree, self.query_filter = where_join_tree, query_filter
+        if self.where_join_tree is not None:
             self.subquery_join_tree = self.where_join_tree
             self.root_join_tree = merge_trees(self.root_join_tree, self.where_join_tree, match_on="value_equality")
         if self.order_by_tree:

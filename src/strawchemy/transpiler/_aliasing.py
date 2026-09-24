@@ -444,6 +444,10 @@ class AliasContext(Generic[DeclarativeT]):
         if alias is not None:
             self._root_alias = alias
 
+    def detached(self, alias: AliasedClass[Any]) -> AliasContext[DeclarativeT]:
+        """Creates a root context of the same model on ``alias``, sharing no alias with this one."""
+        return AliasContext(self.model, self.dialect, root_alias=alias, inspector=self._inspector)
+
     def sub(self, model: type[DeclarativeSubT], alias: AliasedClass[Any]) -> AliasContext[DeclarativeSubT]:
         """Creates the context of a related model, one level down, sharing this context's aliases."""
         return AliasContext(
