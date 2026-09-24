@@ -89,3 +89,47 @@ async def test_distinct_on_projects_every_aggregation_order_by_column(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("arguments", "deterministic_ordering", "expected"),
+    [
+        pytest.param(
+            "orderBy: [{name: ASC}, {id: DESC}], limit: 2",
+            False,
+            [{"id": 2, "name": "Alice"}, {"id": 5, "name": "Bob"}],
+            id="order-by-distinct-columns",
+        ),
+        pytest.param(
+            "limit: 2",
+            True,
+            [{"id": 1, "name": "Alice"}, {"id": 3, "name": "Charlie"}],
+            id="deterministic-ordering",
+        ),
+        pytest.param(
+            "limit: 2, offset: 1",
+            True,
+            [{"id": 3, "name": "Charlie"}, {"id": 5, "name": "Bob"}],
+            id="deterministic-ordering-offset",
+        ),
+    ],
+)
+@pytest.mark.snapshot
+async def test_distinct_on_paginates_distinct_rows(
+    arguments: str,
+    deterministic_ordering: bool,
+    expected: list[dict[str, object]],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    config: StrawchemyConfig,
+) -> None:
+    config.deterministic_ordering = deterministic_ordering
+    result = await maybe_async(any_query(f"{{ usersPaginated(distinctOn: [name], {arguments}) {{ id name }} }}"))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["usersPaginated"] == expected
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

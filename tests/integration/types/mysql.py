@@ -522,6 +522,12 @@ class AsyncQuery:
         repository_type=StrawchemyAsyncRepository,
         distinct_on=UserDistinctOn,
     )
+    users_paginated: list[UserType] = strawchemy.field(
+        order_by_input=UserOrderBy,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+        distinct_on=UserDistinctOn,
+    )
 
     # Custom resolvers
     @strawchemy.field
@@ -693,6 +699,12 @@ class SyncQuery:
     users: list[UserType] = strawchemy.field(
         filter_input=UserFilter,
         order_by_input=UserOrderBy,
+        repository_type=StrawchemySyncRepository,
+        distinct_on=UserDistinctOn,
+    )
+    users_paginated: list[UserType] = strawchemy.field(
+        order_by_input=UserOrderBy,
+        pagination=True,
         repository_type=StrawchemySyncRepository,
         distinct_on=UserDistinctOn,
     )
