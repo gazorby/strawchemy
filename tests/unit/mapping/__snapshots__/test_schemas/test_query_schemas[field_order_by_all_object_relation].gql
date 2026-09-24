@@ -7,24 +7,6 @@ type AliasedFruitType {
   id: UUID!
 }
 
-"""GraphQL type"""
-input ColorAggregateMinMaxStringFieldsOrderBy {
-  name: OrderByEnum
-}
-
-"""GraphQL type"""
-input ColorAggregateNumericFieldsOrderBy {
-  name: OrderByEnum
-}
-
-"""GraphQL type"""
-input ColorAggregateOrderBy {
-  count: OrderByEnum
-  maxString: ColorAggregateMinMaxStringFieldsOrderBy
-  minString: ColorAggregateMinMaxStringFieldsOrderBy
-  sum: ColorAggregateNumericFieldsOrderBy
-}
-
 """Ordering input."""
 input ColorOrderBy {
   fruitsAggregate: FruitAggregateOrderBy
@@ -60,7 +42,6 @@ input FruitAggregateOrderBy {
 
 """Ordering input."""
 input FruitOrderBy {
-  colorAggregate: ColorAggregateOrderBy
   color: ColorOrderBy
   name: OrderByEnum
   id: OrderByEnum
@@ -68,7 +49,6 @@ input FruitOrderBy {
 
 """Ordering input."""
 input FruitOrderBy1 {
-  colorAggregate: ColorAggregateOrderBy
   color: ColorOrderBy
   name: OrderByEnum
   id: OrderByEnum
@@ -76,7 +56,6 @@ input FruitOrderBy1 {
 
 """Ordering input."""
 input FruitOrderBy3 {
-  shadeAggregate: ColorAggregateOrderBy
   shade: ColorOrderBy
   name: OrderByEnum
   id: OrderByEnum
