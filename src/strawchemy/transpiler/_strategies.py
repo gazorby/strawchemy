@@ -14,7 +14,7 @@ from strawchemy.transpiler._query import Join
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from sqlalchemy import Label, Select
+    from sqlalchemy import Label, Select, SQLColumnExpression
     from sqlalchemy.orm import QueryableAttribute
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement
@@ -83,7 +83,18 @@ class LateralJoinStrategy:
         aliased_attribute = scope.aliased_attribute(node)
         root_relation = aliased_attribute.of_type(target_insp)
         base_statement = select(target_insp).with_only_columns(*selection)
-        statement = correlate_relation(plan.apply_clauses(base_statement), root_relation, target_alias).lateral()
+        if plan.emulates_distinct_on:
+            unpaged_plan = dataclasses.replace(plan, limit=None, offset=None)
+            statement = correlate_relation(unpaged_plan.apply_clauses(base_statement), root_relation, target_alias)
+            statement, adapter = plan.distinct_rows(statement.correlate_except())
+            statement = (
+                statement.order_by(*[adapter.traverse(expression) for expression in plan.order_by])
+                .limit(plan.limit)
+                .offset(plan.offset)
+            )
+        else:
+            statement = correlate_relation(plan.apply_clauses(base_statement), root_relation, target_alias)
+        statement = statement.lateral()
         lateral_alias = aliased(target_insp.mapper, statement, flat=True)
         scope.set_relation_alias(node, "target", lateral_alias)
         return Join(statement, node=node, is_outer=is_outer, onclause=true())
@@ -107,16 +118,27 @@ class CteJoinStrategy:
         The CTE ranks rows per parent; the join condition applies the limit and offset on that rank.
         """
         remote_fks = scope.inspect(node).foreign_key_columns("target", target_alias)
-        rank_column = self._rank_column(remote_fks, plan)
-        plan_wihtout_limit_offset = dataclasses.replace(plan, limit=None, offset=None)
+        unpaged_plan = dataclasses.replace(plan, limit=None, offset=None)
         base_statement = (
             select(*selection, *remote_fks)
             .group_by(*remote_fks, *selection)
             .where(and_(*[fk.is_not(null()) for fk in remote_fks]))
         )
-        if rank_column is not None:
-            base_statement = base_statement.add_columns(rank_column)
-        statement = plan_wihtout_limit_offset.apply_clauses(base_statement).cte()
+        if plan.emulates_distinct_on:
+            statement, adapter = plan.distinct_rows(unpaged_plan.apply_clauses(base_statement), remote_fks)
+            rank_column = self._rank_column(
+                [adapter.traverse(fk.__clause_element__()) for fk in remote_fks],
+                [adapter.traverse(expression) for expression in plan.order_by],
+                plan,
+            )
+            if rank_column is not None:
+                statement = statement.add_columns(rank_column)
+        else:
+            rank_column = self._rank_column(remote_fks, plan.order_by, plan)
+            if rank_column is not None:
+                base_statement = base_statement.add_columns(rank_column)
+            statement = unpaged_plan.apply_clauses(base_statement)
+        statement = statement.cte()
         cte_alias = aliased(target_alias, statement)
         scope.set_relation_alias(node, "target", cte_alias)
         # Read after registering the CTE alias, so that the ON clause targets the CTE rather than a new alias.
@@ -128,14 +150,16 @@ class CteJoinStrategy:
         return Join(statement, node, onclause=and_(aliased_attribute, *limit_offset_condition), is_outer=is_outer)
 
     @staticmethod
-    def _rank_column(remote_fks: list[QueryableAttribute[Any]], plan: QueryPlan) -> Label[int] | None:
+    def _rank_column(
+        remote_fks: Sequence[SQLColumnExpression[Any]], order_by: Sequence[SQLColumnExpression[Any]], plan: QueryPlan
+    ) -> Label[int] | None:
         """Builds the ``dense_rank()`` column, per parent, that limit and offset are applied on.
 
         Returns ``None`` when the plan has no ordering, limit or offset.
         """
         if not (plan.order_by or plan.limit is not None or plan.offset is not None):
             return None
-        return func.dense_rank().over(partition_by=remote_fks, order_by=plan.order_by or None).label(name="rank")
+        return func.dense_rank().over(partition_by=remote_fks, order_by=order_by or None).label(name="rank")
 
     @staticmethod
     def _limit_offset_condition(rank_column: ColumnElement[Any], plan: QueryPlan) -> list[ColumnElement[bool]]:

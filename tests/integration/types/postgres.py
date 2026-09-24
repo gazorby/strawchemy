@@ -243,6 +243,10 @@ class FruitDistinctOn: ...
 class ColorTypeWithPagination: ...
 
 
+@strawchemy.type(Color, include="all", distinct_on="all", order="all", paginate="all")
+class ColorTypeWithDistinctOn: ...
+
+
 @strawchemy.type(Color, include="all")
 class ColorWithFilteredFruit:
     instance: ModelInstance[Color]
@@ -479,6 +483,7 @@ class AsyncQuery:
     colors_paginated: list[ColorTypeWithPagination] = strawchemy.field(
         pagination=True, repository_type=StrawchemyAsyncRepository
     )
+    colors_nested_distinct: list[ColorTypeWithDistinctOn] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
     colors_filterable_paginated: list[ColorType] = strawchemy.field(
         filter_input=ColorFilter,
         order_by_input=ColorOrder,
@@ -660,6 +665,7 @@ class SyncQuery:
     colors_paginated: list[ColorTypeWithPagination] = strawchemy.field(
         pagination=True, repository_type=StrawchemySyncRepository
     )
+    colors_nested_distinct: list[ColorTypeWithDistinctOn] = strawchemy.field(repository_type=StrawchemySyncRepository)
     colors_filterable_paginated: list[ColorType] = strawchemy.field(
         filter_input=ColorFilter,
         order_by_input=ColorOrder,

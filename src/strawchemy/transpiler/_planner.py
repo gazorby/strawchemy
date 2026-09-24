@@ -24,7 +24,6 @@ from strawchemy.dto.strawberry import (
     CustomFilter,
     Filter,
     OrderByEnum,
-    OrderByRelationFilterDTO,
     QueryNode,
     decompose_order_by,
 )
@@ -147,7 +146,6 @@ class PlanContext(Generic[DeclarativeT]):
         assert isinstance(relationship, RelationshipProperty)
         target_mapper: Mapper[Any] = relationship.mapper.mapper
         target_alias: AliasedClass[Any] = aliased(target_mapper, flat=True)
-        order_by = relation_filter.order_by if isinstance(relation_filter, OrderByRelationFilterDTO) else []
 
         sub_context = replace(
             self,
@@ -155,7 +153,9 @@ class PlanContext(Generic[DeclarativeT]):
             statement=None,
             default_order_by=(),
         )
-        query_graph = QueryGraph(sub_context.aliases, order_by=order_by)
+        query_graph = QueryGraph(
+            sub_context.aliases, order_by=relation_filter.order_by, distinct_on=list(relation_filter.distinct_on)
+        )
         plan = plan_query(query_graph, sub_context, limit=relation_filter.limit, offset=relation_filter.offset)
         hook_order_by = self.hook_applier.order_by(node, target_alias)
         plan = replace(

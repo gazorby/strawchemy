@@ -50,6 +50,7 @@ from strawchemy.transpiler.hook import (
 from strawchemy.typing import (
     AggregationFunction,
     AggregationType,
+    EnumDTOT,
     FunctionInfo,
     GraphQLPurpose,
     OrderByDTOT,
@@ -77,16 +78,18 @@ class _ArgumentValue:
     value: str
 
 
-class RelationFilterDTO(Struct, frozen=True, dict=True):
+class RelationFilterDTO(Struct, Generic[OrderByDTOT, EnumDTOT], frozen=True, dict=True):
     limit: int | None = None
     offset: int | None = None
+    order_by: tuple[OrderByDTOT, ...] = field(default_factory=tuple)
+    distinct_on: tuple[EnumDTOT, ...] = field(default_factory=tuple)
 
     @cached_property
     def _json(self) -> bytes:
         return json.encode(self)
 
     def __bool__(self) -> bool:
-        return bool(self.limit or self.offset)
+        return bool(self.limit or self.offset or self.order_by or self.distinct_on)
 
     @override
     def __hash__(self) -> int:
@@ -144,14 +147,6 @@ class StrawchemyObject:
             cls.__strawchemy_definition__ = StrawchemyDefinition()
         else:
             cls.__strawchemy_definition__ = copy(existing)
-
-
-class OrderByRelationFilterDTO(RelationFilterDTO, Generic[OrderByDTOT], frozen=True):
-    order_by: tuple[OrderByDTOT, ...] = field(default_factory=tuple)
-
-    @override
-    def __bool__(self) -> bool:
-        return bool(self.limit or self.offset or self.order_by)
 
 
 @dataclass

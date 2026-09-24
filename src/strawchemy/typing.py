@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from strawchemy import StrawchemyAsyncRepository, StrawchemySyncRepository, ValidationErrorType
     from strawchemy.dto.strawberry import (
         AggregateDTO,
+        EnumDTO,
         FilterFunctionInfo,
         GraphQLFieldDefinition,
         GraphQLFilterDTO,
@@ -43,6 +44,7 @@ __all__ = (
     "DataclassProtocol",
     "DateOperator",
     "DateTimeOperator",
+    "EnumDTOT",
     "EqualityOperator",
     "FilterStatementCallable",
     "FunctionInfo",
@@ -80,6 +82,7 @@ GraphQLFilterDTOT = TypeVar("GraphQLFilterDTOT", bound="GraphQLFilterDTO")
 AggregateDTOT = TypeVar("AggregateDTOT", bound="AggregateDTO")
 GraphQLDTOT = TypeVar("GraphQLDTOT", bound="GraphQLDTO[Any]")
 OrderByDTOT = TypeVar("OrderByDTOT", bound="OrderByDTO")
+EnumDTOT = TypeVar("EnumDTOT", bound="EnumDTO")
 
 SupportedDialect: TypeAlias = Literal["postgresql", "mysql", "sqlite"]
 """Must match SQLAlchemy dialect."""
