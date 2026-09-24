@@ -189,6 +189,237 @@ async def test_relation_order_by_unselected_column(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+def _color_fruits(raw_fruits: RawRecordData, color_id: int) -> RawRecordData:
+    return [fruit for fruit in raw_fruits if fruit["color_id"] == color_id]
+
+
+def _farm_count(raw_farms: RawRecordData, fruit_id: int) -> int:
+    return sum(1 for farm in raw_farms if farm["fruit_id"] == fruit_id)
+
+
+@pytest.mark.snapshot
+async def test_relation_order_by_nested_relation(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
+) -> None:
+    result = await maybe_async(
+        any_query(
+            """{
+            colors {
+                id
+                fruits(orderBy: [{ color: { name: ASC } }, { sweetness: DESC }]) {
+                    name
+                    sweetness
+                }
+            }
+        }"""
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    for color in result.data["colors"]:
+        expected_order = [
+            fruit["name"]
+            for fruit in sorted(_color_fruits(raw_fruits, color["id"]), key=lambda fruit: -fruit["sweetness"])
+        ]
+        assert [row["name"] for row in color["fruits"]] == expected_order
+
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize("order_by", ["ASC", "DESC"])
+@pytest.mark.snapshot
+async def test_relation_order_by_nested_aggregation(
+    order_by: Literal["ASC", "DESC"],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
+) -> None:
+    result = await maybe_async(
+        any_query(
+            f"""{{
+            colors {{
+                id
+                fruits(orderBy: [{{ farmsAggregate: {{ count: {order_by} }} }}, {{ sweetness: ASC }}]) {{
+                    name
+                    sweetness
+                }}
+            }}
+        }}"""
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    direction = -1 if order_by == "DESC" else 1
+    for color in result.data["colors"]:
+        expected_order = [
+            fruit["name"]
+            for fruit in sorted(
+                _color_fruits(raw_fruits, color["id"]),
+                key=lambda fruit: (direction * _farm_count(raw_farms, fruit["id"]), fruit["sweetness"]),
+            )
+        ]
+        assert [row["name"] for row in color["fruits"]] == expected_order
+
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_relation_order_by_nested_relation_aggregation(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
+) -> None:
+    result = await maybe_async(
+        any_query(
+            """{
+            colors {
+                id
+                fruits(orderBy: [{ color: { fruitsAggregate: { count: ASC } } }, { sweetness: DESC }]) {
+                    name
+                    sweetness
+                }
+            }
+        }"""
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    for color in result.data["colors"]:
+        expected_order = [
+            fruit["name"]
+            for fruit in sorted(_color_fruits(raw_fruits, color["id"]), key=lambda fruit: -fruit["sweetness"])
+        ]
+        assert [row["name"] for row in color["fruits"]] == expected_order
+
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_paginated_relation_order_by_nested_aggregation(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
+) -> None:
+    result = await maybe_async(
+        any_query(
+            """{
+            colorsPaginated {
+                id
+                fruits(limit: 1, orderBy: [{ farmsAggregate: { count: DESC } }, { sweetness: ASC }]) {
+                    name
+                    sweetness
+                }
+            }
+        }"""
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    for color in result.data["colorsPaginated"]:
+        expected_order = sorted(
+            _color_fruits(raw_fruits, color["id"]),
+            key=lambda fruit: (-_farm_count(raw_farms, fruit["id"]), fruit["sweetness"]),
+        )
+        assert [row["name"] for row in color["fruits"]] == [expected_order[0]["name"]]
+
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_paginated_relation_order_by_nested_relation(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
+) -> None:
+    result = await maybe_async(
+        any_query(
+            """{
+            colorsPaginated {
+                id
+                fruits(limit: 1, offset: 1, orderBy: [{ color: { name: ASC } }, { sweetness: DESC }]) {
+                    name
+                    sweetness
+                }
+            }
+        }"""
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    for color in result.data["colorsPaginated"]:
+        expected_order = sorted(_color_fruits(raw_fruits, color["id"]), key=lambda fruit: -fruit["sweetness"])
+        assert [row["name"] for row in color["fruits"]] == [expected_order[1]["name"]]
+
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_distinct_on_with_relation_order_by_nested_aggregation(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
+    db_features: DatabaseFeatures,
+    request: pytest.FixtureRequest,
+) -> None:
+    if db_features.supports_distinct_on:
+        request.applymarker(pytest.mark.xfail(reason="#304", strict=True))
+    result = await maybe_async(
+        any_query(
+            """{
+            colors(distinctOn: [name], orderBy: [{ name: ASC }]) {
+                id
+                fruits(orderBy: [{ farmsAggregate: { count: ASC } }, { sweetness: DESC }]) {
+                    name
+                    sweetness
+                }
+            }
+        }"""
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    for color in result.data["colors"]:
+        expected_order = [
+            fruit["name"]
+            for fruit in sorted(
+                _color_fruits(raw_fruits, color["id"]),
+                key=lambda fruit: (_farm_count(raw_farms, fruit["id"]), -fruit["sweetness"]),
+            )
+        ]
+        assert [row["name"] for row in color["fruits"]] == expected_order
+
+    # Verify SQL query
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
 @pytest.mark.snapshot
 async def test_deterministic_ordering(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion

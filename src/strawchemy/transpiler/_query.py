@@ -68,8 +68,8 @@ class Join:
     node: QueryNodeType
     onclause: _OnClauseArgument | None = None
     is_outer: bool = False
-    order_nodes: list[QueryNodeType] = dataclasses.field(default_factory=list)
-    """Order-by nodes of the relation's own ordering."""
+    order_by: list[OrderBySpec] = dataclasses.field(default_factory=list)
+    """Client ordering of the relation, on columns of ``selectable``."""
     hook_order_by: tuple[UnaryExpression[Any], ...] = ()
     """ORDER BY of the relation's query hooks, read from the join target."""
 

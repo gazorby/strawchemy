@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from sqlalchemy.sql.elements import UnaryExpression
     from sqlalchemy.sql.selectable import Alias
 
+    from strawchemy.repository.typing import OrderBySpec
     from strawchemy.transpiler._query import HookApplier, Join
     from strawchemy.transpiler.hook import ColumnLoadingMode
     from strawchemy.typing import QueryNodeType
@@ -69,6 +70,8 @@ class QueryPlan:
     load_options: tuple[_AbstractLoad, ...] = ()
     where: tuple[ColumnElement[bool], ...] = ()
     order_by: tuple[UnaryExpression[Any], ...] = ()
+    order_keys: tuple[OrderBySpec, ...] = ()
+    """Columns and directions of the client ordering, which ``order_by`` is built from."""
     joins: tuple[Join, ...] = ()
     root_aggregation_functions: tuple[Label[Any], ...] = ()
     """Window function columns, selected last."""

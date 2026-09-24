@@ -55,7 +55,7 @@ class JoinStrategy(Protocol):
         target_alias: AliasedClass[Any],
         plan: QueryPlan,
         *,
-        selection: Sequence[QueryableAttribute[Any]],
+        selection: Sequence[SQLColumnExpression[Any]],
         is_outer: bool,
     ) -> Join:
         """Builds the join of the relation behind ``node``, running ``plan`` against ``target_alias``.
@@ -75,7 +75,7 @@ class LateralJoinStrategy:
         target_alias: AliasedClass[Any],
         plan: QueryPlan,
         *,
-        selection: Sequence[QueryableAttribute[Any]],
+        selection: Sequence[SQLColumnExpression[Any]],
         is_outer: bool,
     ) -> Join:
         """Builds a LATERAL join running ``plan`` for each row of the outer query."""
@@ -110,7 +110,7 @@ class CteJoinStrategy:
         target_alias: AliasedClass[Any],
         plan: QueryPlan,
         *,
-        selection: Sequence[QueryableAttribute[Any]],
+        selection: Sequence[SQLColumnExpression[Any]],
         is_outer: bool,
     ) -> Join:
         """Builds a CTE join running ``plan`` over all parents at once.
