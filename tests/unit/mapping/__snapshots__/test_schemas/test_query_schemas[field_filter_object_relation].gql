@@ -8,44 +8,6 @@ type AliasedFruitType {
 }
 
 """
-Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
-"""
-input ColorAggregateBoolExp {
-  count: ColorAggregateBoolExpCount
-  maxString: ColorAggregateBoolExpMaxstring
-  minString: ColorAggregateBoolExpMinstring
-  sum: ColorAggregateBoolExpSum
-}
-
-"""Boolean expression to compare count aggregation."""
-input ColorAggregateBoolExpCount {
-  arguments: [ColorCountFields!] = []
-  predicate: IntOrderComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare max aggregation."""
-input ColorAggregateBoolExpMaxstring {
-  arguments: [ColorMinMaxStringFieldsEnum!]!
-  predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare min aggregation."""
-input ColorAggregateBoolExpMinstring {
-  arguments: [ColorMinMaxStringFieldsEnum!]!
-  predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare sum aggregation."""
-input ColorAggregateBoolExpSum {
-  arguments: [ColorSumFieldsEnum!]!
-  predicate: FloatOrderComparison!
-  distinct: Boolean = false
-}
-
-"""
 Boolean expression to compare fields. All fields are combined with logical 'AND'.
 """
 input ColorBoolExp {
@@ -56,19 +18,6 @@ input ColorBoolExp {
   fruits: FruitBoolExp
   name: TextComparison
   id: UUIDGenericComparison
-}
-
-enum ColorCountFields {
-  name
-  id
-}
-
-enum ColorMinMaxStringFieldsEnum {
-  name
-}
-
-enum ColorSumFieldsEnum {
-  name
 }
 
 """
@@ -131,7 +80,6 @@ input FruitBoolExp {
   _and: [FruitBoolExp!]! = []
   _or: [FruitBoolExp!]! = []
   _not: FruitBoolExp
-  colorAggregate: ColorAggregateBoolExp
   color: ColorBoolExp
   name: TextComparison
   id: UUIDGenericComparison
@@ -144,7 +92,6 @@ input FruitBoolExp1 {
   _and: [FruitBoolExp1!]! = []
   _or: [FruitBoolExp1!]! = []
   _not: FruitBoolExp1
-  shadeAggregate: ColorAggregateBoolExp
   shade: ColorBoolExp
   name: TextComparison
   id: UUIDGenericComparison
