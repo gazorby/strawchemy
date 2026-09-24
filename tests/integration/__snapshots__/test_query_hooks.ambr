@@ -2363,6 +2363,474 @@
             fruit_1.id ASC
   '''
 # ---
+# name: test_query_hook_ordering_on_paginated_relation[session-async-tracked-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS rank,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.rank > ?
+     AND anon_1.rank <= ?
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_paginated_relation[session-async-tracked-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS `rank`,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.`rank` > %s
+     AND anon_1.`rank` <= %s
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_paginated_relation[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_paginated_relation[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_paginated_relation[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_paginated_relation[session-sync-tracked-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS rank,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+     AND anon_1.rank > ?
+     AND anon_1.rank <= ?
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-async-tracked-client-order-by-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness DESC) AS rank,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.sweetness,
+                    fruit_1.id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.sweetness DESC
+         ) SELECT anon_1.name,
+         anon_1.sweetness,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-async-tracked-client-order-by-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness DESC) AS `rank`,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.sweetness,
+                    fruit_1.id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.sweetness DESC
+         ) SELECT anon_1.name,
+         anon_1.sweetness,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-async-tracked-client-order-by-asyncpg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.sweetness,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.sweetness DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-async-tracked-client-order-by-psycopg_async_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.sweetness,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.sweetness DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-async-tracked-hook-only-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS rank,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-async-tracked-hook-only-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS `rank`,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-async-tracked-hook-only-asyncpg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-async-tracked-hook-only-psycopg_async_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-sync-tracked-client-order-by-psycopg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.sweetness,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.sweetness DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-sync-tracked-client-order-by-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness DESC) AS rank,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.sweetness,
+                    fruit_1.id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.sweetness DESC
+         ) SELECT anon_1.name,
+         anon_1.sweetness,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-sync-tracked-hook-only-psycopg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_query_hook_ordering_on_relation[session-sync-tracked-hook-only-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS rank,
+                 fruit_1.water_percent AS water_percent
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id
+           ORDER BY fruit_1.water_percent ASC,
+                    fruit_1.id ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
 # name: test_root_field_query_hook_load[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit.name,

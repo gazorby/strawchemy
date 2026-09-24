@@ -15,6 +15,7 @@ from sqlalchemy import (
     UnaryExpression,
     inspect,
     null,
+    select,
 )
 from sqlalchemy.orm import (
     QueryableAttribute,
@@ -23,6 +24,8 @@ from sqlalchemy.orm import (
     aliased,
 )
 from sqlalchemy.orm.util import AliasedClass
+from sqlalchemy.sql.elements import ColumnClause
+from sqlalchemy.sql.visitors import iterate
 from typing_extensions import Self
 
 from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
@@ -37,10 +40,12 @@ from strawchemy.dto.strawberry import (
 )
 from strawchemy.exceptions import TranspilingError
 from strawchemy.repository.typing import DeclarativeT, OrderBySpec
+from strawchemy.transpiler._aliasing import same_column
+from strawchemy.transpiler._plan import add_missing_columns
 from strawchemy.utils.graph import merge_trees
 
 if TYPE_CHECKING:
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.sql import ColumnElement, SQLColumnExpression
@@ -65,6 +70,8 @@ class Join:
     is_outer: bool = False
     order_nodes: list[QueryNodeType] = dataclasses.field(default_factory=list)
     """Order-by nodes of the relation's own ordering."""
+    hook_order_by: tuple[UnaryExpression[Any], ...] = ()
+    """ORDER BY of the relation's query hooks, read from the join target."""
 
     @property
     def _relationship(self) -> RelationshipProperty[Any]:
@@ -334,20 +341,35 @@ class HookApplier:
         node: QueryNodeType,
         alias: AliasedClass[Any],
         loading_mode: ColumnLoadingMode,
+        *,
         in_subquery: bool = False,
+        export_order_by: bool = False,
     ) -> tuple[Select[tuple[DeclarativeT]], list[_AbstractLoad]]:
         """Runs every hook of ``node`` on ``statement`` and returns the loader options they add.
 
         Each hook edits the statement, then adds its columns and, outside a subquery, its relationship loads.
+        With ``export_order_by``, the ORDER BY the hooks add is dropped and the columns it reads are selected instead.
         """
         options: list[_AbstractLoad] = []
+        order_by = statement._order_by_clauses  # noqa: SLF001
         for hook in self.hooks[node]:
             statement = hook.apply_hook(statement, alias)
             statement, column_options = hook.load_columns(statement, alias, loading_mode)
             options.extend(column_options)
             if not in_subquery:
                 options.extend(hook.load_relationships(self.scope.alias_from_relation_node(node, "target")))
+        if export_order_by:
+            hook_order_by = statement._order_by_clauses[len(order_by) :]  # noqa: SLF001
+            statement = add_missing_columns(statement.order_by(None).order_by(*order_by), _columns_of(hook_order_by))
         return statement, options
+
+    def order_by(self, node: QueryNodeType, alias: AliasedClass[Any]) -> tuple[UnaryExpression[Any], ...]:
+        """Returns the ORDER BY the hooks of ``node`` add, built against ``alias``."""
+        statement = self.apply_statement_hooks(select(alias), node, alias)
+        return tuple(
+            clause if isinstance(clause, UnaryExpression) else clause.asc()
+            for clause in statement._order_by_clauses  # noqa: SLF001
+        )
 
     def collect_load_options(
         self, node: QueryNodeType, alias: AliasedClass[Any], in_subquery: bool = False
@@ -370,3 +392,13 @@ class HookApplier:
         for hook in self.hooks[node]:
             statement = hook.apply_hook(statement, alias)
         return statement
+
+
+def _columns_of(clauses: Iterable[ColumnElement[Any]]) -> list[ColumnElement[Any]]:
+    """Returns the table columns ``clauses`` read, once each, in order of appearance."""
+    columns: list[ColumnElement[Any]] = []
+    for clause in clauses:
+        for element in iterate(clause):
+            if isinstance(element, ColumnClause) and not any(same_column(element, column) for column in columns):
+                columns.append(element)
+    return columns

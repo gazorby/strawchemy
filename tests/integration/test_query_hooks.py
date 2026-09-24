@@ -378,3 +378,71 @@ async def test_query_hook_joining_on_relation(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+def _fruits_by_water_percent(raw_colors: RawRecordData, raw_fruits: RawRecordData) -> list[tuple[str, list[str]]]:
+    return [
+        (
+            color["name"],
+            [
+                fruit["name"]
+                for fruit in sorted(raw_fruits, key=lambda fruit: fruit["water_percent"])
+                if fruit["color_id"] == color["id"]
+            ],
+        )
+        for color in raw_colors
+    ]
+
+
+@pytest.mark.parametrize(
+    "fruits_field",
+    [
+        pytest.param("fruits { name }", id="hook-only"),
+        pytest.param("fruits(orderBy: { sweetness: DESC }) { name sweetness }", id="client-order-by"),
+    ],
+)
+@pytest.mark.snapshot
+async def test_query_hook_ordering_on_relation(
+    fruits_field: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
+) -> None:
+    """Test that the ORDER BY of a hook on a related type orders the related rows, ahead of the client ordering."""
+    result = await maybe_async(any_query(f"{{ colorsWithOrderedFruits {{ name {fruits_field} }} }}"))
+
+    assert not result.errors
+    assert result.data
+    assert [
+        (color["name"], [fruit["name"] for fruit in color["fruits"]])
+        for color in result.data["colorsWithOrderedFruits"]
+    ] == _fruits_by_water_percent(raw_colors, raw_fruits)
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_query_hook_ordering_on_paginated_relation(
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
+) -> None:
+    """Test that the ORDER BY of a hook on a related type decides which related rows a page keeps."""
+    result = await maybe_async(
+        any_query("{ colorsWithPaginatedOrderedFruits { name fruits(limit: 2, offset: 1) { name } } }")
+    )
+
+    assert not result.errors
+    assert result.data
+    assert [
+        (color["name"], [fruit["name"] for fruit in color["fruits"]])
+        for color in result.data["colorsWithPaginatedOrderedFruits"]
+    ] == [(name, fruits[1:3]) for name, fruits in _fruits_by_water_percent(raw_colors, raw_fruits)]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

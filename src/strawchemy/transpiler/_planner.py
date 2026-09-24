@@ -152,9 +152,16 @@ class PlanContext(Generic[DeclarativeT]):
         sub_context = replace(self, aliases=self.aliases.sub(target_mapper.class_, target_alias), statement=None)
         query_graph = QueryGraph(sub_context.aliases, order_by=order_by)
         plan = plan_query(query_graph, sub_context, limit=relation_filter.limit, offset=relation_filter.offset)
-        plan = replace(plan, hook_specs=(HookSpec(node=node, alias=target_alias, loading_mode="add"),))
+        hook_order_by = self.hook_applier.order_by(node, target_alias)
+        plan = replace(
+            plan,
+            order_by=(*hook_order_by, *plan.order_by),
+            hook_specs=(HookSpec(node=node, alias=target_alias, loading_mode="add", export_order_by=True),),
+        )
         join = self.join_strategy.relation_join(self.aliases, node, target_alias, plan, is_outer)
         join.order_nodes = query_graph.order_by_nodes
+        adapter = ClauseAdapter(join.selectable)
+        join.hook_order_by = tuple(adapter.traverse(clause) for clause in hook_order_by)
         return join
 
 
@@ -628,9 +635,10 @@ class OrderPlan:
         primary keys. The own ordering of each join in ``existing_joins`` is appended.
         """
         _default_order_by = list(context.default_order_by)
+        relation_expressions = cls._relation_order_by(query_graph, context, existing_joins)
 
         if not (query_graph.order_by_tree or context.deterministic_ordering or _default_order_by):
-            return cls()
+            return cls(expressions=tuple(relation_expressions))
 
         columns: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = []
         joins: list[Join] = []
@@ -657,11 +665,7 @@ class OrderPlan:
             columns.extend([(id_col, OrderByEnum.ASC) for id_col in pk_aliases])
 
         order_by = OrderBy(context.db_features, columns, joins)
-
-        relation_order_columns = cls._relation_order_by(query_graph, context, existing_joins)
-        order_by.columns.extend(relation_order_columns)
-
-        return cls(expressions=tuple(order_by.expressions), joins=tuple(order_by.joins))
+        return cls(expressions=(*order_by.expressions, *relation_expressions), joins=tuple(order_by.joins))
 
     @staticmethod
     def _default_order_columns(
@@ -718,15 +722,15 @@ class OrderPlan:
         query_graph: QueryGraph[Any],
         context: PlanContext[Any],
         joins: Sequence[Join],
-    ) -> list[tuple[SQLColumnExpression[Any], OrderByEnum]]:
-        """Returns the ORDER BY columns of the selected relation joins.
+    ) -> list[UnaryExpression[Any]]:
+        """Returns the ORDER BY expressions of the selected relation joins.
 
-        Uses each join's own ordering, or its primary keys when it has none and ``deterministic_ordering`` is set.
+        Uses each join's hook ordering, then its own ordering or, with ``deterministic_ordering``, its primary keys.
         """
         aliases = context.aliases
         deterministic_ordering = context.deterministic_ordering
         selected_tree = query_graph.resolved_selection_tree()
-        order_by_spec: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = []
+        expressions: list[UnaryExpression[Any]] = []
         for join in sorted(joins):
             if (
                 isinstance(join, AggregationJoin)
@@ -736,22 +740,17 @@ class OrderPlan:
                 )
             ):
                 continue
+            order_by_spec: list[tuple[SQLColumnExpression[Any], OrderByEnum]] = []
             if not join.order_nodes and deterministic_ordering:
-                order_by_spec.extend(
-                    [(attribute, OrderByEnum.ASC) for attribute in aliases.aliased_id_attributes(join.node)]
-                )
+                order_by_spec = [(attribute, OrderByEnum.ASC) for attribute in aliases.aliased_id_attributes(join.node)]
             elif join.order_nodes:
-                order_by_spec.extend(
-                    [
-                        (
-                            aliases.scoped_column(join.selectable, node.value.model_field_name),
-                            node.metadata.data.order_by,
-                        )
-                        for node in join.order_nodes
-                        if node.metadata.data.order_by
-                    ]
-                )
-        return order_by_spec
+                order_by_spec = [
+                    (aliases.scoped_column(join.selectable, node.value.model_field_name), node.metadata.data.order_by)
+                    for node in join.order_nodes
+                    if node.metadata.data.order_by
+                ]
+            expressions.extend([*join.hook_order_by, *OrderBy(context.db_features, order_by_spec).expressions])
+        return expressions
 
 
 @dataclass(frozen=True)
