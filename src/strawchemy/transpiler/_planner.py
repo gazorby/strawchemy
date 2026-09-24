@@ -881,8 +881,12 @@ class FilterPhase:
 
     @classmethod
     def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any], allow_null: bool) -> Self:
-        """Builds the aggregation plan, the filter plan and the subquery-tree joins."""
+        """Builds the aggregation plan, the filter plan and the subquery-tree joins.
+
+        Joins made for the filter run no query hook: hooks restrict the selected rows, not those the filter tests.
+        """
         aggregation_plan = AggregationPlan.plan(query_graph, context)
+        context = replace(context, hook_applier=context.hook_applier.without(query_graph.filter_relation_nodes))
         filter_plan = FilterPlan.plan(query_graph, context, aggregation_plan, allow_null)
         filter_join_nodes = {join.node for join in filter_plan.joins}
         subquery_tree_joins: list[Join] = []
@@ -1247,11 +1251,16 @@ def plan_query(
 ) -> QueryPlan:
     """Plans ``query_graph`` into one ``QueryPlan``.
 
-    A root query that is paginated, or needs DISTINCT ON emulation, is planned by ``_plan_subquery``.
+    A root query that is paginated, needs DISTINCT ON emulation, or filters on a relation with query hooks, is
+    planned by ``_plan_subquery``: the filter joins such a relation without its hooks, so the selection cannot reuse
+    that join.
     """
     distinct_on_rank = _use_distinct_rank(query_graph, context)
+    filters_hooked_relation = any(context.hook_applier.has_hooks(node) for node in query_graph.filter_relation_nodes)
 
-    subquery_needed = context.aliases.is_root and (limit is not None or offset is not None or distinct_on_rank)
+    subquery_needed = context.aliases.is_root and (
+        limit is not None or offset is not None or distinct_on_rank or filters_hooked_relation
+    )
     if subquery_needed:
         return _plan_subquery(
             query_graph, context, limit=limit, offset=offset, allow_null=allow_null, distinct_on_rank=distinct_on_rank

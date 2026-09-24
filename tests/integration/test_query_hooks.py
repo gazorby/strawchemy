@@ -446,3 +446,57 @@ async def test_query_hook_ordering_on_paginated_relation(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize("query", ["colorsWithSweetFruits", "colorsWithSweetFruitsPaginated"])
+@pytest.mark.snapshot
+async def test_query_hook_on_relation_ignored_by_filter(
+    query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
+) -> None:
+    """Test that a filter on a hooked relation considers the related rows the hook leaves out."""
+    result = await maybe_async(
+        any_query(f"{{ {query}(filter: {{ fruits: {{ sweetness: {{ lte: 5 }} }} }}) {{ name fruits {{ name }} }} }}")
+    )
+
+    assert not result.errors
+    assert result.data
+    expected = {
+        color["name"]: sorted(
+            fruit["name"] for fruit in raw_fruits if fruit["color_id"] == color["id"] and fruit["sweetness"] > 5
+        )
+        for color in raw_colors
+        if any(fruit["color_id"] == color["id"] and fruit["sweetness"] <= 5 for fruit in raw_fruits)
+    }
+    assert {
+        color["name"]: sorted(fruit["name"] for fruit in color["fruits"]) for color in result.data[query]
+    } == expected
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_query_hook_joining_on_relation_ignored_by_filter(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a filter on a relation whose hook adds a join considers the related rows the hook leaves out."""
+    result = await maybe_async(
+        any_query(
+            '{ colorsWithMultiFarmFruits(filter: { fruits: { name: { in: ["Apple", "Banana"] } } }) { name fruits { name } } }'
+        )
+    )
+
+    assert not result.errors
+    assert result.data
+    assert {
+        color["name"]: sorted(fruit["name"] for fruit in color["fruits"])
+        for color in result.data["colorsWithMultiFarmFruits"]
+    } == {"Red": ["Apple", "Cherry"], "Yellow": []}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

@@ -486,15 +486,17 @@ class AsyncQuery:
     colors_hooks_paginated: list[ColorTypeHooks] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
-    colors_with_sweet_fruits: list[ColorWithSweetFruits] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    colors_with_sweet_fruits: list[ColorWithSweetFruits] = strawchemy.field(
+        filter_input=ColorFilter, repository_type=StrawchemyAsyncRepository
+    )
     colors_with_sweet_fruits_paginated: list[ColorWithSweetFruits] = strawchemy.field(
-        repository_type=StrawchemyAsyncRepository, pagination=True
+        filter_input=ColorFilter, repository_type=StrawchemyAsyncRepository, pagination=True
     )
     colors_with_paginated_sweet_fruits: list[ColorWithPaginatedSweetFruits] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository
     )
     colors_with_multi_farm_fruits: list[ColorWithMultiFarmFruits] = strawchemy.field(
-        repository_type=StrawchemyAsyncRepository
+        filter_input=ColorFilter, repository_type=StrawchemyAsyncRepository
     )
     colors_with_ordered_fruits: list[ColorWithOrderedFruits] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository
@@ -652,15 +654,17 @@ class SyncQuery:
     colors_hooks_paginated: list[ColorTypeHooks] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
     )
-    colors_with_sweet_fruits: list[ColorWithSweetFruits] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    colors_with_sweet_fruits: list[ColorWithSweetFruits] = strawchemy.field(
+        filter_input=ColorFilter, repository_type=StrawchemySyncRepository
+    )
     colors_with_sweet_fruits_paginated: list[ColorWithSweetFruits] = strawchemy.field(
-        repository_type=StrawchemySyncRepository, pagination=True
+        filter_input=ColorFilter, repository_type=StrawchemySyncRepository, pagination=True
     )
     colors_with_paginated_sweet_fruits: list[ColorWithPaginatedSweetFruits] = strawchemy.field(
         repository_type=StrawchemySyncRepository
     )
     colors_with_multi_farm_fruits: list[ColorWithMultiFarmFruits] = strawchemy.field(
-        repository_type=StrawchemySyncRepository
+        filter_input=ColorFilter, repository_type=StrawchemySyncRepository
     )
     colors_with_ordered_fruits: list[ColorWithOrderedFruits] = strawchemy.field(
         repository_type=StrawchemySyncRepository
