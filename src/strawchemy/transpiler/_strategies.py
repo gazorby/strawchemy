@@ -12,6 +12,8 @@ from sqlalchemy.orm import join as orm_join
 from strawchemy.transpiler._query import Join
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
     from sqlalchemy import Label, Select
     from sqlalchemy.orm import QueryableAttribute
     from sqlalchemy.orm.util import AliasedClass
@@ -52,9 +54,14 @@ class JoinStrategy(Protocol):
         node: QueryNodeType,
         target_alias: AliasedClass[Any],
         plan: QueryPlan,
+        *,
+        selection: Sequence[QueryableAttribute[Any]],
         is_outer: bool,
     ) -> Join:
-        """Builds the join of the relation behind ``node``, running ``plan`` against ``target_alias``."""
+        """Builds the join of the relation behind ``node``, running ``plan`` against ``target_alias``.
+
+        ``selection`` holds the columns the subquery exposes to the outer query.
+        """
         ...
 
 
@@ -67,14 +74,15 @@ class LateralJoinStrategy:
         node: QueryNodeType,
         target_alias: AliasedClass[Any],
         plan: QueryPlan,
+        *,
+        selection: Sequence[QueryableAttribute[Any]],
         is_outer: bool,
     ) -> Join:
         """Builds a LATERAL join running ``plan`` for each row of the outer query."""
         target_insp = inspect(target_alias)
         aliased_attribute = scope.aliased_attribute(node)
-        node_inspect = scope.inspect(node)
         root_relation = aliased_attribute.of_type(target_insp)
-        base_statement = select(target_insp).with_only_columns(*node_inspect.selection(target_alias))
+        base_statement = select(target_insp).with_only_columns(*selection)
         statement = correlate_relation(plan.apply_clauses(base_statement), root_relation, target_alias).lateral()
         lateral_alias = aliased(target_insp.mapper, statement, flat=True)
         scope.set_relation_alias(node, "target", lateral_alias)
@@ -90,6 +98,8 @@ class CteJoinStrategy:
         node: QueryNodeType,
         target_alias: AliasedClass[Any],
         plan: QueryPlan,
+        *,
+        selection: Sequence[QueryableAttribute[Any]],
         is_outer: bool,
     ) -> Join:
         """Builds a CTE join running ``plan`` over all parents at once.
@@ -99,9 +109,6 @@ class CteJoinStrategy:
         remote_fks = scope.inspect(node).foreign_key_columns("target", target_alias)
         rank_column = self._rank_column(remote_fks, plan)
         plan_wihtout_limit_offset = dataclasses.replace(plan, limit=None, offset=None)
-        node_inspect = scope.inspect(node)
-        remote_fks = node_inspect.foreign_key_columns("target", target_alias)
-        selection = node_inspect.selection(target_alias)
         base_statement = (
             select(*selection, *remote_fks)
             .group_by(*remote_fks, *selection)

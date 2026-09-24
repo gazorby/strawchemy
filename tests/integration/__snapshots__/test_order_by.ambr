@@ -3361,3 +3361,267 @@
             anon_1.sweetness DESC
   '''
 # ---
+# name: test_relation_order_by_unselected_column[session-async-tracked-ASC-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC) AS rank
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id,
+                    fruit_1.sweetness
+           ORDER BY fruit_1.sweetness ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-async-tracked-ASC-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC) AS `rank`
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id,
+                    fruit_1.sweetness
+           ORDER BY fruit_1.sweetness ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-async-tracked-ASC-asyncpg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-async-tracked-ASC-psycopg_async_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-async-tracked-DESC-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC) AS rank
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id,
+                    fruit_1.sweetness
+           ORDER BY fruit_1.sweetness DESC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-async-tracked-DESC-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC) AS `rank`
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id,
+                    fruit_1.sweetness
+           ORDER BY fruit_1.sweetness DESC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-async-tracked-DESC-asyncpg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-async-tracked-DESC-psycopg_async_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-sync-tracked-ASC-psycopg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-sync-tracked-ASC-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC) AS rank
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id,
+                    fruit_1.sweetness
+           ORDER BY fruit_1.sweetness ASC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-sync-tracked-DESC-psycopg_engine]
+  '''
+  SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness
+            FROM fruit AS fruit_1
+           WHERE color.id = fruit_1.color_id
+           ORDER BY fruit_1.sweetness DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_relation_order_by_unselected_column[session-sync-tracked-DESC-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT fruit_1.name AS name,
+                 fruit_1.id AS id,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.color_id AS color_id,
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC) AS rank
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id,
+                    fruit_1.name,
+                    fruit_1.id,
+                    fruit_1.sweetness
+           ORDER BY fruit_1.sweetness DESC
+         ) SELECT anon_1.name,
+         anon_1.id,
+         color.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.sweetness DESC
+  '''
+# ---

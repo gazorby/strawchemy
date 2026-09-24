@@ -163,7 +163,16 @@ class PlanContext(Generic[DeclarativeT]):
             order_by=(*hook_order_by, *plan.order_by),
             hook_specs=(HookSpec(node=node, alias=target_alias, loading_mode="add", export_order_by=True),),
         )
-        join = self.join_strategy.relation_join(self.aliases, node, target_alias, plan, is_outer)
+        selection = self.aliases.inspect(node).selection(target_alias)
+        selected_keys = {attribute.key for attribute in selection}
+        selection.extend(
+            sub_context.aliases.aliased_attribute(order_node, target_alias)
+            for order_node in query_graph.order_by_nodes
+            if order_node.level == 1 and order_node.value.model_field_name not in selected_keys
+        )
+        join = self.join_strategy.relation_join(
+            self.aliases, node, target_alias, plan, selection=selection, is_outer=is_outer
+        )
         join.order_nodes = query_graph.order_by_nodes
         adapter = ClauseAdapter(join.selectable)
         join.hook_order_by = tuple(adapter.traverse(clause) for clause in hook_order_by)
