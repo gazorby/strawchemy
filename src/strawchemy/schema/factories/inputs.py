@@ -373,16 +373,21 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
         Raises:
             StrawchemyFieldError: If a declared annotation does not map to an emitted relation.
         """
-        relations = {name for name, field in self.inspector.field_definitions(model, dto_config) if field.is_relation}
+        relations = {
+            name: field.uselist
+            for name, field in self.inspector.field_definitions(model, dto_config)
+            if field.is_relation
+        }
         for field_name in declared_aggregates:
             if field_name in matched:
                 continue
             relation_name = field_name.removesuffix("_aggregate")
-            reason = (
-                f"relation {relation_name!r} is excluded by the filter's include/exclude"
-                if relation_name in relations
-                else f"{relation_name!r} is not a relation on {model.__name__}"
-            )
+            if relation_name not in relations:
+                reason = f"{relation_name!r} is not a relation on {model.__name__}"
+            elif not relations[relation_name]:
+                reason = f"relation {relation_name!r} is to-one, only to-many relations have an aggregate field"
+            else:
+                reason = f"relation {relation_name!r} is excluded by the filter's include/exclude"
             msg = f"Filter field {field_name!r} matches no aggregate field: {reason}"
             raise StrawchemyFieldError(msg)
 
@@ -412,7 +417,7 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
                 field.type_ = Union[field.type_, None]
                 if field.uselist and field.related_dto:
                     field.type_ = Union[field.related_dto, None]  # ty: ignore[invalid-type-form]
-                if aggregate_filters:
+                if aggregate_filters and field.uselist:
                     yield self._relation_aggregate_field(
                         field,
                         dto_config.copy_with(partial_default=UNSET, partial=True),

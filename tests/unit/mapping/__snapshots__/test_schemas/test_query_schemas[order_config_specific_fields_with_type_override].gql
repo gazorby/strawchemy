@@ -8,24 +8,6 @@ type ColorAggregate {
 }
 
 """GraphQL type"""
-input ColorAggregateMinMaxStringFieldsOrderBy {
-  name: OrderByEnum
-}
-
-"""GraphQL type"""
-input ColorAggregateNumericFieldsOrderBy {
-  name: OrderByEnum
-}
-
-"""GraphQL type"""
-input ColorAggregateOrderBy {
-  count: OrderByEnum
-  maxString: ColorAggregateMinMaxStringFieldsOrderBy
-  minString: ColorAggregateMinMaxStringFieldsOrderBy
-  sum: ColorAggregateNumericFieldsOrderBy
-}
-
-"""GraphQL type"""
 type ColorMinMaxFields {
   name: String
 }
@@ -134,7 +116,6 @@ type FruitNumericFields {
 
 """Ordering input."""
 input FruitOrderBy {
-  colorAggregate: ColorAggregateOrderBy
   color: ColorOrderBy
   name: OrderByEnum
   colorId: OrderByEnum

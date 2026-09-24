@@ -779,6 +779,31 @@ def test_undeclared_relation_keeps_generated_aggregate() -> None:
     assert {"count", "max_datetime"} <= _aggregate_fields(cast("type[Any]", field_type))
 
 
+def test_to_one_relation_has_no_generated_aggregate() -> None:
+    sc = Strawchemy("sqlite")
+
+    @sc.filter(_Ticket, include="all")
+    class TicketFilter: ...
+
+    @sc.order(_Ticket, include="all")
+    class TicketOrderBy: ...
+
+    for dto in (TicketFilter, TicketOrderBy):
+        fields = _aggregate_fields(dto)
+        assert "project" in fields
+        assert "project_aggregate" not in fields
+
+
+def test_aggregate_annotation_on_to_one_relation_raises() -> None:
+    sc = Strawchemy("sqlite")
+
+    with pytest.raises(StrawchemyFieldError, match="to-one"):
+
+        @sc.filter(_Ticket, include=["name", "project"])
+        class TicketFilter:
+            project_aggregate: _ProjectAggregateFilterMismatch  # ty: ignore[invalid-type-form]
+
+
 def test_declared_aggregate_filter_model_mismatch_raises() -> None:
     """An aggregate filter built for another model cannot be attached to this relation."""
     sc = Strawchemy("sqlite")
