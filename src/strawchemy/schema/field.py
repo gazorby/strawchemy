@@ -26,7 +26,7 @@ from strawchemy.dto.strawberry import (
     StrawchemyObject,
     decompose_order_by,
 )
-from strawchemy.dto.types import DTOConfig, FieldSpec, Purpose
+from strawchemy.dto.types import DTOAuto, DTOConfig, FieldSpec, Purpose
 from strawchemy.exceptions import EmptyDTOError, StrawchemyFieldError
 from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.utils.annotation import is_type_hint_optional
@@ -323,6 +323,12 @@ class StrawchemyField(StrawberryField):
             isclass(type_) and issubclass(type_, MappedStrawberryGraphQLDTO)
         )
 
+    @classmethod
+    def _input_dto_config(cls, inner_type: builtins.type[MappedStrawberryGraphQLDTO[Any]]) -> DTOConfig:
+        # Body annotations are output types: keep the fields they force-include, but let the input factory type them.
+        config = inner_type.__dto_config__
+        return config.copy_with(annotation_overrides=dict.fromkeys(config.annotation_overrides, DTOAuto))
+
     @property
     def pagination(self) -> DefaultOffsetPagination | None:
         if self._pagination is True or (
@@ -377,7 +383,7 @@ class StrawchemyField(StrawberryField):
                 return self._order_by_factory.make_input(
                     inner_type.__dto_model__,
                     mode="order_by",
-                    dto_config=inner_type.__dto_config__.copy_with(
+                    dto_config=self._input_dto_config(inner_type).copy_with(
                         include=inner_type.__dto_config__.included_fields & order_by
                     ),
                     no_cache=True,
@@ -405,7 +411,7 @@ class StrawchemyField(StrawberryField):
             return self._filter_factory.make_input(
                 inner_type.__dto_model__,
                 mode="filter",
-                dto_config=inner_type.__dto_config__,
+                dto_config=self._input_dto_config(inner_type),
                 no_cache=True,
             )
         if (
