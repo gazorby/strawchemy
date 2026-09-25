@@ -1,12 +1,23 @@
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from tests.integration.fixtures import QueryTracker
+from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 pytestmark = [pytest.mark.integration]
+
+
+def _fruit_ids_of(raw_fruits: RawRecordData, color_id: int) -> list[dict[str, Any]]:
+    return [
+        {"id": fruit["id"]}
+        for fruit in sorted(raw_fruits, key=lambda fruit: fruit["id"])
+        if fruit["color_id"] == color_id
+    ]
 
 
 async def test_pagination(any_query: AnyQueryExecutor) -> None:
@@ -137,6 +148,22 @@ async def test_paginated_relationship_and_aggregate_selection(any_query: AnyQuer
     assert plain.data
     assert paginated.data
     assert paginated.data["colorsPaginated"] == plain.data["colors"]
+
+
+async def test_ordered_relationship_and_aggregate_selection(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+) -> None:
+    """Test that a relation with its own ordering can be selected next to an aggregate of the same relation."""
+    result = await maybe_async(
+        any_query("{ colors { id fruits(orderBy: { id: DESC }) { id } fruitsAggregate { count } } }")
+    )
+    assert not result.errors
+    assert result.data
+    assert query_tracker.query_count == 1
+    for color in result.data["colors"]:
+        fruits = _fruit_ids_of(raw_fruits, color["id"])
+        assert color["fruits"] == fruits[::-1]
+        assert color["fruitsAggregate"] == {"count": len(fruits)}
 
 
 async def test_pagination_ordered_by_aggregation(any_query: AnyQueryExecutor) -> None:

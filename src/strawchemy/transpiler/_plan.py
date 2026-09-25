@@ -116,10 +116,8 @@ class QueryPlan:
 
     def emit(self) -> Select[Any]:
         """Builds the SELECT of this plan."""
-        statement = select(self.root)
-        if self.collection_entities:
-            # A selected LATERAL entity is also a FROM candidate, which makes the left side of its join ambiguous.
-            statement = statement.select_from(self.root)
+        # Columns selected from a LATERAL make it a FROM candidate, so the left side of the joins must be explicit.
+        statement = select(self.root).select_from(self.root)
         if self.filter_semijoin is not None:
             statement = statement.join(self.filter_semijoin.alias, onclause=self.filter_semijoin.onclause)
         if self.projection_columns:
