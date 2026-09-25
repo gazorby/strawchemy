@@ -352,5 +352,5 @@ def test_secondary_aggregation_cte_join_is_bound_by_identity(captured_statements
         if isinstance(element, ColumnClause) and element.table is not None
     ]
     assert len(tables) == 2
-    assert any(table is join.left for table in tables)
+    assert any(table.c is join.left.c for table in tables)
     assert any(table.c is join.right.c for table in tables)
