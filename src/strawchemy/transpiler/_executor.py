@@ -169,6 +169,12 @@ class QueryExecutor(Generic[DeclarativeT]):
         collections: dict[QueryNodeType, dict[tuple[Any, ...] | None, dict[int, Any]]] = {
             node: {} for node in self.plan.collection_entities
         }
+        # Rows of a cached compiled statement are keyed by the entities of the query that first compiled it, so
+        # collection entities, which are fresh aliases per query, are read by their position in ``QueryPlan.emit``.
+        collection_positions = {
+            node: position
+            for position, node in enumerate(self.plan.collection_entities, start=1 + len(self.plan.projection_columns))
+        }
         seen: set[int] = set()
         if self.apply_unique:
             result = result.unique()
@@ -181,8 +187,8 @@ class QueryExecutor(Generic[DeclarativeT]):
             }
             for node, identity in identities.items():
                 related[node, identity] = row_computed
-            for node, entity in self.plan.collection_entities.items():
-                if (related_object := mapping[entity]) is not None:
+            for node, position in collection_positions.items():
+                if (related_object := row[position]) is not None:
                     parent_identity = identities.get(node.parent) or inspect(obj).identity
                     collections[node].setdefault(parent_identity, {})[id(related_object)] = related_object
             if id(obj) in seen:

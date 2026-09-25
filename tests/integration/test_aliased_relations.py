@@ -292,3 +292,29 @@ async def test_aliased_relations_with_same_query_hook_apply_it_once(
         sweet = [fruit for fruit in _fruits_of(raw_fruits, color["id"]) if fruit["sweetness"] > 5]
         assert color["a"] == [{"id": fruit["id"]} for fruit in sweet]
         assert color["b"] == [{"name": fruit["name"]} for fruit in sweet]
+
+
+async def test_aliased_relations_queried_twice(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
+) -> None:
+    """Test that an aliased query runs again once its compiled statement is cached."""
+    query = """
+        {
+            colors {
+                id
+                a: fruits { id farmsAggregate { count } }
+                b: fruits(orderBy: { sweetness: DESC }) { id }
+            }
+        }
+    """
+    farm_counts = Counter(farm["fruit_id"] for farm in raw_farms)
+    for _ in range(2):
+        data = await _data(any_query, query)
+        for color in data["colors"]:
+            assert color["a"] == [
+                {"id": fruit["id"], "farmsAggregate": {"count": farm_counts[fruit["id"]]}}
+                for fruit in _fruits_of(raw_fruits, color["id"])
+            ]
+            assert color["b"] == [
+                {"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"], by="sweetness", descending=True)
+            ]
