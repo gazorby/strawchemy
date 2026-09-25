@@ -405,7 +405,8 @@ class FilterPlan:
     ) -> Self:
         """Builds the WHERE predicates and the relation joins they need."""
         if query_graph.exists_filter is not None:
-            return cls._exists(query_graph.exists_filter, context, allow_null)
+            derived_table = query_graph.filter_scope == "dml" and context.db_features.dml_subquery_needs_derived_table
+            return cls._exists(query_graph.exists_filter, context, allow_null, derived_table=derived_table)
         if not query_graph.query_filter:
             return cls()
 
@@ -421,7 +422,9 @@ class FilterPlan:
         return cls(where=tuple(where.expressions), joins=tuple(where.joins))
 
     @classmethod
-    def _exists(cls, dto_filter: BooleanFilterDTO, context: PlanContext[Any], allow_null: bool) -> Self:
+    def _exists(
+        cls, dto_filter: BooleanFilterDTO, context: PlanContext[Any], allow_null: bool, derived_table: bool
+    ) -> Self:
         """Tests ``dto_filter`` in an EXISTS subquery on a copy of the root, matched to the root on its primary keys.
 
         A root row passes when one combination of its related rows passes, as with a join, but is not repeated.
@@ -431,20 +434,26 @@ class FilterPlan:
         inner_aliases = context.aliases.detached(inner_alias)
         inner_context = replace(context, aliases=inner_aliases, hook_applier=HookApplier(inner_aliases), statement=None)
         phase = FilterPhase.plan(
-            QueryGraph(inner_aliases, dto_filter=dto_filter, join_to_many_filter=True), inner_context, allow_null
+            QueryGraph(inner_aliases, dto_filter=dto_filter, filter_scope="subquery"), inner_context, allow_null
         )
-        correlation = [
-            getattr(inner_alias, attribute.key) == getattr(context.aliases.root_alias, attribute.key)
-            for attribute in SQLAlchemyInspector.pk_attributes(class_mapper(model))
-        ]
         plan = QueryPlan(
             root=inner_alias,
             filter_semijoin=None,
-            where=(*phase.filter_plan.where, *correlation),
+            where=phase.filter_plan.where,
             joins=(*phase.filter_plan.joins, *phase.subquery_tree_joins),
         )
-        subquery = plan.apply_clauses(select(literal_column("1")).select_from(inner_alias))
-        return cls(where=(subquery.exists().correlate(context.aliases.root_alias),))
+        pk_keys = [attribute.key for attribute in SQLAlchemyInspector.pk_attributes(class_mapper(model))]
+        matched_pks: Sequence[SQLColumnExpression[Any]] = [getattr(inner_alias, key) for key in pk_keys]
+        if derived_table:
+            matched = plan.apply_clauses(select(*matched_pks).select_from(inner_alias)).subquery()
+            matched_pks, subquery = list(matched.c), select(literal_column("1")).select_from(matched)
+        else:
+            subquery = plan.apply_clauses(select(literal_column("1")).select_from(inner_alias))
+        correlation = [
+            matched_pk == getattr(context.aliases.root_alias, key)
+            for matched_pk, key in zip(matched_pks, pk_keys, strict=True)
+        ]
+        return cls(where=(subquery.where(*correlation).exists().correlate(context.aliases.root_alias),))
 
     @staticmethod
     def _to_expressions(

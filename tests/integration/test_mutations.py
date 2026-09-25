@@ -891,6 +891,90 @@ async def test_update_by_filter_only_return_affected_objects(
 
 
 @pytest.mark.snapshot
+@pytest.mark.parametrize(
+    ("dto_filter", "updated_names"),
+    [
+        pytest.param('{ color: { name: { eq: "Red" } } }', ["Apple", "Cherry"], id="relation"),
+        pytest.param(
+            '{ _and: [{ sweetness: { gt: 5 } }, { color: { name: { eq: "Red" } } }] }',
+            ["Cherry"],
+            id="column-and-relation",
+        ),
+    ],
+)
+async def test_update_by_filter_on_to_one_relation(
+    dto_filter: str,
+    updated_names: list[str],
+    raw_fruits: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that an update filtered on a to-one relation updates only the rows whose relation matches."""
+    query = f"""
+        mutation {{
+            updateFruitsFilter(data: {{ sweetness: 42 }}, filter: {dto_filter}) {{
+                id
+                sweetness
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    updated_ids = [fruit["id"] for fruit in raw_fruits if fruit["name"] in updated_names]
+    assert sorted(result.data["updateFruitsFilter"], key=lambda fruit: fruit["id"]) == [
+        {"id": to_graphql_representation(fruit_id, "output"), "sweetness": 42} for fruit_id in updated_ids
+    ]
+    query_tracker.assert_statements(1, "update", sql_snapshot)
+
+    result = await maybe_async(any_query("{ fruits(filter: { sweetness: { eq: 42 } }) { id } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(fruit["id"] for fruit in result.data["fruits"]) == [
+        to_graphql_representation(fruit_id, "output") for fruit_id in updated_ids
+    ]
+
+
+@pytest.mark.snapshot
+@pytest.mark.parametrize(
+    ("dto_filter", "color_index"),
+    [
+        pytest.param('{ fruits: { name: { in: ["Apple", "Cherry"] } } }', 0, id="relation"),
+        pytest.param("{ fruitsAggregate: { count: { arguments: [id], predicate: { gt: 2 } } } }", 1, id="aggregation"),
+    ],
+)
+async def test_update_by_filter_on_to_many_relation(
+    dto_filter: str,
+    color_index: int,
+    raw_colors: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that an update filtered on a to-many relation updates each matching row once, and only those."""
+    query = f"""
+        mutation {{
+            updateColorsFilter(data: {{ name: "updated color" }}, filter: {dto_filter}) {{
+                id
+                name
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    color_id = to_graphql_representation(raw_colors[color_index]["id"], "output")
+    assert result.data["updateColorsFilter"] == [{"id": color_id, "name": "updated color"}]
+    query_tracker.assert_statements(1, "update", sql_snapshot)
+
+    result = await maybe_async(any_query('{ colors(filter: { name: { eq: "updated color" } }) { id } }'))
+    assert not result.errors
+    assert result.data
+    assert result.data["colors"] == [{"id": color_id}]
+
+
+@pytest.mark.snapshot
 async def test_update_with_to_one_set(
     raw_fruits: RawRecordData,
     raw_colors: RawRecordData,
@@ -1753,6 +1837,56 @@ async def test_delete_filter(
         query_tracker.assert_statements(1, "select", sql_snapshot)
     else:
         query_tracker.assert_statements(2, "select", sql_snapshot)
+
+
+@pytest.mark.snapshot
+@pytest.mark.parametrize(
+    ("dto_filter", "deleted_names"),
+    [
+        pytest.param('{ group: { name: { eq: "Group 1" } } }', ["Alice"], id="to-one"),
+        pytest.param('{ departments: { name: { eq: "IT" } } }', ["Alice", "Charlie"], id="to-many"),
+        pytest.param(
+            '{ _or: [{ name: { eq: "Bob" } }, { group: { name: { eq: "Group 1" } } }] }',
+            ["Alice", "Bob"],
+            id="or-column-relation",
+        ),
+        pytest.param('{ _not: { group: { name: { eq: "Group 1" } } } }', ["Bob", "Charlie", "Tango"], id="not-to-one"),
+        pytest.param(
+            '{ departments: { users: { name: { eq: "Alice" } } } }', ["Alice", "Charlie"], id="nested-to-many"
+        ),
+    ],
+)
+async def test_delete_filter_on_relation(
+    dto_filter: str,
+    deleted_names: list[str],
+    raw_users: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that a delete filtered on a relation deletes and returns only the rows whose relation matches."""
+    query = f"""
+        mutation {{
+            deleteUsersFilter(filter: {dto_filter}) {{
+                id
+                name
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert sorted(result.data["deleteUsersFilter"], key=lambda user: user["id"]) == [
+        {"id": user["id"], "name": user["name"]} for user in raw_users if user["name"] in deleted_names
+    ]
+    query_tracker.assert_statements(1, "delete", sql_snapshot)
+
+    result = await maybe_async(any_query("{ users { name } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(user["name"] for user in result.data["users"]) == sorted(
+        user["name"] for user in raw_users if user["name"] not in deleted_names
+    )
 
 
 @pytest.mark.snapshot

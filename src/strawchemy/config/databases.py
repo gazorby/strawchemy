@@ -21,6 +21,8 @@ class DatabaseFeatures:
         supports_distinct_on: Whether the database supports DISTINCT ON.
         supports_json: Whether the database supports JSON operations.
         supports_null_ordering: Whether the database supports NULLS FIRST/LAST ordering.
+        dml_subquery_needs_derived_table: Whether an UPDATE or DELETE subquery may read its target table only
+            through a derived table.
         aggregation_functions: A set of supported aggregation function names.
     """
 
@@ -29,6 +31,7 @@ class DatabaseFeatures:
     supports_distinct_on: bool = False
     supports_json: bool = True
     supports_null_ordering: bool = False
+    dml_subquery_needs_derived_table: bool = False
     aggregation_functions: set[AggregationFunction] = field(
         default_factory=lambda: {
             "min",
@@ -81,6 +84,7 @@ class MySQLFeatures(DatabaseFeatures):
     """Database features specific to MySQL."""
 
     dialect: SupportedDialect = "mysql"
+    dml_subquery_needs_derived_table: bool = True
 
 
 @dataclass(frozen=True)

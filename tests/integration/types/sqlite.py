@@ -302,6 +302,10 @@ class ColorUpdateInput: ...
 class ColorPartial: ...
 
 
+@strawchemy.filter_update_input(Fruit, include=["name", "sweetness"])
+class FruitPartial: ...
+
+
 @strawchemy.filter(Color, include="all")
 class ColorFilter: ...
 
@@ -801,6 +805,9 @@ class AsyncMutation:
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemyAsyncRepository
     )
+    update_fruits_filter: list[FruitType] = strawchemy.update(
+        FruitPartial, FruitFilter, repository_type=StrawchemyAsyncRepository
+    )
     # Fruit - upsert
     upsert_fruit: FruitType = strawchemy.upsert(
         FruitCreateInput,
@@ -925,6 +932,9 @@ class SyncMutation:
     update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemySyncRepository)
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemySyncRepository
+    )
+    update_fruits_filter: list[FruitType] = strawchemy.update(
+        FruitPartial, FruitFilter, repository_type=StrawchemySyncRepository
     )
     # Fruit - upsert
     upsert_fruit: FruitType = strawchemy.upsert(
