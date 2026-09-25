@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import dataclasses
+from collections import Counter
 from dataclasses import dataclass
+from functools import cached_property
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, cast
 
 from strawberry.types import get_object_definition
 from strawberry.utils.typing import type_has_annotation
 
-from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
+from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY, RESPONSE_VALUES_ATTRIBUTE
 from strawchemy.dto.strawberry import QueryNode
 from strawchemy.dto.types import DTOMissing
 from strawchemy.exceptions import GraphError
@@ -57,28 +59,38 @@ class StrawberryQueryNode(QueryNode, Generic[T]):
             kwargs[child.value.name] = self.computed_value(child, result)
         return node.metadata.data.strawberry_type(**kwargs)
 
+    def _child_value(self, child: StrawberryQueryNode[Any], node_result: NodeResult[Any]) -> object:
+        if child.value.is_computed or child.metadata.data.is_transform:
+            return self.computed_value(child, node_result)
+        if not child.value.is_relation:
+            return node_result.value(child)
+        value = node_result.value(child)
+        if isinstance(value, (list, tuple)):
+            return [child.node_result_to_strawberry_type(node_result.copy_with(child, element)) for element in value]
+        if value is not None:
+            return child.node_result_to_strawberry_type(node_result.copy_with(child, value))
+        return None
+
+    @cached_property
+    def _shared_field_names(self) -> frozenset[str]:
+        names = Counter(child.value.name for child in self.children if isinstance(child, StrawberryQueryNode))
+        return frozenset(name for name, count in names.items() if count > 1)
+
     def node_result_to_strawberry_type(self, node_result: NodeResult[Any]) -> T:
         kwargs = self._default_type_kwargs(self)
-        for child in self.children:
-            if not isinstance(child, StrawberryQueryNode):
-                continue
-            if child.value.is_computed or child.metadata.data.is_transform:
-                kwargs[child.value.name] = self.computed_value(child, node_result)
-            elif child.value.is_relation:
-                value = node_result.value(child)
-                if isinstance(value, (list, tuple)):
-                    kwargs[child.value.name] = [
-                        child.node_result_to_strawberry_type(node_result.copy_with(child, element)) for element in value
-                    ]
-                elif value is not None:
-                    kwargs[child.value.name] = child.node_result_to_strawberry_type(node_result.copy_with(child, value))
-                else:
-                    kwargs[child.value.name] = None
-            else:
-                kwargs[child.value.name] = node_result.value(child)
+        shared_field_names = self._shared_field_names
+        response_values: dict[str, Any] = {}
+        for child in [child for child in self.children if isinstance(child, StrawberryQueryNode)]:
+            kwargs[child.value.name] = value = self._child_value(child, node_result)
+            if child.value.name in shared_field_names:
+                response_values.update(dict.fromkeys(child.metadata.data.response_keys, value))
         if attribute := self._model_instance_attribute():
             kwargs[attribute] = node_result.model
-        return self.strawberry_type(**kwargs)
+        instance = self.strawberry_type(**kwargs)
+        # Children sharing a field name differ by arguments; the field resolver picks the value by response key.
+        if response_values:
+            setattr(instance, RESPONSE_VALUES_ATTRIBUTE, response_values)
+        return instance
 
     def query_result_to_strawberry_type(self, results: QueryResult[Any]) -> Sequence[T]:
         """Recursively constructs a sequence of Strawberry type instances from a query result.

@@ -29,6 +29,8 @@ __all__ = ("AsyncQueryExecutor", "NodeResult", "QueryExecutor", "QueryResult", "
 
 RelatedKey: TypeAlias = "tuple[QueryNodeType, tuple[Any, ...] | None]"
 """Identifies one element of a related collection: its relation node and its identity key."""
+RelatedCollections: TypeAlias = "Mapping[QueryNodeType, Mapping[tuple[Any, ...] | None, list[Any]]]"
+"""Relation node loaded apart from its model attribute -> its related objects, by identity key of their parent."""
 
 
 @dataclass
@@ -39,11 +41,15 @@ class NodeResult(Generic[ModelT]):
     computed_values: dict[QueryNodeType, Any]
     related_computed_values: Mapping[RelatedKey, dict[QueryNodeType, Any]] = dataclasses.field(default_factory=dict)
     """Computed values of every related object of the query, by relation node and primary key."""
+    related_collections: RelatedCollections = dataclasses.field(default_factory=dict)
+    """Related objects of every relation loaded apart from its model attribute, by relation node and parent key."""
 
     def value(self, key: QueryNodeType) -> Any:
-        """Returns the value of ``key``: a computed value, or else the model attribute."""
+        """Returns the value of ``key``: a computed value, a related collection, or else the model attribute."""
         if key.value.is_computed or key.metadata.data.is_transform:
             return self.computed_values[key]
+        if self.related_collections and (collections := self.related_collections.get(key)) is not None:
+            return collections.get(inspect(self.model, raiseerr=True).identity, [])
         return getattr(self.model, key.value.model_field_name)
 
     def copy_with(self, node: QueryNodeType, model: Any) -> Self:
@@ -65,6 +71,8 @@ class QueryResult(Generic[ModelT]):
     """Values computed over the whole query, such as root aggregations."""
     related_computed_values: Mapping[RelatedKey, dict[QueryNodeType, Any]] = dataclasses.field(default_factory=dict)
     """Computed values of every related object of the query, by relation node and primary key."""
+    related_collections: RelatedCollections = dataclasses.field(default_factory=dict)
+    """Related objects of every relation loaded apart from its model attribute, by relation node and parent key."""
 
     def __post_init__(self) -> None:
         if not self.node_computed_values:
@@ -72,7 +80,7 @@ class QueryResult(Generic[ModelT]):
 
     def __iter__(self) -> Generator[NodeResult[ModelT]]:
         for model, computed_values in zip(self.nodes, self.node_computed_values, strict=False):
-            yield NodeResult(model, computed_values, self.related_computed_values)
+            yield NodeResult(model, computed_values, self.related_computed_values, self.related_collections)
 
     def filter_in(self, **kwargs: Sequence[Any]) -> Self:
         """Returns the results whose attribute named by each keyword is in the given values."""
@@ -97,7 +105,9 @@ class QueryResult(Generic[ModelT]):
         if len(self.nodes) != 1 or len(self.node_computed_values) != 1:
             msg = f"Expected one item, got {len(self.nodes)}"
             raise QueryResultError(msg)
-        return NodeResult(self.nodes[0], self.node_computed_values[0], self.related_computed_values)
+        return NodeResult(
+            self.nodes[0], self.node_computed_values[0], self.related_computed_values, self.related_collections
+        )
 
     def one_or_none(self) -> NodeResult[ModelT] | None:
         """Returns the only result, or ``None`` if there is not exactly one."""
@@ -156,6 +166,15 @@ class QueryExecutor(Generic[DeclarativeT]):
         nodes: list[DeclarativeT] = []
         computed: list[dict[QueryNodeType, Any]] = []
         related: dict[RelatedKey, dict[QueryNodeType, Any]] = {}
+        collections: dict[QueryNodeType, dict[tuple[Any, ...] | None, dict[int, Any]]] = {
+            node: {} for node in self.plan.collection_entities
+        }
+        # Rows of a cached compiled statement are keyed by the entities of the query that first compiled it, so
+        # collection entities, which are fresh aliases per query, are read by their position in ``QueryPlan.emit``.
+        collection_positions = {
+            node: position
+            for position, node in enumerate(self.plan.collection_entities, start=1 + len(self.plan.projection_columns))
+        }
         seen: set[int] = set()
         if self.apply_unique:
             result = result.unique()
@@ -163,8 +182,15 @@ class QueryExecutor(Generic[DeclarativeT]):
             obj = row[0]
             mapping = row._mapping  # noqa: SLF001  # Row exposes computed values only via _mapping keyed by Label.
             row_computed = {node: mapping[label] for node, label in self.column_map.items() if label in mapping}
-            for node, columns in self.identity_columns.items():
-                related[node, tuple(mapping[column] for column in columns)] = row_computed
+            identities = {
+                node: tuple(mapping[column] for column in columns) for node, columns in self.identity_columns.items()
+            }
+            for node, identity in identities.items():
+                related[node, identity] = row_computed
+            for node, position in collection_positions.items():
+                if (related_object := row[position]) is not None:
+                    parent_identity = identities.get(node.parent) or inspect(obj).identity
+                    collections[node].setdefault(parent_identity, {})[id(related_object)] = related_object
             if id(obj) in seen:
                 continue
             seen.add(id(obj))
@@ -185,6 +211,10 @@ class QueryExecutor(Generic[DeclarativeT]):
             node_computed_values=computed,
             query_computed_values=defaultdict(lambda: None) | query_computed_values,
             related_computed_values=related,
+            related_collections={
+                node: {identity: list(objects.values()) for identity, objects in by_parent.items()}
+                for node, by_parent in collections.items()
+            },
         )
 
     def statement(self) -> Select[tuple[DeclarativeT]] | StatementLambdaElement:

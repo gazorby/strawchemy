@@ -216,6 +216,32 @@ async def test_nested_distinct_on_and_order_by(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+async def test_nested_distinct_on_on_one_alias(any_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
+    """Test that distinct on applied to one alias of a relation leaves another alias of it unaffected."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colorsNestedDistinct {
+                    name
+                    a: fruits(distinctOn: [sweetness], orderBy: [{ sweetness: ASC }, { name: DESC }]) { name }
+                    b: fruits(orderBy: [{ name: ASC }]) { name }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    colors = {color["name"]: color for color in result.data["colorsNestedDistinct"]}
+    assert colors["Red"]["a"] == [{"name": "Cherry"}, {"name": "Plum"}]
+    assert colors["Red"]["b"] == [{"name": "Apple"}, {"name": "Cherry"}, {"name": "Plum"}]
+    assert colors["Yellow"]["a"] == [{"name": "Lemon"}]
+    assert colors["Yellow"]["b"] == [{"name": "Banana"}, {"name": "Lemon"}]
+    assert query_tracker.query_count == 1
+
+
 @pytest.mark.parametrize(
     ("pagination", "expected_red", "expected_yellow"),
     [

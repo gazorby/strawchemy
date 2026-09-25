@@ -179,7 +179,7 @@ class StrawchemyRepository(Generic[T]):
         if self.query_hook is not None:
             self._add_query_hooks(self.query_hook, node)
         self._build(inner_root_type, resolver_selection.selections, node)
-        self._tree = node.merge_same_children(match_on="value_equality")
+        self._tree = node
 
     def _relation_filter(
         self, selection: SelectedField, strawberry_field: StrawberryField, arguments: dict[str, Any]
@@ -208,9 +208,23 @@ class StrawchemyRepository(Generic[T]):
         return () if hooks is None else hooks
 
     def _add_query_hooks(self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: QueryNodeType) -> None:
+        node_hooks = self._query_hooks[node]
         for hook in [query_hooks] if isinstance(query_hooks, QueryHook) else query_hooks:
+            if any(existing is hook for existing in node_hooks):
+                continue
             hook.info_var.set(self.info)
-            self._query_hooks[node].append(hook)
+            node_hooks.append(hook)
+
+    @staticmethod
+    def _upsert_child(node: QueryNodeType, child: QueryNodeType) -> QueryNodeType:
+        return next(
+            (
+                existing
+                for existing in node.children
+                if existing.value == child.value and existing.metadata.data.arguments == child.metadata.data.arguments
+            ),
+            None,
+        ) or node.insert_node(child)
 
     def _build(
         self,
@@ -264,7 +278,8 @@ class StrawchemyRepository(Generic[T]):
                     )
                 ),
             )
-            child = node.insert_node(child_node)
+            child = self._upsert_child(node, child_node)
+            child.metadata.data.response_keys += (selection.alias or selection.name,)
             # A relation field's hook targets the related model; a column or resolver field's hook the owning one.
             is_relation_field = field_definition.is_relation and strawberry_field.base_resolver is None
             self._add_query_hooks(hooks, child if is_relation_field else node)

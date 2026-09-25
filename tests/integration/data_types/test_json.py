@@ -195,3 +195,28 @@ async def test_json_extract_inner_path(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_json_extract_aliased_paths(
+    any_query: AnyQueryExecutor, raw_json: RawRecordData, query_tracker: QueryTracker
+) -> None:
+    """Test that aliases of a JSON column extracting different paths each get their own path."""
+    query = """
+        {
+            json {
+                id
+                key1: dictCol(path: "$.key1")
+                nested: dictCol(path: "$.nested")
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    for json in result.data["json"]:
+        expected_dict_col = next(f for f in raw_json if f["id"] == json["id"])["dict_col"]
+        assert json["key1"] == expected_dict_col.get("key1", {})
+        assert json["nested"] == expected_dict_col.get("nested", {})
+
+    assert query_tracker.query_count == 1
