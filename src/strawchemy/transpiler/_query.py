@@ -4,7 +4,7 @@ import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
 from functools import cached_property
-from typing import TYPE_CHECKING, Any, Generic, cast
+from typing import TYPE_CHECKING, Any, Generic, Literal, TypeAlias, cast
 
 from sqlalchemy import (
     CTE,
@@ -58,6 +58,8 @@ if TYPE_CHECKING:
     from strawchemy.typing import QueryNodeType
 
 __all__ = ("AggregationJoin", "AggregationSpec", "Conjunction", "DistinctOn", "Join", "OrderBy", "QueryGraph", "Where")
+
+FilterScope: TypeAlias = Literal["query", "subquery", "dml"]
 
 
 @dataclass
@@ -137,10 +139,11 @@ class AggregationSpec:
         return cls(node=node, alias=alias)
 
 
-def _has_to_many_relation(tree: QueryNodeType) -> bool:
-    return any(
-        node.value.uselist and not node.value.is_computed for node in tree.iter_breadth_first() if not node.is_root
-    )
+def _filters_in_exists(tree: QueryNodeType, scope: FilterScope) -> bool:
+    fields = [node.value for node in tree.iter_breadth_first() if not node.is_root]
+    if scope == "dml":
+        return any(field.is_relation for field in fields)
+    return scope == "query" and any(field.uselist and not field.is_computed for field in fields)
 
 
 @dataclass
@@ -152,12 +155,12 @@ class QueryGraph(Generic[DeclarativeT]):
     order_by: Sequence[OrderByDTO] = dataclasses.field(default_factory=list)
     distinct_on: list[EnumDTO] = dataclasses.field(default_factory=list)
     dto_filter: BooleanFilterDTO | None = None
-    join_to_many_filter: bool = False
-    """Joins a filter on a to-many relation into the query rather than moving it to ``exists_filter``."""
+    filter_scope: FilterScope = "query"
+    """Statement the filter restricts; ``subquery`` is the EXISTS copy of the root, which joins every relation."""
 
     query_filter: Filter | None = dataclasses.field(init=False, default=None)
     exists_filter: BooleanFilterDTO | None = dataclasses.field(init=False, default=None)
-    """Filter on a to-many relation, tested in an EXISTS subquery so that it does not repeat the root rows."""
+    """Filter on relations, tested in an EXISTS subquery so that it neither joins nor repeats the root rows."""
     where_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
     """Relations the filter uses."""
     subquery_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
@@ -171,7 +174,7 @@ class QueryGraph(Generic[DeclarativeT]):
         self.root_join_tree = self.resolved_selection_tree()
         if self.dto_filter is not None:
             where_join_tree, query_filter = self.dto_filter.filters_tree()
-            if not self.join_to_many_filter and _has_to_many_relation(where_join_tree):
+            if _filters_in_exists(where_join_tree, self.filter_scope):
                 self.exists_filter = self.dto_filter
             else:
                 self.where_join_tree, self.query_filter = where_join_tree, query_filter

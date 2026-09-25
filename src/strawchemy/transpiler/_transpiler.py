@@ -81,8 +81,8 @@ class Transpiler(Generic[DeclarativeT]):
         )
 
     def filter_expressions(self, dto_filter: BooleanFilterDTO) -> list[ColumnElement[bool]]:
-        """Returns the WHERE predicates of ``dto_filter`` on the root model."""
-        query_graph = QueryGraph(self.context.aliases, dto_filter=dto_filter)
+        """Returns the WHERE predicates of ``dto_filter`` on the root model, joining no relation."""
+        query_graph = QueryGraph(self.context.aliases, dto_filter=dto_filter, filter_scope="dml")
         plan = plan_query(query_graph, self.context)
         return list(plan.where)
 
