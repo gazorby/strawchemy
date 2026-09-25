@@ -107,10 +107,17 @@ class QueryNodeMetadata:
     order_by: OrderByEnum | None = None
     strawberry_type: type[Any] | None = None
     json_path: str | None = None
+    response_keys: tuple[str, ...] = ()
+    """Names under which the node's value appears in the GraphQL response: the field name or its aliases."""
 
     @property
     def is_transform(self) -> bool:
         return bool(self.json_path)
+
+    @property
+    def arguments(self) -> tuple[RelationFilterDTO, str | None]:
+        """Field arguments that change the node's value, so that nodes differing by them are not merged."""
+        return self.relation_filter, self.json_path
 
 
 @dataclass(slots=True)
@@ -315,7 +322,7 @@ class QueryNode(Node[GraphQLFieldDefinition, QueryNodeMetadata]):
     @classmethod
     @override
     def _node_hash_identity(cls, node: Node[GraphQLFieldDefinition, QueryNodeMetadata]) -> Hashable:
-        return super()._node_hash_identity(node), node.metadata.data.relation_filter
+        return tuple((path_node.value, path_node.metadata.data.arguments) for path_node in node.path_from_root())
 
     @override
     def _update_new_child(self, child: NodeT) -> NodeT:

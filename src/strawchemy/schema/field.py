@@ -16,7 +16,15 @@ from strawberry.types.base import StrawberryOptional
 from strawberry.types.field import UNRESOLVED, StrawberryField
 from typing_extensions import Self, TypeIs, override
 
-from strawchemy.constants import DISTINCT_ON_KEY, FILTER_KEY, LIMIT_KEY, NODES_KEY, OFFSET_KEY, ORDER_BY_KEY
+from strawchemy.constants import (
+    DISTINCT_ON_KEY,
+    FILTER_KEY,
+    LIMIT_KEY,
+    NODES_KEY,
+    OFFSET_KEY,
+    ORDER_BY_KEY,
+    RESPONSE_VALUES_ATTRIBUTE,
+)
 from strawchemy.dto.base import MappedDTO
 from strawchemy.dto.strawberry import (
     BooleanFilterDTO,
@@ -548,11 +556,14 @@ class StrawchemyField(StrawberryField):
     @property
     @override
     def is_basic_field(self) -> bool:
-        return not self.is_root_field
+        # A field taking arguments may be selected under several aliases, each resolved from its own value.
+        return not self.is_root_field and not self.arguments
 
     @cached_property
     @override
     def is_async(self) -> bool:
+        if not self.is_root_field:
+            return super().is_async
         return self._is_repo_async(self._repository_type)
 
     @override
@@ -668,4 +679,8 @@ class StrawchemyField(StrawberryField):
         if self.is_root_field and self.base_resolver is None:
             assert info
             return self.resolver(info, *args, **kwargs)
+        if info is not None and self.base_resolver is None:
+            response_values = getattr(source, RESPONSE_VALUES_ATTRIBUTE, {})
+            if info.path.key in response_values:
+                return response_values[info.path.key]
         return super().get_result(source, info, args, kwargs)

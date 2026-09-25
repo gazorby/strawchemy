@@ -483,34 +483,6 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
             raise GraphError(msg)
         return None
 
-    def merge_same_children(
-        self,
-        match_on: MatchOn | Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool],
-    ) -> Self:
-        """Create a new node by merging children that match according to the given condition.
-
-        This method creates a copy of the current node and merges its children that match
-        according to the match_on parameter. For each child, if there are existing children
-        that match it, they are merged together using the merge_trees function.
-
-        Args:
-            match_on: The condition used to determine if two nodes match. Can be either
-                a predefined matching strategy ('value_identity', 'value_equality',
-                'node_identity') or a custom function that takes two nodes and returns
-                a boolean.
-
-        Returns:
-            A new node with merged children.
-        """
-        node = dataclasses.replace(self, children=[])
-        for child in self.children:
-            child_copy = child.copy()
-            existing_children = [child for child in node.children if child.match_nodes(child, child_copy, match_on)]
-            for existing_child in existing_children:
-                child_copy = merge_trees(existing_child, child_copy, match_on)
-            node.insert_node(child_copy)
-        return node
-
     def __gt__(self, other: Node[NodeValueT, NodeMetadataT]) -> bool:
         return self.insert_order > other.insert_order
 

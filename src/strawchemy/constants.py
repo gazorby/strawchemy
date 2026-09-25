@@ -13,6 +13,7 @@ __all__ = (
     "NODES_KEY",
     "OFFSET_KEY",
     "ORDER_BY_KEY",
+    "RESPONSE_VALUES_ATTRIBUTE",
     "UPSERT_CONFLICT_FIELDS",
     "UPSERT_UPDATE_FIELDS",
 )
@@ -30,6 +31,7 @@ NODES_KEY: str = "nodes"
 
 DATA_KEY: str = "data"
 JSON_PATH_KEY: str = "path"
+RESPONSE_VALUES_ATTRIBUTE: str = "__strawchemy_response_values__"
 
 UPSERT_UPDATE_FIELDS: str = "update_fields"
 UPSERT_CONFLICT_FIELDS: str = "conflict_fields"
