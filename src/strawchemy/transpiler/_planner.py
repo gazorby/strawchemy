@@ -32,7 +32,7 @@ from strawchemy.exceptions import StrawchemyFieldError, TranspilingError
 from strawchemy.repository.typing import DeclarativeT
 from strawchemy.schema.filters import GraphQLComparison
 from strawchemy.transpiler._aliasing import AliasContext, require_corresponding_column, same_column
-from strawchemy.transpiler._plan import FilterSemiJoin, HookSpec, QueryPlan, add_missing_columns
+from strawchemy.transpiler._plan import FilterSemiJoin, HookSpec, QueryPlan, add_missing_columns, distinct_rows
 from strawchemy.transpiler._query import (
     AggregationJoin,
     AggregationSpec,
@@ -1144,15 +1144,6 @@ def _assemble_inner_statement(
         )
     projected: list[Any] = _dedup_columns([*only_columns, *selected_function_columns])
 
-    rank_label: KeyedColumnElement[Any] | None = None
-    if distinct_on and not use_distinct_on:
-        rank_label = (
-            func.row_number()
-            .over(partition_by=distinct_on.expressions, order_by=list(order_expressions) or None)
-            .label(None)
-        )
-        projected.append(rank_label)
-
     inner_statement = select(inspect(inner_alias)).options(raiseload("*")).with_only_columns(*projected)
     if context.statement is not None:
         inner_statement = UserStatementPlan(context.statement, context.aliases).apply_to_statement(
@@ -1174,27 +1165,14 @@ def _assemble_inner_statement(
         loading_mode="add",
         in_subquery=True,
     )
-    if rank_label is not None:
-        inner_statement = _first_ranked_rows(inner_statement, rank_label, order_expressions)
+    if distinct_on and not use_distinct_on:
+        inner_statement, adapter = distinct_rows(inner_statement, distinct_on.expressions, order_expressions)
+        inner_statement = inner_statement.order_by(*[adapter.traverse(expression) for expression in order_expressions])
     if limit is not None:
         inner_statement = inner_statement.limit(limit)
     if offset is not None:
         inner_statement = inner_statement.offset(offset)
     return inner_statement
-
-
-def _first_ranked_rows(
-    statement: Select[Any], rank: KeyedColumnElement[Any], order_expressions: Sequence[UnaryExpression[Any]]
-) -> Select[Any]:
-    """Keeps the rows of ``statement`` ranked first, ordered by ``order_expressions``."""
-    ranked = add_missing_columns(statement, [expression.element for expression in order_expressions]).subquery()
-    ranked_rank = require_corresponding_column(ranked, rank)
-    adapter = ClauseAdapter(ranked)
-    return (
-        select(*[column for column in ranked.c if column is not ranked_rank])
-        .where(ranked_rank == 1)
-        .order_by(*[adapter.traverse(expression) for expression in order_expressions])
-    )
 
 
 def _plan_subquery(
