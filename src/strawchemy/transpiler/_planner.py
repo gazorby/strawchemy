@@ -34,7 +34,6 @@ from strawchemy.dto.strawberry import (
     CustomFilter,
     Filter,
     OrderByEnum,
-    QueryNode,
     decompose_order_by,
 )
 from strawchemy.exceptions import StrawchemyFieldError, TranspilingError
@@ -413,26 +412,39 @@ class FilterPlan:
         allow_null: bool = False,
     ) -> Self:
         """Builds the WHERE predicates and the relation joins they need."""
+        exists: tuple[ColumnElement[bool], ...] = ()
         if query_graph.exists_filter is not None:
             derived_table = query_graph.filter_scope == "dml" and context.db_features.dml_subquery_needs_derived_table
-            return cls._exists(query_graph.exists_filter, context, allow_null, derived_table=derived_table)
+            exists = cls._exists(
+                query_graph.exists_filter,
+                query_graph.exists_join_path,
+                context,
+                allow_null,
+                derived_table=derived_table,
+            ).where
         if not query_graph.query_filter:
-            return cls()
+            return cls(where=exists)
 
         emitted_agg_joins: set[QueryNodeType] = set()
 
         where = cls._where(
             query_graph.query_filter,
+            query_graph.where_join_path,
             context,
             agg_plan=agg_plan,
             emitted_agg_joins=emitted_agg_joins,
             allow_null=allow_null,
         )
-        return cls(where=tuple(where.expressions), joins=tuple(where.joins))
+        return cls(where=(*where.expressions, *exists), joins=tuple(where.joins))
 
     @classmethod
     def _exists(
-        cls, dto_filter: BooleanFilterDTO, context: PlanContext[Any], allow_null: bool, derived_table: bool
+        cls,
+        dto_filter: BooleanFilterDTO,
+        join_path: Sequence[QueryNodeType] | None,
+        context: PlanContext[Any],
+        allow_null: bool,
+        derived_table: bool,
     ) -> Self:
         """Tests ``dto_filter`` in an EXISTS subquery on a copy of the root, matched to the root on its primary keys.
 
@@ -443,7 +455,9 @@ class FilterPlan:
         inner_aliases = context.aliases.detached(inner_alias)
         inner_context = replace(context, aliases=inner_aliases, hook_applier=HookApplier(inner_aliases), statement=None)
         phase = FilterPhase.plan(
-            QueryGraph(inner_aliases, dto_filter=dto_filter, filter_scope="subquery"), inner_context, allow_null
+            QueryGraph(inner_aliases, dto_filter=dto_filter, filter_scope="subquery", filter_join_path=join_path),
+            inner_context,
+            allow_null,
         )
         plan = QueryPlan(
             root=inner_alias,
@@ -555,12 +569,9 @@ class FilterPlan:
         """Builds the predicates and joins of each filter in ``query``."""
         bool_expressions: list[ColumnElement[bool]] = []
         joins: list[Join] = []
-        common_join_path: list[QueryNodeType] = []
-        node_path: list[QueryNodeType] = []
 
         for value in query:
             if isinstance(value, AggregationFilter):
-                node_path = value.field_node.path_from_root()
                 aggregation_join, aggregation_expressions = FilterPlan._aggregation_filter(
                     value, context, agg_plan, emitted_agg_joins
                 )
@@ -568,10 +579,8 @@ class FilterPlan:
                     joins.append(aggregation_join)
                 bool_expressions.extend(aggregation_expressions)
             elif isinstance(value, GraphQLComparison):
-                node_path = value.field_node.path_from_root()
                 bool_expressions.extend(FilterPlan._to_expressions(context, value, not_null_check=not_null_check))
             elif isinstance(value, CustomFilter):
-                node_path = value.field_node.path_from_root()
                 bool_expressions.append(FilterPlan._custom_filter_expression(value, context))
             else:
                 conjunction = FilterPlan._conjunctions(
@@ -581,16 +590,13 @@ class FilterPlan:
                     emitted_agg_joins=emitted_agg_joins,
                     allow_null=not_null_check,
                 )
-                common_join_path = QueryNode.common_path(common_join_path, conjunction.common_join_path)
                 joins.extend(conjunction.joins)
                 if conjunction.expressions:
                     and_expression = and_(*conjunction.expressions)
                     bool_expressions.append(
                         and_expression.self_group() if conjunction.has_many_predicates() else and_expression
                     )
-            if not isinstance(value, AggregationFilter):
-                common_join_path = QueryNode.common_path(node_path, common_join_path)
-        return Conjunction(bool_expressions, joins, common_join_path)
+        return Conjunction(bool_expressions, joins)
 
     @staticmethod
     def _conjunctions(
@@ -617,7 +623,6 @@ class FilterPlan:
             emitted_agg_joins=emitted_agg_joins,
             not_null_check=allow_null,
         )
-        common_path = QueryNode.common_path(and_conjunction.common_join_path, or_conjunction.common_join_path)
         joins = [*and_conjunction.joins, *or_conjunction.joins]
 
         if query.not_:
@@ -628,9 +633,6 @@ class FilterPlan:
                 emitted_agg_joins=emitted_agg_joins,
                 not_null_check=True,
             )
-            common_path = [
-                node for node in common_path if all(not_node != node for not_node in not_conjunction.common_join_path)
-            ]
             joins.extend(not_conjunction.joins)
             and_conjunction.expressions.append(not_(and_(*not_conjunction.expressions)))
         if and_conjunction.expressions:
@@ -643,11 +645,12 @@ class FilterPlan:
             if and_conjunction.expressions and or_conjunction.has_many_predicates():
                 or_expression = or_expression.self_group()
             bool_expressions.append(or_expression)
-        return Conjunction(bool_expressions, joins, common_path)
+        return Conjunction(bool_expressions, joins)
 
     @staticmethod
     def _where(
         query_filter: Filter,
+        join_path: Sequence[QueryNodeType],
         context: PlanContext[Any],
         *,
         agg_plan: AggregationPlan,
@@ -666,11 +669,7 @@ class FilterPlan:
             conjunction,
             [
                 *conjunction.joins,
-                *[
-                    context.build_join(node, False)
-                    for node in conjunction.common_join_path
-                    if not node.is_root and node.value.is_relation
-                ],
+                *[context.build_join(node, False) for node in join_path if not node.is_root and node.value.is_relation],
             ],
         )
 

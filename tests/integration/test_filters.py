@@ -604,3 +604,86 @@ async def test_to_many_filter_behind_to_one_keeps_every_selected_related_row(
     ) == [("Apple", "Red", ["Apple", "Cherry"]), ("Cherry", "Red", ["Apple", "Cherry"])]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_to_many_filter_and_column_filter(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a column filter next to a to-many filter restricts the parents outside of the EXISTS subquery."""
+    query = """
+        {
+            colors(filter: { name: { neq: "Red" }, fruits: { sweetness: { lte: 5 } } }) {
+                name
+                fruits { name }
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert _names_by_color(result.data["colors"]) == {
+        "Yellow": ["Banana", "Lemon", "Quince"],
+        "Green": ["Cantaloupe", "Strawberry"],
+    }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_to_many_filter_and_to_one_filter(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a to-one filter next to a to-many filter restricts the parents through a join."""
+    query = """
+        {
+            users(filter: { group: { name: { eq: "Group 1" } }, departments: { name: { eq: "IT" } } }) {
+                name
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["users"] == [{"name": "Alice"}]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("field", "arguments"),
+    [
+        pytest.param("users", "", id="plain"),
+        pytest.param("usersPaginated", "", id="paginated"),
+        pytest.param("users", ", distinctOn: [name]", id="distinct-on"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param(
+            '{ name: { neq: "Zed" }, departments: { name: { isNull: true } } }', ["Tango"], id="column-and-to-many-null"
+        ),
+        pytest.param(
+            '{ name: { neq: "Zed" }, departments: { _or: [{ name: { isNull: true } }, { name: { eq: "IT" } }] } }',
+            ["Alice", "Charlie", "Tango"],
+            id="column-and-to-many-or-null",
+        ),
+        pytest.param(
+            '{ group: { name: { isNull: true } }, departments: { name: { eq: "IT" } } }',
+            ["Charlie"],
+            id="to-one-null-and-to-many",
+        ),
+    ],
+)
+async def test_split_filter_keeps_relation_outer_joins(
+    field: str, arguments: str, dto_filter: str, names: list[str], any_query: AnyQueryExecutor
+) -> None:
+    """Test that a filter split between the WHERE and an EXISTS subquery outer-joins relations as the whole filter."""
+    result = await maybe_async(any_query(f"{{ {field}(filter: {dto_filter}{arguments}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data
+
+    assert sorted(user["name"] for user in result.data[field]) == names

@@ -61,7 +61,7 @@ from strawchemy.utils.graph import AnyNode, GraphMetadata, MatchOn, Node, NodeMe
 from strawchemy.utils.text import camel_to_snake
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Hashable, Iterator
+    from collections.abc import Callable, Hashable, Iterator, Sequence
 
     from sqlalchemy import ColumnElement
     from strawberry.types.field import StrawberryField
@@ -401,6 +401,29 @@ class Filter:
     def __bool__(self) -> bool:
         return bool(self.and_ or self.or_ or self.not_)
 
+    @staticmethod
+    def _gather_join_path(
+        values: Sequence[Filter | GraphQLComparison | AggregationFilter | CustomFilter],
+    ) -> list[QueryNodeType]:
+        common: list[QueryNodeType] = []
+        node_path: list[QueryNodeType] = []
+        for value in values:
+            if isinstance(value, Filter):
+                common = QueryNode.common_path(common, value.join_path())
+            else:
+                node_path = value.field_node.path_from_root()
+            if not isinstance(value, AggregationFilter):
+                common = QueryNode.common_path(node_path, common)
+        return common
+
+    def join_path(self) -> list[QueryNodeType]:
+        """Returns the longest relation path shared by all predicates, joined once for all of them."""
+        common = QueryNode.common_path(self._gather_join_path(self.and_), self._gather_join_path(self.or_))
+        if self.not_:
+            not_path = self._gather_join_path([self.not_])
+            common = [node for node in common if all(not_node != node for not_node in not_path)]
+        return common
+
     def iter_aggregation_filters(self) -> Iterator[AggregationFilter]:
         """Yields every ``AggregationFilter`` in this filter tree in traversal order.
 
@@ -558,6 +581,26 @@ class BooleanFilterDTO(GraphQLFilterDTO):
     and_: list[Self] = strawberry.field(default_factory=list, name="_and")
     or_: list[Self] = strawberry.field(default_factory=list, name="_or")
     not_: Self | None = strawberry.field(default=strawberry.UNSET, name="_not")
+
+    @classmethod
+    def _from_fields(cls, **fields: object) -> Self:
+        return cls(**fields)
+
+    @classmethod
+    def all_of(cls, filters: list[Self]) -> Self:
+        """Returns a filter matching the rows that every one of ``filters`` matches."""
+        return cls._from_fields(and_=filters)
+
+    def conjuncts(self) -> list[Self]:
+        """Splits the filter into filters whose AND is equivalent to it, flattening nested ``_and``."""
+        parts = [self._from_fields(**{name: getattr(self, name)}) for name in self.dto_set_fields]
+        for and_val in self.and_:
+            parts.extend(and_val.conjuncts())
+        if self.or_:
+            parts.append(self._from_fields(or_=self.or_))
+        if self.not_:
+            parts.append(self._from_fields(not_=self.not_))
+        return parts
 
     def filters_tree(self, _node: QueryNodeType | None = None) -> tuple[QueryNodeType, Filter]:
         node = _node or QueryNode.root_node(self.__dto_model__)

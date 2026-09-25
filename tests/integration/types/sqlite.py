@@ -306,6 +306,10 @@ class ColorPartial: ...
 class FruitPartial: ...
 
 
+@strawchemy.filter_update_input(User, include=["name"])
+class UserPartial: ...
+
+
 @strawchemy.filter(Color, include="all")
 class ColorFilter: ...
 
@@ -531,6 +535,7 @@ class AsyncQuery:
         distinct_on=UserDistinctOn,
     )
     users_paginated: list[UserType] = strawchemy.field(
+        filter_input=UserFilter,
         order_by_input=UserOrderBy,
         pagination=True,
         repository_type=StrawchemyAsyncRepository,
@@ -712,6 +717,7 @@ class SyncQuery:
         distinct_on=UserDistinctOn,
     )
     users_paginated: list[UserType] = strawchemy.field(
+        filter_input=UserFilter,
         order_by_input=UserOrderBy,
         pagination=True,
         repository_type=StrawchemySyncRepository,
@@ -827,6 +833,9 @@ class AsyncMutation:
     # User - Delete
     delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemyAsyncRepository)
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemyAsyncRepository)
+    update_users_filter: list[UserType] = strawchemy.update(
+        UserPartial, UserFilter, repository_type=StrawchemyAsyncRepository
+    )
 
     @strawberry.field
     async def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
@@ -955,6 +964,9 @@ class SyncMutation:
     # User - Delete
     delete_users: list[UserType] = strawchemy.delete(repository_type=StrawchemySyncRepository)
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemySyncRepository)
+    update_users_filter: list[UserType] = strawchemy.update(
+        UserPartial, UserFilter, repository_type=StrawchemySyncRepository
+    )
 
     @strawberry.field
     def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:

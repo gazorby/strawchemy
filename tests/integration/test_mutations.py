@@ -942,6 +942,11 @@ async def test_update_by_filter_on_to_one_relation(
     [
         pytest.param('{ fruits: { name: { in: ["Apple", "Cherry"] } } }', 0, id="relation"),
         pytest.param("{ fruitsAggregate: { count: { arguments: [id], predicate: { gt: 2 } } } }", 1, id="aggregation"),
+        pytest.param(
+            '{ name: { eq: "Orange" }, fruitsAggregate: { count: { arguments: [id], predicate: { gt: 1 } } } }',
+            2,
+            id="column-and-aggregation",
+        ),
     ],
 )
 async def test_update_by_filter_on_to_many_relation(
@@ -972,6 +977,62 @@ async def test_update_by_filter_on_to_many_relation(
     assert not result.errors
     assert result.data
     assert result.data["colors"] == [{"id": color_id}]
+
+
+@pytest.mark.snapshot
+@pytest.mark.parametrize(
+    ("dto_filter", "updated_names"),
+    [
+        pytest.param(
+            '{ name: { neq: "Zed" }, departments: { name: { isNull: true } } }', ["Tango"], id="column-and-to-many-null"
+        ),
+        pytest.param(
+            '{ name: { neq: "Zed" }, departments: { _or: [{ name: { isNull: true } }, { name: { eq: "IT" } }] } }',
+            ["Alice", "Charlie", "Tango"],
+            id="column-and-to-many-or-null",
+        ),
+        pytest.param(
+            '{ group: { name: { isNull: true } }, departments: { name: { eq: "IT" } } }',
+            ["Charlie"],
+            id="to-one-null-and-to-many",
+        ),
+        pytest.param(
+            '{ name: { neq: "Zed" }, group: { name: { isNull: true } } }',
+            ["Bob", "Charlie", "Tango"],
+            id="column-and-to-one-null",
+        ),
+    ],
+)
+async def test_update_users_by_split_filter(
+    dto_filter: str,
+    updated_names: list[str],
+    raw_users: RawRecordData,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that an update split between the WHERE and an EXISTS subquery updates and returns the same rows."""
+    query = f"""
+        mutation {{
+            updateUsersFilter(data: {{ name: "updated" }}, filter: {dto_filter}) {{
+                id
+                name
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    updated_ids = sorted(user["id"] for user in raw_users if user["name"] in updated_names)
+    assert sorted(result.data["updateUsersFilter"], key=lambda user: user["id"]) == [
+        {"id": user_id, "name": "updated"} for user_id in updated_ids
+    ]
+    query_tracker.assert_statements(1, "update", sql_snapshot)
+
+    result = await maybe_async(any_query('{ users(filter: { name: { eq: "updated" } }) { id } }'))
+    assert not result.errors
+    assert result.data
+    assert sorted(user["id"] for user in result.data["users"]) == updated_ids
 
 
 @pytest.mark.snapshot
@@ -1853,6 +1914,59 @@ async def test_delete_filter(
         pytest.param('{ _not: { group: { name: { eq: "Group 1" } } } }', ["Bob", "Charlie", "Tango"], id="not-to-one"),
         pytest.param(
             '{ departments: { users: { name: { eq: "Alice" } } } }', ["Alice", "Charlie"], id="nested-to-many"
+        ),
+        pytest.param('{ name: { eq: "Bob" } }', ["Bob"], id="column"),
+        pytest.param(
+            '{ name: { neq: "Alice" }, departments: { name: { eq: "IT" } } }', ["Charlie"], id="column-and-to-many"
+        ),
+        pytest.param(
+            '{ _and: [{ name: { eq: "Alice" } }, { departments: { name: { eq: "IT" } } }] }',
+            ["Alice"],
+            id="and-column-relation",
+        ),
+        pytest.param(
+            '{ _and: [{ _and: [{ name: { neq: "Alice" } }, { name: { neq: "Bob" } }] }, '
+            '{ departments: { name: { in: ["IT", "Sales"] } } }] }',
+            ["Charlie"],
+            id="nested-and-column-relation",
+        ),
+        pytest.param(
+            '{ name: { neq: "Alice" }, _or: [{ name: { eq: "Bob" } }, { group: { name: { eq: "Group 1" } } }] }',
+            ["Bob"],
+            id="column-and-or-column-relation",
+        ),
+        pytest.param(
+            '{ _not: { name: { eq: "Bob" } }, departments: { name: { in: ["IT", "Sales"] } } }',
+            ["Alice", "Charlie"],
+            id="not-column-and-relation",
+        ),
+        pytest.param(
+            '{ name: { neq: "Bob" }, _not: { group: { name: { eq: "Group 1" } } } }',
+            ["Charlie", "Tango"],
+            id="column-and-not-to-one",
+        ),
+        pytest.param(
+            '{ name: { neq: "Alice" }, departmentsAggregate: { count: { arguments: [id], predicate: { gt: 1 } } } }',
+            ["Charlie"],
+            id="column-and-aggregation",
+        ),
+        pytest.param(
+            '{ name: { neq: "Zed" }, departments: { name: { isNull: true } } }', ["Tango"], id="column-and-to-many-null"
+        ),
+        pytest.param(
+            '{ name: { neq: "Zed" }, departments: { _or: [{ name: { isNull: true } }, { name: { eq: "IT" } }] } }',
+            ["Alice", "Charlie", "Tango"],
+            id="column-and-to-many-or-null",
+        ),
+        pytest.param(
+            '{ group: { name: { isNull: true } }, departments: { name: { eq: "IT" } } }',
+            ["Charlie"],
+            id="to-one-null-and-to-many",
+        ),
+        pytest.param(
+            '{ name: { neq: "Zed" }, group: { name: { isNull: true } } }',
+            ["Bob", "Charlie", "Tango"],
+            id="column-and-to-one-null",
         ),
     ],
 )
