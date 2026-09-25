@@ -1302,15 +1302,16 @@ def plan_query(
 ) -> QueryPlan:
     """Plans ``query_graph`` into one ``QueryPlan``.
 
-    A root query that is paginated, needs DISTINCT ON emulation, or filters on a relation with query hooks, is
-    planned by ``_plan_subquery``: the filter joins such a relation without its hooks, so the selection cannot reuse
-    that join.
+    A root query is planned by ``_plan_subquery`` when it is paginated, filters on a relation with query hooks, or
+    has a DISTINCT ON that must be emulated or would run over rows a selected to-many relation repeats. The filter
+    joins a hooked relation without its hooks, so the selection cannot reuse that join.
     """
     distinct_on_rank = _use_distinct_rank(query_graph, context)
     filters_hooked_relation = any(context.hook_applier.has_hooks(node) for node in query_graph.filter_relation_nodes)
+    distinct_on_subquery = distinct_on_rank or (bool(query_graph.distinct_on) and query_graph.selects_to_many_relation)
 
     subquery_needed = context.aliases.is_root and (
-        limit is not None or offset is not None or distinct_on_rank or filters_hooked_relation
+        limit is not None or offset is not None or distinct_on_subquery or filters_hooked_relation
     )
     if subquery_needed:
         return _plan_subquery(
