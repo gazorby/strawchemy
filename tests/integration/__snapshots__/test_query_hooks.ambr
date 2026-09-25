@@ -2008,6 +2008,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
+     AND anon_1.rank > ?
      AND anon_1.rank <= ?
    ORDER BY color.id ASC,
             anon_1.id ASC
@@ -2036,6 +2037,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
+     AND anon_1.`rank` > %s
      AND anon_1.`rank` <= %s
    ORDER BY color.id ASC,
             anon_1.id ASC
@@ -2058,6 +2060,7 @@
              AND color.id = fruit_1.color_id
            ORDER BY fruit_1.id ASC
            LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
          ) AS anon_1
       ON TRUE
    ORDER BY color.id ASC,
@@ -2081,6 +2084,7 @@
              AND color.id = fruit_1.color_id
            ORDER BY fruit_1.id ASC
            LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
          ) AS anon_1
       ON TRUE
    ORDER BY color.id ASC,
@@ -2104,6 +2108,7 @@
              AND color.id = fruit_1.color_id
            ORDER BY fruit_1.id ASC
            LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
          ) AS anon_1
       ON TRUE
    ORDER BY color.id ASC,
@@ -2133,6 +2138,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
+     AND anon_1.rank > ?
      AND anon_1.rank <= ?
    ORDER BY color.id ASC,
             anon_1.id ASC

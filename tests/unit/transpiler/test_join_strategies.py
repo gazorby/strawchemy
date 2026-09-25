@@ -98,6 +98,7 @@ def test_select_join_strategy_returns_cte_when_not_supported() -> None:
                     '         WHERE "user".id = user_department_join_table_1.user_id',
                     "         ORDER BY department_1.id ASC",
                     "         LIMIT %(param_1)s",
+                    "        OFFSET %(param_2)s",
                     "       ) AS anon_1",
                     "    ON TRUE",
                     ' ORDER BY "user".id ASC,',

@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeVar, overload
 
 from msgspec import convert
+from strawberry import UNSET
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.enum import StrawberryEnumDefinition
 from strawberry.types.lazy_type import LazyType
@@ -193,6 +194,15 @@ class StrawchemyRepository(Generic[T]):
         distinct_on_type = self._argument_item_type(argument_types, DISTINCT_ON_KEY)
         return convert(arguments, type=RelationFilterDTO[order_by_type, distinct_on_type], strict=False)
 
+    def _selection_arguments(self, selection: SelectedField, strawberry_field: StrawberryField) -> dict[str, Any]:
+        name_converter = self.info.schema.config.name_converter
+        arguments = {
+            name_converter.get_graphql_name(argument): argument.default
+            for argument in strawberry_field.arguments
+            if argument.default is not UNSET
+        } | selection.arguments
+        return snake_keys(arguments) if self.auto_snake_case else arguments
+
     @staticmethod
     def _argument_item_type(argument_types: dict[str, Any], name: str) -> Any:
         if name not in argument_types:
@@ -266,7 +276,7 @@ class StrawchemyRepository(Generic[T]):
                 self._add_query_hooks(hooks, node)
                 continue
 
-            selection_arguments = snake_keys(selection.arguments) if self.auto_snake_case else selection.arguments
+            selection_arguments = self._selection_arguments(selection, strawberry_field)
 
             child_node = StrawberryQueryNode(
                 value=field_definition,
