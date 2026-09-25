@@ -78,10 +78,10 @@
                     fruit_farm_1.name,
                     fruit_farm_1.id
            ORDER BY fruit_farm_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+         ) SELECT fruit.name,
+         fruit.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN anon_1
       ON fruit.id = anon_1.fruit_id
@@ -105,10 +105,10 @@
                     fruit_farm_1.name,
                     fruit_farm_1.id
            ORDER BY fruit_farm_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+         ) SELECT fruit.name,
+         fruit.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN anon_1
       ON fruit.id = anon_1.fruit_id
@@ -121,10 +121,10 @@
 # ---
 # name: test_default_order_not_applied_to_nested_missing_column[session-async-tracked-asyncpg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_farm_1.name AS name,
@@ -143,10 +143,10 @@
 # ---
 # name: test_default_order_not_applied_to_nested_missing_column[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_farm_1.name AS name,
@@ -165,10 +165,10 @@
 # ---
 # name: test_default_order_not_applied_to_nested_missing_column[session-sync-tracked-psycopg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_farm_1.name AS name,
@@ -198,10 +198,10 @@
                     fruit_farm_1.name,
                     fruit_farm_1.id
            ORDER BY fruit_farm_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+         ) SELECT fruit.name,
+         fruit.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN anon_1
       ON fruit.id = anon_1.fruit_id
@@ -225,10 +225,10 @@
                     fruit_1.id,
                     fruit_1.name
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -252,10 +252,10 @@
                     fruit_1.id,
                     fruit_1.name
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -268,10 +268,10 @@
 # ---
 # name: test_default_order_not_applied_to_nested_same_named_column[session-async-tracked-asyncpg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.id AS id,
@@ -290,10 +290,10 @@
 # ---
 # name: test_default_order_not_applied_to_nested_same_named_column[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.id AS id,
@@ -312,10 +312,10 @@
 # ---
 # name: test_default_order_not_applied_to_nested_same_named_column[session-sync-tracked-psycopg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.id AS id,
@@ -345,10 +345,10 @@
                     fruit_1.id,
                     fruit_1.name
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id

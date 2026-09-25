@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from types import SimpleNamespace
+from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import MagicMock
 
 import pytest
@@ -10,7 +11,8 @@ from sqlalchemy import Result, Select
 from sqlalchemy.exc import MultipleResultsFound
 from sqlalchemy.orm import aliased, load_only
 
-from strawchemy.transpiler._executor import SyncQueryExecutor
+from strawchemy.exceptions import QueryResultError
+from strawchemy.transpiler._executor import NodeResult, SyncQueryExecutor
 from strawchemy.transpiler._plan import QueryPlan
 from tests.unit.models import Fruit
 
@@ -38,7 +40,6 @@ def _result(*models: object) -> MagicMock:
         rows.append(row)
     result = MagicMock(spec=Result)
     result.all.return_value = rows
-    result.unique.return_value = result
     return result
 
 
@@ -72,3 +73,13 @@ def test_executor_folds_rows_onto_their_root() -> None:
     session.execute.return_value = _result(fruit, fruit)
     executor = SyncQueryExecutor(plan=_plan(), id_field_definitions=[])
     assert executor.list(session).nodes == [fruit]
+
+
+def test_node_result_rejects_relation_not_selected() -> None:
+    """value() raises for a relation node the query did not select, rather than reading the model attribute."""
+    relation = SimpleNamespace(
+        value=SimpleNamespace(is_computed=False, is_relation=True, name="color"),
+        metadata=SimpleNamespace(data=SimpleNamespace(is_transform=False)),
+    )
+    with pytest.raises(QueryResultError, match="'color'"):
+        NodeResult(model=Fruit(), computed_values={}).value(cast("Any", relation))

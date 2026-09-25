@@ -85,9 +85,9 @@ def test_select_join_strategy_returns_cte_when_not_supported() -> None:
             "{ users { id departments(limit: 2) { id name } } }",
             snapshot(
                 [
-                    "SELECT anon_1.name,",
-                    "       anon_1.id,",
-                    '       "user".id AS id_1',
+                    'SELECT "user".id,',
+                    "       anon_1.name,",
+                    "       anon_1.id AS id_1",
                     '  FROM "user" AS "user"',
                     "  LEFT OUTER JOIN LATERAL (",
                     "        SELECT department_1.id AS id,",
@@ -123,9 +123,9 @@ def test_secondary_lateral_joins_the_secondary_table(
 RELATION_ORDER_BY_SQL = snapshot(
     {
         "postgresql": [
-            "SELECT anon_1.name,",
-            "       anon_1.id,",
-            "       color.id AS id_1",
+            "SELECT color.id,",
+            "       anon_1.name,",
+            "       anon_1.id AS id_1",
             "  FROM color AS color",
             "  LEFT OUTER JOIN LATERAL (",
             "        SELECT fruit_1.name AS name,",
@@ -183,9 +183,9 @@ RELATION_ORDER_BY_SQL = snapshot(
             "                  fruit_1.sweetness",
             "         ORDER BY color_1.name ASC,",
             "                  coalesce(anon_2.count_1, %s) DESC, fruit_1.sweetness ASC",
-            "       ) SELECT anon_1.name,",
-            "       anon_1.id,",
-            "       color.id AS id_1",
+            "       ) SELECT color.id,",
+            "       anon_1.name,",
+            "       anon_1.id AS id_1",
             "  FROM color AS color",
             "  LEFT OUTER JOIN anon_1",
             "    ON color.id = anon_1.color_id",

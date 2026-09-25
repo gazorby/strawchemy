@@ -151,10 +151,10 @@
 # ---
 # name: test_only_queried_columns_included_in_select[session-async-tracked-aiosqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -164,10 +164,10 @@
 # ---
 # name: test_only_queried_columns_included_in_select[session-async-tracked-asyncmy_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -177,10 +177,10 @@
 # ---
 # name: test_only_queried_columns_included_in_select[session-async-tracked-asyncpg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -190,10 +190,10 @@
 # ---
 # name: test_only_queried_columns_included_in_select[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -203,10 +203,10 @@
 # ---
 # name: test_only_queried_columns_included_in_select[session-sync-tracked-psycopg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -216,10 +216,10 @@
 # ---
 # name: test_only_queried_columns_included_in_select[session-sync-tracked-sqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -229,9 +229,9 @@
 # ---
 # name: test_secondary_table_relationships[session-async-tracked-aiosqlite_engine]
   '''
-  SELECT department_1.name,
-         department_1.id,
-         user.id AS id_1
+  SELECT user.id,
+         department_1.name,
+         department_1.id AS id_1
     FROM USER AS USER
     LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
       ON user.id = user_department_join_table_1.user_id
@@ -241,9 +241,9 @@
 # ---
 # name: test_secondary_table_relationships[session-async-tracked-asyncmy_engine]
   '''
-  SELECT department_1.name,
-         department_1.id,
-         user.id AS id_1
+  SELECT user.id,
+         department_1.name,
+         department_1.id AS id_1
     FROM USER AS USER
     LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
       ON user.id = user_department_join_table_1.user_id
@@ -253,9 +253,9 @@
 # ---
 # name: test_secondary_table_relationships[session-async-tracked-asyncpg_engine]
   '''
-  SELECT department_1.name,
-         department_1.id,
-         "user".id AS id_1
+  SELECT "user".id,
+         department_1.name,
+         department_1.id AS id_1
     FROM "user" AS "user"
     LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
       ON "user".id = user_department_join_table_1.user_id
@@ -265,9 +265,9 @@
 # ---
 # name: test_secondary_table_relationships[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT department_1.name,
-         department_1.id,
-         "user".id AS id_1
+  SELECT "user".id,
+         department_1.name,
+         department_1.id AS id_1
     FROM "user" AS "user"
     LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
       ON "user".id = user_department_join_table_1.user_id
@@ -277,9 +277,9 @@
 # ---
 # name: test_secondary_table_relationships[session-sync-tracked-psycopg_engine]
   '''
-  SELECT department_1.name,
-         department_1.id,
-         "user".id AS id_1
+  SELECT "user".id,
+         department_1.name,
+         department_1.id AS id_1
     FROM "user" AS "user"
     LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
       ON "user".id = user_department_join_table_1.user_id
@@ -289,9 +289,9 @@
 # ---
 # name: test_secondary_table_relationships[session-sync-tracked-sqlite_engine]
   '''
-  SELECT department_1.name,
-         department_1.id,
-         user.id AS id_1
+  SELECT user.id,
+         department_1.name,
+         department_1.id AS id_1
     FROM USER AS USER
     LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
       ON user.id = user_department_join_table_1.user_id

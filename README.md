@@ -597,8 +597,9 @@ Important notes when implementing `apply_hooks`:
 
 #### Load specific columns/relationships
 
-The `load` parameter specify columns and relationships that should always be loaded, even if not directly requested in
-the GraphQL query. This is useful for:
+The `load` parameter specify columns and relationships that should always be loaded on the model instance. Relations
+selected in the GraphQL query are not set on the instance, so a custom resolver reading `self.instance.<relation>`, or
+code reading relations of `GraphQLResult.instance(s)`, must declare them in `load`. This is useful for:
 
 - Ensuring data needed for computed properties is available
 - Loading columns or relationships required for custom resolvers

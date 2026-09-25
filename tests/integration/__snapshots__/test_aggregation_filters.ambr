@@ -8,8 +8,8 @@
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
            GROUP BY fruit_2.color_id
-         ) SELECT fruit_1.id,
-         color.id AS id_1
+         ) SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -29,8 +29,8 @@
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
            GROUP BY fruit_2.color_id
-         ) SELECT fruit_1.id,
-         color.id AS id_1
+         ) SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -43,8 +43,8 @@
 # ---
 # name: test_aggregation_built_once_across_filter_and_order_by[session-async-tracked-asyncpg_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS count_1,
@@ -62,8 +62,8 @@
 # ---
 # name: test_aggregation_built_once_across_filter_and_order_by[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS count_1,
@@ -81,8 +81,8 @@
 # ---
 # name: test_aggregation_built_once_across_filter_and_order_by[session-sync-tracked-psycopg_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS count_1,
@@ -107,8 +107,8 @@
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
            GROUP BY fruit_2.color_id
-         ) SELECT fruit_1.id,
-         color.id AS id_1
+         ) SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -127,8 +127,8 @@
             FROM fruit_farm AS fruit_farm_1
            WHERE fruit_farm_1.fruit_id IS NOT NULL
            GROUP BY fruit_farm_1.fruit_id
-         ) SELECT fruit_1.id,
-         color.id AS id_1
+         ) SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -154,8 +154,8 @@
             FROM fruit_farm AS fruit_farm_1
            WHERE fruit_farm_1.fruit_id IS NOT NULL
            GROUP BY fruit_farm_1.fruit_id
-         ) SELECT fruit_1.id,
-         color.id AS id_1
+         ) SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -175,8 +175,8 @@
 # ---
 # name: test_aggregation_filter_through_to_many_relation_also_selected[session-async-tracked-asyncpg_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -200,8 +200,8 @@
 # ---
 # name: test_aggregation_filter_through_to_many_relation_also_selected[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -225,8 +225,8 @@
 # ---
 # name: test_aggregation_filter_through_to_many_relation_also_selected[session-sync-tracked-psycopg_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -256,8 +256,8 @@
             FROM fruit_farm AS fruit_farm_1
            WHERE fruit_farm_1.fruit_id IS NOT NULL
            GROUP BY fruit_farm_1.fruit_id
-         ) SELECT fruit_1.id,
-         color.id AS id_1
+         ) SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -283,8 +283,8 @@
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id
-         ) SELECT color_1.id,
-         fruit.id AS id_1
+         ) SELECT fruit.id,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -303,8 +303,8 @@
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id
-         ) SELECT color_1.id,
-         fruit.id AS id_1
+         ) SELECT fruit.id,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -317,8 +317,8 @@
 # ---
 # name: test_aggregation_filter_through_to_one_relation_also_selected[session-async-tracked-asyncpg_engine]
   '''
-  SELECT color_1.id,
-         fruit.id AS id_1
+  SELECT fruit.id,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -335,8 +335,8 @@
 # ---
 # name: test_aggregation_filter_through_to_one_relation_also_selected[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT color_1.id,
-         fruit.id AS id_1
+  SELECT fruit.id,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -353,8 +353,8 @@
 # ---
 # name: test_aggregation_filter_through_to_one_relation_also_selected[session-sync-tracked-psycopg_engine]
   '''
-  SELECT color_1.id,
-         fruit.id AS id_1
+  SELECT fruit.id,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -377,8 +377,8 @@
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id
-         ) SELECT color_1.id,
-         fruit.id AS id_1
+         ) SELECT fruit.id,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1477,8 +1477,8 @@
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
            GROUP BY fruit_2.color_id
-         ) SELECT fruit_1.id,
-         color.id AS id_1
+         ) SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1497,8 +1497,8 @@
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
            GROUP BY fruit_2.color_id
-         ) SELECT fruit_1.id,
-         color.id AS id_1
+         ) SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1511,8 +1511,8 @@
 # ---
 # name: test_count_aggregation_filter_nested_under_or[session-async-tracked-asyncpg_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS count_1
@@ -1529,8 +1529,8 @@
 # ---
 # name: test_count_aggregation_filter_nested_under_or[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS count_1
@@ -1547,8 +1547,8 @@
 # ---
 # name: test_count_aggregation_filter_nested_under_or[session-sync-tracked-psycopg_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     JOIN LATERAL (
           SELECT count(*) AS count_1
@@ -1571,8 +1571,8 @@
             FROM fruit AS fruit_2
            WHERE fruit_2.color_id IS NOT NULL
            GROUP BY fruit_2.color_id
-         ) SELECT fruit_1.id,
-         color.id AS id_1
+         ) SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
