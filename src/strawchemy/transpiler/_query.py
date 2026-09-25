@@ -139,6 +139,24 @@ class AggregationSpec:
         return cls(node=node, alias=alias)
 
 
+def _nodes_matching(path: Sequence[QueryNodeType], tree: QueryNodeType) -> list[QueryNodeType]:
+    """Returns the nodes of ``tree`` at the same place as those of ``path``, which belong to another tree."""
+    nodes = list(tree.iter_breadth_first())
+    matches = (
+        next(
+            (
+                node
+                for node in nodes
+                if len(node_path := node.path_from_root()) == len(target := path_node.path_from_root())
+                and all(QueryNode.match_nodes(a, b, "value_equality") for a, b in zip(node_path, target, strict=True))
+            ),
+            None,
+        )
+        for path_node in path
+    )
+    return [node for node in matches if node is not None]
+
+
 def _filters_in_exists(tree: QueryNodeType, scope: FilterScope) -> bool:
     fields = [node.value for node in tree.iter_breadth_first() if not node.is_root]
     if scope == "dml":
@@ -157,10 +175,15 @@ class QueryGraph(Generic[DeclarativeT]):
     dto_filter: BooleanFilterDTO | None = None
     filter_scope: FilterScope = "query"
     """Statement the filter restricts; ``subquery`` is the EXISTS copy of the root, which joins every relation."""
+    filter_join_path: Sequence[QueryNodeType] | None = None
+    """Join path of the whole filter when this one tests a part of it, so that the part joins its relations alike."""
 
     query_filter: Filter | None = dataclasses.field(init=False, default=None)
     exists_filter: BooleanFilterDTO | None = dataclasses.field(init=False, default=None)
     """Filter on relations, tested in an EXISTS subquery so that it neither joins nor repeats the root rows."""
+    exists_join_path: Sequence[QueryNodeType] | None = dataclasses.field(init=False, default=None)
+    where_join_path: Sequence[QueryNodeType] = dataclasses.field(init=False, default=())
+    """Relations inner-joined once for every predicate of ``query_filter``."""
     where_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
     """Relations the filter uses."""
     subquery_join_tree: QueryNodeType | None = dataclasses.field(init=False, default=None)
@@ -173,11 +196,7 @@ class QueryGraph(Generic[DeclarativeT]):
     def __post_init__(self) -> None:
         self.root_join_tree = self.resolved_selection_tree()
         if self.dto_filter is not None:
-            where_join_tree, query_filter = self.dto_filter.filters_tree()
-            if _filters_in_exists(where_join_tree, self.filter_scope):
-                self.exists_filter = self.dto_filter
-            else:
-                self.where_join_tree, self.query_filter = where_join_tree, query_filter
+            self._split_filter(self.dto_filter)
         if self.where_join_tree is not None:
             self.subquery_join_tree = self.where_join_tree
             self.root_join_tree = merge_trees(self.root_join_tree, self.where_join_tree, match_on="value_equality")
@@ -193,6 +212,27 @@ class QueryGraph(Generic[DeclarativeT]):
                 else self.order_by_tree
             )
             self.order_by_nodes = sorted(self.order_by_tree.leaves())
+
+    def _split_filter(self, dto_filter: BooleanFilterDTO) -> None:
+        """Moves to ``exists_filter`` the top-level AND branches that must be tested in an EXISTS subquery."""
+        where_join_tree, query_filter = dto_filter.filters_tree()
+        join_path = query_filter.join_path()
+        if self.filter_join_path is not None:
+            join_path = _nodes_matching(self.filter_join_path, where_join_tree)
+        if not _filters_in_exists(where_join_tree, self.filter_scope):
+            self.where_join_tree, self.query_filter, self.where_join_path = where_join_tree, query_filter, join_path
+            return
+        root_parts: list[BooleanFilterDTO] = []
+        exists_parts: list[BooleanFilterDTO] = []
+        for part in dto_filter.conjuncts():
+            in_exists = _filters_in_exists(part.filters_tree()[0], self.filter_scope)
+            (exists_parts if in_exists else root_parts).append(part)
+        if not root_parts:
+            self.exists_filter = dto_filter
+            return
+        self.exists_filter, self.exists_join_path = dto_filter.all_of(exists_parts), join_path
+        self.where_join_tree, self.query_filter = dto_filter.all_of(root_parts).filters_tree()
+        self.where_join_path = _nodes_matching(join_path, self.where_join_tree)
 
     def resolved_selection_tree(self) -> QueryNodeType:
         """Returns the selection tree of the listed rows, or a tree of the primary keys when nothing is selected."""
@@ -253,8 +293,6 @@ class Conjunction:
 
     expressions: list[ColumnElement[bool]] = dataclasses.field(default_factory=list)
     joins: list[Join] = dataclasses.field(default_factory=list)
-    common_join_path: list[QueryNodeType] = dataclasses.field(default_factory=list)
-    """Longest relation path shared by all predicates, joined once for all of them."""
 
     def has_many_predicates(self) -> bool:
         """Whether there are several predicates, counting those inside a single ``and_`` or ``or_``."""

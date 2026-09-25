@@ -2783,6 +2783,374 @@
             group_1.id ASC
   '''
 # ---
+# name: test_delete_filter_on_relation[session-async-tracked-and-column-relation-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = ? AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-and-column-relation-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = %s) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-and-column-relation-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = $1::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = $2::VARCHAR AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-and-column-relation-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = %(name_2)s::VARCHAR AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = ? RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-aggregation-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT count(department_1.id) AS count_1,
+                 user_2.id AS id
+            FROM USER AS user_2
+            JOIN user_department_join_table AS user_department_join_table_1
+              ON user_2.id = user_department_join_table_1.user_id
+            JOIN department AS department_1
+              ON department_1.id = user_department_join_table_1.department_id
+           GROUP BY user_2.id
+         ) DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN anon_1 ON user_1.id = anon_1.id WHERE coalesce(anon_1.count_1, ?) > ? AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-aggregation-asyncmy_engine]
+  '''
+  WITH anon_2 AS (
+          SELECT count(department_1.id) AS count_1,
+                 user_2.id AS id
+            FROM USER AS user_2
+           INNER JOIN user_department_join_table AS user_department_join_table_1
+              ON user_2.id = user_department_join_table_1.user_id
+           INNER JOIN department AS department_1
+              ON department_1.id = user_department_join_table_1.department_id
+           GROUP BY user_2.id
+         ) DELETE
+    FROM USER AS USER
+   WHERE user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN anon_2 ON user_1.id = anon_2.id WHERE coalesce(anon_2.count_1, %s) > %s) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-aggregation-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != $1::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN LATERAL (SELECT count(department_1.id) AS count_1 FROM user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE user_1.id = user_department_join_table_1.user_id) AS anon_1 ON TRUE WHERE anon_1.count_1 > $2::INTEGER AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-aggregation-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN LATERAL (SELECT count(department_1.id) AS count_1 FROM user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE user_1.id = user_department_join_table_1.user_id) AS anon_1 ON TRUE WHERE anon_1.count_1 > %(param_1)s::INTEGER AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-one-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name = ? AND group_1.name IS NOT NULL) AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-one-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name = %s AND group_1.name IS NOT NULL)) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-one-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != $1::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name = $2::VARCHAR AND group_1.name IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-one-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name = %(name_2)s::VARCHAR AND group_1.name IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-or-column-relation-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE (user_1.name = ? OR group_1.name = ?) AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-or-column-relation-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE (user_1.name = %s OR group_1.name = %s)) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-or-column-relation-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != $1::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE (user_1.name = $2::VARCHAR OR group_1.name = $3::VARCHAR) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-or-column-relation-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE (user_1.name = %(name_2)s::VARCHAR OR group_1.name = %(name_3)s::VARCHAR) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = ? AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = %s) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != $1::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = $2::VARCHAR AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-null-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-null-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-null-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != $1::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-null-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-or-null-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = ?) AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-or-null-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = %s)) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-or-null-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != $1::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = $2::VARCHAR) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-or-null-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = %(name_2)s::VARCHAR) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = %(name_2)s::VARCHAR AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-one-null-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-one-null-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-one-null-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != $1::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-one-null-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = %s
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = $1::VARCHAR RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-column-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-nested-and-column-relation-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IN (__[POSTCOMPILE_name_3]) AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-nested-and-column-relation-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != %s
+     AND user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IN (__[POSTCOMPILE_name_3])) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-nested-and-column-relation-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != $1::VARCHAR
+     AND "user".name != $2::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IN (__[POSTCOMPILE_name_3]) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-nested-and-column-relation-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND "user".name != %(name_2)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IN (__[POSTCOMPILE_name_3]) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
 # name: test_delete_filter_on_relation[session-async-tracked-nested-to-many-aiosqlite_engine]
   '''
   DELETE
@@ -2866,6 +3234,41 @@
            WHERE user_2.name = %(name_1)s::VARCHAR
              AND user_1.id = "user".id
          ) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-not-column-and-relation-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE NOT (user.name = ? AND user.name IS NOT NULL)
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name IN (__[POSTCOMPILE_name_2]) AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-not-column-and-relation-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE NOT (user.name = %s AND user.name IS NOT NULL)
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name IN (__[POSTCOMPILE_name_2])) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-not-column-and-relation-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE NOT ("user".name = $1::VARCHAR AND "user".name IS NOT NULL)
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name IN (__[POSTCOMPILE_name_2]) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-not-column-and-relation-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE NOT ("user".name = %(name_1)s::VARCHAR AND "user".name IS NOT NULL)
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name IN (__[POSTCOMPILE_name_2]) AND user_1.id = "user".id)) RETURNING "user".id,
          "user".id AS id_1
   '''
 # ---
@@ -3111,6 +3514,80 @@
          "user".id AS id_1
   '''
 # ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-one-null-and-to-many-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE EXISTS (
+          SELECT 1
+            FROM USER AS user_1
+            LEFT OUTER JOIN "group" AS group_1
+              ON group_1.id = user_1.group_id
+            LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+              ON user_1.id = user_department_join_table_1.user_id
+           WHERE group_1.name IS NULL
+             AND department_1.name = ?
+             AND user_1.id = user.id
+         ) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-one-null-and-to-many-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE EXISTS (
+          SELECT 1
+            FROM (
+                  SELECT user_1.id AS id
+                    FROM USER AS user_1
+                    LEFT OUTER JOIN `group` AS group_1
+                      ON group_1.id = user_1.group_id
+                    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+                      ON user_1.id = user_department_join_table_1.user_id
+                   WHERE group_1.name IS NULL
+                     AND department_1.name = %s
+                 ) AS anon_1
+           WHERE anon_1.id = user.id
+         )
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-one-null-and-to-many-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+            LEFT OUTER JOIN "group" AS group_1
+              ON group_1.id = user_1.group_id
+            LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+              ON user_1.id = user_department_join_table_1.user_id
+           WHERE group_1.name IS NULL
+             AND department_1.name = $1::VARCHAR
+             AND user_1.id = "user".id
+         ) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-one-null-and-to-many-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+            LEFT OUTER JOIN "group" AS group_1
+              ON group_1.id = user_1.group_id
+            LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+              ON user_1.id = user_department_join_table_1.user_id
+           WHERE group_1.name IS NULL
+             AND department_1.name = %(name_1)s::VARCHAR
+             AND user_1.id = "user".id
+         ) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-one-psycopg_async_engine]
   '''
   DELETE
@@ -3124,6 +3601,195 @@
              AND user_1.id = "user".id
          ) RETURNING "user".id,
          "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-and-column-relation-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = %(name_2)s::VARCHAR AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-and-column-relation-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = ? AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-aggregation-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN LATERAL (SELECT count(department_1.id) AS count_1 FROM user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE user_1.id = user_department_join_table_1.user_id) AS anon_1 ON TRUE WHERE anon_1.count_1 > %(param_1)s::INTEGER AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-aggregation-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT count(department_1.id) AS count_1,
+                 user_2.id AS id
+            FROM USER AS user_2
+            JOIN user_department_join_table AS user_department_join_table_1
+              ON user_2.id = user_department_join_table_1.user_id
+            JOIN department AS department_1
+              ON department_1.id = user_department_join_table_1.department_id
+           GROUP BY user_2.id
+         ) DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN anon_1 ON user_1.id = anon_1.id WHERE coalesce(anon_1.count_1, ?) > ? AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-not-to-one-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name = %(name_2)s::VARCHAR AND group_1.name IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-not-to-one-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name = ? AND group_1.name IS NOT NULL) AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-or-column-relation-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE (user_1.name = %(name_2)s::VARCHAR OR group_1.name = %(name_3)s::VARCHAR) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-or-column-relation-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE (user_1.name = ? OR group_1.name = ?) AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-to-many-null-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-to-many-null-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-to-many-or-null-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = %(name_2)s::VARCHAR) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-to-many-or-null-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = ?) AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-to-many-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = %(name_2)s::VARCHAR AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-to-many-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = ? AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-to-one-null-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-and-to-one-null-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-column-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = ? RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-nested-and-column-relation-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND "user".name != %(name_2)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IN (__[POSTCOMPILE_name_3]) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-nested-and-column-relation-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name != ?
+     AND user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IN (__[POSTCOMPILE_name_3]) AND user_1.id = user.id)) RETURNING id,
+         id AS id_1
   '''
 # ---
 # name: test_delete_filter_on_relation[session-sync-tracked-nested-to-many-psycopg_engine]
@@ -3165,6 +3831,24 @@
            WHERE user_2.name = ?
              AND user_1.id = user.id
          ) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-not-column-and-relation-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE NOT ("user".name = %(name_1)s::VARCHAR AND "user".name IS NOT NULL)
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name IN (__[POSTCOMPILE_name_2]) AND user_1.id = "user".id)) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-not-column-and-relation-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE NOT (user.name = ? AND user.name IS NOT NULL)
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name IN (__[POSTCOMPILE_name_2]) AND user_1.id = user.id)) RETURNING id,
          id AS id_1
   '''
 # ---
@@ -3257,6 +3941,42 @@
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
            WHERE department_1.name = ?
+             AND user_1.id = user.id
+         ) RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-to-one-null-and-to-many-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+            LEFT OUTER JOIN "group" AS group_1
+              ON group_1.id = user_1.group_id
+            LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+              ON user_1.id = user_department_join_table_1.user_id
+           WHERE group_1.name IS NULL
+             AND department_1.name = %(name_1)s::VARCHAR
+             AND user_1.id = "user".id
+         ) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-to-one-null-and-to-many-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE EXISTS (
+          SELECT 1
+            FROM USER AS user_1
+            LEFT OUTER JOIN "group" AS group_1
+              ON group_1.id = user_1.group_id
+            LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+              ON user_1.id = user_department_join_table_1.user_id
+           WHERE group_1.name IS NULL
+             AND department_1.name = ?
              AND user_1.id = user.id
          ) RETURNING id,
          id AS id_1
@@ -3789,6 +4509,50 @@
          ) RETURNING color.id
   '''
 # ---
+# name: test_update_by_filter_on_to_many_relation[session-async-tracked-column-and-aggregation-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT count(fruit_1.id) AS count_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) UPDATE color AS color
+     SET name = ?
+   WHERE color.name = ?
+     AND (EXISTS (SELECT 1 FROM color AS color_1 LEFT OUTER JOIN anon_1 ON color_1.id = anon_1.color_id WHERE coalesce(anon_1.count_1, ?) > ? AND color_1.id = color.id)) RETURNING id
+  '''
+# ---
+# name: test_update_by_filter_on_to_many_relation[session-async-tracked-column-and-aggregation-asyncmy_engine]
+  '''
+  WITH anon_2 AS (
+          SELECT count(fruit_1.id) AS count_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) UPDATE color AS color
+     SET name = %s
+   WHERE color.name = %s
+     AND (EXISTS (SELECT 1 FROM (SELECT color_1.id AS id FROM color AS color_1 LEFT OUTER JOIN anon_2 ON color_1.id = anon_2.color_id WHERE coalesce(anon_2.count_1, %s) > %s) AS anon_1 WHERE anon_1.id = color.id))
+  '''
+# ---
+# name: test_update_by_filter_on_to_many_relation[session-async-tracked-column-and-aggregation-asyncpg_engine]
+  '''
+  UPDATE color AS color
+     SET name = $1::VARCHAR
+   WHERE color.name = $2::VARCHAR
+     AND (EXISTS (SELECT 1 FROM color AS color_1 JOIN LATERAL (SELECT count(fruit_1.id) AS count_1 FROM fruit AS fruit_1 WHERE color_1.id = fruit_1.color_id) AS anon_1 ON TRUE WHERE anon_1.count_1 > $3::INTEGER AND color_1.id = color.id)) RETURNING color.id
+  '''
+# ---
+# name: test_update_by_filter_on_to_many_relation[session-async-tracked-column-and-aggregation-psycopg_async_engine]
+  '''
+  UPDATE color AS color
+     SET name = %(name)s::VARCHAR
+   WHERE color.name = %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM color AS color_1 JOIN LATERAL (SELECT count(fruit_1.id) AS count_1 FROM fruit AS fruit_1 WHERE color_1.id = fruit_1.color_id) AS anon_1 ON TRUE WHERE anon_1.count_1 > %(param_1)s::INTEGER AND color_1.id = color.id)) RETURNING color.id
+  '''
+# ---
 # name: test_update_by_filter_on_to_many_relation[session-async-tracked-relation-aiosqlite_engine]
   '''
   UPDATE color AS color
@@ -3886,6 +4650,28 @@
          ) RETURNING id
   '''
 # ---
+# name: test_update_by_filter_on_to_many_relation[session-sync-tracked-column-and-aggregation-psycopg_engine]
+  '''
+  UPDATE color AS color
+     SET name = %(name)s::VARCHAR
+   WHERE color.name = %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM color AS color_1 JOIN LATERAL (SELECT count(fruit_1.id) AS count_1 FROM fruit AS fruit_1 WHERE color_1.id = fruit_1.color_id) AS anon_1 ON TRUE WHERE anon_1.count_1 > %(param_1)s::INTEGER AND color_1.id = color.id)) RETURNING color.id
+  '''
+# ---
+# name: test_update_by_filter_on_to_many_relation[session-sync-tracked-column-and-aggregation-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT count(fruit_1.id) AS count_1,
+                 fruit_1.color_id AS color_id
+            FROM fruit AS fruit_1
+           WHERE fruit_1.color_id IS NOT NULL
+           GROUP BY fruit_1.color_id
+         ) UPDATE color AS color
+     SET name = ?
+   WHERE color.name = ?
+     AND (EXISTS (SELECT 1 FROM color AS color_1 LEFT OUTER JOIN anon_1 ON color_1.id = anon_1.color_id WHERE coalesce(anon_1.count_1, ?) > ? AND color_1.id = color.id)) RETURNING id
+  '''
+# ---
 # name: test_update_by_filter_on_to_many_relation[session-sync-tracked-relation-psycopg_engine]
   '''
   UPDATE color AS color
@@ -3918,63 +4704,32 @@
   '''
   UPDATE fruit AS fruit
      SET sweetness = ?
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_1
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit_1.color_id
-           WHERE fruit_1.sweetness > ?
-             AND color_1.name = ?
-             AND fruit_1.id = fruit.id
-         ) RETURNING id
+   WHERE fruit.sweetness > ?
+     AND (EXISTS (SELECT 1 FROM fruit AS fruit_1 LEFT OUTER JOIN color AS color_1 ON color_1.id = fruit_1.color_id WHERE color_1.name = ? AND fruit_1.id = fruit.id)) RETURNING id
   '''
 # ---
 # name: test_update_by_filter_on_to_one_relation[session-async-tracked-column-and-relation-asyncmy_engine]
   '''
   UPDATE fruit AS fruit
      SET sweetness = %s
-   WHERE EXISTS (
-          SELECT 1
-            FROM (
-                  SELECT fruit_1.id AS id
-                    FROM fruit AS fruit_1
-                    LEFT OUTER JOIN color AS color_1
-                      ON color_1.id = fruit_1.color_id
-                   WHERE fruit_1.sweetness > %s
-                     AND color_1.name = %s
-                 ) AS anon_1
-           WHERE anon_1.id = fruit.id
-         )
+   WHERE fruit.sweetness > %s
+     AND (EXISTS (SELECT 1 FROM (SELECT fruit_1.id AS id FROM fruit AS fruit_1 LEFT OUTER JOIN color AS color_1 ON color_1.id = fruit_1.color_id WHERE color_1.name = %s) AS anon_1 WHERE anon_1.id = fruit.id))
   '''
 # ---
 # name: test_update_by_filter_on_to_one_relation[session-async-tracked-column-and-relation-asyncpg_engine]
   '''
   UPDATE fruit AS fruit
      SET sweetness = $1::INTEGER
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_1
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit_1.color_id
-           WHERE fruit_1.sweetness > $2::INTEGER
-             AND color_1.name = $3::VARCHAR
-             AND fruit_1.id = fruit.id
-         ) RETURNING fruit.id
+   WHERE fruit.sweetness > $2::INTEGER
+     AND (EXISTS (SELECT 1 FROM fruit AS fruit_1 LEFT OUTER JOIN color AS color_1 ON color_1.id = fruit_1.color_id WHERE color_1.name = $3::VARCHAR AND fruit_1.id = fruit.id)) RETURNING fruit.id
   '''
 # ---
 # name: test_update_by_filter_on_to_one_relation[session-async-tracked-column-and-relation-psycopg_async_engine]
   '''
   UPDATE fruit AS fruit
      SET sweetness = %(sweetness)s::INTEGER
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_1
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit_1.color_id
-           WHERE fruit_1.sweetness > %(sweetness_1)s::INTEGER
-             AND color_1.name = %(name_1)s::VARCHAR
-             AND fruit_1.id = fruit.id
-         ) RETURNING fruit.id
+   WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
+     AND (EXISTS (SELECT 1 FROM fruit AS fruit_1 LEFT OUTER JOIN color AS color_1 ON color_1.id = fruit_1.color_id WHERE color_1.name = %(name_1)s::VARCHAR AND fruit_1.id = fruit.id)) RETURNING fruit.id
   '''
 # ---
 # name: test_update_by_filter_on_to_one_relation[session-async-tracked-relation-aiosqlite_engine]
@@ -4040,30 +4795,16 @@
   '''
   UPDATE fruit AS fruit
      SET sweetness = %(sweetness)s::INTEGER
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_1
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit_1.color_id
-           WHERE fruit_1.sweetness > %(sweetness_1)s::INTEGER
-             AND color_1.name = %(name_1)s::VARCHAR
-             AND fruit_1.id = fruit.id
-         ) RETURNING fruit.id
+   WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
+     AND (EXISTS (SELECT 1 FROM fruit AS fruit_1 LEFT OUTER JOIN color AS color_1 ON color_1.id = fruit_1.color_id WHERE color_1.name = %(name_1)s::VARCHAR AND fruit_1.id = fruit.id)) RETURNING fruit.id
   '''
 # ---
 # name: test_update_by_filter_on_to_one_relation[session-sync-tracked-column-and-relation-sqlite_engine]
   '''
   UPDATE fruit AS fruit
      SET sweetness = ?
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_1
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit_1.color_id
-           WHERE fruit_1.sweetness > ?
-             AND color_1.name = ?
-             AND fruit_1.id = fruit.id
-         ) RETURNING id
+   WHERE fruit.sweetness > ?
+     AND (EXISTS (SELECT 1 FROM fruit AS fruit_1 LEFT OUTER JOIN color AS color_1 ON color_1.id = fruit_1.color_id WHERE color_1.name = ? AND fruit_1.id = fruit.id)) RETURNING id
   '''
 # ---
 # name: test_update_by_filter_on_to_one_relation[session-sync-tracked-relation-psycopg_engine]
@@ -4351,6 +5092,255 @@
      SET name = ?,
          updated_at = ?
    WHERE user.id = ?
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-null-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL AND user_1.id = user.id)) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-null-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+   WHERE user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-null-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR
+   WHERE "user".name != $2::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-null-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-or-null-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = ?) AND user_1.id = user.id)) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-or-null-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+   WHERE user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = %s)) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-or-null-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR
+   WHERE "user".name != $2::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = $3::VARCHAR) AND user_1.id = "user".id)) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-or-null-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = %(name_2)s::VARCHAR) AND user_1.id = "user".id)) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-one-null-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = user.id)) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-one-null-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+   WHERE user.name != %s
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL) AS anon_1 WHERE anon_1.id = user.id))
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-one-null-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR
+   WHERE "user".name != $2::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-one-null-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-one-null-and-to-many-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE EXISTS (
+          SELECT 1
+            FROM USER AS user_1
+            LEFT OUTER JOIN "group" AS group_1
+              ON group_1.id = user_1.group_id
+            LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+              ON user_1.id = user_department_join_table_1.user_id
+           WHERE group_1.name IS NULL
+             AND department_1.name = ?
+             AND user_1.id = user.id
+         ) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-one-null-and-to-many-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+   WHERE EXISTS (
+          SELECT 1
+            FROM (
+                  SELECT user_1.id AS id
+                    FROM USER AS user_1
+                    LEFT OUTER JOIN `group` AS group_1
+                      ON group_1.id = user_1.group_id
+                    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+                      ON user_1.id = user_department_join_table_1.user_id
+                   WHERE group_1.name IS NULL
+                     AND department_1.name = %s
+                 ) AS anon_1
+           WHERE anon_1.id = user.id
+         )
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-one-null-and-to-many-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+            LEFT OUTER JOIN "group" AS group_1
+              ON group_1.id = user_1.group_id
+            LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+              ON user_1.id = user_department_join_table_1.user_id
+           WHERE group_1.name IS NULL
+             AND department_1.name = $2::VARCHAR
+             AND user_1.id = "user".id
+         ) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-one-null-and-to-many-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+            LEFT OUTER JOIN "group" AS group_1
+              ON group_1.id = user_1.group_id
+            LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+              ON user_1.id = user_department_join_table_1.user_id
+           WHERE group_1.name IS NULL
+             AND department_1.name = %(name_1)s::VARCHAR
+             AND user_1.id = "user".id
+         ) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-column-and-to-many-null-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-column-and-to-many-null-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name IS NULL AND user_1.id = user.id)) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-column-and-to-many-or-null-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = %(name_2)s::VARCHAR) AND user_1.id = "user".id)) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-column-and-to-many-or-null-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE (department_1.name IS NULL OR department_1.name = ?) AND user_1.id = user.id)) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-column-and-to-one-null-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE "user".name != %(name_1)s::VARCHAR
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-column-and-to-one-null-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE user.name != ?
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = user.id)) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-to-one-null-and-to-many-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+            LEFT OUTER JOIN "group" AS group_1
+              ON group_1.id = user_1.group_id
+            LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+              ON user_1.id = user_department_join_table_1.user_id
+           WHERE group_1.name IS NULL
+             AND department_1.name = %(name_1)s::VARCHAR
+             AND user_1.id = "user".id
+         ) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-to-one-null-and-to-many-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE EXISTS (
+          SELECT 1
+            FROM USER AS user_1
+            LEFT OUTER JOIN "group" AS group_1
+              ON group_1.id = user_1.group_id
+            LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
+              ON user_1.id = user_department_join_table_1.user_id
+           WHERE group_1.name IS NULL
+             AND department_1.name = ?
+             AND user_1.id = user.id
+         ) RETURNING id
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-async-tracked-aiosqlite_engine]
