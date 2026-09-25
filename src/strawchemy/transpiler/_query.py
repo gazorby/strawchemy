@@ -222,6 +222,15 @@ class QueryGraph(Generic[DeclarativeT]):
         return merged_tree
 
     @cached_property
+    def selects_to_many_relation(self) -> bool:
+        """Whether a selected relation can repeat the root rows."""
+        return any(
+            node.value.uselist and not node.value.is_computed
+            for node in self.resolved_selection_tree().iter_breadth_first()
+            if not node.is_root
+        )
+
+    @cached_property
     def filter_relation_nodes(self) -> list[QueryNodeType]:
         """Relations the filter joins."""
         if self.where_join_tree is None:

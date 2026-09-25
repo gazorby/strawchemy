@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from strawchemy.transpiler.hook import ColumnLoadingMode
     from strawchemy.typing import QueryNodeType
 
-__all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan", "add_missing_columns")
+__all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan", "add_missing_columns", "distinct_rows")
 
 
 def add_missing_columns(statement: Select[Any], columns: Sequence[ColumnElement[Any]]) -> Select[Any]:
@@ -38,6 +38,27 @@ def add_missing_columns(statement: Select[Any], columns: Sequence[ColumnElement[
             if not any(same_column(column, selected) for selected in statement.selected_columns)
         ]
     )
+
+
+def distinct_rows(
+    statement: Select[Any],
+    distinct_on: Sequence[SQLColumnExpression[Any]],
+    order_by: Sequence[UnaryExpression[Any]],
+    partition_by: Sequence[SQLColumnExpression[Any]] = (),
+) -> tuple[Select[Any], ClauseAdapter]:
+    """Emulates DISTINCT ON, keeping the first row of each group of ``statement`` by a ``row_number()`` rank.
+
+    Groups are formed on ``partition_by`` then on ``distinct_on``.
+
+    Returns:
+        A SELECT of the kept rows, and an adapter mapping the columns of ``statement`` onto it.
+    """
+    rank = func.row_number().over(partition_by=[*partition_by, *distinct_on], order_by=order_by or None).label(None)
+    ranked_statement = add_missing_columns(statement, [expression.element for expression in order_by])
+    ranked = ranked_statement.add_columns(rank).subquery()
+    ranked_rank = require_corresponding_column(ranked, rank)
+    kept_rows = select(*[column for column in ranked.c if column is not ranked_rank]).where(ranked_rank == 1)
+    return kept_rows, ClauseAdapter(ranked)
 
 
 @dataclass(frozen=True)
@@ -136,27 +157,6 @@ class QueryPlan:
     def emulates_distinct_on(self) -> bool:
         """Whether the DISTINCT ON columns must be applied with ``distinct_rows`` rather than natively."""
         return bool(self.distinct_on) and not self.use_distinct_on
-
-    def distinct_rows(
-        self, statement: Select[Any], partition_by: Sequence[SQLColumnExpression[Any]] = ()
-    ) -> tuple[Select[Any], ClauseAdapter]:
-        """Emulates DISTINCT ON, keeping the first row of each group of ``statement`` by a ``row_number()`` rank.
-
-        Groups are formed on ``partition_by`` then on the DISTINCT ON columns.
-
-        Returns:
-            A SELECT of the kept rows, and an adapter mapping the columns of ``statement`` onto it.
-        """
-        rank = (
-            func.row_number()
-            .over(partition_by=[*partition_by, *self.distinct_on], order_by=self.order_by or None)
-            .label(None)
-        )
-        ranked_statement = add_missing_columns(statement, [expression.element for expression in self.order_by])
-        ranked = ranked_statement.add_columns(rank).subquery()
-        ranked_rank = require_corresponding_column(ranked, rank)
-        kept_rows = select(*[column for column in ranked.c if column is not ranked_rank]).where(ranked_rank == 1)
-        return kept_rows, ClauseAdapter(ranked)
 
     def _apply_distinct(self, statement: Select[Any]) -> Select[Any]:
         """Adds native DISTINCT ON, selecting the ORDER BY columns it requires; does nothing when it is emulated."""

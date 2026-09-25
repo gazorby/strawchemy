@@ -32,7 +32,7 @@ from strawchemy.exceptions import StrawchemyFieldError, TranspilingError
 from strawchemy.repository.typing import DeclarativeT
 from strawchemy.schema.filters import GraphQLComparison
 from strawchemy.transpiler._aliasing import AliasContext, require_corresponding_column, same_column
-from strawchemy.transpiler._plan import FilterSemiJoin, HookSpec, QueryPlan, add_missing_columns
+from strawchemy.transpiler._plan import FilterSemiJoin, HookSpec, QueryPlan, add_missing_columns, distinct_rows
 from strawchemy.transpiler._query import (
     AggregationJoin,
     AggregationSpec,
@@ -1153,15 +1153,6 @@ def _assemble_inner_statement(
         )
     projected: list[Any] = _dedup_columns([*only_columns, *selected_function_columns])
 
-    rank_label: KeyedColumnElement[Any] | None = None
-    if distinct_on and not use_distinct_on:
-        rank_label = (
-            func.row_number()
-            .over(partition_by=distinct_on.expressions, order_by=list(order_expressions) or None)
-            .label(None)
-        )
-        projected.append(rank_label)
-
     inner_statement = select(inspect(inner_alias)).options(raiseload("*")).with_only_columns(*projected)
     if context.statement is not None:
         inner_statement = UserStatementPlan(context.statement, context.aliases).apply_to_statement(
@@ -1183,27 +1174,14 @@ def _assemble_inner_statement(
         loading_mode="add",
         in_subquery=True,
     )
-    if rank_label is not None:
-        inner_statement = _first_ranked_rows(inner_statement, rank_label, order_expressions)
+    if distinct_on and not use_distinct_on:
+        inner_statement, adapter = distinct_rows(inner_statement, distinct_on.expressions, order_expressions)
+        inner_statement = inner_statement.order_by(*[adapter.traverse(expression) for expression in order_expressions])
     if limit is not None:
         inner_statement = inner_statement.limit(limit)
     if offset is not None:
         inner_statement = inner_statement.offset(offset)
     return inner_statement
-
-
-def _first_ranked_rows(
-    statement: Select[Any], rank: KeyedColumnElement[Any], order_expressions: Sequence[UnaryExpression[Any]]
-) -> Select[Any]:
-    """Keeps the rows of ``statement`` ranked first, ordered by ``order_expressions``."""
-    ranked = add_missing_columns(statement, [expression.element for expression in order_expressions]).subquery()
-    ranked_rank = require_corresponding_column(ranked, rank)
-    adapter = ClauseAdapter(ranked)
-    return (
-        select(*[column for column in ranked.c if column is not ranked_rank])
-        .where(ranked_rank == 1)
-        .order_by(*[adapter.traverse(expression) for expression in order_expressions])
-    )
 
 
 def _plan_subquery(
@@ -1311,15 +1289,16 @@ def plan_query(
 ) -> QueryPlan:
     """Plans ``query_graph`` into one ``QueryPlan``.
 
-    A root query that is paginated, needs DISTINCT ON emulation, or filters on a relation with query hooks, is
-    planned by ``_plan_subquery``: the filter joins such a relation without its hooks, so the selection cannot reuse
-    that join.
+    A root query is planned by ``_plan_subquery`` when it is paginated, filters on a relation with query hooks, or
+    has a DISTINCT ON that must be emulated or would run over rows a selected to-many relation repeats. The filter
+    joins a hooked relation without its hooks, so the selection cannot reuse that join.
     """
     distinct_on_rank = _use_distinct_rank(query_graph, context)
     filters_hooked_relation = any(context.hook_applier.has_hooks(node) for node in query_graph.filter_relation_nodes)
+    distinct_on_subquery = distinct_on_rank or (bool(query_graph.distinct_on) and query_graph.selects_to_many_relation)
 
     subquery_needed = context.aliases.is_root and (
-        limit is not None or offset is not None or distinct_on_rank or filters_hooked_relation
+        limit is not None or offset is not None or distinct_on_subquery or filters_hooked_relation
     )
     if subquery_needed:
         return _plan_subquery(

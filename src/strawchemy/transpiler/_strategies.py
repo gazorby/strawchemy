@@ -9,6 +9,7 @@ from sqlalchemy import and_, func, inspect, null, select, true
 from sqlalchemy.orm import RelationshipProperty, aliased
 from sqlalchemy.orm import join as orm_join
 
+from strawchemy.transpiler._plan import distinct_rows
 from strawchemy.transpiler._query import Join
 
 if TYPE_CHECKING:
@@ -86,7 +87,7 @@ class LateralJoinStrategy:
         if plan.emulates_distinct_on:
             unpaged_plan = dataclasses.replace(plan, limit=None, offset=None)
             statement = correlate_relation(unpaged_plan.apply_clauses(base_statement), root_relation, target_alias)
-            statement, adapter = plan.distinct_rows(statement.correlate_except())
+            statement, adapter = distinct_rows(statement.correlate_except(), plan.distinct_on, plan.order_by)
             statement = (
                 statement.order_by(*[adapter.traverse(expression) for expression in plan.order_by])
                 .limit(plan.limit)
@@ -125,7 +126,9 @@ class CteJoinStrategy:
             .where(and_(*[fk.is_not(null()) for fk in remote_fks]))
         )
         if plan.emulates_distinct_on:
-            statement, adapter = plan.distinct_rows(unpaged_plan.apply_clauses(base_statement), remote_fks)
+            statement, adapter = distinct_rows(
+                unpaged_plan.apply_clauses(base_statement), plan.distinct_on, plan.order_by, remote_fks
+            )
             rank_column = self._rank_column(
                 [adapter.traverse(fk.__clause_element__()) for fk in remote_fks],
                 [adapter.traverse(expression) for expression in plan.order_by],

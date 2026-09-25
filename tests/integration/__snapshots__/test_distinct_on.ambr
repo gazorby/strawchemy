@@ -293,6 +293,768 @@
          ) AS USER
   '''
 # ---
+# name: test_distinct_on_deduplicates_root_rows_selecting_a_to_many_relation[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.sweetness AS sweetness,
+                 anon_1.id AS id,
+                 anon_1.color_id AS color_id
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.sweetness AS sweetness,
+                         fruit.id AS id,
+                         fruit.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit.sweetness ORDER BY fruit.sweetness ASC, fruit.name ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.sweetness ASC,
+                            fruit.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.sweetness ASC,
+                    anon_1.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.sweetness ASC,
+            fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_deduplicates_root_rows_selecting_a_to_many_relation[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.sweetness AS sweetness,
+                 anon_1.id AS id,
+                 anon_1.color_id AS color_id
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.sweetness AS sweetness,
+                         fruit.id AS id,
+                         fruit.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit.sweetness ORDER BY fruit.sweetness ASC, fruit.name ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.sweetness ASC,
+                            fruit.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.sweetness ASC,
+                    anon_1.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.sweetness ASC,
+            fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_deduplicates_root_rows_selecting_a_to_many_relation[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT DISTINCT
+              ON (fruit.sweetness) fruit.name AS name,
+                 fruit.sweetness AS sweetness,
+                 fruit.id AS id,
+                 fruit.color_id AS color_id
+            FROM fruit AS fruit
+           ORDER BY fruit.sweetness ASC,
+                    fruit.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.sweetness ASC,
+            fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_deduplicates_root_rows_selecting_a_to_many_relation[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT DISTINCT
+              ON (fruit.sweetness) fruit.name AS name,
+                 fruit.sweetness AS sweetness,
+                 fruit.id AS id,
+                 fruit.color_id AS color_id
+            FROM fruit AS fruit
+           ORDER BY fruit.sweetness ASC,
+                    fruit.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.sweetness ASC,
+            fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_deduplicates_root_rows_selecting_a_to_many_relation[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT DISTINCT
+              ON (fruit.sweetness) fruit.name AS name,
+                 fruit.sweetness AS sweetness,
+                 fruit.id AS id,
+                 fruit.color_id AS color_id
+            FROM fruit AS fruit
+           ORDER BY fruit.sweetness ASC,
+                    fruit.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.sweetness ASC,
+            fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_deduplicates_root_rows_selecting_a_to_many_relation[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.sweetness AS sweetness,
+                 anon_1.id AS id,
+                 anon_1.color_id AS color_id
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.sweetness AS sweetness,
+                         fruit.id AS id,
+                         fruit.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit.sweetness ORDER BY fruit.sweetness ASC, fruit.name ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.sweetness ASC,
+                            fruit.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.sweetness ASC,
+                    anon_1.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.sweetness ASC,
+            fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-async-tracked-paginated-aiosqlite_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id
+            FROM (
+                  SELECT color.name AS name,
+                         color.id AS id,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
+                    FROM color AS color
+                   WHERE color.name IN (__[POSTCOMPILE_name_2])
+                   ORDER BY color.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-async-tracked-paginated-asyncmy_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id
+            FROM (
+                  SELECT color.name AS name,
+                         color.id AS id,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
+                    FROM color AS color
+                   WHERE color.name IN (__[POSTCOMPILE_name_2])
+                   ORDER BY color.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.name ASC
+           LIMIT %s,
+                 %s
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-async-tracked-paginated-asyncpg_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           WHERE color.name IN (__[POSTCOMPILE_name_2])
+           ORDER BY color.name ASC
+           LIMIT $1::INTEGER
+          OFFSET $2::INTEGER
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-async-tracked-paginated-psycopg_async_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           WHERE color.name IN (__[POSTCOMPILE_name_2])
+           ORDER BY color.name ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-async-tracked-to-many-aiosqlite_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id
+            FROM (
+                  SELECT color.name AS name,
+                         color.id AS id,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
+                    FROM color AS color
+                   ORDER BY color.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-async-tracked-to-many-asyncmy_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id
+            FROM (
+                  SELECT color.name AS name,
+                         color.id AS id,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
+                    FROM color AS color
+                   ORDER BY color.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.name ASC
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-async-tracked-to-many-asyncpg_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           ORDER BY color.name ASC
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-async-tracked-to-many-psycopg_async_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           ORDER BY color.name ASC
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-sync-tracked-paginated-psycopg_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           WHERE color.name IN (__[POSTCOMPILE_name_2])
+           ORDER BY color.name ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-sync-tracked-paginated-sqlite_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id
+            FROM (
+                  SELECT color.name AS name,
+                         color.id AS id,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
+                    FROM color AS color
+                   WHERE color.name IN (__[POSTCOMPILE_name_2])
+                   ORDER BY color.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-sync-tracked-to-many-psycopg_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.name AS name,
+                 color.id AS id
+            FROM color AS color
+           ORDER BY color.name ASC
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation[session-sync-tracked-to-many-sqlite_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color.name AS name_1,
+         color.id AS id_1
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id
+            FROM (
+                  SELECT color.name AS name,
+                         color.id AS id,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
+                    FROM color AS color
+                   ORDER BY color.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation_behind_a_to_one[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.color_id AS color_id
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation_behind_a_to_one[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.color_id AS color_id
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation_behind_a_to_one[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT DISTINCT
+              ON (fruit.name) fruit.name AS name,
+                 fruit.id AS id,
+                 fruit.color_id AS color_id
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation_behind_a_to_one[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT DISTINCT
+              ON (fruit.name) fruit.name AS name,
+                 fruit.id AS id,
+                 fruit.color_id AS color_id
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation_behind_a_to_one[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT DISTINCT
+              ON (fruit.name) fruit.name AS name,
+                 fruit.id AS id,
+                 fruit.color_id AS color_id
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_keeps_every_child_of_a_to_many_relation_behind_a_to_one[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT fruit_1.name,
+         fruit_1.id,
+         color_1.id AS id_1,
+         fruit.name AS name_1,
+         fruit.id AS id_2
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.color_id AS color_id
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.color_id AS color_id,
+                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.name ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC
+         ) AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color_1.id = fruit_1.color_id
+   ORDER BY fruit.name ASC,
+            color_1.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name,
+                 anon_1.name_1 AS name_1
+            FROM (
+                  SELECT color.id AS id,
+                         color.name AS name,
+                         fruit_1.name AS name_1,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, fruit_1.name DESC) AS anon_2
+                    FROM color AS color
+                    LEFT OUTER JOIN fruit AS fruit_1
+                      ON color.id = fruit_1.color_id
+                   ORDER BY color.name ASC,
+                            fruit_1.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC,
+                    anon_1.name_1 DESC
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.name DESC
+  '''
+# ---
+# name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name,
+                 anon_1.name_1 AS name_1
+            FROM (
+                  SELECT color.id AS id,
+                         color.name AS name,
+                         fruit_1.name AS name_1,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, fruit_1.name DESC) AS anon_2
+                    FROM color AS color
+                    LEFT OUTER JOIN fruit AS fruit_1
+                      ON color.id = fruit_1.color_id
+                   ORDER BY color.name ASC,
+                            fruit_1.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.name ASC,
+                    anon_1.name_1 DESC
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.name DESC
+  '''
+# ---
+# name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id,
+         fruit_1.name AS name_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.name DESC
+  '''
+# ---
+# name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id,
+         fruit_1.name AS name_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.name DESC
+  '''
+# ---
+# name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT DISTINCT
+      ON (color.name) color.name,
+         color.id,
+         fruit_1.name AS name_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.name DESC
+  '''
+# ---
+# name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT anon_1.id AS id,
+                 anon_1.name AS name,
+                 anon_1.name_1 AS name_1
+            FROM (
+                  SELECT color.id AS id,
+                         color.name AS name,
+                         fruit_1.name AS name_1,
+                         row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, fruit_1.name DESC) AS anon_2
+                    FROM color AS color
+                    LEFT OUTER JOIN fruit AS fruit_1
+                      ON color.id = fruit_1.color_id
+                   ORDER BY color.name ASC,
+                            fruit_1.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.name ASC,
+                    anon_1.name_1 DESC
+         ) AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.name ASC,
+            fruit_1.name DESC
+  '''
+# ---
 # name: test_distinct_on_paginates_distinct_rows[session-async-tracked-deterministic-ordering-aiosqlite_engine]
   '''
   SELECT user.name,

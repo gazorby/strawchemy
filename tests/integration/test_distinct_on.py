@@ -282,3 +282,130 @@ async def test_nested_distinct_on_paginated_by_primary_key(
     assert [fruit["name"] for fruit in fruits["Red"]] == expected_red
     assert [fruit["name"] for fruit in fruits["Yellow"]] == expected_yellow
     assert query_tracker.query_count == 1
+
+
+@pytest.mark.parametrize(
+    ("query", "field", "expected"),
+    [
+        pytest.param(
+            "{ colors(distinctOn: [name], orderBy: [{ name: ASC }]) { name fruits { name } } }",
+            "colors",
+            {
+                "Green": ["Strawberry"],
+                "Orange": [],
+                "Pink": [],
+                "Red": ["Apple", "Cherry", "Plum"],
+                "Yellow": ["Banana", "Lemon"],
+            },
+            id="to-many",
+        ),
+        pytest.param(
+            """
+            {
+                colorsFilteredDistinct(distinctOn: [name], orderBy: [{ name: ASC }], limit: 2, offset: 1) {
+                    name
+                    fruits { name }
+                }
+            }
+            """,
+            "colorsFilteredDistinct",
+            {"Pink": [], "Red": ["Apple", "Cherry", "Plum"]},
+            id="paginated",
+        ),
+    ],
+)
+@pytest.mark.snapshot
+async def test_distinct_on_keeps_every_child_of_a_to_many_relation(
+    query: str,
+    field: str,
+    expected: dict[str, list[str]],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that a root distinctOn deduplicates the root rows only, keeping every child of a to-many relation."""
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    children = {color["name"]: sorted(fruit["name"] for fruit in color["fruits"]) for color in result.data[field]}
+    assert children == expected
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_distinct_on_keeps_every_child_of_a_to_many_relation_behind_a_to_one(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a root distinctOn keeps every child of a to-many relation selected through a to-one relation."""
+    result = await maybe_async(
+        any_query(
+            "{ fruitsDefaultOrderDistinct(distinctOn: [name], orderBy: [{ name: ASC }]) { name color { fruits { name } } } }"
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    children = {
+        fruit["name"]: sorted(child["name"] for child in fruit["color"]["fruits"])
+        for fruit in result.data["fruitsDefaultOrderDistinct"]
+    }
+    assert children == {
+        "Apple": ["Apple", "Cherry", "Plum"],
+        "Banana": ["Banana", "Lemon"],
+        "Cherry": ["Apple", "Cherry", "Plum"],
+        "Lemon": ["Banana", "Lemon"],
+        "Plum": ["Apple", "Cherry", "Plum"],
+        "Strawberry": ["Strawberry"],
+    }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_distinct_on_deduplicates_root_rows_selecting_a_to_many_relation(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a root distinctOn drops duplicate root rows and keeps every child of the selected to-many relation."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                fruitsDefaultOrderDistinct(distinctOn: [sweetness], orderBy: [{ sweetness: ASC }, { name: ASC }]) {
+                    name
+                    color { fruits { name } }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    fruits = result.data["fruitsDefaultOrderDistinct"]
+    assert [fruit["name"] for fruit in fruits] == ["Banana", "Apple", "Strawberry", "Plum"]
+    assert {fruit["name"]: sorted(child["name"] for child in fruit["color"]["fruits"]) for fruit in fruits} == {
+        "Banana": ["Banana", "Lemon"],
+        "Apple": ["Apple", "Cherry", "Plum"],
+        "Strawberry": ["Strawberry"],
+        "Plum": ["Apple", "Cherry", "Plum"],
+    }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_distinct_on_ordered_by_an_unselected_to_many_relation(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a root distinctOn ordered by a to-many relation it does not select returns one row per group."""
+    result = await maybe_async(
+        any_query("{ colors(distinctOn: [name], orderBy: [{ name: ASC }, { fruits: { name: DESC } }]) { id name } }")
+    )
+    assert not result.errors
+    assert result.data
+
+    assert [color["name"] for color in result.data["colors"]] == ["Green", "Orange", "Pink", "Red", "Yellow"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
