@@ -29,8 +29,8 @@ __all__ = ("AsyncQueryExecutor", "NodeResult", "QueryExecutor", "QueryResult", "
 
 RelatedKey: TypeAlias = "tuple[QueryNodeType, tuple[Any, ...] | None]"
 """Identifies one element of a related collection: its relation node and its identity key."""
-RelatedCollections: TypeAlias = "Mapping[QueryNodeType, Mapping[tuple[Any, ...] | None, list[Any]]]"
-"""Relation node loaded apart from its model attribute -> its related objects, by identity key of their parent."""
+RelatedObjects: TypeAlias = "Mapping[int, Mapping[int, list[Any]]]"
+"""Relation node ``id`` -> its related objects by parent object ``id``; ids avoid hashing nodes, which walks their path."""
 
 
 @dataclass
@@ -41,15 +41,23 @@ class NodeResult(Generic[ModelT]):
     computed_values: dict[QueryNodeType, Any]
     related_computed_values: Mapping[RelatedKey, dict[QueryNodeType, Any]] = dataclasses.field(default_factory=dict)
     """Computed values of every related object of the query, by relation node and primary key."""
-    related_collections: RelatedCollections = dataclasses.field(default_factory=dict)
-    """Related objects of every relation loaded apart from its model attribute, by relation node and parent key."""
+    related_objects: RelatedObjects = dataclasses.field(default_factory=dict)
+    """Related objects of every selected relation, by relation node and parent object."""
 
     def value(self, key: QueryNodeType) -> Any:
-        """Returns the value of ``key``: a computed value, a related collection, or else the model attribute."""
+        """Returns the value of ``key``: a computed value, selected related objects, or else the model attribute.
+
+        Raises:
+            QueryResultError: If ``key`` is a relation the query did not select.
+        """
         if key.value.is_computed or key.metadata.data.is_transform:
             return self.computed_values[key]
-        if self.related_collections and (collections := self.related_collections.get(key)) is not None:
-            return collections.get(inspect(self.model, raiseerr=True).identity, [])
+        if key.value.is_relation:
+            if (by_parent := self.related_objects.get(id(key))) is None:
+                msg = f"Relation {key.value.name!r} was not selected by the query"
+                raise QueryResultError(msg)
+            related = by_parent.get(id(self.model), [])
+            return related if key.value.uselist else next(iter(related), None)
         return getattr(self.model, key.value.model_field_name)
 
     def copy_with(self, node: QueryNodeType, model: Any) -> Self:
@@ -71,8 +79,8 @@ class QueryResult(Generic[ModelT]):
     """Values computed over the whole query, such as root aggregations."""
     related_computed_values: Mapping[RelatedKey, dict[QueryNodeType, Any]] = dataclasses.field(default_factory=dict)
     """Computed values of every related object of the query, by relation node and primary key."""
-    related_collections: RelatedCollections = dataclasses.field(default_factory=dict)
-    """Related objects of every relation loaded apart from its model attribute, by relation node and parent key."""
+    related_objects: RelatedObjects = dataclasses.field(default_factory=dict)
+    """Related objects of every selected relation, by relation node and parent object."""
 
     def __post_init__(self) -> None:
         if not self.node_computed_values:
@@ -80,7 +88,7 @@ class QueryResult(Generic[ModelT]):
 
     def __iter__(self) -> Generator[NodeResult[ModelT]]:
         for model, computed_values in zip(self.nodes, self.node_computed_values, strict=False):
-            yield NodeResult(model, computed_values, self.related_computed_values, self.related_collections)
+            yield NodeResult(model, computed_values, self.related_computed_values, self.related_objects)
 
     def filter_in(self, **kwargs: Sequence[Any]) -> Self:
         """Returns the results whose attribute named by each keyword is in the given values."""
@@ -106,7 +114,7 @@ class QueryResult(Generic[ModelT]):
             msg = f"Expected one item, got {len(self.nodes)}"
             raise QueryResultError(msg)
         return NodeResult(
-            self.nodes[0], self.node_computed_values[0], self.related_computed_values, self.related_collections
+            self.nodes[0], self.node_computed_values[0], self.related_computed_values, self.related_objects
         )
 
     def one_or_none(self) -> NodeResult[ModelT] | None:
@@ -143,11 +151,6 @@ class QueryExecutor(Generic[DeclarativeT]):
         """Window function columns of the root aggregations."""
         return list(self.plan.root_aggregation_functions)
 
-    @property
-    def apply_unique(self) -> bool:
-        """Whether rows must be deduplicated, which is the case when a to-many relation is joined."""
-        return any(join.to_many for join in self.plan.joins)
-
     def add_where(self, *predicates: ColumnElement[bool]) -> None:
         """Adds WHERE predicates to the planned statement, such as a primary-key lookup."""
         self.extra_where.extend(predicates)
@@ -166,31 +169,23 @@ class QueryExecutor(Generic[DeclarativeT]):
         nodes: list[DeclarativeT] = []
         computed: list[dict[QueryNodeType, Any]] = []
         related: dict[RelatedKey, dict[QueryNodeType, Any]] = {}
-        collections: dict[QueryNodeType, dict[tuple[Any, ...] | None, dict[int, Any]]] = {
-            node: {} for node in self.plan.collection_entities
+        related_objects: dict[QueryNodeType, dict[int, dict[int, Any]]] = {
+            node: {} for node in self.plan.relation_entities
         }
-        # Rows of a cached compiled statement are keyed by the entities of the query that first compiled it, so
-        # collection entities, which are fresh aliases per query, are read by their position in ``QueryPlan.emit``.
-        collection_positions = {
-            node: position
-            for position, node in enumerate(self.plan.collection_entities, start=1 + len(self.plan.projection_columns))
-        }
+        positions = {node: position for position, node in enumerate(self.plan.relation_entities, start=1)}
+        entities = [
+            (position, related_objects[node], positions.get(node.parent, 0)) for node, position in positions.items()
+        ]
         seen: set[int] = set()
-        if self.apply_unique:
-            result = result.unique()
         for row in result.all():
             obj = row[0]
             mapping = row._mapping  # noqa: SLF001  # Row exposes computed values only via _mapping keyed by Label.
             row_computed = {node: mapping[label] for node, label in self.column_map.items() if label in mapping}
-            identities = {
-                node: tuple(mapping[column] for column in columns) for node, columns in self.identity_columns.items()
-            }
-            for node, identity in identities.items():
-                related[node, identity] = row_computed
-            for node, position in collection_positions.items():
+            for node, columns in self.identity_columns.items():
+                related[node, tuple(mapping[column] for column in columns)] = row_computed
+            for position, by_parent, parent_position in entities:
                 if (related_object := row[position]) is not None:
-                    parent_identity = identities.get(node.parent) or inspect(obj).identity
-                    collections[node].setdefault(parent_identity, {})[id(related_object)] = related_object
+                    by_parent.setdefault(id(row[parent_position]), {})[id(related_object)] = related_object
             if id(obj) in seen:
                 continue
             seen.add(id(obj))
@@ -211,9 +206,9 @@ class QueryExecutor(Generic[DeclarativeT]):
             node_computed_values=computed,
             query_computed_values=defaultdict(lambda: None) | query_computed_values,
             related_computed_values=related,
-            related_collections={
-                node: {identity: list(objects.values()) for identity, objects in by_parent.items()}
-                for node, by_parent in collections.items()
+            related_objects={
+                id(node): {identity: list(objects.values()) for identity, objects in by_parent.items()}
+                for node, by_parent in related_objects.items()
             },
         )
 

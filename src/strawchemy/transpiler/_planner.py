@@ -11,16 +11,7 @@ from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any, Generic, Protocol, cast
 
 from sqlalchemy import and_, exists, func, inspect, literal_column, not_, null, or_, select, true, tuple_
-from sqlalchemy.orm import (
-    Load,
-    Mapper,
-    RelationshipProperty,
-    aliased,
-    class_mapper,
-    contains_eager,
-    load_only,
-    raiseload,
-)
+from sqlalchemy.orm import Load, Mapper, RelationshipProperty, aliased, class_mapper, load_only, raiseload
 from sqlalchemy.sql.functions import count as sqla_count
 from sqlalchemy.sql.util import ClauseAdapter
 from typing_extensions import ParamSpec, Self
@@ -55,7 +46,7 @@ from strawchemy.transpiler._query import (
 from strawchemy.transpiler._strategies import correlate_relation, select_join_strategy
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Iterator, Mapping, Sequence
+    from collections.abc import Iterable, Mapping, Sequence
 
     from sqlalchemy import Dialect, Label, Select
     from sqlalchemy.orm.strategy_options import _AbstractLoad
@@ -823,9 +814,9 @@ class ProjectionPlan:
     transform_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
     """Transform node -> its labelled column, for the executor's column map."""
     identity_map: Mapping[QueryNodeType, tuple[ColumnElement[Any], ...]] = field(default_factory=dict)
-    """Related level owning computed values or collection entities -> its primary-key columns."""
-    collection_entities: Mapping[QueryNodeType, AliasedClass[Any]] = field(default_factory=dict)
-    """Relation node loaded apart from its model attribute -> the alias its rows are selected from."""
+    """Related level owning computed values -> its primary-key columns."""
+    relation_entities: Mapping[QueryNodeType, AliasedClass[Any]] = field(default_factory=dict)
+    """Selected relation node -> the alias its objects are selected from."""
 
     @classmethod
     def plan(cls, query_graph: QueryGraph[Any], context: PlanContext[Any], agg_plan: AggregationPlan) -> Self:
@@ -850,15 +841,15 @@ class ProjectionPlan:
         load_options: list[_AbstractLoad] = [load_only(*root_columns)] if root_columns else []
         load_options.extend(context.hook_applier.collect_load_options(selection_tree.root, context.aliases.root_alias))
 
-        collection_entities: dict[QueryNodeType, AliasedClass[Any]] = {}
-        for child, via_model_attribute in cls._relation_children(selection_tree):
-            child_load = cls._collect_child_load(child, context, via_model_attribute=via_model_attribute)
+        relation_entities: dict[QueryNodeType, AliasedClass[Any]] = {}
+        for child in cls._relation_children(selection_tree):
+            child_load = cls._collect_child_load(child, context)
             projection_columns.extend(child_load.transform_columns)
-            load_options.extend([child_load.load, *child_load.entity_loads])
+            load_options.extend(child_load.loads)
             transform_map.update(child_load.transform_map)
-            collection_entities.update(child_load.collection_entities)
+            relation_entities.update(child_load.relation_entities)
 
-        identity_map = cls._identity_columns(selection_tree, collection_entities, context)
+        identity_map = cls._identity_columns(selection_tree, context)
         for identity_columns in identity_map.values():
             projection_columns.extend(identity_columns)
 
@@ -869,43 +860,28 @@ class ProjectionPlan:
             hook_specs=(HookSpec(node=selection_tree.root, alias=context.aliases.root_alias, loading_mode="undefer"),),
             transform_map=transform_map,
             identity_map=identity_map,
-            collection_entities=collection_entities,
+            relation_entities=relation_entities,
         )
 
     @staticmethod
-    def _relation_children(node: QueryNodeType) -> Iterator[tuple[QueryNodeType, bool]]:
-        """Yields the selected relations of ``node``, and whether each one is loaded through its model attribute.
-
-        Aliases of a relation selected with different arguments are distinct nodes; only the first can populate the
-        model attribute, the others are read from their own selected entity.
-        """
-        eager_fields: set[str] = set()
-        for child in node.children:
-            if not child.value.is_relation or child.value.is_computed:
-                continue
-            yield child, child.value.model_field_name not in eager_fields
-            eager_fields.add(child.value.model_field_name)
+    def _relation_children(node: QueryNodeType) -> list[QueryNodeType]:
+        return [child for child in node.children if child.value.is_relation and not child.value.is_computed]
 
     @staticmethod
     def _identity_columns(
-        selection_tree: QueryNodeType,
-        collection_entities: Mapping[QueryNodeType, AliasedClass[Any]],
-        context: PlanContext[Any],
+        selection_tree: QueryNodeType, context: PlanContext[Any]
     ) -> dict[QueryNodeType, tuple[ColumnElement[Any], ...]]:
-        """Selects the primary keys of every related level that owns computed values or collection entities.
+        """Selects the primary keys of every related level that owns computed values.
 
         A result row carries a computed value of one related object, not of the root. Selecting that object's
         primary key lets the executor attach the value to the right object.
         """
         identity_map: dict[QueryNodeType, tuple[ColumnElement[Any], ...]] = {}
-        owners = [
-            node.find_parent(lambda parent: parent.value.is_relation and not parent.value.is_computed)
-            for node in selection_tree.iter_depth_first()
-            if node.value.is_computed or node.metadata.data.is_transform
-        ]
-        owners.extend(node.parent for node in collection_entities)
-        for owner in owners:
-            if owner is None or owner in identity_map or context.aliases.inspect(owner).is_data_root:
+        for node in selection_tree.iter_depth_first():
+            if not (node.value.is_computed or node.metadata.data.is_transform):
+                continue
+            owner = node.find_parent(lambda parent: parent.value.is_relation and not parent.value.is_computed)
+            if owner is None or owner in identity_map:
                 continue
             owner_name = context.aliases.inspect(owner).name
             identity_map[owner] = tuple(
@@ -915,7 +891,7 @@ class ProjectionPlan:
         return identity_map
 
     @staticmethod
-    def _collect_child_load(node: QueryNodeType, context: PlanContext[Any], *, via_model_attribute: bool) -> ChildLoad:
+    def _collect_child_load(node: QueryNodeType, context: PlanContext[Any]) -> ChildLoad:
         """Builds the projection of one selected relation and of its selected sub-relations."""
         aliases = context.aliases
         columns, column_transforms = aliases.inspect(node).columns()
@@ -926,30 +902,21 @@ class ProjectionPlan:
         eager_options: list[_AbstractLoad] = [load_only(*columns)] if columns else []
         node_alias = aliases.alias_from_relation_node(node, "target")
         eager_options.extend(context.hook_applier.collect_load_options(node, node_alias))
-        load = contains_eager(aliases.aliased_attribute(node)) if via_model_attribute else Load(node_alias)
-        load = load.options(*eager_options)
-        collection_entities: dict[QueryNodeType, AliasedClass[Any]] = {} if via_model_attribute else {node: node_alias}
-        entity_loads: list[_AbstractLoad] = []
+        loads: list[_AbstractLoad] = [Load(node_alias).options(*eager_options)]
+        relation_entities: dict[QueryNodeType, AliasedClass[Any]] = {node: node_alias}
 
-        for child, child_via_model_attribute in ProjectionPlan._relation_children(node):
-            child_load = ProjectionPlan._collect_child_load(
-                child, context, via_model_attribute=child_via_model_attribute
-            )
+        for child in ProjectionPlan._relation_children(node):
+            child_load = ProjectionPlan._collect_child_load(child, context)
             transform_columns.extend(child_load.transform_columns)
-            if child_via_model_attribute:
-                load = load.options(child_load.load)
-            else:
-                entity_loads.append(child_load.load)
-            entity_loads.extend(child_load.entity_loads)
+            loads.extend(child_load.loads)
             transform_map.update(child_load.transform_map)
-            collection_entities.update(child_load.collection_entities)
+            relation_entities.update(child_load.relation_entities)
 
         return ChildLoad(
             transform_columns=tuple(transform_columns),
-            load=load,
+            loads=tuple(loads),
             transform_map=transform_map,
-            collection_entities=collection_entities,
-            entity_loads=tuple(entity_loads),
+            relation_entities=relation_entities,
         )
 
 
@@ -957,16 +924,14 @@ class ProjectionPlan:
 class ChildLoad:
     """Projection of one selected relation and of its sub-relations."""
 
-    load: _AbstractLoad
-    """Loader option of the relation: ``contains_eager``, or a ``Load`` of its selected entity."""
+    loads: tuple[_AbstractLoad, ...] = ()
+    """``Load`` options of the selected entities of the subtree."""
     transform_columns: tuple[ColumnElement[Any], ...] = ()
     """Transform columns of the subtree, in selection order."""
     transform_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
     """Transform node -> its labelled column."""
-    collection_entities: Mapping[QueryNodeType, AliasedClass[Any]] = field(default_factory=dict)
-    """Relation nodes of the subtree loaded from their own selected entity -> that entity."""
-    entity_loads: tuple[_AbstractLoad, ...] = ()
-    """Loader options of those entities, which apply to the statement rather than under ``load``."""
+    relation_entities: Mapping[QueryNodeType, AliasedClass[Any]] = field(default_factory=dict)
+    """Relation nodes of the subtree -> the alias their objects are selected from."""
 
 
 @dataclass(frozen=True)
@@ -1324,7 +1289,7 @@ def _plan_subquery(
         hook_applier=context.hook_applier,
         column_map=column_map,
         identity_columns=outer_proj.identity_map,
-        collection_entities=outer_proj.collection_entities,
+        relation_entities=outer_proj.relation_entities,
     )
 
 
@@ -1422,5 +1387,5 @@ def plan_query(
         hook_applier=context.hook_applier,
         column_map=column_map,
         identity_columns=projection_plan.identity_map,
-        collection_entities=projection_plan.collection_entities,
+        relation_entities=projection_plan.relation_entities,
     )

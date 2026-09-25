@@ -1795,12 +1795,12 @@
 # ---
 # name: test_to_many_filter_behind_to_one_keeps_every_selected_related_row[session-async-tracked-aiosqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
+  SELECT fruit.name,
+         fruit.id,
          color_1.name AS name_1,
          color_1.id AS id_1,
-         fruit.name AS name_2,
-         fruit.id AS id_2
+         fruit_1.name AS name_2,
+         fruit_1.id AS id_2
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1823,12 +1823,12 @@
 # ---
 # name: test_to_many_filter_behind_to_one_keeps_every_selected_related_row[session-async-tracked-asyncmy_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
+  SELECT fruit.name,
+         fruit.id,
          color_1.name AS name_1,
          color_1.id AS id_1,
-         fruit.name AS name_2,
-         fruit.id AS id_2
+         fruit_1.name AS name_2,
+         fruit_1.id AS id_2
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1851,12 +1851,12 @@
 # ---
 # name: test_to_many_filter_behind_to_one_keeps_every_selected_related_row[session-async-tracked-asyncpg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
+  SELECT fruit.name,
+         fruit.id,
          color_1.name AS name_1,
          color_1.id AS id_1,
-         fruit.name AS name_2,
-         fruit.id AS id_2
+         fruit_1.name AS name_2,
+         fruit_1.id AS id_2
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1879,12 +1879,12 @@
 # ---
 # name: test_to_many_filter_behind_to_one_keeps_every_selected_related_row[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
+  SELECT fruit.name,
+         fruit.id,
          color_1.name AS name_1,
          color_1.id AS id_1,
-         fruit.name AS name_2,
-         fruit.id AS id_2
+         fruit_1.name AS name_2,
+         fruit_1.id AS id_2
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1907,12 +1907,12 @@
 # ---
 # name: test_to_many_filter_behind_to_one_keeps_every_selected_related_row[session-sync-tracked-psycopg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
+  SELECT fruit.name,
+         fruit.id,
          color_1.name AS name_1,
          color_1.id AS id_1,
-         fruit.name AS name_2,
-         fruit.id AS id_2
+         fruit_1.name AS name_2,
+         fruit_1.id AS id_2
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1935,12 +1935,12 @@
 # ---
 # name: test_to_many_filter_behind_to_one_keeps_every_selected_related_row[session-sync-tracked-sqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
+  SELECT fruit.name,
+         fruit.id,
          color_1.name AS name_1,
          color_1.id AS id_1,
-         fruit.name AS name_2,
-         fruit.id AS id_2
+         fruit_1.name AS name_2,
+         fruit_1.id AS id_2
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1963,10 +1963,10 @@
 # ---
 # name: test_to_many_filter_keeps_every_selected_related_row[session-async-tracked-aiosqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1984,10 +1984,10 @@
 # ---
 # name: test_to_many_filter_keeps_every_selected_related_row[session-async-tracked-asyncmy_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2005,10 +2005,10 @@
 # ---
 # name: test_to_many_filter_keeps_every_selected_related_row[session-async-tracked-asyncpg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2026,10 +2026,10 @@
 # ---
 # name: test_to_many_filter_keeps_every_selected_related_row[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2047,10 +2047,10 @@
 # ---
 # name: test_to_many_filter_keeps_every_selected_related_row[session-sync-tracked-psycopg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2068,10 +2068,10 @@
 # ---
 # name: test_to_many_filter_keeps_every_selected_related_row[session-sync-tracked-sqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id

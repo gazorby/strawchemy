@@ -22,10 +22,10 @@
 # ---
 # name: test_to_many_upsert_create_new[session-async-tracked-aiosqlite_engine].2
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -68,10 +68,10 @@
 # ---
 # name: test_to_many_upsert_create_new[session-async-tracked-asyncmy_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -117,10 +117,10 @@
 # ---
 # name: test_to_many_upsert_create_new[session-async-tracked-asyncpg_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -166,10 +166,10 @@
 # ---
 # name: test_to_many_upsert_create_new[session-async-tracked-psycopg_async_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -215,10 +215,10 @@
 # ---
 # name: test_to_many_upsert_create_new[session-sync-tracked-psycopg_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -250,10 +250,10 @@
 # ---
 # name: test_to_many_upsert_create_new[session-sync-tracked-sqlite_engine].2
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -285,10 +285,10 @@
 # ---
 # name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-aiosqlite_engine].2
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -331,10 +331,10 @@
 # ---
 # name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-asyncmy_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -380,10 +380,10 @@
 # ---
 # name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-asyncpg_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -429,10 +429,10 @@
 # ---
 # name: test_to_many_upsert_mixed_create_and_update[session-async-tracked-psycopg_async_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -478,10 +478,10 @@
 # ---
 # name: test_to_many_upsert_mixed_create_and_update[session-sync-tracked-psycopg_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -513,10 +513,10 @@
 # ---
 # name: test_to_many_upsert_mixed_create_and_update[session-sync-tracked-sqlite_engine].2
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -548,10 +548,10 @@
 # ---
 # name: test_to_many_upsert_update_existing[session-async-tracked-aiosqlite_engine].2
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -594,10 +594,10 @@
 # ---
 # name: test_to_many_upsert_update_existing[session-async-tracked-asyncmy_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -643,10 +643,10 @@
 # ---
 # name: test_to_many_upsert_update_existing[session-async-tracked-asyncpg_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -692,10 +692,10 @@
 # ---
 # name: test_to_many_upsert_update_existing[session-async-tracked-psycopg_async_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -741,10 +741,10 @@
 # ---
 # name: test_to_many_upsert_update_existing[session-sync-tracked-psycopg_engine].3
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -776,10 +776,10 @@
 # ---
 # name: test_to_many_upsert_update_existing[session-sync-tracked-sqlite_engine].2
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -810,10 +810,10 @@
 # ---
 # name: test_to_one_upsert_create_new[session-async-tracked-aiosqlite_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -843,10 +843,10 @@
 # ---
 # name: test_to_one_upsert_create_new[session-async-tracked-asyncmy_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -878,10 +878,10 @@
 # ---
 # name: test_to_one_upsert_create_new[session-async-tracked-asyncpg_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -913,10 +913,10 @@
 # ---
 # name: test_to_one_upsert_create_new[session-async-tracked-psycopg_async_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -948,10 +948,10 @@
 # ---
 # name: test_to_one_upsert_create_new[session-sync-tracked-psycopg_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -982,10 +982,10 @@
 # ---
 # name: test_to_one_upsert_create_new[session-sync-tracked-sqlite_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1014,10 +1014,10 @@
 # ---
 # name: test_to_one_upsert_update_existing[session-async-tracked-aiosqlite_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1046,10 +1046,10 @@
 # ---
 # name: test_to_one_upsert_update_existing[session-async-tracked-asyncmy_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1080,10 +1080,10 @@
 # ---
 # name: test_to_one_upsert_update_existing[session-async-tracked-asyncpg_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1114,10 +1114,10 @@
 # ---
 # name: test_to_one_upsert_update_existing[session-async-tracked-psycopg_async_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1148,10 +1148,10 @@
 # ---
 # name: test_to_one_upsert_update_existing[session-sync-tracked-psycopg_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id
@@ -1180,10 +1180,10 @@
 # ---
 # name: test_to_one_upsert_update_existing[session-sync-tracked-sqlite_engine].2
   '''
-  SELECT color_1.name,
-         color_1.id,
-         fruit.name AS name_1,
-         fruit.id AS id_1
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
     FROM fruit AS fruit
     LEFT OUTER JOIN color AS color_1
       ON color_1.id = fruit.color_id

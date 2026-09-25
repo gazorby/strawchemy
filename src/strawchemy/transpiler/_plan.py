@@ -110,20 +110,20 @@ class QueryPlan:
     The executor reads values by column object, so column names do not matter.
     """
     identity_columns: Mapping[QueryNodeType, tuple[ColumnElement[Any], ...]] = field(default_factory=dict)
-    """Related level owning computed values or collection entities -> its primary-key columns, also selected."""
-    collection_entities: Mapping[QueryNodeType, AliasedClass[Any]] = field(default_factory=dict)
-    """Relation node loaded apart from its model attribute -> the alias its rows are selected from."""
+    """Related level owning computed values -> its primary-key columns, also in ``projection_columns``."""
+    relation_entities: Mapping[QueryNodeType, AliasedClass[Any]] = field(default_factory=dict)
+    """Selected relation node -> the alias its objects are read from."""
 
     def emit(self) -> Select[Any]:
         """Builds the SELECT of this plan."""
-        # Columns selected from a LATERAL make it a FROM candidate, so the left side of the joins must be explicit.
-        statement = select(self.root).select_from(self.root)
+        # The executor reads relation entities by position: a cached compiled statement keys rows by the entities of
+        # the query that compiled it. Columns selected from a LATERAL make it a FROM candidate, so the left side of the
+        # joins must be explicit.
+        statement = select(self.root, *self.relation_entities.values()).select_from(self.root)
         if self.filter_semijoin is not None:
             statement = statement.join(self.filter_semijoin.alias, onclause=self.filter_semijoin.onclause)
         if self.projection_columns:
             statement = statement.add_columns(*self.projection_columns)
-        if self.collection_entities:
-            statement = statement.add_columns(*self.collection_entities.values())
         statement = self.apply_clauses(statement)
         return statement.options(raiseload("*"), *self.load_options)
 

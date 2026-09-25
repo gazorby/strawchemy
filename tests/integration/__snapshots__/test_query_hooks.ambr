@@ -1069,8 +1069,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooks-aiosqlite_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1092,8 +1092,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooks-asyncmy_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1115,8 +1115,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooks-asyncpg_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1138,8 +1138,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooks-psycopg_async_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1161,8 +1161,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-aiosqlite_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.id AS id
             FROM color AS color
@@ -1190,8 +1190,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-asyncmy_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.id AS id
             FROM color AS color
@@ -1219,8 +1219,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-asyncpg_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.id AS id
             FROM color AS color
@@ -1248,8 +1248,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-psycopg_async_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.id AS id
             FROM color AS color
@@ -1277,8 +1277,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooks-psycopg_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1300,8 +1300,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooks-sqlite_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -1323,8 +1323,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooksPaginated-psycopg_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.id AS id
             FROM color AS color
@@ -1352,8 +1352,8 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooksPaginated-sqlite_engine]
   '''
-  SELECT fruit_1.id,
-         color.id AS id_1
+  SELECT color.id,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.id AS id
             FROM color AS color
@@ -1659,10 +1659,10 @@
                     fruit_1.name,
                     fruit_1.id
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1686,10 +1686,10 @@
                     fruit_1.name,
                     fruit_1.id
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1699,10 +1699,10 @@
 # ---
 # name: test_query_hook_joining_on_relation[session-async-tracked-asyncpg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -1721,10 +1721,10 @@
 # ---
 # name: test_query_hook_joining_on_relation[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -1743,10 +1743,10 @@
 # ---
 # name: test_query_hook_joining_on_relation[session-sync-tracked-psycopg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -1779,10 +1779,10 @@
                     fruit_1.name,
                     fruit_1.id
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1806,10 +1806,10 @@
                     fruit_1.name,
                     fruit_1.id
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1841,10 +1841,10 @@
                     fruit_1.name,
                     fruit_1.id
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1862,10 +1862,10 @@
 # ---
 # name: test_query_hook_joining_on_relation_ignored_by_filter[session-async-tracked-asyncpg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -1892,10 +1892,10 @@
 # ---
 # name: test_query_hook_joining_on_relation_ignored_by_filter[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -1922,10 +1922,10 @@
 # ---
 # name: test_query_hook_joining_on_relation_ignored_by_filter[session-sync-tracked-psycopg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -1966,10 +1966,10 @@
                     fruit_1.name,
                     fruit_1.id
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -2000,11 +2000,11 @@
                     fruit_1.name,
                     fruit_1.id
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.water_percent,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -2029,11 +2029,11 @@
                     fruit_1.name,
                     fruit_1.id
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.water_percent,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -2045,11 +2045,11 @@
 # ---
 # name: test_query_hook_on_paginated_relation[session-async-tracked-asyncpg_engine]
   '''
-  SELECT anon_1.name,
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.water_percent,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -2069,11 +2069,11 @@
 # ---
 # name: test_query_hook_on_paginated_relation[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.water_percent,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -2093,11 +2093,11 @@
 # ---
 # name: test_query_hook_on_paginated_relation[session-sync-tracked-psycopg_engine]
   '''
-  SELECT anon_1.name,
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.water_percent,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -2130,11 +2130,11 @@
                     fruit_1.name,
                     fruit_1.id
            ORDER BY fruit_1.id ASC
-         ) SELECT anon_1.name,
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.water_percent,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -2146,10 +2146,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruits-aiosqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2160,10 +2160,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruits-asyncmy_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2174,10 +2174,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruits-asyncpg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2188,10 +2188,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruits-psycopg_async_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2202,10 +2202,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruitsPaginated-aiosqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2223,10 +2223,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruitsPaginated-asyncmy_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2244,10 +2244,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruitsPaginated-asyncpg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2265,10 +2265,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruitsPaginated-psycopg_async_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2286,10 +2286,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-sync-tracked-colorsWithSweetFruits-psycopg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2300,10 +2300,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-sync-tracked-colorsWithSweetFruits-sqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2314,10 +2314,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-sync-tracked-colorsWithSweetFruitsPaginated-psycopg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2335,10 +2335,10 @@
 # ---
 # name: test_query_hook_on_relation_field[session-sync-tracked-colorsWithSweetFruitsPaginated-sqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2356,10 +2356,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruits-aiosqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2378,10 +2378,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruits-asyncmy_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2400,10 +2400,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruits-asyncpg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2422,10 +2422,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruits-psycopg_async_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2444,10 +2444,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruitsPaginated-aiosqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2473,10 +2473,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruitsPaginated-asyncmy_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2502,10 +2502,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruitsPaginated-asyncpg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2531,10 +2531,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruitsPaginated-psycopg_async_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2560,10 +2560,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-sync-tracked-colorsWithSweetFruits-psycopg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2582,10 +2582,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-sync-tracked-colorsWithSweetFruits-sqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2604,10 +2604,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-sync-tracked-colorsWithSweetFruitsPaginated-psycopg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2633,10 +2633,10 @@
 # ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-sync-tracked-colorsWithSweetFruitsPaginated-sqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2662,10 +2662,10 @@
 # ---
 # name: test_query_hook_on_relation_keeps_parent_page_full[session-async-tracked-aiosqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2683,10 +2683,10 @@
 # ---
 # name: test_query_hook_on_relation_keeps_parent_page_full[session-async-tracked-asyncmy_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2704,10 +2704,10 @@
 # ---
 # name: test_query_hook_on_relation_keeps_parent_page_full[session-async-tracked-asyncpg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2725,10 +2725,10 @@
 # ---
 # name: test_query_hook_on_relation_keeps_parent_page_full[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2746,10 +2746,10 @@
 # ---
 # name: test_query_hook_on_relation_keeps_parent_page_full[session-sync-tracked-psycopg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2767,10 +2767,10 @@
 # ---
 # name: test_query_hook_on_relation_keeps_parent_page_full[session-sync-tracked-sqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM (
           SELECT color.name AS name,
                  color.id AS id
@@ -2788,10 +2788,10 @@
 # ---
 # name: test_query_hook_on_type[session-async-tracked-aiosqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2802,10 +2802,10 @@
 # ---
 # name: test_query_hook_on_type[session-async-tracked-asyncmy_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2816,10 +2816,10 @@
 # ---
 # name: test_query_hook_on_type[session-async-tracked-asyncpg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2830,10 +2830,10 @@
 # ---
 # name: test_query_hook_on_type[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2844,10 +2844,10 @@
 # ---
 # name: test_query_hook_on_type[session-sync-tracked-psycopg_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2858,10 +2858,10 @@
 # ---
 # name: test_query_hook_on_type[session-sync-tracked-sqlite_engine]
   '''
-  SELECT fruit_1.name,
-         fruit_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
@@ -2885,10 +2885,10 @@
                     fruit_1.id
            ORDER BY fruit_1.water_percent ASC,
                     fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -2914,10 +2914,10 @@
                     fruit_1.id
            ORDER BY fruit_1.water_percent ASC,
                     fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -2930,10 +2930,10 @@
 # ---
 # name: test_query_hook_ordering_on_paginated_relation[session-async-tracked-asyncpg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -2954,10 +2954,10 @@
 # ---
 # name: test_query_hook_ordering_on_paginated_relation[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -2978,10 +2978,10 @@
 # ---
 # name: test_query_hook_ordering_on_paginated_relation[session-sync-tracked-psycopg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -3015,10 +3015,10 @@
                     fruit_1.id
            ORDER BY fruit_1.water_percent ASC,
                     fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -3046,11 +3046,11 @@
                     fruit_1.id
            ORDER BY fruit_1.water_percent ASC,
                     fruit_1.sweetness DESC
-         ) SELECT anon_1.name,
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.sweetness,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -3076,11 +3076,11 @@
                     fruit_1.id
            ORDER BY fruit_1.water_percent ASC,
                     fruit_1.sweetness DESC
-         ) SELECT anon_1.name,
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.sweetness,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -3091,11 +3091,11 @@
 # ---
 # name: test_query_hook_ordering_on_relation[session-async-tracked-client-order-by-asyncpg_engine]
   '''
-  SELECT anon_1.name,
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.sweetness,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -3115,11 +3115,11 @@
 # ---
 # name: test_query_hook_ordering_on_relation[session-async-tracked-client-order-by-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.sweetness,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -3152,10 +3152,10 @@
                     fruit_1.id
            ORDER BY fruit_1.water_percent ASC,
                     fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -3179,10 +3179,10 @@
                     fruit_1.id
            ORDER BY fruit_1.water_percent ASC,
                     fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -3193,10 +3193,10 @@
 # ---
 # name: test_query_hook_ordering_on_relation[session-async-tracked-hook-only-asyncpg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -3215,10 +3215,10 @@
 # ---
 # name: test_query_hook_ordering_on_relation[session-async-tracked-hook-only-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -3237,11 +3237,11 @@
 # ---
 # name: test_query_hook_ordering_on_relation[session-sync-tracked-client-order-by-psycopg_engine]
   '''
-  SELECT anon_1.name,
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.sweetness,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -3276,11 +3276,11 @@
                     fruit_1.id
            ORDER BY fruit_1.water_percent ASC,
                     fruit_1.sweetness DESC
-         ) SELECT anon_1.name,
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
          anon_1.sweetness,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -3291,10 +3291,10 @@
 # ---
 # name: test_query_hook_ordering_on_relation[session-sync-tracked-hook-only-psycopg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT fruit_1.name AS name,
@@ -3326,10 +3326,10 @@
                     fruit_1.id
            ORDER BY fruit_1.water_percent ASC,
                     fruit_1.id ASC
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id

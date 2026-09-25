@@ -1640,10 +1640,10 @@
                             fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1678,10 +1678,10 @@
                             fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1694,10 +1694,10 @@
 # ---
 # name: test_nested_distinct_on_and_order_by[session-async-tracked-asyncpg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT DISTINCT
@@ -1719,10 +1719,10 @@
 # ---
 # name: test_nested_distinct_on_and_order_by[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT DISTINCT
@@ -1744,10 +1744,10 @@
 # ---
 # name: test_nested_distinct_on_and_order_by[session-sync-tracked-psycopg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT DISTINCT
@@ -1791,10 +1791,10 @@
                             fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1829,10 +1829,10 @@
                             fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1867,10 +1867,10 @@
                             fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1883,10 +1883,10 @@
 # ---
 # name: test_nested_distinct_on_paginated[session-async-tracked-limit-asyncpg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT DISTINCT
@@ -1930,10 +1930,10 @@
                             fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1968,10 +1968,10 @@
                             fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -1984,10 +1984,10 @@
 # ---
 # name: test_nested_distinct_on_paginated[session-async-tracked-limit-offset-asyncpg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT DISTINCT
@@ -2009,10 +2009,10 @@
 # ---
 # name: test_nested_distinct_on_paginated[session-async-tracked-limit-offset-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT DISTINCT
@@ -2034,10 +2034,10 @@
 # ---
 # name: test_nested_distinct_on_paginated[session-async-tracked-limit-psycopg_async_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT DISTINCT
@@ -2059,10 +2059,10 @@
 # ---
 # name: test_nested_distinct_on_paginated[session-sync-tracked-limit-offset-psycopg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT DISTINCT
@@ -2106,10 +2106,10 @@
                             fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
@@ -2122,10 +2122,10 @@
 # ---
 # name: test_nested_distinct_on_paginated[session-sync-tracked-limit-psycopg_engine]
   '''
-  SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT DISTINCT
@@ -2169,10 +2169,10 @@
                             fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
-         ) SELECT anon_1.name,
-         anon_1.id,
-         color.name AS name_1,
-         color.id AS id_1
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
