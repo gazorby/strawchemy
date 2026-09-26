@@ -81,3 +81,22 @@ async def test_postgres_array_filters(
         assert result.data["array"][i]["id"] == raw_arrays[expected_id]["id"]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("filter_name", "expected_ids"),
+    [
+        pytest.param("contains", [1, 2, 3], id="contains"),
+        pytest.param("containedIn", [3], id="containedIn"),
+        pytest.param("overlap", [], id="overlap"),
+        pytest.param("in", [], id="in"),
+        pytest.param("nin", [1, 2, 3], id="nin"),
+    ],
+)
+async def test_postgres_array_filters_empty_list(
+    filter_name: str, expected_ids: list[int], any_query: AnyQueryExecutor
+) -> None:
+    result = await maybe_async(any_query(f"{{ array(filter: {{ arrayStrCol: {{ {filter_name}: [] }} }}) {{ id }} }}"))
+    assert not result.errors
+    assert result.data is not None
+    assert sorted(row["id"] for row in result.data["array"]) == expected_ids

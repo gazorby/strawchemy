@@ -1343,3 +1343,129 @@ async def test_and_same_to_many(
     assert [user["name"] for user in result.data["users"]] == ["Charlie"]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+@pytest.mark.parametrize("comparison", ["in", "nin"])
+async def test_empty_list_comparison(
+    comparison: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(any_query(f"{{ users(filter: {{ bio: {{ {comparison}: [] }} }}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data is not None
+
+    assert [user["name"] for user in result.data["users"]] == (
+        [] if comparison == "in" else ["Alice", "Bob", "Charlie", "Tango"]
+    )
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("query", "variables", "names"),
+    [
+        pytest.param("{ users(filter: { name: { in: [] } }) { name } }", None, [], id="in"),
+        pytest.param(
+            "{ users(filter: { name: { nin: [] } }) { name } }", None, ["Alice", "Bob", "Charlie", "Tango"], id="nin"
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { bio: { in: [] } } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-in",
+        ),
+        pytest.param("{ users(filter: { _not: { bio: { nin: [] } } }) { name } }", None, [], id="not-nin"),
+        pytest.param("{ users(filter: { _not: { _not: { bio: { in: [] } } } }) { name } }", None, [], id="not-not-in"),
+        pytest.param(
+            '{ users(filter: { _not: { bio: { in: [], eq: "Tango\'s bio" } } }) { name } }',
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-in-and-eq",
+        ),
+        pytest.param(
+            '{ users(filter: { _not: { bio: { nin: [], eq: "Tango\'s bio" } } }) { name } }',
+            None,
+            ["Alice", "Bob", "Charlie"],
+            id="not-nin-and-eq",
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { bio: { nin: [], isNull: true } } }) { name } }",
+            None,
+            ["Tango"],
+            id="not-nin-and-is-null",
+        ),
+        pytest.param(
+            '{ users(filter: { _or: [{ bio: { in: [] } }, { name: { eq: "Bob" } }] }) { name } }',
+            None,
+            ["Bob"],
+            id="or-in",
+        ),
+        pytest.param(
+            "query ($names: [String!]) { users(filter: { name: { in: $names } }) { name } }",
+            {"names": []},
+            [],
+            id="in-variable",
+        ),
+        pytest.param(
+            "{ users(filter: { bio: { in: null } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="in-null",
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { bio: { nin: null } } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-nin-null",
+        ),
+        pytest.param("{ users(filter: { group: { name: { in: [] } } }) { name } }", None, [], id="to-one-in"),
+        pytest.param("{ users(filter: { group: { name: { nin: [] } } }) { name } }", None, ["Alice"], id="to-one-nin"),
+        pytest.param(
+            "{ users(filter: { departments: { name: { nin: [] } } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie"],
+            id="to-many-nin",
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { departments: { name: { in: [] } } } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-to-many-in",
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { departments: { name: { nin: [] } } } }) { name } }",
+            None,
+            ["Tango"],
+            id="not-to-many-nin",
+        ),
+        pytest.param(
+            "{ users(filter: { departmentsAggregate: { count: { arguments: [id], predicate: { in: [] } } } }) "
+            "{ name } }",
+            None,
+            [],
+            id="aggregation-in",
+        ),
+        pytest.param(
+            "{ users(filter: { departmentsAggregate: { count: { arguments: [id], predicate: { nin: [] } } } }) "
+            "{ name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="aggregation-nin",
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { departmentsAggregate: { count: { arguments: [id], predicate: { in: [] } } } } "
+            "}) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-aggregation-in",
+        ),
+    ],
+)
+async def test_empty_list_comparison_result(
+    query: str, variables: dict[str, Any] | None, names: list[str], any_query: AnyQueryExecutor
+) -> None:
+    result = await maybe_async(any_query(query, variables))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names

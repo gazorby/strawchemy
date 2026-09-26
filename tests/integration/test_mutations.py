@@ -1117,6 +1117,40 @@ async def test_update_users_by_split_filter(
     assert sorted(user["id"] for user in result.data["users"]) == updated_ids
 
 
+@pytest.mark.parametrize(
+    ("dto_filter", "updated_names"),
+    [
+        pytest.param("{ name: { in: [] } }", [], id="in"),
+        pytest.param("{ bio: { nin: [] } }", ["Alice", "Bob", "Charlie", "Tango"], id="nin"),
+        pytest.param(
+            "{ departments: { name: { in: [] } } }",
+            [],
+            id="to-many-in",
+        ),
+    ],
+)
+async def test_update_users_by_empty_list_filter(
+    dto_filter: str, updated_names: list[str], raw_users: RawRecordData, any_query: AnyQueryExecutor
+) -> None:
+    query = f"""
+        mutation {{
+            updateUsersFilter(data: {{ name: "updated" }}, filter: {dto_filter}) {{
+                id
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    updated_ids = sorted(user["id"] for user in raw_users if user["name"] in updated_names)
+    assert sorted(user["id"] for user in result.data["updateUsersFilter"]) == updated_ids
+
+    result = await maybe_async(any_query('{ users(filter: { name: { eq: "updated" } }) { id } }'))
+    assert not result.errors
+    assert result.data
+    assert sorted(user["id"] for user in result.data["users"]) == updated_ids
+
+
 @pytest.mark.snapshot
 async def test_update_with_to_one_set(
     raw_fruits: RawRecordData,
@@ -1940,6 +1974,29 @@ async def test_update_with_secondary_table_set(
 
 
 # Delete
+
+
+@pytest.mark.parametrize(
+    ("dto_filter", "deleted_names"),
+    [
+        pytest.param("{ name: { in: [] } }", [], id="in"),
+        pytest.param("{ _not: { bio: { in: [] } } }", ["Alice", "Bob", "Charlie", "Tango"], id="not-in"),
+    ],
+)
+async def test_delete_users_by_empty_list_filter(
+    dto_filter: str, deleted_names: list[str], raw_users: RawRecordData, any_query: AnyQueryExecutor
+) -> None:
+    result = await maybe_async(any_query(f"mutation {{ deleteUsersFilter(filter: {dto_filter}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data
+    assert sorted(user["name"] for user in result.data["deleteUsersFilter"]) == deleted_names
+
+    result = await maybe_async(any_query("{ users { name } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(user["name"] for user in result.data["users"]) == sorted(
+        user["name"] for user in raw_users if user["name"] not in deleted_names
+    )
 
 
 @pytest.mark.snapshot

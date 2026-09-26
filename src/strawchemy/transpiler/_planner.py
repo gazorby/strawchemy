@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Generic, Protocol, cast
 from sqlalchemy import and_, exists, func, inspect, literal_column, not_, null, or_, select, true, tuple_
 from sqlalchemy.orm import Load, Mapper, RelationshipProperty, aliased, class_mapper, load_only, raiseload
 from sqlalchemy.sql import operators
-from sqlalchemy.sql.elements import BinaryExpression
+from sqlalchemy.sql.elements import BinaryExpression, False_, True_
 from sqlalchemy.sql.functions import count as sqla_count
 from sqlalchemy.sql.util import ClauseAdapter
 from typing_extensions import ParamSpec, Self
@@ -391,8 +391,10 @@ class AggregationPlan:
         return function_columns, new_join
 
 
-def _is_null_test(expression: ColumnElement[bool]) -> bool:
-    return isinstance(expression, BinaryExpression) and expression.operator in {operators.is_, operators.is_not}
+def _is_never_unknown(expression: ColumnElement[bool]) -> bool:
+    return isinstance(expression, (True_, False_)) or (
+        isinstance(expression, BinaryExpression) and expression.operator in {operators.is_, operators.is_not}
+    )
 
 
 @dataclass(frozen=True)
@@ -500,9 +502,9 @@ class FilterPlan:
         """Converts a filter comparison to SQL predicates, comparing ``override`` instead of the field if given."""
         attribute = override if override is not None else context.aliases.aliased_attribute(dto_filter.field_node)
         expressions: list[ColumnElement[bool]] = dto_filter.to_expressions(context.dialect, attribute)
-        # Under NOT, a NULL column must fail the comparison rather than make it unknown. Skipped for null tests, which
-        # the guard would make always false, and for empty comparisons, which it would turn into a predicate.
-        if not_null_check and expressions and not all(map(_is_null_test, expressions)):
+        # Under NOT, a NULL column must fail the comparison rather than make it unknown. Skipped for null tests and
+        # constants, which are never unknown, and for empty comparisons, which it would turn into a predicate.
+        if not_null_check and expressions and not all(map(_is_never_unknown, expressions)):
             expressions.append(attribute.is_not(null()))
         return expressions
 
