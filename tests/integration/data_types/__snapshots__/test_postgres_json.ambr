@@ -1,0 +1,574 @@
+# serializer version: 1
+# name: test_postgres_json_extract_path[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id,
+         coalesce(jsonb_path_query_first(CAST(postgres_json_model.dict_col AS JSONB), CAST($1 AS JSONPATH)), CAST($2::JSONB AS JSONB)) AS coalesce_1
+    FROM postgres_json_model AS postgres_json_model
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_extract_path[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id,
+         coalesce(jsonb_path_query_first(CAST(postgres_json_model.dict_col AS JSONB), CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
+    FROM postgres_json_model AS postgres_json_model
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_extract_path[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id,
+         coalesce(jsonb_path_query_first(CAST(postgres_json_model.dict_col AS JSONB), CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB)) AS coalesce_1
+    FROM postgres_json_model AS postgres_json_model
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-containedIn-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT ((CAST(postgres_json_model.dict_col AS JSONB) <@ $1::JSONB) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-containedIn-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT ((CAST(postgres_json_model.dict_col AS JSONB) <@ %(param_1)s::JSONB) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-contains-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT ((CAST(postgres_json_model.dict_col AS JSONB) @> $1::JSONB) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-contains-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT ((CAST(postgres_json_model.dict_col AS JSONB) @> %(param_1)s::JSONB) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-eq-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (CAST(postgres_json_model.dict_col AS JSONB) = $1::JSONB AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-eq-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (CAST(postgres_json_model.dict_col AS JSONB) = %(param_1)s::JSONB AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-hasKey-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = $1::VARCHAR AND (CAST(postgres_json_model.dict_col AS JSONB) ? $2::VARCHAR) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-hasKey-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR AND (CAST(postgres_json_model.dict_col AS JSONB) ? %(param_1)s::VARCHAR) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-hasKeyAll-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = $1::VARCHAR AND (CAST(postgres_json_model.dict_col AS JSONB) ? & CAST($2::TEXT[] AS TEXT[])) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-hasKeyAll-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR AND (CAST(postgres_json_model.dict_col AS JSONB) ? & CAST(%(param_1)s::TEXT[] AS TEXT[])) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-hasKeyAny-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = $1::VARCHAR AND (CAST(postgres_json_model.dict_col AS JSONB) ? | CAST($2::TEXT[] AS TEXT[])) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-hasKeyAny-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR AND (CAST(postgres_json_model.dict_col AS JSONB) ? | CAST(%(param_1)s::TEXT[] AS TEXT[])) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-in-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (CAST(postgres_json_model.dict_col AS JSONB) IN (__[POSTCOMPILE_param_1]) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-in-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (CAST(postgres_json_model.dict_col AS JSONB) IN (__[POSTCOMPILE_param_1]) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-isNotNull-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-isNotNull-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-isNull-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NOT NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-isNull-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NOT NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-neq-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (CAST(postgres_json_model.dict_col AS JSONB) != $1::JSONB AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-neq-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (CAST(postgres_json_model.dict_col AS JSONB) != %(param_1)s::JSONB AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-nin-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT ((CAST(postgres_json_model.dict_col AS JSONB) NOT IN (__[POSTCOMPILE_param_1])) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-not-nin-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT ((CAST(postgres_json_model.dict_col AS JSONB) NOT IN (__[POSTCOMPILE_param_1])) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-containedIn-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) <@ $1::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-containedIn-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) <@ %(param_1)s::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-contains-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) @> $1::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-contains-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) @> %(param_1)s::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-eq-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) = $1::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-eq-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) = %(param_1)s::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-hasKey-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = $1::VARCHAR
+     AND (CAST(postgres_json_model.dict_col AS JSONB) ? $2::VARCHAR)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-hasKey-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR
+     AND (CAST(postgres_json_model.dict_col AS JSONB) ? %(param_1)s::VARCHAR)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-hasKeyAll-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = $1::VARCHAR
+     AND (CAST(postgres_json_model.dict_col AS JSONB) ? & CAST($2::TEXT[] AS TEXT[]))
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-hasKeyAll-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR
+     AND (CAST(postgres_json_model.dict_col AS JSONB) ? & CAST(%(param_1)s::TEXT[] AS TEXT[]))
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-hasKeyAny-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = $1::VARCHAR
+     AND (CAST(postgres_json_model.dict_col AS JSONB) ? | CAST($2::TEXT[] AS TEXT[]))
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-hasKeyAny-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR
+     AND (CAST(postgres_json_model.dict_col AS JSONB) ? | CAST(%(param_1)s::TEXT[] AS TEXT[]))
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-in-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) IN (__[POSTCOMPILE_param_1])
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-in-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) IN (__[POSTCOMPILE_param_1])
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-isNotNull-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NOT NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-isNotNull-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NOT NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-isNull-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-isNull-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-neq-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) != $1::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-neq-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) != %(param_1)s::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-nin-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE (CAST(postgres_json_model.dict_col AS JSONB) NOT IN (__[POSTCOMPILE_param_1]))
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-async-tracked-plain-nin-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE (CAST(postgres_json_model.dict_col AS JSONB) NOT IN (__[POSTCOMPILE_param_1]))
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-containedIn-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT ((CAST(postgres_json_model.dict_col AS JSONB) <@ %(param_1)s::JSONB) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-contains-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT ((CAST(postgres_json_model.dict_col AS JSONB) @> %(param_1)s::JSONB) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-eq-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (CAST(postgres_json_model.dict_col AS JSONB) = %(param_1)s::JSONB AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-hasKey-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR AND (CAST(postgres_json_model.dict_col AS JSONB) ? %(param_1)s::VARCHAR) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-hasKeyAll-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR AND (CAST(postgres_json_model.dict_col AS JSONB) ? & CAST(%(param_1)s::TEXT[] AS TEXT[])) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-hasKeyAny-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR AND (CAST(postgres_json_model.dict_col AS JSONB) ? | CAST(%(param_1)s::TEXT[] AS TEXT[])) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-in-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (CAST(postgres_json_model.dict_col AS JSONB) IN (__[POSTCOMPILE_param_1]) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-isNotNull-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-isNull-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NOT NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-neq-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT (CAST(postgres_json_model.dict_col AS JSONB) != %(param_1)s::JSONB AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-not-nin-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE NOT ((CAST(postgres_json_model.dict_col AS JSONB) NOT IN (__[POSTCOMPILE_param_1])) AND postgres_json_model.dict_col IS NOT NULL)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-containedIn-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) <@ %(param_1)s::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-contains-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) @> %(param_1)s::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-eq-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) = %(param_1)s::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-hasKey-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR
+     AND (CAST(postgres_json_model.dict_col AS JSONB) ? %(param_1)s::VARCHAR)
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-hasKeyAll-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR
+     AND (CAST(postgres_json_model.dict_col AS JSONB) ? & CAST(%(param_1)s::TEXT[] AS TEXT[]))
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-hasKeyAny-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE jsonb_typeof(CAST(postgres_json_model.dict_col AS JSONB)) = %(jsonb_typeof_1)s::VARCHAR
+     AND (CAST(postgres_json_model.dict_col AS JSONB) ? | CAST(%(param_1)s::TEXT[] AS TEXT[]))
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-in-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) IN (__[POSTCOMPILE_param_1])
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-isNotNull-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NOT NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-isNull-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE postgres_json_model.dict_col IS NULL
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-neq-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE CAST(postgres_json_model.dict_col AS JSONB) != %(param_1)s::
+   JSONB
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---
+# name: test_postgres_json_filters[session-sync-tracked-plain-nin-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM postgres_json_model AS postgres_json_model
+   WHERE (CAST(postgres_json_model.dict_col AS JSONB) NOT IN (__[POSTCOMPILE_param_1]))
+   ORDER BY postgres_json_model.id ASC
+  '''
+# ---

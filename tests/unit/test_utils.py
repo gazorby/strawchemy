@@ -1,13 +1,19 @@
 from __future__ import annotations
 
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Any, Optional, Union
 from unittest.mock import Mock
 
 import pytest
+from sqlalchemy import JSON, Column, Dialect, MetaData, Table, TypeDecorator
+from sqlalchemy.dialects import postgresql
 
 from strawchemy.exceptions import SessionNotFoundError
 from strawchemy.utils.annotation import inner_types
+from strawchemy.utils.postgres import as_jsonb
 from strawchemy.utils.strawberry import default_session_getter
+
+if TYPE_CHECKING:
+    from sqlalchemy.types import TypeEngine
 
 
 @pytest.mark.parametrize(
@@ -42,3 +48,44 @@ def test_session_not_found_error(info: Mock) -> None:
 )
 def test_inner_types(annotation: object, expected: tuple[object, ...]) -> None:
     assert inner_types(annotation) == expected
+
+
+class _JSONBDecorator(TypeDecorator[Any]):
+    impl = postgresql.JSONB
+    cache_ok = True
+
+
+class _JSONBVariantDecorator(TypeDecorator[Any]):
+    impl = JSON().with_variant(postgresql.JSONB, "postgresql")
+    cache_ok = True
+
+
+class _JSONBLoadedDecorator(TypeDecorator[Any]):
+    impl = JSON
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
+        return dialect.type_descriptor(postgresql.JSONB())
+
+
+class _JSONDecorator(TypeDecorator[Any]):
+    impl = postgresql.JSON
+    cache_ok = True
+
+
+@pytest.mark.parametrize(
+    ("type_", "expected"),
+    [
+        pytest.param(postgresql.JSONB(), "t.c", id="jsonb"),
+        pytest.param(JSON().with_variant(postgresql.JSONB, "postgresql"), "t.c", id="jsonb-variant"),
+        pytest.param(_JSONBDecorator(), "t.c", id="jsonb-decorator"),
+        pytest.param(_JSONBVariantDecorator(), "t.c", id="jsonb-variant-decorator"),
+        pytest.param(_JSONBLoadedDecorator(), "t.c", id="jsonb-load-dialect-impl"),
+        pytest.param(postgresql.JSON(), "CAST(t.c AS JSONB)", id="json"),
+        pytest.param(JSON(), "CAST(t.c AS JSONB)", id="generic-json"),
+        pytest.param(_JSONDecorator(), "CAST(t.c AS JSONB)", id="json-decorator"),
+    ],
+)
+def test_as_jsonb(type_: TypeEngine[Any], expected: str) -> None:
+    column = Table("t", MetaData(), Column("c", type_)).c.c
+    assert str(as_jsonb(column).compile(dialect=postgresql.dialect())) == expected

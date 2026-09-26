@@ -30,6 +30,7 @@ from tests.integration.models import (
     FruitFarm,
     IntervalModel,
     JSONModel,
+    PostgresJSONModel,
     RankedUser,
     User,
 )
@@ -395,6 +396,14 @@ class JSONFilter: ...
 
 @strawchemy.type(JSONModel, include="all")
 class JSONType: ...
+
+
+@strawchemy.filter(PostgresJSONModel, include="all")
+class PostgresJSONFilter: ...
+
+
+@strawchemy.type(PostgresJSONModel, include="all")
+class PostgresJSONType: ...
 
 
 # Date/Time
@@ -816,6 +825,20 @@ class JSONAsyncQuery:
 @strawberry.type
 class JSONSyncQuery:
     json: list[JSONType] = strawchemy.field(filter_input=JSONFilter, repository_type=StrawchemySyncRepository)
+
+
+@strawberry.type
+class PostgresJSONAsyncQuery:
+    json: list[PostgresJSONType] = strawchemy.field(
+        filter_input=PostgresJSONFilter, repository_type=StrawchemyAsyncRepository
+    )
+
+
+@strawberry.type
+class PostgresJSONSyncQuery:
+    json: list[PostgresJSONType] = strawchemy.field(
+        filter_input=PostgresJSONFilter, repository_type=StrawchemySyncRepository
+    )
 
 
 @strawberry.type

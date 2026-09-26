@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase
 
 
-__all__ = ("from_graphql_representation", "python_type", "to_graphql_representation")
+__all__ = ("from_graphql_representation", "graphql_input", "python_type", "to_graphql_representation")
 
 
 _TimeDeltaType = TypeAdapter(timedelta)
@@ -80,6 +80,12 @@ def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> A
             expected = f'"{expected}"'
 
     return expected
+
+
+def graphql_input(value: Any) -> str:
+    if isinstance(value, list):
+        return f"[{', '.join(to_graphql_representation(v, 'input') for v in value)}]"
+    return to_graphql_representation(value, "input")
 
 
 def from_graphql_representation(value: Any, type_: type[Any]) -> Any:
