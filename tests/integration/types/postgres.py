@@ -103,6 +103,12 @@ class MultiFarmFruitHook(QueryHook[Fruit]):
         return statement.join(FruitFarm, FruitFarm.fruit_id == alias.id).where(FruitFarm.name.endswith(" 2"))
 
 
+class ColorOrderingHook(QueryHook[Color]):
+    @override
+    def apply_hook(self, statement: Select[tuple[Color]], alias: AliasedClass[Color]) -> Select[tuple[Color]]:
+        return statement.order_by(alias.name.asc())
+
+
 # User
 
 
@@ -293,6 +299,15 @@ class ColorWithOrderedFruits:
 @strawchemy.type(Color, include="all")
 class ColorWithPaginatedOrderedFruits:
     fruits: list[OrderedFruitType] = strawchemy.field(pagination=True)
+
+
+@strawchemy.type(Color, include="all", query_hook=ColorOrderingHook())
+class OrderedColorType: ...
+
+
+@strawchemy.type(Fruit, include="all", paginate="all", order="all")
+class FruitWithOrderedColorType:
+    color: OrderedColorType | None
 
 
 @strawchemy.create_input(Color, include="all")
@@ -548,6 +563,12 @@ class AsyncQuery:
     colors_with_ordered_fruits: list[ColorWithOrderedFruits] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository
     )
+    fruits_with_ordered_color: list[FruitWithOrderedColorType] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository
+    )
+    fruits_with_ordered_color_paginated: list[FruitWithOrderedColorType] = strawchemy.field(
+        pagination=True, repository_type=StrawchemyAsyncRepository
+    )
     colors_with_paginated_ordered_fruits: list[ColorWithPaginatedOrderedFruits] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository
     )
@@ -732,6 +753,12 @@ class SyncQuery:
     )
     colors_with_ordered_fruits: list[ColorWithOrderedFruits] = strawchemy.field(
         repository_type=StrawchemySyncRepository
+    )
+    fruits_with_ordered_color: list[FruitWithOrderedColorType] = strawchemy.field(
+        repository_type=StrawchemySyncRepository
+    )
+    fruits_with_ordered_color_paginated: list[FruitWithOrderedColorType] = strawchemy.field(
+        pagination=True, repository_type=StrawchemySyncRepository
     )
     colors_with_paginated_ordered_fruits: list[ColorWithPaginatedOrderedFruits] = strawchemy.field(
         repository_type=StrawchemySyncRepository

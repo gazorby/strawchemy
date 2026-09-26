@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import pytest
 
@@ -472,3 +472,229 @@ async def test_root_aggregation(
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def _data(any_query: AnyQueryExecutor, query: str) -> dict[str, Any]:
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    return result.data
+
+
+def _farms_aggregate(raw_farms: RawRecordData, fruit_id: int) -> dict[str, Any]:
+    names = [farm["name"] for farm in raw_farms if farm["fruit_id"] == fruit_id]
+    return {"count": len(names), "min": {"name": min(names)}, "max": {"name": max(names)}}
+
+
+@pytest.mark.parametrize(
+    ("root", "arguments"),
+    [
+        pytest.param("colors", "(orderBy: { sweetness: ASC })", id="order-by"),
+        pytest.param("colorsPaginated", "(limit: 10, offset: 0)", id="limit-offset"),
+        pytest.param("colorsPaginated", "", id="default-pagination"),
+    ],
+)
+async def test_nested_aggregation_under_relation_with_arguments(
+    root: str,
+    arguments: str,
+    any_query: AnyQueryExecutor,
+    raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
+    query_tracker: QueryTracker,
+) -> None:
+    """Test that an aggregate under a relation that gets its own subquery is computed per related row."""
+    data = await _data(
+        any_query,
+        f"""
+        {{
+            {root} {{
+                id
+                fruits{arguments} {{ id farmsAggregate {{ count min {{ name }} max {{ name }} }} }}
+            }}
+        }}
+        """,
+    )
+    fruits = [fruit for color in data[root] for fruit in color["fruits"]]
+    assert sorted(fruit["id"] for fruit in fruits) == sorted(
+        fruit["id"] for fruit in raw_fruits if fruit["color_id"] is not None
+    )
+    for fruit in fruits:
+        assert fruit["farmsAggregate"] == _farms_aggregate(raw_farms, fruit["id"])
+    assert query_tracker.query_count == 1
+
+
+async def test_nested_aggregation_under_relation_with_distinct_on(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
+) -> None:
+    """Test that an aggregate under a relation with DISTINCT ON is computed per kept row."""
+    data = await _data(
+        any_query,
+        """
+        {
+            colorsNestedDistinct {
+                id
+                fruits(distinctOn: [sweetness]) { id sweetness farmsAggregate { count min { name } max { name } } }
+            }
+        }
+        """,
+    )
+    for color in data["colorsNestedDistinct"]:
+        sweetness = {fruit["sweetness"] for fruit in raw_fruits if fruit["color_id"] == color["id"]}
+        assert sorted(fruit["sweetness"] for fruit in color["fruits"]) == sorted(sweetness)
+        for fruit in color["fruits"]:
+            assert fruit["farmsAggregate"] == _farms_aggregate(raw_farms, fruit["id"])
+    assert query_tracker.query_count == 1
+
+
+_ROOT_AGGREGATION_NEXT_TO_NESTED = """
+    {{
+        colors{arguments} {{
+            id
+            fruitsAggregate {{ count }}
+            fruits(orderBy: {{ sweetness: ASC }}) {{ id farmsAggregate {{ count }} }}
+        }}
+    }}
+"""
+
+
+def _assert_nested_aggregates(
+    colors: list[dict[str, Any]], raw_fruits: RawRecordData, raw_farms: RawRecordData
+) -> None:
+    fruit_counts = Counter(fruit["color_id"] for fruit in raw_fruits)
+    for color in colors:
+        fruits = sorted(
+            (fruit for fruit in raw_fruits if fruit["color_id"] == color["id"]), key=lambda fruit: fruit["sweetness"]
+        )
+        assert color["fruitsAggregate"] == {"count": fruit_counts[color["id"]]}
+        assert color["fruits"] == [
+            {"id": fruit["id"], "farmsAggregate": {"count": _farms_aggregate(raw_farms, fruit["id"])["count"]}}
+            for fruit in fruits
+        ]
+
+
+async def test_root_aggregation_filter_next_to_nested_aggregation(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
+) -> None:
+    """Test a root aggregation filter next to an aggregate under an ordered relation."""
+    data = await _data(
+        any_query,
+        _ROOT_AGGREGATION_NEXT_TO_NESTED.format(
+            arguments="(filter: { fruitsAggregate: { count: { predicate: { gt: 1 } } } })"
+        ),
+    )
+    fruit_counts = Counter(fruit["color_id"] for fruit in raw_fruits)
+    assert {color["id"] for color in data["colors"]} == {
+        color_id for color_id, count in fruit_counts.items() if count > 1
+    }
+    _assert_nested_aggregates(data["colors"], raw_fruits, raw_farms)
+    assert query_tracker.query_count == 1
+
+
+async def test_root_aggregation_order_by_next_to_nested_aggregation(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
+) -> None:
+    """Test a root aggregation ordering next to an aggregate under an ordered relation."""
+    data = await _data(
+        any_query,
+        _ROOT_AGGREGATION_NEXT_TO_NESTED.format(arguments="(orderBy: { fruitsAggregate: { count: DESC } })"),
+    )
+    counts = [color["fruitsAggregate"]["count"] for color in data["colors"]]
+    assert counts == sorted(counts, reverse=True)
+    _assert_nested_aggregates(data["colors"], raw_fruits, raw_farms)
+    assert query_tracker.query_count == 1
+
+
+@pytest.mark.parametrize(
+    ("root", "expected_fruit_ids"),
+    [
+        pytest.param("colorsWithOrderedFruits", None, id="ordering-hook"),
+        pytest.param("colorsWithMultiFarmFruits", {1, 2}, id="joining-hook"),
+    ],
+)
+async def test_nested_aggregation_under_hooked_relation(
+    root: str,
+    expected_fruit_ids: set[int] | None,
+    any_query: AnyQueryExecutor,
+    raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
+    query_tracker: QueryTracker,
+) -> None:
+    """Test that an aggregate under a relation whose query hook is not WHERE-only is computed per related row."""
+    data = await _data(any_query, f"{{ {root} {{ id fruits {{ id farmsAggregate {{ count }} }} }} }}")
+    fruits = [fruit for color in data[root] for fruit in color["fruits"]]
+    colored_fruit_ids = {fruit["id"] for fruit in raw_fruits if fruit["color_id"] is not None}
+    assert {fruit["id"] for fruit in fruits} == (expected_fruit_ids or colored_fruit_ids)
+    for fruit in fruits:
+        assert fruit["farmsAggregate"] == {"count": _farms_aggregate(raw_farms, fruit["id"])["count"]}
+    assert query_tracker.query_count == 1
+
+
+async def test_aggregation_two_levels_under_relation_with_arguments(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker
+) -> None:
+    """Test that an aggregate under a to-one relation of an ordered relation reports its own parent's value."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colors {
+                    id
+                    fruits(orderBy: { sweetness: ASC }) {
+                        id
+                        color {
+                            id
+                            fruitsAggregate { count sum { sweetness } min { sweetness } max { sweetness } }
+                        }
+                    }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    for color in result.data["colors"]:
+        sweetness = [fruit["sweetness"] for fruit in raw_fruits if fruit["color_id"] == color["id"]]
+        expected = {
+            "count": len(sweetness),
+            "sum": {"sweetness": sum(sweetness)},
+            "min": {"sweetness": min(sweetness)},
+            "max": {"sweetness": max(sweetness)},
+        }
+        assert [fruit["color"] for fruit in color["fruits"]] == [
+            {"id": color["id"], "fruitsAggregate": expected} for _ in sweetness
+        ]
+    assert query_tracker.query_count == 1
+
+
+async def test_nested_aggregation_under_aliased_relations_with_arguments(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
+) -> None:
+    """Test that each alias of an ordered relation computes its own nested aggregate."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colors {
+                    id
+                    a: fruits(orderBy: { sweetness: ASC }) { id farmsAggregate { count min { name } max { name } } }
+                    b: fruits(orderBy: { sweetness: DESC }) { id farmsAggregate { count } }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    for color in result.data["colors"]:
+        fruits = sorted(
+            (fruit for fruit in raw_fruits if fruit["color_id"] == color["id"]), key=lambda fruit: fruit["sweetness"]
+        )
+        assert color["a"] == [
+            {"id": fruit["id"], "farmsAggregate": _farms_aggregate(raw_farms, fruit["id"])} for fruit in fruits
+        ]
+        assert color["b"] == [
+            {"id": fruit["id"], "farmsAggregate": {"count": _farms_aggregate(raw_farms, fruit["id"])["count"]}}
+            for fruit in reversed(fruits)
+        ]
+    assert query_tracker.query_count == 1

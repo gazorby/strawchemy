@@ -46,7 +46,7 @@ from strawchemy.transpiler._query import (
 from strawchemy.transpiler._strategies import correlate_relation, select_join_strategy
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping, Sequence
+    from collections.abc import Collection, Iterable, Mapping, Sequence
 
     from sqlalchemy import Dialect, Label, Select
     from sqlalchemy.orm.strategy_options import _AbstractLoad
@@ -428,6 +428,11 @@ class FilterPlan:
         )
         return cls(where=(*where.expressions, *exists), joins=tuple(where.joins))
 
+    @staticmethod
+    def join_nodes(query_graph: QueryGraph[Any]) -> list[QueryNodeType]:
+        """Returns the relation nodes the filter of ``query_graph`` joins itself."""
+        return _relation_nodes(query_graph.where_join_path) if query_graph.query_filter else []
+
     @classmethod
     def _exists(
         cls,
@@ -657,11 +662,7 @@ class FilterPlan:
             allow_null=allow_null,
         )
         return Where(
-            conjunction,
-            [
-                *conjunction.joins,
-                *[context.build_join(node, False) for node in join_path if not node.is_root and node.value.is_relation],
-            ],
+            conjunction, [*conjunction.joins, *[context.build_join(node, False) for node in _relation_nodes(join_path)]]
         )
 
 
@@ -949,20 +950,19 @@ class FilterPhase:
 
         Joins made for the filter run no query hook: hooks restrict the selected rows, not those the filter tests.
         """
-        aggregation_plan = AggregationPlan.plan(query_graph, context)
         context = replace(context, hook_applier=context.hook_applier.without(query_graph.filter_relation_nodes))
-        filter_plan = FilterPlan.plan(query_graph, context, aggregation_plan, allow_null)
-        filter_join_nodes = {join.node for join in filter_plan.joins}
-        subquery_tree_joins: list[Join] = []
+        subquery_tree_joins: tuple[Join, ...] = ()
         if query_graph.subquery_join_tree:
-            subquery_tree_joins = [
-                join
-                for join in _plan_relation_joins(
-                    query_graph, context, is_outer=True, tree=query_graph.subquery_join_tree
-                )
-                if join.node not in filter_join_nodes
-            ]
-        return cls(agg_plan=aggregation_plan, filter_plan=filter_plan, subquery_tree_joins=tuple(subquery_tree_joins))
+            subquery_tree_joins = _plan_relation_joins(
+                query_graph,
+                context,
+                is_outer=True,
+                tree=query_graph.subquery_join_tree,
+                exclude=set(FilterPlan.join_nodes(query_graph)),
+            )
+        aggregation_plan = AggregationPlan.plan(query_graph, context)
+        filter_plan = FilterPlan.plan(query_graph, context, aggregation_plan, allow_null)
+        return cls(agg_plan=aggregation_plan, filter_plan=filter_plan, subquery_tree_joins=subquery_tree_joins)
 
 
 @dataclass(frozen=True)
@@ -1048,16 +1048,27 @@ def _is_where_only(statement: Select[Any], base: Select[Any]) -> bool:
 
 
 def _plan_relation_joins(
-    query_graph: QueryGraph[Any], context: PlanContext[Any], is_outer: bool = True, tree: QueryNodeType | None = None
+    query_graph: QueryGraph[Any],
+    context: PlanContext[Any],
+    is_outer: bool = True,
+    tree: QueryNodeType | None = None,
+    exclude: Collection[QueryNodeType] = (),
 ) -> tuple[Join, ...]:
-    """Builds a join for every non-computed relation in ``tree``, or in the root join tree, breadth-first."""
+    """Builds a join for every non-computed relation in ``tree``, or in the root join tree, breadth-first.
+
+    Nodes in ``exclude`` are never built: building a join may swap the alias another join of the node relies on.
+    """
     source_tree = tree if tree is not None else query_graph.root_join_tree
     joins: list[Join] = [
         context.build_join(child, is_outer)
         for child in source_tree.iter_breadth_first()
-        if not child.value.is_computed and child.value.is_relation and not child.is_root
+        if not child.value.is_computed and child.value.is_relation and not child.is_root and child not in exclude
     ]
     return tuple(joins)
+
+
+def _relation_nodes(path: Sequence[QueryNodeType]) -> list[QueryNodeType]:
+    return [node for node in path if not node.is_root and node.value.is_relation]
 
 
 def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any]) -> bool:
@@ -1166,7 +1177,9 @@ def _assemble_inner_statement(
         )
     projected: list[Any] = _dedup_columns([*only_columns, *selected_function_columns])
 
-    inner_statement = select(inspect(inner_alias)).options(raiseload("*")).with_only_columns(*projected)
+    inner_statement = (
+        select(inspect(inner_alias)).options(raiseload("*")).with_only_columns(*projected).select_from(inner_alias)
+    )
     if context.statement is not None:
         inner_statement = UserStatementPlan(context.statement, context.aliases).apply_to_statement(
             inner_statement, inner_alias
@@ -1254,9 +1267,8 @@ def _plan_subquery(
         fn: require_corresponding_column(subquery, cast("KeyedColumnElement[Any]", selected_function_labels[fn]))
         for fn in referenced_functions
     }
-    outer_agg_plan = AggregationPlan.plan(query_graph, context, reprojected_agg_columns)
-
     outer_joins = list(_plan_relation_joins(query_graph, context, is_outer=True))
+    outer_agg_plan = AggregationPlan.plan(query_graph, context, reprojected_agg_columns)
     outer_order = OrderPlan.plan(query_graph, context, outer_agg_plan, outer_joins)
     outer_joins.extend(outer_order.joins)
 
@@ -1322,16 +1334,13 @@ def plan_query(
     distinct_on = DistinctOn(query_graph)
     use_distinct_on = not distinct_on_rank
 
+    subquery_join_tree = query_graph.subquery_join_tree
+    subquery_join_nodes = set(subquery_join_tree.iter_breadth_first()) if subquery_join_tree else set()
+    root_tree_joins = list(_plan_relation_joins(query_graph, context, is_outer=True, exclude=subquery_join_nodes))
+
     phase = FilterPhase.plan(query_graph, context, allow_null)
     aggregation_plan, filter_plan = phase.agg_plan, phase.filter_plan
     subquery_tree_joins = list(phase.subquery_tree_joins)
-    subquery_join_nodes = {join.node for join in [*filter_plan.joins, *subquery_tree_joins]}
-
-    root_tree_joins: list[Join] = [
-        join
-        for join in _plan_relation_joins(query_graph, context, is_outer=True)
-        if join.node not in subquery_join_nodes
-    ]
 
     all_relation_joins: list[Join] = [*filter_plan.joins, *subquery_tree_joins, *root_tree_joins]
 
