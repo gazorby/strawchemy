@@ -929,6 +929,12 @@ Strawchemy supports a wide range of filter operations:
 | **Interval**                            | order filters on plain intervals, plus `days`, `hours`, `minutes` and `seconds` filters                                                                                          |
 | **Logical**                             | `_and`, `_or`, `_not`                                                                                                                                                            |
 
+A filter on a relationship only matches rows that have a matching related row, whatever the filters next to it:
+`users(filter: { group: { name: { isNull: true } } })` skips users without a group. To find rows without a related row,
+filter on the foreign key column (`groupId: { isNull: true }`), negate the relationship
+(`_not: { group: { id: { isNull: false } } }`) or, for to-many relationships, count them
+(`postsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } }`).
+
 ### Geo Filters
 
 Strawchemy supports spatial filtering capabilities for geometry fields
