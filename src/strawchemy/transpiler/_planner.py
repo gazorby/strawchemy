@@ -488,9 +488,9 @@ class FilterPlan:
         """Converts a filter comparison to SQL predicates, comparing ``override`` instead of the field if given."""
         attribute = override if override is not None else context.aliases.aliased_attribute(dto_filter.field_node)
         expressions: list[ColumnElement[bool]] = dto_filter.to_expressions(context.dialect, attribute)
-        # Under NOT, a comparison on a NULL column must be false rather than unknown, but guarding a null test such
-        # as ``IS NULL`` would make it always false.
-        if not_null_check and not (expressions and all(map(_is_null_test, expressions))):
+        # Under NOT, a NULL column must fail the comparison rather than make it unknown. Skipped for null tests, which
+        # the guard would make always false, and for empty comparisons, which it would turn into a predicate.
+        if not_null_check and expressions and not all(map(_is_null_test, expressions)):
             expressions.append(attribute.is_not(null()))
         return expressions
 
@@ -642,7 +642,8 @@ class FilterPlan:
                 not_null_check=True,
             )
             joins.extend(not_conjunction.joins)
-            and_conjunction.expressions.append(not_(and_(*not_conjunction.expressions)))
+            if not_conjunction.expressions:
+                and_conjunction.expressions.append(not_(and_(*not_conjunction.expressions)))
         if and_conjunction.expressions:
             and_expression = and_(*and_conjunction.expressions)
             if or_conjunction.expressions and and_conjunction.has_many_predicates():
