@@ -983,23 +983,69 @@ async def test_update_by_filter_on_to_many_relation(
 @pytest.mark.parametrize(
     ("dto_filter", "updated_names"),
     [
+        pytest.param("{ departments: { name: { isNull: true } } }", [], id="to-many-null"),
         pytest.param(
-            '{ name: { neq: "Zed" }, departments: { name: { isNull: true } } }', ["Tango"], id="column-and-to-many-null"
+            '{ name: { neq: "Zed" }, departments: { name: { isNull: true } } }', [], id="column-and-to-many-null"
         ),
         pytest.param(
             '{ name: { neq: "Zed" }, departments: { _or: [{ name: { isNull: true } }, { name: { eq: "IT" } }] } }',
-            ["Alice", "Charlie", "Tango"],
+            ["Alice", "Charlie"],
             id="column-and-to-many-or-null",
         ),
         pytest.param(
             '{ group: { name: { isNull: true } }, departments: { name: { eq: "IT" } } }',
-            ["Charlie"],
+            [],
             id="to-one-null-and-to-many",
         ),
+        pytest.param("{ group: { name: { isNull: true } } }", [], id="to-one-null"),
+        pytest.param('{ name: { neq: "Zed" }, group: { name: { isNull: true } } }', [], id="column-and-to-one-null"),
         pytest.param(
-            '{ name: { neq: "Zed" }, group: { name: { isNull: true } } }',
-            ["Bob", "Charlie", "Tango"],
-            id="column-and-to-one-null",
+            '{ _or: [{ name: { eq: "Bob" } }, { group: { name: { isNull: true } } }] }', ["Bob"], id="or-to-one-null"
+        ),
+        pytest.param(
+            '{ name: { neq: "Zed" }, _not: { group: { name: { isNull: true } } } }',
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="column-and-not-to-one-null",
+        ),
+        pytest.param('{ group: { _not: { name: { eq: "Group 1" } } } }', [], id="to-one-not"),
+        pytest.param('{ departments: { _not: { name: { eq: "IT" } } } }', ["Bob", "Charlie"], id="to-many-not"),
+        pytest.param(
+            '{ departments: { _or: [{ name: { eq: "Sales" } }, { _not: { name: { isNull: false } } }] } }',
+            ["Bob"],
+            id="to-many-or-not",
+        ),
+        pytest.param(
+            "{ departments: { usersAggregate: { count: { arguments: [id], predicate: { lt: 2 } } } } }",
+            ["Bob", "Charlie"],
+            id="to-many-aggregation",
+        ),
+        pytest.param(
+            "{ group: { topicsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } } } }",
+            [],
+            id="to-one-aggregation",
+        ),
+        pytest.param(
+            '{ _or: [{ name: { eq: "Bob" } }, '
+            "{ group: { topicsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } } } }] }",
+            ["Bob"],
+            id="or-to-one-aggregation",
+        ),
+        pytest.param(
+            '{ _or: [{ group: { name: { eq: "Group 1" } } }, { departments: { name: { eq: "Sales" } } }] }',
+            ["Alice", "Bob"],
+            id="or-to-one-and-to-many",
+        ),
+        pytest.param(
+            "{ _or: [{ departmentsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } } }, "
+            "{ group: { name: { isNull: true } } }] }",
+            ["Tango"],
+            id="or-aggregation-and-to-one-null",
+        ),
+        pytest.param(
+            "{ _or: [{ departmentsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } } }, "
+            '{ group: { name: { eq: "Group 1" } } }] }',
+            ["Alice", "Tango"],
+            id="or-aggregation-and-to-one",
         ),
     ],
 )
@@ -1950,23 +1996,69 @@ async def test_delete_filter(
             ["Charlie"],
             id="column-and-aggregation",
         ),
+        pytest.param("{ departments: { name: { isNull: true } } }", [], id="to-many-null"),
         pytest.param(
-            '{ name: { neq: "Zed" }, departments: { name: { isNull: true } } }', ["Tango"], id="column-and-to-many-null"
+            '{ name: { neq: "Zed" }, departments: { name: { isNull: true } } }', [], id="column-and-to-many-null"
         ),
         pytest.param(
             '{ name: { neq: "Zed" }, departments: { _or: [{ name: { isNull: true } }, { name: { eq: "IT" } }] } }',
-            ["Alice", "Charlie", "Tango"],
+            ["Alice", "Charlie"],
             id="column-and-to-many-or-null",
         ),
         pytest.param(
             '{ group: { name: { isNull: true } }, departments: { name: { eq: "IT" } } }',
-            ["Charlie"],
+            [],
             id="to-one-null-and-to-many",
         ),
+        pytest.param("{ group: { name: { isNull: true } } }", [], id="to-one-null"),
+        pytest.param('{ name: { neq: "Zed" }, group: { name: { isNull: true } } }', [], id="column-and-to-one-null"),
         pytest.param(
-            '{ name: { neq: "Zed" }, group: { name: { isNull: true } } }',
-            ["Bob", "Charlie", "Tango"],
-            id="column-and-to-one-null",
+            '{ _or: [{ name: { eq: "Bob" } }, { group: { name: { isNull: true } } }] }', ["Bob"], id="or-to-one-null"
+        ),
+        pytest.param(
+            '{ name: { neq: "Zed" }, _not: { group: { name: { isNull: true } } } }',
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="column-and-not-to-one-null",
+        ),
+        pytest.param('{ group: { _not: { name: { eq: "Group 1" } } } }', [], id="to-one-not"),
+        pytest.param('{ departments: { _not: { name: { eq: "IT" } } } }', ["Bob", "Charlie"], id="to-many-not"),
+        pytest.param(
+            '{ departments: { _or: [{ name: { eq: "Sales" } }, { _not: { name: { isNull: false } } }] } }',
+            ["Bob"],
+            id="to-many-or-not",
+        ),
+        pytest.param(
+            "{ departments: { usersAggregate: { count: { arguments: [id], predicate: { lt: 2 } } } } }",
+            ["Bob", "Charlie"],
+            id="to-many-aggregation",
+        ),
+        pytest.param(
+            "{ group: { topicsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } } } }",
+            [],
+            id="to-one-aggregation",
+        ),
+        pytest.param(
+            '{ _or: [{ name: { eq: "Bob" } }, '
+            "{ group: { topicsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } } } }] }",
+            ["Bob"],
+            id="or-to-one-aggregation",
+        ),
+        pytest.param(
+            '{ _or: [{ group: { name: { eq: "Group 1" } } }, { departments: { name: { eq: "Sales" } } }] }',
+            ["Alice", "Bob"],
+            id="or-to-one-and-to-many",
+        ),
+        pytest.param(
+            "{ _or: [{ departmentsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } } }, "
+            "{ group: { name: { isNull: true } } }] }",
+            ["Tango"],
+            id="or-aggregation-and-to-one-null",
+        ),
+        pytest.param(
+            "{ _or: [{ departmentsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } } }, "
+            '{ group: { name: { eq: "Group 1" } } }] }',
+            ["Alice", "Tango"],
+            id="or-aggregation-and-to-one",
         ),
     ],
 )

@@ -46,7 +46,7 @@ from strawchemy.transpiler._query import (
 from strawchemy.transpiler._strategies import correlate_relation, select_join_strategy
 
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping, Sequence
+    from collections.abc import Collection, Iterable, Mapping, Sequence
 
     from sqlalchemy import Dialect, Label, Select
     from sqlalchemy.orm.strategy_options import _AbstractLoad
@@ -408,7 +408,6 @@ class FilterPlan:
             derived_table = query_graph.filter_scope == "dml" and context.db_features.dml_subquery_needs_derived_table
             exists = cls._exists(
                 query_graph.exists_filter,
-                query_graph.exists_join_path,
                 context,
                 allow_null,
                 derived_table=derived_table,
@@ -432,7 +431,6 @@ class FilterPlan:
     def _exists(
         cls,
         dto_filter: BooleanFilterDTO,
-        join_path: Sequence[QueryNodeType] | None,
         context: PlanContext[Any],
         allow_null: bool,
         derived_table: bool,
@@ -446,7 +444,7 @@ class FilterPlan:
         inner_aliases = context.aliases.detached(inner_alias)
         inner_context = replace(context, aliases=inner_aliases, hook_applier=HookApplier(inner_aliases), statement=None)
         phase = FilterPhase.plan(
-            QueryGraph(inner_aliases, dto_filter=dto_filter, filter_scope="subquery", filter_join_path=join_path),
+            QueryGraph(inner_aliases, dto_filter=dto_filter, filter_scope="subquery"),
             inner_context,
             allow_null,
         )
@@ -555,6 +553,7 @@ class FilterPlan:
         *,
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
+        inner_joined: Collection[QueryNodeType],
         not_null_check: bool = False,
     ) -> Conjunction:
         """Builds the predicates and joins of each filter in ``query``."""
@@ -579,6 +578,7 @@ class FilterPlan:
                     context,
                     agg_plan=agg_plan,
                     emitted_agg_joins=emitted_agg_joins,
+                    inner_joined=inner_joined,
                     allow_null=not_null_check,
                 )
                 joins.extend(conjunction.joins)
@@ -596,6 +596,7 @@ class FilterPlan:
         *,
         agg_plan: AggregationPlan,
         emitted_agg_joins: set[QueryNodeType],
+        inner_joined: Collection[QueryNodeType],
         allow_null: bool = False,
     ) -> Conjunction:
         """Builds the predicates and joins of a filter's AND, OR and NOT branches."""
@@ -605,6 +606,7 @@ class FilterPlan:
             context,
             agg_plan=agg_plan,
             emitted_agg_joins=emitted_agg_joins,
+            inner_joined=inner_joined,
             not_null_check=allow_null,
         )
         or_conjunction = FilterPlan._gather_conjunctions(
@@ -612,6 +614,7 @@ class FilterPlan:
             context,
             agg_plan=agg_plan,
             emitted_agg_joins=emitted_agg_joins,
+            inner_joined=inner_joined,
             not_null_check=allow_null,
         )
         joins = [*and_conjunction.joins, *or_conjunction.joins]
@@ -622,6 +625,7 @@ class FilterPlan:
                 context,
                 agg_plan=agg_plan,
                 emitted_agg_joins=emitted_agg_joins,
+                inner_joined=inner_joined,
                 not_null_check=True,
             )
             joins.extend(not_conjunction.joins)
@@ -636,6 +640,9 @@ class FilterPlan:
             if and_conjunction.expressions and or_conjunction.has_many_predicates():
                 or_expression = or_expression.self_group()
             bool_expressions.append(or_expression)
+        if query.relation is not None and query.relation not in inner_joined:
+            # Outer-joined, a missing related row would pass predicates such as ``isNull`` or ``_not``.
+            bool_expressions.append(context.aliases.aliased_id_attributes(query.relation)[0].is_not(null()))
         return Conjunction(bool_expressions, joins)
 
     @staticmethod
@@ -654,6 +661,7 @@ class FilterPlan:
             context,
             agg_plan=agg_plan,
             emitted_agg_joins=emitted_agg_joins,
+            inner_joined=set(join_path),
             allow_null=allow_null,
         )
         return Where(
