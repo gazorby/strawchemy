@@ -553,7 +553,11 @@ class UnmappedStrawberryGraphQLDTO(StrawchemyObject, StrawberryDTO[ModelT]): ...
 class GraphQLFilterDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]):
     @property
     def dto_set_fields(self) -> list[str]:
-        return [name for name in self.__dto_field_definitions__ if getattr(self, name) is not strawberry.UNSET]
+        return [
+            name
+            for name in self.__dto_field_definitions__
+            if (value := getattr(self, name)) is not strawberry.UNSET and value is not None
+        ]
 
 
 class AggregateDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]): ...
@@ -739,7 +743,7 @@ class AggregateFilterDTO(GraphQLFilterDTO):
                     _model_field=aggregation_node.value.model_field,
                 )
             )
-            for arg in function_filter.arguments:
+            for arg in function_filter.arguments or ():
                 function_node.insert_child(
                     FunctionArgFieldDefinition.from_field(
                         arg.__field_definitions__[arg.value], function=aggregation_function

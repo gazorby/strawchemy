@@ -54,6 +54,17 @@ async def test_custom_apply_filter_in_strategy(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+@pytest.mark.parametrize("field", [pytest.param("sweeterThan", id="exists"), pytest.param("sweeterThanIn", id="in")])
+async def test_null_custom_apply_filter_is_ignored(
+    field: str, any_query: AnyQueryExecutor, raw_fruits: RawRecordData
+) -> None:
+    """Test that a custom apply filter set to null filters nothing."""
+    result = await maybe_async(any_query(f"{{ fruitsFineGrained(filter: {{ {field}: null }}) {{ id }} }}"))
+    assert not result.errors
+    assert result.data is not None
+    assert {row["id"] for row in result.data["fruitsFineGrained"]} == {fruit["id"] for fruit in raw_fruits}
+
+
 async def test_custom_apply_filter_under_or(any_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
     threshold = 8
     target_name = raw_fruits[0]["name"]

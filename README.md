@@ -935,10 +935,11 @@ related row, filter on the foreign key column (`groupId: { isNull: true }`), neg
 (`_not: { group: { id: { isNull: false } } }`) or, for to-many relationships, count them
 (`postsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } }`).
 
-An empty filter is ignored, as if it were absent: `{}`, a comparison with no operator set (`name: {}`, or operators
-bound to omitted variables), and a relationship or aggregation filter holding only empty filters
-(`group: {}`, `group: { name: {} }`, `postsAggregate: { count: { arguments: [id], predicate: {} } }`) match every row,
-including rows without a related row. An empty `_or` branch is dropped rather than matching every row:
+An empty filter is ignored, as if it were absent: `{}`, a filter field set to `null` (`name: null`, `group: null`,
+`_not: null`), a comparison with no operator set (`name: {}`, or operators bound to omitted variables), and a
+relationship or aggregation filter holding only empty filters (`group: {}`, `group: { name: {} }`,
+`postsAggregate: { count: { arguments: [id], predicate: {} } }`) match every row, including rows without a related
+row. An empty `_or` branch is dropped rather than matching every row:
 `_or: [{}, { name: { eq: "John" } }]` is the same as `name: { eq: "John" }`, and an `_or` with only empty branches
 filters nothing. This also applies under `_not` and to mutations filtering the rows to update or delete.
 
@@ -1087,10 +1088,11 @@ class Query:
   GraphQL input, so using one is a GraphQL validation error rather than a runtime one.
 - **`apply`**: replaces the field with a custom virtual scalar filter. The callable's signature is
   `(statement, value, *, dialect, model) -> Select`: it receives an isolated `select(model)` statement and the
-  GraphQL-supplied value, and must only add `.where(...)` predicates to it. It must not join or subquery against
-  the same model — the statement is later re-aliased and correlated back to the outer query by primary key, and a
-  self-join there could be rewritten ambiguously. `join` picks that correlation strategy: `"exists"` (the default)
-  wraps it in a correlated `EXISTS`; `"in"` folds it back with an `IN` against the primary key instead.
+  GraphQL-supplied value, and must only add `.where(...)` predicates to it. A `null` value skips the filter: `apply`
+  never receives `None`. It must not join or subquery against the same model — the statement is later re-aliased and
+  correlated back to the outer query by primary key, and a self-join there could be rewritten ambiguously. `join`
+  picks that correlation strategy: `"exists"` (the default) wraps it in a correlated `EXISTS`; `"in"` folds it back
+  with an `IN` against the primary key instead.
 - A bare `strawchemy.filter_field()`, with neither `ops` nor `apply`, force-includes a field the decorator's
   `include`/`exclude` would otherwise have left out, with its full default comparison.
 

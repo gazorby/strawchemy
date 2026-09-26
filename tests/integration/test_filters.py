@@ -1119,6 +1119,86 @@ async def test_empty_or_branch_is_pruned(dto_filter: str, names: list[str], any_
 
 
 @pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param("{ name: null }", ["Alice", "Bob", "Charlie", "Tango"], id="column"),
+        pytest.param("{ group: null }", ["Alice", "Bob", "Charlie", "Tango"], id="to-one"),
+        pytest.param("{ group: { name: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-one-column"),
+        pytest.param("{ group: { topics: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-one-to-many"),
+        pytest.param("{ departments: null }", ["Alice", "Bob", "Charlie", "Tango"], id="to-many"),
+        pytest.param("{ departments: { name: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-many-column"),
+        pytest.param("{ departmentsAggregate: null }", ["Alice", "Bob", "Charlie", "Tango"], id="aggregation"),
+        pytest.param(
+            "{ departmentsAggregate: { count: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="aggregation-function"
+        ),
+        pytest.param(
+            "{ departments: { usersAggregate: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-many-aggregation"
+        ),
+        pytest.param(
+            "{ departmentsAggregate: { count: { arguments: null, predicate: { gt: 0 } } } }",
+            ["Alice", "Bob", "Charlie"],
+            id="aggregation-arguments",
+        ),
+        pytest.param(
+            "{ _not: { departmentsAggregate: { count: { arguments: null, predicate: { gt: 0 } } } } }",
+            ["Tango"],
+            id="not-aggregation-arguments",
+        ),
+        pytest.param("{ _not: null }", ["Alice", "Bob", "Charlie", "Tango"], id="not"),
+        pytest.param("{ _not: { name: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="not-column"),
+        pytest.param("{ _not: { group: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="not-to-one"),
+        pytest.param("{ _not: { departments: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="not-to-many"),
+        pytest.param(
+            "{ _not: { departmentsAggregate: { count: null } } }",
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-aggregation-function",
+        ),
+        pytest.param("{ group: { _not: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-one-not"),
+        pytest.param("{ _and: [{ group: null }] }", ["Alice", "Bob", "Charlie", "Tango"], id="and"),
+        pytest.param("{ _or: [{ departments: null }] }", ["Alice", "Bob", "Charlie", "Tango"], id="or"),
+        pytest.param('{ group: null, name: { eq: "Bob" } }', ["Bob"], id="to-one-and-column"),
+        pytest.param('{ departmentsAggregate: null, name: { eq: "Bob" } }', ["Bob"], id="aggregation-and-column"),
+        pytest.param('{ _not: null, name: { eq: "Bob" } }', ["Bob"], id="not-and-column"),
+        pytest.param('{ _or: [{ departments: null }, { name: { eq: "Bob" } }] }', ["Bob"], id="or-to-many-and-column"),
+        pytest.param(
+            '{ departments: null, _and: [{ departments: { name: { eq: "IT" } } }] }',
+            ["Alice", "Charlie"],
+            id="to-many-and-to-many-branch",
+        ),
+        pytest.param(
+            '{ _not: { departments: { name: null }, name: { eq: "Bob" } } }',
+            ["Alice", "Charlie", "Tango"],
+            id="not-to-many-and-column",
+        ),
+    ],
+)
+async def test_null_filter_field_is_ignored(dto_filter: str, names: list[str], any_query: AnyQueryExecutor) -> None:
+    """Test that a filter field set to null filters nothing, as if it were absent."""
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("query ($value: GroupBoolExp) { users(filter: { group: $value }) { name } }", id="to-one"),
+        pytest.param("query ($value: TextComparison) { users(filter: { name: $value }) { name } }", id="column"),
+        pytest.param("query ($value: UserFilter) { users(filter: $value) { name } }", id="filter"),
+    ],
+)
+async def test_null_filter_variable_is_ignored(query: str, any_query: AnyQueryExecutor) -> None:
+    """Test that a filter bound to a null variable filters nothing."""
+    result = await maybe_async(any_query(query, {"value": None}))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == ["Alice", "Bob", "Charlie", "Tango"]
+
+
+@pytest.mark.parametrize(
     ("raw_departments", "raw_user_departments"),
     [
         pytest.param(
