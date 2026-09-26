@@ -7,9 +7,9 @@ from unittest.mock import MagicMock, NonCallableMock
 
 import pytest
 from sqlalchemy import Result
+from strawberry.utils.str_converters import to_camel_case
 
 from strawchemy.transpiler import _executor as executor
-from strawchemy.transpiler._aliasing import AggregationFunctionInfo
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable
@@ -17,22 +17,46 @@ if TYPE_CHECKING:
     from strawchemy.dto import ModelT
     from strawchemy.dto.strawberry import QueryNode
     from strawchemy.repository.typing import AnySession, DeclarativeT
-    from strawchemy.typing import SupportedDialect
+    from strawchemy.typing import QueryNodeType, SupportedDialect
 
 
 SyncExecuteCallable: TypeAlias = "Callable[[executor.QueryExecutor[DeclarativeT], AnySession], MagicMock]"
 AsyncExecuteCallable: TypeAlias = "Callable[[executor.QueryExecutor[DeclarativeT], AnySession], Awaitable[MagicMock]]"
 
 
+def _names(node: QueryNodeType) -> frozenset[str]:
+    if node.is_root:
+        return frozenset(node.metadata.data.response_keys)
+    return frozenset((node.value.name, to_camel_case(node.value.name), *node.metadata.data.response_keys))
+
+
+def _path_names(node: QueryNodeType) -> list[frozenset[str]]:
+    return [_names(path_node) for path_node in node.path_from_root()]
+
+
+def _key_matches(key: str, path_names: list[frozenset[str]]) -> bool:
+    segments = key.split(".")
+    return len(segments) <= len(path_names) and all(
+        segment in names for segment, names in zip(reversed(segments), reversed(path_names), strict=False)
+    )
+
+
+def _computed_value(node: QueryNodeType, computed_values: dict[str, Any]) -> object:
+    path_names = _path_names(node)
+    if matching := [key for key in computed_values if _key_matches(key, path_names)]:
+        return computed_values[max(matching, key=lambda key: key.count("."))]
+    function = node.value.function()
+    return 0 if function is not None and function.function == "count" else None
+
+
 def make_execute(computed_values: dict[str, Any], model_instance: Any) -> SyncExecuteCallable[DeclarativeT]:
     def _execute(self: executor.QueryExecutor[DeclarativeT], session: AnySession) -> MagicMock:  # noqa: ARG001
-        # The executor reads computed values by Label identity from ``row._mapping``. Match each
-        # column-map label to a value by its node name so name-keyed ``computed_values`` still apply.
+        # The executor reads computed values by Label identity from ``row._mapping``.
         mapping = {model_instance: model_instance}
         for columns in self.identity_columns.values():
             mapping.update(dict.fromkeys(columns))
         for node, label in self.column_map.items():
-            mapping[label] = computed_values.get(node.value.name)
+            mapping[label] = _computed_value(node, computed_values)
         rows = [MagicMock(name="RowMock", __getitem__=lambda _self, _index: model_instance, _mapping=mapping)]
         self.statement()
         result = MagicMock(
@@ -64,19 +88,20 @@ def fx_model_instance() -> dict[str, Any]:
 
 @pytest.fixture(name="computed_values")
 def fx_computed_values() -> dict[str, Any]:
+    """Values returned for aggregation fields, keyed by a dotted path of field names, aliases or Python names.
+
+    A key matches the trailing fields of a path from the queried root field, such as ``count``, ``max.sweetness`` or
+    ``colors.fruitsAggregate.count``; the longest matching key wins, and on ties the first one. Unmatched ``count``
+    fields return ``0``, other aggregation fields ``None``.
+    """
     return {}
 
 
 @pytest.fixture(name="patch_query", autouse=True)
 def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, Any], model_instance: Any) -> None:
     def node_result_value(self: executor.NodeResult[ModelT], key: QueryNode) -> Any:
-        key_name = key.value.name
         if key.value.is_computed:
-            for name, value in computed_values.items():
-                if name in key_name:
-                    return value
-        if any(func in key_name for func in AggregationFunctionInfo.functions_map):
-            return 0
+            return _computed_value(key, computed_values)
         value = getattr(self.model, key.value.model_field_name)
         if key.value.is_relation and key.value.uselist:
             # A mock attribute stands for a single related object; wrap it so it reads as a collection.
@@ -86,13 +111,7 @@ def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, A
         return value
 
     def query_result_value(self: executor.QueryResult[ModelT], key: QueryNode) -> Any:  # noqa: ARG001
-        key_name = key.value.name
-        for name, value in computed_values.items():
-            if name in key_name:
-                return value
-        if any(func in key_name for func in AggregationFunctionInfo.functions_map):
-            return 0
-        return None
+        return _computed_value(key, computed_values)
 
     monkeypatch.setattr(
         executor.AsyncQueryExecutor[Any], "execute", make_async_execute(computed_values, model_instance)

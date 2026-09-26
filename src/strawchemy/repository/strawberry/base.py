@@ -192,6 +192,8 @@ class StrawchemyRepository(Generic[T]):
             strawberry_type=inner_root_type,
             root_aggregations=self.root_aggregations,
         )
+        root_field = self._raw_info.field_nodes[0]
+        node.metadata.data.response_keys = ((root_field.alias or root_field.name).value,)
 
         if self.query_hook is not None:
             self._add_query_hooks(self.query_hook, node)
