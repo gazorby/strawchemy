@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import pytest
 
@@ -486,3 +486,123 @@ async def test_deterministic_ordering_mixed_with_user_ordering(
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+def _default_colors(raw_colors: RawRecordData, raw_fruits: RawRecordData) -> list[dict[str, Any]]:
+    return [
+        {"id": color["id"], "fruits": [{"id": fruit["id"]} for fruit in _color_fruits(raw_fruits, color["id"])]}
+        for color in sorted(raw_colors, key=lambda color: color["id"])
+    ]
+
+
+@pytest.mark.parametrize(
+    ("query", "variables"),
+    [
+        pytest.param("{ colors(orderBy: {}) { id fruits { id } } }", None, id="root-empty"),
+        pytest.param("{ colors(orderBy: [{}]) { id fruits { id } } }", None, id="root-empty-list"),
+        pytest.param(
+            "query ($d: OrderByEnum) { colors(orderBy: { name: $d }) { id fruits { id } } }",
+            {},
+            id="root-omitted-variable",
+        ),
+        pytest.param("{ colors { id fruits(orderBy: {}) { id } } }", None, id="nested-empty"),
+        pytest.param("{ colors { id fruits(orderBy: [{}]) { id } } }", None, id="nested-empty-list"),
+        pytest.param(
+            "query ($d: OrderByEnum) { colors { id fruits(orderBy: { sweetness: $d }) { id } } }",
+            {},
+            id="nested-omitted-variable",
+        ),
+        pytest.param("{ colors { id fruits(orderBy: { color: {} }) { id } } }", None, id="nested-empty-relation"),
+        pytest.param(
+            "{ colors { id fruits(orderBy: { color: { fruits: {} } }) { id } } }",
+            None,
+            id="nested-empty-nested-relation",
+        ),
+    ],
+)
+async def test_empty_order_by_is_ignored(
+    query: str,
+    variables: dict[str, Any] | None,
+    any_query: AnyQueryExecutor,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
+) -> None:
+    result = await maybe_async(any_query(query, variables))
+    assert not result.errors
+    assert result.data
+    assert result.data["colors"] == _default_colors(raw_colors, raw_fruits)
+
+
+@pytest.mark.parametrize(
+    ("empty_entry", "variables"),
+    [
+        pytest.param("{}", None, id="empty"),
+        pytest.param("{ color: {} }", None, id="empty-relation"),
+        pytest.param("{ color: { fruits: {} } }", None, id="empty-nested-relation"),
+        pytest.param("{ color: { name: $d } }", {}, id="omitted-variable-in-relation"),
+    ],
+)
+async def test_empty_order_by_entry_keeps_other_entries(
+    empty_entry: str,
+    variables: dict[str, Any] | None,
+    any_query: AnyQueryExecutor,
+    raw_fruits: RawRecordData,
+) -> None:
+    signature = "query ($d: OrderByEnum) " if variables is not None else ""
+    result = await maybe_async(
+        any_query(
+            f"{signature}{{ fruits(orderBy: [{{ color: {{}}, sweetness: ASC }}, {empty_entry}, {{ id: DESC }}]) {{ id }} }}",
+            variables,
+        )
+    )
+    assert not result.errors
+    assert result.data
+    expected = [fruit["id"] for fruit in sorted(raw_fruits, key=lambda fruit: (fruit["sweetness"], -fruit["id"]))]
+    assert [row["id"] for row in result.data["fruits"]] == expected
+
+
+@pytest.mark.parametrize(
+    ("empty_entry", "variables"),
+    [
+        pytest.param("{}", None, id="empty"),
+        pytest.param("{ fruitsAggregate: {} }", None, id="empty-aggregate"),
+        pytest.param("{ fruitsAggregate: { max: {} } }", None, id="empty-aggregate-function"),
+        pytest.param("{ fruitsAggregate: { count: $d } }", {}, id="omitted-variable-in-aggregate"),
+    ],
+)
+async def test_empty_order_by_entry_keeps_other_entries_nested(
+    empty_entry: str,
+    variables: dict[str, Any] | None,
+    any_query: AnyQueryExecutor,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
+) -> None:
+    signature = "query ($d: OrderByEnum) " if variables is not None else ""
+    result = await maybe_async(
+        any_query(
+            f"""{signature}{{
+            colors(orderBy: [{empty_entry}, {{ id: DESC }}]) {{
+                id
+                fruits(orderBy: [{{}}, {{ color: {{ fruits: {{}} }}, sweetness: DESC }}, {{ color: {{}} }}, {{ id: DESC }}]) {{
+                    id
+                }}
+            }}
+        }}""",
+            variables,
+        )
+    )
+    assert not result.errors
+    assert result.data
+    expected = [
+        {
+            "id": color["id"],
+            "fruits": [
+                {"id": fruit["id"]}
+                for fruit in sorted(
+                    _color_fruits(raw_fruits, color["id"]), key=lambda fruit: (-fruit["sweetness"], -fruit["id"])
+                )
+            ],
+        }
+        for color in sorted(raw_colors, key=lambda color: -color["id"])
+    ]
+    assert result.data["colors"] == expected
