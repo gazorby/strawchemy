@@ -402,7 +402,15 @@ class JSONType: ...
 class PostgresJSONFilter: ...
 
 
-@strawchemy.type(PostgresJSONModel, include="all")
+@strawchemy.order(PostgresJSONModel, include="all")
+class PostgresJSONOrder: ...
+
+
+@strawchemy.distinct_on(PostgresJSONModel, include="all")
+class PostgresJSONDistinctOn: ...
+
+
+@strawchemy.type(PostgresJSONModel, include="all", order="all", distinct_on="all", paginate="all")
 class PostgresJSONType: ...
 
 
@@ -830,14 +838,32 @@ class JSONSyncQuery:
 @strawberry.type
 class PostgresJSONAsyncQuery:
     json: list[PostgresJSONType] = strawchemy.field(
-        filter_input=PostgresJSONFilter, repository_type=StrawchemyAsyncRepository
+        filter_input=PostgresJSONFilter,
+        order_by_input=PostgresJSONOrder,
+        distinct_on=PostgresJSONDistinctOn,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    json_paginated: list[PostgresJSONType] = strawchemy.field(
+        order_by_input=PostgresJSONOrder,
+        distinct_on=PostgresJSONDistinctOn,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
     )
 
 
 @strawberry.type
 class PostgresJSONSyncQuery:
     json: list[PostgresJSONType] = strawchemy.field(
-        filter_input=PostgresJSONFilter, repository_type=StrawchemySyncRepository
+        filter_input=PostgresJSONFilter,
+        order_by_input=PostgresJSONOrder,
+        distinct_on=PostgresJSONDistinctOn,
+        repository_type=StrawchemySyncRepository,
+    )
+    json_paginated: list[PostgresJSONType] = strawchemy.field(
+        order_by_input=PostgresJSONOrder,
+        distinct_on=PostgresJSONDistinctOn,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
     )
 
 

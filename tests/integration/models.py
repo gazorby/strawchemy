@@ -255,6 +255,14 @@ class PostgresJSONModel(PostgresJSONBase):
     __tablename__ = "postgres_json_model"
 
     dict_col: Mapped[dict[str, Any] | None] = mapped_column(postgresql.JSON, nullable=True)
+    children: Mapped[list[PostgresJSONChildModel]] = relationship("PostgresJSONChildModel")
+
+
+class PostgresJSONChildModel(PostgresJSONBase):
+    __tablename__ = "postgres_json_child_model"
+
+    dict_col: Mapped[dict[str, Any] | None] = mapped_column(postgresql.JSON, nullable=True)
+    parent_id: Mapped[int] = mapped_column(ForeignKey("postgres_json_model.id"))
 
 
 class DateTimeModel(DateTimeBase):

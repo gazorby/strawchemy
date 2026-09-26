@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 from sqlalchemy import Insert, MetaData, insert, null
 
-from tests.integration.models import PostgresJSONModel, postgres_json_metadata
+from tests.integration.models import PostgresJSONChildModel, PostgresJSONModel, postgres_json_metadata
 from tests.integration.types import postgres as postgres_types
 from tests.integration.utils import graphql_input
 from tests.utils import maybe_async
@@ -26,6 +26,12 @@ _ROWS: RawRecordData = [
     {"id": 3, "dict_col": {"key3": 3, "key4": None}},
     {"id": 4, "dict_col": null()},
 ]
+_CHILD_ROWS: RawRecordData = [
+    {"id": 1, "parent_id": 1, "dict_col": {"a": 1}},
+    {"id": 2, "parent_id": 1, "dict_col": {"a": 2}},
+    {"id": 3, "parent_id": 1, "dict_col": {"a": 1}},
+    {"id": 4, "parent_id": 2, "dict_col": {"b": 1, "c": 2}},
+]
 
 
 @pytest.fixture
@@ -35,7 +41,7 @@ def metadata() -> MetaData:
 
 @pytest.fixture
 def seed_insert_statements() -> list[Insert]:
-    return [insert(PostgresJSONModel).values(_ROWS)]
+    return [insert(PostgresJSONModel).values(_ROWS), insert(PostgresJSONChildModel).values(_CHILD_ROWS)]
 
 
 @pytest.fixture
@@ -101,6 +107,115 @@ async def test_postgres_json_extract_path(
     assert not result.errors
     assert result.data
     assert {row["id"]: row["dictCol"] for row in result.data["json"]} == {1: "value", 2: {}, 3: {}, 4: {}}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+def _children(**children_ids: list[int]) -> list[dict[str, Any]]:
+    return [{"id": int(key[1:]), "children": [{"id": id_} for id_ in ids]} for key, ids in children_ids.items()]
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        pytest.param(
+            "{ json(orderBy: [{ dictCol: ASC }]) { id } }",
+            [{"id": 3}, {"id": 2}, {"id": 1}, {"id": 4}],
+            id="order-by",
+        ),
+        pytest.param(
+            "{ json(orderBy: [{ dictCol: DESC_NULLS_LAST }]) { id } }",
+            [{"id": 1}, {"id": 2}, {"id": 3}, {"id": 4}],
+            id="order-by-nulls",
+        ),
+        pytest.param(
+            "{ json(distinctOn: [dictCol], orderBy: [{ dictCol: ASC }]) { id } }",
+            [{"id": 3}, {"id": 2}, {"id": 1}, {"id": 4}],
+            id="distinct-on-order-by",
+        ),
+        pytest.param(
+            "{ jsonPaginated(orderBy: [{ dictCol: ASC }], limit: 2) { id } }",
+            [{"id": 3}, {"id": 2}],
+            id="paginated-order-by",
+        ),
+        pytest.param(
+            "{ jsonPaginated(distinctOn: [dictCol], orderBy: [{ dictCol: ASC }], limit: 2) { id } }",
+            [{"id": 3}, {"id": 2}],
+            id="paginated-distinct-on",
+        ),
+        pytest.param(
+            "{ json(distinctOn: [dictCol], orderBy: [{ dictCol: ASC }]) { id children(orderBy: [{ id: ASC }]) { id } } }",
+            _children(i3=[], i2=[4], i1=[1, 2, 3], i4=[]),
+            id="distinct-on-to-many",
+        ),
+        pytest.param(
+            "{ json(filter: { childrenAggregate: { count: { arguments: [dictCol], distinct: true, predicate: { gt: 1 } } } })"
+            " { id } }",
+            [{"id": 1}],
+            id="count-distinct-filter",
+        ),
+        pytest.param(
+            "{ json(orderBy: [{ id: ASC }]) { id children(orderBy: [{ dictCol: DESC }, { id: ASC }]) { id } } }",
+            _children(i1=[2, 1, 3], i2=[4], i3=[], i4=[]),
+            id="nested-order-by",
+        ),
+        pytest.param(
+            "{ json(orderBy: [{ id: ASC }]) { id children(orderBy: [{ dictCol: ASC }, { id: ASC }], limit: 1) { id } } }",
+            _children(i1=[1], i2=[4], i3=[], i4=[]),
+            id="nested-paginated-order-by",
+        ),
+        pytest.param(
+            "{ json(orderBy: [{ id: ASC }]) { id children(distinctOn: [dictCol], orderBy: [{ dictCol: ASC }, { id: DESC }])"
+            " { id } } }",
+            _children(i1=[3, 2], i2=[4], i3=[], i4=[]),
+            id="nested-distinct-on",
+        ),
+    ],
+)
+@pytest.mark.snapshot
+async def test_postgres_json_order_by_and_distinct_on(
+    query: str,
+    expected: list[dict[str, Any]],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that ordering, DISTINCT ON and distinct counts on a PostgreSQL ``json`` column compare it as ``jsonb``."""
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert next(iter(result.data.values())) == expected
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("{ json(distinctOn: [dictCol], orderBy: [{ dictCol: ASC }]) { id dictCol } }", id="root"),
+        pytest.param(
+            "{ jsonPaginated(distinctOn: [dictCol], orderBy: [{ dictCol: ASC }], limit: 4) { id dictCol } }",
+            id="paginated",
+        ),
+        pytest.param(
+            "{ json(orderBy: [{ id: ASC }]) { id dictCol children(distinctOn: [dictCol]) { dictCol } } }", id="nested"
+        ),
+    ],
+)
+@pytest.mark.snapshot
+async def test_postgres_json_distinct_on_selects_stored_values(
+    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that DISTINCT ON returns the ``json`` values as stored, not their ``jsonb`` cast, whose keys are sorted."""
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    rows = {row["id"]: row for row in next(iter(result.data.values()))}
+    assert list(rows[1]["dictCol"]) == ["key1", "key2", "nested", "key3", "key4"]
+    if "children" in rows[1]:
+        assert [child["dictCol"] for child in rows[1]["children"]] == [{"a": 1}, {"a": 2}]
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
