@@ -22,6 +22,12 @@ if TYPE_CHECKING:
     from tests.typing import AnyQueryExecutor
 
 
+def _graphql_input(value: Any) -> str:
+    if isinstance(value, list):
+        return f"[{', '.join(to_graphql_representation(v, 'input') for v in value)}]"
+    return to_graphql_representation(value, "input")
+
+
 @pytest.fixture
 def metadata() -> MetaData:
     return json_metadata
@@ -68,6 +74,9 @@ def sync_query(dialect: SupportedDialect) -> type[Any]:
         pytest.param("hasKey", "key1", [0], id="hasKey"),
         pytest.param("hasKeyAll", ["key1", "key2"], [0], id="hasKeyAll"),
         pytest.param("hasKeyAny", ["key1", "status"], [0, 1], id="hasKeyAny"),
+        pytest.param("hasKey", "key4", [0, 1, 2], id="hasKey-json-null"),
+        pytest.param("hasKeyAll", ["key3", "key4"], [0, 1, 2], id="hasKeyAll-json-null"),
+        pytest.param("hasKeyAny", ["key4", "missing"], [0, 1, 2], id="hasKeyAny-json-null"),
     ],
 )
 @pytest.mark.snapshot
@@ -83,12 +92,7 @@ async def test_json_filters(
 ) -> None:
     if db_features.dialect == "sqlite" and filter_name in {"contains", "containedIn"}:
         pytest.skip(f"contains/containedIn not supported on {db_features.dialect}")
-    if isinstance(value, list):
-        value_str = ", ".join(to_graphql_representation(v, "input") for v in value)
-        value_repr = f"[{value_str}]"
-    else:
-        value_repr = to_graphql_representation(value, "input")
-
+    value_repr = _graphql_input(value)
     query = f"""
         {{
             json(filter: {{ dictCol: {{ {filter_name}: {value_repr} }} }}) {{
@@ -104,6 +108,41 @@ async def test_json_filters(
 
     for i, expected_id in enumerate(expected_ids):
         assert result.data["json"][i]["id"] == raw_json[expected_id]["id"]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("filter_name", "value", "expected_ids"),
+    [
+        pytest.param("hasKey", "key1", [1, 2], id="hasKey"),
+        pytest.param("hasKey", "key4", [], id="hasKey-json-null"),
+        pytest.param("hasKeyAll", ["key1", "key4"], [1, 2], id="hasKeyAll-json-null"),
+        pytest.param("hasKeyAny", ["key4", "missing"], [], id="hasKeyAny-json-null"),
+    ],
+)
+@pytest.mark.snapshot
+async def test_json_not_filters(
+    filter_name: str,
+    value: Any,
+    expected_ids: list[int],
+    any_query: AnyQueryExecutor,
+    raw_json: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = f"""
+        {{
+            json(filter: {{ _not: {{ dictCol: {{ {filter_name}: {_graphql_input(value)} }} }} }}) {{
+                id
+            }}
+        }}
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+    assert [row["id"] for row in result.data["json"]] == [raw_json[i]["id"] for i in expected_ids]
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

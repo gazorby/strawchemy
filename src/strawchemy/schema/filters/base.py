@@ -203,26 +203,16 @@ class JSONFilter(EqualityFilter):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
+        def has_key(key: str | None) -> ColumnElement[bool]:
+            # json_type is 'null', not NULL, for a key holding JSON null.
+            return func.json_type(model_attribute, f"$.{key}").is_not(null())
+
         if self.comparison.has_key is not UNSET:
-            expressions.append(func.json_extract(model_attribute, f"$.{self.comparison.has_key}").is_not(null()))
+            expressions.append(has_key(self.comparison.has_key))
         if self.comparison.has_key_all is not UNSET and self.comparison.has_key_all:
-            expressions.append(
-                and_(
-                    *[
-                        func.json_extract(model_attribute, f"$.{key}").is_not(null())
-                        for key in self.comparison.has_key_all
-                    ]
-                )
-            )
+            expressions.append(and_(*[has_key(key) for key in self.comparison.has_key_all]))
         if self.comparison.has_key_any is not UNSET and self.comparison.has_key_any:
-            expressions.append(
-                or_(
-                    *[
-                        func.json_extract(model_attribute, f"$.{key}").is_not(null())
-                        for key in self.comparison.has_key_any
-                    ]
-                )
-            )
+            expressions.append(or_(*[has_key(key) for key in self.comparison.has_key_any]))
         return expressions
 
     @override
