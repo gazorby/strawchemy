@@ -342,42 +342,6 @@ class Node(Generic[NodeValueT, NodeMetadataT]):
         """
         return [*reversed(list(self.iter_parents())), self]
 
-    @classmethod
-    def common_path(
-        cls,
-        left: list[Node[NodeValueT, NodeMetadataT]],
-        right: list[Node[NodeValueT, NodeMetadataT]],
-        match_on: (
-            MatchOn | Callable[[Node[NodeValueT, NodeMetadataT], Node[NodeValueT, NodeMetadataT]], bool]
-        ) = "node_identity",
-    ) -> list[Node[NodeValueT, NodeMetadataT]]:
-        """Find the common path between two lists of nodes.
-
-        Compares nodes at the same positions in both lists using the specified matching condition.
-        Stops at the first non-matching pair of nodes.
-
-        Args:
-            left: First list of nodes
-            right: Second list of nodes
-            match_on: The condition used to match nodes. Can be either
-                a predefined matching strategy ('value_identity', 'value_equality',
-                'node_identity') or a custom function that takes two nodes and returns
-                a boolean.
-
-        Returns:
-            A list of nodes that form the common path between the two input lists
-        """
-        common: list[Node[NodeValueT, NodeMetadataT]] = []
-        longest, shortest = (left, right) if len(left) > len(right) else (right, left)
-        if len(shortest) == 0:
-            return longest
-        for i, longest_value in enumerate(longest):
-            if i >= len(shortest):
-                break
-            if cls.match_nodes(longest_value, shortest[i], match_on):
-                common.append(longest_value)
-        return common
-
     def copy(self) -> Self:
         """Create a deep copy of this node and its subtree.
 

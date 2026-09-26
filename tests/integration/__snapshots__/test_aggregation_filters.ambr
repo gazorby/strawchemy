@@ -135,7 +135,7 @@
    WHERE EXISTS (
           SELECT 1
             FROM color AS color_1
-            LEFT OUTER JOIN fruit AS fruit_2
+            JOIN fruit AS fruit_2
               ON color_1.id = fruit_2.color_id
             LEFT OUTER JOIN anon_1
               ON fruit_2.id = anon_1.fruit_id
@@ -162,7 +162,7 @@
    WHERE EXISTS (
           SELECT 1
             FROM color AS color_1
-            LEFT OUTER JOIN fruit AS fruit_2
+           INNER JOIN fruit AS fruit_2
               ON color_1.id = fruit_2.color_id
             LEFT OUTER JOIN anon_1
               ON fruit_2.id = anon_1.fruit_id
@@ -183,7 +183,7 @@
    WHERE EXISTS (
           SELECT 1
             FROM color AS color_1
-            LEFT OUTER JOIN fruit AS fruit_2
+            JOIN fruit AS fruit_2
               ON color_1.id = fruit_2.color_id
             JOIN LATERAL (
                   SELECT count(*) AS count_1
@@ -208,7 +208,7 @@
    WHERE EXISTS (
           SELECT 1
             FROM color AS color_1
-            LEFT OUTER JOIN fruit AS fruit_2
+            JOIN fruit AS fruit_2
               ON color_1.id = fruit_2.color_id
             JOIN LATERAL (
                   SELECT count(*) AS count_1
@@ -233,7 +233,7 @@
    WHERE EXISTS (
           SELECT 1
             FROM color AS color_1
-            LEFT OUTER JOIN fruit AS fruit_2
+            JOIN fruit AS fruit_2
               ON color_1.id = fruit_2.color_id
             JOIN LATERAL (
                   SELECT count(*) AS count_1
@@ -264,7 +264,7 @@
    WHERE EXISTS (
           SELECT 1
             FROM color AS color_1
-            LEFT OUTER JOIN fruit AS fruit_2
+            JOIN fruit AS fruit_2
               ON color_1.id = fruit_2.color_id
             LEFT OUTER JOIN anon_1
               ON fruit_2.id = anon_1.fruit_id
@@ -286,7 +286,7 @@
          ) SELECT fruit.id,
          color_1.id AS id_1
     FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
+    JOIN color AS color_1
       ON color_1.id = fruit.color_id
     LEFT OUTER JOIN anon_1
       ON color_1.id = anon_1.color_id
@@ -306,7 +306,7 @@
          ) SELECT fruit.id,
          color_1.id AS id_1
     FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
+   INNER JOIN color AS color_1
       ON color_1.id = fruit.color_id
     LEFT OUTER JOIN anon_1
       ON color_1.id = anon_1.color_id
@@ -320,7 +320,7 @@
   SELECT fruit.id,
          color_1.id AS id_1
     FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
+    JOIN color AS color_1
       ON color_1.id = fruit.color_id
     JOIN LATERAL (
           SELECT count(*) AS count_1
@@ -338,7 +338,7 @@
   SELECT fruit.id,
          color_1.id AS id_1
     FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
+    JOIN color AS color_1
       ON color_1.id = fruit.color_id
     JOIN LATERAL (
           SELECT count(*) AS count_1
@@ -356,7 +356,7 @@
   SELECT fruit.id,
          color_1.id AS id_1
     FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
+    JOIN color AS color_1
       ON color_1.id = fruit.color_id
     JOIN LATERAL (
           SELECT count(*) AS count_1
@@ -380,7 +380,7 @@
          ) SELECT fruit.id,
          color_1.id AS id_1
     FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
+    JOIN color AS color_1
       ON color_1.id = fruit.color_id
     LEFT OUTER JOIN anon_1
       ON color_1.id = anon_1.color_id

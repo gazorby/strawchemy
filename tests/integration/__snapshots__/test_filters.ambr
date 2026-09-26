@@ -1641,7 +1641,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE color.name != ?
-     AND (EXISTS (SELECT 1 FROM color AS color_1 LEFT OUTER JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= ? AND color_1.id = color.id))
+     AND (EXISTS (SELECT 1 FROM color AS color_1 JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= ? AND color_1.id = color.id))
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1656,7 +1656,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE color.name != %s
-     AND (EXISTS (SELECT 1 FROM color AS color_1 LEFT OUTER JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= %s AND color_1.id = color.id))
+     AND (EXISTS (SELECT 1 FROM color AS color_1 INNER JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= %s AND color_1.id = color.id))
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1671,7 +1671,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE color.name != $1::VARCHAR
-     AND (EXISTS (SELECT 1 FROM color AS color_1 LEFT OUTER JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= $2::INTEGER AND color_1.id = color.id))
+     AND (EXISTS (SELECT 1 FROM color AS color_1 JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= $2::INTEGER AND color_1.id = color.id))
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1686,7 +1686,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE color.name != %(name_2)s::VARCHAR
-     AND (EXISTS (SELECT 1 FROM color AS color_1 LEFT OUTER JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= %(sweetness_1)s::INTEGER AND color_1.id = color.id))
+     AND (EXISTS (SELECT 1 FROM color AS color_1 JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= %(sweetness_1)s::INTEGER AND color_1.id = color.id))
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1701,7 +1701,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE color.name != %(name_2)s::VARCHAR
-     AND (EXISTS (SELECT 1 FROM color AS color_1 LEFT OUTER JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= %(sweetness_1)s::INTEGER AND color_1.id = color.id))
+     AND (EXISTS (SELECT 1 FROM color AS color_1 JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= %(sweetness_1)s::INTEGER AND color_1.id = color.id))
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1716,7 +1716,7 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
    WHERE color.name != ?
-     AND (EXISTS (SELECT 1 FROM color AS color_1 LEFT OUTER JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= ? AND color_1.id = color.id))
+     AND (EXISTS (SELECT 1 FROM color AS color_1 JOIN fruit AS fruit_2 ON color_1.id = fruit_2.color_id WHERE fruit_2.sweetness <= ? AND color_1.id = color.id))
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -1726,10 +1726,10 @@
   SELECT user.name,
          user.id
     FROM USER AS USER
-    LEFT OUTER JOIN "group" AS group_1
+    JOIN "group" AS group_1
       ON group_1.id = user.group_id
    WHERE group_1.name = ?
-     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = ? AND user_1.id = user.id))
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = ? AND user_1.id = user.id))
    ORDER BY user.id ASC
   '''
 # ---
@@ -1738,10 +1738,10 @@
   SELECT user.name,
          user.id
     FROM USER AS USER
-    LEFT OUTER JOIN `group` AS group_1
+   INNER JOIN `group` AS group_1
       ON group_1.id = user.group_id
    WHERE group_1.name = %s
-     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = %s AND user_1.id = user.id))
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %s AND user_1.id = user.id))
    ORDER BY user.id ASC
   '''
 # ---
@@ -1750,10 +1750,10 @@
   SELECT "user".name,
          "user".id
     FROM "user" AS "user"
-    LEFT OUTER JOIN "group" AS group_1
+    JOIN "group" AS group_1
       ON group_1.id = "user".group_id
    WHERE group_1.name = $1::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = $2::VARCHAR AND user_1.id = "user".id))
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = $2::VARCHAR AND user_1.id = "user".id))
    ORDER BY "user".id ASC
   '''
 # ---
@@ -1762,10 +1762,10 @@
   SELECT "user".name,
          "user".id
     FROM "user" AS "user"
-    LEFT OUTER JOIN "group" AS group_1
+    JOIN "group" AS group_1
       ON group_1.id = "user".group_id
    WHERE group_1.name = %(name_1)s::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = %(name_2)s::VARCHAR AND user_1.id = "user".id))
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %(name_2)s::VARCHAR AND user_1.id = "user".id))
    ORDER BY "user".id ASC
   '''
 # ---
@@ -1774,10 +1774,10 @@
   SELECT "user".name,
          "user".id
     FROM "user" AS "user"
-    LEFT OUTER JOIN "group" AS group_1
+    JOIN "group" AS group_1
       ON group_1.id = "user".group_id
    WHERE group_1.name = %(name_1)s::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = %(name_2)s::VARCHAR AND user_1.id = "user".id))
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %(name_2)s::VARCHAR AND user_1.id = "user".id))
    ORDER BY "user".id ASC
   '''
 # ---
@@ -1786,10 +1786,10 @@
   SELECT user.name,
          user.id
     FROM USER AS USER
-    LEFT OUTER JOIN "group" AS group_1
+    JOIN "group" AS group_1
       ON group_1.id = user.group_id
    WHERE group_1.name = ?
-     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id) ON user_1.id = user_department_join_table_1.user_id WHERE department_1.name = ? AND user_1.id = user.id))
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = ? AND user_1.id = user.id))
    ORDER BY user.id ASC
   '''
 # ---
