@@ -148,6 +148,101 @@ async def test_json_not_filters(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+_KEY_ROWS: RawRecordData = [
+    {"id": 1, "dict_col": {"a.b": 1}},
+    {"id": 2, "dict_col": {"a": {"b": 1}}},
+    {"id": 3, "dict_col": {"x y": 1}},
+    {"id": 4, "dict_col": {"": 1}},
+    {"id": 5, "dict_col": ["k"]},
+    {"id": 6, "dict_col": {'q"t': 1}},
+    {"id": 7, "dict_col": {"a[0]": 1}},
+    {"id": 8, "dict_col": {"arr": [1]}},
+    {"id": 9, "dict_col": {"b\\s": 1}},
+    {"id": 10, "dict_col": {"k": None}},
+    {"id": 11, "dict_col": {"*": 1}},
+    {"id": 12, "dict_col": "k"},
+    {"id": 13, "dict_col": None},
+    {"id": 14, "dict_col": {"None": 1}},
+    {"id": 15, "dict_col": {"é": 1}},
+    {"id": 16, "dict_col": {"😀": 1}},
+]
+_KEY_ROW_IDS = [row["id"] for row in _KEY_ROWS]
+
+
+@pytest.mark.parametrize("raw_json", [pytest.param(_KEY_ROWS, id="keys")])
+@pytest.mark.parametrize(
+    ("filter_name", "value", "expected_ids"),
+    [
+        pytest.param("hasKey", "a.b", [1], id="hasKey-dot"),
+        pytest.param("hasKey", "a[0]", [7], id="hasKey-brackets"),
+        pytest.param("hasKey", "arr[0]", [], id="hasKey-array-index"),
+        pytest.param("hasKey", "*", [11], id="hasKey-wildcard"),
+        pytest.param("hasKey", "x y", [3], id="hasKey-space"),
+        pytest.param("hasKey", 'q"t', [6], id="hasKey-double-quote"),
+        pytest.param("hasKey", "b\\s", [9], id="hasKey-backslash"),
+        pytest.param("hasKey", "", [4], id="hasKey-empty"),
+        pytest.param("hasKey", "k", [10], id="hasKey-objects-only"),
+        pytest.param("hasKey", "é", [15], id="hasKey-non-ascii"),
+        pytest.param("hasKeyAny", ["😀", "missing"], [16], id="hasKeyAny-non-ascii"),
+        pytest.param("hasKeyAll", [], _KEY_ROW_IDS, id="hasKeyAll-empty"),
+        pytest.param("hasKeyAny", [], [], id="hasKeyAny-empty"),
+        pytest.param("hasKeyAll", ["a.b"], [1], id="hasKeyAll-dot"),
+        pytest.param("hasKeyAll", ["k"], [10], id="hasKeyAll-objects-only"),
+        pytest.param("hasKeyAny", ['q"t', "a[0]", "*"], [6, 7, 11], id="hasKeyAny-path-syntax"),
+        pytest.param("hasKeyAny", ["k"], [10], id="hasKeyAny-objects-only"),
+    ],
+)
+async def test_json_has_key_literal(
+    filter_name: str,
+    value: str | list[str],
+    expected_ids: list[int],
+    any_query: AnyQueryExecutor,
+    raw_json: RawRecordData,  # noqa: ARG001
+) -> None:
+    """Test that ``hasKey*`` match literal top-level object keys, and that ``_not`` matches every other row."""
+    variable_type = "String!" if isinstance(value, str) else "[String!]!"
+    for dto_filter, ids in (
+        (f"{{ dictCol: {{ {filter_name}: $value }} }}", expected_ids),
+        (f"{{ _not: {{ dictCol: {{ {filter_name}: $value }} }} }}", [i for i in _KEY_ROW_IDS if i not in expected_ids]),
+    ):
+        query = f"query ($value: {variable_type}) {{ json(filter: {dto_filter}) {{ id }} }}"
+        result = await maybe_async(any_query(query, {"value": value}))
+        assert not result.errors
+        assert result.data
+        assert sorted(row["id"] for row in result.data["json"]) == ids
+
+
+@pytest.mark.parametrize("raw_json", [pytest.param(_KEY_ROWS, id="keys")])
+@pytest.mark.parametrize(
+    "comparison",
+    [
+        pytest.param("hasKey: null", id="hasKey-null"),
+        pytest.param("hasKeyAll: null", id="hasKeyAll-null"),
+        pytest.param("hasKeyAny: null", id="hasKeyAny-null"),
+        pytest.param("contains: null", id="contains-null"),
+        pytest.param("containedIn: null", id="containedIn-null"),
+    ],
+)
+@pytest.mark.parametrize("negated", [pytest.param(False, id="plain"), pytest.param(True, id="not")])
+async def test_json_null_comparison_ignored(
+    comparison: str,
+    negated: bool,
+    any_query: AnyQueryExecutor,
+    raw_json: RawRecordData,  # noqa: ARG001
+    db_features: DatabaseFeatures,
+) -> None:
+    """Test that a null JSON comparison is ignored, directly and under ``_not``."""
+    if db_features.dialect == "sqlite" and comparison.startswith(("contains", "containedIn")):
+        pytest.skip(f"contains/containedIn not supported on {db_features.dialect}")
+    dto_filter = f"{{ dictCol: {{ {comparison} }} }}"
+    if negated:
+        dto_filter = f"{{ _not: {dto_filter} }}"
+    result = await maybe_async(any_query(f"{{ json(filter: {dto_filter}) {{ id }} }}"))
+    assert not result.errors
+    assert result.data
+    assert sorted(row["id"] for row in result.data["json"]) == _KEY_ROW_IDS
+
+
 @pytest.mark.snapshot
 async def test_json_output(
     any_query: AnyQueryExecutor,
