@@ -936,12 +936,15 @@ async def test_not_empty_comparison(
             id="not-not-empty",
         ),
         pytest.param(
-            "{ users(filter: { group: { _not: { name: {} } } }) { name } }", None, ["Alice"], id="to-one-not-empty"
+            "{ users(filter: { group: { _not: { name: {} } } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="to-one-not-empty",
         ),
         pytest.param(
             "{ users(filter: { departments: { _not: { name: {} } } }) { name } }",
             None,
-            ["Alice", "Bob", "Charlie"],
+            ["Alice", "Bob", "Charlie", "Tango"],
             id="to-many-not-empty",
         ),
         pytest.param(
@@ -957,6 +960,158 @@ async def test_empty_comparison_is_ignored(
     query: str, variables: dict[str, Any] | None, names: list[str], any_query: AnyQueryExecutor
 ) -> None:
     result = await maybe_async(any_query(query, variables))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize(
+    ("query", "variables"),
+    [
+        pytest.param("{ users(filter: { group: {} }) { name } }", None, id="to-one"),
+        pytest.param("{ users(filter: { group: { name: {} } }) { name } }", None, id="to-one-empty-comparison"),
+        pytest.param(
+            "query ($name: String) { users(filter: { group: { name: { eq: $name } } }) { name } }",
+            {},
+            id="to-one-omitted-variable",
+        ),
+        pytest.param("{ users(filter: { _not: { group: {} } }) { name } }", None, id="not-to-one"),
+        pytest.param(
+            "{ users(filter: { _not: { group: { name: {} } } }) { name } }", None, id="not-to-one-empty-comparison"
+        ),
+        pytest.param("{ users(filter: { group: { topics: {} } }) { name } }", None, id="to-one-to-many"),
+        pytest.param(
+            "{ users(filter: { group: { topics: { name: {} } } }) { name } }",
+            None,
+            id="to-one-to-many-empty-comparison",
+        ),
+        pytest.param("{ users(filter: { group: { _and: [{ name: {} }] } }) { name } }", None, id="to-one-and"),
+        pytest.param("{ users(filter: { group: { _or: [{ name: {} }] } }) { name } }", None, id="to-one-or"),
+        pytest.param("{ users(filter: { departments: {} }) { name } }", None, id="to-many"),
+        pytest.param("{ users(filter: { departments: { name: {} } }) { name } }", None, id="to-many-empty-comparison"),
+        pytest.param("{ users(filter: { _not: { departments: {} } }) { name } }", None, id="not-to-many"),
+        pytest.param(
+            "{ users(filter: { _not: { departments: { name: {} } } }) { name } }",
+            None,
+            id="not-to-many-empty-comparison",
+        ),
+        pytest.param(
+            "{ users(filter: { departments: { users: { name: {} } } }) { name } }", None, id="to-many-to-many"
+        ),
+        pytest.param(
+            "{ users(filter: { _and: [{ departments: { name: {} } }, { group: {} }] }) { name } }",
+            None,
+            id="and-relations",
+        ),
+        pytest.param("{ users(filter: { departmentsAggregate: {} }) { name } }", None, id="aggregation"),
+        pytest.param(
+            "{ users(filter: { departmentsAggregate: { count: { arguments: [id], predicate: {} } } }) { name } }",
+            None,
+            id="aggregation-empty-predicate",
+        ),
+        pytest.param("{ users(filter: { _not: { departmentsAggregate: {} } }) { name } }", None, id="not-aggregation"),
+        pytest.param(
+            "{ users(filter: { departments: { usersAggregate: {} } }) { name } }", None, id="to-many-aggregation"
+        ),
+    ],
+)
+async def test_empty_relation_filter_is_ignored(
+    query: str, variables: dict[str, Any] | None, any_query: AnyQueryExecutor
+) -> None:
+    result = await maybe_async(any_query(query, variables))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == ["Alice", "Bob", "Charlie", "Tango"]
+
+
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param('{ group: { name: {} }, name: { eq: "Bob" } }', ["Bob"], id="to-one-and-column"),
+        pytest.param('{ departments: { name: {} }, name: { eq: "Bob" } }', ["Bob"], id="to-many-and-column"),
+        pytest.param(
+            '{ departments: { name: {} }, group: { name: { eq: "Group 1" } } }', ["Alice"], id="to-many-and-to-one"
+        ),
+        pytest.param('{ _not: { group: { name: {} }, name: { eq: "Bob" } } }', ["Alice", "Charlie", "Tango"], id="not"),
+    ],
+)
+async def test_empty_relation_filter_beside_predicate(
+    dto_filter: str, names: list[str], any_query: AnyQueryExecutor
+) -> None:
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.snapshot
+@pytest.mark.parametrize(
+    "dto_filter",
+    [
+        pytest.param("{ group: { name: {} } }", id="to-one"),
+        pytest.param("{ departments: { name: {} } }", id="to-many"),
+        pytest.param("{ _not: { departments: { name: {} } } }", id="not-to-many"),
+    ],
+)
+async def test_empty_relation_filter(
+    dto_filter: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data
+
+    assert sorted(user["name"] for user in result.data["users"]) == ["Alice", "Bob", "Charlie", "Tango"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param("{ _or: [] }", ["Alice", "Bob", "Charlie", "Tango"], id="no-branch"),
+        pytest.param("{ _or: [{}, {}] }", ["Alice", "Bob", "Charlie", "Tango"], id="empty-branches"),
+        pytest.param("{ _or: [{ bio: {} }] }", ["Alice", "Bob", "Charlie", "Tango"], id="empty-comparison"),
+        pytest.param('{ _or: [{}, { name: { eq: "Bob" } }] }', ["Bob"], id="empty-and-eq"),
+        pytest.param('{ _or: [{ bio: {} }, { name: { eq: "Bob" } }] }', ["Bob"], id="empty-comparison-and-eq"),
+        pytest.param('{ _or: [{ _not: { bio: {} } }, { name: { eq: "Bob" } }] }', ["Bob"], id="empty-not-and-eq"),
+        pytest.param('{ _or: [{ _and: [{ bio: {} }] }, { name: { eq: "Bob" } }] }', ["Bob"], id="empty-and-and-eq"),
+        pytest.param('{ _or: [{ group: {} }, { name: { eq: "Bob" } }] }', ["Bob"], id="to-one-and-eq"),
+        pytest.param('{ _or: [{ group: { name: {} } }, { name: { eq: "Bob" } }] }', ["Bob"], id="to-one-empty-and-eq"),
+        pytest.param('{ _or: [{ departments: {} }, { name: { eq: "Bob" } }] }', ["Bob"], id="to-many-and-eq"),
+        pytest.param(
+            '{ _or: [{ departments: { name: {} } }, { name: { eq: "Bob" } }] }', ["Bob"], id="to-many-empty-and-eq"
+        ),
+        pytest.param(
+            '{ _or: [{ departmentsAggregate: {} }, { name: { eq: "Bob" } }] }', ["Bob"], id="aggregation-and-eq"
+        ),
+        pytest.param(
+            '{ group: { _or: [{ name: {} }, { name: { eq: "Group 1" } }] } }', ["Alice"], id="to-one-or-empty-and-eq"
+        ),
+        pytest.param(
+            '{ departments: { _or: [{ name: {} }, { name: { eq: "IT" } }] } }',
+            ["Alice", "Charlie"],
+            id="to-many-or-empty-and-eq",
+        ),
+        pytest.param(
+            '{ _not: { _or: [{ group: { name: {} } }, { name: { eq: "Bob" } }] } }',
+            ["Alice", "Charlie", "Tango"],
+            id="not-or-to-one-empty-and-eq",
+        ),
+        pytest.param(
+            '{ _not: { _or: [{ departments: { name: {} } }, { name: { eq: "Bob" } }] } }',
+            ["Alice", "Charlie", "Tango"],
+            id="not-or-to-many-empty-and-eq",
+        ),
+        pytest.param(
+            '{ _or: [{ _or: [{ bio: {} }] }, { name: { eq: "Bob" } }] }', ["Bob"], id="nested-or-empty-and-eq"
+        ),
+    ],
+)
+async def test_empty_or_branch_is_pruned(dto_filter: str, names: list[str], any_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
