@@ -332,3 +332,49 @@ async def test_nested_pagination_defaults_apply_in_fragment(
     assert query_tracker.query_count == 1
     for color in result.data["colorsWithDefaultPaginatedFruits"]:
         assert color["fruits"] == _fruit_ids_of(raw_fruits, color["id"])[1:2]
+
+
+@pytest.mark.parametrize(
+    ("operation", "variables", "expected"),
+    [
+        pytest.param("query ($l: Int, $o: Int)", {}, slice(1, 2), id="omitted-variables"),
+        pytest.param("query ($l: Int, $o: Int)", {"l": None}, slice(1, None), id="null-limit-variable"),
+        pytest.param("query ($l: Int = 1, $o: Int = 0)", {}, slice(0, 1), id="operation-defaults"),
+        pytest.param("query ($l: Int = 1, $o: Int = 0)", {"l": None}, slice(0, None), id="null-overrides-default"),
+    ],
+)
+async def test_nested_pagination_variables(
+    operation: str,
+    variables: dict[str, Any],
+    expected: slice,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    raw_fruits: RawRecordData,
+) -> None:
+    """Test that nested pagination variables fall back to their operation default, then the argument default."""
+    result = await maybe_async(
+        any_query(
+            f"{operation} {{ colorsWithDefaultPaginatedFruits {{ id fruits(limit: $l, offset: $o) {{ id }} }} }}",
+            variables,
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert query_tracker.query_count == 1
+    for color in result.data["colorsWithDefaultPaginatedFruits"]:
+        assert color["fruits"] == _fruit_ids_of(raw_fruits, color["id"])[expected]
+
+
+async def test_nested_config_default_limit_with_omitted_variable(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker
+) -> None:
+    """Test that a nested limit bound to an omitted variable keeps the configured default limit."""
+    result = await maybe_async(
+        any_query("query ($l: Int) { colorsPaginated { id a: fruits { id } b: fruits(limit: $l) { id } } }", {})
+    )
+    assert not result.errors
+    assert result.data
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted.count("JOIN") == 1
+    for color in result.data["colorsPaginated"]:
+        assert color["a"] == color["b"]

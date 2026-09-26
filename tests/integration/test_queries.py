@@ -95,6 +95,18 @@ async def test_list_relation(any_query: AnyQueryExecutor, raw_fruits: RawRecordD
             assert fruit == {"name": expected["name"], "id": expected["id"]}
 
 
+async def test_repeated_root_field_merges_selections(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_colors: RawRecordData
+) -> None:
+    """Test that a root field selected twice under one response key loads the columns of both selections."""
+    result = await maybe_async(any_query("{ colors { id } colors { name } }"))
+
+    assert not result.errors
+    assert result.data
+    assert query_tracker.query_count == 1
+    assert sorted(result.data["colors"], key=lambda color: color["id"]) == raw_colors
+
+
 async def test_column_property(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
     result = await maybe_async(
         any_query(
