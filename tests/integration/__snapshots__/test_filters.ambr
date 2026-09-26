@@ -1582,7 +1582,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) NOT REGEXP ?
+   WHERE fruit.name NOT REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1591,7 +1591,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) NOT REGEXP %s
+   WHERE NOT regexp_like(fruit.name, %s, %s)
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1600,7 +1600,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) !~ $1::VARCHAR
+   WHERE fruit.name !~ * $1::VARCHAR
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1609,7 +1609,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) !~ %(lower_1)s::VARCHAR
+   WHERE fruit.name !~ * %(name_1)s::VARCHAR
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1618,7 +1618,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) REGEXP ?
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1627,7 +1627,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) REGEXP %s
+   WHERE regexp_like(fruit.name, %s, %s)
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1636,7 +1636,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) ~ $1::VARCHAR
+   WHERE fruit.name ~ * $1::VARCHAR
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1645,7 +1645,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) ~ %(lower_1)s::VARCHAR
+   WHERE fruit.name ~ * %(name_1)s::VARCHAR
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1996,7 +1996,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) !~ %(lower_1)s::VARCHAR
+   WHERE fruit.name !~ * %(name_1)s::VARCHAR
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2005,7 +2005,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) NOT REGEXP ?
+   WHERE fruit.name NOT REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2014,7 +2014,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) ~ %(lower_1)s::VARCHAR
+   WHERE fruit.name ~ * %(name_1)s::VARCHAR
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2023,7 +2023,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) REGEXP ?
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---

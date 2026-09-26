@@ -141,12 +141,15 @@ class TextFilter(OrderFilter):
         expressions: list[ColumnElement[bool]] = []
 
         def regexp_match(pattern: str, *, case_sensitive: bool) -> ColumnElement[bool]:
-            value = model_attribute if case_sensitive else func.lower(model_attribute)
-            if dialect.name != "mysql":
-                return value.regexp_match(pattern)
-            # MySQL rejects an empty pattern; an empty group matches every string alike.
-            pattern = pattern or "(?:)"
-            return func.regexp_like(value, pattern, "c") if case_sensitive else value.regexp_match(pattern)
+            if dialect.name == "mysql":
+                # MySQL rejects an empty pattern; an empty group matches every string alike.
+                return func.regexp_like(model_attribute, pattern or "(?:)", "c" if case_sensitive else "i")
+            if case_sensitive:
+                return model_attribute.regexp_match(pattern)
+            if dialect.name == "sqlite":
+                # SQLAlchemy's SQLite REGEXP function ignores flags, but Python's re reads them inline.
+                return model_attribute.regexp_match(f"(?i){pattern}")
+            return model_attribute.regexp_match(pattern, flags="i")
 
         if is_set(self.comparison.regexp):
             expressions.append(regexp_match(self.comparison.regexp, case_sensitive=True))

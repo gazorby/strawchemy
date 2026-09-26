@@ -1718,3 +1718,32 @@ async def test_regexp_operators_are_independent(dto_filter: str, names: list[str
     assert result.data is not None
 
     assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param('{ name: { iregexp: "^A" } }', ["Alice"], id="iregexp-uppercase"),
+        pytest.param('{ name: { iregexp: "^a" } }', ["Alice"], id="iregexp-lowercase"),
+        pytest.param('{ name: { iregexp: "lI" } }', ["Alice", "Charlie"], id="iregexp-mixed-case"),
+        pytest.param('{ name: { iregexp: "^[A-B]" } }', ["Alice", "Bob"], id="iregexp-uppercase-class"),
+        pytest.param('{ name: { iregexp: "^[a-b]" } }', ["Alice", "Bob"], id="iregexp-lowercase-class"),
+        pytest.param('{ name: { inregexp: "^A" } }', ["Bob", "Charlie", "Tango"], id="inregexp-uppercase"),
+        pytest.param('{ name: { inregexp: "^[B-C]" } }', ["Alice", "Tango"], id="inregexp-uppercase-class"),
+        pytest.param('{ _not: { name: { iregexp: "^A" } } }', ["Bob", "Charlie", "Tango"], id="not-iregexp"),
+        pytest.param('{ _not: { name: { inregexp: "^A" } } }', ["Alice"], id="not-inregexp"),
+        pytest.param('{ name: { iregexp: "E$", regexp: "^A" } }', ["Alice"], id="iregexp-and-regexp"),
+        pytest.param('{ name: { iregexp: "E$", nregexp: "^A" } }', ["Charlie"], id="iregexp-and-nregexp"),
+        pytest.param('{ name: { regexp: "^[a-z]" } }', [], id="regexp-stays-case-sensitive"),
+        pytest.param('{ name: { nregexp: "^[a-z]" } }', _ALL_USERS, id="nregexp-stays-case-sensitive"),
+    ],
+)
+async def test_case_insensitive_regexp_ignores_pattern_case(
+    dto_filter: str, names: list[str], any_query: AnyQueryExecutor
+) -> None:
+    """Test that iregexp and inregexp match regardless of the case of either the pattern or the value."""
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
