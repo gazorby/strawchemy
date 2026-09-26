@@ -1072,6 +1072,17 @@ async def test_update_by_filter_on_to_many_relation(
         pytest.param(
             '{ _or: [{ departments: { name: {} } }, { name: { eq: "Bob" } }] }', ["Bob"], id="or-to-many-empty"
         ),
+        pytest.param(
+            '{ _and: [{ departments: { name: { eq: "IT" } } }, { departments: { name: { eq: "Platform" } } }] }',
+            ["Charlie"],
+            id="and-same-to-many",
+        ),
+        pytest.param(
+            '{ _not: { _and: [{ departments: { name: { eq: "IT" } } }, '
+            '{ departments: { name: { eq: "Platform" } } }] } }',
+            ["Alice", "Bob", "Tango"],
+            id="not-and-same-to-many",
+        ),
     ],
 )
 async def test_update_users_by_split_filter(

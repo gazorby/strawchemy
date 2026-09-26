@@ -1140,6 +1140,19 @@ async def test_empty_or_branch_is_pruned(dto_filter: str, names: list[str], any_
     ],
 )
 @pytest.mark.parametrize(
+    "raw_topics",
+    [
+        pytest.param(
+            [
+                {"id": 1, "name": "Hello!", "group_id": 1},
+                {"id": 2, "name": "Problems", "group_id": 2},
+                {"id": 3, "name": "Welcome", "group_id": 1},
+            ],
+            id="group-with-two-topics",
+        )
+    ],
+)
+@pytest.mark.parametrize(
     ("field", "arguments"),
     [
         pytest.param("users", "", id="plain"),
@@ -1198,6 +1211,77 @@ async def test_empty_or_branch_is_pruned(dto_filter: str, names: list[str], any_
             ["Bob", "Charlie", "Tango"],
             id="to-one-not-to-many",
         ),
+        pytest.param(
+            '{ _and: [{ departments: { name: { eq: "IT" } } }, { departments: { name: { eq: "Platform" } } }] }',
+            ["Alice", "Bob", "Tango"],
+            id="and-same-to-many",
+        ),
+        pytest.param(
+            '{ departments: { name: { eq: "IT" } }, _and: [{ departments: { name: { eq: "Platform" } } }] }',
+            ["Alice", "Bob", "Tango"],
+            id="to-many-and-same-to-many",
+        ),
+        pytest.param(
+            '{ _and: [{ _and: [{ departments: { name: { eq: "IT" } } }] }, '
+            '{ departments: { name: { eq: "Platform" } } }] }',
+            ["Alice", "Bob", "Tango"],
+            id="nested-and-same-to-many",
+        ),
+        pytest.param(
+            '{ departments: { name: { eq: "IT" } }, '
+            '_or: [{ departments: { name: { eq: "Platform" } } }, { name: { eq: "Bob" } }] }',
+            ["Alice", "Bob", "Tango"],
+            id="to-many-and-or-same-to-many",
+        ),
+        pytest.param(
+            '{ _and: [{ _or: [{ departments: { name: { eq: "Sales" } } }, '
+            '{ departments: { name: { eq: "Platform" } } }] }, { departments: { name: { eq: "IT" } } }] }',
+            ["Alice", "Bob", "Tango"],
+            id="and-or-same-to-many",
+        ),
+        pytest.param(
+            '{ _or: [{ departments: { name: { eq: "IT" } } }, { departments: { name: { eq: "Platform" } } }] }',
+            ["Bob", "Tango"],
+            id="or-same-to-many",
+        ),
+        pytest.param(
+            '{ departments: { _and: [{ name: { eq: "IT" } }, { name: { eq: "Platform" } }] } }',
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="to-many-and-same-row",
+        ),
+        pytest.param(
+            '{ _and: [{ _not: { departments: { name: { eq: "IT" } } } }, { departments: { name: { eq: "Sales" } } }] }',
+            ["Alice", "Charlie", "Tango"],
+            id="and-not-to-many",
+        ),
+        pytest.param(
+            '{ _and: [{ departments: { name: { eq: "Platform" } } }, '
+            '{ departments: { users: { name: { eq: "Alice" } } } }] }',
+            ["Alice", "Bob", "Tango"],
+            id="and-same-to-many-nested-to-many",
+        ),
+        pytest.param(
+            '{ departments: { _and: [{ users: { name: { eq: "Alice" } } }, { users: { name: { eq: "Charlie" } } }] } }',
+            ["Bob", "Tango"],
+            id="to-many-and-same-nested-to-many",
+        ),
+        pytest.param(
+            '{ group: { _and: [{ topics: { name: { eq: "Hello!" } } }, { topics: { name: { eq: "Welcome" } } }] } }',
+            ["Bob", "Charlie", "Tango"],
+            id="to-one-and-same-to-many",
+        ),
+        pytest.param(
+            '{ _and: [{ group: { topics: { name: { eq: "Hello!" } } } }, '
+            '{ group: { topics: { name: { eq: "Welcome" } } } }] }',
+            ["Bob", "Charlie", "Tango"],
+            id="and-to-one-same-to-many",
+        ),
+        pytest.param(
+            "{ _and: [{ departmentsAggregate: { count: { arguments: [id], predicate: { gt: 1 } } } }, "
+            '{ departments: { name: { eq: "IT" } } }, { departments: { name: { isNull: true } } }] }',
+            ["Bob", "Charlie", "Tango"],
+            id="and-aggregation-same-to-many",
+        ),
     ],
 )
 async def test_not_complements_relation_filter(
@@ -1208,6 +1292,7 @@ async def test_not_complements_relation_filter(
     any_query: AnyQueryExecutor,
     raw_departments: RawRecordData,  # noqa: ARG001
     raw_user_departments: RawRecordData,  # noqa: ARG001
+    raw_topics: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test that ``_not`` over a filter matches exactly the rows the filter does not."""
     query = "{{ {field}(filter: {dto_filter}{arguments}) {{ name }} }}"
@@ -1237,5 +1322,24 @@ async def test_not_to_many(
     assert result.data
 
     assert sorted(user["name"] for user in result.data["users"]) == ["Bob", "Tango"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_and_same_to_many(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(
+        any_query(
+            "{ users(filter: { _and: ["
+            '{ departments: { name: { eq: "IT" } } }, { departments: { name: { eq: "Platform" } } }'
+            "] }) { name } }"
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    assert [user["name"] for user in result.data["users"]] == ["Charlie"]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

@@ -25,6 +25,7 @@ from strawchemy.dto.strawberry import (
     AggregationFilter,
     BooleanFilterDTO,
     CustomFilter,
+    ExistsFilter,
     Filter,
     NotExistsFilter,
     OrderByEnum,
@@ -482,11 +483,12 @@ class FilterPlan:
         return subquery.where(*correlation).exists().correlate(outer_alias)
 
     @staticmethod
-    def _not_exists(not_exists: NotExistsFilter, context: PlanContext[Any]) -> ColumnElement[bool]:
-        outer_alias = context.aliases.alias_from_relation_node(not_exists.field_node, "target")
-        return not_(
-            FilterPlan._exists(not_exists.dto_filter, context, outer_alias, allow_null=False, derived_table=False)
+    def _exists_filter(exists_filter: ExistsFilter, context: PlanContext[Any]) -> ColumnElement[bool]:
+        outer_alias = context.aliases.alias_from_relation_node(exists_filter.field_node, "target")
+        expression = FilterPlan._exists(
+            exists_filter.dto_filter, context, outer_alias, allow_null=False, derived_table=False
         )
+        return not_(expression) if isinstance(exists_filter, NotExistsFilter) else expression
 
     @staticmethod
     def _to_expressions(
@@ -567,7 +569,7 @@ class FilterPlan:
 
     @staticmethod
     def _gather_conjunctions(
-        query: Sequence[Filter | AggregationFilter | GraphQLComparison | CustomFilter | NotExistsFilter],
+        query: Sequence[Filter | AggregationFilter | GraphQLComparison | CustomFilter | ExistsFilter],
         context: PlanContext[Any],
         *,
         agg_plan: AggregationPlan,
@@ -591,8 +593,8 @@ class FilterPlan:
                 bool_expressions.extend(FilterPlan._to_expressions(context, value, not_null_check=not_null_check))
             elif isinstance(value, CustomFilter):
                 bool_expressions.append(FilterPlan._custom_filter_expression(value, context))
-            elif isinstance(value, NotExistsFilter):
-                bool_expressions.append(FilterPlan._not_exists(value, context))
+            elif isinstance(value, ExistsFilter):
+                bool_expressions.append(FilterPlan._exists_filter(value, context))
             else:
                 conjunction = FilterPlan._conjunctions(
                     value,
