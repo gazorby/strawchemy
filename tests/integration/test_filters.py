@@ -881,3 +881,83 @@ async def test_not_isnull_relation(
     assert result.data is not None
 
     assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.snapshot
+async def test_not_empty_comparison(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(any_query("{ users(filter: { _not: { bio: {} } }) { name } }"))
+    assert not result.errors
+    assert result.data
+
+    assert [user["name"] for user in result.data["users"]] == ["Alice", "Bob", "Charlie", "Tango"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("query", "variables", "names"),
+    [
+        pytest.param(
+            "query ($bio: String) { users(filter: { _not: { bio: { eq: $bio } } }) { name } }",
+            {},
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-omitted-variable",
+        ),
+        pytest.param(
+            '{ users(filter: { _not: { bio: {}, name: { eq: "Bob" } } }) { name } }',
+            None,
+            ["Alice", "Charlie", "Tango"],
+            id="not-empty-and-eq",
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { _and: [{ bio: {} }] } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-and-empty",
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { _or: [{ bio: {} }] } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-or-empty",
+        ),
+        pytest.param(
+            '{ users(filter: { _not: { _or: [{ bio: {} }, { name: { eq: "Bob" } }] } }) { name } }',
+            None,
+            ["Alice", "Charlie", "Tango"],
+            id="not-or-empty-and-eq",
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { _not: { bio: {} } } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-not-empty",
+        ),
+        pytest.param(
+            "{ users(filter: { group: { _not: { name: {} } } }) { name } }", None, ["Alice"], id="to-one-not-empty"
+        ),
+        pytest.param(
+            "{ users(filter: { departments: { _not: { name: {} } } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie"],
+            id="to-many-not-empty",
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { departmentsAggregate: { count: { arguments: [id], predicate: {} } } } }) "
+            "{ name } }",
+            None,
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-empty-aggregation",
+        ),
+    ],
+)
+async def test_empty_comparison_is_ignored(
+    query: str, variables: dict[str, Any] | None, names: list[str], any_query: AnyQueryExecutor
+) -> None:
+    result = await maybe_async(any_query(query, variables))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names

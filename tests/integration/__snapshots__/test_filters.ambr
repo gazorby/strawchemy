@@ -809,6 +809,54 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_not_empty_comparison[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_not_empty_comparison[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_not_empty_comparison[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_not_empty_comparison[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_not_empty_comparison[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_not_empty_comparison[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
 # name: test_not_isnull[session-async-tracked-aiosqlite_engine]
   '''
   SELECT user.name,
