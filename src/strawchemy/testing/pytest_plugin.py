@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypeAlias
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, NonCallableMock
 
 import pytest
 from sqlalchemy import Result
@@ -28,6 +29,8 @@ def make_execute(computed_values: dict[str, Any], model_instance: Any) -> SyncEx
         # The executor reads computed values by Label identity from ``row._mapping``. Match each
         # column-map label to a value by its node name so name-keyed ``computed_values`` still apply.
         mapping = {model_instance: model_instance}
+        for columns in self.identity_columns.values():
+            mapping.update(dict.fromkeys(columns))
         for node, label in self.column_map.items():
             mapping[label] = computed_values.get(node.value.name)
         rows = [MagicMock(name="RowMock", __getitem__=lambda _self, _index: model_instance, _mapping=mapping)]
@@ -74,7 +77,13 @@ def fx_patch_query(monkeypatch: pytest.MonkeyPatch, computed_values: dict[str, A
                     return value
         if any(func in key_name for func in AggregationFunctionInfo.functions_map):
             return 0
-        return getattr(self.model, key.value.model_field_name)
+        value = getattr(self.model, key.value.model_field_name)
+        if key.value.is_relation and key.value.uselist:
+            # A mock attribute stands for a single related object; wrap it so it reads as a collection.
+            if isinstance(value, NonCallableMock):
+                return [value]
+            return list(value.values()) if isinstance(value, Mapping) else list(value)
+        return value
 
     def query_result_value(self: executor.QueryResult[ModelT], key: QueryNode) -> Any:  # noqa: ARG001
         key_name = key.value.name
