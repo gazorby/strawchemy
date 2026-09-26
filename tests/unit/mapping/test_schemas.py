@@ -19,7 +19,7 @@ from strawberry.types.object_type import StrawberryObjectDefinition
 from strawchemy import RELATIONSHIPS, SCALARS
 from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
 from strawchemy.schema.scalars import Interval
-from strawchemy.testing.pytest_plugin import MockContext
+from strawchemy.testing import MockContext
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
 from tests.unit.models import Color, Fruit, User
