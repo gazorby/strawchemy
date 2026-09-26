@@ -500,3 +500,55 @@ async def test_query_hook_joining_on_relation_ignored_by_filter(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_order_by_aggregation_of_relation_with_ordering_hook(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker
+) -> None:
+    """Test ordering by an aggregate of a to-one relation whose query hook orders its rows."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                fruitsWithOrderedColorPaginated(orderBy: { color: { fruitsAggregate: { count: DESC } } }, limit: 3) {
+                    id
+                    color { id fruitsAggregate { count } }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    color_of = {fruit["id"]: fruit["color_id"] for fruit in raw_fruits}
+    fruit_counts = {color_id: list(color_of.values()).count(color_id) for color_id in color_of.values()}
+    fruits = result.data["fruitsWithOrderedColorPaginated"]
+    for fruit in fruits:
+        assert fruit["color"] == {
+            "id": color_of[fruit["id"]],
+            "fruitsAggregate": {"count": fruit_counts[color_of[fruit["id"]]]},
+        }
+    assert [fruit["color"]["fruitsAggregate"]["count"] for fruit in fruits] == sorted(
+        (fruit_counts[color_id] for color_id in color_of.values()), reverse=True
+    )[:3]
+    assert query_tracker.query_count == 1
+
+
+async def test_order_by_relation_with_ordering_hook(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_colors: RawRecordData, query_tracker: QueryTracker
+) -> None:
+    """Test ordering by a column of a to-one relation whose query hook orders its rows."""
+    result = await maybe_async(
+        any_query("{ fruitsWithOrderedColor(orderBy: { color: { name: DESC } }) { id color { id name } } }")
+    )
+    assert not result.errors
+    assert result.data
+    color_names = {color["id"]: color["name"] for color in raw_colors}
+    fruits = result.data["fruitsWithOrderedColor"]
+    assert sorted(fruit["id"] for fruit in fruits) == sorted(fruit["id"] for fruit in raw_fruits)
+    for fruit in fruits:
+        color_id = next(raw["color_id"] for raw in raw_fruits if raw["id"] == fruit["id"])
+        assert fruit["color"] == {"id": color_id, "name": color_names[color_id]}
+    names = [fruit["color"]["name"] for fruit in fruits]
+    assert names == sorted(names, reverse=True)
+    assert query_tracker.query_count == 1
