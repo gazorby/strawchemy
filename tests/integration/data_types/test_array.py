@@ -100,3 +100,18 @@ async def test_postgres_array_filters_empty_list(
     assert not result.errors
     assert result.data is not None
     assert sorted(row["id"] for row in result.data["array"]) == expected_ids
+
+
+@pytest.mark.parametrize("operator", ["contains", "containedIn", "overlap"])
+@pytest.mark.parametrize("negated", [pytest.param(False, id="plain"), pytest.param(True, id="not")])
+async def test_postgres_array_null_operator_is_ignored(
+    operator: str, negated: bool, any_query: AnyQueryExecutor, raw_arrays: RawRecordData
+) -> None:
+    """Test that an array operator set to null is ignored, directly and under ``_not``."""
+    dto_filter = f"{{ arrayStrCol: {{ {operator}: null }} }}"
+    if negated:
+        dto_filter = f"{{ _not: {dto_filter} }}"
+    result = await maybe_async(any_query(f"{{ array(filter: {dto_filter}) {{ id }} }}"))
+    assert not result.errors
+    assert result.data is not None
+    assert sorted(row["id"] for row in result.data["array"]) == sorted(row["id"] for row in raw_arrays)

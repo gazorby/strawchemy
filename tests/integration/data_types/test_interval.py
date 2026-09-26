@@ -123,3 +123,21 @@ async def test_timedelta_output(
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    "dto_filter",
+    [
+        pytest.param("{ timeDeltaCol: { days: null } }", id="part"),
+        pytest.param("{ timeDeltaCol: { hours: { eq: null } } }", id="part-operator"),
+        pytest.param("{ _not: { timeDeltaCol: { seconds: { gt: null }, lt: null } } }", id="not-part-operator"),
+    ],
+)
+async def test_null_part_operator_is_ignored(
+    dto_filter: str, any_query: AnyQueryExecutor, raw_intervals: RawRecordData
+) -> None:
+    """Test that an interval part, or one of its operators, set to null is ignored."""
+    result = await maybe_async(any_query(f"{{ intervals(filter: {dto_filter}) {{ id }} }}"))
+    assert not result.errors
+    assert result.data
+    assert sorted(row["id"] for row in result.data["intervals"]) == sorted(row["id"] for row in raw_intervals)

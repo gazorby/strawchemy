@@ -29,7 +29,9 @@ def test_iter_aggregation_filters_walks_and_or_not_branches() -> None:
         pytest.param(DateComparison(), False, id="no-operator"),
         pytest.param(DateComparison(year=OrderComparison[Any]()), False, id="empty-nested"),  # ty:ignore[unknown-argument]
         pytest.param(DateComparison(year=OrderComparison[Any](gt=2)), True, id="nested"),  # ty:ignore[unknown-argument]
-        pytest.param(DateComparison(eq=None), True, id="null"),  # ty:ignore[unknown-argument]
+        pytest.param(DateComparison(eq=None), False, id="null"),  # ty:ignore[unknown-argument]
+        pytest.param(DateComparison(year=None), False, id="null-nested"),  # ty:ignore[unknown-argument]
+        pytest.param(DateComparison(year=OrderComparison[Any](eq=None)), False, id="nested-null"),  # ty:ignore[unknown-argument]
         pytest.param(EqualityComparison[Any](in_=[]), True, id="empty-list"),  # ty:ignore[unknown-argument]
     ],
 )

@@ -33,6 +33,7 @@ from strawchemy.schema.filters import (
     TextFilter,
     TimeDeltaFilter,
     TimeFilter,
+    is_set,
 )
 from strawchemy.typing import ComparisonOperator, QueryNodeType
 
@@ -295,9 +296,7 @@ class GraphQLComparison:
     def has_operator(self) -> bool:
         """Whether an operator of this comparison, or of a nested comparison, is set."""
         values = (getattr(self, field.python_name) for field in get_object_definition(self, strict=True).fields)
-        return any(
-            value.has_operator() if isinstance(value, GraphQLComparison) else value is not UNSET for value in values
-        )
+        return any(value.has_operator() if isinstance(value, GraphQLComparison) else is_set(value) for value in values)
 
     @property
     def field_node(self) -> QueryNodeType:

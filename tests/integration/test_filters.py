@@ -15,6 +15,33 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.integration]
 
+_ALL_USERS = ["Alice", "Bob", "Charlie", "Tango"]
+_TEXT_OPERATORS = (
+    "eq",
+    "neq",
+    "isNull",
+    "in",
+    "nin",
+    "gt",
+    "gte",
+    "lt",
+    "lte",
+    "like",
+    "nlike",
+    "ilike",
+    "nilike",
+    "regexp",
+    "iregexp",
+    "nregexp",
+    "inregexp",
+    "startswith",
+    "endswith",
+    "contains",
+    "istartswith",
+    "iendswith",
+    "icontains",
+)
+
 
 @pytest.mark.snapshot
 async def test_no_filtering(
@@ -811,8 +838,6 @@ async def test_not_isnull(
             '{ _not: { _or: [{ bio: { isNull: true } }, { name: { eq: "Bob" } }] } }', ["Tango"], id="not-or-isnull"
         ),
         pytest.param("{ _not: { _not: { bio: { isNull: true } } } }", ["Alice", "Bob", "Charlie"], id="not-not-isnull"),
-        pytest.param("{ _not: { bio: { eq: null } } }", ["Tango"], id="not-eq-null"),
-        pytest.param("{ _not: { bio: { neq: null } } }", ["Alice", "Bob", "Charlie"], id="not-neq-null"),
     ],
 )
 async def test_not_isnull_column(dto_filter: str, names: list[str], any_query: AnyQueryExecutor) -> None:
@@ -1545,6 +1570,150 @@ async def test_empty_list_comparison_result(
     query: str, variables: dict[str, Any] | None, names: list[str], any_query: AnyQueryExecutor
 ) -> None:
     result = await maybe_async(any_query(query, variables))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize("operator", _TEXT_OPERATORS)
+@pytest.mark.parametrize(
+    "template",
+    [
+        pytest.param("{{ bio: {{ {operator}: null }} }}", id="column"),
+        pytest.param("{{ _not: {{ bio: {{ {operator}: null }} }} }}", id="not-column"),
+    ],
+)
+async def test_null_operator_is_ignored(template: str, operator: str, any_query: AnyQueryExecutor) -> None:
+    """Test that an operator set to null is ignored like an absent one, directly and under ``_not``."""
+    result = await maybe_async(any_query(f"{{ users(filter: {template.format(operator=operator)}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == _ALL_USERS
+
+
+@pytest.mark.parametrize(
+    ("query", "variables", "names"),
+    [
+        pytest.param(
+            "query ($bio: String) { users(filter: { bio: { eq: $bio } }) { name } }",
+            {"bio": None},
+            _ALL_USERS,
+            id="null-variable",
+        ),
+        pytest.param(
+            "query ($bio: String) { users(filter: { _not: { bio: { neq: $bio } } }) { name } }",
+            {"bio": None},
+            _ALL_USERS,
+            id="not-null-variable",
+        ),
+        pytest.param(
+            "{ users(filter: { bio: { eq: null, isNull: true } }) { name } }",
+            None,
+            ["Alice", "Bob", "Charlie"],
+            id="null-beside-operator",
+        ),
+        pytest.param(
+            '{ users(filter: { _not: { name: { eq: "Bob", neq: null, isNull: null } } }) { name } }',
+            None,
+            ["Alice", "Charlie", "Tango"],
+            id="not-null-beside-operator",
+        ),
+        pytest.param('{ users(filter: { bio: { eq: null }, name: { eq: "Bob" } }) { name } }', None, ["Bob"], id="and"),
+        pytest.param(
+            '{ users(filter: { _or: [{ bio: { eq: null } }, { name: { eq: "Bob" } }] }) { name } }',
+            None,
+            ["Bob"],
+            id="or-branch",
+        ),
+        pytest.param("{ users(filter: { group: { name: { eq: null } } }) { name } }", None, _ALL_USERS, id="to-one"),
+        pytest.param(
+            "{ users(filter: { group: { name: { isNull: null } } }) { name } }", None, _ALL_USERS, id="to-one-isnull"
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { group: { name: { eq: null } } } }) { name } }",
+            None,
+            _ALL_USERS,
+            id="not-to-one",
+        ),
+        pytest.param(
+            "{ users(filter: { departments: { name: { gt: null } } }) { name } }", None, _ALL_USERS, id="to-many"
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { departments: { name: { like: null } } } }) { name } }",
+            None,
+            _ALL_USERS,
+            id="not-to-many",
+        ),
+        pytest.param(
+            "{ users(filter: { departments: { _not: { name: { neq: null } } } }) { name } }",
+            None,
+            _ALL_USERS,
+            id="to-many-not",
+        ),
+        pytest.param(
+            "{ users(filter: { departmentsAggregate: { count: { arguments: [id], predicate: { eq: null } } } }) "
+            "{ name } }",
+            None,
+            _ALL_USERS,
+            id="aggregation-eq",
+        ),
+        pytest.param(
+            "{ users(filter: { departmentsAggregate: { count: { arguments: [id], predicate: { gt: null, "
+            "isNull: null, in: null } } } }) { name } }",
+            None,
+            _ALL_USERS,
+            id="aggregation-operators",
+        ),
+        pytest.param(
+            "{ users(filter: { _not: { departmentsAggregate: { count: { arguments: [id], "
+            "predicate: { lte: null } } } } }) { name } }",
+            None,
+            _ALL_USERS,
+            id="not-aggregation",
+        ),
+        pytest.param(
+            "{ users(filter: { departmentsAggregate: { count: { arguments: [id], predicate: { eq: 1, neq: null } } } }) "
+            "{ name } }",
+            None,
+            ["Alice", "Bob"],
+            id="aggregation-null-beside-operator",
+        ),
+    ],
+)
+async def test_null_operator_is_ignored_in_filter(
+    query: str, variables: dict[str, Any] | None, names: list[str], any_query: AnyQueryExecutor
+) -> None:
+    """Test that null operators are ignored beside other operators, in branches, relations and aggregations."""
+    result = await maybe_async(any_query(query, variables))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param('{ name: { regexp: "o", nregexp: "^B" } }', ["Tango"], id="regexp-and-nregexp"),
+        pytest.param('{ name: { iregexp: "a", inregexp: "^t" } }', ["Alice", "Charlie"], id="iregexp-and-inregexp"),
+        pytest.param('{ name: { regexp: "" } }', _ALL_USERS, id="regexp-empty"),
+        pytest.param('{ name: { nregexp: "" } }', [], id="nregexp-empty"),
+        pytest.param('{ name: { iregexp: "" } }', _ALL_USERS, id="iregexp-empty"),
+        pytest.param('{ name: { inregexp: "" } }', [], id="inregexp-empty"),
+        pytest.param('{ name: { regexp: null, nregexp: "^B" } }', ["Alice", "Charlie", "Tango"], id="regexp-null"),
+        pytest.param('{ name: { regexp: "^B", nregexp: null } }', ["Bob"], id="nregexp-null"),
+        pytest.param(
+            '{ _not: { name: { regexp: "o", nregexp: "^B" } } }',
+            ["Alice", "Bob", "Charlie"],
+            id="not-regexp-and-nregexp",
+        ),
+    ],
+)
+async def test_regexp_operators_are_independent(dto_filter: str, names: list[str], any_query: AnyQueryExecutor) -> None:
+    """Test that each regexp operator gets its own predicate, an empty pattern matching every string."""
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
