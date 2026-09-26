@@ -393,18 +393,23 @@ class CustomFilter:
 
 
 @dataclass
-class NotExistsFilter:
-    """A ``_not`` over to-many relations, tested with a correlated NOT EXISTS so that no related row matches."""
+class ExistsFilter:
+    """A filter over to-many relations, tested in its own correlated EXISTS so that its related rows are not shared."""
 
     dto_filter: BooleanFilterDTO
-    """The negated filter."""
+    """The filter tested in the subquery."""
     field_node: QueryNodeType
     """The node of the model ``dto_filter`` applies to, used to correlate the subquery."""
 
 
 @dataclass
+class NotExistsFilter(ExistsFilter):
+    """A ``_not`` over to-many relations, tested with a correlated NOT EXISTS so that no related row matches."""
+
+
+@dataclass
 class Filter:
-    and_: list[Self | GraphQLComparison | AggregationFilter | CustomFilter | NotExistsFilter] = dataclasses.field(
+    and_: list[Self | GraphQLComparison | AggregationFilter | CustomFilter | ExistsFilter] = dataclasses.field(
         default_factory=list
     )
     or_: list[Self] = dataclasses.field(default_factory=list)
@@ -426,7 +431,7 @@ class Filter:
             nodes.extend(node for node in first if all(node in other for other in others))
         return list(dict.fromkeys(nodes))
 
-    def iter_leaves(self) -> Iterator[GraphQLComparison | AggregationFilter | CustomFilter | NotExistsFilter]:
+    def iter_leaves(self) -> Iterator[GraphQLComparison | AggregationFilter | CustomFilter | ExistsFilter]:
         """Yields every predicate in this filter tree in traversal order.
 
         Walks the ``and_``, ``or_`` and ``not_`` branches depth-first.
@@ -598,6 +603,37 @@ class BooleanFilterDTO(GraphQLFilterDTO):
     def _from_fields(cls, **fields: object) -> Self:
         return cls(**fields)
 
+    def _fields_to_many_paths(self) -> set[tuple[str, ...]]:
+        """Returns the paths of the to-many relations the set fields of this level test, as ``to_many_paths``."""
+        paths: set[tuple[str, ...]] = set()
+        for definition, value in self._filtering_fields():
+            if isinstance(value, BooleanFilterDTO) and not isinstance(definition, CustomFilterFieldDefinition):
+                name = definition.name
+                paths.update({(name,)} if definition.uselist else {(name, *path) for path in value.to_many_paths()})
+        return paths
+
+    def _branches_filter(self, node: QueryNodeType) -> Filter:
+        """Builds the filter of the ``_and`` and ``_or`` branches on ``node``.
+
+        A branch testing a to-many relation that the fields or an earlier branch join gets its own EXISTS: sharing the
+        join would require one related row to match both.
+        """
+        query = Filter()
+        joined = self._fields_to_many_paths()
+        for and_val in self.and_:
+            paths = and_val.to_many_paths()
+            if paths & joined:
+                query.and_.append(ExistsFilter(dto_filter=and_val, field_node=node))
+            else:
+                joined |= paths
+                query.and_.append(and_val.filters_tree(node)[1])
+        or_branches = [or_val for or_val in self.or_ if or_val.has_filter()]
+        if set().union(*(or_val.to_many_paths() for or_val in or_branches)) & joined:
+            query.and_.append(ExistsFilter(dto_filter=self._from_fields(or_=or_branches), field_node=node))
+        else:
+            query.or_ = [or_val.filters_tree(node)[1] for or_val in or_branches]
+        return query
+
     @classmethod
     def all_of(cls, filters: list[Self]) -> Self:
         """Returns a filter matching the rows that every one of ``filters`` matches."""
@@ -637,23 +673,23 @@ class BooleanFilterDTO(GraphQLFilterDTO):
             or bool(self.not_ and self.not_.has_filter())
         )
 
+    def to_many_paths(self) -> set[tuple[str, ...]]:
+        """Returns the paths of the to-many relations the filter tests outside a nested ``_not``.
+
+        Each path stops at its first to-many relation.
+        """
+        paths = self._fields_to_many_paths()
+        for branch in (*self.and_, *self.or_):
+            paths.update(branch.to_many_paths())
+        return paths
+
     def tests_to_many(self) -> bool:
         """Whether the filter tests the rows of a to-many relation outside a nested ``_not``."""
-        for definition, value in self._filtering_fields():
-            if (
-                isinstance(value, BooleanFilterDTO)
-                and not isinstance(definition, CustomFilterFieldDefinition)
-                and (definition.uselist or value.tests_to_many())
-            ):
-                return True
-        return any(branch.tests_to_many() for branch in (*self.and_, *self.or_))
+        return bool(self.to_many_paths())
 
     def filters_tree(self, _node: QueryNodeType | None = None) -> tuple[QueryNodeType, Filter]:
         node = _node or QueryNode.root_node(self.__dto_model__)
-        query = Filter(
-            and_=[and_val.filters_tree(node)[1] for and_val in self.and_],
-            or_=[or_val.filters_tree(node)[1] for or_val in self.or_ if or_val.has_filter()],
-        )
+        query = self._branches_filter(node)
         if self.not_ and self.not_.tests_to_many():
             query.and_.append(NotExistsFilter(dto_filter=self.not_, field_node=node))
         elif self.not_ and self.not_.has_filter():

@@ -7115,6 +7115,77 @@
      SET name = %(name)s::VARCHAR RETURNING "user".id
   '''
 # ---
+# name: test_update_users_by_split_filter[session-async-tracked-and-same-to-many-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE EXISTS (
+          SELECT 1
+            FROM USER AS user_1
+            JOIN user_department_join_table AS user_department_join_table_1
+              ON user_1.id = user_department_join_table_1.user_id
+            JOIN department AS department_1
+              ON department_1.id = user_department_join_table_1.department_id
+           WHERE department_1.name = ?
+             AND (EXISTS (SELECT 1 FROM USER AS user_2 JOIN user_department_join_table AS user_department_join_table_2 ON user_2.id = user_department_join_table_2.user_id JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = ? AND user_2.id = user_1.id))
+             AND user_1.id = user.id
+         ) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-and-same-to-many-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+   WHERE EXISTS (
+          SELECT 1
+            FROM (
+                  SELECT user_1.id AS id
+                    FROM USER AS user_1
+                   INNER JOIN user_department_join_table AS user_department_join_table_1
+                      ON user_1.id = user_department_join_table_1.user_id
+                   INNER JOIN department AS department_1
+                      ON department_1.id = user_department_join_table_1.department_id
+                   WHERE department_1.name = %s
+                     AND (EXISTS (SELECT 1 FROM USER AS user_2 INNER JOIN user_department_join_table AS user_department_join_table_2 ON user_2.id = user_department_join_table_2.user_id INNER JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = %s AND user_2.id = user_1.id))
+                 ) AS anon_1
+           WHERE anon_1.id = user.id
+         )
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-and-same-to-many-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+            JOIN user_department_join_table AS user_department_join_table_1
+              ON user_1.id = user_department_join_table_1.user_id
+            JOIN department AS department_1
+              ON department_1.id = user_department_join_table_1.department_id
+           WHERE department_1.name = $2::VARCHAR
+             AND (EXISTS (SELECT 1 FROM "user" AS user_2 JOIN user_department_join_table AS user_department_join_table_2 ON user_2.id = user_department_join_table_2.user_id JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = $3::VARCHAR AND user_2.id = user_1.id))
+             AND user_1.id = "user".id
+         ) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-and-same-to-many-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+            JOIN user_department_join_table AS user_department_join_table_1
+              ON user_1.id = user_department_join_table_1.user_id
+            JOIN department AS department_1
+              ON department_1.id = user_department_join_table_1.department_id
+           WHERE department_1.name = %(name_1)s::VARCHAR
+             AND (EXISTS (SELECT 1 FROM "user" AS user_2 JOIN user_department_join_table AS user_department_join_table_2 ON user_2.id = user_department_join_table_2.user_id JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = %(name_2)s::VARCHAR AND user_2.id = user_1.id))
+             AND user_1.id = "user".id
+         ) RETURNING "user".id
+  '''
+# ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-not-to-many-aiosqlite_engine]
   '''
   UPDATE USER AS USER
@@ -7273,6 +7344,57 @@
      SET name = %(name)s::VARCHAR
    WHERE "user".name != %(name_1)s::VARCHAR
      AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = "user".id)) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-not-and-same-to-many-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE EXISTS (
+          SELECT 1
+            FROM USER AS user_1
+           WHERE NOT (EXISTS (SELECT 1 FROM USER AS user_2 JOIN user_department_join_table AS user_department_join_table_1 ON user_2.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = ? AND (EXISTS (SELECT 1 FROM USER AS user_3 JOIN user_department_join_table AS user_department_join_table_2 ON user_3.id = user_department_join_table_2.user_id JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = ? AND user_3.id = user_2.id)) AND user_2.id = user_1.id))
+             AND user_1.id = user.id
+         ) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-not-and-same-to-many-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+   WHERE EXISTS (
+          SELECT 1
+            FROM (
+                  SELECT user_1.id AS id
+                    FROM USER AS user_1
+                   WHERE NOT (EXISTS (SELECT 1 FROM USER AS user_2 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_2.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %s AND (EXISTS (SELECT 1 FROM USER AS user_3 INNER JOIN user_department_join_table AS user_department_join_table_2 ON user_3.id = user_department_join_table_2.user_id INNER JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = %s AND user_3.id = user_2.id)) AND user_2.id = user_1.id))
+                 ) AS anon_1
+           WHERE anon_1.id = user.id
+         )
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-not-and-same-to-many-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+           WHERE NOT (EXISTS (SELECT 1 FROM "user" AS user_2 JOIN user_department_join_table AS user_department_join_table_1 ON user_2.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = $2::VARCHAR AND (EXISTS (SELECT 1 FROM "user" AS user_3 JOIN user_department_join_table AS user_department_join_table_2 ON user_3.id = user_department_join_table_2.user_id JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = $3::VARCHAR AND user_3.id = user_2.id)) AND user_2.id = user_1.id))
+             AND user_1.id = "user".id
+         ) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-not-and-same-to-many-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+           WHERE NOT (EXISTS (SELECT 1 FROM "user" AS user_2 JOIN user_department_join_table AS user_department_join_table_1 ON user_2.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %(name_1)s::VARCHAR AND (EXISTS (SELECT 1 FROM "user" AS user_3 JOIN user_department_join_table AS user_department_join_table_2 ON user_3.id = user_department_join_table_2.user_id JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = %(name_2)s::VARCHAR AND user_3.id = user_2.id)) AND user_2.id = user_1.id))
+             AND user_1.id = "user".id
+         ) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-not-nested-to-many-aiosqlite_engine]
@@ -8558,6 +8680,40 @@
      SET name = ? RETURNING id
   '''
 # ---
+# name: test_update_users_by_split_filter[session-sync-tracked-and-same-to-many-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+            JOIN user_department_join_table AS user_department_join_table_1
+              ON user_1.id = user_department_join_table_1.user_id
+            JOIN department AS department_1
+              ON department_1.id = user_department_join_table_1.department_id
+           WHERE department_1.name = %(name_1)s::VARCHAR
+             AND (EXISTS (SELECT 1 FROM "user" AS user_2 JOIN user_department_join_table AS user_department_join_table_2 ON user_2.id = user_department_join_table_2.user_id JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = %(name_2)s::VARCHAR AND user_2.id = user_1.id))
+             AND user_1.id = "user".id
+         ) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-and-same-to-many-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE EXISTS (
+          SELECT 1
+            FROM USER AS user_1
+            JOIN user_department_join_table AS user_department_join_table_1
+              ON user_1.id = user_department_join_table_1.user_id
+            JOIN department AS department_1
+              ON department_1.id = user_department_join_table_1.department_id
+           WHERE department_1.name = ?
+             AND (EXISTS (SELECT 1 FROM USER AS user_2 JOIN user_department_join_table AS user_department_join_table_2 ON user_2.id = user_department_join_table_2.user_id JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = ? AND user_2.id = user_1.id))
+             AND user_1.id = user.id
+         ) RETURNING id
+  '''
+# ---
 # name: test_update_users_by_split_filter[session-sync-tracked-column-and-not-to-many-psycopg_engine]
   '''
   UPDATE "user" AS "user"
@@ -8636,6 +8792,30 @@
      SET name = ?
    WHERE user.name != ?
      AND (EXISTS (SELECT 1 FROM USER AS user_1 JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL AND user_1.id = user.id)) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-not-and-same-to-many-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE EXISTS (
+          SELECT 1
+            FROM "user" AS user_1
+           WHERE NOT (EXISTS (SELECT 1 FROM "user" AS user_2 JOIN user_department_join_table AS user_department_join_table_1 ON user_2.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %(name_1)s::VARCHAR AND (EXISTS (SELECT 1 FROM "user" AS user_3 JOIN user_department_join_table AS user_department_join_table_2 ON user_3.id = user_department_join_table_2.user_id JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = %(name_2)s::VARCHAR AND user_3.id = user_2.id)) AND user_2.id = user_1.id))
+             AND user_1.id = "user".id
+         ) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-not-and-same-to-many-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE EXISTS (
+          SELECT 1
+            FROM USER AS user_1
+           WHERE NOT (EXISTS (SELECT 1 FROM USER AS user_2 JOIN user_department_join_table AS user_department_join_table_1 ON user_2.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = ? AND (EXISTS (SELECT 1 FROM USER AS user_3 JOIN user_department_join_table AS user_department_join_table_2 ON user_3.id = user_department_join_table_2.user_id JOIN department AS department_2 ON department_2.id = user_department_join_table_2.department_id WHERE department_2.name = ? AND user_3.id = user_2.id)) AND user_2.id = user_1.id))
+             AND user_1.id = user.id
+         ) RETURNING id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-sync-tracked-not-nested-to-many-psycopg_engine]

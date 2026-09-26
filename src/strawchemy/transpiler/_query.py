@@ -32,9 +32,9 @@ from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.dto.strawberry import (
     BooleanFilterDTO,
     EnumDTO,
+    ExistsFilter,
     Filter,
     GraphQLFieldDefinition,
-    NotExistsFilter,
     OrderByDTO,
     OrderByEnum,
     QueryNode,
@@ -144,7 +144,7 @@ def _filters_in_exists(tree: QueryNodeType, query_filter: Filter, scope: FilterS
     fields = [node.value for node in tree.iter_breadth_first() if not node.is_root]
     if scope == "dml":
         return any(field.is_relation for field in fields) or any(
-            isinstance(leaf, NotExistsFilter) for leaf in query_filter.iter_leaves()
+            isinstance(leaf, ExistsFilter) for leaf in query_filter.iter_leaves()
         )
     return scope == "query" and any(field.uselist and not field.is_computed for field in fields)
 
