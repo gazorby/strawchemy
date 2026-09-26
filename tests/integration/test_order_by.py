@@ -518,6 +518,19 @@ def _default_colors(raw_colors: RawRecordData, raw_fruits: RawRecordData) -> lis
             None,
             id="nested-empty-nested-relation",
         ),
+        pytest.param("{ colors(orderBy: { name: null }) { id fruits { id } } }", None, id="root-null"),
+        pytest.param("{ colors(orderBy: null) { id fruits { id } } }", None, id="root-null-argument"),
+        pytest.param("{ colors { id fruits(orderBy: { color: null }) { id } } }", None, id="nested-null-relation"),
+        pytest.param(
+            "{ colors { id fruits(orderBy: { color: { name: null } }) { id } } }",
+            None,
+            id="nested-null-in-relation",
+        ),
+        pytest.param(
+            "query ($d: OrderByEnum) { colors(orderBy: { name: $d }) { id fruits { id } } }",
+            {"d": None},
+            id="root-null-variable",
+        ),
     ],
 )
 async def test_empty_order_by_is_ignored(
@@ -540,6 +553,8 @@ async def test_empty_order_by_is_ignored(
         pytest.param("{ color: {} }", None, id="empty-relation"),
         pytest.param("{ color: { fruits: {} } }", None, id="empty-nested-relation"),
         pytest.param("{ color: { name: $d } }", {}, id="omitted-variable-in-relation"),
+        pytest.param("{ color: null, name: null }", None, id="null"),
+        pytest.param("{ color: { name: $d } }", {"d": None}, id="null-variable-in-relation"),
     ],
 )
 async def test_empty_order_by_entry_keeps_other_entries(

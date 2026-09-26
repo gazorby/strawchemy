@@ -1072,6 +1072,20 @@ async def test_update_by_filter_on_to_many_relation(
         pytest.param(
             '{ _or: [{ departments: { name: {} } }, { name: { eq: "Bob" } }] }', ["Bob"], id="or-to-many-empty"
         ),
+        pytest.param("{ group: null }", ["Alice", "Bob", "Charlie", "Tango"], id="to-one-null-field"),
+        pytest.param("{ departments: null }", ["Alice", "Bob", "Charlie", "Tango"], id="to-many-null-field"),
+        pytest.param(
+            "{ departmentsAggregate: { count: null } }",
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="aggregation-null-field",
+        ),
+        pytest.param('{ _not: null, name: { eq: "Bob" } }', ["Bob"], id="not-null-field"),
+        pytest.param(
+            "{ departmentsAggregate: { count: { arguments: null, predicate: { gt: 0 } } } }",
+            ["Alice", "Bob", "Charlie"],
+            id="aggregation-arguments-null-field",
+        ),
+        pytest.param('{ _or: [{ departments: null }, { name: { eq: "Bob" } }] }', ["Bob"], id="or-to-many-null-field"),
         pytest.param(
             '{ _and: [{ departments: { name: { eq: "IT" } } }, { departments: { name: { eq: "Platform" } } }] }',
             ["Charlie"],
@@ -2178,6 +2192,20 @@ async def test_delete_filter(
         pytest.param(
             '{ _or: [{ departments: { name: {} } }, { name: { eq: "Bob" } }] }', ["Bob"], id="or-to-many-empty"
         ),
+        pytest.param("{ group: null }", ["Alice", "Bob", "Charlie", "Tango"], id="to-one-null-field"),
+        pytest.param("{ departments: null }", ["Alice", "Bob", "Charlie", "Tango"], id="to-many-null-field"),
+        pytest.param(
+            "{ departmentsAggregate: { count: null } }",
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="aggregation-null-field",
+        ),
+        pytest.param('{ _not: null, name: { eq: "Bob" } }', ["Bob"], id="not-null-field"),
+        pytest.param(
+            "{ departmentsAggregate: { count: { arguments: null, predicate: { gt: 0 } } } }",
+            ["Alice", "Bob", "Charlie"],
+            id="aggregation-arguments-null-field",
+        ),
+        pytest.param('{ _or: [{ departments: null }, { name: { eq: "Bob" } }] }', ["Bob"], id="or-to-many-null-field"),
     ],
 )
 async def test_delete_filter_on_relation(
