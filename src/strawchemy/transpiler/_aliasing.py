@@ -19,6 +19,7 @@ from strawchemy.dto.strawberry import GraphQLFieldDefinition, QueryNode
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.exceptions import TranspilingError
 from strawchemy.repository.typing import DeclarativeT
+from strawchemy.utils.postgres import as_jsonb
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -122,7 +123,9 @@ class _ColumnTransform:
         """Extracts the JSON path of ``node`` from a JSON column, giving an empty object when the value is missing."""
         if scope.dialect == "postgresql":
             transform = func.coalesce(
-                func.jsonb_path_query_first(attribute, sqla_cast(node.metadata.data.json_path, postgresql.JSONPATH)),
+                func.jsonb_path_query_first(
+                    as_jsonb(attribute), sqla_cast(node.metadata.data.json_path, postgresql.JSONPATH)
+                ),
                 sqla_cast({}, postgresql.JSONB),
             )
         else:

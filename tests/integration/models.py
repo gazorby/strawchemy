@@ -33,6 +33,7 @@ metadata = MetaData()
 geo_metadata = MetaData()
 dc_metadata = MetaData()
 json_metadata = MetaData()
+postgres_json_metadata = MetaData()
 array_metadata = MetaData()
 interval_metadata = MetaData()
 date_time_metadata = MetaData()
@@ -94,6 +95,11 @@ class ArrayBase(BaseColumns, DeclarativeBase):
 class JSONBase(BaseColumns, DeclarativeBase):
     __abstract__ = True
     registry = Registry(metadata=json_metadata)
+
+
+class PostgresJSONBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=postgres_json_metadata)
 
 
 class IntervalBase(BaseColumns, DeclarativeBase):
@@ -243,6 +249,12 @@ class JSONModel(JSONBase):
     registry = Registry(metadata=json_metadata)
 
     dict_col: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
+
+
+class PostgresJSONModel(PostgresJSONBase):
+    __tablename__ = "postgres_json_model"
+
+    dict_col: Mapped[dict[str, Any] | None] = mapped_column(postgresql.JSON, nullable=True)
 
 
 class DateTimeModel(DateTimeBase):

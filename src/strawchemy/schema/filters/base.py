@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, fields, replace
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from sqlalchemy import (
@@ -25,6 +25,8 @@ from sqlalchemy.dialects import mysql
 from sqlalchemy.dialects import postgresql as pg
 from strawberry import UNSET
 from typing_extensions import override
+
+from strawchemy.utils.postgres import as_jsonb
 
 if TYPE_CHECKING:
     from datetime import date, timedelta
@@ -205,6 +207,18 @@ class JSONFilter(EqualityFilter):
             expressions.extend([func.jsonb_typeof(as_postgres_jsonb) == "object", *key_expressions])
         return expressions
 
+    def _postgres_equality(
+        self, dialect: Dialect, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]
+    ) -> list[ColumnElement[bool]]:
+        # IS NULL reads the stored column, where the jsonb cast would parse every row.
+        comparison: Any = self.comparison
+        values = replace(comparison, is_null=UNSET)
+        nulls = replace(comparison, **{field.name: UNSET for field in fields(comparison) if field.name != "is_null"})
+        return [
+            *EqualityFilter(values).to_expressions(dialect, as_jsonb(model_attribute)),
+            *EqualityFilter(nulls).to_expressions(dialect, model_attribute),
+        ]
+
     def _mysql_json(self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
         as_mysql_json = type_coerce(model_attribute, mysql.JSON)
@@ -246,14 +260,17 @@ class JSONFilter(EqualityFilter):
     def to_expressions(
         self, dialect: Dialect, model_attribute: QueryableAttribute[JSON] | ColumnElement[JSON]
     ) -> list[ColumnElement[bool]]:
-        expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
+        if dialect.name == "postgresql":
+            expressions = self._postgres_equality(dialect, model_attribute)
+        else:
+            expressions = super().to_expressions(dialect, model_attribute)
 
         if self.comparison.has_key_all == []:
             expressions.append(true())
         if self.comparison.has_key_any == []:
             expressions.append(false())
         if dialect.name == "postgresql":
-            expressions.extend(self._postgres_json(model_attribute))
+            expressions.extend(self._postgres_json(as_jsonb(model_attribute)))
         elif dialect.name == "mysql":
             expressions.extend(self._mysql_json(model_attribute))
         elif dialect.name == "sqlite":

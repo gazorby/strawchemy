@@ -9,7 +9,7 @@ from tests.integration.models import JSONModel, json_metadata
 from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types
 from tests.integration.types import sqlite as sqlite_types
-from tests.integration.utils import to_graphql_representation
+from tests.integration.utils import graphql_input
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
@@ -20,12 +20,6 @@ if TYPE_CHECKING:
     from tests.integration.fixtures import QueryTracker
     from tests.integration.typing import RawRecordData
     from tests.typing import AnyQueryExecutor
-
-
-def _graphql_input(value: Any) -> str:
-    if isinstance(value, list):
-        return f"[{', '.join(to_graphql_representation(v, 'input') for v in value)}]"
-    return to_graphql_representation(value, "input")
 
 
 @pytest.fixture
@@ -92,7 +86,7 @@ async def test_json_filters(
 ) -> None:
     if db_features.dialect == "sqlite" and filter_name in {"contains", "containedIn"}:
         pytest.skip(f"contains/containedIn not supported on {db_features.dialect}")
-    value_repr = _graphql_input(value)
+    value_repr = graphql_input(value)
     query = f"""
         {{
             json(filter: {{ dictCol: {{ {filter_name}: {value_repr} }} }}) {{
@@ -134,7 +128,7 @@ async def test_json_not_filters(
 ) -> None:
     query = f"""
         {{
-            json(filter: {{ _not: {{ dictCol: {{ {filter_name}: {_graphql_input(value)} }} }} }}) {{
+            json(filter: {{ _not: {{ dictCol: {{ {filter_name}: {graphql_input(value)} }} }} }}) {{
                 id
             }}
         }}
