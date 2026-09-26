@@ -911,6 +911,60 @@
    ORDER BY user.id ASC
   '''
 # ---
+# name: test_not_to_many[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   WHERE NOT (EXISTS (SELECT 1 FROM USER AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = ? AND user_1.id = user.id))
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_not_to_many[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   WHERE NOT (EXISTS (SELECT 1 FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %s AND user_1.id = user.id))
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_not_to_many[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   WHERE NOT (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = $1::VARCHAR AND user_1.id = "user".id))
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_not_to_many[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   WHERE NOT (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %(name_1)s::VARCHAR AND user_1.id = "user".id))
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_not_to_many[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   WHERE NOT (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %(name_1)s::VARCHAR AND user_1.id = "user".id))
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_not_to_many[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   WHERE NOT (EXISTS (SELECT 1 FROM USER AS user_1 JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = ? AND user_1.id = user.id))
+   ORDER BY user.id ASC
+  '''
+# ---
 # name: test_or[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit.name,

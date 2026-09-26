@@ -26,6 +26,7 @@ from strawchemy.dto.strawberry import (
     BooleanFilterDTO,
     CustomFilter,
     Filter,
+    NotExistsFilter,
     OrderByEnum,
     decompose_order_by,
 )
@@ -412,12 +413,15 @@ class FilterPlan:
         exists: tuple[ColumnElement[bool], ...] = ()
         if query_graph.exists_filter is not None:
             derived_table = query_graph.filter_scope == "dml" and context.db_features.dml_subquery_needs_derived_table
-            exists = cls._exists(
-                query_graph.exists_filter,
-                context,
-                allow_null,
-                derived_table=derived_table,
-            ).where
+            exists = (
+                cls._exists(
+                    query_graph.exists_filter,
+                    context,
+                    context.aliases.root_alias,
+                    allow_null,
+                    derived_table=derived_table,
+                ),
+            )
         if not query_graph.query_filter:
             return cls(where=exists)
 
@@ -438,19 +442,19 @@ class FilterPlan:
         """Returns the relation nodes the filter of ``query_graph`` joins itself."""
         return _relation_nodes(query_graph.where_join_path) if query_graph.query_filter else []
 
-    @classmethod
+    @staticmethod
     def _exists(
-        cls,
         dto_filter: BooleanFilterDTO,
         context: PlanContext[Any],
+        outer_alias: AliasedClass[Any],
         allow_null: bool,
         derived_table: bool,
-    ) -> Self:
-        """Tests ``dto_filter`` in an EXISTS subquery on a copy of the root, matched to the root on its primary keys.
+    ) -> ColumnElement[bool]:
+        """Tests ``dto_filter`` in an EXISTS subquery on a copy of ``outer_alias``, matched to it on its primary keys.
 
-        A root row passes when one combination of its related rows passes, as with a join, but is not repeated.
+        A row passes when one combination of its related rows passes, as with a join, but is not repeated.
         """
-        model = context.aliases.model
+        model = inspect(outer_alias).mapper.class_
         inner_alias = aliased(class_mapper(model), flat=True)
         inner_aliases = context.aliases.detached(inner_alias)
         inner_context = replace(context, aliases=inner_aliases, hook_applier=HookApplier(inner_aliases), statement=None)
@@ -473,10 +477,16 @@ class FilterPlan:
         else:
             subquery = plan.apply_clauses(select(literal_column("1")).select_from(inner_alias))
         correlation = [
-            matched_pk == getattr(context.aliases.root_alias, key)
-            for matched_pk, key in zip(matched_pks, pk_keys, strict=True)
+            matched_pk == getattr(outer_alias, key) for matched_pk, key in zip(matched_pks, pk_keys, strict=True)
         ]
-        return cls(where=(subquery.where(*correlation).exists().correlate(context.aliases.root_alias),))
+        return subquery.where(*correlation).exists().correlate(outer_alias)
+
+    @staticmethod
+    def _not_exists(not_exists: NotExistsFilter, context: PlanContext[Any]) -> ColumnElement[bool]:
+        outer_alias = context.aliases.alias_from_relation_node(not_exists.field_node, "target")
+        return not_(
+            FilterPlan._exists(not_exists.dto_filter, context, outer_alias, allow_null=False, derived_table=False)
+        )
 
     @staticmethod
     def _to_expressions(
@@ -515,11 +525,7 @@ class FilterPlan:
                 return outer_pks[0].in_(inner_select)
             return tuple_(*outer_pks).in_(inner_select)
 
-        outer_alias = (
-            context.aliases.root_alias
-            if custom.field_node.is_root
-            else context.aliases.alias_from_relation_node(custom.field_node, "target")
-        )
+        outer_alias = context.aliases.alias_from_relation_node(custom.field_node, "target")
 
         # The outer query aliases the root model with its table name. An inner alias with that same name would
         # compare the table's keys to themselves and match every outer row, so SQLAlchemy picks a unique name.
@@ -561,7 +567,7 @@ class FilterPlan:
 
     @staticmethod
     def _gather_conjunctions(
-        query: Sequence[Filter | AggregationFilter | GraphQLComparison | CustomFilter],
+        query: Sequence[Filter | AggregationFilter | GraphQLComparison | CustomFilter | NotExistsFilter],
         context: PlanContext[Any],
         *,
         agg_plan: AggregationPlan,
@@ -585,6 +591,8 @@ class FilterPlan:
                 bool_expressions.extend(FilterPlan._to_expressions(context, value, not_null_check=not_null_check))
             elif isinstance(value, CustomFilter):
                 bool_expressions.append(FilterPlan._custom_filter_expression(value, context))
+            elif isinstance(value, NotExistsFilter):
+                bool_expressions.append(FilterPlan._not_exists(value, context))
             else:
                 conjunction = FilterPlan._conjunctions(
                     value,
