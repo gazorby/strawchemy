@@ -245,6 +245,114 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_empty_list_comparison[session-async-tracked-in-aiosqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   WHERE 0 = 1
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-async-tracked-in-asyncmy_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   WHERE FALSE = 1
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-async-tracked-in-asyncpg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   WHERE FALSE
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-async-tracked-in-psycopg_async_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   WHERE FALSE
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-async-tracked-nin-aiosqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   WHERE 1 = 1
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-async-tracked-nin-asyncmy_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   WHERE TRUE = 1
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-async-tracked-nin-asyncpg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   WHERE TRUE
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-async-tracked-nin-psycopg_async_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   WHERE TRUE
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-sync-tracked-in-psycopg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   WHERE FALSE
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-sync-tracked-in-sqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   WHERE 0 = 1
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-sync-tracked-nin-psycopg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   WHERE TRUE
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_list_comparison[session-sync-tracked-nin-sqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   WHERE 1 = 1
+   ORDER BY user.id ASC
+  '''
+# ---
 # name: test_empty_relation_filter[session-async-tracked-not-to-many-aiosqlite_engine]
   '''
   SELECT user.name,

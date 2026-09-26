@@ -71,10 +71,11 @@ class EqualityFilter(FilterProtocol):
             expressions.append(model_attribute == self.comparison.eq)
         if self.comparison.neq is not UNSET:
             expressions.append(model_attribute != self.comparison.neq)
-        if self.comparison.in_ is not UNSET and self.comparison.in_:
-            expressions.append(model_attribute.in_(self.comparison.in_))
-        if self.comparison.nin is not UNSET and self.comparison.nin:
-            expressions.append(model_attribute.not_in(self.comparison.nin))
+        # Constants rather than SQLAlchemy's empty IN, so that the NOT null guard recognizes them as never unknown.
+        if self.comparison.in_ is not UNSET and self.comparison.in_ is not None:
+            expressions.append(model_attribute.in_(self.comparison.in_) if self.comparison.in_ else false())
+        if self.comparison.nin is not UNSET and self.comparison.nin is not None:
+            expressions.append(model_attribute.not_in(self.comparison.nin) if self.comparison.nin else true())
         if self.comparison.is_null is not UNSET:
             expressions.append(
                 model_attribute.is_(null()) if self.comparison.is_null else model_attribute.is_not(null())
