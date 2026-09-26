@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, fields, replace
-from typing import TYPE_CHECKING, Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast
 
 from sqlalchemy import (
     ARRAY,
@@ -24,7 +24,7 @@ from sqlalchemy import cast as sqla_cast
 from sqlalchemy.dialects import mysql
 from sqlalchemy.dialects import postgresql as pg
 from strawberry import UNSET
-from typing_extensions import override
+from typing_extensions import TypeIs, override
 
 from strawchemy.utils.postgres import as_jsonb
 
@@ -45,6 +45,13 @@ if TYPE_CHECKING:
         TimeDeltaComparison,
         _JSONComparison,
     )
+
+T = TypeVar("T")
+
+
+def is_set(value: T | None) -> TypeIs[T]:
+    """Whether a comparison operator was given a value, an explicit ``null`` counting as absent."""
+    return value is not UNSET and value is not None
 
 
 @dataclass(frozen=True)
@@ -69,16 +76,16 @@ class EqualityFilter(FilterProtocol):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.eq is not UNSET:
+        if is_set(self.comparison.eq):
             expressions.append(model_attribute == self.comparison.eq)
-        if self.comparison.neq is not UNSET:
+        if is_set(self.comparison.neq):
             expressions.append(model_attribute != self.comparison.neq)
         # Constants rather than SQLAlchemy's empty IN, so that the NOT null guard recognizes them as never unknown.
-        if self.comparison.in_ is not UNSET and self.comparison.in_ is not None:
+        if is_set(self.comparison.in_):
             expressions.append(model_attribute.in_(self.comparison.in_) if self.comparison.in_ else false())
-        if self.comparison.nin is not UNSET and self.comparison.nin is not None:
+        if is_set(self.comparison.nin):
             expressions.append(model_attribute.not_in(self.comparison.nin) if self.comparison.nin else true())
-        if self.comparison.is_null is not UNSET:
+        if is_set(self.comparison.is_null):
             expressions.append(
                 model_attribute.is_(null()) if self.comparison.is_null else model_attribute.is_not(null())
             )
@@ -96,13 +103,13 @@ class OrderFilter(EqualityFilter):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
 
-        if self.comparison.gt is not UNSET:
+        if is_set(self.comparison.gt):
             expressions.append(model_attribute > self.comparison.gt)
-        if self.comparison.gte is not UNSET:
+        if is_set(self.comparison.gte):
             expressions.append(model_attribute >= self.comparison.gte)
-        if self.comparison.lt is not UNSET:
+        if is_set(self.comparison.lt):
             expressions.append(model_attribute < self.comparison.lt)
-        if self.comparison.lte is not UNSET:
+        if is_set(self.comparison.lte):
             expressions.append(model_attribute <= self.comparison.lte)
 
         return expressions
@@ -117,13 +124,13 @@ class TextFilter(OrderFilter):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.like is not UNSET:
+        if is_set(self.comparison.like):
             expressions.append(model_attribute.like(self.comparison.like))
-        if self.comparison.nlike is not UNSET:
+        if is_set(self.comparison.nlike):
             expressions.append(model_attribute.not_like(self.comparison.nlike))
-        if self.comparison.ilike is not UNSET:
+        if is_set(self.comparison.ilike):
             expressions.append(model_attribute.ilike(self.comparison.ilike))
-        if self.comparison.nilike is not UNSET:
+        if is_set(self.comparison.nilike):
             expressions.append(model_attribute.not_ilike(self.comparison.nilike))
 
         return expressions
@@ -132,20 +139,23 @@ class TextFilter(OrderFilter):
         self, dialect: Dialect, model_attribute: QueryableAttribute[str] | ColumnElement[str]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
-        if self.comparison.regexp is not UNSET or self.comparison.nregexp is not UNSET:
-            regex = self.comparison.regexp or self.comparison.nregexp
-            if dialect.name == "mysql":
-                regex_comp = func.regexp_like(model_attribute, regex, "c")
-            else:
-                regex_comp = model_attribute.regexp_match(regex)
-            if self.comparison.regexp is not UNSET:
-                expressions.append(regex_comp)
-            else:
-                expressions.append(not_(regex_comp))
-        if self.comparison.iregexp is not UNSET:
-            expressions.append(func.lower(model_attribute).regexp_match(self.comparison.iregexp))
-        if self.comparison.inregexp is not UNSET:
-            expressions.append(not_(func.lower(model_attribute).regexp_match(self.comparison.inregexp)))
+
+        def regexp_match(pattern: str, *, case_sensitive: bool) -> ColumnElement[bool]:
+            value = model_attribute if case_sensitive else func.lower(model_attribute)
+            if dialect.name != "mysql":
+                return value.regexp_match(pattern)
+            # MySQL rejects an empty pattern; an empty group matches every string alike.
+            pattern = pattern or "(?:)"
+            return func.regexp_like(value, pattern, "c") if case_sensitive else value.regexp_match(pattern)
+
+        if is_set(self.comparison.regexp):
+            expressions.append(regexp_match(self.comparison.regexp, case_sensitive=True))
+        if is_set(self.comparison.nregexp):
+            expressions.append(not_(regexp_match(self.comparison.nregexp, case_sensitive=True)))
+        if is_set(self.comparison.iregexp):
+            expressions.append(regexp_match(self.comparison.iregexp, case_sensitive=False))
+        if is_set(self.comparison.inregexp):
+            expressions.append(not_(regexp_match(self.comparison.inregexp, case_sensitive=False)))
 
         return expressions
 
@@ -159,17 +169,17 @@ class TextFilter(OrderFilter):
         expressions.extend(self._like_expressions(model_attribute))
         expressions.extend(self._regexp_expressions(dialect, model_attribute))
 
-        if self.comparison.startswith is not UNSET:
+        if is_set(self.comparison.startswith):
             expressions.append(model_attribute.startswith(self.comparison.startswith, autoescape=True))
-        if self.comparison.endswith is not UNSET:
+        if is_set(self.comparison.endswith):
             expressions.append(model_attribute.endswith(self.comparison.endswith, autoescape=True))
-        if self.comparison.contains is not UNSET:
+        if is_set(self.comparison.contains):
             expressions.append(model_attribute.contains(self.comparison.contains, autoescape=True))
-        if self.comparison.istartswith is not UNSET:
+        if is_set(self.comparison.istartswith):
             expressions.append(model_attribute.istartswith(self.comparison.istartswith, autoescape=True))
-        if self.comparison.iendswith is not UNSET:
+        if is_set(self.comparison.iendswith):
             expressions.append(model_attribute.iendswith(self.comparison.iendswith, autoescape=True))
-        if self.comparison.icontains is not UNSET:
+        if is_set(self.comparison.icontains):
             expressions.append(model_attribute.icontains(self.comparison.icontains, autoescape=True))
 
         return expressions
@@ -290,11 +300,11 @@ class ArrayFilter(EqualityFilter):
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
         as_postgres_array = type_coerce(model_attribute, pg.ARRAY(cast("ARRAY[Any]", model_attribute.type).item_type))
 
-        if self.comparison.contains is not UNSET:
+        if is_set(self.comparison.contains):
             expressions.append(as_postgres_array.contains(self.comparison.contains))
-        if self.comparison.contained_in is not UNSET:
+        if is_set(self.comparison.contained_in):
             expressions.append(as_postgres_array.contained_by(self.comparison.contained_in))
-        if self.comparison.overlap is not UNSET:
+        if is_set(self.comparison.overlap):
             expressions.append(as_postgres_array.overlap(self.comparison.overlap))
         return expressions
 
@@ -345,38 +355,38 @@ class BaseDateFilter(FilterProtocol):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.year is not UNSET and self.comparison.year:
+        if is_set(self.comparison.year):
             expressions.extend(
                 self.comparison.year.to_expressions(dialect, sqla_cast(func.strftime("%Y", model_attribute), Integer))
             )
-        if self.comparison.month is not UNSET and self.comparison.month:
+        if is_set(self.comparison.month):
             expressions.extend(
                 self.comparison.month.to_expressions(dialect, sqla_cast(func.strftime("%m", model_attribute), Integer))
             )
-        if self.comparison.day is not UNSET and self.comparison.day:
+        if is_set(self.comparison.day):
             expressions.extend(
                 self.comparison.day.to_expressions(dialect, sqla_cast(func.strftime("%d", model_attribute), Integer))
             )
-        if self.comparison.week is not UNSET and self.comparison.week:
+        if is_set(self.comparison.week):
             expressions.extend(self.comparison.week.to_expressions(dialect, self._sqlite_iso_week(model_attribute)))
-        if self.comparison.week_day is not UNSET and self.comparison.week_day:
+        if is_set(self.comparison.week_day):
             expressions.extend(
                 self.comparison.week_day.to_expressions(
                     dialect, sqla_cast(func.strftime("%w", model_attribute), Integer)
                 )
             )
-        if self.comparison.quarter is not UNSET and self.comparison.quarter:
+        if is_set(self.comparison.quarter):
             expressions.extend(
                 self.comparison.quarter.to_expressions(
                     dialect,
                     sqla_cast((sqla_cast(func.strftime("%m", model_attribute), Integer) + 2) / 3, Integer),
                 )
             )
-        if self.comparison.iso_week_day is not UNSET and self.comparison.iso_week_day:
+        if is_set(self.comparison.iso_week_day):
             expressions.extend(
                 self.comparison.iso_week_day.to_expressions(dialect, self._sqlite_iso_week_day(model_attribute))
             )
-        if self.comparison.iso_year is not UNSET and self.comparison.iso_year:
+        if is_set(self.comparison.iso_year):
             expressions.extend(self.comparison.iso_year.to_expressions(dialect, self._sqlite_iso_year(model_attribute)))
 
         return expressions
@@ -386,25 +396,25 @@ class BaseDateFilter(FilterProtocol):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.year is not UNSET and self.comparison.year:
+        if is_set(self.comparison.year):
             expressions.extend(self.comparison.year.to_expressions(dialect, func.extract("YEAR", model_attribute)))
-        if self.comparison.month is not UNSET and self.comparison.month:
+        if is_set(self.comparison.month):
             expressions.extend(self.comparison.month.to_expressions(dialect, func.extract("MONTH", model_attribute)))
-        if self.comparison.day is not UNSET and self.comparison.day:
+        if is_set(self.comparison.day):
             expressions.extend(self.comparison.day.to_expressions(dialect, func.extract("DAY", model_attribute)))
-        if self.comparison.week is not UNSET and self.comparison.week:
+        if is_set(self.comparison.week):
             expressions.extend(self.comparison.week.to_expressions(dialect, func.extract("WEEK", model_attribute)))
-        if self.comparison.week_day is not UNSET and self.comparison.week_day:
+        if is_set(self.comparison.week_day):
             expressions.extend(self.comparison.week_day.to_expressions(dialect, func.extract("DOW", model_attribute)))
-        if self.comparison.quarter is not UNSET and self.comparison.quarter:
+        if is_set(self.comparison.quarter):
             expressions.extend(
                 self.comparison.quarter.to_expressions(dialect, func.extract("QUARTER", model_attribute))
             )
-        if self.comparison.iso_week_day is not UNSET and self.comparison.iso_week_day:
+        if is_set(self.comparison.iso_week_day):
             expressions.extend(
                 self.comparison.iso_week_day.to_expressions(dialect, func.extract("ISODOW", model_attribute))
             )
-        if self.comparison.iso_year is not UNSET and self.comparison.iso_year:
+        if is_set(self.comparison.iso_year):
             expressions.extend(
                 self.comparison.iso_year.to_expressions(dialect, func.extract("ISOYEAR", model_attribute))
             )
@@ -416,25 +426,25 @@ class BaseDateFilter(FilterProtocol):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.year is not UNSET and self.comparison.year:
+        if is_set(self.comparison.year):
             expressions.extend(self.comparison.year.to_expressions(dialect, func.extract("YEAR", model_attribute)))
-        if self.comparison.month is not UNSET and self.comparison.month:
+        if is_set(self.comparison.month):
             expressions.extend(self.comparison.month.to_expressions(dialect, func.extract("MONTH", model_attribute)))
-        if self.comparison.day is not UNSET and self.comparison.day:
+        if is_set(self.comparison.day):
             expressions.extend(self.comparison.day.to_expressions(dialect, func.extract("DAY", model_attribute)))
-        if self.comparison.week is not UNSET and self.comparison.week:
+        if is_set(self.comparison.week):
             expressions.extend(self.comparison.week.to_expressions(dialect, func.week(model_attribute, 3)))
-        if self.comparison.week_day is not UNSET and self.comparison.week_day:
+        if is_set(self.comparison.week_day):
             expressions.extend(
                 self.comparison.week_day.to_expressions(dialect, func.date_format(model_attribute, "%w"))
             )
-        if self.comparison.quarter is not UNSET and self.comparison.quarter:
+        if is_set(self.comparison.quarter):
             expressions.extend(
                 self.comparison.quarter.to_expressions(dialect, func.extract("QUARTER", model_attribute))
             )
-        if self.comparison.iso_week_day is not UNSET and self.comparison.iso_week_day:
+        if is_set(self.comparison.iso_week_day):
             expressions.extend(self.comparison.iso_week_day.to_expressions(dialect, func.weekday(model_attribute) + 1))
-        if self.comparison.iso_year is not UNSET and self.comparison.iso_year:
+        if is_set(self.comparison.iso_year):
             expressions.extend(
                 self.comparison.iso_year.to_expressions(dialect, func.date_format(model_attribute, "%x"))
             )
@@ -465,15 +475,15 @@ class BaseTimeFilter(FilterProtocol):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.hour:
+        if is_set(self.comparison.hour):
             expressions.extend(
                 self.comparison.hour.to_expressions(dialect, sqla_cast(func.strftime("%H", model_attribute), Integer))
             )
-        if self.comparison.minute:
+        if is_set(self.comparison.minute):
             expressions.extend(
                 self.comparison.minute.to_expressions(dialect, sqla_cast(func.strftime("%M", model_attribute), Integer))
             )
-        if self.comparison.second:
+        if is_set(self.comparison.second):
             expressions.extend(
                 self.comparison.second.to_expressions(dialect, sqla_cast(func.strftime("%S", model_attribute), Integer))
             )
@@ -485,11 +495,11 @@ class BaseTimeFilter(FilterProtocol):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.hour:
+        if is_set(self.comparison.hour):
             expressions.extend(self.comparison.hour.to_expressions(dialect, func.extract("HOUR", model_attribute)))
-        if self.comparison.minute:
+        if is_set(self.comparison.minute):
             expressions.extend(self.comparison.minute.to_expressions(dialect, func.extract("MINUTE", model_attribute)))
-        if self.comparison.second:
+        if is_set(self.comparison.second):
             expressions.extend(self.comparison.second.to_expressions(dialect, func.extract("SECOND", model_attribute)))
 
         return expressions
@@ -518,21 +528,21 @@ class TimeDeltaFilter(OrderFilter):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.days:
+        if is_set(self.comparison.days):
             expressions.extend(
                 self.comparison.days.to_expressions(
                     dialect, func.extract("EPOCH", model_attribute) / self._seconds_in_day
                 )
             )
-        if self.comparison.hours:
+        if is_set(self.comparison.hours):
             expressions.extend(
                 self.comparison.hours.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 3600)
             )
-        if self.comparison.minutes:
+        if is_set(self.comparison.minutes):
             expressions.extend(
                 self.comparison.minutes.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 60)
             )
-        if self.comparison.seconds:
+        if is_set(self.comparison.seconds):
             expressions.extend(self.comparison.seconds.to_expressions(dialect, func.extract("EPOCH", model_attribute)))
 
         return expressions
@@ -542,21 +552,21 @@ class TimeDeltaFilter(OrderFilter):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.days:
+        if is_set(self.comparison.days):
             expressions.extend(
                 self.comparison.days.to_expressions(
                     dialect, func.unix_timestamp(model_attribute) / self._seconds_in_day
                 )
             )
-        if self.comparison.hours:
+        if is_set(self.comparison.hours):
             expressions.extend(
                 self.comparison.hours.to_expressions(dialect, func.unix_timestamp(model_attribute) / 3600)
             )
-        if self.comparison.minutes:
+        if is_set(self.comparison.minutes):
             expressions.extend(
                 self.comparison.minutes.to_expressions(dialect, func.unix_timestamp(model_attribute) / 60)
             )
-        if self.comparison.seconds:
+        if is_set(self.comparison.seconds):
             expressions.extend(self.comparison.seconds.to_expressions(dialect, func.unix_timestamp(model_attribute)))
 
         return expressions
@@ -566,25 +576,25 @@ class TimeDeltaFilter(OrderFilter):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.days:
+        if is_set(self.comparison.days):
             expressions.extend(
                 self.comparison.days.to_expressions(
                     dialect, sqla_cast(func.strftime("%s", model_attribute), Integer) / self._seconds_in_day
                 )
             )
-        if self.comparison.hours:
+        if is_set(self.comparison.hours):
             expressions.extend(
                 self.comparison.hours.to_expressions(
                     dialect, sqla_cast(func.strftime("%s", model_attribute), Integer) / 3600
                 )
             )
-        if self.comparison.minutes:
+        if is_set(self.comparison.minutes):
             expressions.extend(
                 self.comparison.minutes.to_expressions(
                     dialect, sqla_cast(func.strftime("%s", model_attribute), Integer) / 60
                 )
             )
-        if self.comparison.seconds:
+        if is_set(self.comparison.seconds):
             expressions.extend(
                 self.comparison.seconds.to_expressions(
                     dialect, sqla_cast(func.strftime("%s", model_attribute), Integer)

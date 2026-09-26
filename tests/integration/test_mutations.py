@@ -1141,6 +1141,11 @@ async def test_update_users_by_split_filter(
             [],
             id="to-many-in",
         ),
+        pytest.param("{ bio: { eq: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="eq-null"),
+        pytest.param(
+            "{ _not: { bio: { isNull: null, gt: null } } }", ["Alice", "Bob", "Charlie", "Tango"], id="not-null"
+        ),
+        pytest.param("{ group: { name: { neq: null } } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-one-null"),
     ],
 )
 async def test_update_users_by_empty_list_filter(
@@ -1995,6 +2000,13 @@ async def test_update_with_secondary_table_set(
     [
         pytest.param("{ name: { in: [] } }", [], id="in"),
         pytest.param("{ _not: { bio: { in: [] } } }", ["Alice", "Bob", "Charlie", "Tango"], id="not-in"),
+        pytest.param("{ bio: { isNull: null } }", ["Alice", "Bob", "Charlie", "Tango"], id="is-null-null"),
+        pytest.param(
+            "{ _not: { name: { like: null, regexp: null } } }", ["Alice", "Bob", "Charlie", "Tango"], id="not-null"
+        ),
+        pytest.param(
+            "{ departments: { name: { eq: null } } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-many-null"
+        ),
     ],
 )
 async def test_delete_users_by_empty_list_filter(

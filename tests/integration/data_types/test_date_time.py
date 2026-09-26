@@ -218,3 +218,25 @@ async def test_iso_components_match_isocalendar(
     assert not result.errors
     assert result.data
     assert sorted(row["id"] for row in result.data["dateTimes"]) == expected
+
+
+@pytest.mark.parametrize(
+    "dto_filter",
+    [
+        pytest.param("{ dateCol: { year: null } }", id="date-part"),
+        pytest.param("{ dateCol: { year: { eq: null } } }", id="date-part-operator"),
+        pytest.param("{ _not: { dateCol: { month: { gt: null }, lte: null } } }", id="not-date-part-operator"),
+        pytest.param("{ timeCol: { hour: null } }", id="time-part"),
+        pytest.param("{ timeCol: { hour: { lt: null } } }", id="time-part-operator"),
+        pytest.param("{ datetimeCol: { gte: null, isoYear: { eq: null }, second: null } }", id="datetime-parts"),
+        pytest.param("{ _not: { datetimeCol: { minute: { eq: null } } } }", id="not-datetime-part-operator"),
+    ],
+)
+async def test_null_part_operator_is_ignored(
+    dto_filter: str, any_query: AnyQueryExecutor, raw_date_times: RawRecordData
+) -> None:
+    """Test that a date or time part, or one of its operators, set to null is ignored."""
+    result = await maybe_async(any_query(f"{{ dateTimes(filter: {dto_filter}) {{ id }} }}"))
+    assert not result.errors
+    assert result.data
+    assert sorted(row["id"] for row in result.data["dateTimes"]) == sorted(row["id"] for row in raw_date_times)

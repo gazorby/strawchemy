@@ -13,6 +13,7 @@ from strawchemy.schema.filters.base import (
     TextFilter,
     TimeDeltaFilter,
     TimeFilter,
+    is_set,
 )
 from strawchemy.schema.filters.inputs import (
     ArrayComparison,
@@ -60,6 +61,7 @@ __all__ = (
     "_JSONComparison",
     "_SQLiteJSONComparison",
     "_StrawchemyComparison",
+    "is_set",
     "make_full_json_comparison_input",
     "make_sqlite_json_comparison_input",
 )

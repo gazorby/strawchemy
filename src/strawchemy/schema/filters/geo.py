@@ -11,7 +11,7 @@ from sqlalchemy.orm import QueryableAttribute
 from strawberry import UNSET
 from typing_extensions import override
 
-from strawchemy.schema.filters import FilterProtocol, GraphQLComparison, _StrawchemyComparison
+from strawchemy.schema.filters import FilterProtocol, GraphQLComparison, _StrawchemyComparison, is_set
 from strawchemy.schema.scalars.geo import GeoJSON
 
 __all__ = ("GeoComparison",)
@@ -29,20 +29,20 @@ class GeoFilter(FilterProtocol):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        if self.comparison.contains_geometry:
+        if is_set(self.comparison.contains_geometry):
             expressions.append(
                 geo_func.ST_Contains(
                     model_attribute,
                     geo_func.ST_GeomFromGeoJSON(self.comparison.contains_geometry.geo.model_dump_json()),
                 )
             )
-        if self.comparison.within_geometry:
+        if is_set(self.comparison.within_geometry):
             expressions.append(
                 geo_func.ST_Within(
                     model_attribute, geo_func.ST_GeomFromGeoJSON(self.comparison.within_geometry.geo.model_dump_json())
                 )
             )
-        if self.comparison.is_null is not UNSET:
+        if is_set(self.comparison.is_null):
             expressions.append(
                 model_attribute.is_(null()) if self.comparison.is_null else model_attribute.is_not(null())
             )

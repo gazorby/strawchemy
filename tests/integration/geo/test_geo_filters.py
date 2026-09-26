@@ -224,3 +224,21 @@ async def test_not_is_null(any_query: AnyQueryExecutor, raw_geo: RawRecordData) 
     assert sorted(row["id"] for row in result.data["geoField"]) == sorted(
         to_graphql_representation(row["id"], "output") for row in raw_geo if row["point"] is not None
     )
+
+
+@pytest.mark.parametrize("operator", ["isNull", "containsGeometry", "withinGeometry"])
+@pytest.mark.parametrize("negated", [pytest.param(False, id="plain"), pytest.param(True, id="not")])
+async def test_null_operator_is_ignored(
+    operator: str, negated: bool, any_query: AnyQueryExecutor, raw_geo: RawRecordData
+) -> None:
+    """Test that a geo operator set to null is ignored, directly and under ``_not``."""
+    dto_filter = f"{{ point: {{ {operator}: null }} }}"
+    if negated:
+        dto_filter = f"{{ _not: {dto_filter} }}"
+    result = await maybe_async(any_query(f"{{ geoField(filter: {dto_filter}) {{ id }} }}"))
+    assert not result.errors
+    assert result.data
+
+    assert sorted(row["id"] for row in result.data["geoField"]) == sorted(
+        to_graphql_representation(row["id"], "output") for row in raw_geo
+    )
