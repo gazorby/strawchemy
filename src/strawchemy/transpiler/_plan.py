@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import func, select
+from sqlalchemy import Cast, func, select
 from sqlalchemy.orm import raiseload
 from sqlalchemy.sql.util import ClauseAdapter
 
@@ -30,7 +30,8 @@ __all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan", "add_missing_columns", "di
 
 
 def add_missing_columns(statement: Select[Any], columns: Sequence[ColumnElement[Any]]) -> Select[Any]:
-    """Adds to ``statement`` the ``columns`` it does not already select."""
+    """Adds to ``statement`` the ``columns`` it does not select; a CAST adds its operand, whose name it takes."""
+    columns = [column.clause if isinstance(column, Cast) else column for column in columns]
     return statement.add_columns(
         *[
             column

@@ -44,6 +44,7 @@ from strawchemy.repository.typing import DeclarativeT, OrderBySpec
 from strawchemy.transpiler._aliasing import same_column
 from strawchemy.transpiler._plan import add_missing_columns
 from strawchemy.utils.graph import merge_trees
+from strawchemy.utils.postgres import comparable
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -319,6 +320,7 @@ class OrderBy:
         On databases without ``NULLS FIRST``/``NULLS LAST``, null placement is done by ordering on ``column IS NULL``
         first.
         """
+        column = comparable(cast("ColumnElement[Any]", column), self.db_features.dialect)
         expressions: list[UnaryExpression[Any]] = []
         if order_by is OrderByEnum.ASC:
             expressions.append(column.asc())
@@ -362,7 +364,7 @@ class DistinctOn:
         return [enum.field_definition for enum in self.query_graph.distinct_on]
 
     @property
-    def expressions(self) -> list[QueryableAttribute[Any]]:
+    def expressions(self) -> list[ColumnElement[Any] | QueryableAttribute[Any]]:
         """The DISTINCT ON columns, read from the root alias.
 
         Raises:
@@ -375,8 +377,9 @@ class DistinctOn:
                 continue
             msg = "Distinct on fields must match the leftmost order by fields"
             raise TranspilingError(msg)
+        scope = self.query_graph.scope
         return [
-            field.model_field.adapt_to_entity(inspect(self.query_graph.scope.root_alias))
+            comparable(field.model_field.adapt_to_entity(inspect(scope.root_alias)), scope.dialect)
             for field in self._distinct_on_fields
         ]
 

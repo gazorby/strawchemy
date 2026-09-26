@@ -4,16 +4,18 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 from unittest.mock import Mock
 
 import pytest
-from sqlalchemy import JSON, Column, Dialect, MetaData, Table, TypeDecorator
+from sqlalchemy import JSON, Column, Dialect, Integer, MetaData, Table, TypeDecorator
 from sqlalchemy.dialects import postgresql
 
 from strawchemy.exceptions import SessionNotFoundError
 from strawchemy.utils.annotation import inner_types
-from strawchemy.utils.postgres import as_jsonb
+from strawchemy.utils.postgres import as_jsonb, comparable
 from strawchemy.utils.strawberry import default_session_getter
 
 if TYPE_CHECKING:
     from sqlalchemy.types import TypeEngine
+
+    from strawchemy.typing import SupportedDialect
 
 
 @pytest.mark.parametrize(
@@ -89,3 +91,25 @@ class _JSONDecorator(TypeDecorator[Any]):
 def test_as_jsonb(type_: TypeEngine[Any], expected: str) -> None:
     column = Table("t", MetaData(), Column("c", type_)).c.c
     assert str(as_jsonb(column).compile(dialect=postgresql.dialect())) == expected
+
+
+@pytest.mark.parametrize(
+    ("type_", "expected"),
+    [
+        pytest.param(Integer(), "t.c", id="integer"),
+        pytest.param(postgresql.JSONB(), "t.c", id="jsonb"),
+        pytest.param(_JSONBDecorator(), "t.c", id="jsonb-decorator"),
+        pytest.param(postgresql.JSON(), "CAST(t.c AS JSONB)", id="json"),
+        pytest.param(JSON(), "CAST(t.c AS JSONB)", id="generic-json"),
+        pytest.param(_JSONDecorator(), "CAST(t.c AS JSONB)", id="json-decorator"),
+    ],
+)
+def test_comparable(type_: TypeEngine[Any], expected: str) -> None:
+    column = Table("t", MetaData(), Column("c", type_)).c.c
+    assert str(comparable(column, "postgresql").compile(dialect=postgresql.dialect())) == expected
+
+
+@pytest.mark.parametrize("dialect", ["mysql", "sqlite"])
+def test_comparable_other_dialects(dialect: SupportedDialect) -> None:
+    column = Table("t", MetaData(), Column("c", JSON())).c.c
+    assert comparable(column, dialect) is column

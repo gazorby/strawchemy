@@ -19,7 +19,7 @@ from strawchemy.dto.strawberry import GraphQLFieldDefinition, QueryNode
 from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.exceptions import TranspilingError
 from strawchemy.repository.typing import DeclarativeT
-from strawchemy.utils.postgres import as_jsonb
+from strawchemy.utils.postgres import as_jsonb, comparable
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -255,12 +255,15 @@ class _NodeInspect:
             The argument node when there is exactly one, otherwise the node itself, and the column.
         """
         function_info = AggregationFunctionInfo.from_name(self.value.function(strict=True).function)
-        function_args = []
         argument_attributes = [
             self.mapper.attrs[arg_child.value.model_field_name].class_attribute.adapt_to_entity(inspect(alias))
             for arg_child in self.children
         ]
-        function_args = (sqla_distinct(*argument_attributes),) if distinct else argument_attributes
+        function_args = (
+            (sqla_distinct(*[comparable(attribute, self.scope.dialect) for attribute in argument_attributes]),)
+            if distinct
+            else argument_attributes
+        )
         function_node = self.children[0].node if len(self.children) == 1 else self.node
         return function_node, function_info.apply(*function_args).label(None)
 
