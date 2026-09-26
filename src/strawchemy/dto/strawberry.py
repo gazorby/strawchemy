@@ -550,6 +550,13 @@ class AggregationFunctionFilterDTO(UnmappedStrawberryGraphQLDTO[DeclarativeBase]
 
 
 class OrderByDTO(GraphQLFilterDTO):
+    def has_order(self) -> bool:
+        """Whether any field of this input or of its nested inputs is set to a direction."""
+        return any(
+            not isinstance(value, OrderByDTO) or value.has_order()
+            for value in (getattr(self, name) for name in self.dto_set_fields)
+        )
+
     def tree(self, _node: QueryNodeType | None = None) -> QueryNodeType:
         node = _node or QueryNode.root_node(self.__dto_model__)
 
@@ -559,6 +566,8 @@ class OrderByDTO(GraphQLFilterDTO):
             if isinstance(field, FunctionFieldDefinition) and not field.has_model_field:
                 field.model_field = node.value.model_field
             if isinstance(value, OrderByDTO):
+                if not value.has_order():
+                    continue
                 child, _ = node.upsert_child(field, match_on="value_equality")
                 value.tree(child)
             else:

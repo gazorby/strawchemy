@@ -229,6 +229,8 @@ class QueryGraph(Generic[DeclarativeT]):
         merged_tree: QueryNodeType | None = None
         max_order: int = 0
         for order_by_dto in self.order_by:
+            if not order_by_dto.has_order():
+                continue
             tree = order_by_dto.tree()
             orders: list[int] = []
             for leaf in sorted(tree.leaves(iteration_mode="breadth_first")):
