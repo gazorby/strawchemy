@@ -2910,7 +2910,7 @@
   DELETE
     FROM USER AS USER
    WHERE user.name != ?
-     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL) AND user_1.id = user.id)) RETURNING id,
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL) AND user_1.id = user.id)) RETURNING id,
          id AS id_1
   '''
 # ---
@@ -2919,7 +2919,7 @@
   DELETE
     FROM USER AS USER
    WHERE user.name != %s
-     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL)) AS anon_1 WHERE anon_1.id = user.id))
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL)) AS anon_1 WHERE anon_1.id = user.id))
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-one-null-asyncpg_engine]
@@ -2927,7 +2927,7 @@
   DELETE
     FROM "user" AS "user"
    WHERE "user".name != $1::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id,
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id,
          "user".id AS id_1
   '''
 # ---
@@ -2936,7 +2936,7 @@
   DELETE
     FROM "user" AS "user"
    WHERE "user".name != %(name_1)s::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id,
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id,
          "user".id AS id_1
   '''
 # ---
@@ -4171,7 +4171,7 @@
               ON user_1.id = user_department_join_table_1.user_id
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
-           WHERE (department_1.name = ? OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+           WHERE (department_1.name = ? OR department_1.name IS NULL)
              AND user_1.id = user.id
          ) RETURNING id,
          id AS id_1
@@ -4190,7 +4190,7 @@
                       ON user_1.id = user_department_join_table_1.user_id
                    INNER JOIN department AS department_1
                       ON department_1.id = user_department_join_table_1.department_id
-                   WHERE (department_1.name = %s OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+                   WHERE (department_1.name = %s OR department_1.name IS NULL)
                  ) AS anon_1
            WHERE anon_1.id = user.id
          )
@@ -4207,7 +4207,7 @@
               ON user_1.id = user_department_join_table_1.user_id
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
-           WHERE (department_1.name = $1::VARCHAR OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+           WHERE (department_1.name = $1::VARCHAR OR department_1.name IS NULL)
              AND user_1.id = "user".id
          ) RETURNING "user".id,
          "user".id AS id_1
@@ -4224,7 +4224,7 @@
               ON user_1.id = user_department_join_table_1.user_id
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
-           WHERE (department_1.name = %(name_1)s::VARCHAR OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+           WHERE (department_1.name = %(name_1)s::VARCHAR OR department_1.name IS NULL)
              AND user_1.id = "user".id
          ) RETURNING "user".id,
          "user".id AS id_1
@@ -4655,7 +4655,7 @@
   DELETE
     FROM "user" AS "user"
    WHERE "user".name != %(name_1)s::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id,
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id,
          "user".id AS id_1
   '''
 # ---
@@ -4664,7 +4664,7 @@
   DELETE
     FROM USER AS USER
    WHERE user.name != ?
-     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL) AND user_1.id = user.id)) RETURNING id,
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL) AND user_1.id = user.id)) RETURNING id,
          id AS id_1
   '''
 # ---
@@ -5270,7 +5270,7 @@
               ON user_1.id = user_department_join_table_1.user_id
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
-           WHERE (department_1.name = %(name_1)s::VARCHAR OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+           WHERE (department_1.name = %(name_1)s::VARCHAR OR department_1.name IS NULL)
              AND user_1.id = "user".id
          ) RETURNING "user".id,
          "user".id AS id_1
@@ -5287,7 +5287,7 @@
               ON user_1.id = user_department_join_table_1.user_id
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
-           WHERE (department_1.name = ? OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+           WHERE (department_1.name = ? OR department_1.name IS NULL)
              AND user_1.id = user.id
          ) RETURNING id,
          id AS id_1
@@ -6588,7 +6588,7 @@
   UPDATE USER AS USER
      SET name = ?
    WHERE user.name != ?
-     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL) AND user_1.id = user.id)) RETURNING id
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL) AND user_1.id = user.id)) RETURNING id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-not-to-one-null-asyncmy_engine]
@@ -6596,7 +6596,7 @@
   UPDATE USER AS USER
      SET name = %s
    WHERE user.name != %s
-     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL)) AS anon_1 WHERE anon_1.id = user.id))
+     AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL)) AS anon_1 WHERE anon_1.id = user.id))
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-not-to-one-null-asyncpg_engine]
@@ -6604,7 +6604,7 @@
   UPDATE "user" AS "user"
      SET name = $1::VARCHAR
    WHERE "user".name != $2::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-not-to-one-null-psycopg_async_engine]
@@ -6612,7 +6612,7 @@
   UPDATE "user" AS "user"
      SET name = %(name)s::VARCHAR
    WHERE "user".name != %(name_1)s::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-null-aiosqlite_engine]
@@ -7373,7 +7373,7 @@
               ON user_1.id = user_department_join_table_1.user_id
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
-           WHERE (department_1.name = ? OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+           WHERE (department_1.name = ? OR department_1.name IS NULL)
              AND user_1.id = user.id
          ) RETURNING id
   '''
@@ -7391,7 +7391,7 @@
                       ON user_1.id = user_department_join_table_1.user_id
                    INNER JOIN department AS department_1
                       ON department_1.id = user_department_join_table_1.department_id
-                   WHERE (department_1.name = %s OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+                   WHERE (department_1.name = %s OR department_1.name IS NULL)
                  ) AS anon_1
            WHERE anon_1.id = user.id
          )
@@ -7408,7 +7408,7 @@
               ON user_1.id = user_department_join_table_1.user_id
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
-           WHERE (department_1.name = $2::VARCHAR OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+           WHERE (department_1.name = $2::VARCHAR OR department_1.name IS NULL)
              AND user_1.id = "user".id
          ) RETURNING "user".id
   '''
@@ -7424,7 +7424,7 @@
               ON user_1.id = user_department_join_table_1.user_id
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
-           WHERE (department_1.name = %(name_1)s::VARCHAR OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+           WHERE (department_1.name = %(name_1)s::VARCHAR OR department_1.name IS NULL)
              AND user_1.id = "user".id
          ) RETURNING "user".id
   '''
@@ -7718,7 +7718,7 @@
   UPDATE "user" AS "user"
      SET name = %(name)s::VARCHAR
    WHERE "user".name != %(name_1)s::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id
+     AND (EXISTS (SELECT 1 FROM "user" AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL) AND user_1.id = "user".id)) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-sync-tracked-column-and-not-to-one-null-sqlite_engine]
@@ -7726,7 +7726,7 @@
   UPDATE USER AS USER
      SET name = ?
    WHERE user.name != ?
-     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.name IS NOT NULL AND group_1.id IS NOT NULL) AND user_1.id = user.id)) RETURNING id
+     AND (EXISTS (SELECT 1 FROM USER AS user_1 LEFT OUTER JOIN "group" AS group_1 ON group_1.id = user_1.group_id WHERE NOT (group_1.name IS NULL AND group_1.id IS NOT NULL) AND user_1.id = user.id)) RETURNING id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-sync-tracked-column-and-to-many-null-psycopg_engine]
@@ -8099,7 +8099,7 @@
               ON user_1.id = user_department_join_table_1.user_id
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
-           WHERE (department_1.name = %(name_1)s::VARCHAR OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+           WHERE (department_1.name = %(name_1)s::VARCHAR OR department_1.name IS NULL)
              AND user_1.id = "user".id
          ) RETURNING "user".id
   '''
@@ -8115,7 +8115,7 @@
               ON user_1.id = user_department_join_table_1.user_id
             JOIN department AS department_1
               ON department_1.id = user_department_join_table_1.department_id
-           WHERE (department_1.name = ? OR NOT (department_1.name IS NOT NULL AND department_1.name IS NOT NULL))
+           WHERE (department_1.name = ? OR department_1.name IS NULL)
              AND user_1.id = user.id
          ) RETURNING id
   '''

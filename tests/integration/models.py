@@ -156,7 +156,7 @@ class Color(Base):
 class Group(Base):
     __tablename__ = "group"
 
-    name: Mapped[str] = mapped_column(Text)
+    name: Mapped[str | None] = mapped_column(Text)
     topics: Mapped[list[Topic]] = relationship("Topic")
 
 
