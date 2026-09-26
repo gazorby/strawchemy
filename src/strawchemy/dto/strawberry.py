@@ -393,8 +393,20 @@ class CustomFilter:
 
 
 @dataclass
+class NotExistsFilter:
+    """A ``_not`` over to-many relations, tested with a correlated NOT EXISTS so that no related row matches."""
+
+    dto_filter: BooleanFilterDTO
+    """The negated filter."""
+    field_node: QueryNodeType
+    """The node of the model ``dto_filter`` applies to, used to correlate the subquery."""
+
+
+@dataclass
 class Filter:
-    and_: list[Self | GraphQLComparison | AggregationFilter | CustomFilter] = dataclasses.field(default_factory=list)
+    and_: list[Self | GraphQLComparison | AggregationFilter | CustomFilter | NotExistsFilter] = dataclasses.field(
+        default_factory=list
+    )
     or_: list[Self] = dataclasses.field(default_factory=list)
     not_: Self | None = None
     relation: QueryNodeType | None = None
@@ -414,23 +426,24 @@ class Filter:
             nodes.extend(node for node in first if all(node in other for other in others))
         return list(dict.fromkeys(nodes))
 
-    def iter_aggregation_filters(self) -> Iterator[AggregationFilter]:
-        """Yields every ``AggregationFilter`` in this filter tree in traversal order.
+    def iter_leaves(self) -> Iterator[GraphQLComparison | AggregationFilter | CustomFilter | NotExistsFilter]:
+        """Yields every predicate in this filter tree in traversal order.
 
         Walks the ``and_``, ``or_`` and ``not_`` branches depth-first.
-
-        Yields:
-            Each aggregation filter found under the AND, OR and NOT branches.
         """
         for value in self.and_:
-            if isinstance(value, AggregationFilter):
+            if isinstance(value, Filter):
+                yield from value.iter_leaves()
+            else:
                 yield value
-            elif isinstance(value, Filter):
-                yield from value.iter_aggregation_filters()
         for value in self.or_:
-            yield from value.iter_aggregation_filters()
+            yield from value.iter_leaves()
         if self.not_ is not None:
-            yield from self.not_.iter_aggregation_filters()
+            yield from self.not_.iter_leaves()
+
+    def iter_aggregation_filters(self) -> Iterator[AggregationFilter]:
+        """Yields every ``AggregationFilter`` in this filter tree in traversal order."""
+        return (leaf for leaf in self.iter_leaves() if isinstance(leaf, AggregationFilter))
 
 
 class OrderByEnum(Enum):
@@ -601,13 +614,29 @@ class BooleanFilterDTO(GraphQLFilterDTO):
             parts.append(self._from_fields(not_=self.not_))
         return parts
 
+    def tests_to_many(self) -> bool:
+        """Whether the filter tests the rows of a to-many relation outside a nested ``_not``."""
+        for name in self.dto_set_fields:
+            value = getattr(self, name)
+            field = self.__dto_field_definitions__[name]
+            if (
+                isinstance(value, BooleanFilterDTO)
+                and not isinstance(field, CustomFilterFieldDefinition)
+                and (field.uselist or value.tests_to_many())
+            ):
+                return True
+        return any(branch.tests_to_many() for branch in (*self.and_, *self.or_))
+
     def filters_tree(self, _node: QueryNodeType | None = None) -> tuple[QueryNodeType, Filter]:
         node = _node or QueryNode.root_node(self.__dto_model__)
         query = Filter(
             and_=[and_val.filters_tree(node)[1] for and_val in self.and_],
             or_=[or_val.filters_tree(node)[1] for or_val in self.or_],
-            not_=self.not_.filters_tree(node)[1] if self.not_ else None,
         )
+        if self.not_ and self.not_.tests_to_many():
+            query.and_.append(NotExistsFilter(dto_filter=self.not_, field_node=node))
+        elif self.not_:
+            query.not_ = self.not_.filters_tree(node)[1]
         for name in self.dto_set_fields:
             value: EqualityComparison[Any] | BooleanFilterDTO | AggregateFilterDTO = getattr(self, name)
             field = self.__dto_field_definitions__[name]

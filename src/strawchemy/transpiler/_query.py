@@ -34,6 +34,7 @@ from strawchemy.dto.strawberry import (
     EnumDTO,
     Filter,
     GraphQLFieldDefinition,
+    NotExistsFilter,
     OrderByDTO,
     OrderByEnum,
     QueryNode,
@@ -139,10 +140,12 @@ class AggregationSpec:
         return cls(node=node, alias=alias)
 
 
-def _filters_in_exists(tree: QueryNodeType, scope: FilterScope) -> bool:
+def _filters_in_exists(tree: QueryNodeType, query_filter: Filter, scope: FilterScope) -> bool:
     fields = [node.value for node in tree.iter_breadth_first() if not node.is_root]
     if scope == "dml":
-        return any(field.is_relation for field in fields)
+        return any(field.is_relation for field in fields) or any(
+            isinstance(leaf, NotExistsFilter) for leaf in query_filter.iter_leaves()
+        )
     return scope == "query" and any(field.uselist and not field.is_computed for field in fields)
 
 
@@ -195,14 +198,14 @@ class QueryGraph(Generic[DeclarativeT]):
     def _split_filter(self, dto_filter: BooleanFilterDTO) -> None:
         """Moves to ``exists_filter`` the top-level AND branches that must be tested in an EXISTS subquery."""
         where_join_tree, query_filter = dto_filter.filters_tree()
-        if not _filters_in_exists(where_join_tree, self.filter_scope):
+        if not _filters_in_exists(where_join_tree, query_filter, self.filter_scope):
             self.where_join_tree, self.query_filter = where_join_tree, query_filter
             self.where_join_path = query_filter.join_path()
             return
         root_parts: list[BooleanFilterDTO] = []
         exists_parts: list[BooleanFilterDTO] = []
         for part in dto_filter.conjuncts():
-            in_exists = _filters_in_exists(part.filters_tree()[0], self.filter_scope)
+            in_exists = _filters_in_exists(*part.filters_tree(), self.filter_scope)
             (exists_parts if in_exists else root_parts).append(part)
         if not root_parts:
             self.exists_filter = dto_filter

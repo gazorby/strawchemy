@@ -961,3 +961,126 @@ async def test_empty_comparison_is_ignored(
     assert result.data is not None
 
     assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize(
+    ("raw_departments", "raw_user_departments"),
+    [
+        pytest.param(
+            [
+                {"id": 1, "name": "IT"},
+                {"id": 2, "name": "Sales"},
+                {"id": 3, "name": "Platform"},
+                {"id": 4, "name": None},
+            ],
+            [
+                {"user_id": 1, "department_id": 1},
+                {"user_id": 1, "department_id": 4},
+                {"user_id": 2, "department_id": 2},
+                {"user_id": 3, "department_id": 3},
+                {"user_id": 3, "department_id": 1},
+            ],
+            id="null-department",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("field", "arguments"),
+    [
+        pytest.param("users", "", id="plain"),
+        pytest.param("usersPaginated", "", id="paginated"),
+        pytest.param("users", ", distinctOn: [name]", id="distinct-on"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param('{ departments: { name: { eq: "IT" } } }', ["Bob", "Tango"], id="to-many"),
+        pytest.param('{ departments: { users: { name: { eq: "Alice" } } } }', ["Bob", "Tango"], id="nested-to-many"),
+        pytest.param(
+            '{ departments: { _not: { users: { name: { eq: "Alice" } } } } }',
+            ["Alice", "Tango"],
+            id="to-many-not-nested-to-many",
+        ),
+        pytest.param(
+            '{ _and: [{ departments: { name: { eq: "IT" } } }, { name: { neq: "Alice" } }] }',
+            ["Alice", "Bob", "Tango"],
+            id="and-to-many",
+        ),
+        pytest.param(
+            '{ _or: [{ departments: { name: { eq: "Sales" } } }, { name: { eq: "Alice" } }] }',
+            ["Charlie", "Tango"],
+            id="or-to-many-and-column",
+        ),
+        pytest.param(
+            '{ name: { eq: "Charlie" }, departments: { name: { eq: "IT" } } }',
+            ["Alice", "Bob", "Tango"],
+            id="column-and-to-many",
+        ),
+        pytest.param(
+            '{ group: { name: { eq: "Group 1" } }, departments: { name: { eq: "IT" } } }',
+            ["Bob", "Charlie", "Tango"],
+            id="to-one-and-to-many",
+        ),
+        pytest.param(
+            '{ _or: [{ group: { name: { eq: "Group 1" } } }, { departments: { name: { eq: "Sales" } } }] }',
+            ["Charlie", "Tango"],
+            id="or-to-one-and-to-many",
+        ),
+        pytest.param('{ _not: { departments: { name: { eq: "IT" } } } }', ["Alice", "Charlie"], id="not-to-many"),
+        pytest.param('{ departments: { _not: { name: { eq: "IT" } } } }', ["Tango"], id="to-many-not"),
+        pytest.param(
+            "{ departmentsAggregate: { count: { arguments: [id], predicate: { gt: 1 } } } }",
+            ["Bob", "Tango"],
+            id="aggregation",
+        ),
+        pytest.param('{ group: { name: { eq: "Group 1" } } }', ["Bob", "Charlie", "Tango"], id="to-one"),
+        pytest.param(
+            '{ group: { topics: { name: { eq: "Hello!" } } } }', ["Bob", "Charlie", "Tango"], id="to-one-to-many"
+        ),
+        pytest.param(
+            '{ group: { _not: { topics: { name: { eq: "Problems" } } } } }',
+            ["Bob", "Charlie", "Tango"],
+            id="to-one-not-to-many",
+        ),
+    ],
+)
+async def test_not_complements_relation_filter(
+    field: str,
+    arguments: str,
+    dto_filter: str,
+    names: list[str],
+    any_query: AnyQueryExecutor,
+    raw_departments: RawRecordData,  # noqa: ARG001
+    raw_user_departments: RawRecordData,  # noqa: ARG001
+) -> None:
+    """Test that ``_not`` over a filter matches exactly the rows the filter does not."""
+    query = "{{ {field}(filter: {dto_filter}{arguments}) {{ name }} }}"
+    result = await maybe_async(any_query(query.format(field=field, dto_filter=dto_filter, arguments=arguments)))
+    assert not result.errors
+    assert result.data is not None
+    matched = [user["name"] for user in result.data[field]]
+
+    negated_filter = f"{{ _not: {dto_filter} }}"
+    result = await maybe_async(any_query(query.format(field=field, dto_filter=negated_filter, arguments=arguments)))
+    assert not result.errors
+    assert result.data is not None
+    negated = sorted(user["name"] for user in result.data[field])
+
+    assert negated == names
+    assert sorted(matched + negated) == ["Alice", "Bob", "Charlie", "Tango"]
+
+
+@pytest.mark.snapshot
+async def test_not_to_many(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(
+        any_query('{ users(filter: { _not: { departments: { name: { eq: "IT" } } } }) { name } }')
+    )
+    assert not result.errors
+    assert result.data
+
+    assert sorted(user["name"] for user in result.data["users"]) == ["Bob", "Tango"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

@@ -1047,6 +1047,20 @@ async def test_update_by_filter_on_to_many_relation(
             ["Alice", "Tango"],
             id="or-aggregation-and-to-one",
         ),
+        pytest.param('{ _not: { departments: { name: { eq: "IT" } } } }', ["Bob", "Tango"], id="not-to-many"),
+        pytest.param(
+            '{ _not: { departments: { users: { name: { eq: "Alice" } } } } }', ["Bob", "Tango"], id="not-nested-to-many"
+        ),
+        pytest.param(
+            '{ name: { neq: "Tango" }, _not: { departments: { name: { eq: "IT" } } } }',
+            ["Bob"],
+            id="column-and-not-to-many",
+        ),
+        pytest.param(
+            '{ departments: { _not: { users: { name: { eq: "Alice" } } } } }',
+            ["Bob", "Charlie"],
+            id="to-many-not-nested-to-many",
+        ),
     ],
 )
 async def test_update_users_by_split_filter(
@@ -2059,6 +2073,20 @@ async def test_delete_filter(
             '{ group: { name: { eq: "Group 1" } } }] }',
             ["Alice", "Tango"],
             id="or-aggregation-and-to-one",
+        ),
+        pytest.param('{ _not: { departments: { name: { eq: "IT" } } } }', ["Bob", "Tango"], id="not-to-many"),
+        pytest.param(
+            '{ _not: { departments: { users: { name: { eq: "Alice" } } } } }', ["Bob", "Tango"], id="not-nested-to-many"
+        ),
+        pytest.param(
+            '{ name: { neq: "Tango" }, _not: { departments: { name: { eq: "IT" } } } }',
+            ["Bob"],
+            id="column-and-not-to-many",
+        ),
+        pytest.param(
+            '{ departments: { _not: { users: { name: { eq: "Alice" } } } } }',
+            ["Bob", "Charlie"],
+            id="to-many-not-nested-to-many",
         ),
     ],
 )
