@@ -782,3 +782,102 @@ async def test_relation_filter_ignores_siblings(
     assert result.data is not None
 
     assert sorted(user["name"] for user in result.data[field]) == names
+
+
+@pytest.mark.snapshot
+async def test_not_isnull(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    result = await maybe_async(any_query("{ users(filter: { _not: { bio: { isNull: true } } }) { name } }"))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["users"] == [{"name": "Tango"}]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param("{ _not: { bio: { isNull: false } } }", ["Alice", "Bob", "Charlie"], id="not-isnull-false"),
+        pytest.param('{ _not: { bio: { eq: "Tango\'s bio" } } }', ["Alice", "Bob", "Charlie"], id="not-eq"),
+        pytest.param(
+            '{ _not: { bio: { isNull: true, eq: "Tango\'s bio" } } }',
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="not-isnull-and-eq",
+        ),
+        pytest.param(
+            '{ _not: { _or: [{ bio: { isNull: true } }, { name: { eq: "Bob" } }] } }', ["Tango"], id="not-or-isnull"
+        ),
+        pytest.param("{ _not: { _not: { bio: { isNull: true } } } }", ["Alice", "Bob", "Charlie"], id="not-not-isnull"),
+        pytest.param("{ _not: { bio: { eq: null } } }", ["Tango"], id="not-eq-null"),
+        pytest.param("{ _not: { bio: { neq: null } } }", ["Alice", "Bob", "Charlie"], id="not-neq-null"),
+    ],
+)
+async def test_not_isnull_column(dto_filter: str, names: list[str], any_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize(
+    ("raw_groups", "raw_users", "raw_departments"),
+    [
+        pytest.param(
+            [
+                {"id": 1, "name": "Group 1"},
+                {"id": 2, "name": None},
+                *({"id": i, "name": f"Group {i}"} for i in (3, 4, 5)),
+            ],
+            [
+                {"id": 1, "name": "Alice", "group_id": 1, "bio": None},
+                {"id": 2, "name": "Bob", "group_id": 2, "bio": None},
+                {"id": 3, "name": "Charlie", "group_id": None, "bio": None},
+                {"id": 4, "name": "Tango", "group_id": None, "bio": "Tango's bio"},
+            ],
+            [{"id": 1, "name": "IT"}, {"id": 2, "name": None}, {"id": 3, "name": "Platform"}],
+            id="null-names",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param("{ group: { name: { isNull: true } } }", ["Bob"], id="to-one-isnull"),
+        pytest.param(
+            "{ _not: { group: { name: { isNull: true } } } }", ["Alice", "Charlie", "Tango"], id="not-to-one-isnull"
+        ),
+        pytest.param(
+            "{ _not: { group: { name: { isNull: false } } } }",
+            ["Bob", "Charlie", "Tango"],
+            id="not-to-one-isnull-false",
+        ),
+        pytest.param("{ group: { _not: { name: { isNull: true } } } }", ["Alice"], id="to-one-not-isnull"),
+        pytest.param("{ departments: { name: { isNull: true } } }", ["Bob"], id="to-many-isnull"),
+        pytest.param(
+            "{ _not: { departments: { name: { isNull: true } } } }",
+            ["Alice", "Charlie", "Tango"],
+            id="not-to-many-isnull",
+        ),
+        pytest.param(
+            "{ departments: { _not: { name: { isNull: true } } } }", ["Alice", "Charlie"], id="to-many-not-isnull"
+        ),
+    ],
+)
+async def test_not_isnull_relation(
+    dto_filter: str,
+    names: list[str],
+    any_query: AnyQueryExecutor,
+    raw_groups: RawRecordData,  # noqa: ARG001
+    raw_users: RawRecordData,  # noqa: ARG001
+    raw_departments: RawRecordData,  # noqa: ARG001
+) -> None:
+    """Test ``isNull`` on the columns of NULL-named related rows, directly and under ``_not``."""
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names

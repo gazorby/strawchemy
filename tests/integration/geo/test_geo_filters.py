@@ -214,3 +214,13 @@ async def test_is_null(
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_not_is_null(any_query: AnyQueryExecutor, raw_geo: RawRecordData) -> None:
+    result = await maybe_async(any_query("{ geoField(filter: { _not: { point: { isNull: true } } }) { id } }"))
+    assert not result.errors
+    assert result.data
+
+    assert sorted(row["id"] for row in result.data["geoField"]) == sorted(
+        to_graphql_representation(row["id"], "output") for row in raw_geo if row["point"] is not None
+    )

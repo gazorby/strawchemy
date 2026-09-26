@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING, Any, Generic, Protocol, cast
 
 from sqlalchemy import and_, exists, func, inspect, literal_column, not_, null, or_, select, true, tuple_
 from sqlalchemy.orm import Load, Mapper, RelationshipProperty, aliased, class_mapper, load_only, raiseload
+from sqlalchemy.sql import operators
+from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.functions import count as sqla_count
 from sqlalchemy.sql.util import ClauseAdapter
 from typing_extensions import ParamSpec, Self
@@ -387,6 +389,10 @@ class AggregationPlan:
         return function_columns, new_join
 
 
+def _is_null_test(expression: ColumnElement[bool]) -> bool:
+    return isinstance(expression, BinaryExpression) and expression.operator in {operators.is_, operators.is_not}
+
+
 @dataclass(frozen=True)
 class FilterPlan:
     """WHERE predicates and the relation joins they need."""
@@ -482,7 +488,9 @@ class FilterPlan:
         """Converts a filter comparison to SQL predicates, comparing ``override`` instead of the field if given."""
         attribute = override if override is not None else context.aliases.aliased_attribute(dto_filter.field_node)
         expressions: list[ColumnElement[bool]] = dto_filter.to_expressions(context.dialect, attribute)
-        if not_null_check:
+        # Under NOT, a comparison on a NULL column must be false rather than unknown, but guarding a null test such
+        # as ``IS NULL`` would make it always false.
+        if not_null_check and not (expressions and all(map(_is_null_test, expressions))):
             expressions.append(attribute.is_not(null()))
         return expressions
 
