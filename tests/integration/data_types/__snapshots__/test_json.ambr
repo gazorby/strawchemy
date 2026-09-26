@@ -320,7 +320,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? $1::VARCHAR
+   WHERE jsonb_typeof(json_model.dict_col) = $1::VARCHAR
+     AND (json_model.dict_col ? $2::VARCHAR)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -347,7 +348,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? $1::VARCHAR
+   WHERE jsonb_typeof(json_model.dict_col) = $1::VARCHAR
+     AND (json_model.dict_col ? $2::VARCHAR)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -356,7 +358,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? %(param_1)s::VARCHAR
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? %(param_1)s::VARCHAR)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -365,7 +368,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? %(param_1)s::VARCHAR
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? %(param_1)s::VARCHAR)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -393,7 +397,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? & CAST($1::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = $1::VARCHAR
+     AND (json_model.dict_col ? & CAST($2::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -421,7 +426,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? & CAST($1::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = $1::VARCHAR
+     AND (json_model.dict_col ? & CAST($2::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -430,7 +436,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -439,7 +446,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -467,7 +475,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? | CAST($1::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = $1::VARCHAR
+     AND (json_model.dict_col ? | CAST($2::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -495,7 +504,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? | CAST($1::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = $1::VARCHAR
+     AND (json_model.dict_col ? | CAST($2::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -504,7 +514,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -513,7 +524,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -542,7 +554,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? %(param_1)s::VARCHAR
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? %(param_1)s::VARCHAR)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -560,7 +573,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? %(param_1)s::VARCHAR
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? %(param_1)s::VARCHAR)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -578,7 +592,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -597,7 +612,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -616,7 +632,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -635,7 +652,8 @@
   SELECT json_model.dict_col,
          json_model.id
     FROM json_model AS json_model
-   WHERE json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])
+   WHERE jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR
+     AND (json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[]))
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -913,7 +931,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? $1::VARCHAR) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = $1::VARCHAR AND (json_model.dict_col ? $2::VARCHAR) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -937,7 +955,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? $1::VARCHAR) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = $1::VARCHAR AND (json_model.dict_col ? $2::VARCHAR) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -945,7 +963,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? %(param_1)s::VARCHAR) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR AND (json_model.dict_col ? %(param_1)s::VARCHAR) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -953,7 +971,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? %(param_1)s::VARCHAR) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR AND (json_model.dict_col ? %(param_1)s::VARCHAR) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -977,7 +995,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? & CAST($1::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = $1::VARCHAR AND (json_model.dict_col ? & CAST($2::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -985,7 +1003,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR AND (json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -1009,7 +1027,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? | CAST($1::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = $1::VARCHAR AND (json_model.dict_col ? | CAST($2::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -1017,7 +1035,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR AND (json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -1025,7 +1043,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? %(param_1)s::VARCHAR) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR AND (json_model.dict_col ? %(param_1)s::VARCHAR) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -1041,7 +1059,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? %(param_1)s::VARCHAR) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR AND (json_model.dict_col ? %(param_1)s::VARCHAR) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -1057,7 +1075,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR AND (json_model.dict_col ? & CAST(%(param_1)s::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---
@@ -1073,7 +1091,7 @@
   '''
   SELECT json_model.id
     FROM json_model AS json_model
-   WHERE NOT ((json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
+   WHERE NOT (jsonb_typeof(json_model.dict_col) = %(jsonb_typeof_1)s::VARCHAR AND (json_model.dict_col ? | CAST(%(param_1)s::TEXT[] AS TEXT[])) AND json_model.dict_col IS NOT NULL)
    ORDER BY json_model.id ASC
   '''
 # ---

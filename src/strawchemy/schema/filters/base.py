@@ -1,9 +1,25 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar, cast
 
-from sqlalchemy import ARRAY, JSON, ColumnElement, Dialect, Integer, Text, and_, func, not_, null, or_, type_coerce
+from sqlalchemy import (
+    ARRAY,
+    JSON,
+    ColumnElement,
+    Dialect,
+    Integer,
+    Text,
+    and_,
+    false,
+    func,
+    not_,
+    null,
+    or_,
+    true,
+    type_coerce,
+)
 from sqlalchemy import cast as sqla_cast
 from sqlalchemy.dialects import mysql
 from sqlalchemy.dialects import postgresql as pg
@@ -160,41 +176,51 @@ class TextFilter(OrderFilter):
 class JSONFilter(EqualityFilter):
     comparison: _JSONComparison
 
+    @staticmethod
+    def _key_path(key: str) -> str:
+        # A quoted member reads the key literally, where `$.key` would parse dots, brackets or `*` in it as path syntax.
+        # ASCII escapes match how SQLAlchemy serializes keys, which SQLite before 3.45 compares without decoding.
+        return f"$.{json.dumps(key)}"
+
     def _postgres_json(
         self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
+        key_expressions: list[ColumnElement[bool]] = []
         as_postgres_jsonb = type_coerce(model_attribute, pg.JSONB)
 
-        if self.comparison.contains is not UNSET:
+        if self.comparison.contains is not UNSET and self.comparison.contains is not None:
             expressions.append(as_postgres_jsonb.contains(self.comparison.contains))
-        if self.comparison.contained_in is not UNSET:
+        if self.comparison.contained_in is not UNSET and self.comparison.contained_in is not None:
             expressions.append(as_postgres_jsonb.contained_by(self.comparison.contained_in))
-        if self.comparison.has_key is not UNSET:
-            expressions.append(as_postgres_jsonb.has_key(self.comparison.has_key))
-        if self.comparison.has_key_all is not UNSET:
-            expressions.append(as_postgres_jsonb.has_all(sqla_cast(self.comparison.has_key_all, pg.ARRAY(Text))))
-        if self.comparison.has_key_any is not UNSET:
-            expressions.append(as_postgres_jsonb.has_any(sqla_cast(self.comparison.has_key_any, pg.ARRAY(Text))))
+        if self.comparison.has_key is not UNSET and self.comparison.has_key is not None:
+            key_expressions.append(as_postgres_jsonb.has_key(self.comparison.has_key))
+        if self.comparison.has_key_all is not UNSET and self.comparison.has_key_all:
+            key_expressions.append(as_postgres_jsonb.has_all(sqla_cast(self.comparison.has_key_all, pg.ARRAY(Text))))
+        if self.comparison.has_key_any is not UNSET and self.comparison.has_key_any:
+            key_expressions.append(as_postgres_jsonb.has_any(sqla_cast(self.comparison.has_key_any, pg.ARRAY(Text))))
+        if key_expressions:
+            # ? matches string array elements and string scalars; MySQL and SQLite match object keys only.
+            expressions.extend([func.jsonb_typeof(as_postgres_jsonb) == "object", *key_expressions])
         return expressions
 
     def _mysql_json(self, model_attribute: ColumnElement[JSON] | QueryableAttribute[JSON]) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
         as_mysql_json = type_coerce(model_attribute, mysql.JSON)
 
-        if self.comparison.contains is not UNSET:
+        if self.comparison.contains is not UNSET and self.comparison.contains is not None:
             expressions.append(func.json_contains(as_mysql_json, sqla_cast(self.comparison.contains, mysql.JSON)))
-        if self.comparison.contained_in is not UNSET:
+        if self.comparison.contained_in is not UNSET and self.comparison.contained_in is not None:
             expressions.append(func.json_contains(sqla_cast(self.comparison.contained_in, mysql.JSON), as_mysql_json))
-        if self.comparison.has_key is not UNSET:
-            expressions.append(func.json_contains_path(as_mysql_json, "all", f"$.{self.comparison.has_key}"))
+        if self.comparison.has_key is not UNSET and self.comparison.has_key is not None:
+            expressions.append(func.json_contains_path(as_mysql_json, "all", self._key_path(self.comparison.has_key)))
         if self.comparison.has_key_all is not UNSET and self.comparison.has_key_all:
             expressions.append(
-                func.json_contains_path(as_mysql_json, "all", *[f"$.{key}" for key in self.comparison.has_key_all])
+                func.json_contains_path(as_mysql_json, "all", *map(self._key_path, self.comparison.has_key_all))
             )
         if self.comparison.has_key_any is not UNSET and self.comparison.has_key_any:
             expressions.append(
-                func.json_contains_path(as_mysql_json, "one", *[f"$.{key}" for key in self.comparison.has_key_any])
+                func.json_contains_path(as_mysql_json, "one", *map(self._key_path, self.comparison.has_key_any))
             )
         return expressions
 
@@ -203,11 +229,11 @@ class JSONFilter(EqualityFilter):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
-        def has_key(key: str | None) -> ColumnElement[bool]:
+        def has_key(key: str) -> ColumnElement[bool]:
             # json_type is 'null', not NULL, for a key holding JSON null.
-            return func.json_type(model_attribute, f"$.{key}").is_not(null())
+            return func.json_type(model_attribute, self._key_path(key)).is_not(null())
 
-        if self.comparison.has_key is not UNSET:
+        if self.comparison.has_key is not UNSET and self.comparison.has_key is not None:
             expressions.append(has_key(self.comparison.has_key))
         if self.comparison.has_key_all is not UNSET and self.comparison.has_key_all:
             expressions.append(and_(*[has_key(key) for key in self.comparison.has_key_all]))
@@ -221,6 +247,10 @@ class JSONFilter(EqualityFilter):
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
 
+        if self.comparison.has_key_all == []:
+            expressions.append(true())
+        if self.comparison.has_key_any == []:
+            expressions.append(false())
         if dialect.name == "postgresql":
             expressions.extend(self._postgres_json(model_attribute))
         elif dialect.name == "mysql":
