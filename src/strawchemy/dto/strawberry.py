@@ -614,15 +614,36 @@ class BooleanFilterDTO(GraphQLFilterDTO):
             parts.append(self._from_fields(not_=self.not_))
         return parts
 
+    def _filtering_fields(
+        self,
+    ) -> Iterator[tuple[GraphQLFieldDefinition, EqualityComparison[Any] | BooleanFilterDTO | AggregateFilterDTO]]:
+        """Yields the set fields holding a predicate, skipping empty comparisons and relation filters."""
+        for name in self.dto_set_fields:
+            value: EqualityComparison[Any] | BooleanFilterDTO | AggregateFilterDTO = getattr(self, name)
+            field = self.__dto_field_definitions__[name]
+            if isinstance(field, CustomFilterFieldDefinition):
+                yield field, value
+            elif isinstance(value, (BooleanFilterDTO, AggregateFilterDTO)):
+                if value.has_filter():
+                    yield field, value
+            elif value.has_operator():
+                yield field, value
+
+    def has_filter(self) -> bool:
+        """Whether this filter or one of its nested filters holds a predicate."""
+        return (
+            any(True for _ in self._filtering_fields())
+            or any(branch.has_filter() for branch in (*self.and_, *self.or_))
+            or bool(self.not_ and self.not_.has_filter())
+        )
+
     def tests_to_many(self) -> bool:
         """Whether the filter tests the rows of a to-many relation outside a nested ``_not``."""
-        for name in self.dto_set_fields:
-            value = getattr(self, name)
-            field = self.__dto_field_definitions__[name]
+        for definition, value in self._filtering_fields():
             if (
                 isinstance(value, BooleanFilterDTO)
-                and not isinstance(field, CustomFilterFieldDefinition)
-                and (field.uselist or value.tests_to_many())
+                and not isinstance(definition, CustomFilterFieldDefinition)
+                and (definition.uselist or value.tests_to_many())
             ):
                 return True
         return any(branch.tests_to_many() for branch in (*self.and_, *self.or_))
@@ -631,37 +652,45 @@ class BooleanFilterDTO(GraphQLFilterDTO):
         node = _node or QueryNode.root_node(self.__dto_model__)
         query = Filter(
             and_=[and_val.filters_tree(node)[1] for and_val in self.and_],
-            or_=[or_val.filters_tree(node)[1] for or_val in self.or_],
+            or_=[or_val.filters_tree(node)[1] for or_val in self.or_ if or_val.has_filter()],
         )
         if self.not_ and self.not_.tests_to_many():
             query.and_.append(NotExistsFilter(dto_filter=self.not_, field_node=node))
-        elif self.not_:
+        elif self.not_ and self.not_.has_filter():
             query.not_ = self.not_.filters_tree(node)[1]
-        for name in self.dto_set_fields:
-            value: EqualityComparison[Any] | BooleanFilterDTO | AggregateFilterDTO = getattr(self, name)
-            field = self.__dto_field_definitions__[name]
-            if isinstance(field, CustomFilterFieldDefinition):
-                query.and_.append(CustomFilter(apply=field.apply, value=value, join=field.join, field_node=node))
+        for definition, value in self._filtering_fields():
+            if isinstance(definition, CustomFilterFieldDefinition):
+                query.and_.append(
+                    CustomFilter(apply=definition.apply, value=value, join=definition.join, field_node=node)
+                )
             elif isinstance(value, BooleanFilterDTO):
-                child, _ = node.upsert_child(field, match_on="value_equality")
+                child, _ = node.upsert_child(definition, match_on="value_equality")
                 _, sub_query = value.filters_tree(child)
-                if sub_query:
-                    sub_query.relation = child
-                    query.and_.append(sub_query)
+                sub_query.relation = child
+                query.and_.append(sub_query)
             elif isinstance(value, AggregateFilterDTO):
-                child = node.insert_child(field)
+                child = node.insert_child(definition)
                 query.and_.extend(value.flatten(child))
             else:
-                value.field_node = node.insert_child(field)
+                value.field_node = node.insert_child(definition)
                 query.and_.append(value)
         return node, query
 
 
 class AggregateFilterDTO(GraphQLFilterDTO):
-    def flatten(self, aggregation_node: QueryNodeType) -> list[AggregationFilter]:
-        aggregations = []
+    def _function_filters(self) -> Iterator[AggregationFunctionFilterDTO]:
         for name in self.dto_set_fields:
             function_filter: AggregationFunctionFilterDTO = getattr(self, name)
+            if function_filter.predicate.has_operator():
+                yield function_filter
+
+    def has_filter(self) -> bool:
+        """Whether an aggregation function of this filter has a predicate."""
+        return any(True for _ in self._function_filters())
+
+    def flatten(self, aggregation_node: QueryNodeType) -> list[AggregationFilter]:
+        aggregations = []
+        for function_filter in self._function_filters():
             function_filter.predicate.field_node = aggregation_node
             aggregation_function = function_filter.__dto_function_info__
             function_node = aggregation_node.insert_child(

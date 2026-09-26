@@ -2783,6 +2783,30 @@
             group_1.id ASC
   '''
 # ---
+# name: test_delete_filter_on_relation[session-async-tracked-aggregation-empty-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER RETURNING id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-aggregation-empty-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-aggregation-empty-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-aggregation-empty-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
 # name: test_delete_filter_on_relation[session-async-tracked-and-column-relation-aiosqlite_engine]
   '''
   DELETE
@@ -3437,6 +3461,30 @@
          "user".id AS id_1
   '''
 # ---
+# name: test_delete_filter_on_relation[session-async-tracked-not-to-many-empty-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER RETURNING id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-not-to-many-empty-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-not-to-many-empty-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-not-to-many-empty-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
 # name: test_delete_filter_on_relation[session-async-tracked-not-to-many-psycopg_async_engine]
   '''
   DELETE
@@ -3774,6 +3822,37 @@
            WHERE (user_1.name = %(name_1)s::VARCHAR OR (group_1.name = %(name_2)s::VARCHAR AND group_1.id IS NOT NULL))
              AND user_1.id = "user".id
          ) RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-or-to-many-empty-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = ? RETURNING id,
+         id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-or-to-many-empty-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = %s
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-or-to-many-empty-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = $1::VARCHAR RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-or-to-many-empty-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id,
          "user".id AS id_1
   '''
 # ---
@@ -4161,6 +4240,30 @@
              AND user_1.id = "user".id
          ) RETURNING "user".id,
          "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-many-empty-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER RETURNING id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-many-empty-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-many-empty-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-many-empty-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-many-not-aiosqlite_engine]
@@ -4597,6 +4700,30 @@
          "user".id AS id_1
   '''
 # ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-one-empty-aiosqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER RETURNING id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-one-empty-asyncmy_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-one-empty-asyncpg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-async-tracked-to-one-empty-psycopg_async_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-one-not-aiosqlite_engine]
   '''
   DELETE
@@ -4816,6 +4943,18 @@
              AND user_1.id = "user".id
          ) RETURNING "user".id,
          "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-aggregation-empty-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-aggregation-empty-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER RETURNING id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-sync-tracked-and-column-relation-psycopg_engine]
@@ -5129,6 +5268,18 @@
          id AS id_1
   '''
 # ---
+# name: test_delete_filter_on_relation[session-sync-tracked-not-to-many-empty-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-not-to-many-empty-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER RETURNING id
+  '''
+# ---
 # name: test_delete_filter_on_relation[session-sync-tracked-not-to-many-psycopg_engine]
   '''
   DELETE
@@ -5313,6 +5464,22 @@
          id AS id_1
   '''
 # ---
+# name: test_delete_filter_on_relation[session-sync-tracked-or-to-many-empty-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user"
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id,
+         "user".id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-or-to-many-empty-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER
+   WHERE user.name = ? RETURNING id,
+         id AS id_1
+  '''
+# ---
 # name: test_delete_filter_on_relation[session-sync-tracked-or-to-one-aggregation-psycopg_engine]
   '''
   DELETE
@@ -5472,6 +5639,18 @@
              AND user_1.id = user.id
          ) RETURNING id,
          id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-to-many-empty-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-to-many-empty-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER RETURNING id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-sync-tracked-to-many-not-nested-to-many-psycopg_engine]
@@ -5686,6 +5865,18 @@
              AND user_1.id = user.id
          ) RETURNING id,
          id AS id_1
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-to-one-empty-psycopg_engine]
+  '''
+  DELETE
+    FROM "user" AS "user" RETURNING "user".id
+  '''
+# ---
+# name: test_delete_filter_on_relation[session-sync-tracked-to-one-empty-sqlite_engine]
+  '''
+  DELETE
+    FROM USER AS USER RETURNING id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-sync-tracked-to-one-not-psycopg_engine]
@@ -6900,6 +7091,30 @@
    WHERE user.id = ?
   '''
 # ---
+# name: test_update_users_by_split_filter[session-async-tracked-aggregation-empty-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ? RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-aggregation-empty-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-aggregation-empty-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-aggregation-empty-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR RETURNING "user".id
+  '''
+# ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-not-to-many-aiosqlite_engine]
   '''
   UPDATE USER AS USER
@@ -7150,6 +7365,30 @@
          ) RETURNING "user".id
   '''
 # ---
+# name: test_update_users_by_split_filter[session-async-tracked-not-to-many-empty-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ? RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-not-to-many-empty-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-not-to-many-empty-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-not-to-many-empty-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR RETURNING "user".id
+  '''
+# ---
 # name: test_update_users_by_split_filter[session-async-tracked-not-to-many-psycopg_async_engine]
   '''
   UPDATE "user" AS "user"
@@ -7356,6 +7595,34 @@
            WHERE (anon_1.count_1 = %(param_1)s::INTEGER OR (group_1.name = %(name_1)s::VARCHAR AND group_1.id IS NOT NULL))
              AND user_1.id = "user".id
          ) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-or-to-many-empty-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE user.name = ? RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-or-to-many-empty-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+   WHERE user.name = %s
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-or-to-many-empty-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR
+   WHERE "user".name = $2::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-or-to-many-empty-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-or-to-one-aggregation-aiosqlite_engine]
@@ -7677,6 +7944,30 @@
            WHERE anon_1.count_1 < %(param_1)s::INTEGER
              AND user_1.id = "user".id
          ) RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-many-empty-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ? RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-many-empty-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-many-empty-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-many-empty-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-many-not-aiosqlite_engine]
@@ -8034,6 +8325,30 @@
          ) RETURNING "user".id
   '''
 # ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-one-empty-aiosqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ? RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-one-empty-asyncmy_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = %s
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-one-empty-asyncpg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = $1::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-async-tracked-to-one-empty-psycopg_async_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR RETURNING "user".id
+  '''
+# ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-one-not-aiosqlite_engine]
   '''
   UPDATE USER AS USER
@@ -8231,6 +8546,18 @@
          ) RETURNING "user".id
   '''
 # ---
+# name: test_update_users_by_split_filter[session-sync-tracked-aggregation-empty-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-aggregation-empty-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ? RETURNING id
+  '''
+# ---
 # name: test_update_users_by_split_filter[session-sync-tracked-column-and-not-to-many-psycopg_engine]
   '''
   UPDATE "user" AS "user"
@@ -8333,6 +8660,18 @@
            WHERE NOT (EXISTS (SELECT 1 FROM USER AS user_2 JOIN user_department_join_table AS user_department_join_table_1 ON user_2.id = user_department_join_table_1.user_id JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id JOIN user_department_join_table AS user_department_join_table_2 ON department_1.id = user_department_join_table_2.department_id JOIN USER AS user_3 ON user_3.id = user_department_join_table_2.user_id WHERE user_3.name = ? AND user_2.id = user_1.id))
              AND user_1.id = user.id
          ) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-not-to-many-empty-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-not-to-many-empty-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ? RETURNING id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-sync-tracked-not-to-many-psycopg_engine]
@@ -8451,6 +8790,20 @@
            WHERE (coalesce(anon_1.count_1, ?) = ? OR (group_1.name = ? AND group_1.id IS NOT NULL))
              AND user_1.id = user.id
          ) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-or-to-many-empty-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR
+   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-or-to-many-empty-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ?
+   WHERE user.name = ? RETURNING id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-sync-tracked-or-to-one-aggregation-psycopg_engine]
@@ -8604,6 +8957,18 @@
            WHERE coalesce(anon_1.count_1, ?) < ?
              AND user_1.id = user.id
          ) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-to-many-empty-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-to-many-empty-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ? RETURNING id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-sync-tracked-to-many-not-nested-to-many-psycopg_engine]
@@ -8774,6 +9139,18 @@
            WHERE coalesce(anon_1.count_1, ?) = ?
              AND user_1.id = user.id
          ) RETURNING id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-to-one-empty-psycopg_engine]
+  '''
+  UPDATE "user" AS "user"
+     SET name = %(name)s::VARCHAR RETURNING "user".id
+  '''
+# ---
+# name: test_update_users_by_split_filter[session-sync-tracked-to-one-empty-sqlite_engine]
+  '''
+  UPDATE USER AS USER
+     SET name = ? RETURNING id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-sync-tracked-to-one-not-psycopg_engine]

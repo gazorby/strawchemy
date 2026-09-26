@@ -1061,6 +1061,17 @@ async def test_update_by_filter_on_to_many_relation(
             ["Bob", "Charlie"],
             id="to-many-not-nested-to-many",
         ),
+        pytest.param("{ group: { name: {} } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-one-empty"),
+        pytest.param("{ departments: { name: {} } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-many-empty"),
+        pytest.param("{ _not: { departments: {} } }", ["Alice", "Bob", "Charlie", "Tango"], id="not-to-many-empty"),
+        pytest.param(
+            "{ departmentsAggregate: { count: { arguments: [id], predicate: {} } } }",
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="aggregation-empty",
+        ),
+        pytest.param(
+            '{ _or: [{ departments: { name: {} } }, { name: { eq: "Bob" } }] }', ["Bob"], id="or-to-many-empty"
+        ),
     ],
 )
 async def test_update_users_by_split_filter(
@@ -2087,6 +2098,17 @@ async def test_delete_filter(
             '{ departments: { _not: { users: { name: { eq: "Alice" } } } } }',
             ["Bob", "Charlie"],
             id="to-many-not-nested-to-many",
+        ),
+        pytest.param("{ group: { name: {} } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-one-empty"),
+        pytest.param("{ departments: { name: {} } }", ["Alice", "Bob", "Charlie", "Tango"], id="to-many-empty"),
+        pytest.param("{ _not: { departments: {} } }", ["Alice", "Bob", "Charlie", "Tango"], id="not-to-many-empty"),
+        pytest.param(
+            "{ departmentsAggregate: { count: { arguments: [id], predicate: {} } } }",
+            ["Alice", "Bob", "Charlie", "Tango"],
+            id="aggregation-empty",
+        ),
+        pytest.param(
+            '{ _or: [{ departments: { name: {} } }, { name: { eq: "Bob" } }] }', ["Bob"], id="or-to-many-empty"
         ),
     ],
 )

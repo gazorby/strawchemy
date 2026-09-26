@@ -131,6 +131,150 @@
    ORDER BY fruit.id ASC
   '''
 # ---
+# name: test_empty_relation_filter[session-async-tracked-not-to-many-aiosqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-not-to-many-asyncmy_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-not-to-many-asyncpg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-not-to-many-psycopg_async_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-to-many-aiosqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-to-many-asyncmy_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-to-many-asyncpg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-to-many-psycopg_async_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-to-one-aiosqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-to-one-asyncmy_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-to-one-asyncpg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-async-tracked-to-one-psycopg_async_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-sync-tracked-not-to-many-psycopg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-sync-tracked-not-to-many-sqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-sync-tracked-to-many-psycopg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-sync-tracked-to-many-sqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-sync-tracked-to-one-psycopg_engine]
+  '''
+  SELECT "user".name,
+         "user".id
+    FROM "user" AS "user"
+   ORDER BY "user".id ASC
+  '''
+# ---
+# name: test_empty_relation_filter[session-sync-tracked-to-one-sqlite_engine]
+  '''
+  SELECT user.name,
+         user.id
+    FROM USER AS USER
+   ORDER BY user.id ASC
+  '''
+# ---
 # name: test_eq[session-async-tracked-aiosqlite_engine]
   '''
   SELECT fruit.name,

@@ -929,11 +929,18 @@ Strawchemy supports a wide range of filter operations:
 | **Interval**                            | order filters on plain intervals, plus `days`, `hours`, `minutes` and `seconds` filters                                                                                          |
 | **Logical**                             | `_and`, `_or`, `_not`                                                                                                                                                            |
 
-A filter on a relationship only matches rows that have a matching related row, whatever the filters next to it:
-`users(filter: { group: { name: { isNull: true } } })` skips users without a group. To find rows without a related row,
-filter on the foreign key column (`groupId: { isNull: true }`), negate the relationship
+A relationship filter that holds a predicate only matches rows that have a matching related row, whatever the filters
+next to it: `users(filter: { group: { name: { isNull: true } } })` skips users without a group. To find rows without a
+related row, filter on the foreign key column (`groupId: { isNull: true }`), negate the relationship
 (`_not: { group: { id: { isNull: false } } }`) or, for to-many relationships, count them
 (`postsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } }`).
+
+An empty filter is ignored, as if it were absent: `{}`, a comparison with no operator set (`name: {}`, or operators
+bound to omitted variables), and a relationship or aggregation filter holding only empty filters
+(`group: {}`, `group: { name: {} }`, `postsAggregate: { count: { arguments: [id], predicate: {} } }`) match every row,
+including rows without a related row. An empty `_or` branch is dropped rather than matching every row:
+`_or: [{}, { name: { eq: "John" } }]` is the same as `name: { eq: "John" }`, and an `_or` with only empty branches
+filters nothing. This also applies under `_not` and to mutations filtering the rows to update or delete.
 
 ### Geo Filters
 

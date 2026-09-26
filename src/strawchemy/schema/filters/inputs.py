@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeAlias, Ty
 
 import strawberry
 from strawberry import UNSET, Private
+from strawberry.types import get_object_definition
 from typing_extensions import Self, assert_never
 
 from strawchemy.exceptions import StrawchemyFieldError
@@ -290,6 +291,13 @@ class GraphQLComparison:
         self, dialect: Dialect, model_attribute: QueryableAttribute[Any] | ColumnElement[Any]
     ) -> list[ColumnElement[bool]]:
         return self.__strawchemy_comparison__.filter(self).to_expressions(dialect, model_attribute)
+
+    def has_operator(self) -> bool:
+        """Whether an operator of this comparison, or of a nested comparison, is set."""
+        values = (getattr(self, field.python_name) for field in get_object_definition(self, strict=True).fields)
+        return any(
+            value.has_operator() if isinstance(value, GraphQLComparison) else value is not UNSET for value in values
+        )
 
     @property
     def field_node(self) -> QueryNodeType:
