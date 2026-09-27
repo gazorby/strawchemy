@@ -27,6 +27,10 @@ RelationshipLoadSpec: TypeAlias = "tuple[InstrumentedAttribute[Any], Sequence[Lo
 LoadType: TypeAlias = "InstrumentedAttribute[Any] | RelationshipLoadSpec"
 
 
+class _UnsetLoad(list["LoadType"]):
+    """Default of ``QueryHook.load``, telling an omitted argument apart from an explicit one."""
+
+
 @dataclass
 class QueryHook(Generic[DeclarativeT]):
     """Loads extra columns and relations, or edits the SELECT, for the field it is attached to.
@@ -36,7 +40,7 @@ class QueryHook(Generic[DeclarativeT]):
 
     info_var: ClassVar[ContextVar[Info[Any, Any] | None]] = ContextVar("info", default=None)
     """Strawberry ``Info`` of the current request."""
-    load: Sequence[LoadType] = field(default_factory=list)
+    load: Sequence[LoadType] = field(default_factory=_UnsetLoad)
     """Columns and relations to load, a relation with its own list.
 
     Example: ``[User.name, (User.addresses, [Address.street])]``
@@ -48,6 +52,9 @@ class QueryHook(Generic[DeclarativeT]):
     )
 
     def __post_init__(self) -> None:
+        if isinstance(self.load, _UnsetLoad):
+            # The inherited ``__init__`` shadows a ``load`` set as a plain class attribute on a subclass.
+            self.load = list(getattr(type(self), "load", ()))
         for attribute in self.load:
             is_mapping = isinstance(attribute, tuple)
             if not is_mapping:

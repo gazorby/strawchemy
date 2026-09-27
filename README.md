@@ -604,6 +604,9 @@ code reading relations of `GraphQLResult.instance(s)`, must declare them in `loa
 - Ensuring data needed for computed properties is available
 - Loading columns or relationships required for custom resolvers
 
+A `QueryHook` subclass can also set `load` as a class attribute; a `load` argument passed at instantiation takes
+precedence.
+
 Examples of using the `load` parameter:
 
 ```python
