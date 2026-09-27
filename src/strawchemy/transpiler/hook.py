@@ -6,7 +6,15 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, ClassVar, Generic, Literal, TypeAlias
 
-from sqlalchemy.orm import ColumnProperty, RelationshipProperty, joinedload, selectinload, undefer
+from sqlalchemy.orm import (
+    ColumnProperty,
+    Composite,
+    QueryableAttribute,
+    RelationshipProperty,
+    joinedload,
+    selectinload,
+    undefer,
+)
 
 from strawchemy.exceptions import QueryHookError
 from strawchemy.repository.typing import DeclarativeT
@@ -29,6 +37,17 @@ LoadType: TypeAlias = "InstrumentedAttribute[Any] | RelationshipLoadSpec"
 
 class _UnsetLoad(list["LoadType"]):
     """Default of ``QueryHook.load``, telling an omitted argument apart from an explicit one."""
+
+
+def _loaded_property(attribute: object) -> ColumnProperty[Any] | RelationshipProperty[Any] | Composite[Any] | None:
+    """Returns the property ``attribute`` loads, through synonyms and hybrids; ``None`` if it loads none."""
+    if not isinstance(attribute, QueryableAttribute):
+        return None
+    try:
+        prop = attribute.property
+    except AttributeError:
+        return None
+    return prop if isinstance(prop, (ColumnProperty, RelationshipProperty, Composite)) else None
 
 
 @dataclass
@@ -55,31 +74,45 @@ class QueryHook(Generic[DeclarativeT]):
         if isinstance(self.load, _UnsetLoad):
             # The inherited ``__init__`` shadows a ``load`` set as a plain class attribute on a subclass.
             self.load = list(getattr(type(self), "load", ()))
-        for attribute in self.load:
-            is_mapping = isinstance(attribute, tuple)
-            if not is_mapping:
-                if isinstance(attribute.property, ColumnProperty):
-                    self._columns.append(attribute)
-                if isinstance(attribute.property, RelationshipProperty):
-                    self._relationships.append((attribute, []))
-                continue
-            self._relationships.append(attribute)
-        self._check_relationship_load_spec(self._relationships)
+        for attribute in self._normalize_load_spec(self.load):
+            if isinstance(attribute, tuple):
+                self._relationships.append(attribute)
+            else:
+                self._columns.append(attribute)
 
-    def _check_relationship_load_spec(self, load_spec: Sequence[LoadType]) -> None:
-        """Checks that every key of ``load_spec``, nested ones included, is a relationship.
+    def _normalize_load_spec(
+        self, load_spec: Sequence[LoadType], parent: RelationshipProperty[Any] | None = None
+    ) -> list[LoadType]:
+        """Returns the columns and relationships ``load_spec`` loads under ``parent``, each relationship with its list.
 
         Raises:
-            QueryHookError: If a key is not a relationship attribute.
+            QueryHookError: If a key is not a relationship, or an attribute is not a column or relationship of
+                ``parent``'s model.
         """
+        normalized: list[LoadType] = []
         for item in load_spec:
-            if not isinstance(item, tuple):
-                continue
-            key, attributes = item
-            if not isinstance(key.property, RelationshipProperty):
-                msg = f"Keys of mappings passed in `load` param must be relationship attributes: {key}"
+            attribute, attributes = item if isinstance(item, tuple) else (item, None)
+            prop = _loaded_property(attribute)
+            if attributes is not None and not isinstance(prop, RelationshipProperty):
+                msg = f"Keys of mappings passed in `load` param must be relationship attributes: {attribute}"
                 raise QueryHookError(msg)
-            self._check_relationship_load_spec(attributes)
+            if prop is None:
+                msg = f"Attributes passed in `load` param must be column or relationship attributes: {attribute}"
+                raise QueryHookError(msg)
+            # ``isa`` rejects a subclass attribute under a base class relationship, which loaders do too.
+            if parent is not None and not parent.mapper.isa(prop.parent):
+                msg = (
+                    f"Attributes nested under {parent} in `load` param must belong to "
+                    f"{parent.mapper.class_.__name__}: {attribute}"
+                )
+                raise QueryHookError(msg)
+            if isinstance(prop, RelationshipProperty):
+                normalized.append((prop.class_attribute, self._normalize_load_spec(attributes or [], prop)))
+            elif isinstance(prop, Composite):
+                normalized.extend(self._normalize_load_spec([member.class_attribute for member in prop.props], parent))
+            else:
+                normalized.append(prop.class_attribute)
+        return normalized
 
     def _load_relationships(
         self, load_spec: RelationshipLoadSpec, parent_alias: AliasedClass[Any] | None = None

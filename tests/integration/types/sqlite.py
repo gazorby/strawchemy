@@ -266,6 +266,10 @@ class ColorWithFilteredFruit:
     def farms(self) -> str:
         return f"Farms are: {', '.join(farm.name for fruit in self.instance.fruits for farm in fruit.farms)}"
 
+    @strawchemy.field(query_hook=QueryHook(load=[(Color.fruits, [Fruit.farms])]))
+    def farms_no_columns(self) -> str:
+        return f"Farms are: {', '.join(farm.name for fruit in self.instance.fruits for farm in fruit.farms)}"
+
 
 @strawchemy.type(Color, include="all")
 class ColorTypeHooks:

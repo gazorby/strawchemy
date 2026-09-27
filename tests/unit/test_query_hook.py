@@ -5,10 +5,15 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 import pytest
+from sqlalchemy import ForeignKey, select
+from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import DeclarativeBase, Load, Mapped, composite, mapped_column, relationship, synonym
+from sqlalchemy.orm.util import AliasedClass
 
 from strawchemy import QueryHook
 from strawchemy.exceptions import QueryHookError
-from tests.unit.models import Color, Fruit
+from tests.unit.models import Color, Fruit, Group, User, UserWithGreeting
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -16,6 +21,72 @@ if TYPE_CHECKING:
     from strawchemy.transpiler.hook import LoadType
 
 _WRONG_KEY_MESSAGE = re.escape("Keys of mappings passed in `load` param must be relationship attributes: ")
+_NOT_LOADABLE_MESSAGE = re.escape("Attributes passed in `load` param must be column or relationship attributes: ")
+
+
+def _wrong_model_message(relationship: object, model: str, attribute: object) -> str:
+    return re.escape(f"Attributes nested under {relationship} in `load` param must belong to {model}: {attribute}")
+
+
+@dataclass
+class _Point:
+    x: int
+    y: int
+
+
+@dataclass
+class _OwnerRef:
+    owner_id: int
+    owner: object
+
+
+class _Base(DeclarativeBase): ...
+
+
+class _Owner(_Base):
+    __tablename__ = "query_hook_owner"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    x: Mapped[int]
+    y: Mapped[int]
+    animals: Mapped[list[_Animal]] = relationship("_Animal", back_populates="owner")
+    dogs: Mapped[list[_Dog]] = relationship("_Dog", viewonly=True)
+    animal_names: AssociationProxy[list[str]] = association_proxy("animals", "name")
+    alias: Mapped[str] = synonym("name")
+    pets: Mapped[list[_Animal]] = synonym("animals")
+    point: Mapped[_Point] = composite(_Point, "x", "y")
+
+    @hybrid_property
+    def display_name(self) -> str:
+        return self.name
+
+    @hybrid_property
+    def exclaimed_name(self) -> str:
+        return self.name + "!"
+
+    @hybrid_property
+    def first_animals(self) -> list[_Animal]:
+        return self.animals
+
+
+class _Animal(_Base):
+    __tablename__ = "query_hook_animal"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    kind: Mapped[str]
+    owner_id: Mapped[int] = mapped_column(ForeignKey("query_hook_owner.id"))
+    owner: Mapped[_Owner] = relationship(_Owner, back_populates="animals")
+    owner_ref: Mapped[_OwnerRef] = composite(_OwnerRef, "owner_id", "owner")
+
+    __mapper_args__ = {"polymorphic_on": "kind", "polymorphic_identity": "animal"}  # noqa: RUF012
+
+
+class _Dog(_Animal):
+    tricks: Mapped[int | None]
+
+    __mapper_args__ = {"polymorphic_identity": "dog"}  # noqa: RUF012
 
 
 class _ClassLoadHook(QueryHook[Fruit]):
@@ -161,3 +232,200 @@ def test_class_load_wrong_nested_relationship_load_spec() -> None:
 def test_valid_relationship_load_spec(load: Sequence[LoadType]) -> None:
     """Test that load specs keyed by relationships at every depth are accepted."""
     assert _resolved_load(QueryHook(load=load)) == ([], load)
+
+
+@pytest.mark.parametrize(
+    ("load", "normalized"),
+    [
+        pytest.param([(Color.fruits, [Fruit.color])], [(Color.fruits, [(Fruit.color, [])])], id="nested"),
+        pytest.param(
+            [(Color.fruits, [Fruit.name, Fruit.color])],
+            [(Color.fruits, [Fruit.name, (Fruit.color, [])])],
+            id="nested-with-column",
+        ),
+        pytest.param(
+            [(Color.fruits, [(Fruit.color, [Color.fruits])])],
+            [(Color.fruits, [(Fruit.color, [(Color.fruits, [])])])],
+            id="deeply-nested",
+        ),
+    ],
+)
+def test_nested_bare_relationship_is_normalized(load: Sequence[LoadType], normalized: list[LoadType]) -> None:
+    """Test that a nested bare relationship loads as a relationship with an empty list, at any depth."""
+    assert _resolved_load(QueryHook(load=load)) == ([], normalized)
+
+
+def test_class_load_nested_bare_relationship_is_normalized() -> None:
+    """Test that a class-level ``load`` with a nested bare relationship normalizes it."""
+
+    class NestedBareLoadHook(QueryHook[Color]):
+        load: Sequence[LoadType] = [(Color.fruits, [Fruit.color])]
+
+    assert _resolved_load(NestedBareLoadHook()) == ([], [(Color.fruits, [(Fruit.color, [])])])
+
+
+def test_nested_bare_relationship_loads_as_relationship() -> None:
+    """Test that the loader option of a nested bare relationship loads it rather than a column of it."""
+    option = QueryHook(load=[(Color.fruits, [Fruit.color])]).load_relationships(AliasedClass(Color))[0]
+    assert isinstance(option, Load)
+    load = option.context[-1]
+    assert str(load.path).endswith("Fruit.color -> Mapper[Color(color)]]")
+    assert load.strategy == (("lazy", "joined"),)
+
+
+@pytest.mark.parametrize(
+    ("load", "relationship", "model", "attribute"),
+    [
+        pytest.param([(Color.fruits, [User.name])], Color.fruits, "Fruit", User.name, id="column"),
+        pytest.param([(Color.fruits, [User.group])], Color.fruits, "Fruit", User.group, id="relationship"),
+        pytest.param(
+            [(Color.fruits, [(User.group, [Group.name])])], Color.fruits, "Fruit", User.group, id="relationship-key"
+        ),
+        pytest.param(
+            [(Color.fruits, [(Fruit.color, [User.name])])], Fruit.color, "Color", User.name, id="deeply-nested-column"
+        ),
+        pytest.param(
+            [(Color.fruits, [(Fruit.color, [(Color.fruits, [Fruit.name, User.name])])])],
+            Color.fruits,
+            "Fruit",
+            User.name,
+            id="deeper-nested-column",
+        ),
+        pytest.param([(_Owner.animals, [_Dog.tricks])], _Owner.animals, "_Animal", _Dog.tricks, id="subclass-column"),
+        pytest.param(
+            [(_Animal.owner, [_Dog.owner])], _Animal.owner, "_Owner", _Dog.owner, id="relationship-of-another-model"
+        ),
+    ],
+)
+def test_nested_attribute_of_another_model(
+    load: Sequence[LoadType], relationship: object, model: str, attribute: object
+) -> None:
+    """Test that a nested attribute not of its parent relationship's model raises ``QueryHookError``."""
+    with pytest.raises(QueryHookError, match=_wrong_model_message(relationship, model, attribute)):
+        QueryHook(load=load)
+
+
+def test_class_load_nested_attribute_of_another_model() -> None:
+    """Test that a class-level ``load`` with a nested attribute of another model raises ``QueryHookError``."""
+
+    class WrongModelLoadHook(QueryHook[Color]):
+        load: Sequence[LoadType] = [(Color.fruits, [User.name])]
+
+    with pytest.raises(QueryHookError, match=_wrong_model_message(Color.fruits, "Fruit", User.name)):
+        WrongModelLoadHook()
+
+
+@pytest.mark.parametrize(
+    "load",
+    [
+        pytest.param([(_Owner.animals, [_Animal.name, (_Animal.owner, [_Owner.name])])], id="same-model"),
+        pytest.param([(_Owner.dogs, [_Dog.tricks, _Dog.name])], id="subclass"),
+        pytest.param([(_Owner.dogs, [_Animal.name, (_Animal.owner, [])])], id="base-class"),
+    ],
+)
+def test_nested_attribute_of_inherited_model(load: Sequence[LoadType]) -> None:
+    """Test that a nested attribute of the relationship's model or of a model it inherits from is accepted."""
+    assert _resolved_load(QueryHook(load=load)) == ([], load)
+
+
+def test_nested_inherited_attribute_accessed_on_subclass() -> None:
+    """Test that a subclass attribute inherited from the relationship's model loads as the model's own."""
+    hook = QueryHook(load=[(_Owner.animals, [_Dog.name, (_Dog.owner, [])])])
+    assert _resolved_load(hook) == ([], [(_Owner.animals, [_Animal.name, (_Animal.owner, [])])])
+
+
+@pytest.mark.parametrize(
+    ("load", "columns", "relationships"),
+    [
+        pytest.param([_Owner.alias], [_Owner.name], [], id="synonym"),
+        pytest.param([_Owner.pets], [], [(_Owner.animals, [])], id="relationship-synonym"),
+        pytest.param([_Owner.display_name], [_Owner.name], [], id="hybrid-property"),
+        pytest.param([_Owner.first_animals], [], [(_Owner.animals, [])], id="relationship-hybrid-property"),
+        pytest.param([_Owner.point], [_Owner.x, _Owner.y], [], id="composite"),
+        pytest.param([_Animal.owner_ref], [_Animal.owner_id], [(_Animal.owner, [])], id="composite-with-relationship"),
+        pytest.param(
+            [(_Owner.pets, [_Animal.name])], [], [(_Owner.animals, [_Animal.name])], id="relationship-synonym-key"
+        ),
+        pytest.param(
+            [(_Owner.first_animals, [_Animal.name])],
+            [],
+            [(_Owner.animals, [_Animal.name])],
+            id="relationship-hybrid-property-key",
+        ),
+        pytest.param(
+            [(_Animal.owner, [_Owner.alias, _Owner.display_name, _Owner.point, _Owner.pets, _Owner.first_animals])],
+            [],
+            [
+                (
+                    _Animal.owner,
+                    [_Owner.name, _Owner.name, _Owner.x, _Owner.y, (_Owner.animals, []), (_Owner.animals, [])],
+                )
+            ],
+            id="nested",
+        ),
+    ],
+)
+def test_proxied_attribute_loads_its_property(
+    load: Sequence[LoadType], columns: list[object], relationships: list[object]
+) -> None:
+    """Test that synonyms, hybrids of a column or relationship, and composites load what they stand for."""
+    assert _resolved_load(QueryHook(load=load)) == (columns, relationships)
+
+
+def test_proxied_attribute_of_another_model() -> None:
+    """Test that a synonym nested under a relationship of another model raises ``QueryHookError``."""
+    with pytest.raises(QueryHookError, match=_wrong_model_message(Color.fruits, "Fruit", _Owner.alias)):
+        QueryHook(load=[(Color.fruits, [_Owner.alias])])
+
+
+def test_composite_column_load_options() -> None:
+    """Test that a top-level composite loads its columns, as options and as selected columns."""
+    hook = QueryHook(load=[_Owner.point])
+    alias = AliasedClass(_Owner)
+    assert len(hook.column_load_options(alias)) == 2
+    statement, _ = hook.load_columns(select(alias), alias, "add")
+    assert [column.key for column in statement.selected_columns][-2:] == ["x", "y"]
+
+
+_NOT_LOADABLE_ATTRIBUTES = [
+    pytest.param(UserWithGreeting.greeting_hybrid_property, id="hybrid-property"),
+    pytest.param(_Owner.exclaimed_name, id="hybrid-property-expression"),
+    pytest.param(_Owner.animal_names, id="association-proxy"),
+]
+
+
+@pytest.mark.parametrize("attribute", _NOT_LOADABLE_ATTRIBUTES)
+def test_top_level_attribute_not_loadable(attribute: Any) -> None:
+    """Test that a top-level attribute neither a column nor a relationship raises ``QueryHookError``."""
+    with pytest.raises(QueryHookError, match=_NOT_LOADABLE_MESSAGE + re.escape(str(attribute))):
+        QueryHook(load=[attribute])
+
+
+@pytest.mark.parametrize("attribute", _NOT_LOADABLE_ATTRIBUTES[1:])
+def test_nested_attribute_not_loadable(attribute: Any) -> None:
+    """Test that a nested attribute neither a column nor a relationship raises ``QueryHookError``."""
+    with pytest.raises(QueryHookError, match=_NOT_LOADABLE_MESSAGE + re.escape(str(attribute))):
+        QueryHook(load=[(_Animal.owner, [attribute])])
+
+
+@pytest.mark.parametrize("attribute", [*_NOT_LOADABLE_ATTRIBUTES[1:], _Owner.alias, _Owner.display_name, _Owner.point])
+def test_key_not_loadable(attribute: Any) -> None:
+    """Test that a key not loading a relationship raises ``QueryHookError``."""
+    with pytest.raises(QueryHookError, match=_WRONG_KEY_MESSAGE + re.escape(str(attribute))):
+        QueryHook(load=[(attribute, [])])
+
+
+def test_class_load_attribute_not_loadable() -> None:
+    """Test that a class-level ``load`` with an attribute neither a column nor a relationship raises."""
+
+    class NotLoadableHook(QueryHook[UserWithGreeting]):
+        load: Sequence[LoadType] = [UserWithGreeting.name, UserWithGreeting.greeting_hybrid_property]
+
+    with pytest.raises(QueryHookError, match=_NOT_LOADABLE_MESSAGE):
+        NotLoadableHook()
+
+
+def test_column_property_is_loadable() -> None:
+    """Test that a ``column_property`` loads as a column."""
+    hook = QueryHook(load=[UserWithGreeting.greeting_column_property])
+    assert _resolved_load(hook) == ([UserWithGreeting.greeting_column_property], [])
