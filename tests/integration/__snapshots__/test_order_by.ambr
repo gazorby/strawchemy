@@ -231,6 +231,111 @@
             anon_1.sweetness DESC
   '''
 # ---
+# name: test_distinct_on_with_relation_order_by_nested_aggregation[session-async-tracked-asyncpg_engine]
+  '''
+  SELECT color.id,
+         anon_1.name,
+         anon_1.sweetness,
+         anon_1.id AS id_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.id AS id,
+                 color.name AS name
+            FROM color AS color
+           ORDER BY color.name ASC
+         ) AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.id AS id,
+                 anon_2.count_1 AS count_1
+            FROM fruit AS fruit_1
+            JOIN LATERAL (
+                  SELECT count(*) AS count_1
+                    FROM fruit_farm AS fruit_farm_1
+                   WHERE fruit_1.id = fruit_farm_1.fruit_id
+                 ) AS anon_2
+              ON TRUE
+           WHERE color.id = fruit_1.color_id
+           ORDER BY anon_2.count_1 ASC,
+                    fruit_1.sweetness DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.name ASC,
+            anon_1.count_1 ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_distinct_on_with_relation_order_by_nested_aggregation[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT color.id,
+         anon_1.name,
+         anon_1.sweetness,
+         anon_1.id AS id_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.id AS id,
+                 color.name AS name
+            FROM color AS color
+           ORDER BY color.name ASC
+         ) AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.id AS id,
+                 anon_2.count_1 AS count_1
+            FROM fruit AS fruit_1
+            JOIN LATERAL (
+                  SELECT count(*) AS count_1
+                    FROM fruit_farm AS fruit_farm_1
+                   WHERE fruit_1.id = fruit_farm_1.fruit_id
+                 ) AS anon_2
+              ON TRUE
+           WHERE color.id = fruit_1.color_id
+           ORDER BY anon_2.count_1 ASC,
+                    fruit_1.sweetness DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.name ASC,
+            anon_1.count_1 ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
+# name: test_distinct_on_with_relation_order_by_nested_aggregation[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT color.id,
+         anon_1.name,
+         anon_1.sweetness,
+         anon_1.id AS id_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.id AS id,
+                 color.name AS name
+            FROM color AS color
+           ORDER BY color.name ASC
+         ) AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT fruit_1.name AS name,
+                 fruit_1.sweetness AS sweetness,
+                 fruit_1.id AS id,
+                 anon_2.count_1 AS count_1
+            FROM fruit AS fruit_1
+            JOIN LATERAL (
+                  SELECT count(*) AS count_1
+                    FROM fruit_farm AS fruit_farm_1
+                   WHERE fruit_1.id = fruit_farm_1.fruit_id
+                 ) AS anon_2
+              ON TRUE
+           WHERE color.id = fruit_1.color_id
+           ORDER BY anon_2.count_1 ASC,
+                    fruit_1.sweetness DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.name ASC,
+            anon_1.count_1 ASC,
+            anon_1.sweetness DESC
+  '''
+# ---
 # name: test_distinct_on_with_relation_order_by_nested_aggregation[session-sync-tracked-sqlite_engine]
   '''
   WITH anon_4 AS (
