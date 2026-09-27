@@ -115,6 +115,39 @@ async def test_load_relationships_nested(
     query_tracker.assert_statements(2, "select", sql_snapshot)
 
 
+@pytest.mark.parametrize("query", ["colorsWithFilteredFruits", "colorsWithFilteredFruitsPaginated"])
+@pytest.mark.snapshot
+async def test_load_nested_relationships_no_columns(
+    query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_colors: RawRecordData,
+    raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
+) -> None:
+    result = await maybe_async(any_query(f"{{ {query} {{ farmsNoColumns }} }}"))
+
+    assert not result.errors
+    assert result.data
+
+    farm_names = [
+        sorted(
+            farm["name"]
+            for fruit in raw_fruits
+            if fruit["color_id"] == color["id"]
+            for farm in raw_farms
+            if farm["fruit_id"] == fruit["id"]
+        )
+        for color in raw_colors
+    ]
+    assert [
+        sorted(entry["farmsNoColumns"].removeprefix("Farms are: ").split(", ")) for entry in result.data[query]
+    ] == farm_names
+
+    query_tracker.assert_statements(2, "select", sql_snapshot)
+
+
 @pytest.mark.parametrize("query", ["colorsHooks", "colorsHooksPaginated"])
 @pytest.mark.snapshot
 async def test_load_relationships_on_nested_field(
