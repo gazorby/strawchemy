@@ -378,3 +378,78 @@ async def test_nested_config_default_limit_with_omitted_variable(
     assert query_tracker[0].statement_formatted.count("JOIN") == 1
     for color in result.data["colorsPaginated"]:
         assert color["a"] == color["b"]
+
+
+@pytest.mark.parametrize(
+    "order_by",
+    [
+        pytest.param("", id="no-order-by"),
+        pytest.param("orderBy: [{ color: { name: ASC } }]", id="tied-order-by"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("pagination", "expected"),
+    [
+        pytest.param("limit: 1", slice(0, 1), id="limit"),
+        pytest.param("offset: 1", slice(1, None), id="offset"),
+        pytest.param("limit: 1, offset: 1", slice(1, 2), id="limit-offset"),
+    ],
+)
+async def test_nested_pagination_counts_tied_rows(
+    order_by: str,
+    pagination: str,
+    expected: slice,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    raw_fruits: RawRecordData,
+) -> None:
+    """Test that nested limit and offset count rows tied on the ordering one by one."""
+    result = await maybe_async(any_query(f"{{ colorsPaginated {{ id fruits({order_by} {pagination}) {{ id }} }} }}"))
+    assert not result.errors
+    assert result.data
+    assert query_tracker.query_count == 1
+    for color in result.data["colorsPaginated"]:
+        color_fruits = _fruit_ids_of(raw_fruits, color["id"])
+        assert len(color["fruits"]) == len(color_fruits[expected])
+        assert all(fruit in color_fruits for fruit in color["fruits"])
+
+
+@pytest.mark.parametrize(
+    ("pagination", "expected"),
+    [
+        pytest.param("limit: 1", slice(0, 1), id="limit"),
+        pytest.param("offset: 1", slice(1, None), id="offset"),
+        pytest.param("limit: 1, offset: 1", slice(1, 2), id="limit-offset"),
+    ],
+)
+async def test_nested_pagination_counts_tied_rows_with_to_many_child(
+    pagination: str,
+    expected: slice,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
+) -> None:
+    """Test that the to-many children of a nested paginated relation do not count as rows of that relation."""
+    result = await maybe_async(
+        any_query(
+            f"""
+            {{
+                colorsPaginated {{
+                    id
+                    fruits(orderBy: [{{ color: {{ name: ASC }} }}], {pagination}) {{ id farms {{ id }} }}
+                }}
+            }}
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert query_tracker.query_count == 1
+    for color in result.data["colorsPaginated"]:
+        color_fruits = _fruit_ids_of(raw_fruits, color["id"])
+        assert len(color["fruits"]) == len(color_fruits[expected])
+        for fruit in color["fruits"]:
+            assert {"id": fruit["id"]} in color_fruits
+            farm_ids = sorted(farm["id"] for farm in fruit["farms"])
+            assert farm_ids == [farm["id"] for farm in raw_farms if farm["fruit_id"] == fruit["id"]]

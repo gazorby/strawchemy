@@ -168,7 +168,7 @@ RELATION_ORDER_BY_SQL = snapshot(
             "               coalesce(anon_2.count_1, %s) AS coalesce_1,",
             "               fruit_1.sweetness AS sweetness,",
             "               fruit_1.color_id AS color_id,",
-            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, coalesce(anon_2.count_1, %s) DESC, fruit_1.sweetness ASC) AS `rank`",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, coalesce(anon_2.count_1, %s) DESC, fruit_1.sweetness ASC, fruit_1.id) AS `rank`",
             "          FROM fruit AS fruit_1",
             "          LEFT OUTER JOIN color AS color_1",
             "            ON color_1.id = fruit_1.color_id",

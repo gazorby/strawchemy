@@ -146,7 +146,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_4.count_1, ?) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_4.count_1, ?) ASC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_4.count_1, ?) ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_4
               ON fruit_1.id = anon_4.fruit_id
@@ -196,7 +196,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_4.count_1, %s) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_4.count_1, %s) ASC, fruit_1.sweetness DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_4.count_1, %s) ASC, fruit_1.sweetness DESC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_4
               ON fruit_1.id = anon_4.fruit_id
@@ -246,7 +246,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_4.count_1, ?) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_4.count_1, ?) ASC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_4.count_1, ?) ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_4
               ON fruit_1.id = anon_4.fruit_id
@@ -3280,7 +3280,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, ?) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit_1.sweetness ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit_1.sweetness ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_2
               ON fruit_1.id = anon_2.fruit_id
@@ -3326,7 +3326,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, %s) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, %s) DESC, fruit_1.sweetness ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, %s) DESC, fruit_1.sweetness ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_2
               ON fruit_1.id = anon_2.fruit_id
@@ -3483,7 +3483,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, ?) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit_1.sweetness ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit_1.sweetness ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_2
               ON fruit_1.id = anon_2.fruit_id
@@ -3522,7 +3522,7 @@
                  fruit_1.id AS id,
                  color_1.name AS name_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -3562,7 +3562,7 @@
                  fruit_1.id AS id,
                  color_1.name AS name_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -3701,7 +3701,7 @@
                  fruit_1.id AS id,
                  color_1.name AS name_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -3739,7 +3739,7 @@
           SELECT fruit_1.sweetness AS sweetness,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -3762,7 +3762,7 @@
           SELECT fruit_1.sweetness AS sweetness,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -3821,7 +3821,7 @@
           SELECT fruit_1.sweetness AS sweetness,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -3844,7 +3844,7 @@
           SELECT fruit_1.sweetness AS sweetness,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -3921,7 +3921,7 @@
           SELECT fruit_1.sweetness AS sweetness,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -3962,7 +3962,7 @@
           SELECT fruit_1.sweetness AS sweetness,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -3994,7 +3994,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, ?) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) ASC, fruit_1.sweetness ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) ASC, fruit_1.sweetness ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_2
               ON fruit_1.id = anon_2.fruit_id
@@ -4032,7 +4032,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, %s) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, %s) ASC, fruit_1.sweetness ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, %s) ASC, fruit_1.sweetness ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_2
               ON fruit_1.id = anon_2.fruit_id
@@ -4128,7 +4128,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, ?) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit_1.sweetness ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit_1.sweetness ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_2
               ON fruit_1.id = anon_2.fruit_id
@@ -4166,7 +4166,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, %s) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, %s) DESC, fruit_1.sweetness ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, %s) DESC, fruit_1.sweetness ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_2
               ON fruit_1.id = anon_2.fruit_id
@@ -4291,7 +4291,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, ?) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) ASC, fruit_1.sweetness ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) ASC, fruit_1.sweetness ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_2
               ON fruit_1.id = anon_2.fruit_id
@@ -4358,7 +4358,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, ?) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit_1.sweetness ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit_1.sweetness ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN anon_2
               ON fruit_1.id = anon_2.fruit_id
@@ -4389,7 +4389,7 @@
                  fruit_1.id AS id,
                  color_1.name AS name_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -4421,7 +4421,7 @@
                  fruit_1.id AS id,
                  color_1.name AS name_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -4528,7 +4528,7 @@
                  fruit_1.id AS id,
                  color_1.name AS name_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -4567,7 +4567,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, ?) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) ASC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -4607,7 +4607,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, %s) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, %s) ASC, fruit_1.sweetness DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, %s) ASC, fruit_1.sweetness DESC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -4740,7 +4740,7 @@
                  fruit_1.id AS id,
                  coalesce(anon_2.count_1, ?) AS coalesce_1,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) ASC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY coalesce(anon_2.count_1, ?) ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -4772,7 +4772,7 @@
                  fruit_1.id AS id,
                  fruit_1.sweetness AS sweetness,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4797,7 +4797,7 @@
                  fruit_1.id AS id,
                  fruit_1.sweetness AS sweetness,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4860,7 +4860,7 @@
                  fruit_1.id AS id,
                  fruit_1.sweetness AS sweetness,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4885,7 +4885,7 @@
                  fruit_1.id AS id,
                  fruit_1.sweetness AS sweetness,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4967,7 +4967,7 @@
                  fruit_1.id AS id,
                  fruit_1.sweetness AS sweetness,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -5011,7 +5011,7 @@
                  fruit_1.id AS id,
                  fruit_1.sweetness AS sweetness,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,

@@ -2520,7 +2520,7 @@
                  anon_2.id AS id,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name DESC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -2558,7 +2558,7 @@
                  anon_2.id AS id,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name DESC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -2671,7 +2671,7 @@
                  anon_2.id AS id,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name DESC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -2708,7 +2708,7 @@
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -2741,7 +2741,7 @@
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -2802,7 +2802,7 @@
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -2835,7 +2835,7 @@
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -2952,7 +2952,7 @@
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -2985,7 +2985,7 @@
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3047,7 +3047,7 @@
                  anon_2.id AS id,
                  anon_2.water_percent AS water_percent,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3083,7 +3083,7 @@
                  anon_2.id AS id,
                  anon_2.water_percent AS water_percent,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3234,7 +3234,7 @@
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3295,7 +3295,7 @@
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3359,7 +3359,7 @@
                  anon_2.id AS id,
                  anon_2.water_percent AS water_percent,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3422,7 +3422,7 @@
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3456,7 +3456,7 @@
                  anon_2.id AS id,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3494,7 +3494,7 @@
                  anon_2.id AS id,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3557,7 +3557,7 @@
                  anon_2.id AS id,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3595,7 +3595,7 @@
                  anon_2.id AS id,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3733,7 +3733,7 @@
                  anon_2.id AS id,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -3796,7 +3796,7 @@
                  anon_2.id AS id,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.name ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
