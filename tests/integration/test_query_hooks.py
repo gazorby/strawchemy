@@ -212,6 +212,28 @@ async def test_custom_query_hook_order_by(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("{ orderedFruitsPaginated { waterPercent } }", id="root-subquery"),
+        pytest.param("{ colorsWithOrderedFruits { fruits { waterPercent } } }", id="relation"),
+        pytest.param(
+            "{ colorsWithPaginatedOrderedFruits { fruits(limit: 2) { waterPercent } } }", id="paginated-relation"
+        ),
+    ],
+)
+async def test_query_hook_loaded_column_selected_once(
+    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker
+) -> None:
+    """Test that a column loaded by a hook and selected by the query is selected once."""
+    result = await maybe_async(any_query(query))
+
+    assert not result.errors
+    assert result.data
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted.count(".water_percent AS ") == 1
+
+
 @pytest.mark.snapshot
 async def test_query_hook_on_type(
     any_query: AnyQueryExecutor,

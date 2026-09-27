@@ -133,7 +133,9 @@ class QueryHook(Generic[DeclarativeT]):
             load_options = self.column_load_options(alias)
         else:
             for column in self._columns:
-                statement = statement.add_columns(getattr(alias, column.key))
+                attribute = getattr(alias, column.key).__clause_element__()
+                if not any(attribute.compare(selected) for selected in statement.selected_columns):
+                    statement = statement.add_columns(attribute)
         return statement, load_options
 
     def apply_hook(
