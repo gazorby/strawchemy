@@ -775,6 +775,40 @@
    ORDER BY CAST(postgres_json_model.dict_col AS JSONB) ASC
   '''
 # ---
+# name: test_postgres_json_order_by_and_distinct_on[session-async-tracked-distinct-on-other-order-by-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM (
+          SELECT anon_1.id AS id
+            FROM (
+                  SELECT postgres_json_model.id AS id,
+                         row_number() OVER (PARTITION BY CAST(postgres_json_model.dict_col AS JSONB) ORDER BY postgres_json_model.id DESC) AS anon_2
+                    FROM postgres_json_model AS postgres_json_model
+                   ORDER BY postgres_json_model.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.id DESC
+         ) AS postgres_json_model
+   ORDER BY postgres_json_model.id DESC
+  '''
+# ---
+# name: test_postgres_json_order_by_and_distinct_on[session-async-tracked-distinct-on-other-order-by-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM (
+          SELECT anon_1.id AS id
+            FROM (
+                  SELECT postgres_json_model.id AS id,
+                         row_number() OVER (PARTITION BY CAST(postgres_json_model.dict_col AS JSONB) ORDER BY postgres_json_model.id DESC) AS anon_2
+                    FROM postgres_json_model AS postgres_json_model
+                   ORDER BY postgres_json_model.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.id DESC
+         ) AS postgres_json_model
+   ORDER BY postgres_json_model.id DESC
+  '''
+# ---
 # name: test_postgres_json_order_by_and_distinct_on[session-async-tracked-distinct-on-to-many-asyncpg_engine]
   '''
   SELECT postgres_json_model.id,
@@ -839,6 +873,54 @@
       ON TRUE
    ORDER BY postgres_json_model.id ASC,
             CAST(anon_1.dict_col AS JSONB) ASC, anon_1.id DESC
+  '''
+# ---
+# name: test_postgres_json_order_by_and_distinct_on[session-async-tracked-nested-distinct-on-other-order-by-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id,
+         anon_1.id AS id_1
+    FROM postgres_json_model AS postgres_json_model
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.id AS id
+            FROM (
+                  SELECT postgres_json_child_model_1.id AS id,
+                         row_number() OVER (PARTITION BY CAST(postgres_json_child_model_1.dict_col AS JSONB) ORDER BY postgres_json_child_model_1.id DESC) AS anon_3
+                    FROM postgres_json_child_model AS postgres_json_child_model_1
+                   WHERE postgres_json_model.id = postgres_json_child_model_1.parent_id
+                   ORDER BY postgres_json_child_model_1.id DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = $1::INTEGER
+           ORDER BY anon_2.id DESC
+           LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY postgres_json_model.id ASC,
+            anon_1.id DESC
+  '''
+# ---
+# name: test_postgres_json_order_by_and_distinct_on[session-async-tracked-nested-distinct-on-other-order-by-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id,
+         anon_1.id AS id_1
+    FROM postgres_json_model AS postgres_json_model
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.id AS id
+            FROM (
+                  SELECT postgres_json_child_model_1.id AS id,
+                         row_number() OVER (PARTITION BY CAST(postgres_json_child_model_1.dict_col AS JSONB) ORDER BY postgres_json_child_model_1.id DESC) AS anon_3
+                    FROM postgres_json_child_model AS postgres_json_child_model_1
+                   WHERE postgres_json_model.id = postgres_json_child_model_1.parent_id
+                   ORDER BY postgres_json_child_model_1.id DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %(param_1)s::INTEGER
+           ORDER BY anon_2.id DESC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY postgres_json_model.id ASC,
+            anon_1.id DESC
   '''
 # ---
 # name: test_postgres_json_order_by_and_distinct_on[session-async-tracked-nested-distinct-on-psycopg_async_engine]
@@ -980,6 +1062,44 @@
    ORDER BY CAST(postgres_json_model.dict_col AS JSONB) ASC
   '''
 # ---
+# name: test_postgres_json_order_by_and_distinct_on[session-async-tracked-paginated-distinct-on-other-order-by-asyncpg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM (
+          SELECT anon_1.id AS id
+            FROM (
+                  SELECT postgres_json_model.id AS id,
+                         row_number() OVER (PARTITION BY CAST(postgres_json_model.dict_col AS JSONB) ORDER BY postgres_json_model.id DESC) AS anon_2
+                    FROM postgres_json_model AS postgres_json_model
+                   ORDER BY postgres_json_model.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.id DESC
+           LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
+         ) AS postgres_json_model
+   ORDER BY postgres_json_model.id DESC
+  '''
+# ---
+# name: test_postgres_json_order_by_and_distinct_on[session-async-tracked-paginated-distinct-on-other-order-by-psycopg_async_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM (
+          SELECT anon_1.id AS id
+            FROM (
+                  SELECT postgres_json_model.id AS id,
+                         row_number() OVER (PARTITION BY CAST(postgres_json_model.dict_col AS JSONB) ORDER BY postgres_json_model.id DESC) AS anon_2
+                    FROM postgres_json_model AS postgres_json_model
+                   ORDER BY postgres_json_model.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.id DESC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS postgres_json_model
+   ORDER BY postgres_json_model.id DESC
+  '''
+# ---
 # name: test_postgres_json_order_by_and_distinct_on[session-async-tracked-paginated-distinct-on-psycopg_async_engine]
   '''
   SELECT postgres_json_model.id
@@ -1045,6 +1165,23 @@
    ORDER BY CAST(postgres_json_model.dict_col AS JSONB) ASC
   '''
 # ---
+# name: test_postgres_json_order_by_and_distinct_on[session-sync-tracked-distinct-on-other-order-by-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM (
+          SELECT anon_1.id AS id
+            FROM (
+                  SELECT postgres_json_model.id AS id,
+                         row_number() OVER (PARTITION BY CAST(postgres_json_model.dict_col AS JSONB) ORDER BY postgres_json_model.id DESC) AS anon_2
+                    FROM postgres_json_model AS postgres_json_model
+                   ORDER BY postgres_json_model.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.id DESC
+         ) AS postgres_json_model
+   ORDER BY postgres_json_model.id DESC
+  '''
+# ---
 # name: test_postgres_json_order_by_and_distinct_on[session-sync-tracked-distinct-on-to-many-psycopg_engine]
   '''
   SELECT postgres_json_model.id,
@@ -1066,6 +1203,30 @@
          ) AS anon_1
       ON TRUE
    ORDER BY CAST(postgres_json_model.dict_col AS JSONB) ASC, anon_1.id ASC
+  '''
+# ---
+# name: test_postgres_json_order_by_and_distinct_on[session-sync-tracked-nested-distinct-on-other-order-by-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id,
+         anon_1.id AS id_1
+    FROM postgres_json_model AS postgres_json_model
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.id AS id
+            FROM (
+                  SELECT postgres_json_child_model_1.id AS id,
+                         row_number() OVER (PARTITION BY CAST(postgres_json_child_model_1.dict_col AS JSONB) ORDER BY postgres_json_child_model_1.id DESC) AS anon_3
+                    FROM postgres_json_child_model AS postgres_json_child_model_1
+                   WHERE postgres_json_model.id = postgres_json_child_model_1.parent_id
+                   ORDER BY postgres_json_child_model_1.id DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %(param_1)s::INTEGER
+           ORDER BY anon_2.id DESC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY postgres_json_model.id ASC,
+            anon_1.id DESC
   '''
 # ---
 # name: test_postgres_json_order_by_and_distinct_on[session-sync-tracked-nested-distinct-on-psycopg_engine]
@@ -1138,6 +1299,25 @@
   SELECT postgres_json_model.id
     FROM postgres_json_model AS postgres_json_model
    ORDER BY CAST(postgres_json_model.dict_col AS JSONB) ASC
+  '''
+# ---
+# name: test_postgres_json_order_by_and_distinct_on[session-sync-tracked-paginated-distinct-on-other-order-by-psycopg_engine]
+  '''
+  SELECT postgres_json_model.id
+    FROM (
+          SELECT anon_1.id AS id
+            FROM (
+                  SELECT postgres_json_model.id AS id,
+                         row_number() OVER (PARTITION BY CAST(postgres_json_model.dict_col AS JSONB) ORDER BY postgres_json_model.id DESC) AS anon_2
+                    FROM postgres_json_model AS postgres_json_model
+                   ORDER BY postgres_json_model.id DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.id DESC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS postgres_json_model
+   ORDER BY postgres_json_model.id DESC
   '''
 # ---
 # name: test_postgres_json_order_by_and_distinct_on[session-sync-tracked-paginated-distinct-on-psycopg_engine]

@@ -435,3 +435,149 @@ async def test_distinct_on_ordered_by_an_unselected_to_many_relation(
     assert [color["name"] for color in result.data["colors"]] == ["Green", "Orange", "Pink", "Red", "Yellow"]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        pytest.param(
+            "{ users(distinctOn: [name], orderBy: [{ id: DESC }]) { id name } }",
+            [{"id": 5, "name": "Bob"}, {"id": 4, "name": "Charlie"}, {"id": 2, "name": "Alice"}],
+            id="root",
+        ),
+        pytest.param(
+            "{ users(distinctOn: [name, groupId], orderBy: [{ name: ASC }, { id: DESC }]) { id name } }",
+            [{"id": 2, "name": "Alice"}, {"id": 5, "name": "Bob"}, {"id": 4, "name": "Charlie"}],
+            id="partial-prefix",
+        ),
+        pytest.param(
+            "{ usersPaginated(distinctOn: [name], orderBy: [{ id: DESC }], limit: 2) { id name } }",
+            [{"id": 5, "name": "Bob"}, {"id": 4, "name": "Charlie"}],
+            id="paginated",
+        ),
+        pytest.param(
+            "{ usersPaginated(distinctOn: [name], orderBy: [{ id: DESC }], limit: 2, offset: 1) { id name } }",
+            [{"id": 4, "name": "Charlie"}, {"id": 2, "name": "Alice"}],
+            id="paginated-offset",
+        ),
+    ],
+)
+@pytest.mark.snapshot
+async def test_distinct_on_ordered_by_other_fields(
+    query: str,
+    expected: list[dict[str, Any]],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that distinctOn keeps the first row of each group by an order by not starting with the distinct fields."""
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert next(iter(result.data.values())) == expected
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_distinct_on_ordered_by_tied_fields(any_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
+    """Test that distinctOn keeps one row per group when the order by ties within the group."""
+    result = await maybe_async(any_query("{ users(distinctOn: [name], orderBy: [{ bio: ASC }]) { id name } }"))
+    assert not result.errors
+    assert result.data
+
+    users = result.data["users"]
+    assert sorted(user["name"] for user in users) == ["Alice", "Bob", "Charlie"]
+    ids_by_name = {"Alice": {1, 2}, "Bob": {5}, "Charlie": {3, 4}}
+    assert all(user["id"] in ids_by_name[user["name"]] for user in users)
+    assert query_tracker.query_count == 1
+
+
+@pytest.mark.snapshot
+async def test_distinct_on_ordered_by_other_fields_selecting_a_to_many_relation(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a root distinctOn ordered by other fields keeps every child of a to-many relation behind a to-one."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                fruitsDefaultOrderDistinct(distinctOn: [colorId], orderBy: [{ name: DESC }]) {
+                    name
+                    color { fruits { name } }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    fruits = result.data["fruitsDefaultOrderDistinct"]
+    assert [fruit["name"] for fruit in fruits] == ["Strawberry", "Plum", "Lemon"]
+    assert {fruit["name"]: sorted(child["name"] for child in fruit["color"]["fruits"]) for fruit in fruits} == {
+        "Strawberry": ["Strawberry"],
+        "Plum": ["Apple", "Cherry", "Plum"],
+        "Lemon": ["Banana", "Lemon"],
+    }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_distinct_on_ordered_by_an_aggregation(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that distinctOn keeps the first row of each group by an order by starting with an aggregation."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                fruitsDefaultOrderDistinct(
+                    distinctOn: [colorId], orderBy: [{ farmsAggregate: { count: DESC } }, { name: ASC }]
+                ) {
+                    name
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+
+    assert [fruit["name"] for fruit in result.data["fruitsDefaultOrderDistinct"]] == ["Apple", "Banana", "Strawberry"]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("arguments", "expected_red", "expected_yellow"),
+    [
+        pytest.param("orderBy: [{ name: DESC }]", ["Plum", "Cherry"], ["Lemon"], id="order-by"),
+        pytest.param("orderBy: [{ waterPercent: ASC }]", ["Plum", "Apple"], ["Banana"], id="order-by-other-column"),
+        pytest.param("orderBy: [{ name: DESC }], limit: 1", ["Plum"], ["Lemon"], id="limit"),
+        pytest.param("orderBy: [{ name: DESC }], limit: 1, offset: 1", ["Cherry"], [], id="limit-offset"),
+    ],
+)
+@pytest.mark.snapshot
+async def test_nested_distinct_on_ordered_by_other_fields(
+    arguments: str,
+    expected_red: list[str],
+    expected_yellow: list[str],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that a nested distinctOn keeps the first row of each group by an order by not starting with it."""
+    result = await maybe_async(
+        any_query(f"{{ colorsNestedDistinct {{ name fruits(distinctOn: [sweetness], {arguments}) {{ name }} }} }}")
+    )
+    assert not result.errors
+    assert result.data
+
+    fruits = _fruits_by_color(result.data)
+    assert [fruit["name"] for fruit in fruits["Red"]] == expected_red
+    assert [fruit["name"] for fruit in fruits["Yellow"]] == expected_yellow
+    assert fruits["Orange"] == []
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
