@@ -34,6 +34,12 @@ class _Point:
     y: int
 
 
+@dataclass
+class _OwnerRef:
+    owner_id: int
+    owner: object
+
+
 class _Base(DeclarativeBase): ...
 
 
@@ -72,6 +78,7 @@ class _Animal(_Base):
     kind: Mapped[str]
     owner_id: Mapped[int] = mapped_column(ForeignKey("query_hook_owner.id"))
     owner: Mapped[_Owner] = relationship(_Owner, back_populates="animals")
+    owner_ref: Mapped[_OwnerRef] = composite(_OwnerRef, "owner_id", "owner")
 
     __mapper_args__ = {"polymorphic_on": "kind", "polymorphic_identity": "animal"}  # noqa: RUF012
 
@@ -335,6 +342,7 @@ def test_nested_inherited_attribute_accessed_on_subclass() -> None:
         pytest.param([_Owner.display_name], [_Owner.name], [], id="hybrid-property"),
         pytest.param([_Owner.first_animals], [], [(_Owner.animals, [])], id="relationship-hybrid-property"),
         pytest.param([_Owner.point], [_Owner.x, _Owner.y], [], id="composite"),
+        pytest.param([_Animal.owner_ref], [_Animal.owner_id], [(_Animal.owner, [])], id="composite-with-relationship"),
         pytest.param(
             [(_Owner.pets, [_Animal.name])], [], [(_Owner.animals, [_Animal.name])], id="relationship-synonym-key"
         ),

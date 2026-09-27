@@ -109,7 +109,7 @@ class QueryHook(Generic[DeclarativeT]):
             if isinstance(prop, RelationshipProperty):
                 normalized.append((prop.class_attribute, self._normalize_load_spec(attributes or [], prop)))
             elif isinstance(prop, Composite):
-                normalized.extend(column.class_attribute for column in prop.props)
+                normalized.extend(self._normalize_load_spec([member.class_attribute for member in prop.props], parent))
             else:
                 normalized.append(prop.class_attribute)
         return normalized
