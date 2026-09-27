@@ -43,8 +43,8 @@
           SELECT fruit.water_percent AS water_percent,
                  fruit.id AS id
             FROM fruit AS fruit
-           ORDER BY fruit.id ASC,
-                    fruit.water_percent ASC
+           ORDER BY fruit.water_percent ASC,
+                    fruit.id ASC
            LIMIT ?
           OFFSET ?
          ) AS fruit
@@ -60,8 +60,8 @@
           SELECT fruit.water_percent AS water_percent,
                  fruit.id AS id
             FROM fruit AS fruit
-           ORDER BY fruit.id ASC,
-                    fruit.water_percent ASC
+           ORDER BY fruit.water_percent ASC,
+                    fruit.id ASC
            LIMIT %s,
                  %s
          ) AS fruit
@@ -77,8 +77,8 @@
           SELECT fruit.water_percent AS water_percent,
                  fruit.id AS id
             FROM fruit AS fruit
-           ORDER BY fruit.id ASC,
-                    fruit.water_percent ASC
+           ORDER BY fruit.water_percent ASC,
+                    fruit.id ASC
            LIMIT $1::INTEGER
           OFFSET $2::INTEGER
          ) AS fruit
@@ -94,8 +94,8 @@
           SELECT fruit.water_percent AS water_percent,
                  fruit.id AS id
             FROM fruit AS fruit
-           ORDER BY fruit.id ASC,
-                    fruit.water_percent ASC
+           ORDER BY fruit.water_percent ASC,
+                    fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
@@ -129,8 +129,8 @@
           SELECT fruit.water_percent AS water_percent,
                  fruit.id AS id
             FROM fruit AS fruit
-           ORDER BY fruit.id ASC,
-                    fruit.water_percent ASC
+           ORDER BY fruit.water_percent ASC,
+                    fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
          ) AS fruit
@@ -146,8 +146,8 @@
           SELECT fruit.water_percent AS water_percent,
                  fruit.id AS id
             FROM fruit AS fruit
-           ORDER BY fruit.id ASC,
-                    fruit.water_percent ASC
+           ORDER BY fruit.water_percent ASC,
+                    fruit.id ASC
            LIMIT ?
           OFFSET ?
          ) AS fruit

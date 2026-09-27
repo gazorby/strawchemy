@@ -2513,6 +2513,966 @@
             color.sum_1 ASC
   '''
 # ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-no-order-by-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-no-order-by-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-no-order-by-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-no-order-by-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-order-by-other-fields-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-order-by-other-fields-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-order-by-other-fields-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-order-by-other-fields-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-order-by-prefix-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-order-by-prefix-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-order-by-prefix-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-order-by-prefix-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-no-order-by-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-no-order-by-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+           LIMIT %s,
+                 %s
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-no-order-by-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+           LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-no-order-by-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-order-by-other-fields-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-order-by-other-fields-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+           LIMIT %s,
+                 %s
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-order-by-other-fields-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+           LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-order-by-other-fields-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-order-by-prefix-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-order-by-prefix-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %s
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+           LIMIT %s,
+                 %s
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-order-by-prefix-asyncpg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = $1::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+           LIMIT $2::INTEGER
+          OFFSET $3::INTEGER
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-async-tracked-paginated-order-by-prefix-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-no-order-by-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-no-order-by-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-order-by-other-fields-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-order-by-other-fields-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-order-by-prefix-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-order-by-prefix-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-paginated-no-order-by-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-paginated-no-order-by-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-paginated-order-by-other-fields-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-paginated-order-by-other-fields-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.name DESC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.name DESC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.name DESC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-paginated-order-by-prefix-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+           LIMIT %(param_2)s::INTEGER
+          OFFSET %(param_3)s::INTEGER
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
+# name: test_distinct_on_with_hook_order_by[session-sync-tracked-paginated-order-by-prefix-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM (
+          SELECT anon_1.name AS name,
+                 anon_1.color_id AS color_id,
+                 anon_1.id AS id,
+                 anon_1.water_percent AS water_percent
+            FROM (
+                  SELECT fruit.name AS name,
+                         fruit.color_id AS color_id,
+                         fruit.id AS id,
+                         fruit.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
+                    FROM fruit AS fruit
+                   ORDER BY fruit.water_percent ASC,
+                            fruit.color_id ASC
+                 ) AS anon_1
+           WHERE anon_1.anon_2 = ?
+           ORDER BY anon_1.water_percent ASC,
+                    anon_1.color_id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS fruit
+   ORDER BY fruit.water_percent ASC,
+            fruit.color_id ASC
+  '''
+# ---
 # name: test_nested_distinct_on_and_order_by[session-async-tracked-aiosqlite_engine]
   '''
   WITH anon_1 AS (
@@ -3825,5 +4785,614 @@
    ORDER BY color.id ASC,
             anon_1.sweetness ASC,
             anon_1.name ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-no-order-by-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id ASC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.id ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-no-order-by-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id ASC) AS `rank`
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.id ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %s
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-no-order-by-asyncpg_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.water_percent AS water_percent
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.id ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = $1::INTEGER
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.id ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-no-order-by-psycopg_async_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.water_percent AS water_percent
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.id ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %(param_1)s::INTEGER
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.id ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-order-by-other-fields-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.name DESC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.name DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-order-by-other-fields-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.name DESC) AS `rank`
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.name DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %s
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-order-by-other-fields-asyncpg_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.water_percent AS water_percent
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.name DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = $1::INTEGER
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.name DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-order-by-other-fields-psycopg_async_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.water_percent AS water_percent
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.name DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %(param_1)s::INTEGER
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.name DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-order-by-prefix-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.sweetness ASC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.sweetness ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-order-by-prefix-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.sweetness ASC) AS `rank`
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.sweetness ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %s
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-order-by-prefix-asyncpg_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.water_percent AS water_percent
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.sweetness ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = $1::INTEGER
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.sweetness ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-async-tracked-order-by-prefix-psycopg_async_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.water_percent AS water_percent
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.sweetness ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %(param_1)s::INTEGER
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.sweetness ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-sync-tracked-no-order-by-psycopg_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.water_percent AS water_percent
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.id ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %(param_1)s::INTEGER
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.id ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-sync-tracked-no-order-by-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id ASC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.id ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-sync-tracked-order-by-other-fields-psycopg_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.water_percent AS water_percent
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.name DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %(param_1)s::INTEGER
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.name DESC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-sync-tracked-order-by-other-fields-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.name DESC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.name DESC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.name DESC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-sync-tracked-order-by-prefix-psycopg_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN LATERAL (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.water_percent AS water_percent
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.sweetness ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = %(param_1)s::INTEGER
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.sweetness ASC
+         ) AS anon_1
+      ON TRUE
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness ASC
+  '''
+# ---
+# name: test_nested_distinct_on_with_hook_order_by[session-sync-tracked-order-by-prefix-sqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT anon_2.name AS name,
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.sweetness ASC) AS rank
+            FROM (
+                  SELECT fruit_1.name AS name,
+                         fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
+                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
+                    FROM fruit AS fruit_1
+                   WHERE fruit_1.color_id IS NOT NULL
+                   GROUP BY fruit_1.color_id,
+                            fruit_1.name,
+                            fruit_1.id,
+                            fruit_1.sweetness
+                   ORDER BY fruit_1.water_percent ASC,
+                            fruit_1.sweetness ASC
+                 ) AS anon_2
+           WHERE anon_2.anon_3 = ?
+         ) SELECT color.name,
+         color.id,
+         anon_1.name AS name_1,
+         anon_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN anon_1
+      ON color.id = anon_1.color_id
+   ORDER BY color.id ASC,
+            anon_1.water_percent ASC,
+            anon_1.sweetness ASC
   '''
 # ---

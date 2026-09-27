@@ -11,6 +11,7 @@ from sqlalchemy import distinct as sqla_distinct
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import DeclarativeBase, Mapper, MapperProperty, QueryableAttribute, RelationshipProperty, aliased
 from sqlalchemy.sql.elements import _anonymous_label
+from sqlalchemy.sql.util import ClauseAdapter
 from typing_extensions import Self, override
 
 from strawchemy.constants import NODES_KEY
@@ -62,6 +63,18 @@ def same_column(left: ColumnElement[Any], right: ColumnElement[Any]) -> bool:
     if any(isinstance(getattr(column, "name", None), _anonymous_label) for column in (left, right)):
         return False
     return left.compare(right)
+
+
+def alias_adapter(source: AliasedClass[Any], target: AliasedClass[Any]) -> ClauseAdapter:
+    """Builds an adapter rewriting the columns of ``source`` into those of ``target``, two aliases of one mapper.
+
+    Sibling aliases share no column lineage, so ``ClauseAdapter`` alone would leave ``source`` columns untouched.
+    """
+    source_selectable, target_selectable = inspect(source).selectable, inspect(target).selectable
+    return ClauseAdapter(
+        target_selectable,
+        equivalents={column: {target_selectable.c[key]} for key, column in source_selectable.c.items()},
+    )
 
 
 @dataclass

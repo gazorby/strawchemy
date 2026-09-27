@@ -294,7 +294,7 @@ class ColorWithMultiFarmFruits:
 
 @strawchemy.type(Color, include="all")
 class ColorWithOrderedFruits:
-    fruits: list[OrderedFruitType] = strawchemy.field(order_by_input=FruitOrderBy)
+    fruits: list[OrderedFruitType] = strawchemy.field(order_by_input=FruitOrderBy, distinct_on=FruitDistinctOn)
 
 
 @strawchemy.type(Color, include="all")
@@ -495,9 +495,14 @@ class AsyncQuery:
     filtered_fruits_paginated: list[FilteredFruitType] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
-    ordered_fruits: list[OrderedFruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    ordered_fruits: list[OrderedFruitType] = strawchemy.field(
+        order_by_input=FruitOrderBy, distinct_on=FruitDistinctOn, repository_type=StrawchemyAsyncRepository
+    )
     ordered_fruits_paginated: list[OrderedFruitType] = strawchemy.field(
-        repository_type=StrawchemyAsyncRepository, pagination=True
+        order_by_input=FruitOrderBy,
+        distinct_on=FruitDistinctOn,
+        repository_type=StrawchemyAsyncRepository,
+        pagination=True,
     )
     field_filtered_fruits: list[FruitType] = strawchemy.field(
         query_hook=FruitFilterHook(), repository_type=StrawchemyAsyncRepository
@@ -687,9 +692,14 @@ class SyncQuery:
     filtered_fruits_paginated: list[FilteredFruitType] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
     )
-    ordered_fruits: list[OrderedFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    ordered_fruits: list[OrderedFruitType] = strawchemy.field(
+        order_by_input=FruitOrderBy, distinct_on=FruitDistinctOn, repository_type=StrawchemySyncRepository
+    )
     ordered_fruits_paginated: list[OrderedFruitType] = strawchemy.field(
-        repository_type=StrawchemySyncRepository, pagination=True
+        order_by_input=FruitOrderBy,
+        distinct_on=FruitDistinctOn,
+        repository_type=StrawchemySyncRepository,
+        pagination=True,
     )
     field_filtered_fruits: list[FruitType] = strawchemy.field(
         query_hook=FruitFilterHook(), repository_type=StrawchemySyncRepository
