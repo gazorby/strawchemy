@@ -39,7 +39,6 @@ from strawchemy.dto.strawberry import (
     OrderByEnum,
     QueryNode,
 )
-from strawchemy.exceptions import TranspilingError
 from strawchemy.repository.typing import DeclarativeT, OrderBySpec
 from strawchemy.transpiler._aliasing import same_column
 from strawchemy.transpiler._plan import add_missing_columns
@@ -365,18 +364,7 @@ class DistinctOn:
 
     @property
     def expressions(self) -> list[ColumnElement[Any] | QueryableAttribute[Any]]:
-        """The DISTINCT ON columns, read from the root alias.
-
-        Raises:
-            TranspilingError: If the DISTINCT ON fields are not the first ORDER BY fields, in the same order.
-        """
-        for i, distinct_field in enumerate(self._distinct_on_fields):
-            if i > len(self.query_graph.order_by_nodes) - 1:
-                break
-            if self.query_graph.order_by_nodes[i].value.model_field is distinct_field.model_field:
-                continue
-            msg = "Distinct on fields must match the leftmost order by fields"
-            raise TranspilingError(msg)
+        """The DISTINCT ON columns, read from the root alias."""
         scope = self.query_graph.scope
         return [
             comparable(field.model_field.adapt_to_entity(inspect(scope.root_alias)), scope.dialect)

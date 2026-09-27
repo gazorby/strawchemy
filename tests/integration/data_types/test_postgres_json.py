@@ -171,6 +171,21 @@ def _children(**children_ids: list[int]) -> list[dict[str, Any]]:
             _children(i1=[3, 2], i2=[4], i3=[], i4=[]),
             id="nested-distinct-on",
         ),
+        pytest.param(
+            "{ json(distinctOn: [dictCol], orderBy: [{ id: DESC }]) { id } }",
+            [{"id": 4}, {"id": 3}, {"id": 2}, {"id": 1}],
+            id="distinct-on-other-order-by",
+        ),
+        pytest.param(
+            "{ jsonPaginated(distinctOn: [dictCol], orderBy: [{ id: DESC }], limit: 2) { id } }",
+            [{"id": 4}, {"id": 3}],
+            id="paginated-distinct-on-other-order-by",
+        ),
+        pytest.param(
+            "{ json(orderBy: [{ id: ASC }]) { id children(distinctOn: [dictCol], orderBy: [{ id: DESC }]) { id } } }",
+            _children(i1=[3, 2], i2=[4], i3=[], i4=[]),
+            id="nested-distinct-on-other-order-by",
+        ),
     ],
 )
 @pytest.mark.snapshot
