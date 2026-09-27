@@ -41,8 +41,7 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id,
-                 fruit.water_percent AS water_percent__1
+                 fruit.id AS id
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -59,8 +58,7 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id,
-                 fruit.water_percent AS water_percent__1
+                 fruit.id AS id
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -77,8 +75,7 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id,
-                 fruit.water_percent AS water_percent__1
+                 fruit.id AS id
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -95,8 +92,7 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id,
-                 fruit.water_percent AS water_percent__1
+                 fruit.id AS id
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -131,8 +127,7 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id,
-                 fruit.water_percent AS water_percent__1
+                 fruit.id AS id
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -149,8 +144,7 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id,
-                 fruit.water_percent AS water_percent__1
+                 fruit.id AS id
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
