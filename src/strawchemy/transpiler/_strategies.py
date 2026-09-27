@@ -8,9 +8,8 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 from sqlalchemy import and_, func, inspect, null, select, true
 from sqlalchemy.orm import RelationshipProperty, aliased
 from sqlalchemy.orm import join as orm_join
-from sqlalchemy.sql.util import ClauseAdapter
 
-from strawchemy.transpiler._plan import distinct_rows
+from strawchemy.transpiler._plan import adapt_clauses, distinct_rows
 from strawchemy.transpiler._query import Join
 
 if TYPE_CHECKING:
@@ -19,8 +18,7 @@ if TYPE_CHECKING:
     from sqlalchemy import Label, Select, SQLColumnExpression
     from sqlalchemy.orm import QueryableAttribute
     from sqlalchemy.orm.util import AliasedClass
-    from sqlalchemy.sql import ColumnElement, FromClause
-    from sqlalchemy.sql.elements import UnaryExpression
+    from sqlalchemy.sql import ColumnElement
     from sqlalchemy.sql.selectable import Join as SQLJoin
 
     from strawchemy.config.databases import DatabaseFeatures
@@ -104,7 +102,11 @@ class LateralJoinStrategy:
         lateral_alias = aliased(target_insp.mapper, statement, flat=True)
         scope.set_relation_alias(node, "target", lateral_alias)
         return Join(
-            statement, node=node, is_outer=is_outer, onclause=true(), hook_order_by=_adapt(hook_order_by, statement)
+            statement,
+            node=node,
+            is_outer=is_outer,
+            onclause=true(),
+            hook_order_by=adapt_clauses(hook_order_by, statement),
         )
 
 
@@ -161,7 +163,7 @@ class CteJoinStrategy:
             node,
             onclause=and_(aliased_attribute, *limit_offset_condition),
             is_outer=is_outer,
-            hook_order_by=_adapt(hook_order_by, statement),
+            hook_order_by=adapt_clauses(hook_order_by, statement),
         )
 
     @staticmethod
@@ -190,11 +192,6 @@ class CteJoinStrategy:
         if plan.limit is not None:
             condition.append(rank_column <= (plan.offset + plan.limit if plan.offset else plan.limit))
         return condition
-
-
-def _adapt(clauses: Sequence[UnaryExpression[Any]], selectable: FromClause) -> tuple[UnaryExpression[Any], ...]:
-    adapter = ClauseAdapter(selectable)
-    return tuple(adapter.traverse(clause) for clause in clauses)
 
 
 def select_join_strategy(db_features: DatabaseFeatures) -> JoinStrategy:

@@ -35,7 +35,14 @@ from strawchemy.exceptions import StrawchemyFieldError, TranspilingError
 from strawchemy.repository.typing import DeclarativeT
 from strawchemy.schema.filters import GraphQLComparison
 from strawchemy.transpiler._aliasing import AliasContext, require_corresponding_column, same_column
-from strawchemy.transpiler._plan import FilterSemiJoin, HookSpec, QueryPlan, add_missing_columns, distinct_rows
+from strawchemy.transpiler._plan import (
+    FilterSemiJoin,
+    HookSpec,
+    QueryPlan,
+    adapt_clauses,
+    add_missing_columns,
+    distinct_rows,
+)
 from strawchemy.transpiler._query import (
     AggregationJoin,
     AggregationSpec,
@@ -1198,8 +1205,8 @@ def _assemble_inner_statement(
     selected_function_columns: Sequence[ColumnElement[Any]],
     limit: int | None,
     offset: int | None,
-) -> Select[Any]:
-    """Builds the SELECT of the pagination or DISTINCT ON subquery, from ``inner_alias``.
+) -> tuple[Select[Any], tuple[UnaryExpression[Any], ...]]:
+    """Builds the SELECT of the pagination or DISTINCT ON subquery, from ``inner_alias``, and its root hooks' ORDER BY.
 
     Without ``use_distinct_on``, DISTINCT ON is emulated with a ``row_number()`` rank, filtered before pagination.
     """
@@ -1247,7 +1254,7 @@ def _assemble_inner_statement(
         inner_statement = inner_statement.limit(limit)
     if offset is not None:
         inner_statement = inner_statement.offset(offset)
-    return inner_statement
+    return inner_statement, hook_order_by
 
 
 def _plan_subquery(
@@ -1261,8 +1268,8 @@ def _plan_subquery(
 ) -> QueryPlan:
     """Plans a root query whose pagination or DISTINCT ON runs in a subquery.
 
-    The subquery filters, orders and paginates the root rows. The outer query selects from it, joins the relations,
-    and reads the aggregates the subquery already computed.
+    The subquery runs the root query hooks, filters, orders and paginates the root rows. The outer query selects from
+    it, joins the relations, and reads the aggregates and hook ordering the subquery already computed.
     """
     model = context.aliases.model
     name = model.__tablename__
@@ -1283,7 +1290,7 @@ def _plan_subquery(
     inner_joins = _dedup_agg_joins([*filter_plan.joins, *inner_order.joins, *subquery_tree_joins])
     referenced_functions = _referenced_function_nodes(aggregation_plan, inner_joins)
     selected_function_labels = {fn: aggregation_plan.columns[fn] for fn in referenced_functions}
-    inner_statement = _assemble_inner_statement(
+    inner_statement, hook_order_by = _assemble_inner_statement(
         query_graph,
         context,
         inner_alias=inner_alias,
@@ -1330,14 +1337,13 @@ def _plan_subquery(
         projection_columns=outer_proj.columns,
         load_options=outer_proj.load_options,
         where=(),
-        order_by=outer_order.expressions,
+        order_by=(*adapt_clauses(hook_order_by, subquery), *outer_order.expressions),
         joins=tuple(_dedup_agg_joins(outer_joins)),
         root_aggregation_functions=root_aggs,
         distinct_on=(),
         use_distinct_on=False,
         limit=None,
         offset=None,
-        hook_specs=outer_proj.hook_specs,
         hook_applier=context.hook_applier,
         column_map=column_map,
         identity_columns=outer_proj.identity_map,
