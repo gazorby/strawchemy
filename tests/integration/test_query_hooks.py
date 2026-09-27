@@ -169,6 +169,27 @@ async def test_custom_query_hook_where(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
+@pytest.mark.parametrize("query", ["filteredFruits", "filteredFruitsPaginated", "fieldFilteredFruitsPaginated"])
+@pytest.mark.snapshot
+async def test_custom_query_hook_where_on_unselected_column(
+    query: str,
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_fruits: RawRecordData,
+) -> None:
+    """Test that a root query hook filters on a column the query does not select."""
+    result = await maybe_async(any_query(f"{{ {query} {{ id }} }}"))
+
+    assert not result.errors
+    assert result.data
+    apple_id = next(fruit["id"] for fruit in raw_fruits if fruit["name"] == "Apple")
+    assert next(iter(result.data.values())) == [{"id": apple_id}]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
 @pytest.mark.parametrize("query", ["orderedFruits", "orderedFruitsPaginated"])
 @pytest.mark.snapshot
 async def test_custom_query_hook_order_by(
@@ -600,7 +621,7 @@ async def test_query_hook_order_by_joined_alias(
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a root query hook ordering by an alias it joins orders by that joined alias."""
-    result = await maybe_async(any_query(f"{{ {query} {{ name colorId }} }}"))
+    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
     assert not result.errors
     assert result.data
 

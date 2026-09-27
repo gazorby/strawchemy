@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from sqlalchemy import Label, Select, SQLColumnExpression
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.orm.util import AliasedClass
-    from sqlalchemy.sql import ColumnElement
+    from sqlalchemy.sql import ColumnElement, FromClause
     from sqlalchemy.sql.elements import UnaryExpression
     from sqlalchemy.sql.selectable import Alias
 
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from strawchemy.transpiler.hook import ColumnLoadingMode
     from strawchemy.typing import QueryNodeType
 
-__all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan", "add_missing_columns", "distinct_rows")
+__all__ = ("FilterSemiJoin", "HookSpec", "QueryPlan", "adapt_clauses", "add_missing_columns", "distinct_rows")
 
 
 def add_missing_columns(statement: Select[Any], columns: Sequence[ColumnElement[Any]]) -> Select[Any]:
@@ -39,6 +39,11 @@ def add_missing_columns(statement: Select[Any], columns: Sequence[ColumnElement[
             if not any(same_column(column, selected) for selected in statement.selected_columns)
         ]
     )
+
+
+def adapt_clauses(clauses: Sequence[UnaryExpression[Any]], selectable: FromClause) -> tuple[UnaryExpression[Any], ...]:
+    adapter = ClauseAdapter(selectable)
+    return tuple(adapter.traverse(clause) for clause in clauses)
 
 
 def distinct_rows(
