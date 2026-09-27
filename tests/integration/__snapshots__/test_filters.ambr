@@ -1474,7 +1474,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (lower(fruit.name) LIKE '%' || lower(?) || '%' ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1510,7 +1510,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (lower(fruit.name) LIKE '%' || lower(?) ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1546,7 +1546,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) LIKE lower(?)
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1654,7 +1654,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (lower(fruit.name) LIKE lower(?) || '%' ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1726,7 +1726,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) NOT LIKE lower(?)
+   WHERE fruit.name NOT REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1951,7 +1951,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (lower(fruit.name) LIKE '%' || lower(?) || '%' ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1969,7 +1969,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (lower(fruit.name) LIKE '%' || lower(?) ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1987,7 +1987,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) LIKE lower(?)
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2041,7 +2041,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (lower(fruit.name) LIKE lower(?) || '%' ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2077,7 +2077,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) NOT LIKE lower(?)
+   WHERE fruit.name NOT REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---

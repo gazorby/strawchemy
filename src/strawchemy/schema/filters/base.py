@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, fields, replace
 from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast
 
@@ -47,6 +48,22 @@ if TYPE_CHECKING:
     )
 
 T = TypeVar("T")
+
+
+def _like_segment_regexp(segment: str) -> str:
+    return "".join("." if char == "_" else re.escape(char) for char in segment)
+
+
+def _like_regexp(pattern: str) -> str:
+    first, *rest = (_like_segment_regexp(segment) for segment in pattern.split("%"))
+    if not rest:
+        return rf"(?s)^{first}\Z"
+    *middle, last = rest
+    # A `.*` per `%` backtracks polynomially in the number of wildcards. Taking each fixed-length middle segment at
+    # its earliest position is enough for LIKE, and a lookahead captured then consumed through a backreference emulates
+    # the atomic group Python only has since 3.11, so that position is never revisited.
+    atomic = "".join(rf"(?=(?P<s{i}>.*?{segment}))(?P=s{i})" for i, segment in enumerate(middle))
+    return rf"(?s)^{first}{atomic}.*{last}\Z" if last else rf"(?s)^{first}{atomic}"
 
 
 def is_set(value: T | None) -> TypeIs[T]:
@@ -119,8 +136,15 @@ class OrderFilter(EqualityFilter):
 class TextFilter(OrderFilter):
     comparison: TextComparison
 
+    @staticmethod
+    def _sqlite_iregexp(
+        model_attribute: QueryableAttribute[str] | ColumnElement[str], pattern: str
+    ) -> ColumnElement[bool]:
+        # SQLAlchemy's SQLite REGEXP function ignores flags, but Python's re reads them inline.
+        return model_attribute.regexp_match(f"(?i){pattern}")
+
     def _like_expressions(
-        self, model_attribute: QueryableAttribute[str] | ColumnElement[str]
+        self, model_attribute: QueryableAttribute[str] | ColumnElement[str], *, sqlite: bool
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = []
 
@@ -128,10 +152,16 @@ class TextFilter(OrderFilter):
             expressions.append(model_attribute.like(self.comparison.like))
         if is_set(self.comparison.nlike):
             expressions.append(model_attribute.not_like(self.comparison.nlike))
-        if is_set(self.comparison.ilike):
-            expressions.append(model_attribute.ilike(self.comparison.ilike))
-        if is_set(self.comparison.nilike):
-            expressions.append(model_attribute.not_ilike(self.comparison.nilike))
+        if is_set(ilike := self.comparison.ilike):
+            expressions.append(
+                self._sqlite_iregexp(model_attribute, _like_regexp(ilike)) if sqlite else model_attribute.ilike(ilike)
+            )
+        if is_set(nilike := self.comparison.nilike):
+            expressions.append(
+                not_(self._sqlite_iregexp(model_attribute, _like_regexp(nilike)))
+                if sqlite
+                else model_attribute.not_ilike(nilike)
+            )
 
         return expressions
 
@@ -147,8 +177,7 @@ class TextFilter(OrderFilter):
             if case_sensitive:
                 return model_attribute.regexp_match(pattern)
             if dialect.name == "sqlite":
-                # SQLAlchemy's SQLite REGEXP function ignores flags, but Python's re reads them inline.
-                return model_attribute.regexp_match(f"(?i){pattern}")
+                return self._sqlite_iregexp(model_attribute, pattern)
             return model_attribute.regexp_match(pattern, flags="i")
 
         if is_set(self.comparison.regexp):
@@ -169,7 +198,9 @@ class TextFilter(OrderFilter):
         model_attribute: QueryableAttribute[str] | ColumnElement[str],
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
-        expressions.extend(self._like_expressions(model_attribute))
+        # SQLite's LIKE and lower() fold ASCII letters only, where Python's re folds any.
+        sqlite = dialect.name == "sqlite"
+        expressions.extend(self._like_expressions(model_attribute, sqlite=sqlite))
         expressions.extend(self._regexp_expressions(dialect, model_attribute))
 
         if is_set(self.comparison.startswith):
@@ -178,12 +209,24 @@ class TextFilter(OrderFilter):
             expressions.append(model_attribute.endswith(self.comparison.endswith, autoescape=True))
         if is_set(self.comparison.contains):
             expressions.append(model_attribute.contains(self.comparison.contains, autoescape=True))
-        if is_set(self.comparison.istartswith):
-            expressions.append(model_attribute.istartswith(self.comparison.istartswith, autoescape=True))
-        if is_set(self.comparison.iendswith):
-            expressions.append(model_attribute.iendswith(self.comparison.iendswith, autoescape=True))
-        if is_set(self.comparison.icontains):
-            expressions.append(model_attribute.icontains(self.comparison.icontains, autoescape=True))
+        if is_set(istartswith := self.comparison.istartswith):
+            expressions.append(
+                self._sqlite_iregexp(model_attribute, f"^{re.escape(istartswith)}")
+                if sqlite
+                else model_attribute.istartswith(istartswith, autoescape=True)
+            )
+        if is_set(iendswith := self.comparison.iendswith):
+            expressions.append(
+                self._sqlite_iregexp(model_attribute, rf"{re.escape(iendswith)}\Z")
+                if sqlite
+                else model_attribute.iendswith(iendswith, autoescape=True)
+            )
+        if is_set(icontains := self.comparison.icontains):
+            expressions.append(
+                self._sqlite_iregexp(model_attribute, re.escape(icontains))
+                if sqlite
+                else model_attribute.icontains(icontains, autoescape=True)
+            )
 
         return expressions
 

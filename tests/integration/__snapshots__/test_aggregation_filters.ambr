@@ -1985,7 +1985,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE lower(anon_1.max_1) LIKE lower(?)
+   WHERE anon_1.max_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2239,7 +2239,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE lower(anon_1.max_1) LIKE lower(?)
+   WHERE anon_1.max_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2435,7 +2435,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE lower(anon_1.min_1) LIKE lower(?)
+   WHERE anon_1.min_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2689,7 +2689,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE lower(anon_1.min_1) LIKE lower(?)
+   WHERE anon_1.min_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
