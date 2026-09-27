@@ -1651,7 +1651,7 @@
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  anon_2.name_2 AS name_2,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name_2 DESC, anon_2.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name_2 DESC, anon_2.sweetness DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -1691,7 +1691,7 @@
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  anon_2.name_2 AS name_2,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name_2 DESC, anon_2.sweetness DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name_2 DESC, anon_2.sweetness DESC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -1801,7 +1801,7 @@
                  fruit_1.sweetness AS sweetness,
                  fruit_1.color_id AS color_id,
                  color_1.name AS name_2,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name DESC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name DESC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -1832,7 +1832,7 @@
                  fruit_1.sweetness AS sweetness,
                  fruit_1.color_id AS color_id,
                  color_1.name AS name_2,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name DESC, fruit_1.sweetness DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name DESC, fruit_1.sweetness DESC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -1948,7 +1948,7 @@
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  anon_2.name_2 AS name_2,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name_2 DESC, anon_2.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name_2 DESC, anon_2.sweetness DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
@@ -2013,7 +2013,7 @@
                  fruit_1.sweetness AS sweetness,
                  fruit_1.color_id AS color_id,
                  color_1.name AS name_2,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name DESC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name DESC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             LEFT OUTER JOIN color AS color_1
               ON color_1.id = fruit_1.color_id
@@ -2042,7 +2042,7 @@
           SELECT fruit_1.name AS name,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             JOIN fruit_farm
               ON fruit_farm.fruit_id = fruit_1.id
@@ -2069,7 +2069,7 @@
           SELECT fruit_1.name AS name,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            INNER JOIN fruit_farm
               ON fruit_farm.fruit_id = fruit_1.id
@@ -2162,7 +2162,7 @@
           SELECT fruit_1.name AS name,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             JOIN fruit_farm
               ON fruit_farm.fruit_id = fruit_1.id
@@ -2189,7 +2189,7 @@
           SELECT fruit_1.name AS name,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             JOIN fruit_farm
               ON fruit_farm.fruit_id = fruit_1.id
@@ -2224,7 +2224,7 @@
           SELECT fruit_1.name AS name,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            INNER JOIN fruit_farm
               ON fruit_farm.fruit_id = fruit_1.id
@@ -2349,7 +2349,7 @@
           SELECT fruit_1.name AS name,
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
             JOIN fruit_farm
               ON fruit_farm.fruit_id = fruit_1.id
@@ -2385,7 +2385,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
              AND fruit_1.sweetness > ?
@@ -2414,7 +2414,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
              AND fruit_1.sweetness > %s
@@ -2515,7 +2515,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
              AND fruit_1.sweetness > ?
@@ -3912,7 +3912,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -3941,7 +3941,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4042,7 +4042,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4072,7 +4072,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4102,7 +4102,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness DESC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness DESC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4179,7 +4179,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4206,7 +4206,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS `rank`
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4302,7 +4302,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness DESC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
@@ -4353,7 +4353,7 @@
                  fruit_1.id AS id,
                  fruit_1.color_id AS color_id,
                  fruit_1.water_percent AS water_percent,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS rank
+                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
            GROUP BY fruit_1.color_id,
