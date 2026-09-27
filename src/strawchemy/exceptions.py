@@ -10,6 +10,7 @@ if TYPE_CHECKING:
 __all__ = (
     "DTOError",
     "EmptyDTOError",
+    "FilterValueError",
     "GraphError",
     "ModelInspectorError",
     "QueryHookError",
@@ -67,6 +68,10 @@ class DTOError(StrawchemyError):
 
 class EmptyDTOError(DTOError):
     """Raised when a DTO would be generated without any field."""
+
+
+class FilterValueError(StrawchemyError):
+    """Raised when a filter operator is given a value it cannot apply."""
 
 
 class ModelInspectorError(DTOError):

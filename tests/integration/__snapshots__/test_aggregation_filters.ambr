@@ -1865,7 +1865,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.max_1 LIKE '%' || ? || '%' ESCAPE '/')
+   WHERE anon_1.max_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -1881,7 +1881,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.max_1 LIKE concat('%%', %s, '%%') ESCAPE '/')
+   WHERE anon_1.max_1 LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -1895,7 +1895,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.max_1 LIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
+   WHERE anon_1.max_1 LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -1909,7 +1909,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.max_1 LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE anon_1.max_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2001,7 +2001,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE lower(anon_1.max_1) LIKE lower(%s)
+   WHERE lower(anon_1.max_1) LIKE lower((%s COLLATE utf8mb4_bin)) ESCAPE '\\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2015,7 +2015,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.max_1 ILIKE $1::VARCHAR
+   WHERE anon_1.max_1 ILIKE $1::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2029,7 +2029,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.max_1 ILIKE %(param_1)s::VARCHAR
+   WHERE anon_1.max_1 ILIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2045,7 +2045,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.max_1 LIKE ?
+   WHERE anon_1.max_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2061,7 +2061,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.max_1 LIKE %s
+   WHERE anon_1.max_1 LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2075,7 +2075,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.max_1 LIKE $1::VARCHAR
+   WHERE anon_1.max_1 LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2089,7 +2089,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.max_1 LIKE %(param_1)s::VARCHAR
+   WHERE anon_1.max_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2105,7 +2105,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.max_1 LIKE ? || '%' ESCAPE '/')
+   WHERE anon_1.max_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2121,7 +2121,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.max_1 LIKE concat(%s, '%%') ESCAPE '/')
+   WHERE anon_1.max_1 LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2135,7 +2135,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.max_1 LIKE $1::VARCHAR || '%' ESCAPE '/')
+   WHERE anon_1.max_1 LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2149,7 +2149,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.max_1 LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE anon_1.max_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2163,7 +2163,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.max_1 LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE anon_1.max_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2179,7 +2179,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.max_1 LIKE '%' || ? || '%' ESCAPE '/')
+   WHERE anon_1.max_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2223,7 +2223,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.max_1 ILIKE %(param_1)s::VARCHAR
+   WHERE anon_1.max_1 ILIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2253,7 +2253,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.max_1 LIKE %(param_1)s::VARCHAR
+   WHERE anon_1.max_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2269,7 +2269,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.max_1 LIKE ?
+   WHERE anon_1.max_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2283,7 +2283,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.max_1 LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE anon_1.max_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2299,7 +2299,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.max_1 LIKE ? || '%' ESCAPE '/')
+   WHERE anon_1.max_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2315,7 +2315,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.min_1 LIKE '%' || ? || '%' ESCAPE '/')
+   WHERE anon_1.min_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2331,7 +2331,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.min_1 LIKE concat('%%', %s, '%%') ESCAPE '/')
+   WHERE anon_1.min_1 LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2345,7 +2345,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.min_1 LIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
+   WHERE anon_1.min_1 LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2359,7 +2359,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.min_1 LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE anon_1.min_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2451,7 +2451,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE lower(anon_1.min_1) LIKE lower(%s)
+   WHERE lower(anon_1.min_1) LIKE lower((%s COLLATE utf8mb4_bin)) ESCAPE '\\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2465,7 +2465,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.min_1 ILIKE $1::VARCHAR
+   WHERE anon_1.min_1 ILIKE $1::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2479,7 +2479,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.min_1 ILIKE %(param_1)s::VARCHAR
+   WHERE anon_1.min_1 ILIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2495,7 +2495,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.min_1 LIKE ?
+   WHERE anon_1.min_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2511,7 +2511,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.min_1 LIKE %s
+   WHERE anon_1.min_1 LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2525,7 +2525,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.min_1 LIKE $1::VARCHAR
+   WHERE anon_1.min_1 LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2539,7 +2539,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.min_1 LIKE %(param_1)s::VARCHAR
+   WHERE anon_1.min_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2555,7 +2555,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.min_1 LIKE ? || '%' ESCAPE '/')
+   WHERE anon_1.min_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2571,7 +2571,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.min_1 LIKE concat(%s, '%%') ESCAPE '/')
+   WHERE anon_1.min_1 LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2585,7 +2585,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.min_1 LIKE $1::VARCHAR || '%' ESCAPE '/')
+   WHERE anon_1.min_1 LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2599,7 +2599,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.min_1 LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE anon_1.min_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2613,7 +2613,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.min_1 LIKE '%%' || %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE anon_1.min_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2629,7 +2629,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.min_1 LIKE '%' || ? || '%' ESCAPE '/')
+   WHERE anon_1.min_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2673,7 +2673,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.min_1 ILIKE %(param_1)s::VARCHAR
+   WHERE anon_1.min_1 ILIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2703,7 +2703,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.min_1 LIKE %(param_1)s::VARCHAR
+   WHERE anon_1.min_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2719,7 +2719,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE anon_1.min_1 LIKE ?
+   WHERE anon_1.min_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---
@@ -2733,7 +2733,7 @@
            WHERE color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE (anon_1.min_1 LIKE %(param_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE anon_1.min_1 LIKE %(param_1)s::VARCHAR ESCAPE '\'
    ORDER BY color.id ASC
   '''
 # ---
@@ -2749,7 +2749,7 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   WHERE (anon_1.min_1 LIKE ? || '%' ESCAPE '/')
+   WHERE anon_1.min_1 REGEXP ?
    ORDER BY color.id ASC
   '''
 # ---

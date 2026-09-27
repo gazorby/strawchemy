@@ -929,6 +929,12 @@ Strawchemy supports a wide range of filter operations:
 | **Interval**                            | order filters on plain intervals, plus `days`, `hours`, `minutes` and `seconds` filters                                                                                          |
 | **Logical**                             | `_and`, `_or`, `_not`                                                                                                                                                            |
 
+`like`, `nlike`, `ilike` and `nilike` take a SQL `LIKE` pattern: `%` matches any sequence of characters, `_` any
+single character, and a backslash makes the next character literal (`\%`, `\_`, `\\`; written `"50\\%"` in a GraphQL
+string). A pattern ending with a lone backslash is rejected. `startswith`, `endswith`, `contains` and their `i`
+variants match their value literally. Operators without the `i` prefix compare letter case on every database,
+SQLite and MySQL included.
+
 A relationship filter that holds a predicate only matches rows that have a matching related row, whatever the filters
 next to it: `users(filter: { group: { name: { isNull: true } } })` skips users without a group. To find rows without a
 related row, filter on the foreign key column (`groupId: { isNull: true }`), negate the relationship
