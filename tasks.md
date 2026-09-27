@@ -79,7 +79,7 @@ Install pre-commit hooks
 
 ## `lint`
 
-- Depends: vulture, ty, ruff:check, ruff:format:check, slotscheck, unasyncd:check
+- Depends: vulture, ty, ruff:check, ruff:format:check, slotscheck, unasyncd:check, snapshots:orphans
 
 - **Usage:** `lint`
 - **Aliases:** `l`
@@ -152,6 +152,12 @@ Check code formatting
 - **Usage:** `slotscheck`
 
 Run slotscheck
+
+## `snapshots:orphans`
+
+- **Usage:** `snapshots:orphans`
+
+Fail on .ambr snapshot entries that no collected test produces
 
 ## `test`
 
