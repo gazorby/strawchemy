@@ -402,11 +402,11 @@ class HookApplier:
         *,
         in_subquery: bool = False,
         export_order_by: bool = False,
-    ) -> tuple[Select[tuple[DeclarativeT]], list[_AbstractLoad]]:
-        """Runs every hook of ``node`` on ``statement`` and returns the loader options they add.
+    ) -> tuple[Select[tuple[DeclarativeT]], list[_AbstractLoad], tuple[UnaryExpression[Any], ...]]:
+        """Runs every hook of ``node`` on ``statement``; returns it with the loader options and exported ORDER BY.
 
         Each hook edits the statement, then adds its columns and, outside a subquery, its relationship loads.
-        With ``export_order_by``, the ORDER BY the hooks add is dropped and the columns it reads are selected instead.
+        With ``export_order_by``, the ORDER BY the hooks add is moved out of the statement and its columns selected.
         """
         options: list[_AbstractLoad] = []
         order_by = statement._order_by_clauses  # noqa: SLF001
@@ -416,18 +416,16 @@ class HookApplier:
             options.extend(column_options)
             if not in_subquery:
                 options.extend(hook.load_relationships(self.scope.alias_from_relation_node(node, "target")))
-        if export_order_by:
-            hook_order_by = statement._order_by_clauses[len(order_by) :]  # noqa: SLF001
-            statement = add_missing_columns(statement.order_by(None).order_by(*order_by), _columns_of(hook_order_by))
-        return statement, options
+        if not export_order_by:
+            return statement, options, ()
+        hook_order_by = _as_unary(statement._order_by_clauses[len(order_by) :])  # noqa: SLF001
+        statement = add_missing_columns(statement.order_by(None).order_by(*order_by), _columns_of(hook_order_by))
+        return statement, options, hook_order_by
 
-    def order_by(self, node: QueryNodeType, alias: AliasedClass[Any]) -> tuple[UnaryExpression[Any], ...]:
-        """Returns the ORDER BY the hooks of ``node`` add, built against ``alias``."""
+    def orders(self, node: QueryNodeType, alias: AliasedClass[Any]) -> bool:
+        """Tells whether the hooks of ``node`` add an ORDER BY, run against ``alias``."""
         statement = self.apply_statement_hooks(select(alias), node, alias)
-        return tuple(
-            clause if isinstance(clause, UnaryExpression) else clause.asc()
-            for clause in statement._order_by_clauses  # noqa: SLF001
-        )
+        return bool(statement._order_by_clauses)  # noqa: SLF001
 
     def collect_load_options(
         self, node: QueryNodeType, alias: AliasedClass[Any], in_subquery: bool = False
@@ -450,6 +448,10 @@ class HookApplier:
         for hook in self.hooks[node]:
             statement = hook.apply_hook(statement, alias)
         return statement
+
+
+def _as_unary(clauses: Iterable[ColumnElement[Any]]) -> tuple[UnaryExpression[Any], ...]:
+    return tuple(clause if isinstance(clause, UnaryExpression) else clause.asc() for clause in clauses)
 
 
 def _columns_of(clauses: Iterable[ColumnElement[Any]]) -> list[ColumnElement[Any]]:

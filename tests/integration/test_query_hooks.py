@@ -552,3 +552,109 @@ async def test_order_by_relation_with_ordering_hook(
     names = [fruit["color"]["name"] for fruit in fruits]
     assert names == sorted(names, reverse=True)
     assert query_tracker.query_count == 1
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        pytest.param(
+            "colorNameOrderedFruits(orderBy: [{ sweetness: ASC }])",
+            [
+                "Lemon",
+                "Banana",
+                "Quince",
+                "Apple",
+                "Cherry",
+                "Watermelon",
+                "Pears",
+                "Orange",
+                "clementine",
+                "Cantaloupe",
+                "Strawberry",
+            ],
+            id="plain",
+        ),
+        pytest.param(
+            "colorNameOrderedFruitsPaginated(orderBy: [{ sweetness: ASC }], limit: 3, offset: 2)",
+            ["Quince", "Apple", "Cherry"],
+            id="paginated",
+        ),
+        pytest.param(
+            "colorNameOrderedFruits(distinctOn: [colorId], orderBy: [{ sweetness: ASC }])",
+            ["Lemon", "Apple", "Watermelon", "Orange", "Cantaloupe"],
+            id="distinct-on",
+        ),
+        pytest.param(
+            "colorNameOrderedFruitsPaginated(distinctOn: [colorId], orderBy: [{ sweetness: ASC }], limit: 2, offset: 1)",
+            ["Apple", "Watermelon"],
+            id="distinct-on-paginated",
+        ),
+    ],
+)
+@pytest.mark.snapshot
+async def test_query_hook_order_by_joined_alias(
+    query: str,
+    expected: list[str],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that a root query hook ordering by an alias it joins orders by that joined alias."""
+    result = await maybe_async(any_query(f"{{ {query} {{ name colorId }} }}"))
+    assert not result.errors
+    assert result.data
+
+    assert [fruit["name"] for fruit in next(iter(result.data.values()))] == expected
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("arguments", "expected"),
+    [
+        pytest.param(
+            "orderBy: [{ sweetness: DESC }]",
+            {
+                "Red": ["Cherry", "Apple"],
+                "Yellow": ["Quince", "Banana", "Lemon"],
+                "Orange": ["clementine", "Orange"],
+                "Green": ["Strawberry", "Cantaloupe"],
+                "Pink": ["Pears", "Watermelon"],
+            },
+            id="order-by",
+        ),
+        pytest.param(
+            "distinctOn: [colorId], orderBy: [{ sweetness: DESC }]",
+            {
+                "Red": ["Cherry"],
+                "Yellow": ["Quince"],
+                "Orange": ["clementine"],
+                "Green": ["Strawberry"],
+                "Pink": ["Pears"],
+            },
+            id="distinct-on",
+        ),
+    ],
+)
+@pytest.mark.snapshot
+async def test_nested_query_hook_order_by_joined_alias(
+    arguments: str,
+    expected: dict[str, list[str]],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that a relation query hook ordering by an alias it joins orders by that joined alias."""
+    result = await maybe_async(
+        any_query(f"{{ colorsWithColorNameOrderedFruits {{ name fruits({arguments}) {{ name }} }} }}")
+    )
+    assert not result.errors
+    assert result.data
+
+    fruits = {
+        color["name"]: [fruit["name"] for fruit in color["fruits"]]
+        for color in result.data["colorsWithColorNameOrderedFruits"]
+    }
+    assert fruits == expected
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
