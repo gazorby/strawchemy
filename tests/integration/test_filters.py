@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -1848,6 +1849,135 @@ async def test_ilike_patterns_on_regexp_syntax_and_long_values(
     raw_users: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test that ilike and nilike read regular expression syntax literally and stay fast on long values."""
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize(
+    "raw_users",
+    [
+        pytest.param(
+            [
+                {"id": 1, "name": "Alice", "group_id": None, "bio": "50%"},
+                {"id": 2, "name": "Bob", "group_id": None, "bio": "50\\%"},
+                {"id": 3, "name": "Charlie", "group_id": None, "bio": "a_b"},
+                {"id": 4, "name": "Tango", "group_id": None, "bio": "axb"},
+            ],
+            id="escaped-wildcards",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("operator", "value", "names"),
+    [
+        pytest.param("like", r"50\%", ["Alice"], id="like-escaped-percent"),
+        pytest.param("ilike", r"50\%", ["Alice"], id="ilike-escaped-percent"),
+        pytest.param("nlike", r"50\%", ["Bob", "Charlie", "Tango"], id="nlike-escaped-percent"),
+        pytest.param("nilike", r"50\%", ["Bob", "Charlie", "Tango"], id="nilike-escaped-percent"),
+        pytest.param("like", r"50\\%", ["Bob"], id="like-escaped-backslash"),
+        pytest.param("ilike", r"50\\%", ["Bob"], id="ilike-escaped-backslash"),
+        pytest.param("nlike", r"50\\%", ["Alice", "Charlie", "Tango"], id="nlike-escaped-backslash"),
+        pytest.param("nilike", r"50\\%", ["Alice", "Charlie", "Tango"], id="nilike-escaped-backslash"),
+        pytest.param("like", r"a\_b", ["Charlie"], id="like-escaped-underscore"),
+        pytest.param("ilike", r"A\_B", ["Charlie"], id="ilike-escaped-underscore"),
+        pytest.param("nlike", r"a\_b", ["Alice", "Bob", "Tango"], id="nlike-escaped-underscore"),
+        pytest.param("nilike", r"A\_B", ["Alice", "Bob", "Tango"], id="nilike-escaped-underscore"),
+        pytest.param("like", r"\a\x\b", ["Tango"], id="like-escaped-literal"),
+        pytest.param("ilike", r"\A_\B", ["Charlie", "Tango"], id="ilike-escaped-literal"),
+        pytest.param("like", r"%\\%", ["Bob"], id="like-escaped-backslash-inside"),
+        pytest.param("like", r"50\%%", ["Alice"], id="like-escaped-then-wildcard"),
+        pytest.param("startswith", "50%", ["Alice"], id="startswith-literal-percent"),
+        pytest.param("startswith", "50\\", ["Bob"], id="startswith-literal-backslash"),
+        pytest.param("endswith", r"\%", ["Bob"], id="endswith-literal-backslash"),
+        pytest.param("contains", "_", ["Charlie"], id="contains-literal-underscore"),
+        pytest.param("contains", "\\", ["Bob"], id="contains-literal-backslash"),
+        pytest.param("icontains", r"\%", ["Bob"], id="icontains-literal-backslash"),
+        pytest.param("istartswith", r"50\\", [], id="istartswith-literal-backslashes"),
+        pytest.param("iendswith", "_B", ["Charlie"], id="iendswith-literal-underscore"),
+    ],
+)
+async def test_like_backslash_escapes_next_character(
+    operator: str,
+    value: str,
+    names: list[str],
+    any_query: AnyQueryExecutor,
+    raw_users: RawRecordData,  # noqa: ARG001
+) -> None:
+    """Test that a backslash escapes the next LIKE pattern character, and that the literal operators read it as is."""
+    result = await maybe_async(
+        any_query(f"{{ users(filter: {{ bio: {{ {operator}: {json.dumps(value)} }} }}) {{ name }} }}")
+    )
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize("operator", ["like", "nlike", "ilike", "nilike"])
+@pytest.mark.parametrize("value", ["50\\", "a\\\\\\"])
+async def test_like_pattern_ending_with_escape_is_rejected(
+    operator: str, value: str, any_query: AnyQueryExecutor
+) -> None:
+    """Test that a LIKE pattern ending with a lone backslash is rejected before reaching the database."""
+    result = await maybe_async(
+        any_query(f"{{ users(filter: {{ bio: {{ {operator}: {json.dumps(value)} }} }}) {{ name }} }}")
+    )
+    assert result.errors
+    assert len(result.errors) == 1
+    assert result.errors[0].message == f"LIKE pattern {value!r} must not end with an escape character"
+
+
+@pytest.mark.parametrize(
+    "raw_users",
+    [
+        pytest.param(
+            [
+                {"id": 1, "name": "Émile", "group_id": None, "bio": "ABC"},
+                {"id": 2, "name": "émile", "group_id": None, "bio": "abc"},
+                {"id": 3, "name": "Bob", "group_id": None, "bio": "ABC "},
+                {"id": 4, "name": "Tango", "group_id": None, "bio": None},
+            ],
+            id="mixed-case",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param('{ bio: { like: "ABC" } }', ["Émile"], id="like"),
+        pytest.param('{ bio: { like: "abc" } }', ["émile"], id="like-lowercase"),
+        pytest.param('{ bio: { like: "a%c" } }', ["émile"], id="like-wildcard"),
+        pytest.param('{ bio: { like: "A_C" } }', ["Émile"], id="like-underscore"),
+        pytest.param('{ bio: { nlike: "abc" } }', ["Bob", "Émile"], id="nlike"),
+        pytest.param('{ bio: { startswith: "ab" } }', ["émile"], id="startswith"),
+        pytest.param('{ bio: { endswith: "bc" } }', ["émile"], id="endswith"),
+        pytest.param('{ bio: { contains: "b" } }', ["émile"], id="contains"),
+        pytest.param('{ bio: { contains: "B" } }', ["Bob", "Émile"], id="contains-uppercase"),
+        pytest.param('{ name: { like: "é%" } }', ["émile"], id="like-non-ascii"),
+        pytest.param('{ name: { startswith: "É" } }', ["Émile"], id="startswith-non-ascii"),
+        pytest.param('{ name: { like: "_mile" } }', ["Émile", "émile"], id="like-underscore-non-ascii"),
+        pytest.param('{ name: { like: "emile" } }', [], id="like-accent"),
+        pytest.param('{ bio: { ilike: "abc" } }', ["Émile", "émile"], id="ilike"),
+        pytest.param('{ bio: { nilike: "abc" } }', ["Bob"], id="nilike"),
+        pytest.param('{ bio: { istartswith: "AB" } }', ["Bob", "Émile", "émile"], id="istartswith"),
+        pytest.param('{ bio: { iendswith: "BC" } }', ["Émile", "émile"], id="iendswith"),
+        pytest.param('{ bio: { icontains: "B" } }', ["Bob", "Émile", "émile"], id="icontains"),
+        pytest.param('{ name: { ilike: "emile" } }', [], id="ilike-accent"),
+        pytest.param('{ name: { icontains: "EMI" } }', [], id="icontains-accent"),
+        pytest.param('{ bio: { like: "ABC " } }', ["Bob"], id="like-trailing-space"),
+        pytest.param('{ bio: { endswith: "C" } }', ["Émile"], id="endswith-trailing-space"),
+    ],
+)
+async def test_case_sensitive_like_operators(
+    dto_filter: str,
+    names: list[str],
+    any_query: AnyQueryExecutor,
+    raw_users: RawRecordData,  # noqa: ARG001
+) -> None:
+    """Test that like, nlike, startswith, endswith and contains compare letter case, and trailing spaces, exactly."""
     result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None

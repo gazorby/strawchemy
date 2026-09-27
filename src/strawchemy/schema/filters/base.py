@@ -15,6 +15,7 @@ from sqlalchemy import (
     and_,
     false,
     func,
+    literal,
     not_,
     null,
     or_,
@@ -27,6 +28,7 @@ from sqlalchemy.dialects import postgresql as pg
 from strawberry import UNSET
 from typing_extensions import TypeIs, override
 
+from strawchemy.exceptions import FilterValueError
 from strawchemy.utils.postgres import as_jsonb
 
 if TYPE_CHECKING:
@@ -49,13 +51,27 @@ if TYPE_CHECKING:
 
 T = TypeVar("T")
 
+_LIKE_ESCAPE = "\\"
+# A binary collation on the pattern compares code points, whatever the column charset, where MySQL's default collations
+# ignore case and accents. Unlike `LIKE BINARY`, `_` still matches one character rather than one byte.
+_MYSQL_LIKE_COLLATION = "utf8mb4_bin"
 
-def _like_segment_regexp(segment: str) -> str:
-    return "".join("." if char == "_" else re.escape(char) for char in segment)
+
+def _like_segment_regexps(pattern: str) -> list[str]:
+    segments = [""]
+    chars = iter(pattern)
+    for char in chars:
+        if char == "%":
+            segments.append("")
+        elif char == "_":
+            segments[-1] += "."
+        else:
+            segments[-1] += re.escape(next(chars, "") if char == _LIKE_ESCAPE else char)
+    return segments
 
 
 def _like_regexp(pattern: str) -> str:
-    first, *rest = (_like_segment_regexp(segment) for segment in pattern.split("%"))
+    first, *rest = _like_segment_regexps(pattern)
     if not rest:
         return rf"(?s)^{first}\Z"
     *middle, last = rest
@@ -64,6 +80,25 @@ def _like_regexp(pattern: str) -> str:
     # the atomic group Python only has since 3.11, so that position is never revisited.
     atomic = "".join(rf"(?=(?P<s{i}>.*?{segment}))(?P=s{i})" for i, segment in enumerate(middle))
     return rf"(?s)^{first}{atomic}.*{last}\Z" if last else rf"(?s)^{first}{atomic}"
+
+
+def _checked_like_pattern(pattern: str) -> str:
+    # PostgreSQL rejects a trailing escape, MySQL reads it as a literal backslash.
+    if (len(pattern) - len(pattern.rstrip(_LIKE_ESCAPE))) % 2:
+        msg = f"LIKE pattern {pattern!r} must not end with an escape character"
+        raise FilterValueError(msg)
+    return pattern
+
+
+def _escape_like(value: str) -> str:
+    return re.sub(r"([\\%_])", r"\\\1", value)
+
+
+def _sqlite_regexp(
+    model_attribute: QueryableAttribute[str] | ColumnElement[str], pattern: str, *, case_sensitive: bool
+) -> ColumnElement[bool]:
+    # SQLAlchemy's SQLite REGEXP function ignores flags, but Python's re reads them inline.
+    return model_attribute.regexp_match(pattern if case_sensitive else f"(?i){pattern}")
 
 
 def is_set(value: T | None) -> TypeIs[T]:
@@ -133,37 +168,55 @@ class OrderFilter(EqualityFilter):
 
 
 @dataclass(frozen=True)
+class _LikePattern:
+    pattern: str
+    case_sensitive: bool
+    negated: bool = False
+
+    def to_expression(
+        self, dialect: Dialect, model_attribute: QueryableAttribute[str] | ColumnElement[str]
+    ) -> ColumnElement[bool]:
+        if dialect.name == "sqlite":
+            # SQLite's LIKE ignores ASCII case, which fits neither the case-sensitive operators nor non-ASCII folding.
+            expression = _sqlite_regexp(model_attribute, _like_regexp(self.pattern), case_sensitive=self.case_sensitive)
+        else:
+            pattern = (
+                literal(self.pattern, Text).collate(_MYSQL_LIKE_COLLATION) if dialect.name == "mysql" else self.pattern
+            )
+            like = model_attribute.like if self.case_sensitive else model_attribute.ilike
+            expression = like(pattern, escape=_LIKE_ESCAPE)
+        return not_(expression) if self.negated else expression
+
+
+@dataclass(frozen=True)
 class TextFilter(OrderFilter):
     comparison: TextComparison
 
-    @staticmethod
-    def _sqlite_iregexp(
-        model_attribute: QueryableAttribute[str] | ColumnElement[str], pattern: str
-    ) -> ColumnElement[bool]:
-        # SQLAlchemy's SQLite REGEXP function ignores flags, but Python's re reads them inline.
-        return model_attribute.regexp_match(f"(?i){pattern}")
-
-    def _like_expressions(
-        self, model_attribute: QueryableAttribute[str] | ColumnElement[str], *, sqlite: bool
-    ) -> list[ColumnElement[bool]]:
-        expressions: list[ColumnElement[bool]] = []
-
-        if is_set(self.comparison.like):
-            expressions.append(model_attribute.like(self.comparison.like))
-        if is_set(self.comparison.nlike):
-            expressions.append(model_attribute.not_like(self.comparison.nlike))
-        if is_set(ilike := self.comparison.ilike):
-            expressions.append(
-                self._sqlite_iregexp(model_attribute, _like_regexp(ilike)) if sqlite else model_attribute.ilike(ilike)
+    def _like_patterns(self) -> list[_LikePattern]:
+        comparison = self.comparison
+        patterns = [
+            _LikePattern(_checked_like_pattern(pattern), case_sensitive=case_sensitive, negated=negated)
+            for pattern, case_sensitive, negated in (
+                (comparison.like, True, False),
+                (comparison.nlike, True, True),
+                (comparison.ilike, False, False),
+                (comparison.nilike, False, True),
             )
-        if is_set(nilike := self.comparison.nilike):
-            expressions.append(
-                not_(self._sqlite_iregexp(model_attribute, _like_regexp(nilike)))
-                if sqlite
-                else model_attribute.not_ilike(nilike)
+            if is_set(pattern)
+        ]
+        patterns.extend(
+            _LikePattern(template.format(_escape_like(value)), case_sensitive=case_sensitive)
+            for value, template, case_sensitive in (
+                (comparison.startswith, "{}%", True),
+                (comparison.endswith, "%{}", True),
+                (comparison.contains, "%{}%", True),
+                (comparison.istartswith, "{}%", False),
+                (comparison.iendswith, "%{}", False),
+                (comparison.icontains, "%{}%", False),
             )
-
-        return expressions
+            if is_set(value)
+        )
+        return patterns
 
     def _regexp_expressions(
         self, dialect: Dialect, model_attribute: QueryableAttribute[str] | ColumnElement[str]
@@ -177,7 +230,7 @@ class TextFilter(OrderFilter):
             if case_sensitive:
                 return model_attribute.regexp_match(pattern)
             if dialect.name == "sqlite":
-                return self._sqlite_iregexp(model_attribute, pattern)
+                return _sqlite_regexp(model_attribute, pattern, case_sensitive=False)
             return model_attribute.regexp_match(pattern, flags="i")
 
         if is_set(self.comparison.regexp):
@@ -198,36 +251,8 @@ class TextFilter(OrderFilter):
         model_attribute: QueryableAttribute[str] | ColumnElement[str],
     ) -> list[ColumnElement[bool]]:
         expressions: list[ColumnElement[bool]] = super().to_expressions(dialect, model_attribute)
-        # SQLite's LIKE and lower() fold ASCII letters only, where Python's re folds any.
-        sqlite = dialect.name == "sqlite"
-        expressions.extend(self._like_expressions(model_attribute, sqlite=sqlite))
+        expressions.extend(like.to_expression(dialect, model_attribute) for like in self._like_patterns())
         expressions.extend(self._regexp_expressions(dialect, model_attribute))
-
-        if is_set(self.comparison.startswith):
-            expressions.append(model_attribute.startswith(self.comparison.startswith, autoescape=True))
-        if is_set(self.comparison.endswith):
-            expressions.append(model_attribute.endswith(self.comparison.endswith, autoescape=True))
-        if is_set(self.comparison.contains):
-            expressions.append(model_attribute.contains(self.comparison.contains, autoescape=True))
-        if is_set(istartswith := self.comparison.istartswith):
-            expressions.append(
-                self._sqlite_iregexp(model_attribute, f"^{re.escape(istartswith)}")
-                if sqlite
-                else model_attribute.istartswith(istartswith, autoescape=True)
-            )
-        if is_set(iendswith := self.comparison.iendswith):
-            expressions.append(
-                self._sqlite_iregexp(model_attribute, rf"{re.escape(iendswith)}\Z")
-                if sqlite
-                else model_attribute.iendswith(iendswith, autoescape=True)
-            )
-        if is_set(icontains := self.comparison.icontains):
-            expressions.append(
-                self._sqlite_iregexp(model_attribute, re.escape(icontains))
-                if sqlite
-                else model_attribute.icontains(icontains, autoescape=True)
-            )
-
         return expressions
 
 

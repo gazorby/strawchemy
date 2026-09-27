@@ -6,7 +6,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > ?
-     AND (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+     AND fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -17,7 +17,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > %s
-     AND (fruit.name LIKE concat('%%', %s, '%%') ESCAPE '/')
+     AND fruit.name LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -28,7 +28,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > $1::INTEGER
-     AND (fruit.name LIKE '%' || $2::VARCHAR || '%' ESCAPE '/')
+     AND fruit.name LIKE $2::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -39,7 +39,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
-     AND (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+     AND fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -50,7 +50,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
-     AND (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+     AND fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -61,7 +61,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > ?
-     AND (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+     AND fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -185,7 +185,7 @@
          fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.sweetness > ? AND (fruit.name LIKE '%' || ? || '%' ESCAPE '/'))
+   WHERE (fruit.sweetness > ? AND fruit.name REGEXP ?)
       OR (fruit.water_percent > ? AND fruit.sweetness < ?)
    ORDER BY fruit.id ASC
   '''
@@ -196,7 +196,7 @@
          fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.sweetness > %s AND (fruit.name LIKE concat('%%', %s, '%%') ESCAPE '/'))
+   WHERE (fruit.sweetness > %s AND fruit.name LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\')
       OR (fruit.water_percent > %s AND fruit.sweetness < %s)
    ORDER BY fruit.id ASC
   '''
@@ -207,7 +207,7 @@
          fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.sweetness > $1::INTEGER AND (fruit.name LIKE '%' || $2::VARCHAR || '%' ESCAPE '/'))
+   WHERE (fruit.sweetness > $1::INTEGER AND fruit.name LIKE $2::VARCHAR ESCAPE '\')
       OR (fruit.water_percent > $3::FLOAT AND fruit.sweetness < $4::INTEGER)
    ORDER BY fruit.id ASC
   '''
@@ -218,7 +218,7 @@
          fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.sweetness > %(sweetness_1)s::INTEGER AND (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/'))
+   WHERE (fruit.sweetness > %(sweetness_1)s::INTEGER AND fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\')
       OR (fruit.water_percent > %(water_percent_1)s AND fruit.sweetness < %(sweetness_2)s::INTEGER)
    ORDER BY fruit.id ASC
   '''
@@ -229,7 +229,7 @@
          fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.sweetness > %(sweetness_1)s::INTEGER AND (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/'))
+   WHERE (fruit.sweetness > %(sweetness_1)s::INTEGER AND fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\')
       OR (fruit.water_percent > %(water_percent_1)s AND fruit.sweetness < %(sweetness_2)s::INTEGER)
    ORDER BY fruit.id ASC
   '''
@@ -240,7 +240,7 @@
          fruit.sweetness,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.sweetness > ? AND (fruit.name LIKE '%' || ? || '%' ESCAPE '/'))
+   WHERE (fruit.sweetness > ? AND fruit.name REGEXP ?)
       OR (fruit.water_percent > ? AND fruit.sweetness < ?)
    ORDER BY fruit.id ASC
   '''
@@ -1338,7 +1338,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > ?
-      OR (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+      OR fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1349,7 +1349,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > %s
-      OR (fruit.name LIKE concat('%%', %s, '%%') ESCAPE '/')
+      OR fruit.name LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1360,7 +1360,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > $1::INTEGER
-      OR (fruit.name LIKE '%' || $2::VARCHAR || '%' ESCAPE '/')
+      OR fruit.name LIKE $2::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1371,7 +1371,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
-      OR (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+      OR fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1382,7 +1382,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
-      OR (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+      OR fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1393,7 +1393,7 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.sweetness > ?
-      OR (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+      OR fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1402,7 +1402,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1411,7 +1411,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE concat('%%', %s, '%%') ESCAPE '/')
+   WHERE fruit.name LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1420,7 +1420,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
+   WHERE fruit.name LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1429,7 +1429,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1438,7 +1438,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE '%' || ? ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1447,7 +1447,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE concat('%%', %s) ESCAPE '/')
+   WHERE fruit.name LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1456,7 +1456,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE '%' || $1::VARCHAR ESCAPE '/')
+   WHERE fruit.name LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1465,7 +1465,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE '%%' || %(name_1)s::VARCHAR ESCAPE '/')
+   WHERE fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1483,7 +1483,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (lower(fruit.name) LIKE concat('%%', lower(%s), '%%') ESCAPE '/')
+   WHERE lower(fruit.name) LIKE lower((%s COLLATE utf8mb4_bin)) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1492,7 +1492,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name ILIKE '%' || $1::VARCHAR || '%' ESCAPE '/')
+   WHERE fruit.name ILIKE $1::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1501,7 +1501,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name ILIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE fruit.name ILIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1519,7 +1519,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (lower(fruit.name) LIKE concat('%%', lower(%s)) ESCAPE '/')
+   WHERE lower(fruit.name) LIKE lower((%s COLLATE utf8mb4_bin)) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1528,7 +1528,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name ILIKE '%' || $1::VARCHAR ESCAPE '/')
+   WHERE fruit.name ILIKE $1::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1537,7 +1537,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name ILIKE '%%' || %(name_1)s::VARCHAR ESCAPE '/')
+   WHERE fruit.name ILIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1555,7 +1555,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) LIKE lower(%s)
+   WHERE lower(fruit.name) LIKE lower((%s COLLATE utf8mb4_bin)) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1564,7 +1564,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name ILIKE $1::VARCHAR
+   WHERE fruit.name ILIKE $1::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1573,7 +1573,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name ILIKE %(name_1)s::VARCHAR
+   WHERE fruit.name ILIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1663,7 +1663,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (lower(fruit.name) LIKE concat(lower(%s), '%%') ESCAPE '/')
+   WHERE lower(fruit.name) LIKE lower((%s COLLATE utf8mb4_bin)) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1672,7 +1672,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name ILIKE $1::VARCHAR || '%' ESCAPE '/')
+   WHERE fruit.name ILIKE $1::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1681,7 +1681,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name ILIKE %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE fruit.name ILIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1690,7 +1690,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name LIKE ?
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1699,7 +1699,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name LIKE %s
+   WHERE fruit.name LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1708,7 +1708,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name LIKE $1::VARCHAR
+   WHERE fruit.name LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1717,7 +1717,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name LIKE %(name_1)s::VARCHAR
+   WHERE fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1735,7 +1735,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE lower(fruit.name) NOT LIKE lower(%s)
+   WHERE lower(fruit.name) NOT LIKE lower((%s COLLATE utf8mb4_bin)) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1744,7 +1744,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name NOT ILIKE $1::VARCHAR
+   WHERE fruit.name NOT ILIKE $1::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1753,7 +1753,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name NOT ILIKE %(name_1)s::VARCHAR
+   WHERE fruit.name NOT ILIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1762,7 +1762,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name NOT LIKE ?
+   WHERE fruit.name NOT REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1771,7 +1771,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name NOT LIKE %s
+   WHERE fruit.name NOT LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1780,7 +1780,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name NOT LIKE $1::VARCHAR
+   WHERE fruit.name NOT LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1789,7 +1789,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name NOT LIKE %(name_1)s::VARCHAR
+   WHERE fruit.name NOT LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1870,7 +1870,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE ? || '%' ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1879,7 +1879,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE concat(%s, '%%') ESCAPE '/')
+   WHERE fruit.name LIKE (%s COLLATE utf8mb4_bin) ESCAPE '\\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1888,7 +1888,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE $1::VARCHAR || '%' ESCAPE '/')
+   WHERE fruit.name LIKE $1::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1897,7 +1897,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1906,7 +1906,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1915,7 +1915,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE '%' || ? || '%' ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1924,7 +1924,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE '%%' || %(name_1)s::VARCHAR ESCAPE '/')
+   WHERE fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1933,7 +1933,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE '%' || ? ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1942,7 +1942,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name ILIKE '%%' || %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE fruit.name ILIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1960,7 +1960,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name ILIKE '%%' || %(name_1)s::VARCHAR ESCAPE '/')
+   WHERE fruit.name ILIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -1978,7 +1978,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name ILIKE %(name_1)s::VARCHAR
+   WHERE fruit.name ILIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2032,7 +2032,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name ILIKE %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE fruit.name ILIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2050,7 +2050,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name LIKE %(name_1)s::VARCHAR
+   WHERE fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2059,7 +2059,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name LIKE ?
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2068,7 +2068,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name NOT ILIKE %(name_1)s::VARCHAR
+   WHERE fruit.name NOT ILIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2086,7 +2086,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name NOT LIKE %(name_1)s::VARCHAR
+   WHERE fruit.name NOT LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2095,7 +2095,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE fruit.name NOT LIKE ?
+   WHERE fruit.name NOT REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2140,7 +2140,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE %(name_1)s::VARCHAR || '%%' ESCAPE '/')
+   WHERE fruit.name LIKE %(name_1)s::VARCHAR ESCAPE '\'
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -2149,7 +2149,7 @@
   SELECT fruit.name,
          fruit.id
     FROM fruit AS fruit
-   WHERE (fruit.name LIKE ? || '%' ESCAPE '/')
+   WHERE fruit.name REGEXP ?
    ORDER BY fruit.id ASC
   '''
 # ---
