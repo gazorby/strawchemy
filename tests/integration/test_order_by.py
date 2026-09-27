@@ -384,11 +384,7 @@ async def test_distinct_on_with_relation_order_by_nested_aggregation(
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
-    db_features: DatabaseFeatures,
-    request: pytest.FixtureRequest,
 ) -> None:
-    if db_features.supports_distinct_on:
-        request.applymarker(pytest.mark.xfail(reason="#304", strict=True))
     result = await maybe_async(
         any_query(
             """{
