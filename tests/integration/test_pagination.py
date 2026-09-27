@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -8,6 +8,9 @@ from tests.integration.fixtures import QueryTracker
 from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
+
+if TYPE_CHECKING:
+    from strawchemy.config.databases import DatabaseFeatures
 
 pytestmark = [pytest.mark.integration]
 
@@ -402,6 +405,7 @@ async def test_nested_pagination_counts_tied_rows(
     any_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     raw_fruits: RawRecordData,
+    db_features: DatabaseFeatures,
 ) -> None:
     """Test that nested limit and offset count rows tied on the ordering one by one."""
     result = await maybe_async(any_query(f"{{ colorsPaginated {{ id fruits({order_by} {pagination}) {{ id }} }} }}"))
@@ -412,6 +416,9 @@ async def test_nested_pagination_counts_tied_rows(
         color_fruits = _fruit_ids_of(raw_fruits, color["id"])
         assert len(color["fruits"]) == len(color_fruits[expected])
         assert all(fruit in color_fruits for fruit in color["fruits"])
+        # PostgreSQL's LATERAL LIMIT picks any of the tied rows; the rank breaks ties by primary key.
+        if not db_features.supports_lateral:
+            assert color["fruits"] == color_fruits[expected]
 
 
 @pytest.mark.parametrize(
@@ -429,6 +436,7 @@ async def test_nested_pagination_counts_tied_rows_with_to_many_child(
     query_tracker: QueryTracker,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
+    db_features: DatabaseFeatures,
 ) -> None:
     """Test that the to-many children of a nested paginated relation do not count as rows of that relation."""
     result = await maybe_async(
@@ -449,6 +457,8 @@ async def test_nested_pagination_counts_tied_rows_with_to_many_child(
     for color in result.data["colorsPaginated"]:
         color_fruits = _fruit_ids_of(raw_fruits, color["id"])
         assert len(color["fruits"]) == len(color_fruits[expected])
+        if not db_features.supports_lateral:
+            assert [{"id": fruit["id"]} for fruit in color["fruits"]] == color_fruits[expected]
         for fruit in color["fruits"]:
             assert {"id": fruit["id"]} in color_fruits
             farm_ids = sorted(farm["id"] for farm in fruit["farms"])
