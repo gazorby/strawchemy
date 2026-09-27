@@ -213,23 +213,39 @@ async def test_custom_query_hook_order_by(
 
 
 @pytest.mark.parametrize(
-    "query",
+    ("query", "path"),
     [
-        pytest.param("{ orderedFruitsPaginated { waterPercent } }", id="root-subquery"),
-        pytest.param("{ colorsWithOrderedFruits { fruits { waterPercent } } }", id="relation"),
+        pytest.param("{ orderedFruitsPaginated { id waterPercent } }", ("orderedFruitsPaginated",), id="root-subquery"),
         pytest.param(
-            "{ colorsWithPaginatedOrderedFruits { fruits(limit: 2) { waterPercent } } }", id="paginated-relation"
+            "{ colorsWithOrderedFruits { fruits { id waterPercent } } }",
+            ("colorsWithOrderedFruits", "fruits"),
+            id="relation",
+        ),
+        pytest.param(
+            "{ colorsWithPaginatedOrderedFruits { fruits(limit: 2) { id waterPercent } } }",
+            ("colorsWithPaginatedOrderedFruits", "fruits"),
+            id="paginated-relation",
         ),
     ],
 )
 async def test_query_hook_loaded_column_selected_once(
-    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker
+    query: str,
+    path: tuple[str, ...],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    raw_fruits: RawRecordData,
 ) -> None:
-    """Test that a column loaded by a hook and selected by the query is selected once."""
+    """Test that a column loaded by a hook and selected by the query is selected once and read correctly."""
     result = await maybe_async(any_query(query))
 
     assert not result.errors
     assert result.data
+    fruits = result.data[path[0]]
+    if len(path) > 1:
+        fruits = [fruit for color in fruits for fruit in color[path[1]]]
+    assert fruits
+    water_percents = {fruit["id"]: fruit["water_percent"] for fruit in raw_fruits}
+    assert all(fruit["waterPercent"] == water_percents[fruit["id"]] for fruit in fruits)
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted.count(".water_percent AS ") == 1
 
