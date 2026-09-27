@@ -66,21 +66,20 @@ class QueryHook(Generic[DeclarativeT]):
             self._relationships.append(attribute)
         self._check_relationship_load_spec(self._relationships)
 
-    def _check_relationship_load_spec(
-        self, load_spec: list[tuple[InstrumentedAttribute[Any], Sequence[LoadType]]]
-    ) -> None:
+    def _check_relationship_load_spec(self, load_spec: Sequence[LoadType]) -> None:
         """Checks that every key of ``load_spec``, nested ones included, is a relationship.
 
         Raises:
             QueryHookError: If a key is not a relationship attribute.
         """
-        for key, attributes in load_spec:
-            for attribute in attributes:
-                if isinstance(attribute, list):
-                    self._check_relationship_load_spec(attribute)
-                if not isinstance(key.property, RelationshipProperty):
-                    msg = f"Keys of mappings passed in `load` param must be relationship attributes: {key}"
-                    raise QueryHookError(msg)
+        for item in load_spec:
+            if not isinstance(item, tuple):
+                continue
+            key, attributes = item
+            if not isinstance(key.property, RelationshipProperty):
+                msg = f"Keys of mappings passed in `load` param must be relationship attributes: {key}"
+                raise QueryHookError(msg)
+            self._check_relationship_load_spec(attributes)
 
     def _load_relationships(
         self, load_spec: RelationshipLoadSpec, parent_alias: AliasedClass[Any] | None = None

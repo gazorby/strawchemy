@@ -15,6 +15,8 @@ if TYPE_CHECKING:
 
     from strawchemy.transpiler.hook import LoadType
 
+_WRONG_KEY_MESSAGE = re.escape("Keys of mappings passed in `load` param must be relationship attributes: ")
+
 
 class _ClassLoadHook(QueryHook[Fruit]):
     load: Sequence[LoadType] = [Fruit.name, Fruit.color]
@@ -118,7 +120,44 @@ def test_class_load_wrong_relationship_load_spec() -> None:
     class WrongLoadHook(QueryHook[Fruit]):
         load: Sequence[LoadType] = [(Fruit.name, [Fruit.id])]
 
-    with pytest.raises(
-        QueryHookError, match=re.escape("Keys of mappings passed in `load` param must be relationship attributes: ")
-    ):
+    with pytest.raises(QueryHookError, match=_WRONG_KEY_MESSAGE):
         WrongLoadHook()
+
+
+@pytest.mark.parametrize(
+    "load",
+    [
+        pytest.param([(Fruit.name, [])], id="empty-list-key"),
+        pytest.param([(Color.fruits, [(Fruit.name, [Fruit.id])])], id="nested-key"),
+        pytest.param([(Color.fruits, [(Fruit.name, [])])], id="nested-empty-list-key"),
+        pytest.param([(Color.fruits, [Fruit.name, (Fruit.color, [(Color.name, [Color.id])])])], id="deeply-nested-key"),
+    ],
+)
+def test_wrong_relationship_load_spec(load: Sequence[LoadType]) -> None:
+    """Test that a load spec keyed by a column at any depth raises ``QueryHookError``."""
+    with pytest.raises(QueryHookError, match=_WRONG_KEY_MESSAGE):
+        QueryHook(load=load)
+
+
+def test_class_load_wrong_nested_relationship_load_spec() -> None:
+    """Test that a class-level ``load`` with a nested key being a column raises ``QueryHookError``."""
+
+    class WrongNestedLoadHook(QueryHook[Color]):
+        load: Sequence[LoadType] = [(Color.fruits, [(Fruit.name, [Fruit.id])])]
+
+    with pytest.raises(QueryHookError, match=_WRONG_KEY_MESSAGE):
+        WrongNestedLoadHook()
+
+
+@pytest.mark.parametrize(
+    "load",
+    [
+        pytest.param([(Color.fruits, [])], id="empty-list"),
+        pytest.param([(Color.fruits, [(Fruit.color, [])])], id="nested-empty-list"),
+        pytest.param([(Color.fruits, [Fruit.name, (Fruit.color, [Color.name])])], id="nested"),
+        pytest.param([(Color.fruits, [(Fruit.color, [(Color.fruits, [Fruit.name])])])], id="deeply-nested"),
+    ],
+)
+def test_valid_relationship_load_spec(load: Sequence[LoadType]) -> None:
+    """Test that load specs keyed by relationships at every depth are accepted."""
+    assert _resolved_load(QueryHook(load=load)) == ([], load)
