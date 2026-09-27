@@ -22,6 +22,10 @@ run = "{{vars.uv_run}} tombi format"
 description = "Run ty"
 run = "{{vars.uv_run}} ty --version && {{vars.uv_run}} ty check"
 
+["snapshots:orphans"]
+description = "Fail on .ambr snapshot entries that no collected test produces"
+run = "{{vars.uv_run}} pytest tests --collect-only -qq --disable-warnings --check-orphan-snapshots"
+
 [vulture]
 description = "Run vulture"
 run = "{{vars.uv_run}} vulture --version && uv run vulture"
@@ -48,7 +52,15 @@ run = '''
 [lint]
 description = "Lint the code"
 alias = "l"
-depends = ["vulture", "ty", "ruff:check", "ruff:format:check", "slotscheck", "unasyncd:check"]
+depends = [
+  "vulture",
+  "ty",
+  "ruff:check",
+  "ruff:format:check",
+  "slotscheck",
+  "unasyncd:check",
+  "snapshots:orphans",
+]
 
 [pre-commit]
 description = "Run pre-commit checks"

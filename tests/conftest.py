@@ -19,7 +19,12 @@ if TYPE_CHECKING:
     from docker import DockerClient
     from pytest_databases.types import ServiceContainer
 
-pytest_plugins = ("pytest_databases.docker.postgres", "pytest_databases.docker.mysql", "pytester")
+pytest_plugins = (
+    "pytest_databases.docker.postgres",
+    "pytest_databases.docker.mysql",
+    "pytester",
+    "tests.snapshot_orphans",
+)
 
 __all__ = ("fx_sqlalchemy_pydantic_factory", "graphql_snapshot", "sql_snapshot", "strawchemy", "sync_query")
 
