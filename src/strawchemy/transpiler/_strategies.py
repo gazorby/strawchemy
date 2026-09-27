@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Protocol, cast
 from sqlalchemy import and_, func, inspect, null, select, true
 from sqlalchemy.orm import RelationshipProperty, aliased
 from sqlalchemy.orm import join as orm_join
+from sqlalchemy.sql.util import ClauseAdapter
 
 from strawchemy.transpiler._plan import distinct_rows
 from strawchemy.transpiler._query import Join
@@ -18,7 +19,8 @@ if TYPE_CHECKING:
     from sqlalchemy import Label, Select, SQLColumnExpression
     from sqlalchemy.orm import QueryableAttribute
     from sqlalchemy.orm.util import AliasedClass
-    from sqlalchemy.sql import ColumnElement
+    from sqlalchemy.sql import ColumnElement, FromClause
+    from sqlalchemy.sql.elements import UnaryExpression
     from sqlalchemy.sql.selectable import Join as SQLJoin
 
     from strawchemy.config.databases import DatabaseFeatures
@@ -86,19 +88,24 @@ class LateralJoinStrategy:
         base_statement = select(target_insp).with_only_columns(*selection)
         if plan.emulates_distinct_on:
             unpaged_plan = dataclasses.replace(plan, limit=None, offset=None)
-            statement = correlate_relation(unpaged_plan.apply_clauses(base_statement), root_relation, target_alias)
-            statement, adapter = distinct_rows(statement.correlate_except(), plan.distinct_on, plan.order_by)
+            statement, hook_order_by = unpaged_plan.apply_clauses(base_statement)
+            statement = correlate_relation(statement, root_relation, target_alias)
+            order_by = (*hook_order_by, *plan.order_by)
+            statement, adapter = distinct_rows(statement.correlate_except(), plan.distinct_on, order_by)
             statement = (
-                statement.order_by(*[adapter.traverse(expression) for expression in plan.order_by])
+                statement.order_by(*[adapter.traverse(expression) for expression in order_by])
                 .limit(plan.limit)
                 .offset(plan.offset)
             )
         else:
-            statement = correlate_relation(plan.apply_clauses(base_statement), root_relation, target_alias)
+            statement, hook_order_by = plan.apply_clauses(base_statement)
+            statement = correlate_relation(statement, root_relation, target_alias)
         statement = statement.lateral()
         lateral_alias = aliased(target_insp.mapper, statement, flat=True)
         scope.set_relation_alias(node, "target", lateral_alias)
-        return Join(statement, node=node, is_outer=is_outer, onclause=true())
+        return Join(
+            statement, node=node, is_outer=is_outer, onclause=true(), hook_order_by=_adapt(hook_order_by, statement)
+        )
 
 
 class CteJoinStrategy:
@@ -126,23 +133,20 @@ class CteJoinStrategy:
             .group_by(*remote_fks, *selection)
             .where(and_(*[fk.is_not(null()) for fk in remote_fks]))
         )
+        statement, hook_order_by = unpaged_plan.apply_clauses(base_statement)
+        order_by = (*hook_order_by, *plan.order_by)
         if plan.emulates_distinct_on:
-            statement, adapter = distinct_rows(
-                unpaged_plan.apply_clauses(base_statement), plan.distinct_on, plan.order_by, remote_fks
-            )
+            statement, adapter = distinct_rows(statement, plan.distinct_on, order_by, remote_fks)
             rank_column = self._rank_column(
                 [adapter.traverse(fk.__clause_element__()) for fk in remote_fks],
-                [adapter.traverse(expression) for expression in plan.order_by],
+                [adapter.traverse(expression) for expression in order_by],
                 [adapter.traverse(pk.__clause_element__()) for pk in primary_keys],
                 plan,
             )
-            if rank_column is not None:
-                statement = statement.add_columns(rank_column)
         else:
-            rank_column = self._rank_column(remote_fks, plan.order_by, primary_keys, plan)
-            if rank_column is not None:
-                base_statement = base_statement.add_columns(rank_column)
-            statement = unpaged_plan.apply_clauses(base_statement)
+            rank_column = self._rank_column(remote_fks, order_by, primary_keys, plan)
+        if rank_column is not None:
+            statement = statement.add_columns(rank_column)
         statement = statement.cte()
         cte_alias = aliased(target_alias, statement)
         scope.set_relation_alias(node, "target", cte_alias)
@@ -152,7 +156,13 @@ class CteJoinStrategy:
         if rank_column is not None:
             scoped_rank = scope.scoped_column(statement, rank_column.name)
             limit_offset_condition = self._limit_offset_condition(scoped_rank, plan)
-        return Join(statement, node, onclause=and_(aliased_attribute, *limit_offset_condition), is_outer=is_outer)
+        return Join(
+            statement,
+            node,
+            onclause=and_(aliased_attribute, *limit_offset_condition),
+            is_outer=is_outer,
+            hook_order_by=_adapt(hook_order_by, statement),
+        )
 
     @staticmethod
     def _rank_column(
@@ -165,9 +175,9 @@ class CteJoinStrategy:
 
         ``primary_keys`` break ties on ``order_by``, so that limit and offset count each row, as with LATERAL.
 
-        Returns ``None`` when the plan has no ordering, limit or offset.
+        Returns ``None`` when there is no ``order_by``, limit or offset.
         """
-        if not (plan.order_by or plan.limit is not None or plan.offset is not None):
+        if not (order_by or plan.limit is not None or plan.offset is not None):
             return None
         return func.dense_rank().over(partition_by=remote_fks, order_by=[*order_by, *primary_keys]).label(name="rank")
 
@@ -180,6 +190,11 @@ class CteJoinStrategy:
         if plan.limit is not None:
             condition.append(rank_column <= (plan.offset + plan.limit if plan.offset else plan.limit))
         return condition
+
+
+def _adapt(clauses: Sequence[UnaryExpression[Any]], selectable: FromClause) -> tuple[UnaryExpression[Any], ...]:
+    adapter = ClauseAdapter(selectable)
+    return tuple(adapter.traverse(clause) for clause in clauses)
 
 
 def select_join_strategy(db_features: DatabaseFeatures) -> JoinStrategy:

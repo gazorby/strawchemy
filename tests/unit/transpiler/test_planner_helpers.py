@@ -163,7 +163,23 @@ def test_use_distinct_rank_native_when_postgres_and_prefix() -> None:
         deterministic_ordering=False,
         default_order_by=(),
     )
-    assert _use_distinct_rank(graph, context) is False  # ty: ignore[invalid-argument-type]
+    assert _use_distinct_rank(graph, context, hooks_order=False) is False  # ty: ignore[invalid-argument-type]
+
+
+def test_use_distinct_rank_emulates_when_postgres_and_hooks_order() -> None:
+    """Postgres + query hooks ordering before a compatible prefix order -> rank emulation."""
+    col_name = object()
+    graph = SimpleNamespace(
+        distinct_on=[_distinct_enum(col_name)],
+        order_by_nodes=[_order_node(col_name)],
+        order_by_tree=object(),
+    )
+    context = SimpleNamespace(
+        db_features=SimpleNamespace(supports_distinct_on=True),
+        deterministic_ordering=False,
+        default_order_by=(),
+    )
+    assert _use_distinct_rank(graph, context, hooks_order=True) is True  # ty: ignore[invalid-argument-type]
 
 
 def test_use_distinct_rank_emulates_when_postgres_and_incompatible() -> None:
@@ -179,7 +195,7 @@ def test_use_distinct_rank_emulates_when_postgres_and_incompatible() -> None:
         deterministic_ordering=False,
         default_order_by=(),
     )
-    assert _use_distinct_rank(graph, context) is True  # ty: ignore[invalid-argument-type]
+    assert _use_distinct_rank(graph, context, hooks_order=False) is True  # ty: ignore[invalid-argument-type]
 
 
 def test_use_distinct_rank_native_when_postgres_and_no_ordering() -> None:
@@ -195,7 +211,7 @@ def test_use_distinct_rank_native_when_postgres_and_no_ordering() -> None:
         deterministic_ordering=False,
         default_order_by=(),
     )
-    assert _use_distinct_rank(graph, context) is False  # ty: ignore[invalid-argument-type]
+    assert _use_distinct_rank(graph, context, hooks_order=False) is False  # ty: ignore[invalid-argument-type]
 
 
 def test_use_distinct_rank_emulates_when_no_native_support() -> None:
@@ -211,7 +227,7 @@ def test_use_distinct_rank_emulates_when_no_native_support() -> None:
         deterministic_ordering=False,
         default_order_by=(),
     )
-    assert _use_distinct_rank(graph, context) is True  # ty: ignore[invalid-argument-type]
+    assert _use_distinct_rank(graph, context, hooks_order=False) is True  # ty: ignore[invalid-argument-type]
 
 
 @pytest.mark.inline_snapshot

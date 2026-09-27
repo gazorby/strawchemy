@@ -161,12 +161,15 @@ class PlanContext(Generic[DeclarativeT]):
         query_graph = QueryGraph(
             sub_context.aliases, order_by=relation_filter.order_by, distinct_on=list(relation_filter.distinct_on)
         )
-        plan = plan_query(query_graph, sub_context, limit=relation_filter.limit, offset=relation_filter.offset)
-        hook_order_by = self.hook_applier.order_by(node, target_alias)
+        plan = plan_query(
+            query_graph,
+            sub_context,
+            limit=relation_filter.limit,
+            offset=relation_filter.offset,
+            hooks_order=self.hook_applier.orders(node, target_alias),
+        )
         plan = replace(
-            plan,
-            order_by=(*hook_order_by, *plan.order_by),
-            hook_specs=(HookSpec(node=node, alias=target_alias, loading_mode="add", export_order_by=True),),
+            plan, hook_specs=(HookSpec(node=node, alias=target_alias, loading_mode="add", export_order_by=True),)
         )
         order_columns: list[Any] = [column for column, _ in plan.order_keys]
         selection: list[Any] = [*self.aliases.inspect(node).selection(target_alias), *order_columns]
@@ -178,8 +181,6 @@ class PlanContext(Generic[DeclarativeT]):
             (require_corresponding_column(join.selectable, column), order_by)
             for column, (_, order_by) in zip(order_columns, plan.order_keys, strict=True)
         ]
-        adapter = ClauseAdapter(join.selectable)
-        join.hook_order_by = tuple(adapter.traverse(clause) for clause in hook_order_by)
         return join
 
 
@@ -475,10 +476,10 @@ class FilterPlan:
         pk_keys = [attribute.key for attribute in SQLAlchemyInspector.pk_attributes(class_mapper(model))]
         matched_pks: Sequence[SQLColumnExpression[Any]] = [getattr(inner_alias, key) for key in pk_keys]
         if derived_table:
-            matched = plan.apply_clauses(select(*matched_pks).select_from(inner_alias)).subquery()
+            matched = plan.apply_clauses(select(*matched_pks).select_from(inner_alias))[0].subquery()
             matched_pks, subquery = list(matched.c), select(literal_column("1")).select_from(matched)
         else:
-            subquery = plan.apply_clauses(select(literal_column("1")).select_from(inner_alias))
+            subquery, _ = plan.apply_clauses(select(literal_column("1")).select_from(inner_alias))
         correlation = [
             matched_pk == getattr(outer_alias, key) for matched_pk, key in zip(matched_pks, pk_keys, strict=True)
         ]
@@ -1100,16 +1101,18 @@ def _relation_nodes(path: Sequence[QueryNodeType]) -> list[QueryNodeType]:
     return [node for node in path if not node.is_root and node.value.is_relation]
 
 
-def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any]) -> bool:
+def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any], hooks_order: bool) -> bool:
     """Tells whether DISTINCT ON must be emulated with a ``row_number()`` window.
 
-    Always the case when the database lacks DISTINCT ON. Otherwise only when the query is ordered and the DISTINCT ON
-    fields are not the first ORDER BY columns, which native DISTINCT ON requires.
+    Always the case when the database lacks DISTINCT ON. Otherwise only when query hooks or the ORDER BY columns do not
+    start with the DISTINCT ON fields, which native DISTINCT ON requires; hooks order before those columns.
     """
     if not context.db_features.supports_distinct_on:
         return bool(query_graph.distinct_on)
     if not query_graph.distinct_on:
         return False
+    if hooks_order:
+        return True
     has_ordering = bool(query_graph.order_by_tree or context.deterministic_ordering or context.default_order_by)
     if not has_ordering:
         return False
@@ -1121,6 +1124,12 @@ def _use_distinct_rank(query_graph: QueryGraph[Any], context: PlanContext[Any]) 
         order_nodes[index].value.model_field is field.model_field for index, field in enumerate(distinct_fields)
     )
     return not is_order_prefix
+
+
+def _root_hooks_order(query_graph: QueryGraph[Any], context: PlanContext[Any]) -> bool:
+    # Selecting from the root alias of a DML statement, even without running a hook, changes its RETURNING columns.
+    root = query_graph.root_join_tree.root
+    return context.hook_applier.has_hooks(root) and context.hook_applier.orders(root, context.aliases.root_alias)
 
 
 def _dedup_agg_joins(joins: list[Join]) -> list[Join]:
@@ -1217,18 +1226,20 @@ def _assemble_inner_statement(
         inner_statement = inner_statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
     if where:
         inner_statement = inner_statement.where(*where)
-    if order_expressions:
-        inner_statement = inner_statement.order_by(*order_expressions)
-    if use_distinct_on and distinct_on:
-        inner_statement = add_missing_columns(inner_statement, [e.element for e in order_expressions])
-        inner_statement = inner_statement.distinct(*distinct_on.expressions)
-    inner_statement, _ = context.hook_applier.apply(
+    inner_statement, _, hook_order_by = context.hook_applier.apply(
         inner_statement,
         node=query_graph.root_join_tree.root,
         alias=context.aliases.root_alias,
         loading_mode="add",
         in_subquery=True,
+        export_order_by=True,
     )
+    order_expressions = (*hook_order_by, *order_expressions)
+    if order_expressions:
+        inner_statement = inner_statement.order_by(*order_expressions)
+    if use_distinct_on and distinct_on:
+        inner_statement = add_missing_columns(inner_statement, [e.element for e in order_expressions])
+        inner_statement = inner_statement.distinct(*distinct_on.expressions)
     if distinct_on and not use_distinct_on:
         inner_statement, adapter = distinct_rows(inner_statement, distinct_on.expressions, order_expressions)
         inner_statement = inner_statement.order_by(*[adapter.traverse(expression) for expression in order_expressions])
@@ -1341,14 +1352,19 @@ def plan_query(
     limit: int | None = None,
     offset: int | None = None,
     allow_null: bool = False,
+    hooks_order: bool | None = None,
 ) -> QueryPlan:
     """Plans ``query_graph`` into one ``QueryPlan``.
 
     A root query is planned by ``_plan_subquery`` when it is paginated, filters on a relation with query hooks, or
     has a DISTINCT ON that must be emulated or would run over rows a selected to-many relation repeats. The filter
     joins a hooked relation without its hooks, so the selection cannot reuse that join.
+
+    ``hooks_order`` tells whether the query hooks of a relation order its rows; ``None`` reads the root's hooks.
     """
-    distinct_on_rank = _use_distinct_rank(query_graph, context)
+    if hooks_order is None:
+        hooks_order = _root_hooks_order(query_graph, context)
+    distinct_on_rank = _use_distinct_rank(query_graph, context, hooks_order=hooks_order)
     filters_hooked_relation = any(context.hook_applier.has_hooks(node) for node in query_graph.filter_relation_nodes)
     distinct_on_subquery = distinct_on_rank or (bool(query_graph.distinct_on) and query_graph.selects_to_many_relation)
 
@@ -1357,7 +1373,12 @@ def plan_query(
     )
     if subquery_needed:
         return _plan_subquery(
-            query_graph, context, limit=limit, offset=offset, allow_null=allow_null, distinct_on_rank=distinct_on_rank
+            query_graph,
+            context,
+            limit=limit,
+            offset=offset,
+            allow_null=allow_null,
+            distinct_on_rank=distinct_on_rank,
         )
 
     distinct_on = DistinctOn(query_graph)

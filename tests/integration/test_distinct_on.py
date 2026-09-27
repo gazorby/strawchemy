@@ -581,3 +581,75 @@ async def test_nested_distinct_on_ordered_by_other_fields(
     assert fruits["Orange"] == []
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        pytest.param("distinctOn: [sweetness]", id="no-order-by"),
+        pytest.param("distinctOn: [sweetness], orderBy: [{ sweetness: ASC }]", id="order-by-prefix"),
+        pytest.param("distinctOn: [sweetness], orderBy: [{ name: DESC }]", id="order-by-other-fields"),
+    ],
+)
+@pytest.mark.snapshot
+async def test_nested_distinct_on_with_hook_order_by(
+    arguments: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a nested distinctOn keeps the first row of each group by the hook ordering, then the client's."""
+    result = await maybe_async(any_query(f"{{ colorsWithOrderedFruits {{ name fruits({arguments}) {{ name }} }} }}"))
+    assert not result.errors
+    assert result.data
+
+    fruits = {
+        color["name"]: [fruit["name"] for fruit in color["fruits"]] for color in result.data["colorsWithOrderedFruits"]
+    }
+    assert fruits == {"Red": ["Plum", "Apple"], "Yellow": ["Banana"], "Orange": [], "Green": ["Strawberry"], "Pink": []}
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        pytest.param("orderedFruits(distinctOn: [colorId])", ["Banana", "Plum", "Strawberry"], id="no-order-by"),
+        pytest.param(
+            "orderedFruits(distinctOn: [colorId], orderBy: [{ colorId: ASC }])",
+            ["Banana", "Plum", "Strawberry"],
+            id="order-by-prefix",
+        ),
+        pytest.param(
+            "orderedFruits(distinctOn: [colorId], orderBy: [{ name: DESC }])",
+            ["Banana", "Plum", "Strawberry"],
+            id="order-by-other-fields",
+        ),
+        pytest.param(
+            "orderedFruitsPaginated(distinctOn: [colorId], limit: 2)", ["Banana", "Plum"], id="paginated-no-order-by"
+        ),
+        pytest.param(
+            "orderedFruitsPaginated(distinctOn: [colorId], orderBy: [{ colorId: ASC }], limit: 2)",
+            ["Banana", "Plum"],
+            id="paginated-order-by-prefix",
+        ),
+        pytest.param(
+            "orderedFruitsPaginated(distinctOn: [colorId], orderBy: [{ name: DESC }], limit: 2, offset: 1)",
+            ["Plum", "Strawberry"],
+            id="paginated-order-by-other-fields",
+        ),
+    ],
+)
+@pytest.mark.snapshot
+async def test_distinct_on_with_hook_order_by(
+    query: str,
+    expected: list[str],
+    any_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    """Test that a root distinctOn keeps the first row of each group by the hook ordering, then the client's."""
+    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
+    assert not result.errors
+    assert result.data
+
+    assert [fruit["name"] for fruit in next(iter(result.data.values()))] == expected
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

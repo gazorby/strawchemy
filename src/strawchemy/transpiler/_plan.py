@@ -70,7 +70,7 @@ class HookSpec:
     alias: AliasedClass[Any]
     loading_mode: ColumnLoadingMode
     export_order_by: bool = False
-    """Leaves the hooks' ORDER BY to the plan's ``order_by``, selecting the columns it reads."""
+    """Places the hooks' ORDER BY before ``order_by`` and returns it from ``apply_clauses``, selecting its columns."""
 
 
 @dataclass(frozen=True)
@@ -125,17 +125,18 @@ class QueryPlan:
             statement = statement.join(self.filter_semijoin.alias, onclause=self.filter_semijoin.onclause)
         if self.projection_columns:
             statement = statement.add_columns(*self.projection_columns)
-        statement = self.apply_clauses(statement)
+        statement, _ = self.apply_clauses(statement)
         return statement.options(raiseload("*"), *self.load_options)
 
-    def apply_clauses(self, statement: Select[Any]) -> Select[Any]:
+    def apply_clauses(self, statement: Select[Any]) -> tuple[Select[Any], tuple[UnaryExpression[Any], ...]]:
         """Runs the query hooks, then adds the joins, WHERE, ORDER BY, DISTINCT ON, LIMIT, OFFSET and root aggregations.
 
-        Also used by the join strategies, which build their own selected columns.
+        Also used by the join strategies, which build their own selected columns and read the returned hook ORDER BY.
         """
+        hook_order_by: tuple[UnaryExpression[Any], ...] = ()
         if self.hook_applier is not None:
             for spec in self.hook_specs:
-                statement, _ = self.hook_applier.apply(
+                statement, _, exported = self.hook_applier.apply(
                     statement,
                     spec.node,
                     spec.alias,
@@ -143,30 +144,32 @@ class QueryPlan:
                     in_subquery=True,
                     export_order_by=spec.export_order_by,
                 )
+                hook_order_by = (*hook_order_by, *exported)
+        order_by = (*hook_order_by, *self.order_by)
         for join in sorted(self.joins):
             statement = statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
         if self.where:
             statement = statement.where(*self.where)
-        if self.order_by:
-            statement = statement.order_by(*self.order_by)
+        if order_by:
+            statement = statement.order_by(*order_by)
         if self.distinct_on:
-            statement = self._apply_distinct(statement)
+            statement = self._apply_distinct(statement, order_by)
         if self.limit is not None:
             statement = statement.limit(self.limit)
         if self.offset is not None:
             statement = statement.offset(self.offset)
         if self.root_aggregation_functions:
             statement = statement.add_columns(*self.root_aggregation_functions)
-        return statement
+        return statement, hook_order_by
 
     @property
     def emulates_distinct_on(self) -> bool:
         """Whether the DISTINCT ON columns must be applied with ``distinct_rows`` rather than natively."""
         return bool(self.distinct_on) and not self.use_distinct_on
 
-    def _apply_distinct(self, statement: Select[Any]) -> Select[Any]:
-        """Adds native DISTINCT ON, selecting the ORDER BY columns it requires; does nothing when it is emulated."""
+    def _apply_distinct(self, statement: Select[Any], order_by: Sequence[UnaryExpression[Any]]) -> Select[Any]:
+        """Adds native DISTINCT ON, selecting the ``order_by`` columns it requires; does nothing when it is emulated."""
         if not self.use_distinct_on:
             return statement
-        statement = add_missing_columns(statement, [expression.element for expression in self.order_by])
+        statement = add_missing_columns(statement, [expression.element for expression in order_by])
         return statement.distinct(*self.distinct_on)
