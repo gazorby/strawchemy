@@ -1747,3 +1747,109 @@ async def test_case_insensitive_regexp_ignores_pattern_case(
     assert result.data is not None
 
     assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize(
+    "raw_users",
+    [
+        pytest.param(
+            [
+                {"id": 1, "name": "Émile", "group_id": None, "bio": None},
+                {"id": 2, "name": "émile", "group_id": None, "bio": "50%_off"},
+                {"id": 3, "name": "Bob", "group_id": None, "bio": "Line one\nline two\n"},
+                {"id": 4, "name": "Tango", "group_id": None, "bio": "Tango's bio"},
+            ],
+            id="non-ascii-names",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param('{ name: { ilike: "é%" } }', ["Émile", "émile"], id="ilike-lowercase"),
+        pytest.param('{ name: { ilike: "É%" } }', ["Émile", "émile"], id="ilike-uppercase"),
+        pytest.param('{ name: { ilike: "_MILE" } }', ["Émile", "émile"], id="ilike-underscore-wildcard"),
+        pytest.param('{ name: { ilike: "é" } }', [], id="ilike-matches-whole-value"),
+        pytest.param('{ name: { ilike: "" } }', [], id="ilike-empty"),
+        pytest.param('{ name: { nilike: "É%" } }', ["Bob", "Tango"], id="nilike"),
+        pytest.param('{ name: { istartswith: "é" } }', ["Émile", "émile"], id="istartswith-lowercase"),
+        pytest.param('{ name: { istartswith: "ÉM" } }', ["Émile", "émile"], id="istartswith-uppercase"),
+        pytest.param('{ name: { iendswith: "MILE" } }', ["Émile", "émile"], id="iendswith"),
+        pytest.param('{ name: { icontains: "É" } }', ["Émile", "émile"], id="icontains-uppercase"),
+        pytest.param('{ name: { icontains: "é" } }', ["Émile", "émile"], id="icontains-lowercase"),
+        pytest.param('{ name: { icontains: "" } }', ["Bob", "Tango", "Émile", "émile"], id="icontains-empty"),
+        pytest.param('{ _not: { name: { ilike: "é%" } } }', ["Bob", "Tango"], id="not-ilike"),
+        pytest.param('{ _not: { name: { icontains: "É" } } }', ["Bob", "Tango"], id="not-icontains"),
+        pytest.param('{ bio: { ilike: "50%" } }', ["émile"], id="ilike-percent-wildcard"),
+        pytest.param('{ bio: { ilike: "5_%_OFF" } }', ["émile"], id="ilike-wildcards-match-literals"),
+        pytest.param('{ bio: { ilike: "line%TWO%" } }', ["Bob"], id="ilike-wildcard-spans-newline"),
+        pytest.param('{ bio: { ilike: "%two" } }', [], id="ilike-no-match-before-trailing-newline"),
+        pytest.param('{ bio: { nilike: "%bio" } }', ["Bob", "émile"], id="nilike-skips-null"),
+        pytest.param('{ _not: { bio: { ilike: "%BIO" } } }', ["Bob", "Émile", "émile"], id="not-ilike-null"),
+        pytest.param('{ bio: { icontains: "%" } }', ["émile"], id="icontains-literal-percent"),
+        pytest.param('{ bio: { icontains: "_" } }', ["émile"], id="icontains-literal-underscore"),
+        pytest.param('{ bio: { icontains: "." } }', [], id="icontains-literal-dot"),
+        pytest.param('{ bio: { istartswith: "%" } }', [], id="istartswith-literal-percent"),
+        pytest.param('{ bio: { iendswith: "%_OFF" } }', ["émile"], id="iendswith-literal-wildcards"),
+        pytest.param('{ bio: { iendswith: "TWO" } }', [], id="iendswith-no-match-before-trailing-newline"),
+        pytest.param('{ bio: { icontains: "" } }', ["Bob", "Tango", "émile"], id="icontains-empty-skips-null"),
+        pytest.param('{ bio: { icontains: "", ilike: null } }', ["Bob", "Tango", "émile"], id="null-ignored"),
+    ],
+)
+async def test_case_insensitive_like_folds_non_ascii(
+    dto_filter: str,
+    names: list[str],
+    any_query: AnyQueryExecutor,
+    raw_users: RawRecordData,  # noqa: ARG001
+) -> None:
+    """Test that the case-insensitive LIKE operators ignore the case of non-ASCII letters."""
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
+
+
+@pytest.mark.parametrize(
+    "raw_users",
+    [
+        pytest.param(
+            [
+                {"id": 1, "name": "Alice", "group_id": None, "bio": "a.b (d) [e] +f ^g $h {2} |"},
+                {"id": 2, "name": "Bob", "group_id": None, "bio": "axb"},
+                {"id": 3, "name": "Charlie", "group_id": None, "bio": "a" * 2000 + "b"},
+                {"id": 4, "name": "Tango", "group_id": None, "bio": "a" * 2000},
+            ],
+            id="regexp-syntax-and-long-bios",
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("dto_filter", "names"),
+    [
+        pytest.param('{ bio: { ilike: "a.b" } }', [], id="ilike-literal-dot"),
+        pytest.param('{ bio: { ilike: "a_b" } }', ["Bob"], id="ilike-underscore"),
+        pytest.param('{ bio: { ilike: "A.B%" } }', ["Alice"], id="ilike-literal-dot-prefix"),
+        pytest.param('{ bio: { ilike: "%(D)%" } }', ["Alice"], id="ilike-literal-parentheses"),
+        pytest.param('{ bio: { ilike: "%[E]%" } }', ["Alice"], id="ilike-literal-brackets"),
+        pytest.param('{ bio: { ilike: "%[ab]%" } }', [], id="ilike-no-character-class"),
+        pytest.param('{ bio: { ilike: "%+F ^G $H%" } }', ["Alice"], id="ilike-literal-anchors"),
+        pytest.param('{ bio: { ilike: "%{2} |" } }', ["Alice"], id="ilike-literal-quantifier-and-bar"),
+        pytest.param('{ bio: { nilike: "%(d)%" } }', ["Bob", "Charlie", "Tango"], id="nilike-literal-parentheses"),
+        pytest.param('{ bio: { ilike: "%a%a%a%b" } }', ["Charlie"], id="ilike-wildcards-long-value"),
+        pytest.param('{ bio: { ilike: "%A%A%A%A%A%C" } }', [], id="ilike-wildcards-long-value-no-match"),
+        pytest.param('{ bio: { nilike: "%a%a%a%b" } }', ["Alice", "Bob", "Tango"], id="nilike-wildcards-long-value"),
+    ],
+)
+async def test_ilike_patterns_on_regexp_syntax_and_long_values(
+    dto_filter: str,
+    names: list[str],
+    any_query: AnyQueryExecutor,
+    raw_users: RawRecordData,  # noqa: ARG001
+) -> None:
+    """Test that ilike and nilike read regular expression syntax literally and stay fast on long values."""
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    assert not result.errors
+    assert result.data is not None
+
+    assert sorted(user["name"] for user in result.data["users"]) == names
