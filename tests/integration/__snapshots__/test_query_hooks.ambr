@@ -41,7 +41,8 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id
+                 fruit.id AS id,
+                 fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -58,7 +59,8 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id
+                 fruit.id AS id,
+                 fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -75,7 +77,8 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id
+                 fruit.id AS id,
+                 fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -92,7 +95,8 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id
+                 fruit.id AS id,
+                 fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -127,7 +131,8 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id
+                 fruit.id AS id,
+                 fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -144,7 +149,8 @@
          fruit.id
     FROM (
           SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id
+                 fruit.id AS id,
+                 fruit.water_percent AS water_percent__1
             FROM fruit AS fruit
            ORDER BY fruit.water_percent ASC,
                     fruit.id ASC
@@ -3923,6 +3929,7 @@
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
@@ -3952,6 +3959,7 @@
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
@@ -3968,6 +3976,7 @@
   SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
@@ -3992,6 +4001,7 @@
   SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
@@ -4016,6 +4026,7 @@
   SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
@@ -4053,6 +4064,7 @@
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
@@ -4085,6 +4097,7 @@
          color.id,
          anon_1.name AS name_1,
          anon_1.sweetness,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
@@ -4115,6 +4128,7 @@
          color.id,
          anon_1.name AS name_1,
          anon_1.sweetness,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
@@ -4130,6 +4144,7 @@
          color.id,
          anon_1.name AS name_1,
          anon_1.sweetness,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
@@ -4154,6 +4169,7 @@
          color.id,
          anon_1.name AS name_1,
          anon_1.sweetness,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
@@ -4190,6 +4206,7 @@
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
@@ -4217,6 +4234,7 @@
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
@@ -4231,6 +4249,7 @@
   SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
@@ -4253,6 +4272,7 @@
   SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
@@ -4276,6 +4296,7 @@
          color.id,
          anon_1.name AS name_1,
          anon_1.sweetness,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
@@ -4315,6 +4336,7 @@
          color.id,
          anon_1.name AS name_1,
          anon_1.sweetness,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
@@ -4329,6 +4351,7 @@
   SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
@@ -4364,6 +4387,7 @@
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
+         anon_1.water_percent,
          anon_1.id AS id_1
     FROM color AS color
     LEFT OUTER JOIN anon_1
