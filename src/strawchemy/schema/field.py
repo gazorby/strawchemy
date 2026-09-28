@@ -306,11 +306,14 @@ class StrawchemyField(StrawberryField):
             QueryHookError: If a root field hook loads an attribute of another model than the field's.
         """
         for inner_type in strawberry_contained_types(type_):
-            if not (isclass(inner_type) and issubclass(inner_type, StrawchemyObject)):
-                continue
-            if self.root_aggregations and not inner_type.__strawchemy_definition__.is_root_aggregation_type:
+            is_strawchemy_type = isclass(inner_type) and issubclass(inner_type, StrawchemyObject)
+            if self.root_aggregations and not (
+                is_strawchemy_type and inner_type.__strawchemy_definition__.is_root_aggregation_type
+            ):
                 msg = f"The `{self.name}` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."
                 raise StrawchemyFieldError(msg)
+            if not is_strawchemy_type:
+                continue
             if self.is_root_field and self.base_resolver is None:
                 for hook in self.query_hooks:
                     hook.check_model(dto_model_from_type(inner_type))
