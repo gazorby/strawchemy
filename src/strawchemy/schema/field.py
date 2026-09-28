@@ -47,7 +47,7 @@ from strawchemy.utils.strawberry import (
 
 if TYPE_CHECKING:
     import builtins
-    from collections.abc import Awaitable, Callable, Coroutine, Mapping, Sequence
+    from collections.abc import Awaitable, Callable, Coroutine, Mapping
 
     from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase
@@ -294,7 +294,7 @@ class StrawchemyField(StrawberryField):
         )
 
     def _validate_type(self, type_: StrawberryType | builtins.type[WithStrawberryObjectDefinition] | Any) -> None:
-        """Validates the resolved field type against ``root_aggregations`` and ``default_order_by``.
+        """Validates the resolved field type against the field's options.
 
         Args:
             type_: The resolved type of the field from resolve_type.
@@ -303,15 +303,17 @@ class StrawchemyField(StrawberryField):
             StrawchemyFieldError: If ``root_aggregations`` is enabled on a non-root-aggregation
                 type, or if ``default_order_by`` is set on a non-list field or references a
                 column not belonging to the field's root model.
+            QueryHookError: If a root field hook loads an attribute of another model than the field's.
         """
         for inner_type in strawberry_contained_types(type_):
-            if (
-                self.root_aggregations
-                and issubclass(inner_type, StrawchemyObject)
-                and not inner_type.__strawchemy_definition__.is_root_aggregation_type
-            ):
+            if not (isclass(inner_type) and issubclass(inner_type, StrawchemyObject)):
+                continue
+            if self.root_aggregations and not inner_type.__strawchemy_definition__.is_root_aggregation_type:
                 msg = f"The `{self.name}` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."
                 raise StrawchemyFieldError(msg)
+            if self.is_root_field and self.base_resolver is None:
+                for hook in self.query_hooks:
+                    hook.check_model(dto_model_from_type(inner_type))
 
         if self._default_order_by:
             if not is_list(type_):
@@ -540,6 +542,12 @@ class StrawchemyField(StrawberryField):
             if self._arguments is None:
                 self._arguments = generated._arguments  # noqa: SLF001
         return self
+
+    @property
+    def query_hooks(self) -> Sequence[QueryHookCallable[Any]]:
+        if self.query_hook is None:
+            return ()
+        return self.query_hook if isinstance(self.query_hook, Sequence) else (self.query_hook,)
 
     def filter_statement(self, info: Info[Any, Any]) -> Select[tuple[DeclarativeBase]] | None:
         return self._filter_statement(info) if self._filter_statement else None

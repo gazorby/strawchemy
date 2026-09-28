@@ -181,6 +181,7 @@ class StrawchemyRepository(Generic[T]):
 
     def __post_init__(self) -> None:
         inner_root_type = strawberry_contained_user_type(self.type)
+        model = dto_model_from_type(inner_root_type)
         root_selections = [
             selection
             for field_node in self._raw_info.field_nodes
@@ -188,13 +189,15 @@ class StrawchemyRepository(Generic[T]):
             for selection in field_node.selection_set.selections
         ]
         node = StrawberryQueryNode.root_node(
-            dto_model_from_type(inner_root_type),
+            model,
             strawberry_type=inner_root_type,
             root_aggregations=self.root_aggregations,
         )
 
         if self.query_hook is not None:
             self._add_query_hooks(self.query_hook, node)
+            for hook in self._query_hooks[node]:
+                hook.check_model(model)
         self._build(inner_root_type, _composite_type(self._raw_info.return_type), root_selections, node)
         self._tree = node
 
@@ -247,11 +250,10 @@ class StrawchemyRepository(Generic[T]):
         return item_type.wrapped_cls if isinstance(item_type, StrawberryEnumDefinition) else item_type
 
     @classmethod
-    def _get_field_hooks(cls, field: StrawberryField) -> QueryHook[Any] | Sequence[QueryHook[Any]]:
+    def _get_field_hooks(cls, field: StrawberryField) -> Sequence[QueryHook[Any]]:
         from strawchemy.schema.field import StrawchemyField  # noqa: PLC0415
 
-        hooks = field.query_hook if isinstance(field, StrawchemyField) else None
-        return () if hooks is None else hooks
+        return field.query_hooks if isinstance(field, StrawchemyField) else ()
 
     def _add_query_hooks(self, query_hooks: QueryHook[Any] | Sequence[QueryHook[Any]], node: QueryNodeType) -> None:
         node_hooks = self._query_hooks[node]

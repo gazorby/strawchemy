@@ -11,6 +11,7 @@ from sqlalchemy.orm import (
     Composite,
     QueryableAttribute,
     RelationshipProperty,
+    class_mapper,
     joinedload,
     selectinload,
     undefer,
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from sqlalchemy import Select
-    from sqlalchemy.orm import InstrumentedAttribute
+    from sqlalchemy.orm import DeclarativeBase, InstrumentedAttribute, Mapper
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.orm.util import AliasedClass
     from strawberry import Info
@@ -69,6 +70,7 @@ class QueryHook(Generic[DeclarativeT]):
     _relationships: list[tuple[InstrumentedAttribute[Any], Sequence[LoadType]]] = field(
         init=False, default_factory=list
     )
+    _checked_mappers: set[Mapper[Any]] = field(init=False, default_factory=set, compare=False, repr=False)
 
     def __post_init__(self) -> None:
         if isinstance(self.load, _UnsetLoad):
@@ -113,6 +115,23 @@ class QueryHook(Generic[DeclarativeT]):
             else:
                 normalized.append(prop.class_attribute)
         return normalized
+
+    def check_model(self, model: type[DeclarativeBase]) -> None:
+        """Checks that the top-level attributes of ``load`` can be loaded from ``model``.
+
+        Raises:
+            QueryHookError: If an attribute belongs neither to ``model`` nor to a model it inherits from.
+        """
+        mapper = class_mapper(model)
+        if mapper in self._checked_mappers:
+            return
+        for item in self.load:
+            attribute = item[0] if isinstance(item, tuple) else item
+            prop = _loaded_property(attribute)
+            if prop is not None and not mapper.isa(prop.parent):
+                msg = f"Attributes passed in `load` param must belong to {model.__name__}: {attribute}"
+                raise QueryHookError(msg)
+        self._checked_mappers.add(mapper)
 
     def _load_relationships(
         self, load_spec: RelationshipLoadSpec, parent_alias: AliasedClass[Any] | None = None

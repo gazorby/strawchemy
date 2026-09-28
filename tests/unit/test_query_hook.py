@@ -3,15 +3,18 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
+from unittest.mock import MagicMock
 
 import pytest
+import strawberry
 from sqlalchemy import ForeignKey, select
 from sqlalchemy.ext.associationproxy import AssociationProxy, association_proxy
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Load, Mapped, composite, mapped_column, relationship, synonym
 from sqlalchemy.orm.util import AliasedClass
+from strawberry.types import get_object_definition
 
-from strawchemy import QueryHook
+from strawchemy import QueryHook, Strawchemy, StrawchemySyncRepository
 from strawchemy.exceptions import QueryHookError
 from tests.unit.models import Color, Fruit, Group, User, UserWithGreeting
 
@@ -26,6 +29,10 @@ _NOT_LOADABLE_MESSAGE = re.escape("Attributes passed in `load` param must be col
 
 def _wrong_model_message(relationship: object, model: str, attribute: object) -> str:
     return re.escape(f"Attributes nested under {relationship} in `load` param must belong to {model}: {attribute}")
+
+
+def _foreign_attribute_message(model: str, attribute: object) -> str:
+    return re.escape(f"Attributes passed in `load` param must belong to {model}: {attribute}")
 
 
 @dataclass
@@ -107,6 +114,21 @@ class _OverridingClassLoadHook(_ClassLoadHook):
 @dataclass
 class _DataclassLoadHook(QueryHook[Fruit]):
     load: Sequence[LoadType] = field(default_factory=lambda: [Fruit.name])
+
+
+_strawchemy = Strawchemy("postgresql")
+
+
+@_strawchemy.type(Fruit, include="all")
+class _FruitType: ...
+
+
+@_strawchemy.type(Fruit, include="all", query_hook=QueryHook(load=[Fruit.name]))
+class _HookedFruitType: ...
+
+
+@_strawchemy.aggregate(Fruit, include="all")
+class _FruitAggregationType: ...
 
 
 def _resolved_load(hook: QueryHook[Any]) -> tuple[list[Any], list[Any]]:
@@ -429,3 +451,169 @@ def test_column_property_is_loadable() -> None:
     """Test that a ``column_property`` loads as a column."""
     hook = QueryHook(load=[UserWithGreeting.greeting_column_property])
     assert _resolved_load(hook) == ([UserWithGreeting.greeting_column_property], [])
+
+
+@pytest.mark.parametrize(
+    ("load", "attribute"),
+    [
+        pytest.param([User.name], User.name, id="column"),
+        pytest.param([User.group], User.group, id="relationship"),
+        pytest.param([(User.group, [Group.name])], User.group, id="relationship-key"),
+        pytest.param([Fruit.name], Fruit.name, id="column-with-a-key-of-the-model"),
+        pytest.param([Color.id, Fruit.color], Fruit.color, id="after-an-attribute-of-the-model"),
+        pytest.param([_Owner.alias], _Owner.alias, id="synonym"),
+    ],
+)
+def test_top_level_attribute_of_another_model(load: Sequence[LoadType], attribute: object) -> None:
+    """Test that a top-level attribute not of the hooked model raises ``QueryHookError``."""
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Color", attribute)):
+        QueryHook(load=load).check_model(Color)
+
+
+def test_top_level_subclass_attribute_on_base_class_model() -> None:
+    """Test that a subclass-only attribute on a hook of the base class raises ``QueryHookError``."""
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("_Animal", _Dog.tricks)):
+        QueryHook(load=[_Animal.name, _Dog.tricks]).check_model(_Animal)
+
+
+@pytest.mark.parametrize(
+    ("load", "model"),
+    [
+        pytest.param([Color.name, Color.fruits, (Color.fruits, [Fruit.name])], Color, id="same-model"),
+        pytest.param([_Animal.name, _Animal.owner, _Dog.name, _Dog.tricks], _Dog, id="base-class-attribute"),
+        pytest.param([_Owner.alias, _Owner.pets, _Owner.point, _Owner.display_name], _Owner, id="proxied-attributes"),
+    ],
+)
+def test_top_level_attribute_of_the_model(load: Sequence[LoadType], model: type[Any]) -> None:
+    """Test that top-level attributes of the hooked model or of a model it inherits from are accepted."""
+    QueryHook(load=load).check_model(model)
+
+
+def test_hook_checked_against_several_models() -> None:
+    """Test that a hook accepted for one model is still checked against another."""
+    hook = QueryHook(load=[Fruit.name])
+    hook.check_model(Fruit)
+    hook.check_model(Fruit)
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Color", Fruit.name)):
+        hook.check_model(Color)
+
+
+def test_type_hook_of_another_model(strawchemy: Strawchemy) -> None:
+    """Test that a type-level hook loading another model's attribute raises when the type is defined."""
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Color", Fruit.name)):
+
+        @strawchemy.type(Color, include="all", query_hook=QueryHook(load=[Fruit.name]))
+        class ColorType: ...
+
+
+def test_type_hook_list_of_another_model(strawchemy: Strawchemy) -> None:
+    """Test that each hook of a type-level hook list is checked against the type's model."""
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Color", User.group)):
+
+        @strawchemy.type(Color, include="all", query_hook=[QueryHook(load=[Color.name]), QueryHook(load=[User.group])])
+        class ColorType: ...
+
+
+def test_resolver_field_hook_of_another_model(strawchemy: Strawchemy) -> None:
+    """Test that a resolver field hook is checked against the model of the type it belongs to."""
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Color", Fruit.name)):
+
+        @strawchemy.type(Color, include="all")
+        class ColorType:
+            @strawchemy.field(query_hook=QueryHook(load=[Fruit.name]))
+            def label(self) -> str:
+                return "label"
+
+
+def test_column_field_hook_of_another_model(strawchemy: Strawchemy) -> None:
+    """Test that a column field hook is checked against the model of the type it belongs to."""
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Color", Fruit.sweetness)):
+
+        @strawchemy.type(Color, include="all")
+        class ColorType:
+            name: str = strawchemy.field(query_hook=QueryHook(load=[Fruit.sweetness]))
+
+
+def test_relation_field_hook_of_another_model(strawchemy: Strawchemy) -> None:
+    """Test that a relation field hook is checked against the relation's model, not the type's."""
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Fruit", Color.name)):
+
+        @strawchemy.type(Color, include="all")
+        class ColorType:
+            fruits: list[_FruitType] = strawchemy.field(query_hook=QueryHook(load=[Color.name]))
+
+
+def test_relation_resolver_field_hook_of_another_model(strawchemy: Strawchemy) -> None:
+    """Test that a resolver named after a relation has its hook checked against the type's model."""
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Color", Fruit.sweetness)):
+
+        @strawchemy.type(Color, include="all")
+        class ColorType:
+            @strawchemy.field(query_hook=QueryHook(load=[Fruit.sweetness]))
+            def fruits(self) -> str:
+                return "fruits"
+
+
+def test_field_hooks_of_their_models(strawchemy: Strawchemy) -> None:
+    """Test that type and field hooks loading attributes of the model they apply to are accepted."""
+
+    @strawchemy.type(Color, include="all", query_hook=QueryHook(load=[Color.name]))
+    class ColorType:
+        fruits: list[_HookedFruitType] = strawchemy.field(query_hook=QueryHook(load=[Fruit.sweetness]))
+
+        @strawchemy.field(query_hook=[QueryHook(load=[Color.name]), QueryHook(load=[(Color.fruits, [Fruit.name])])])
+        def label(self) -> str:
+            return "label"
+
+    assert {field.name for field in get_object_definition(ColorType, strict=True).fields} >= {"fruits", "label"}
+
+
+def test_root_field_hook_of_another_model() -> None:
+    """Test that a root field hook loading another model's attribute raises when its type is resolved."""
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Fruit", Color.name)):
+
+        @strawberry.type
+        class Query:
+            fruits: list[_FruitType] = _strawchemy.field(query_hook=QueryHook(load=[Color.name]))
+
+
+def test_root_aggregation_field_hook_of_another_model() -> None:
+    """Test that a root aggregation field hook is checked against the aggregated model."""
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Fruit", Color.name)):
+
+        @strawberry.type
+        class Query:
+            fruits: list[_FruitAggregationType] = _strawchemy.field(
+                root_aggregations=True, query_hook=QueryHook(load=[Color.name])
+            )
+
+
+def test_shared_hook_of_another_model(strawchemy: Strawchemy) -> None:
+    """Test that a hook shared by a field of its model and a type of another model raises for the latter."""
+    hook = QueryHook(load=[Fruit.name])
+
+    @strawberry.type
+    class Query:
+        fruits: list[_FruitType] = _strawchemy.field(query_hook=hook)
+
+    strawberry.Schema(query=Query)
+    with pytest.raises(QueryHookError, match=_foreign_attribute_message("Color", Fruit.name)):
+
+        @strawchemy.type(Color, include="all", query_hook=hook)
+        class ColorType: ...
+
+
+def test_repository_hook_of_another_model() -> None:
+    """Test that a hook given to a repository built in a resolver raises when the repository is built."""
+
+    @strawberry.type
+    class Query:
+        @strawberry.field
+        def fruits(self, info: strawberry.Info) -> list[_FruitType]:
+            StrawchemySyncRepository(_FruitType, info, session=MagicMock(), query_hook=QueryHook(load=[Color.name]))
+            return []
+
+    result = strawberry.Schema(query=Query).execute_sync("{ fruits { id } }")
+    assert result.errors
+    assert isinstance(result.errors[0].original_error, QueryHookError)
+    assert re.fullmatch(_foreign_attribute_message("Fruit", Color.name), result.errors[0].message)
