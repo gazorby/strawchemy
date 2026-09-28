@@ -179,14 +179,22 @@ def test_multiple_types_error(path: str) -> None:
         import_module(path)
 
 
-def test_aggregation_type_mismatch() -> None:
+@pytest.mark.parametrize(
+    "module",
+    [
+        pytest.param("tests.unit.schemas.aggregations.type_mismatch", id="strawchemy_type"),
+        pytest.param("tests.unit.schemas.aggregations.type_mismatch_plain_type", id="plain_type"),
+        pytest.param("tests.unit.schemas.aggregations.type_mismatch_custom_resolver", id="custom_resolver"),
+    ],
+)
+def test_aggregation_type_mismatch(module: str) -> None:
     with pytest.raises(
         StrawchemyFieldError,
         match=re.escape(
             """The `color_aggregations` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."""
         ),
     ):
-        import_module("tests.unit.schemas.aggregations.type_mismatch")
+        import_module(module)
 
 
 def test_query_hooks_wrong_relationship_load_spec() -> None:
