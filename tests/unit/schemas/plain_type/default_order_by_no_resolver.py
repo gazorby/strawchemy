@@ -1,15 +1,16 @@
 import strawberry
 
 from strawchemy import Strawchemy
+from tests.unit.models import Color
 
 strawchemy = Strawchemy("postgresql")
 
 
 @strawberry.type
-class ColorType:
+class Plain:
     name: str
 
 
 @strawberry.type
 class Query:
-    color_aggregations: list[ColorType] = strawchemy.field(root_aggregations=True)
+    plain: list[Plain] = strawchemy.field(default_order_by=Color.name)

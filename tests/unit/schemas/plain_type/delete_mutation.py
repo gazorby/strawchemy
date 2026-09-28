@@ -6,10 +6,10 @@ strawchemy = Strawchemy("postgresql")
 
 
 @strawberry.type
-class ColorType:
+class Plain:
     name: str
 
 
 @strawberry.type
-class Query:
-    color_aggregations: list[ColorType] = strawchemy.field(root_aggregations=True)
+class Mutation:
+    plain: list[Plain] = strawchemy.delete()

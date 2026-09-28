@@ -177,6 +177,7 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
         if self._filter is not None and not is_list(type_):
             msg = f"Type of update mutation by filter must be a list: {self.name}"
             raise StrawchemyFieldError(msg)
+        super()._validate_type(type_)
 
     def _update_by_ids_resolver(
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO], **_: Any
@@ -254,6 +255,7 @@ class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
         if not is_list(type_):
             msg = f"Type of delete mutation must be a list: {self.name}"
             raise StrawchemyFieldError(msg)
+        super()._validate_type(type_)
 
     @override
     def auto_arguments(self) -> list[StrawberryArgument]:
