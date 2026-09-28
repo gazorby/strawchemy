@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Any, ForwardRef, Literal, Optional, TypeAlias,
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import UNSET
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
-from strawberry.types import has_object_definition
+from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.auto import StrawberryAuto
 from strawberry.types.scalar import ScalarDefinition, ScalarWrapper
 from strawberry.utils.typing import type_has_annotation
@@ -285,6 +285,27 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
                 dto_config = dto_config | DTOConfig(dto_config.purpose, aliases=delta)
         return dto_config
 
+    @staticmethod
+    def _check_query_hooks(dto: type[GraphQLDTOT], model: type[DeclarativeBase]) -> None:
+        """Checks each hook of ``dto`` and of its fields against the model it runs on.
+
+        Raises:
+            QueryHookError: If a hook loads an attribute of another model.
+        """
+        for query_hook in dto.__strawchemy_definition__.query_hooks:
+            query_hook.check_model(model)
+        for field in get_object_definition(dto, strict=True).fields:
+            if not isinstance(field, StrawchemyField):
+                continue
+            target = model
+            field_definition = dto.__dto_field_definitions__.get(field.name)
+            # A relation field's hook runs on the related model, as in ``StrawchemyRepository._build``.
+            if field_definition is not None and field_definition.is_relation and field.base_resolver is None:
+                assert field_definition.related_model
+                target = field_definition.related_model
+            for query_hook in field.query_hooks:
+                query_hook.check_model(target)
+
     def _type_order_by(
         self, model: type[DeclarativeBase], include: FieldSpec | type[OrderByDTO] | None = None
     ) -> type[OrderByDTO] | None:
@@ -392,6 +413,7 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
             )
             strawchemy_def = dto.__strawchemy_definition__
             strawchemy_def.query_hook = query_hook
+            self._check_query_hooks(dto, model)
             if issubclass(dto, MappedStrawberryGraphQLDTO):
                 if order_by_input is not None:
                     strawchemy_def.order_by = order_by_input
