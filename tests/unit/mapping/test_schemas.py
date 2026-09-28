@@ -197,6 +197,50 @@ def test_aggregation_type_mismatch(module: str) -> None:
         import_module(module)
 
 
+@pytest.mark.parametrize(
+    ("module", "type_name"),
+    [
+        pytest.param("root_list", "Plain", id="root_list"),
+        pytest.param("root_single", "Plain", id="root_single"),
+        pytest.param("root_scalar", "int", id="root_scalar"),
+        pytest.param("root_union_plain_first", "Plain", id="root_union_plain_first"),
+        pytest.param("type_body_field", "Plain", id="type_body_field"),
+        pytest.param("default_order_by_no_resolver", "Plain", id="default_order_by_no_resolver"),
+        pytest.param("create_mutation", "Plain", id="create_mutation"),
+        pytest.param("upsert_mutation", "Plain", id="upsert_mutation"),
+        pytest.param("update_mutation", "Plain", id="update_mutation"),
+        pytest.param("delete_mutation", "Plain", id="delete_mutation"),
+    ],
+)
+def test_resolverless_field_on_plain_type_fail(module: str, type_name: str) -> None:
+    """Test that a root field without resolver is rejected when its type is not a strawchemy type."""
+    with pytest.raises(
+        StrawchemyFieldError,
+        match=re.escape(f"The `plain` field has no resolver but its type `{type_name}` is not a strawchemy type."),
+    ):
+        import_module(f"tests.unit.schemas.plain_type.{module}")
+
+
+def test_default_order_by_on_plain_type_fail() -> None:
+    """Test that `default_order_by` is rejected on a field with a resolver returning a plain type."""
+    with pytest.raises(
+        StrawchemyFieldError,
+        match=re.escape(
+            "`default_order_by` cannot be set on `plain` because its type `Plain` is not a strawchemy type."
+        ),
+    ):
+        import_module("tests.unit.schemas.plain_type.default_order_by_resolver")
+
+
+@pytest.mark.snapshot
+def test_plain_type_fields_accepted(graphql_snapshot: SnapshotAssertion) -> None:
+    """Test that plain types are accepted behind a resolver or after the strawchemy type of a union."""
+    from tests.unit.schemas.plain_type.accepted import Mutation, Query
+
+    schema = strawberry.Schema(query=Query, mutation=Mutation)
+    assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
+
+
 def test_query_hooks_wrong_relationship_load_spec() -> None:
     with pytest.raises(
         QueryHookError, match=re.escape("Keys of mappings passed in `load` param must be relationship attributes: ")

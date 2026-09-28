@@ -300,11 +300,13 @@ class StrawchemyField(StrawberryField):
             type_: The resolved type of the field from resolve_type.
 
         Raises:
-            StrawchemyFieldError: If ``root_aggregations`` is enabled on a non-root-aggregation
-                type, or if ``default_order_by`` is set on a non-list field or references a
-                column not belonging to the field's root model.
+            StrawchemyFieldError: If ``root_aggregations`` is enabled on a non-root-aggregation type, if the field
+                has no resolver or sets ``default_order_by`` on a type that is not a strawchemy type, or if
+                ``default_order_by`` is set on a non-list field or references a column not of the field's root model.
             QueryHookError: If a root field hook loads an attribute of another model than the field's.
         """
+        if type_ is UNRESOLVED:
+            return
         for inner_type in strawberry_contained_types(type_):
             is_strawchemy_type = isclass(inner_type) and issubclass(inner_type, StrawchemyObject)
             if self.root_aggregations and not (
@@ -312,21 +314,31 @@ class StrawchemyField(StrawberryField):
             ):
                 msg = f"The `{self.name}` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."
                 raise StrawchemyFieldError(msg)
-            if not is_strawchemy_type:
-                continue
-            if self.is_root_field and self.base_resolver is None:
-                for hook in self.query_hooks:
-                    hook.check_model(dto_model_from_type(inner_type))
+
+        if self.is_root_field and self.base_resolver is None:
+            user_type = self._strawchemy_user_type(type_, f"The `{self.name}` field has no resolver but")
+            for hook in self.query_hooks:
+                hook.check_model(dto_model_from_type(user_type))
 
         if self._default_order_by:
             if not is_list(type_):
                 msg = f"`default_order_by` is only valid on a list field, but `{self.name}` is not a list field."
                 raise StrawchemyFieldError(msg)
-            model = dto_model_from_type(strawberry_contained_user_type(type_))
+            model = dto_model_from_type(
+                self._strawchemy_user_type(type_, f"`default_order_by` cannot be set on `{self.name}` because")
+            )
             for expr in self._default_order_by:
                 if decompose_order_by(expr).element.entity_namespace is not model:
                     msg = f"`default_order_by` expression is not a column of {model.__name__}"
                     raise StrawchemyFieldError(msg)
+
+    @classmethod
+    def _strawchemy_user_type(cls, type_: object, context: str) -> builtins.type[StrawchemyObject]:
+        user_type = strawberry_contained_user_type(type_)
+        if isclass(user_type) and issubclass(user_type, StrawchemyObject):
+            return user_type
+        msg = f"{context} its type `{getattr(user_type, '__name__', user_type)}` is not a strawchemy type."
+        raise StrawchemyFieldError(msg)
 
     @classmethod
     def _is_strawchemy_type(

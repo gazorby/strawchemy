@@ -1,0 +1,82 @@
+'''
+"""Create input"""
+input ColorCreate {
+  name: String!
+}
+
+"""GraphQL type"""
+type ColorType {
+  name: String!
+
+  """Fetch objects from the Plain collection"""
+  plain: [Plain!]!
+}
+
+union ColorTypePlain = ColorType | Plain
+
+union ColorTypeValidationErrorType = ColorType | ValidationErrorType
+
+type CustomError implements ErrorType {
+  id: String!
+  message: String!
+}
+
+union CustomErrorColorType = CustomError | ColorType
+
+"""Base interface for expected errors"""
+interface ErrorType {
+  id: String!
+}
+
+"""Indicate validation error type and location."""
+type LocalizedErrorType implements ErrorType {
+  id: String!
+  loc: [String!]!
+  message: String!
+  type: String!
+}
+
+type Mutation {
+  """Fetch object from the ColorType collection by id"""
+  createColor(data: ColorCreate!): ColorTypeValidationErrorType!
+
+  """Fetch object from the ColorType collection by id"""
+  createColorCustomError(data: ColorCreate!): CustomErrorColorType!
+
+  """Fetch objects from the ColorType collection"""
+  createColors(data: [ColorCreate!]!): [ColorTypePlain!]!
+
+  """Fetch object from the Plain collection"""
+  createPlain: Plain!
+}
+
+type Plain {
+  name: String!
+}
+
+type Query {
+  """Fetch objects from the ColorType collection"""
+  colors: [ColorType!]!
+
+  """Fetch object from the ColorType collection by id"""
+  colorOrPlain(id: UUID!): ColorTypePlain!
+
+  """Fetch objects from the ColorType collection"""
+  orderedColors: [ColorTypePlain!]!
+
+  """Fetch objects from the Plain collection"""
+  plain: [Plain!]!
+
+  """Fetch object from the Plain collection"""
+  plainById: Plain!
+  count: Int!
+}
+
+scalar UUID
+
+"""Input is malformed or invalid."""
+type ValidationErrorType implements ErrorType {
+  id: String!
+  errors: [LocalizedErrorType!]!
+}
+'''
