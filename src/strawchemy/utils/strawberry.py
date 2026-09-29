@@ -60,10 +60,10 @@ def strawberry_contained_types(type_: StrawberryType | Any, resolve_lazy: bool =
 
 
 def strawberry_contained_user_type(type_: StrawberryType | Any) -> Any:
-    inner_types = [
-        inner_type for inner_type in strawberry_contained_types(type_) if inner_type not in ErrorType.__error_types__
-    ]
-    return inner_types[0]
+    return next(
+        (inner_type for inner_type in strawberry_contained_types(type_) if inner_type not in ErrorType.__error_types__),
+        None,
+    )
 
 
 def is_list(

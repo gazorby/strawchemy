@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 import strawberry
 from strawberry import auto
+from strawberry.exceptions import UnresolvedFieldTypeError
 from strawberry.scalars import JSON
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import get_object_definition
@@ -231,6 +232,45 @@ def test_default_order_by_on_plain_type_fail() -> None:
         ),
     ):
         import_module("tests.unit.schemas.plain_type.default_order_by_resolver")
+
+
+@pytest.mark.parametrize(
+    ("module", "field_name"),
+    [
+        pytest.param("delete_mutation", "delete_colors", id="delete_mutation"),
+        pytest.param("update_mutation", "update_colors", id="update_mutation"),
+    ],
+)
+def test_unresolved_mutation_type_fail(module: str, field_name: str) -> None:
+    """Test that a mutation type unresolved at definition raises strawberry's unresolved type error."""
+    schema_module = import_module(f"tests.unit.schemas.unresolved_type.{module}")
+    with pytest.raises(UnresolvedFieldTypeError, match=re.escape(f"Could not resolve the type of '{field_name}'")):
+        strawberry.Schema(query=schema_module.Query, mutation=schema_module.Mutation)
+
+
+@pytest.mark.parametrize(
+    ("module", "context"),
+    [
+        pytest.param("root_list", "The `errors` field has no resolver but", id="root_list"),
+        pytest.param("create_mutation", "The `errors` field has no resolver but", id="create_mutation"),
+        pytest.param(
+            "default_order_by_resolver",
+            "`default_order_by` cannot be set on `errors` because",
+            id="default_order_by_resolver",
+        ),
+    ],
+)
+def test_error_only_type_fail(module: str, context: str) -> None:
+    """Test that a field needing a strawchemy type is rejected when its type only contains error types."""
+    with pytest.raises(StrawchemyFieldError, match=re.escape(f"{context} its type only contains error types.")):
+        import_module(f"tests.unit.schemas.error_only_type.{module}")
+
+
+def test_error_only_type_with_resolver_accepted() -> None:
+    """Test that a field with a resolver can return only error types."""
+    from tests.unit.schemas.error_only_type.resolver import Query
+
+    assert "errors: [ValidationErrorType!]!" in str(strawberry.Schema(query=Query))
 
 
 @pytest.mark.snapshot
