@@ -8,15 +8,10 @@ from tests.unit.models import Color
 strawchemy = Strawchemy("postgresql")
 
 
+@strawberry.type
+class Mutation:
+    delete_colors: list[ColorType] = strawchemy.delete()
+
+
 @strawchemy.type(Color, include=["name"])
 class ColorType: ...
-
-
-@strawberry.type
-class Plain:
-    name: str
-
-
-@strawberry.type
-class Query:
-    plain: Plain | ColorType = strawchemy.field()
