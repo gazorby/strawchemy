@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any
 import pytest
 import strawberry
 from strawberry import auto
-from strawberry.exceptions import UnresolvedFieldTypeError
 from strawberry.scalars import JSON
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import get_object_definition
@@ -234,18 +233,29 @@ def test_default_order_by_on_plain_type_fail() -> None:
         import_module("tests.unit.schemas.plain_type.default_order_by_resolver")
 
 
+@pytest.mark.parametrize("module", ["delete_mutation", "update_mutation"])
+def test_mutation_type_resolved_after_definition(module: str) -> None:
+    """Test that a list mutation type defined after the field is validated once resolved."""
+    schema_module = import_module(f"tests.unit.schemas.unresolved_type.{module}")
+    strawberry.Schema(query=schema_module.Query, mutation=schema_module.Mutation)
+
+
 @pytest.mark.parametrize(
-    ("module", "field_name"),
+    ("module", "message"),
     [
-        pytest.param("delete_mutation", "delete_colors", id="delete_mutation"),
-        pytest.param("update_mutation", "update_colors", id="update_mutation"),
+        pytest.param("delete_mutation_not_list", "Type of delete mutation must be a list: delete_color", id="delete"),
+        pytest.param(
+            "update_mutation_not_list", "Type of update mutation by filter must be a list: update_color", id="update"
+        ),
     ],
 )
-def test_unresolved_mutation_type_fail(module: str, field_name: str) -> None:
-    """Test that a mutation type unresolved at definition raises strawberry's unresolved type error."""
+def test_mutation_type_resolved_after_definition_not_list_fail(module: str, message: str) -> None:
+    """Test that a non-list mutation type defined after the field fails the list check once resolved."""
     schema_module = import_module(f"tests.unit.schemas.unresolved_type.{module}")
-    with pytest.raises(UnresolvedFieldTypeError, match=re.escape(f"Could not resolve the type of '{field_name}'")):
+    # Strawberry wraps errors raised while resolving field types at schema build.
+    with pytest.raises(TypeError, match=re.escape(message)) as exc_info:
         strawberry.Schema(query=schema_module.Query, mutation=schema_module.Mutation)
+    assert isinstance(exc_info.value.__cause__, StrawchemyFieldError)
 
 
 @pytest.mark.parametrize(
@@ -301,7 +311,6 @@ def test_postponed_field_resolves_type_defined_after_it() -> None:
     assert strawberry_contained_user_type(field.type) is RegistryColorType
 
 
-@pytest.mark.xfail(reason="#394: delete mutations reject unresolved types", strict=True)
 def test_postponed_delete_mutation_resolves_type_defined_after_it() -> None:
     """Test that a postponed delete mutation annotation resolves a strawchemy type defined later in the module."""
     from tests.unit.schemas.late_type.delete_mutation import ColorType, Mutation
