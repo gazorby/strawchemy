@@ -56,7 +56,7 @@ class UserType: ...
 }
 ```
 
-Pagination applies per parent row, and a relationship selected without `offset`/`limit` still gets its defaults. Rows tied on `orderBy` count one by one: PostgreSQL returns any of the tied rows, MySQL and SQLite the first by primary key. End `orderBy` on a unique field for stable pages.
+Pagination applies per parent row, and each alias of a relationship gets its own page. A relationship selected without `offset`/`limit`, or with them bound to unset variables, still gets its defaults; `default_pagination=DefaultOffsetPagination(…)` on `@strawchemy.type` changes them for that type's relationships. Rows tied on `orderBy` count one by one: PostgreSQL returns any of the tied rows, MySQL and SQLite the first by primary key. End `orderBy` on a unique field for stable pages.
 
 An `ORDER BY` added by a [query hook](/learn/query-hooks) sorts ahead of the client's `orderBy`, so it decides which rows each page keeps.
 

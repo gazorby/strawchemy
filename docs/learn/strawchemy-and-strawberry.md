@@ -2,8 +2,8 @@
 
 Strawchemy generates GraphQL types, resolvers and inputs from SQLAlchemy models, but the schema
 underneath is Strawberry's own. This page marks what carries over unchanged, what Strawchemy
-takes off your hands, two Strawberry patterns that don't apply to a mapped model, and the two
-places a generated type and a hand-written field share one class.
+takes off your hands and the types it needs to do so, two Strawberry patterns that don't apply to
+a mapped model, and the two places a generated type and a hand-written field share one class.
 
 ## What still works
 
@@ -53,6 +53,34 @@ what the generated resolver does, and [filtering](/learn/filtering), [ordering](
 [pagination](/learn/pagination) for the arguments it adds. Mutations get the same treatment —
 [mutations](/learn/mutations/) covers the input types Strawchemy generates in place of hand-written
 ones.
+
+## Which types a field accepts
+
+A field Strawchemy resolves itself builds its query from a Strawchemy type. On a
+`strawchemy.field()` or mutation field without a resolver of its own, the first member of the
+annotation that isn't an error type must be one; plain Strawberry types may follow it in a union:
+
+```python
+@strawberry.type
+class Query:
+    user_or_plain: UserType | Plain = strawchemy.field()
+    plain: list[Plain] = strawchemy.field()  # [!code error]
+```
+
+```
+strawchemy.exceptions.StrawchemyFieldError: The `plain` field has no resolver but its type `Plain` is not a strawchemy type.
+```
+
+`Plain | UserType` fails the same way, and an annotation made only of error types, such as
+`list[ValidationErrorType]`, raises "…its type only contains error types." A method decorated with
+`@strawchemy.field` may return any type — a plain Strawberry type, a scalar, error types alone —
+but `default_order_by` still needs a Strawchemy type, and `root_aggregations` an
+[aggregation type](/learn/aggregations#aggregating-a-result-set), resolver or not.
+
+These checks run when the class holding the field is decorated, or at `strawberry.Schema(...)` for
+an annotation naming a type declared further down the module, where Strawberry wraps the
+`StrawchemyFieldError` in a `TypeError`. Under `from __future__ import annotations`, a name
+Strawchemy has registered takes precedence over a module-level name when the annotation resolves.
 
 ## What doesn't apply
 

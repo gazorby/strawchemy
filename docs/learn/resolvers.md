@@ -46,6 +46,8 @@ The repository has four methods for fetching data, each paired with its own conv
 - `get_by_id()` — returns a single result filtered on primary key
 - `list()` — returns every matching result
 
+`instance` and `instances` on the returned `GraphQLResult` give the model instances instead. Relationships the GraphQL query selected are not set on them: declare the ones your code reads in [`QueryHook(load=...)`](/learn/query-hooks).
+
 See [async sessions](/learn/async) for how the same resolvers look written against `StrawchemyAsyncRepository`.
 
 See [query hooks](/learn/query-hooks) for constraining every query against a type, and for loading data a custom field needs.

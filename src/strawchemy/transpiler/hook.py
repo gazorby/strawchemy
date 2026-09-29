@@ -53,7 +53,7 @@ def _loaded_property(attribute: object) -> ColumnProperty[Any] | RelationshipPro
 
 @dataclass
 class QueryHook(Generic[DeclarativeT]):
-    """Loads extra columns and relations, or edits the SELECT, for the field it is attached to.
+    """Loads extra columns and relations, or edits the SELECT, for the type, field or repository it is attached to.
 
     Override ``apply_hook`` to edit the statement; read the current request from ``info``.
     """
@@ -196,6 +196,6 @@ class QueryHook(Generic[DeclarativeT]):
     ) -> Select[tuple[DeclarativeT]]:
         """Returns ``statement`` edited, for instance with a filter or a join; unchanged by default.
 
-        ``alias`` is the alias of the model the hook's field belongs to.
+        ``alias`` is the alias of the model the hook runs on: the related model for a relation field.
         """
         return statement

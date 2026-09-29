@@ -86,6 +86,8 @@ Without the hook, `{ users { displayName } }` fails with `sqlalchemy.exc.Missing
 
 `load` takes columns or relationships, but the rule is the same either way: whatever the method reads, the hook declares.
 
+A decorated method may return any type, a plain `@strawberry.type` included; a `strawchemy.field()` declared without one needs a Strawchemy type, as covered in [which types a field accepts](/learn/strawchemy-and-strawberry#which-types-a-field-accepts).
+
 See [query hooks](/learn/query-hooks) for what `QueryHook` can do, and [custom resolvers](/learn/resolvers) for the other options `@strawchemy.field` accepts.
 
 ## Overriding generated types

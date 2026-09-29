@@ -123,7 +123,7 @@ class Query:
 
 The row kept from each group is the first one by `orderBy`, which need not start with the `distinctOn` fields — here, each author's most viewed post. `limit` and `offset` count the kept rows, and relationships selected under a kept row return all their rows. `distinct_on="all"` on `@strawchemy.type` adds `distinctOn` to its list relationships, where it applies per parent row.
 
-`DISTINCT ON` is native on PostgreSQL and emulated with a window function on MySQL and SQLite, with the same results. On PostgreSQL, `json` columns are ordered and compared as `jsonb`.
+PostgreSQL applies `DISTINCT ON` natively when the ordering starts with the `distinctOn` fields; otherwise, and always on MySQL and SQLite, it's emulated with a `row_number()` window, with the same results. On PostgreSQL, `json` columns are ordered and compared as `jsonb`.
 
 ## Ordering everything
 

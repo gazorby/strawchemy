@@ -443,15 +443,9 @@ class _JSONComparison(EqualityComparison[dict[str, Any]]):
 
 
 class _SQLiteJSONComparison(EqualityComparison[dict[str, Any]]):
-    """JSON comparison class for GraphQL filters.
-
-    This class provides a set of JSON comparison operators that can be
-    used to filter data based on containment, key existence, and other
-    JSON-specific properties.
+    """JSON comparison class for GraphQL filters on SQLite, which lacks containment operators.
 
     Attributes:
-        contains: Filters for JSON values that contain this JSON object.
-        contained_in: Filters for JSON values that are contained in this JSON object.
         has_key: Filters for JSON values that have this key.
         has_key_all: Filters for JSON values that have all of these keys.
         has_key_any: Filters for JSON values that have any of these keys.
