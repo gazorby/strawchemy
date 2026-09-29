@@ -12,11 +12,14 @@ strawchemy = Strawchemy("postgresql")
 class ColorType: ...
 
 
-@strawberry.type
-class Plain:
+RegistryColorType = ColorType
+
+
+@strawberry.type(name="PlainColorType")
+class ColorType:
     name: str
 
 
 @strawberry.type
 class Query:
-    plain: Plain | ColorType = strawchemy.field()
+    color: ColorType = strawchemy.field()

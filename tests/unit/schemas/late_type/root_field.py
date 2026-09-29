@@ -8,15 +8,18 @@ from tests.unit.models import Color
 strawchemy = Strawchemy("postgresql")
 
 
+@strawberry.type
+class Query:
+    colors: list[ColorType] = strawchemy.field()
+
+
 @strawchemy.type(Color, include=["name"])
 class ColorType: ...
 
 
-@strawberry.type
-class Plain:
+RegistryColorType = ColorType
+
+
+@strawberry.type(name="PlainColorType")
+class ColorType:
     name: str
-
-
-@strawberry.type
-class Query:
-    plain: Plain | ColorType = strawchemy.field()

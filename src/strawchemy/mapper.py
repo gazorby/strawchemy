@@ -4,7 +4,6 @@ import dataclasses
 from functools import cached_property, partial
 from typing import TYPE_CHECKING, Any, ClassVar, TypeVar, cast, overload
 
-from strawberry.annotation import StrawberryAnnotation
 from strawberry.schema.config import StrawberryConfig
 from typing_extensions import Unpack
 
@@ -27,7 +26,13 @@ from strawchemy.schema.factories import (
     UpsertConflictEnumBackend,
     UpsertConflictEnumFactory,
 )
-from strawchemy.schema.field import MutationFieldKwargs, OutputFieldKwargs, StrawberryFieldKwargs, StrawchemyField
+from strawchemy.schema.field import (
+    MutationFieldKwargs,
+    OutputFieldKwargs,
+    RegistryAnnotation,
+    StrawberryFieldKwargs,
+    StrawchemyField,
+)
 from strawchemy.schema.filters.fields import VALID_JOINS, FilterFieldMarker
 from strawchemy.schema.mutation import types as mutation_types
 from strawchemy.schema.mutation.field_builder import MutationFieldBuilder
@@ -285,9 +290,8 @@ class Strawchemy:
         Returns:
             A StrawchemyField instance, which is a specialized StrawberryField.
         """
-        namespace = self._annotation_namespace()
         graphql_type = field_kwargs.get("graphql_type")
-        type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
+        type_annotation = RegistryAnnotation.from_registry(graphql_type, self._annotation_namespace)
 
         if model_field is not None:
             root_field = False
@@ -318,7 +322,7 @@ class Strawchemy:
             metadata=field_kwargs.get("metadata"),
             directives=field_kwargs.get("directives", ()),
             extensions=field_kwargs.get("extensions") or [],
-            registry_namespace=namespace,
+            registry_namespace_getter=self._annotation_namespace,
             description=field_kwargs.get("description"),
             arguments=arguments,
             order_by_factory=self.order_by_factory,

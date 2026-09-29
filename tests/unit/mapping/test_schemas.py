@@ -20,6 +20,7 @@ from strawchemy import RELATIONSHIPS, SCALARS
 from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
 from strawchemy.schema.scalars import Interval
 from strawchemy.testing import MockContext
+from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
 from tests.unit.models import Color, Fruit, User
@@ -239,6 +240,36 @@ def test_plain_type_fields_accepted(graphql_snapshot: SnapshotAssertion) -> None
 
     schema = strawberry.Schema(query=Query, mutation=Mutation)
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
+
+
+def test_registry_type_shadows_module_name() -> None:
+    """Test that a postponed annotation resolves a registry type over a module name bound to another type."""
+    from tests.unit.schemas.plain_type.registry_shadowing import Query, RegistryColorType
+
+    field = get_object_definition(Query, strict=True).get_field("color")
+    assert field is not None
+    assert field.type is RegistryColorType
+
+
+def test_postponed_field_resolves_type_defined_after_it() -> None:
+    """Test that a postponed field annotation resolves a registry type defined later over a module name."""
+    from tests.unit.schemas.late_type.root_field import Query, RegistryColorType
+
+    strawberry.Schema(query=Query)
+    field = get_object_definition(Query, strict=True).get_field("colors")
+    assert field is not None
+    assert strawberry_contained_user_type(field.type) is RegistryColorType
+
+
+@pytest.mark.xfail(reason="#394: delete mutations reject unresolved types", strict=True)
+def test_postponed_delete_mutation_resolves_type_defined_after_it() -> None:
+    """Test that a postponed delete mutation annotation resolves a strawchemy type defined later in the module."""
+    from tests.unit.schemas.late_type.delete_mutation import ColorType, Mutation
+
+    strawberry.Schema(query=DefaultQuery, mutation=Mutation)
+    field = get_object_definition(Mutation, strict=True).get_field("delete_colors")
+    assert field is not None
+    assert strawberry_contained_user_type(field.type) is ColorType
 
 
 def test_query_hooks_wrong_relationship_load_spec() -> None:

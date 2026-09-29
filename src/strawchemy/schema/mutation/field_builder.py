@@ -5,8 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from strawberry.annotation import StrawberryAnnotation
-
+from strawchemy.schema.field import RegistryAnnotation
 from strawchemy.schema.mutation.fields import (
     StrawchemyCreateMutationField,
     StrawchemyDeleteMutationField,
@@ -69,8 +68,7 @@ class MutationFieldBuilder:
             A configured mutation field instance, either wrapped with the resolver
             or as a standalone field.
         """
-        namespace = self.registry_namespace_getter()
-        type_annotation = StrawberryAnnotation.from_annotation(graphql_type, namespace) if graphql_type else None
+        type_annotation = RegistryAnnotation.from_registry(graphql_type, self.registry_namespace_getter)
         graphql_name = field_kwargs.pop("name", None)
 
         # Inject the shared registry only for input mutation fields (create/update/upsert),
@@ -86,7 +84,7 @@ class MutationFieldBuilder:
             graphql_name=graphql_name,
             type_annotation=type_annotation,
             is_subscription=False,
-            registry_namespace=namespace,
+            registry_namespace_getter=self.registry_namespace_getter,
             order_by_factory=self.order_by_factory,
             filter_factory=self.filter_factory,
             distinct_on_factory=self.distinct_on_factory,

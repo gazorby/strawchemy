@@ -73,7 +73,7 @@ if TYPE_CHECKING:
         StrawchemyObjectWithStrawberryObjectDefinition,
     )
 
-__all__ = ("StrawchemyField",)
+__all__ = ("RegistryAnnotation", "StrawchemyField")
 
 T = TypeVar("T", bound="DeclarativeBase")
 
@@ -112,6 +112,29 @@ class MutationFieldKwargs(OutputFieldKwargs, total=False):
     repository_type: AnyRepositoryType | None
 
 
+class RegistryAnnotation(StrawberryAnnotation):
+    """Annotation resolving names from the strawchemy registry first, then from ``namespace``."""
+
+    __slots__ = ("registry_namespace_getter",)
+
+    def __init__(self, annotation: object | str, *, registry_namespace_getter: Callable[[], dict[str, Any]]) -> None:
+        super().__init__(annotation)  # strawberry sets namespace to the module declaring the field
+        self.registry_namespace_getter = registry_namespace_getter
+
+    @classmethod
+    def from_registry(
+        cls, annotation: object, registry_namespace_getter: Callable[[], dict[str, Any]]
+    ) -> StrawberryAnnotation | None:
+        if annotation is None or isinstance(annotation, StrawberryAnnotation):
+            return annotation
+        return cls(annotation, registry_namespace_getter=registry_namespace_getter)
+
+    @override
+    def evaluate(self) -> builtins.type:
+        namespace = (self.namespace or {}) | self.registry_namespace_getter()
+        return StrawberryAnnotation(self.raw_annotation, namespace=namespace).evaluate()
+
+
 class StrawchemyField(StrawberryField):
     """A custom field class for Strawberry GraphQL that allows explicit handling of resolver arguments.
 
@@ -141,7 +164,7 @@ class StrawchemyField(StrawberryField):
         pagination: DefaultOffsetPagination | bool | None = False,
         repository_type: AnyRepositoryType | None = None,
         root_aggregations: bool = False,
-        registry_namespace: dict[str, Any] | None = None,
+        registry_namespace_getter: Callable[[], dict[str, Any]] | None = None,
         filter_statement: FilterStatementCallable | None = None,
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
         execution_options: dict[str, Any] | None = None,
@@ -167,7 +190,7 @@ class StrawchemyField(StrawberryField):
         root_field: bool = False,
     ) -> None:
         self.type_annotation = type_annotation
-        self.registry_namespace = registry_namespace
+        self.registry_namespace_getter = registry_namespace_getter or dict
         self.is_root_field = root_field
         self.root_aggregations = root_aggregations
         self.query_hook = query_hook
@@ -616,7 +639,7 @@ class StrawchemyField(StrawberryField):
             default_order_by=self._default_order_by,
             distinct_on=self._distinct_on,
             pagination=self.pagination,
-            registry_namespace=self.registry_namespace,
+            registry_namespace_getter=self.registry_namespace_getter,
             execution_options=self._execution_options,
             config=self._config,
             order_by_factory=self._order_by_factory,
@@ -637,7 +660,7 @@ class StrawchemyField(StrawberryField):
         current_annotation = self.type_annotation.annotation if self.type_annotation else UNRESOLVED
         if type_ is UNRESOLVED and current_annotation is not UNRESOLVED:
             return
-        self.type_annotation = StrawberryAnnotation.from_annotation(type_, namespace=self.registry_namespace)
+        self.type_annotation = RegistryAnnotation.from_registry(type_, self.registry_namespace_getter)
 
     @property
     def description(self) -> str | None:
