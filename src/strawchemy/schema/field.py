@@ -328,8 +328,6 @@ class StrawchemyField(StrawberryField):
                 ``default_order_by`` is set on a non-list field or references a column not of the field's root model.
             QueryHookError: If a root field hook loads an attribute of another model than the field's.
         """
-        if type_ is UNRESOLVED:
-            return
         for inner_type in strawberry_contained_types(type_):
             is_strawchemy_type = isclass(inner_type) and issubclass(inner_type, StrawchemyObject)
             if self.root_aggregations and not (
@@ -360,6 +358,9 @@ class StrawchemyField(StrawberryField):
         user_type = strawberry_contained_user_type(type_)
         if isclass(user_type) and issubclass(user_type, StrawchemyObject):
             return user_type
+        if user_type is None:
+            msg = f"{context} its type only contains error types."
+            raise StrawchemyFieldError(msg)
         msg = f"{context} its type `{getattr(user_type, '__name__', user_type)}` is not a strawchemy type."
         raise StrawchemyFieldError(msg)
 
@@ -702,7 +703,8 @@ class StrawchemyField(StrawberryField):
         self, *, type_definition: StrawberryObjectDefinition | None = None
     ) -> StrawberryType | builtins.type[WithStrawberryObjectDefinition] | Any:
         type_ = super().resolve_type(type_definition=type_definition)
-        self._validate_type(type_)
+        if type_ is not UNRESOLVED:
+            self._validate_type(type_)
         return type_
 
     def resolver(self, info: Info[Any, Any], *args: Any, **kwargs: Any) -> (
