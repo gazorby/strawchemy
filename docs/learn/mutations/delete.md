@@ -25,6 +25,8 @@ mutation {
 }
 ```
 
+The filter takes the same input as a query filter, [related records](/learn/filtering#filtering-related-records) included.
+
 ## Deleting everything
 
 Leave out the filter argument and the mutation removes every record of the type instead:

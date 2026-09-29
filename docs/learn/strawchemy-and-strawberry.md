@@ -117,9 +117,9 @@ class UserType:
         return len(self.instance.posts)
 ```
 
-`post_count` needs `instance.posts` loaded, which the generated query only does when something
-else in the selection also asked for `posts`. A `QueryHook` guarantees it regardless of what the
-client selected, by adding the load to the statement Strawchemy is already building:
+`post_count` needs `instance.posts` loaded, which the generated query never does: relationships
+the client selects are not set on the instance. A `QueryHook` loads it, by adding the load to the
+statement Strawchemy is already building:
 
 ```python
 @strawchemy.field(query_hook=QueryHook(load=[User.posts]))
@@ -128,4 +128,4 @@ def post_count(self) -> int:
 ```
 
 See [mapping models](/learn/mapping-models) for `ModelInstance` and computed fields, and
-[query hooks](/learn/query-hooks) for the rest of what `QueryHook` can do.
+[loading extra data](/learn/query-hooks#loading-extra-data) for the rest of what `load` can do.

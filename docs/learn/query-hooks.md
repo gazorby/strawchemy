@@ -30,13 +30,18 @@ When implementing `apply_hook`:
 - You must use the provided `alias` parameter to refer to columns of the model on which the hook is applied. Otherwise,
   the statement may fail.
 - The GraphQL context is available through `self.info` within hook methods.
+- A hook on a related type, or on a relation field, only restricts the related rows: a parent without matching rows is
+  still returned, with an empty list or `null`.
+- An `ORDER BY` added by a hook sorts ahead of the client's `orderBy`, on the root field as on a relation, so it
+  decides which rows a page keeps and which row `distinctOn` keeps from each group.
+- A filter on a relation ignores the hooks of that relation: it tests every related row, hidden or not.
 - You must set a `ModelInstance` typed attribute if you want to access the model instance values.
   The `instance` attribute is matched by the `ModelInstance[Post]` type hint, so you can give it any name you want.
 :::
 
 ## Loading extra data
 
-`apply_hook` returns the statement unchanged by default — loading columns or relationships doesn't go through it at all. A `QueryHook`'s `load` parameter loads them instead, even when the GraphQL query didn't request them — needed whenever a custom `@strawchemy.field` reads model attributes the query selection wouldn't otherwise touch, such as a computed `summary` field built from `title` and `views`:
+`apply_hook` returns the statement unchanged by default — loading columns or relationships doesn't go through it at all. A `QueryHook`'s `load` parameter loads them instead, even when the GraphQL query didn't request them — needed whenever a custom `@strawchemy.field` reads model attributes the query selection wouldn't otherwise touch, such as a computed `summary` field built from `title` and `views`. Relations selected in the GraphQL query are not set on the instance, so a custom resolver reading `self.instance.<relation>`, or code reading relations of `GraphQLResult.instance(s)`, must declare them in `load`:
 
 ```python
 from strawchemy import ModelInstance, QueryHook
@@ -50,6 +55,8 @@ class PostTypeWithSummary:
     def summary(self) -> str:
         return f"{self.instance.title} ({self.instance.views} views)"
 ```
+
+A `QueryHook` subclass can also set `load` as a class attribute; a `load` argument passed at instantiation takes precedence.
 
 `load` accepts four shapes:
 
@@ -77,3 +84,9 @@ class PostTypeWithSummary:
   def all_tag_names(self) -> str:
       return ", ".join(tag.name for post in self.instance.posts for tag in post.tags)
   ```
+
+`(relationship, [])` and a bare relationship nested in a tuple load the relationship in full. A relationship loaded through `load` holds every related row: hooks on the related type don't restrict it.
+
+Synonyms, composites, `column_property` attributes, and hybrid properties returning a column or relationship as-is load what they stand for. Each attribute must belong to the model it loads from, or to a model that one inherits from: the target of the enclosing relationship when nested, otherwise the model the hook runs on — the type's model for a hook on `@strawchemy.type`, on a method or on a column field, the related model for a hook on a relation field.
+
+Any other entry raises `QueryHookError`, from `strawchemy.exceptions`: an attribute that loads no column or relationship (a computed hybrid, an association proxy), a tuple not keyed by a relationship, or an attribute of the wrong model. The hook raises when created, except for a top-level attribute of the wrong model, which raises when the type or field using the hook is declared.

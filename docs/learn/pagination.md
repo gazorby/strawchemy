@@ -8,7 +8,7 @@ class Query:
     users: list[UserType] = strawchemy.field(pagination=True)
 ```
 
-`users` now takes `offset` and `limit` arguments, falling back to the config's defaults (limit 100 and offset 0 unless changed) whenever a query omits them:
+`users` now takes `offset` and `limit` arguments, falling back to the config's defaults (limit 100 and offset 0 unless changed) whenever a query omits them or binds them to unset variables. `limit: null` lifts the limit:
 
 ```graphql
 {
@@ -55,6 +55,10 @@ class UserType: ...
     }
 }
 ```
+
+Pagination applies per parent row, and a relationship selected without `offset`/`limit` still gets its defaults. Rows tied on `orderBy` count one by one: PostgreSQL returns any of the tied rows, MySQL and SQLite the first by primary key. End `orderBy` on a unique field for stable pages.
+
+An `ORDER BY` added by a [query hook](/learn/query-hooks) sorts ahead of the client's `orderBy`, so it decides which rows each page keeps.
 
 ## Paginating everything
 

@@ -40,7 +40,7 @@ Each argument to `strawchemy.field()` adds its own piece of the field:
 - `filter_input` — adds a `filter` argument. [Filtering](/learn/filtering)
 - `order_by_input` — adds an `orderBy` argument. [Ordering](/learn/ordering)
 - `pagination` — adds `limit` and `offset`. [Pagination](/learn/pagination)
-- `distinct_on` — adds a `distinctOn` argument, which restricts results to the first row for each distinct value of the given fields.
+- `distinct_on` — adds a `distinctOn` argument, which restricts results to the first row for each distinct value of the given fields. [Distinct rows](/learn/ordering#distinct-rows)
 - `root_aggregations` — switches the field into aggregate mode. [Aggregations](/learn/aggregations)
 
 ## Building the schema

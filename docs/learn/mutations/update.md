@@ -74,3 +74,5 @@ mutation {
     }
 }
 ```
+
+The filter takes the same input as a query filter, [related records](/learn/filtering#filtering-related-records) included; each matching record is updated once.

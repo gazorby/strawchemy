@@ -3,7 +3,8 @@
 ## Aggregating a relationship
 
 Every list relationship Strawchemy maps gets an automatic `<field>Aggregate` field on its
-GraphQL type — no extra declaration needed.
+GraphQL type — no extra declaration needed. To-one relationships get none, in output, filter
+or order-by types alike.
 
 ```graphql
 {
@@ -24,6 +25,9 @@ GraphQL type — no extra declaration needed.
     }
 }
 ```
+
+An aggregate field can sit at any depth, including under a list relationship with its own
+`orderBy`, pagination or `distinctOn`, and aggregates the related rows of the row it's selected on.
 
 ## Filtering by an aggregate
 
@@ -119,7 +123,8 @@ class Query:
 
 `posts_aggregate: PostFineGrainedAggregateFilter` swaps the generated aggregate bool expression on
 that one field for the declared one above; any other list relationship on `User` keeps its full
-generated aggregate bool expression untouched.
+generated aggregate bool expression untouched. Declaring `<field>_aggregate` for a to-one
+relationship raises `StrawchemyFieldError`.
 
 Inside the class body, `strawchemy.filter_field()` refines one function at a time:
 
@@ -160,6 +165,10 @@ class PostAggregationType: ...
 class Query:
     posts_aggregations: PostAggregationType = strawchemy.field(root_aggregations=True)
 ```
+
+The field's type must be one built by `@strawchemy.aggregate`: `root_aggregations=True` on any
+other type, custom resolver or not, raises `StrawchemyFieldError` ("…the field type is not a root
+aggregation type.") when the field is defined.
 
 ```graphql
 {

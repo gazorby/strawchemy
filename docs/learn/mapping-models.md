@@ -76,7 +76,7 @@ class UserType:
         return f"{self.instance.name} <{self.instance.email}>"
 ```
 
-Without the hook, `{ users { displayName } }` fails with `sqlalchemy.exc.MissingGreenlet` unless the client also happens to select `name` and `email`. The same applies to a relationship:
+Without the hook, `{ users { displayName } }` fails with `sqlalchemy.exc.MissingGreenlet` unless the client also happens to select `name` and `email`. A relationship always needs the hook, since relationships the client selects are not set on the instance:
 
 ```python
     @strawchemy.field(query_hook=QueryHook(load=[User.posts]))

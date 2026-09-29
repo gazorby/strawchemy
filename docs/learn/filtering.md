@@ -40,6 +40,12 @@ Strawchemy supports a wide range of filter operations:
 | **Interval**                            | order filters on plain intervals, plus `days`, `hours`, `minutes` and `seconds` filters                                                                                          |
 | **Logical**                             | `_and`, `_or`, `_not`                                                                                                                                                            |
 
+`like`, `nlike`, `ilike` and `nilike` take a SQL `LIKE` pattern: `%` matches any sequence of characters, `_` any single character, and a backslash makes the next character literal (`\%`, `\_`, `\\`; written `"50\\%"` in a GraphQL string). A pattern ending with a lone backslash raises `FilterValueError` before the query runs, and the client gets a GraphQL error: `LIKE pattern '50\\' must not end with an escape character`. `startswith`, `endswith`, `contains` and their `i` variants match their value literally. Without the `i` prefix, these operators and `regexp`, `nregexp` compare letter case on every database, SQLite and MySQL included; with it, they ignore case, of non-ASCII letters too for the `LIKE`-based ones. The `LIKE`-based operators compare accents and trailing spaces on every database, whatever the column collation.
+
+`in: []` matches no rows and `nin: []` every row.
+
+`hasKey`, `hasKeyAll` and `hasKeyAny` match the top-level keys of a JSON object, read literally: `hasKey: "a.b"` matches `{"a.b": 1}`, not `{"a": {"b": 1}}`, and a key holding `null` counts. Arrays and scalars have no keys. `hasKeyAll: []` matches every row, `hasKeyAny: []` none. On PostgreSQL, JSON filters work on `json` and `jsonb` columns alike.
+
 PostGIS geometry columns filter too, with their own operations — see [geometry](/learn/geometry).
 
 ## Combining conditions
@@ -59,6 +65,10 @@ Combine several field conditions into one filter with three logical operators:
 }
 ```
 
+`_not` matches exactly the rows its condition does not, rows with a `NULL` column included: `_not: { bio: { eq: "x" } }` returns users without a bio, where `bio: { neq: "x" }` does not.
+
+An empty filter is ignored, as if it were absent: `{}`, a filter field set to `null` (`name: null`, `group: null`, `_not: null`), a comparison with no operator set (`name: {}`, or operators set to `null` or bound to omitted variables), and a relationship or aggregation filter holding only empty filters (`group: {}`, `group: { name: {} }`, `postsAggregate: { count: { arguments: [id], predicate: {} } }`) match every row, including rows without a related row. An empty `_or` branch is dropped rather than matching every row: `_or: [{}, { name: { eq: "John" } }]` is the same as `name: { eq: "John" }`, and an `_or` with only empty branches filters nothing. This also applies under `_not` and to mutations filtering the rows to update or delete. Use `isNull`, not `eq: null`, to test for `NULL`.
+
 ## Filtering related records
 
 ```graphql
@@ -73,6 +83,12 @@ Combine several field conditions into one filter with three logical operators:
     }
 }
 ```
+
+The filter selects users, not posts: each matching user appears once, on paginated fields too, and `posts` lists all of its posts, not only the matching ones.
+
+On a to-many relationship, one filter object must match a single related row: `posts: { title: { contains: "GraphQL" }, views: { gt: 10 } }` needs one post matching both. Separate filters on the same relationship, as in `_and: [{ posts: { title: { contains: "GraphQL" } } }, { posts: { views: { gt: 10 } } }]`, may each match a different post. `_not: { posts: { ... } }` matches users with no matching post; `posts: { _not: { ... } }` those with at least one post that does not match.
+
+A relationship filter that holds a predicate only matches rows that have a matching related row, whatever the filters next to it: `users(filter: { group: { name: { isNull: true } } })` skips users without a group. To find rows without a related row, filter on the foreign key column (`groupId: { isNull: true }`), negate the relationship (`_not: { group: { id: { isNull: false } } }`) or, for to-many relationships, count them (`postsAggregate: { count: { arguments: [id], predicate: { eq: 0 } } }`). Update and delete mutations filter on relationships with the same rules.
 
 ## Date and time parts
 
@@ -166,7 +182,7 @@ class PostFineGrainedFilter:
 
 `ops` and `apply` are mutually exclusive on the same field.
 
-The callable's signature is `(statement, value, *, dialect, model) -> Select`: it receives an isolated `select(model)` statement and the GraphQL-supplied value, and must only add `.where(...)` predicates to it. It must not join or subquery against the same model — the statement is later re-aliased and correlated back to the outer query by primary key, and a self-join there could be rewritten ambiguously. `join` picks that correlation strategy: `"exists"` (the default) wraps it in a correlated `EXISTS`; `"in"` folds it back with an `IN` against the primary key instead.
+The callable's signature is `(statement, value, *, dialect, model) -> Select`: it receives an isolated `select(model)` statement and the GraphQL-supplied value, and must only add `.where(...)` predicates to it. A `null` value skips the filter: `apply` never receives `None`. It must not join or subquery against the same model — the statement is later re-aliased and correlated back to the outer query by primary key, and a self-join there could be rewritten ambiguously. `join` picks that correlation strategy: `"exists"` (the default) wraps it in a correlated `EXISTS`; `"in"` folds it back with an `IN` against the primary key instead.
 
 ::: warning
 An `apply` field is different: it has no column, so its annotation *defines* the generated GraphQL input type (`more_viewed_than: int` above) and is used verbatim.
