@@ -17,6 +17,6 @@ class MockContext:
 
     def __post_init__(self) -> None:
         dialect = MagicMock(name="DialectMock")
-        dialect.name = "postgresql"
+        dialect.name = self.dialect
         engine = MagicMock(name="EngineMock", dialect=dialect)
         self.session = MagicMock(name="SessionMock", get_bind=MagicMock(return_value=engine))
