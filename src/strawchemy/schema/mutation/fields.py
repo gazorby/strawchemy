@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Coroutine, Sequence
-from typing import TYPE_CHECKING, Any, Optional, TypeVar
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, TypeVar
 
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types.arguments import StrawberryArgument
@@ -17,7 +17,7 @@ from strawchemy.validation import InputValidationError
 if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase
     from strawberry import Info
-    from strawberry.types.base import StrawberryType, WithStrawberryObjectDefinition
+    from strawberry.types.base import StrawberryObjectDefinition, StrawberryType, WithStrawberryObjectDefinition
 
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO
     from strawchemy.repository.strawberry.base import GraphQLResult
@@ -74,7 +74,13 @@ class _StrawchemyInputMutationField(StrawchemyField):
         return StrawberryArgument(DATA_KEY, None, type_annotation=StrawberryAnnotation(annotation))
 
 
-class _StrawchemyMutationField:
+class _StrawchemyMutationField(StrawchemyField):
+    _action: ClassVar[str]
+
+    @override
+    def _auto_description(self, definition: StrawberryObjectDefinition) -> str:
+        return f"{self._action} {'objects' if self.is_list else 'object'} in the {definition.name} collection"
+
     async def _input_result_async(
         self, repository_call: Awaitable[GraphQLResult[Any, Any]], input_data: Input[Any]
     ) -> ListResolverResult:
@@ -88,6 +94,8 @@ class _StrawchemyMutationField:
 
 
 class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMutationField):
+    _action = "Create"
+
     def _create_resolver(
         self, info: Info, data: AnyMappedDTO | Sequence[AnyMappedDTO]
     ) -> CreateOrUpdateResolverResult | Coroutine[CreateOrUpdateResolverResult, Any, Any]:
@@ -112,6 +120,8 @@ class StrawchemyCreateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
 
 
 class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMutationField):
+    _action = "Upsert"
+
     def __init__(
         self,
         input_type: type[MappedGraphQLDTO[T]],
@@ -172,6 +182,8 @@ class StrawchemyUpsertMutationField(_StrawchemyInputMutationField, _StrawchemyMu
 
 
 class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMutationField):
+    _action = "Update"
+
     @override
     def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
         if self._filter is not None and not is_list(type_):
@@ -228,7 +240,9 @@ class StrawchemyUpdateMutationField(_StrawchemyInputMutationField, _StrawchemyMu
         return self._update_by_filter_resolver(info, *args, **kwargs)
 
 
-class StrawchemyDeleteMutationField(StrawchemyField, _StrawchemyMutationField):
+class StrawchemyDeleteMutationField(_StrawchemyMutationField):
+    _action = "Delete"
+
     def __init__(
         self,
         input_type: type[BooleanFilterDTO] | None = None,

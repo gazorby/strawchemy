@@ -105,7 +105,7 @@ enum FruitUpdateFieldsInput {
 }
 
 type Mutation {
-  """Fetch object from the FruitType collection by id"""
+  """Upsert object in the FruitType collection"""
   upsertFruit(updateFields: [FruitUpdateFieldsInput!] = null, conflictFields: FruitConflictFields = null, data: FruitPartial!): FruitType!
 }
 

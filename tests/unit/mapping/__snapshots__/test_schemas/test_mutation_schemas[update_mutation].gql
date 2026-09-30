@@ -657,22 +657,22 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](https:/
 scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
 
 type Mutation {
-  """Fetch object from the SQLDataTypesType collection by id"""
+  """Update object in the SQLDataTypesType collection"""
   updateDataType(data: SQLDataTypesUpdate!): SQLDataTypesType!
 
-  """Fetch objects from the SQLDataTypesType collection"""
+  """Update objects in the SQLDataTypesType collection"""
   updateDataTypes(data: [SQLDataTypesUpdate!]!): [SQLDataTypesType!]!
 
-  """Fetch objects from the GroupType collection"""
+  """Update objects in the GroupType collection"""
   updateGroups(data: GroupPartial!, filter: GroupFilter = null): [GroupType!]!
 
-  """Fetch object from the GroupType collection by id"""
+  """Update object in the GroupType collection"""
   updateGroupById(data: GroupUpdate!): GroupType!
 
-  """Fetch objects from the GroupType collection"""
+  """Update objects in the GroupType collection"""
   updateGroupsByIds(data: [GroupUpdate!]!): [GroupType!]!
 
-  """Fetch object from the TagType collection by id"""
+  """Update object in the TagType collection"""
   updateTag(data: TagUpdate!): TagType!
 }
 

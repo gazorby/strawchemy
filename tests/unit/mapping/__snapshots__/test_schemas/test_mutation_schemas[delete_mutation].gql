@@ -418,10 +418,10 @@ input IntOrderComparison {
 }
 
 type Mutation {
-  """Fetch objects from the GroupType collection"""
+  """Delete objects in the GroupType collection"""
   deleteGroups: [GroupType!]!
 
-  """Fetch objects from the GroupType collection"""
+  """Delete objects in the GroupType collection"""
   deleteGroupsFilter(filter: GroupFilter!): [GroupType!]!
 }
 
