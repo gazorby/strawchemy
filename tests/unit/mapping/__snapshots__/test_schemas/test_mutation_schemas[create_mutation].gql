@@ -336,16 +336,16 @@ The `JSON` scalar type represents JSON values as specified by [ECMA-404](https:/
 scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
 
 type Mutation {
-  """Fetch object from the SQLDataTypesType collection by id"""
+  """Create object in the SQLDataTypesType collection"""
   createDataType(data: SQLDataTypesCreate!): SQLDataTypesType!
 
-  """Fetch objects from the SQLDataTypesType collection"""
+  """Create objects in the SQLDataTypesType collection"""
   createDataTypes(data: [SQLDataTypesCreate!]!): [SQLDataTypesType!]!
 
-  """Fetch object from the GroupType collection by id"""
+  """Create object in the GroupType collection"""
   createGroup(data: GroupInput!): GroupType!
 
-  """Fetch objects from the GroupType collection"""
+  """Create objects in the GroupType collection"""
   createGroups(data: [GroupInput!]!): [GroupType!]!
 }
 

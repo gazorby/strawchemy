@@ -3,7 +3,7 @@
 scalar DateTime
 
 type Mutation {
-  """Fetch object from the TimestampedRecordType collection by id"""
+  """Create object in the TimestampedRecordType collection"""
   createRecord(data: TimestampedRecordCreateInput!): TimestampedRecordType!
 }
 

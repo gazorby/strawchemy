@@ -329,9 +329,8 @@ class StrawchemyField(StrawberryField):
             QueryHookError: If a root field hook loads an attribute of another model than the field's.
         """
         for inner_type in strawberry_contained_types(type_):
-            is_strawchemy_type = isclass(inner_type) and issubclass(inner_type, StrawchemyObject)
             if self.root_aggregations and not (
-                is_strawchemy_type and inner_type.__strawchemy_definition__.is_root_aggregation_type
+                self._is_strawchemy_object(inner_type) and inner_type.__strawchemy_definition__.is_root_aggregation_type
             ):
                 msg = f"The `{self.name}` field is defined with `root_aggregations` enabled but the field type is not a root aggregation type."
                 raise StrawchemyFieldError(msg)
@@ -356,13 +355,17 @@ class StrawchemyField(StrawberryField):
     @classmethod
     def _strawchemy_user_type(cls, type_: object, context: str) -> builtins.type[StrawchemyObject]:
         user_type = strawberry_contained_user_type(type_)
-        if isclass(user_type) and issubclass(user_type, StrawchemyObject):
+        if cls._is_strawchemy_object(user_type):
             return user_type
         if user_type is None:
             msg = f"{context} its type only contains error types."
             raise StrawchemyFieldError(msg)
         msg = f"{context} its type `{getattr(user_type, '__name__', user_type)}` is not a strawchemy type."
         raise StrawchemyFieldError(msg)
+
+    @classmethod
+    def _is_strawchemy_object(cls, type_: object) -> TypeIs[builtins.type[StrawchemyObject]]:
+        return isclass(type_) and issubclass(type_, StrawchemyObject)
 
     @classmethod
     def _is_strawchemy_type(
@@ -667,10 +670,16 @@ class StrawchemyField(StrawberryField):
     def description(self) -> str | None:
         if self._description is not None:
             return self._description
-        definition = get_object_definition(strawberry_contained_user_type(self.type), strict=False)
-        named_template = "Fetch {object} from the {name} collection"
+        user_type = strawberry_contained_user_type(self.type)
+        if not self._is_strawchemy_object(user_type):
+            return None
+        definition = get_object_definition(user_type, strict=False)
         if not definition or definition.is_input:
             return None
+        return self._auto_description(definition)
+
+    def _auto_description(self, definition: StrawberryObjectDefinition) -> str:
+        named_template = "Fetch {object} from the {name} collection"
         if not self.is_list:
             description = named_template.format(object="object", name=definition.name)
             return description if self.base_resolver else f"{description} by id"

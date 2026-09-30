@@ -497,6 +497,77 @@ def test_mutation_schemas(path: str, graphql_snapshot: SnapshotAssertion) -> Non
     assert textwrap.dedent(str(schema)).strip() == graphql_snapshot
 
 
+@pytest.mark.parametrize(
+    ("path", "field_name", "description"),
+    [
+        pytest.param("create.Mutation", "create_group", "Create object in the GroupType collection", id="create"),
+        pytest.param(
+            "create.Mutation", "create_groups", "Create objects in the GroupType collection", id="create_list"
+        ),
+        pytest.param("update.Mutation", "update_group_by_id", "Update object in the GroupType collection", id="update"),
+        pytest.param(
+            "update.Mutation", "update_groups", "Update objects in the GroupType collection", id="update_filter"
+        ),
+        pytest.param("upsert.Mutation", "upsert_fruit", "Upsert object in the FruitType collection", id="upsert"),
+        pytest.param(
+            "delete.Mutation", "delete_groups", "Delete objects in the GroupType collection", id="delete_list"
+        ),
+    ],
+)
+def test_mutation_field_description(path: str, field_name: str, description: str) -> None:
+    """Test that generated mutation fields describe the mutation instead of a fetch."""
+    module, mutation_name = f"tests.unit.schemas.mutations.{path}".rsplit(".", maxsplit=1)
+    mutation_class = getattr(import_module(module), mutation_name)
+    strawberry.Schema(query=DefaultQuery, mutation=mutation_class, scalar_overrides=SCALAR_OVERRIDES)
+
+    field = get_object_definition(mutation_class, strict=True).get_field(field_name)
+    assert field is not None
+    assert field.description == description
+
+
+@pytest.mark.parametrize(
+    ("type_name", "field_name", "description"),
+    [
+        pytest.param("Query", "plain", None, id="plain_list_resolver"),
+        pytest.param("Query", "plain_by_id", None, id="plain_resolver"),
+        pytest.param("ColorType", "plain", None, id="plain_type_body_resolver"),
+        pytest.param("Mutation", "create_plain", None, id="plain_create_resolver"),
+        pytest.param("Mutation", "create_color", "Create object in the ColorType collection", id="error_union"),
+        pytest.param("Query", "colors", "Fetch objects from the ColorType collection", id="strawchemy_list"),
+        pytest.param(
+            "Query", "color_or_plain", "Fetch object from the ColorType collection by id", id="strawchemy_first_union"
+        ),
+    ],
+)
+def test_plain_type_field_description(type_name: str, field_name: str, description: str | None) -> None:
+    """Test that fields only get an auto description when they return a strawchemy type."""
+    module = import_module("tests.unit.schemas.plain_type.accepted")
+    strawberry.Schema(query=module.Query, mutation=module.Mutation)
+
+    field = get_object_definition(getattr(module, type_name), strict=True).get_field(field_name)
+    assert field is not None
+    assert field.description == description
+
+
+def test_mutation_field_explicit_description(strawchemy: Strawchemy) -> None:
+    """Test that an explicit description wins over the generated mutation description."""
+
+    @strawchemy.type(Color, include=["name"])
+    class ColorType: ...
+
+    @strawchemy.create_input(Color, include=["name"])
+    class ColorCreate: ...
+
+    @strawberry.type
+    class Mutation:
+        create_color: ColorType = strawchemy.create(ColorCreate, description="custom")
+
+    strawberry.Schema(query=DefaultQuery, mutation=Mutation)
+    field = get_object_definition(Mutation, strict=True).get_field("create_color")
+    assert field is not None
+    assert field.description == "custom"
+
+
 @pytest.mark.snapshot
 def test_query_and_mutations(graphql_snapshot: SnapshotAssertion) -> None:
     from tests.unit.schemas.mutation_and_query import Mutation, Query

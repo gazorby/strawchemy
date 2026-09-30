@@ -141,16 +141,16 @@ type FruitType {
 }
 
 type Mutation {
-  """Fetch object from the FruitType collection by id"""
+  """Create object in the FruitType collection"""
   createFruit(data: FruitInput!): FruitType!
 
-  """Fetch objects from the FruitType collection"""
+  """Create objects in the FruitType collection"""
   createFruits(data: [FruitInput!]!): [FruitType!]!
 
-  """Fetch object from the ColorType collection by id"""
+  """Create object in the ColorType collection"""
   createColor(data: ColorInput!): ColorType!
 
-  """Fetch objects from the ColorType collection"""
+  """Create objects in the ColorType collection"""
   createColors(data: [ColorInput!]!): [ColorType!]!
 }
 

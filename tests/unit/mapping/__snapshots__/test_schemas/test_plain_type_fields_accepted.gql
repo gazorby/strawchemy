@@ -7,8 +7,6 @@ input ColorCreate {
 """GraphQL type"""
 type ColorType {
   name: String!
-
-  """Fetch objects from the Plain collection"""
   plain: [Plain!]!
 }
 
@@ -37,16 +35,14 @@ type LocalizedErrorType implements ErrorType {
 }
 
 type Mutation {
-  """Fetch object from the ColorType collection by id"""
+  """Create object in the ColorType collection"""
   createColor(data: ColorCreate!): ColorTypeValidationErrorType!
 
-  """Fetch object from the ColorType collection by id"""
+  """Create object in the ColorType collection"""
   createColorCustomError(data: ColorCreate!): CustomErrorColorType!
 
-  """Fetch objects from the ColorType collection"""
+  """Create objects in the ColorType collection"""
   createColors(data: [ColorCreate!]!): [ColorTypePlain!]!
-
-  """Fetch object from the Plain collection"""
   createPlain: Plain!
 }
 
@@ -63,11 +59,7 @@ type Query {
 
   """Fetch objects from the ColorType collection"""
   orderedColors: [ColorTypePlain!]!
-
-  """Fetch objects from the Plain collection"""
   plain: [Plain!]!
-
-  """Fetch object from the Plain collection"""
   plainById: Plain!
   count: Int!
 }

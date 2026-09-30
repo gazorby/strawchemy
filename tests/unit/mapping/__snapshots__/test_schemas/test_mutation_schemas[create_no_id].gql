@@ -317,7 +317,7 @@ enum GroupUsersUpdateFields {
 }
 
 type Mutation {
-  """Fetch object from the GroupType collection by id"""
+  """Create object in the GroupType collection"""
   createGroup(data: GroupInput!): GroupType!
 }
 

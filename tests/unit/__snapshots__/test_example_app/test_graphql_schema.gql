@@ -457,34 +457,34 @@ type MilestoneType {
 }
 
 type Mutation {
-  """Fetch object from the TicketType collection by id"""
+  """Create object in the TicketType collection"""
   createTicket(data: TicketCreate!): TicketTypeValidationErrorType!
 
-  """Fetch objects from the TicketType collection"""
+  """Create objects in the TicketType collection"""
   createTickets(data: [TicketCreate!]!): [TicketType!]!
 
-  """Fetch object from the TicketType collection by id"""
+  """Upsert object in the TicketType collection"""
   upsertTicket(updateFields: [TicketUpsertFields!] = null, conflictFields: TicketUpsertConflictFields = null, data: TicketCreate!): TicketType!
 
-  """Fetch object from the ProjectType collection by id"""
+  """Create object in the ProjectType collection"""
   createProject(data: ProjectCreate!): ProjectType!
 
-  """Fetch objects from the ProjectType collection"""
+  """Create objects in the ProjectType collection"""
   createProjects(data: [ProjectCreate!]!): [ProjectType!]!
 
-  """Fetch object from the MilestoneType collection by id"""
+  """Create object in the MilestoneType collection"""
   createMilestone(data: MilestoneCreate!): MilestoneType!
 
-  """Fetch object from the TicketType collection by id"""
+  """Update object in the TicketType collection"""
   updateTicketsByIds(data: TicketUpdate!, filter: TicketFilter = null): TicketType!
 
-  """Fetch objects from the TicketType collection"""
+  """Update objects in the TicketType collection"""
   updateTickets(data: TicketPartial!, filter: TicketFilter = null): [TicketType!]!
 
-  """Fetch objects from the TicketType collection"""
+  """Delete objects in the TicketType collection"""
   deleteTicket(filter: TicketFilter!): [TicketType!]!
 
-  """Fetch object from the CustomerType collection by id"""
+  """Create object in the CustomerType collection"""
   createCustomer(data: CustomerCreate!): CustomerType!
 }
 
