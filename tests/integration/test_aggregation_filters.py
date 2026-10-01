@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from typing import TYPE_CHECKING
 
 import pytest
@@ -536,6 +537,36 @@ async def test_aggregation_filter_through_to_one_relation_also_selected(
     order_by_keys = _order_by_keys(query_tracker[0].statement_str)
     assert len(order_by_keys) == len(set(order_by_keys))
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_not_or_of_aggregation_and_to_many_through_to_one_relation(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker
+) -> None:
+    """A relation-level ``_not`` of an OR on an aggregation and a to-many keeps the fruits of colors matching neither."""
+    query = """
+        {
+            fruits(
+                filter: {
+                    color: {
+                        _not: {
+                            _or: [
+                                { fruitsAggregate: { count: { predicate: { gt: 2 } } } }
+                                { fruits: { name: { eq: "Apple" } } }
+                            ]
+                        }
+                    }
+                }
+            ) {
+                id
+            }
+        }
+    """
+    result = await maybe_async(any_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert sorted(fruit["id"] for fruit in result.data["fruits"]) == [6, 7, 8, 9, 10, 11]
+    assert re.search(r"\) IS NOT (TRUE|1) ", query_tracker[0].statement_str, re.IGNORECASE)
 
 
 async def test_aggregation_filter_through_relation_selected_with_its_own_ordering(any_query: AnyQueryExecutor) -> None:

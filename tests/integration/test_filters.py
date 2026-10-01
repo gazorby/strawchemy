@@ -850,6 +850,47 @@ async def test_not_isnull_column(dto_filter: str, names: list[str], any_query: A
 
 
 @pytest.mark.parametrize(
+    ("raw_users", "raw_user_departments"),
+    [
+        pytest.param(
+            [
+                {"id": 1, "name": "Alice", "group_id": 1, "bio": None},
+                {"id": 2, "name": "Bob", "group_id": 1, "bio": None},
+                {"id": 3, "name": "Charlie", "group_id": 2, "bio": None},
+                {"id": 4, "name": "Dave", "group_id": 1, "bio": None},
+                {"id": 5, "name": "Eve", "group_id": None, "bio": None},
+            ],
+            [
+                {"user_id": 1, "department_id": 1},
+                {"user_id": 2, "department_id": 2},
+                {"user_id": 3, "department_id": 1},
+                {"user_id": 4, "department_id": 1},
+                {"user_id": 4, "department_id": 3},
+                {"user_id": 5, "department_id": 3},
+            ],
+            id="it-three-users-platform-two",
+        )
+    ],
+)
+async def test_aggregate_under_one_of_two_to_many_paths(
+    any_query: AnyQueryExecutor,
+    raw_users: RawRecordData,  # noqa: ARG001
+    raw_user_departments: RawRecordData,  # noqa: ARG001
+) -> None:
+    """A user passes a count over its departments' users and a topic of its group when both hold for some rows."""
+    dto_filter = (
+        "{ departments: { usersAggregate: { count: { predicate: { gt: 1 } } } }, "
+        'group: { topics: { name: { eq: "Hello!" } } } }'
+    )
+
+    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+
+    assert not result.errors
+    assert result.data is not None
+    assert sorted(user["name"] for user in result.data["users"]) == ["Alice", "Dave"]
+
+
+@pytest.mark.parametrize(
     ("raw_groups", "raw_users", "raw_departments"),
     [
         pytest.param(

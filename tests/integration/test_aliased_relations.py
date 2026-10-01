@@ -28,6 +28,12 @@ def _fruits_of(
     return sorted(fruits, key=lambda fruit: fruit[by], reverse=descending)
 
 
+@pytest.mark.allow_duplicate_reads(
+    reason=(
+        "aliases a and b of colors.fruits, ordered differently, each read fruit through their own LATERAL "
+        "or rank CTE (Ruling V)"
+    )
+)
 async def test_aliased_relations_with_different_order_by(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
@@ -126,6 +132,12 @@ async def test_aliased_relations_with_and_without_arguments(
         ]
 
 
+@pytest.mark.allow_duplicate_reads(
+    reason=(
+        "aliases a and b of fruits.color.fruits, ordered differently, each read fruit through their own "
+        "LATERAL or rank CTE (Ruling V)"
+    )
+)
 async def test_aliased_relations_nested_in_relation(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
@@ -226,6 +238,12 @@ async def test_aliased_relations_with_query_hook(
         assert color["b"] == sweet[1:2]
 
 
+@pytest.mark.allow_duplicate_reads(
+    reason=(
+        "aliases a and b of fruits.color.fruits, under the color aliases x and y and ordered differently, "
+        "each read fruit through their own LATERAL or rank CTE (Ruling V)"
+    )
+)
 async def test_aliased_relations_under_to_one_relation_selected_twice(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:

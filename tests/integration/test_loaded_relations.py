@@ -104,6 +104,12 @@ async def test_to_one_relation_ignores_stale_attribute_loaded_in_session(
     assert next(item for item in data["fruits"] if item["id"] == fruit_id)["color"] == {"id": new_color_id}
 
 
+@pytest.mark.allow_duplicate_reads(
+    reason=(
+        "colors.fruits (sweetness DESC) and colors.fruits.color.fruits (sweetness ASC) are independent selections "
+        "that each read fruit through their own LATERAL or rank CTE (Ruling V)"
+    )
+)
 async def test_same_object_reached_through_two_paths_keeps_each_path_arguments(
     any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
