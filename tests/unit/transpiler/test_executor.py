@@ -5,25 +5,29 @@ from __future__ import annotations
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import Result, Select
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import MultipleResultsFound
-from sqlalchemy.orm import aliased, load_only
 
 from strawchemy.exceptions import QueryResultError
+from strawchemy.transpiler._core.level import Level, PlanContext
+from strawchemy.transpiler._core.request import QueryRequest
 from strawchemy.transpiler._executor import NodeResult, SyncQueryExecutor
-from strawchemy.transpiler._plan import QueryPlan
+from strawchemy.transpiler._passes import DEFAULT_PIPELINES
 from tests.unit.models import Fruit
 
 if TYPE_CHECKING:
-    from sqlalchemy.orm.util import AliasedClass
+    from strawchemy.transpiler._core.plan import QueryPlan
 
 
-def _plan() -> QueryPlan:
-    """Builds a minimal QueryPlan over the Fruit model for executor tests."""
-    fruit: AliasedClass[Fruit] = cast("AliasedClass[Fruit]", aliased(Fruit))
-    return QueryPlan(root=fruit, filter_semijoin=None, load_options=(load_only(fruit.name),))
+def _plan(limit: int | None = None) -> QueryPlan:
+    """Plans a query over the Fruit model for executor tests."""
+    context = PlanContext.create(Fruit, postgresql.dialect(), pipelines=DEFAULT_PIPELINES)
+    request = QueryRequest(Fruit, None, None, (), (), limit, None, False)
+    return context.pipelines.root.plan(Level.root(request, context))
 
 
 def _result(*models: object) -> MagicMock:
@@ -49,12 +53,15 @@ def test_executor_emits_plan_in_statement() -> None:
     assert isinstance(executor.statement(), Select)
 
 
-def test_executor_add_where_appends_predicate() -> None:
-    """add_where predicates are applied on top of the emitted statement."""
-    executor = SyncQueryExecutor(plan=_plan(), id_field_definitions=[])
-    executor.add_where(executor.plan.root.name == "x")
-    compiled = str(executor.statement())
-    assert "WHERE" in compiled
+@pytest.mark.parametrize("limit", [None, 2], ids=["plain", "paginated"])
+def test_executor_add_where_reads_the_root_alias(limit: int | None) -> None:
+    """add_where predicates on the unaliased model are moved onto the plan's root alias, adding no FROM."""
+    executor = SyncQueryExecutor(plan=_plan(limit), id_field_definitions=[])
+    planned_froms = len(executor.statement().get_final_froms())
+    executor.add_where(Fruit.id == uuid4())
+    statement = executor.statement()
+    assert "WHERE" in str(statement)
+    assert len(statement.get_final_froms()) == planned_froms
 
 
 def test_executor_rejects_several_roots_when_fetching_one() -> None:

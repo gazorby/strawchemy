@@ -480,8 +480,8 @@ PAGINATION_JOIN_SQL = snapshot(
             "       color.count_1",
             "  FROM (",
             "        SELECT color.id AS id,",
-            "               anon_1.sum_1 AS sum_1,",
-            "               anon_1.count_1 AS count_1",
+            "               anon_1.count_1 AS count_1,",
+            "               anon_1.sum_1 AS sum_1",
             "          FROM color AS color",
             "          JOIN LATERAL (",
             "                SELECT sum(fruit_1.sweetness) AS sum_1,",
@@ -505,11 +505,11 @@ PAGINATION_JOIN_SQL = snapshot(
             "         WHERE fruit_1.color_id IS NOT NULL",
             "         GROUP BY fruit_1.color_id",
             "       ) SELECT color.id,",
-            "       color.coalesce_1",
+            "       coalesce(color.count_1, ?) AS coalesce_1",
             "  FROM (",
             "        SELECT color.id AS id,",
-            "               anon_1.sum_1 AS sum_1,",
-            "               coalesce(anon_1.count_1, ?) AS coalesce_1",
+            "               anon_1.count_1 AS count_1,",
+            "               anon_1.sum_1 AS sum_1",
             "          FROM color AS color",
             "          LEFT OUTER JOIN anon_1",
             "            ON color.id = anon_1.color_id",
@@ -528,11 +528,11 @@ PAGINATION_JOIN_SQL = snapshot(
             "         WHERE fruit_1.color_id IS NOT NULL",
             "         GROUP BY fruit_1.color_id",
             "       ) SELECT color.id,",
-            "       color.coalesce_1",
+            "       coalesce(color.count_1, %s) AS coalesce_1",
             "  FROM (",
             "        SELECT color.id AS id,",
-            "               anon_1.sum_1 AS sum_1,",
-            "               coalesce(anon_1.count_1, %s) AS coalesce_1",
+            "               anon_1.count_1 AS count_1,",
+            "               anon_1.sum_1 AS sum_1",
             "          FROM color AS color",
             "          LEFT OUTER JOIN anon_1",
             "            ON color.id = anon_1.color_id",
@@ -547,7 +547,6 @@ PAGINATION_JOIN_SQL = snapshot(
             "       color.sum_1",
             "  FROM (",
             "        SELECT color.id AS id,",
-            "               anon_1.count_1 AS count_1,",
             "               anon_1.sum_1 AS sum_1",
             "          FROM color AS color",
             "          JOIN LATERAL (",
@@ -576,7 +575,6 @@ PAGINATION_JOIN_SQL = snapshot(
             "       color.sum_1",
             "  FROM (",
             "        SELECT color.id AS id,",
-            "               coalesce(anon_1.count_1, ?) AS coalesce_1,",
             "               anon_1.sum_1 AS sum_1",
             "          FROM color AS color",
             "          LEFT OUTER JOIN anon_1",
@@ -600,7 +598,6 @@ PAGINATION_JOIN_SQL = snapshot(
             "       color.sum_1",
             "  FROM (",
             "        SELECT color.id AS id,",
-            "               coalesce(anon_1.count_1, %s) AS coalesce_1,",
             "               anon_1.sum_1 AS sum_1",
             "          FROM color AS color",
             "          LEFT OUTER JOIN anon_1",
@@ -677,11 +674,9 @@ PAGINATION_JOIN_SQL = snapshot(
             "          FROM color AS color",
             "         WHERE EXISTS (",
             "                SELECT 1",
-            "                  FROM color AS color_1",
-            "                  JOIN fruit AS fruit_1",
-            "                    ON color_1.id = fruit_1.color_id",
-            "                 WHERE fruit_1.sweetness > %(sweetness_1)s",
-            "                   AND color_1.id = color.id",
+            "                  FROM fruit AS fruit_1",
+            "                 WHERE color.id = fruit_1.color_id",
+            "                   AND fruit_1.sweetness > %(sweetness_1)s",
             "               )",
             "         ORDER BY color.id ASC",
             "         LIMIT %(param_1)s",
@@ -696,11 +691,9 @@ PAGINATION_JOIN_SQL = snapshot(
             "          FROM color AS color",
             "         WHERE EXISTS (",
             "                SELECT 1",
-            "                  FROM color AS color_1",
-            "                  JOIN fruit AS fruit_1",
-            "                    ON color_1.id = fruit_1.color_id",
-            "                 WHERE fruit_1.sweetness > ?",
-            "                   AND color_1.id = color.id",
+            "                  FROM fruit AS fruit_1",
+            "                 WHERE color.id = fruit_1.color_id",
+            "                   AND fruit_1.sweetness > ?",
             "               )",
             "         ORDER BY color.id ASC",
             "         LIMIT ?",
@@ -715,11 +708,9 @@ PAGINATION_JOIN_SQL = snapshot(
             "          FROM color AS color",
             "         WHERE EXISTS (",
             "                SELECT 1",
-            "                  FROM color AS color_1",
-            "                 INNER JOIN fruit AS fruit_1",
-            "                    ON color_1.id = fruit_1.color_id",
-            "                 WHERE fruit_1.sweetness > %s",
-            "                   AND color_1.id = color.id",
+            "                  FROM fruit AS fruit_1",
+            "                 WHERE color.id = fruit_1.color_id",
+            "                   AND fruit_1.sweetness > %s",
             "               )",
             "         ORDER BY color.id ASC",
             "         LIMIT %s,",
@@ -760,11 +751,11 @@ PAGINATION_JOIN_SQL = snapshot(
             "         WHERE fruit_1.color_id IS NOT NULL",
             "         GROUP BY fruit_1.color_id",
             "       ) SELECT color.id,",
-            "       color.coalesce_1,",
+            "       coalesce(color.count_1, ?) AS coalesce_1,",
             "       color.sum_1",
             "  FROM (",
             "        SELECT color.id AS id,",
-            "               coalesce(anon_1.count_1, ?) AS coalesce_1,",
+            "               anon_1.count_1 AS count_1,",
             "               anon_1.sum_1 AS sum_1",
             "          FROM color AS color",
             "          LEFT OUTER JOIN anon_1",
@@ -786,11 +777,11 @@ PAGINATION_JOIN_SQL = snapshot(
             "         WHERE fruit_1.color_id IS NOT NULL",
             "         GROUP BY fruit_1.color_id",
             "       ) SELECT color.id,",
-            "       color.coalesce_1,",
+            "       coalesce(color.count_1, %s) AS coalesce_1,",
             "       color.sum_1",
             "  FROM (",
             "        SELECT color.id AS id,",
-            "               coalesce(anon_1.count_1, %s) AS coalesce_1,",
+            "               anon_1.count_1 AS count_1,",
             "               anon_1.sum_1 AS sum_1",
             "          FROM color AS color",
             "          LEFT OUTER JOIN anon_1",
@@ -883,11 +874,9 @@ INNER_JOIN_SQL = snapshot(
             "    ON color.id = fruit_1.color_id",
             " WHERE EXISTS (",
             "        SELECT 1",
-            "          FROM color AS color_1",
-            "          JOIN fruit AS fruit_2",
-            "            ON color_1.id = fruit_2.color_id",
-            "         WHERE fruit_2.sweetness > %(sweetness_1)s",
-            "           AND color_1.id = color.id",
+            "          FROM fruit AS fruit_2",
+            "         WHERE color.id = fruit_2.color_id",
+            "           AND fruit_2.sweetness > %(sweetness_1)s",
             "       )",
             " ORDER BY color.id ASC,",
             "          fruit_1.id ASC",
@@ -901,11 +890,9 @@ INNER_JOIN_SQL = snapshot(
             "    ON color.id = fruit_1.color_id",
             " WHERE EXISTS (",
             "        SELECT 1",
-            "          FROM color AS color_1",
-            "          JOIN fruit AS fruit_2",
-            "            ON color_1.id = fruit_2.color_id",
-            "         WHERE fruit_2.sweetness > ?",
-            "           AND color_1.id = color.id",
+            "          FROM fruit AS fruit_2",
+            "         WHERE color.id = fruit_2.color_id",
+            "           AND fruit_2.sweetness > ?",
             "       )",
             " ORDER BY color.id ASC,",
             "          fruit_1.id ASC",
@@ -919,11 +906,9 @@ INNER_JOIN_SQL = snapshot(
             "    ON color.id = fruit_1.color_id",
             " WHERE EXISTS (",
             "        SELECT 1",
-            "          FROM color AS color_1",
-            "         INNER JOIN fruit AS fruit_2",
-            "            ON color_1.id = fruit_2.color_id",
-            "         WHERE fruit_2.sweetness > %s",
-            "           AND color_1.id = color.id",
+            "          FROM fruit AS fruit_2",
+            "         WHERE color.id = fruit_2.color_id",
+            "           AND fruit_2.sweetness > %s",
             "       )",
             " ORDER BY color.id ASC,",
             "          fruit_1.id ASC",
@@ -948,20 +933,20 @@ SELECTED_FUNCTION_COLUMNS = snapshot(
         "nested-filter-only-postgresql": [
             '"group".id',
             "color_1.id AS id_1",
-            "anon_1.sum_1",
             "color_1.id AS group__color__id",
+            "anon_1.sum_1",
         ],
         "nested-filter-only-sqlite": [
             '"group".id',
             "color_1.id AS id_1",
-            "anon_1.sum_1",
             "color_1.id AS group__color__id",
+            "anon_1.sum_1",
         ],
         "nested-filter-only-mysql": [
             "`group`.id",
             "color_1.id AS id_1",
-            "anon_1.sum_1",
             "color_1.id AS group__color__id",
+            "anon_1.sum_1",
         ],
     }
 )
@@ -1341,3 +1326,63 @@ def test_projection_selects_only_requested_functions(
 
     compiled = str(captured_statements[0].compile(dialect=SQLA_DIALECTS[dialect_name]))
     assert _outer_projection(format_sql(compiled)) == SELECTED_FUNCTION_COLUMNS[request.node.callspec.id]
+
+
+@pytest.mark.inline_snapshot
+def test_allowed_duplicate_hooked_relation(captured_statements: list[Select[Any]]) -> None:
+    """A hooked to-one filtered and selected is joined twice: once without its hook, once with it."""
+    query = '{ groupsVisibleColor(filter: { color: { name: { eq: "red" } } }) { name color { name } } }'
+
+    result = schema.execute_sync(query, context_value=DialectContext("postgresql"))
+
+    assert not result.errors
+    assert len(captured_statements) == 1
+    compiled = str(captured_statements[0].compile(dialect=SQLA_DIALECTS["postgresql"]))
+    assert format_sql(compiled).splitlines() == snapshot(
+        [
+            'SELECT "group".name,',
+            '       "group".id,',
+            "       color_1.name AS name_1,",
+            "       color_1.id AS id_1",
+            '  FROM "group" AS "group"',
+            "  JOIN color AS color_2",
+            '    ON color_2.id = "group".color_id',
+            "  LEFT OUTER JOIN color AS color_1",
+            '    ON color_1.id = "group".color_id',
+            "   AND color_1.name != %(name_2)s",
+            " WHERE color_2.name = %(name_3)s",
+            ' ORDER BY "group".id ASC,',
+            "          color_1.id ASC",
+        ]
+    )
+
+
+@pytest.mark.inline_snapshot
+def test_allowed_duplicate_exists_and_selection(captured_statements: list[Select[Any]]) -> None:
+    """A to-many filtered in an EXISTS and selected is read twice: the selection keeps every related row."""
+    query = "{ colors(filter: { fruits: { sweetness: { gt: 5 } } }) { name fruits { name } } }"
+
+    result = schema.execute_sync(query, context_value=DialectContext("postgresql"))
+
+    assert not result.errors
+    assert len(captured_statements) == 1
+    compiled = str(captured_statements[0].compile(dialect=SQLA_DIALECTS["postgresql"]))
+    assert format_sql(compiled).splitlines() == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id,",
+            "       fruit_1.name AS name_1,",
+            "       fruit_1.id AS id_1",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN fruit AS fruit_1",
+            "    ON color.id = fruit_1.color_id",
+            " WHERE EXISTS (",
+            "        SELECT 1",
+            "          FROM fruit AS fruit_2",
+            "         WHERE color.id = fruit_2.color_id",
+            "           AND fruit_2.sweetness > %(sweetness_1)s",
+            "       )",
+            " ORDER BY color.id ASC,",
+            "          fruit_1.id ASC",
+        ]
+    )

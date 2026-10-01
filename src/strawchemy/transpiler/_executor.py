@@ -7,8 +7,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeAlias
 
-from sqlalchemy import inspect
+from sqlalchemy import Column, inspect
 from sqlalchemy.exc import MultipleResultsFound
+from sqlalchemy.sql import visitors
 from typing_extensions import Self
 
 from strawchemy.dto import ModelT
@@ -21,7 +22,7 @@ if TYPE_CHECKING:
     from sqlalchemy import ColumnElement, Label, Result, Select, StatementLambdaElement
 
     from strawchemy.dto.strawberry import GraphQLFieldDefinition
-    from strawchemy.transpiler._plan import QueryPlan
+    from strawchemy.transpiler._core.plan import QueryPlan
     from strawchemy.typing import QueryNodeType
 
 
@@ -134,7 +135,7 @@ class QueryExecutor(Generic[DeclarativeT]):
     """Primary-key fields of the queried model, used by the repository to fetch by id."""
     execution_options: dict[str, Any] | None = None
     extra_where: list[ColumnElement[bool]] = dataclasses.field(default_factory=list)
-    """WHERE predicates added to the planned statement."""
+    """WHERE predicates added to the planned statement, on the unaliased model."""
 
     @property
     def column_map(self) -> Mapping[QueryNodeType, ColumnElement[Any]]:
@@ -154,6 +155,21 @@ class QueryExecutor(Generic[DeclarativeT]):
     def add_where(self, *predicates: ColumnElement[bool]) -> None:
         """Adds WHERE predicates to the planned statement, such as a primary-key lookup."""
         self.extra_where.extend(predicates)
+
+    def _on_root(self, predicate: ColumnElement[bool]) -> ColumnElement[bool]:
+        """Reads the model columns of ``predicate`` through the root entity's attributes.
+
+        A page exporting two aliases of the root's table would make a match by base column ambiguous.
+        """
+        entity = self.plan.root_entity
+        mapper = inspect(entity).mapper
+
+        def replace(element: visitors.ExternallyTraversible, **_: object) -> ColumnElement[Any] | None:
+            if isinstance(element, Column) and element.table in mapper.tables:
+                return getattr(entity, mapper.get_property_by_column(element).key).__clause_element__()
+            return None
+
+        return visitors.replacement_traverse(predicate, {}, replace)
 
     def _to_query_result(
         self, result: Result[tuple[DeclarativeT, Any]], fetch: Literal["one_or_none", "all"]
@@ -216,7 +232,7 @@ class QueryExecutor(Generic[DeclarativeT]):
         """Returns the planned statement with the extra WHERE predicates and execution options."""
         statement = self.plan.emit()
         if self.extra_where:
-            statement = statement.where(*self.extra_where)
+            statement = statement.where(*(self._on_root(predicate) for predicate in self.extra_where))
         if self.execution_options:
             statement = statement.execution_options(**self.execution_options)
         return statement

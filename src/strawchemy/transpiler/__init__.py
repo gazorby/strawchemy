@@ -1,3 +1,5 @@
+"""Plans GraphQL queries into SQLAlchemy statements and executes them."""
+
 from __future__ import annotations
 
 from strawchemy.transpiler._executor import (

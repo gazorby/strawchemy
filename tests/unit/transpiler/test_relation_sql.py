@@ -1,4 +1,4 @@
-"""Tests for join strategy selection and construction."""
+"""SQL of relations planned on their own: secondary-table LATERAL joins and nested sort keys."""
 
 from __future__ import annotations
 
@@ -11,12 +11,6 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import SAWarning
 from sqlalchemy.sql.compiler import FROM_LINTING
 
-from strawchemy.config.databases import DatabaseFeatures
-from strawchemy.transpiler._strategies import (
-    CteJoinStrategy,
-    LateralJoinStrategy,
-    select_join_strategy,
-)
 from tests.unit.schemas.optimizations import schema as optimizations_schema
 from tests.unit.schemas.secondary_table import schema as secondary_table_schema
 from tests.unit.utils import SQLA_DIALECTS, DialectContext
@@ -40,24 +34,6 @@ def _linted_sql(statement: Select[Any]) -> str:
         return format_sql(str(statement.compile(dialect=postgresql.dialect(), linting=FROM_LINTING)))
 
 
-def test_select_join_strategy_returns_lateral_when_supported() -> None:
-    """A lateral-capable dialect selects the lateral strategy."""
-    db_features = DatabaseFeatures.new("postgresql")
-    assert db_features.supports_lateral is True
-    strategy = select_join_strategy(db_features)
-    assert isinstance(strategy, LateralJoinStrategy)
-    assert callable(strategy.relation_join)
-
-
-def test_select_join_strategy_returns_cte_when_not_supported() -> None:
-    """A dialect without lateral selects the CTE strategy."""
-    db_features = DatabaseFeatures.new("sqlite")
-    assert db_features.supports_lateral is False
-    strategy = select_join_strategy(db_features)
-    assert isinstance(strategy, CteJoinStrategy)
-    assert callable(strategy.relation_join)
-
-
 @pytest.mark.parametrize(
     ("query", "expected"),
     [
@@ -70,8 +46,8 @@ def test_select_join_strategy_returns_cte_when_not_supported() -> None:
                     '  FROM "user" AS "user"',
                     "  JOIN LATERAL (",
                     "        SELECT count(*) AS count_1",
-                    "          FROM user_department_join_table AS user_department_join_table_1",
-                    "          JOIN department AS department_1",
+                    "          FROM department AS department_1",
+                    "          JOIN user_department_join_table AS user_department_join_table_1",
                     "            ON department_1.id = user_department_join_table_1.department_id",
                     '         WHERE "user".id = user_department_join_table_1.user_id',
                     "       ) AS anon_1",
@@ -92,8 +68,8 @@ def test_select_join_strategy_returns_cte_when_not_supported() -> None:
                     "  LEFT OUTER JOIN LATERAL (",
                     "        SELECT department_1.id AS id,",
                     "               department_1.name AS name",
-                    "          FROM user_department_join_table AS user_department_join_table_1",
-                    "          JOIN department AS department_1",
+                    "          FROM department AS department_1",
+                    "          JOIN user_department_join_table AS user_department_join_table_1",
                     "            ON department_1.id = user_department_join_table_1.department_id",
                     '         WHERE "user".id = user_department_join_table_1.user_id',
                     "         ORDER BY department_1.id ASC",
@@ -164,10 +140,10 @@ RELATION_ORDER_BY_SQL = snapshot(
             "       anon_1 AS (",
             "        SELECT fruit_1.name AS name,",
             "               fruit_1.id AS id,",
+            "               fruit_1.color_id AS color_id,",
             "               color_1.name AS name_1,",
             "               coalesce(anon_2.count_1, %s) AS coalesce_1,",
             "               fruit_1.sweetness AS sweetness,",
-            "               fruit_1.color_id AS color_id,",
             "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, coalesce(anon_2.count_1, %s) DESC, fruit_1.sweetness ASC, fruit_1.id) AS `rank`",
             "          FROM fruit AS fruit_1",
             "          LEFT OUTER JOIN color AS color_1",
@@ -175,9 +151,9 @@ RELATION_ORDER_BY_SQL = snapshot(
             "          LEFT OUTER JOIN anon_2",
             "            ON color_1.id = anon_2.color_id",
             "         WHERE fruit_1.color_id IS NOT NULL",
-            "         GROUP BY fruit_1.color_id,",
-            "                  fruit_1.name,",
+            "         GROUP BY fruit_1.name,",
             "                  fruit_1.id,",
+            "                  fruit_1.color_id,",
             "                  color_1.name,",
             "                  coalesce(anon_2.count_1, %s),",
             "                  fruit_1.sweetness",
