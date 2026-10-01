@@ -140,6 +140,9 @@ class _TypeReference:
         """
         self._set_type(self._replaced(self.ref_holder.type, strawberry_type))
 
+    def contains_type(self, strawberry_type: type[WithStrawberryObjectDefinition]) -> bool:
+        return any(inner_type is strawberry_type for inner_type in strawberry_contained_types(self.ref_holder.type))
+
 
 @dataclasses.dataclass(frozen=True, eq=True)
 class RegistryTypeInfo:
@@ -160,6 +163,20 @@ class RegistryTypeInfo:
     @property
     def scoped_id(self) -> Hashable:
         return self.model, self.graphql_type, self.tags
+
+    @property
+    def _is_user_defined_default_name_override(self) -> bool:
+        """Whether this override should take over generated refs for the model's default DTO name."""
+        return self.scope is None and self.override and self.user_defined and self.default_name is not None
+
+    @property
+    def resolves_scoped_references(self) -> bool:
+        """Whether this registration should satisfy refs to generated DTOs for the same model."""
+        return bool(
+            self.model
+            and not self.exclude_from_scope
+            and (self.scope == "global" or self._is_user_defined_default_name_override)
+        )
 
 
 class StrawberryRegistry:
@@ -284,11 +301,33 @@ class StrawberryRegistry:
                 reference.update_type(strawberry_type)
         if type_info.graphql_type != "enum":
             self._track_references(strawberry_type, type_info.graphql_type, force=type_info.override)
-        if type_info.scope == "global" and type_info.model:
+        if type_info.resolves_scoped_references:
+            # A user-defined override can replace a generated/default DTO for
+            # the same model after relationship fields have already recorded
+            # references to it. Update only refs that still point at that
+            # previous default DTO; refs already resolved to another explicit
+            # override for the same model must keep their chosen type.
+            # ``scope="global"`` keeps the historical behavior and refreshes
+            # every scoped reference.
+            previous_default_type: type[WithStrawberryObjectDefinition] | None = None
             if type_info.default_name:
+                previous_type_info = self._names_map[type_info.graphql_type].get(type_info.default_name)
+                previous_default_type = cast(
+                    "type[WithStrawberryObjectDefinition] | None",
+                    self._type_map.get(previous_type_info) if previous_type_info else None,
+                )
                 self._namespaces[type_info.graphql_type][type_info.default_name] = strawberry_type
+                if type_info.default_name != type_info.name:
+                    for reference in self._forward_type_refs[type_info.graphql_type][type_info.default_name]:
+                        if previous_default_type is None or reference.contains_type(previous_default_type):
+                            reference.update_type(strawberry_type)
             for reference in self._type_refs[type_info.scoped_id]:
-                reference.update_type(strawberry_type)
+                if (
+                    type_info.scope == "global"
+                    or previous_default_type is None
+                    or reference.contains_type(previous_default_type)
+                ):
+                    reference.update_type(strawberry_type)
             self._scoped_types[type_info.scoped_id] = strawberry_type
         self._names_map[type_info.graphql_type][type_info.name] = type_info
         self._type_map[type_info] = strawberry_type
