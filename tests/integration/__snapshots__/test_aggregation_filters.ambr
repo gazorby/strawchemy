@@ -134,13 +134,11 @@
       ON color.id = fruit_1.color_id
    WHERE EXISTS (
           SELECT 1
-            FROM color AS color_1
-            JOIN fruit AS fruit_2
-              ON color_1.id = fruit_2.color_id
+            FROM fruit AS fruit_2
             LEFT OUTER JOIN anon_1
               ON fruit_2.id = anon_1.fruit_id
-           WHERE coalesce(anon_1.count_1, ?) > ?
-             AND color_1.id = color.id
+           WHERE color.id = fruit_2.color_id
+             AND coalesce(anon_1.count_1, ?) > ?
          )
    ORDER BY color.id ASC,
             fruit_1.id ASC
@@ -161,13 +159,11 @@
       ON color.id = fruit_1.color_id
    WHERE EXISTS (
           SELECT 1
-            FROM color AS color_1
-           INNER JOIN fruit AS fruit_2
-              ON color_1.id = fruit_2.color_id
+            FROM fruit AS fruit_2
             LEFT OUTER JOIN anon_1
               ON fruit_2.id = anon_1.fruit_id
-           WHERE coalesce(anon_1.count_1, %s) > %s
-             AND color_1.id = color.id
+           WHERE color.id = fruit_2.color_id
+             AND coalesce(anon_1.count_1, %s) > %s
          )
    ORDER BY color.id ASC,
             fruit_1.id ASC
@@ -182,17 +178,15 @@
       ON color.id = fruit_1.color_id
    WHERE EXISTS (
           SELECT 1
-            FROM color AS color_1
-            JOIN fruit AS fruit_2
-              ON color_1.id = fruit_2.color_id
+            FROM fruit AS fruit_2
             JOIN LATERAL (
                   SELECT count(*) AS count_1
                     FROM fruit_farm AS fruit_farm_1
                    WHERE fruit_2.id = fruit_farm_1.fruit_id
                  ) AS anon_1
               ON TRUE
-           WHERE anon_1.count_1 > $1::INTEGER
-             AND color_1.id = color.id
+           WHERE color.id = fruit_2.color_id
+             AND anon_1.count_1 > $1::INTEGER
          )
    ORDER BY color.id ASC,
             fruit_1.id ASC
@@ -207,17 +201,15 @@
       ON color.id = fruit_1.color_id
    WHERE EXISTS (
           SELECT 1
-            FROM color AS color_1
-            JOIN fruit AS fruit_2
-              ON color_1.id = fruit_2.color_id
+            FROM fruit AS fruit_2
             JOIN LATERAL (
                   SELECT count(*) AS count_1
                     FROM fruit_farm AS fruit_farm_1
                    WHERE fruit_2.id = fruit_farm_1.fruit_id
                  ) AS anon_1
               ON TRUE
-           WHERE anon_1.count_1 > %(param_1)s::INTEGER
-             AND color_1.id = color.id
+           WHERE color.id = fruit_2.color_id
+             AND anon_1.count_1 > %(param_1)s::INTEGER
          )
    ORDER BY color.id ASC,
             fruit_1.id ASC
@@ -232,17 +224,15 @@
       ON color.id = fruit_1.color_id
    WHERE EXISTS (
           SELECT 1
-            FROM color AS color_1
-            JOIN fruit AS fruit_2
-              ON color_1.id = fruit_2.color_id
+            FROM fruit AS fruit_2
             JOIN LATERAL (
                   SELECT count(*) AS count_1
                     FROM fruit_farm AS fruit_farm_1
                    WHERE fruit_2.id = fruit_farm_1.fruit_id
                  ) AS anon_1
               ON TRUE
-           WHERE anon_1.count_1 > %(param_1)s::INTEGER
-             AND color_1.id = color.id
+           WHERE color.id = fruit_2.color_id
+             AND anon_1.count_1 > %(param_1)s::INTEGER
          )
    ORDER BY color.id ASC,
             fruit_1.id ASC
@@ -263,13 +253,11 @@
       ON color.id = fruit_1.color_id
    WHERE EXISTS (
           SELECT 1
-            FROM color AS color_1
-            JOIN fruit AS fruit_2
-              ON color_1.id = fruit_2.color_id
+            FROM fruit AS fruit_2
             LEFT OUTER JOIN anon_1
               ON fruit_2.id = anon_1.fruit_id
-           WHERE coalesce(anon_1.count_1, ?) > ?
-             AND color_1.id = color.id
+           WHERE color.id = fruit_2.color_id
+             AND coalesce(anon_1.count_1, ?) > ?
          )
    ORDER BY color.id ASC,
             fruit_1.id ASC

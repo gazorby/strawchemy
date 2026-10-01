@@ -11,8 +11,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.name ASC,
-                            user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC,
@@ -34,8 +32,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.name ASC,
-                            user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.name ASC,
@@ -47,30 +43,48 @@
 # ---
 # name: test_distinct_and_order_by[session-async-tracked-asyncpg_engine]
   '''
-  SELECT DISTINCT
-      ON ("user".name) "user".name,
+  SELECT "user".name,
          "user".id
-    FROM "user" AS "user"
+    FROM (
+          SELECT DISTINCT
+              ON ("user".name) "user".id AS id,
+                 "user".name AS name
+            FROM "user" AS "user"
+           ORDER BY "user".name ASC,
+                    "user".id DESC
+         ) AS "user"
    ORDER BY "user".name ASC,
             "user".id DESC
   '''
 # ---
 # name: test_distinct_and_order_by[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT DISTINCT
-      ON ("user".name) "user".name,
+  SELECT "user".name,
          "user".id
-    FROM "user" AS "user"
+    FROM (
+          SELECT DISTINCT
+              ON ("user".name) "user".id AS id,
+                 "user".name AS name
+            FROM "user" AS "user"
+           ORDER BY "user".name ASC,
+                    "user".id DESC
+         ) AS "user"
    ORDER BY "user".name ASC,
             "user".id DESC
   '''
 # ---
 # name: test_distinct_and_order_by[session-sync-tracked-psycopg_engine]
   '''
-  SELECT DISTINCT
-      ON ("user".name) "user".name,
+  SELECT "user".name,
          "user".id
-    FROM "user" AS "user"
+    FROM (
+          SELECT DISTINCT
+              ON ("user".name) "user".id AS id,
+                 "user".name AS name
+            FROM "user" AS "user"
+           ORDER BY "user".name ASC,
+                    "user".id DESC
+         ) AS "user"
    ORDER BY "user".name ASC,
             "user".id DESC
   '''
@@ -87,8 +101,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.name ASC,
-                            user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC,
@@ -110,7 +122,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id ASC
@@ -130,7 +141,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.id ASC
@@ -150,7 +160,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.id ASC
@@ -170,7 +179,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id ASC
@@ -214,18 +222,26 @@
 # ---
 # name: test_distinct_on[session-async-tracked-non-deterministic-ordering-asyncpg_engine]
   '''
-  SELECT DISTINCT
-      ON ("user".name) "user".name,
+  SELECT "user".name,
          "user".id
-    FROM "user" AS "user"
+    FROM (
+          SELECT DISTINCT
+              ON ("user".name) "user".id AS id,
+                 "user".name AS name
+            FROM "user" AS "user"
+         ) AS "user"
   '''
 # ---
 # name: test_distinct_on[session-async-tracked-non-deterministic-ordering-psycopg_async_engine]
   '''
-  SELECT DISTINCT
-      ON ("user".name) "user".name,
+  SELECT "user".name,
          "user".id
-    FROM "user" AS "user"
+    FROM (
+          SELECT DISTINCT
+              ON ("user".name) "user".id AS id,
+                 "user".name AS name
+            FROM "user" AS "user"
+         ) AS "user"
   '''
 # ---
 # name: test_distinct_on[session-sync-tracked-deterministic-ordering-psycopg_engine]
@@ -240,7 +256,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id ASC
@@ -260,7 +275,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id ASC
@@ -270,10 +284,14 @@
 # ---
 # name: test_distinct_on[session-sync-tracked-non-deterministic-ordering-psycopg_engine]
   '''
-  SELECT DISTINCT
-      ON ("user".name) "user".name,
+  SELECT "user".name,
          "user".id
-    FROM "user" AS "user"
+    FROM (
+          SELECT DISTINCT
+              ON ("user".name) "user".id AS id,
+                 "user".name AS name
+            FROM "user" AS "user"
+         ) AS "user"
   '''
 # ---
 # name: test_distinct_on[session-sync-tracked-non-deterministic-ordering-sqlite_engine]
@@ -302,18 +320,16 @@
          fruit_1.id AS id_2
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.sweetness AS sweetness,
                  anon_1.id AS id,
-                 anon_1.color_id AS color_id
+                 anon_1.color_id AS color_id,
+                 anon_1.sweetness AS sweetness
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.sweetness AS sweetness,
                          fruit.id AS id,
                          fruit.color_id AS color_id,
+                         fruit.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit.sweetness ORDER BY fruit.sweetness ASC, fruit.name ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.sweetness ASC,
-                            fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.sweetness ASC,
@@ -338,18 +354,16 @@
          fruit_1.id AS id_2
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.sweetness AS sweetness,
                  anon_1.id AS id,
-                 anon_1.color_id AS color_id
+                 anon_1.color_id AS color_id,
+                 anon_1.sweetness AS sweetness
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.sweetness AS sweetness,
                          fruit.id AS id,
                          fruit.color_id AS color_id,
+                         fruit.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit.sweetness ORDER BY fruit.sweetness ASC, fruit.name ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.sweetness ASC,
-                            fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.sweetness ASC,
@@ -375,9 +389,9 @@
     FROM (
           SELECT DISTINCT
               ON (fruit.sweetness) fruit.name AS name,
-                 fruit.sweetness AS sweetness,
                  fruit.id AS id,
-                 fruit.color_id AS color_id
+                 fruit.color_id AS color_id,
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.sweetness ASC,
                     fruit.name ASC
@@ -402,9 +416,9 @@
     FROM (
           SELECT DISTINCT
               ON (fruit.sweetness) fruit.name AS name,
-                 fruit.sweetness AS sweetness,
                  fruit.id AS id,
-                 fruit.color_id AS color_id
+                 fruit.color_id AS color_id,
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.sweetness ASC,
                     fruit.name ASC
@@ -429,9 +443,9 @@
     FROM (
           SELECT DISTINCT
               ON (fruit.sweetness) fruit.name AS name,
-                 fruit.sweetness AS sweetness,
                  fruit.id AS id,
-                 fruit.color_id AS color_id
+                 fruit.color_id AS color_id,
+                 fruit.sweetness AS sweetness
             FROM fruit AS fruit
            ORDER BY fruit.sweetness ASC,
                     fruit.name ASC
@@ -455,18 +469,16 @@
          fruit_1.id AS id_2
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.sweetness AS sweetness,
                  anon_1.id AS id,
-                 anon_1.color_id AS color_id
+                 anon_1.color_id AS color_id,
+                 anon_1.sweetness AS sweetness
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.sweetness AS sweetness,
                          fruit.id AS id,
                          fruit.color_id AS color_id,
+                         fruit.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit.sweetness ORDER BY fruit.sweetness ASC, fruit.name ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.sweetness ASC,
-                            fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.sweetness ASC,
@@ -497,7 +509,6 @@
                          row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
                     FROM color AS color
                    WHERE color.name IN (__[POSTCOMPILE_name_2])
-                   ORDER BY color.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC
@@ -525,7 +536,6 @@
                          row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
                     FROM color AS color
                    WHERE color.name IN (__[POSTCOMPILE_name_2])
-                   ORDER BY color.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.name ASC
@@ -596,7 +606,6 @@
                          color.id AS id,
                          row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
                     FROM color AS color
-                   ORDER BY color.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC
@@ -621,7 +630,6 @@
                          color.id AS id,
                          row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
                     FROM color AS color
-                   ORDER BY color.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.name ASC
@@ -707,7 +715,6 @@
                          row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
                     FROM color AS color
                    WHERE color.name IN (__[POSTCOMPILE_name_2])
-                   ORDER BY color.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC
@@ -753,7 +760,6 @@
                          color.id AS id,
                          row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2
                     FROM color AS color
-                   ORDER BY color.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC
@@ -781,7 +787,6 @@
                          fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC
@@ -812,7 +817,6 @@
                          fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.name ASC
@@ -915,7 +919,6 @@
                          fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC
@@ -942,16 +945,17 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
+                 anon_1.color_id AS color_id,
                  anon_1.coalesce_1 AS coalesce_1
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
+                         fruit.color_id AS color_id,
                          coalesce(anon_2.count_1, ?) AS coalesce_1,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit.name ASC) AS anon_3
                     FROM fruit AS fruit
                     LEFT OUTER JOIN anon_2
                       ON fruit.id = anon_2.fruit_id
-                   ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_3 = ?
            ORDER BY anon_1.coalesce_1 DESC,
@@ -974,16 +978,17 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
+                 anon_1.color_id AS color_id,
                  anon_1.coalesce_1 AS coalesce_1
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
+                         fruit.color_id AS color_id,
                          coalesce(anon_2.count_1, %s) AS coalesce_1,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY coalesce(anon_2.count_1, %s) DESC, fruit.name ASC) AS anon_3
                     FROM fruit AS fruit
                     LEFT OUTER JOIN anon_2
                       ON fruit.id = anon_2.fruit_id
-                   ORDER BY coalesce(anon_2.count_1, %s) DESC, fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_3 = %s
            ORDER BY anon_1.coalesce_1 DESC,
@@ -1000,10 +1005,12 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
+                 anon_1.color_id AS color_id,
                  anon_1.count_1 AS count_1
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
+                         fruit.color_id AS color_id,
                          anon_2.count_1 AS count_1,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY anon_2.count_1 DESC, fruit.name ASC) AS anon_3
                     FROM fruit AS fruit
@@ -1013,8 +1020,6 @@
                            WHERE fruit.id = fruit_farm_1.fruit_id
                          ) AS anon_2
                       ON TRUE
-                   ORDER BY anon_2.count_1 DESC,
-                            fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_3 = $1::INTEGER
            ORDER BY anon_1.count_1 DESC,
@@ -1031,10 +1036,12 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
+                 anon_1.color_id AS color_id,
                  anon_1.count_1 AS count_1
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
+                         fruit.color_id AS color_id,
                          anon_2.count_1 AS count_1,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY anon_2.count_1 DESC, fruit.name ASC) AS anon_3
                     FROM fruit AS fruit
@@ -1044,8 +1051,6 @@
                            WHERE fruit.id = fruit_farm_1.fruit_id
                          ) AS anon_2
                       ON TRUE
-                   ORDER BY anon_2.count_1 DESC,
-                            fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_1.count_1 DESC,
@@ -1062,10 +1067,12 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
+                 anon_1.color_id AS color_id,
                  anon_1.count_1 AS count_1
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
+                         fruit.color_id AS color_id,
                          anon_2.count_1 AS count_1,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY anon_2.count_1 DESC, fruit.name ASC) AS anon_3
                     FROM fruit AS fruit
@@ -1075,8 +1082,6 @@
                            WHERE fruit.id = fruit_farm_1.fruit_id
                          ) AS anon_2
                       ON TRUE
-                   ORDER BY anon_2.count_1 DESC,
-                            fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_1.count_1 DESC,
@@ -1099,16 +1104,17 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
+                 anon_1.color_id AS color_id,
                  anon_1.coalesce_1 AS coalesce_1
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
+                         fruit.color_id AS color_id,
                          coalesce(anon_2.count_1, ?) AS coalesce_1,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit.name ASC) AS anon_3
                     FROM fruit AS fruit
                     LEFT OUTER JOIN anon_2
                       ON fruit.id = anon_2.fruit_id
-                   ORDER BY coalesce(anon_2.count_1, ?) DESC, fruit.name ASC
                  ) AS anon_1
            WHERE anon_1.anon_3 = ?
            ORDER BY anon_1.coalesce_1 DESC,
@@ -1134,17 +1140,13 @@
                     FROM color AS color
                     LEFT OUTER JOIN fruit AS fruit_1
                       ON color.id = fruit_1.color_id
-                   ORDER BY color.name ASC,
-                            fruit_1.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC,
                     anon_1.name_1 DESC
          ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
    ORDER BY color.name ASC,
-            fruit_1.name DESC
+            color.name_1 DESC
   '''
 # ---
 # name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-async-tracked-asyncmy_engine]
@@ -1163,56 +1165,70 @@
                     FROM color AS color
                     LEFT OUTER JOIN fruit AS fruit_1
                       ON color.id = fruit_1.color_id
-                   ORDER BY color.name ASC,
-                            fruit_1.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.name ASC,
                     anon_1.name_1 DESC
          ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
    ORDER BY color.name ASC,
-            fruit_1.name DESC
+            color.name_1 DESC
   '''
 # ---
 # name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-async-tracked-asyncpg_engine]
   '''
-  SELECT DISTINCT
-      ON (color.name) color.name,
-         color.id,
-         fruit_1.name AS name_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.id AS id,
+                 color.name AS name,
+                 fruit_1.name AS name_1
+            FROM color AS color
+            LEFT OUTER JOIN fruit AS fruit_1
+              ON color.id = fruit_1.color_id
+           ORDER BY color.name ASC,
+                    fruit_1.name DESC
+         ) AS color
    ORDER BY color.name ASC,
-            fruit_1.name DESC
+            color.name_1 DESC
   '''
 # ---
 # name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT DISTINCT
-      ON (color.name) color.name,
-         color.id,
-         fruit_1.name AS name_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.id AS id,
+                 color.name AS name,
+                 fruit_1.name AS name_1
+            FROM color AS color
+            LEFT OUTER JOIN fruit AS fruit_1
+              ON color.id = fruit_1.color_id
+           ORDER BY color.name ASC,
+                    fruit_1.name DESC
+         ) AS color
    ORDER BY color.name ASC,
-            fruit_1.name DESC
+            color.name_1 DESC
   '''
 # ---
 # name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-sync-tracked-psycopg_engine]
   '''
-  SELECT DISTINCT
-      ON (color.name) color.name,
-         color.id,
-         fruit_1.name AS name_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
+  SELECT color.name,
+         color.id
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.id AS id,
+                 color.name AS name,
+                 fruit_1.name AS name_1
+            FROM color AS color
+            LEFT OUTER JOIN fruit AS fruit_1
+              ON color.id = fruit_1.color_id
+           ORDER BY color.name ASC,
+                    fruit_1.name DESC
+         ) AS color
    ORDER BY color.name ASC,
-            fruit_1.name DESC
+            color.name_1 DESC
   '''
 # ---
 # name: test_distinct_on_ordered_by_an_unselected_to_many_relation[session-sync-tracked-sqlite_engine]
@@ -1231,17 +1247,13 @@
                     FROM color AS color
                     LEFT OUTER JOIN fruit AS fruit_1
                       ON color.id = fruit_1.color_id
-                   ORDER BY color.name ASC,
-                            fruit_1.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC,
                     anon_1.name_1 DESC
          ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
    ORDER BY color.name ASC,
-            fruit_1.name DESC
+            color.name_1 DESC
   '''
 # ---
 # name: test_distinct_on_ordered_by_other_fields[session-async-tracked-paginated-aiosqlite_engine]
@@ -1256,7 +1268,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id DESC
@@ -1278,7 +1289,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.id DESC
@@ -1300,7 +1310,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.id DESC
@@ -1322,7 +1331,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id DESC
@@ -1344,7 +1352,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.id DESC
@@ -1366,7 +1373,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.id DESC
@@ -1388,7 +1394,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id DESC
@@ -1410,7 +1415,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id DESC
@@ -1426,14 +1430,14 @@
          user.id
     FROM (
           SELECT anon_1.id AS id,
-                 anon_1.name AS name
+                 anon_1.name AS name,
+                 anon_1.group_id AS group_id
             FROM (
                   SELECT user.id AS id,
                          user.name AS name,
+                         user.group_id AS group_id,
                          row_number() OVER (PARTITION BY user.name, user.group_id ORDER BY user.name ASC, user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.name ASC,
-                            user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC,
@@ -1449,14 +1453,14 @@
          user.id
     FROM (
           SELECT anon_1.id AS id,
-                 anon_1.name AS name
+                 anon_1.name AS name,
+                 anon_1.group_id AS group_id
             FROM (
                   SELECT user.id AS id,
                          user.name AS name,
+                         user.group_id AS group_id,
                          row_number() OVER (PARTITION BY user.name, user.group_id ORDER BY user.name ASC, user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.name ASC,
-                            user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.name ASC,
@@ -1472,14 +1476,14 @@
          "user".id
     FROM (
           SELECT anon_1.id AS id,
-                 anon_1.name AS name
+                 anon_1.name AS name,
+                 anon_1.group_id AS group_id
             FROM (
                   SELECT "user".id AS id,
                          "user".name AS name,
+                         "user".group_id AS group_id,
                          row_number() OVER (PARTITION BY "user".name, "user".group_id ORDER BY "user".name ASC, "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".name ASC,
-                            "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.name ASC,
@@ -1495,14 +1499,14 @@
          "user".id
     FROM (
           SELECT anon_1.id AS id,
-                 anon_1.name AS name
+                 anon_1.name AS name,
+                 anon_1.group_id AS group_id
             FROM (
                   SELECT "user".id AS id,
                          "user".name AS name,
+                         "user".group_id AS group_id,
                          row_number() OVER (PARTITION BY "user".name, "user".group_id ORDER BY "user".name ASC, "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".name ASC,
-                            "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.name ASC,
@@ -1524,7 +1528,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id DESC
@@ -1544,7 +1547,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.id DESC
@@ -1564,7 +1566,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.id DESC
@@ -1584,7 +1585,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id DESC
@@ -1604,7 +1604,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id DESC
@@ -1626,7 +1625,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id DESC
@@ -1648,7 +1646,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id DESC
@@ -1670,7 +1667,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id DESC
@@ -1686,14 +1682,14 @@
          "user".id
     FROM (
           SELECT anon_1.id AS id,
-                 anon_1.name AS name
+                 anon_1.name AS name,
+                 anon_1.group_id AS group_id
             FROM (
                   SELECT "user".id AS id,
                          "user".name AS name,
+                         "user".group_id AS group_id,
                          row_number() OVER (PARTITION BY "user".name, "user".group_id ORDER BY "user".name ASC, "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".name ASC,
-                            "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.name ASC,
@@ -1709,14 +1705,14 @@
          user.id
     FROM (
           SELECT anon_1.id AS id,
-                 anon_1.name AS name
+                 anon_1.name AS name,
+                 anon_1.group_id AS group_id
             FROM (
                   SELECT user.id AS id,
                          user.name AS name,
+                         user.group_id AS group_id,
                          row_number() OVER (PARTITION BY user.name, user.group_id ORDER BY user.name ASC, user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.name ASC,
-                            user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC,
@@ -1738,7 +1734,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id DESC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id DESC
@@ -1758,7 +1753,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id DESC
@@ -1783,7 +1777,6 @@
                          fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name DESC
@@ -1814,7 +1807,6 @@
                          fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.name DESC
@@ -1845,7 +1837,6 @@
                          fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.name DESC
@@ -1876,7 +1867,6 @@
                          fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.name DESC
@@ -1907,7 +1897,6 @@
                          fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.name DESC
@@ -1938,7 +1927,6 @@
                          fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name DESC
@@ -1964,7 +1952,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id ASC
@@ -1986,7 +1973,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.id ASC
@@ -2008,7 +1994,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.id ASC
@@ -2030,7 +2015,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id ASC
@@ -2052,7 +2036,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.id ASC
@@ -2074,7 +2057,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.id ASC
@@ -2096,7 +2078,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id ASC
@@ -2118,7 +2099,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id ASC
@@ -2140,8 +2120,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.name ASC,
-                            user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC,
@@ -2165,8 +2143,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.name ASC,
-                            user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.name ASC,
@@ -2226,7 +2202,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id ASC
@@ -2248,7 +2223,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id ASC
@@ -2270,7 +2244,6 @@
                          "user".name AS name,
                          row_number() OVER (PARTITION BY "user".name ORDER BY "user".id ASC) AS anon_2
                     FROM "user" AS "user"
-                   ORDER BY "user".id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.id ASC
@@ -2292,7 +2265,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.id ASC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.id ASC
@@ -2332,8 +2304,6 @@
                          user.name AS name,
                          row_number() OVER (PARTITION BY user.name ORDER BY user.name ASC, user.id DESC) AS anon_2
                     FROM USER AS USER
-                   ORDER BY user.name ASC,
-                            user.id DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC,
@@ -2360,19 +2330,17 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.sum_1 AS sum_1,
-                 anon_1.max_1 AS max_1
+                 anon_1.max_1 AS max_1,
+                 anon_1.sum_1 AS sum_1
             FROM (
                   SELECT color.name AS name,
                          color.id AS id,
-                         anon_2.sum_1 AS sum_1,
                          anon_2.max_1 AS max_1,
+                         anon_2.sum_1 AS sum_1,
                          row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_2.sum_1 ASC) AS anon_3
                     FROM color AS color
                     LEFT OUTER JOIN anon_2
                       ON color.id = anon_2.color_id
-                   ORDER BY color.name ASC,
-                            anon_2.sum_1 ASC
                  ) AS anon_1
            WHERE anon_1.anon_3 = ?
            ORDER BY anon_1.name ASC,
@@ -2397,19 +2365,17 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.sum_1 AS sum_1,
-                 anon_1.max_1 AS max_1
+                 anon_1.max_1 AS max_1,
+                 anon_1.sum_1 AS sum_1
             FROM (
                   SELECT color.name AS name,
                          color.id AS id,
-                         anon_2.sum_1 AS sum_1,
                          anon_2.max_1 AS max_1,
+                         anon_2.sum_1 AS sum_1,
                          row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_2.sum_1 ASC) AS anon_3
                     FROM color AS color
                     LEFT OUTER JOIN anon_2
                       ON color.id = anon_2.color_id
-                   ORDER BY color.name ASC,
-                            anon_2.sum_1 ASC
                  ) AS anon_1
            WHERE anon_1.anon_3 = %s
            ORDER BY anon_1.name ASC,
@@ -2421,59 +2387,80 @@
 # ---
 # name: test_distinct_on_projects_every_aggregation_order_by_column[session-async-tracked-asyncpg_engine]
   '''
-  SELECT DISTINCT
-      ON (color.name) color.name,
+  SELECT color.name,
          color.id,
-         anon_1.max_1,
-         anon_1.sum_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT sum(fruit_1.sweetness) AS sum_1,
-                 max(fruit_1.sweetness) AS max_1
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS anon_1
-      ON TRUE
+         color.max_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.name AS name,
+                 color.id AS id,
+                 anon_1.max_1 AS max_1,
+                 anon_1.sum_1 AS sum_1
+            FROM color AS color
+            JOIN LATERAL (
+                  SELECT sum(fruit_1.sweetness) AS sum_1,
+                         max(fruit_1.sweetness) AS max_1
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                 ) AS anon_1
+              ON TRUE
+           ORDER BY color.name ASC,
+                    anon_1.sum_1 ASC
+         ) AS color
    ORDER BY color.name ASC,
-            anon_1.sum_1 ASC
+            color.sum_1 ASC
   '''
 # ---
 # name: test_distinct_on_projects_every_aggregation_order_by_column[session-async-tracked-psycopg_async_engine]
   '''
-  SELECT DISTINCT
-      ON (color.name) color.name,
+  SELECT color.name,
          color.id,
-         anon_1.max_1,
-         anon_1.sum_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT sum(fruit_1.sweetness) AS sum_1,
-                 max(fruit_1.sweetness) AS max_1
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS anon_1
-      ON TRUE
+         color.max_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.name AS name,
+                 color.id AS id,
+                 anon_1.max_1 AS max_1,
+                 anon_1.sum_1 AS sum_1
+            FROM color AS color
+            JOIN LATERAL (
+                  SELECT sum(fruit_1.sweetness) AS sum_1,
+                         max(fruit_1.sweetness) AS max_1
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                 ) AS anon_1
+              ON TRUE
+           ORDER BY color.name ASC,
+                    anon_1.sum_1 ASC
+         ) AS color
    ORDER BY color.name ASC,
-            anon_1.sum_1 ASC
+            color.sum_1 ASC
   '''
 # ---
 # name: test_distinct_on_projects_every_aggregation_order_by_column[session-sync-tracked-psycopg_engine]
   '''
-  SELECT DISTINCT
-      ON (color.name) color.name,
+  SELECT color.name,
          color.id,
-         anon_1.max_1,
-         anon_1.sum_1
-    FROM color AS color
-    JOIN LATERAL (
-          SELECT sum(fruit_1.sweetness) AS sum_1,
-                 max(fruit_1.sweetness) AS max_1
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-         ) AS anon_1
-      ON TRUE
+         color.max_1
+    FROM (
+          SELECT DISTINCT
+              ON (color.name) color.name AS name,
+                 color.id AS id,
+                 anon_1.max_1 AS max_1,
+                 anon_1.sum_1 AS sum_1
+            FROM color AS color
+            JOIN LATERAL (
+                  SELECT sum(fruit_1.sweetness) AS sum_1,
+                         max(fruit_1.sweetness) AS max_1
+                    FROM fruit AS fruit_1
+                   WHERE color.id = fruit_1.color_id
+                 ) AS anon_1
+              ON TRUE
+           ORDER BY color.name ASC,
+                    anon_1.sum_1 ASC
+         ) AS color
    ORDER BY color.name ASC,
-            anon_1.sum_1 ASC
+            color.sum_1 ASC
   '''
 # ---
 # name: test_distinct_on_projects_every_aggregation_order_by_column[session-sync-tracked-sqlite_engine]
@@ -2491,19 +2478,17 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.sum_1 AS sum_1,
-                 anon_1.max_1 AS max_1
+                 anon_1.max_1 AS max_1,
+                 anon_1.sum_1 AS sum_1
             FROM (
                   SELECT color.name AS name,
                          color.id AS id,
-                         anon_2.sum_1 AS sum_1,
                          anon_2.max_1 AS max_1,
+                         anon_2.sum_1 AS sum_1,
                          row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC, anon_2.sum_1 ASC) AS anon_3
                     FROM color AS color
                     LEFT OUTER JOIN anon_2
                       ON color.id = anon_2.color_id
-                   ORDER BY color.name ASC,
-                            anon_2.sum_1 ASC
                  ) AS anon_1
            WHERE anon_1.anon_3 = ?
            ORDER BY anon_1.name ASC,
@@ -2521,15 +2506,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -2547,15 +2532,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.water_percent ASC,
@@ -2573,15 +2558,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -2599,15 +2584,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -2625,15 +2610,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -2651,15 +2636,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.water_percent ASC,
@@ -2677,15 +2662,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -2703,15 +2688,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -2728,18 +2713,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -2756,18 +2739,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.water_percent ASC,
@@ -2784,18 +2765,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -2812,18 +2791,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -2841,15 +2818,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -2869,15 +2846,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.water_percent ASC,
@@ -2897,15 +2874,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -2925,15 +2902,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -2953,15 +2930,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -2981,15 +2958,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.water_percent ASC,
@@ -3009,15 +2986,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -3037,15 +3014,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -3064,18 +3041,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -3094,18 +3069,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.water_percent ASC,
@@ -3124,18 +3097,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -3154,18 +3125,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -3185,15 +3154,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -3211,15 +3180,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -3237,15 +3206,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -3263,15 +3232,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -3288,18 +3257,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -3316,18 +3283,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -3345,15 +3310,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -3373,15 +3338,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -3401,15 +3366,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -3429,15 +3394,15 @@
     FROM (
           SELECT anon_1.name AS name,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.name DESC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.name DESC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -3456,18 +3421,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %(param_1)s::INTEGER
            ORDER BY anon_1.water_percent ASC,
@@ -3486,18 +3449,16 @@
          fruit.id
     FROM (
           SELECT anon_1.name AS name,
-                 anon_1.color_id AS color_id,
                  anon_1.id AS id,
-                 anon_1.water_percent AS water_percent
+                 anon_1.water_percent AS water_percent,
+                 anon_1.color_id AS color_id
             FROM (
                   SELECT fruit.name AS name,
-                         fruit.color_id AS color_id,
                          fruit.id AS id,
                          fruit.water_percent AS water_percent,
+                         fruit.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit.color_id ORDER BY fruit.water_percent ASC, fruit.color_id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.water_percent ASC,
-                            fruit.color_id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.water_percent ASC,
@@ -3525,14 +3486,14 @@
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.sweetness ASC,
-                            fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.sweetness ASC,
+                    anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -3563,14 +3524,14 @@
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.sweetness ASC,
-                            fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.sweetness ASC,
+                    anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -3676,14 +3637,14 @@
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.sweetness ASC,
-                            fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.sweetness ASC,
+                    anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -3703,21 +3664,24 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -3736,21 +3700,24 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -3773,14 +3740,15 @@
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
-                 anon_2.id AS id
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = $1::INTEGER
            ORDER BY anon_2.name DESC
@@ -3797,21 +3765,24 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -3830,21 +3801,24 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -3867,14 +3841,15 @@
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
-                 anon_2.id AS id
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = $1::INTEGER
            ORDER BY anon_2.name DESC
@@ -3895,14 +3870,15 @@
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
-                 anon_2.id AS id
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.name DESC
@@ -3923,14 +3899,15 @@
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
-                 anon_2.id AS id
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.name DESC
@@ -3947,21 +3924,24 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -3980,21 +3960,24 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4017,14 +4000,15 @@
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
-                 anon_2.id AS id
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = $1::INTEGER
            ORDER BY anon_2.name DESC
@@ -4041,24 +4025,27 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.water_percent
-                   ORDER BY fruit_1.water_percent ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id,
+                    anon_2.water_percent
+           ORDER BY anon_2.water_percent ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4077,24 +4064,27 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.water_percent
-                   ORDER BY fruit_1.water_percent ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id,
+                    anon_2.water_percent
+           ORDER BY anon_2.water_percent ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4118,15 +4108,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.water_percent AS water_percent
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.water_percent AS water_percent,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = $1::INTEGER
            ORDER BY anon_2.water_percent ASC
@@ -4148,15 +4139,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.water_percent AS water_percent
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.water_percent AS water_percent,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.water_percent ASC
@@ -4177,14 +4169,15 @@
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
-                 anon_2.id AS id
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.name DESC
@@ -4205,14 +4198,15 @@
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
-                 anon_2.id AS id
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.name DESC
@@ -4229,21 +4223,24 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4266,14 +4263,15 @@
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
-                 anon_2.id AS id
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.name DESC
@@ -4290,21 +4288,24 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4328,15 +4329,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.water_percent AS water_percent
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.water_percent AS water_percent,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.water_percent ASC
@@ -4353,24 +4355,27 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
+                 anon_2.water_percent AS water_percent,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
+                         fruit_1.water_percent AS water_percent,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.water_percent
-                   ORDER BY fruit_1.water_percent ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id,
+                    anon_2.water_percent
+           ORDER BY anon_2.water_percent ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4393,14 +4398,15 @@
     FROM color AS color
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
-                 anon_2.id AS id
+                 anon_2.id AS id,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.name DESC
@@ -4417,21 +4423,24 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4461,14 +4470,14 @@
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.sweetness ASC,
-                            fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.sweetness ASC,
+                    anon_2.name ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4499,14 +4508,14 @@
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.sweetness ASC,
-                            fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.sweetness ASC,
+                    anon_2.name ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4562,14 +4571,14 @@
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.sweetness ASC,
-                            fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.sweetness ASC,
+                    anon_2.name ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4600,14 +4609,14 @@
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.sweetness ASC,
-                            fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.sweetness ASC,
+                    anon_2.name ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4738,14 +4747,14 @@
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.sweetness ASC,
-                            fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.sweetness ASC,
+                    anon_2.name ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4801,14 +4810,14 @@
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.sweetness ASC, fruit_1.name ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.sweetness ASC,
-                            fruit_1.name ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.sweetness ASC,
+                    anon_2.name ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4828,24 +4837,28 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.color_id AS color_id,
                  anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.color_id AS color_id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.id ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.water_percent,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.id ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4864,24 +4877,28 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.color_id AS color_id,
                  anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id ASC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.color_id AS color_id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.id ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.water_percent,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.id ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -4906,16 +4923,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.water_percent AS water_percent
+                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.id ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = $1::INTEGER
            ORDER BY anon_2.water_percent ASC,
@@ -4938,16 +4955,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.water_percent AS water_percent
+                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.id ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.water_percent ASC,
@@ -4964,24 +4981,28 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.color_id AS color_id,
                  anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.color_id AS color_id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.water_percent,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -5000,24 +5021,28 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.color_id AS color_id,
                  anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.name DESC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.color_id AS color_id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.water_percent,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -5042,16 +5067,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.water_percent AS water_percent
+                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = $1::INTEGER
            ORDER BY anon_2.water_percent ASC,
@@ -5074,16 +5099,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.water_percent AS water_percent
+                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.water_percent ASC,
@@ -5100,27 +5125,28 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.water_percent AS water_percent,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 anon_2.water_percent AS water_percent,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.sweetness ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.water_percent AS water_percent,
                          fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
-                         fruit_1.water_percent AS water_percent,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.sweetness ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.water_percent,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.sweetness ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -5139,27 +5165,28 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.water_percent AS water_percent,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 anon_2.water_percent AS water_percent,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.sweetness ASC, anon_2.id) AS `rank`
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.water_percent AS water_percent,
                          fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
-                         fruit_1.water_percent AS water_percent,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.sweetness ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %s
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.water_percent,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.sweetness ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -5184,18 +5211,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.sweetness AS sweetness,
-                 anon_2.water_percent AS water_percent
+                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.sweetness AS sweetness,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.sweetness ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = $1::INTEGER
            ORDER BY anon_2.water_percent ASC,
@@ -5218,18 +5243,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.sweetness AS sweetness,
-                 anon_2.water_percent AS water_percent
+                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.sweetness AS sweetness,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.sweetness ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.water_percent ASC,
@@ -5252,16 +5275,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.water_percent AS water_percent
+                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.id ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.water_percent ASC,
@@ -5278,24 +5301,28 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.color_id AS color_id,
                  anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.id ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.color_id AS color_id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.id ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.water_percent,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.id ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -5320,16 +5347,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.water_percent AS water_percent
+                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.water_percent ASC,
@@ -5346,24 +5373,28 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.color_id AS color_id,
                  anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness,
+                 anon_2.color_id AS color_id,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.name DESC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.color_id AS color_id,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
+                         fruit_1.color_id AS color_id,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.name DESC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.name DESC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.water_percent,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.name DESC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
@@ -5388,18 +5419,16 @@
     LEFT OUTER JOIN LATERAL (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
-                 anon_2.sweetness AS sweetness,
-                 anon_2.water_percent AS water_percent
+                 anon_2.water_percent AS water_percent,
+                 anon_2.sweetness AS sweetness
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
-                         fruit_1.sweetness AS sweetness,
                          fruit_1.water_percent AS water_percent,
+                         fruit_1.sweetness AS sweetness,
                          row_number() OVER (PARTITION BY fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE color.id = fruit_1.color_id
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.sweetness ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = %(param_1)s::INTEGER
            ORDER BY anon_2.water_percent ASC,
@@ -5416,27 +5445,28 @@
   WITH anon_1 AS (
           SELECT anon_2.name AS name,
                  anon_2.id AS id,
+                 anon_2.water_percent AS water_percent,
                  anon_2.sweetness AS sweetness,
                  anon_2.color_id AS color_id,
-                 anon_2.water_percent AS water_percent,
                  dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.water_percent ASC, anon_2.sweetness ASC, anon_2.id) AS rank
             FROM (
                   SELECT fruit_1.name AS name,
                          fruit_1.id AS id,
+                         fruit_1.water_percent AS water_percent,
                          fruit_1.sweetness AS sweetness,
                          fruit_1.color_id AS color_id,
-                         fruit_1.water_percent AS water_percent,
                          row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.sweetness ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness ASC) AS anon_3
                     FROM fruit AS fruit_1
                    WHERE fruit_1.color_id IS NOT NULL
-                   GROUP BY fruit_1.color_id,
-                            fruit_1.name,
-                            fruit_1.id,
-                            fruit_1.sweetness
-                   ORDER BY fruit_1.water_percent ASC,
-                            fruit_1.sweetness ASC
                  ) AS anon_2
            WHERE anon_2.anon_3 = ?
+           GROUP BY anon_2.name,
+                    anon_2.id,
+                    anon_2.water_percent,
+                    anon_2.sweetness,
+                    anon_2.color_id
+           ORDER BY anon_2.water_percent ASC,
+                    anon_2.sweetness ASC
          ) SELECT color.name,
          color.id,
          anon_1.name AS name_1,
