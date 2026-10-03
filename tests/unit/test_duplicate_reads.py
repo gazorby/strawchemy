@@ -709,3 +709,100 @@ def test_checks_predicate_holding_a_join_with_two_froms_to_start_from() -> None:
     statement = select(group.id).select_from(group).where(users.exists())
 
     assert duplicate_reads(statement, DIALECT) == []
+
+
+def _users_page(
+    group: type[Group], name: str, limit: int | None, offset: int | None, *, descending: bool
+) -> LateralFromClause:
+    user = aliased(User)
+    rows = select(user.id, user.name).select_from(user).where(user.group_id == group.id)
+    rows = rows.order_by(user.name.desc() if descending else user.name.asc()).limit(limit).offset(offset)
+    return rows.lateral(name)
+
+
+def _departments_count(page: LateralFromClause, name: str) -> LateralFromClause:
+    link = UserDepartmentJoinTable.alias()
+    return select(func.count().label("n")).select_from(link).where(link.c.user_id == page.c.id).lateral(name)
+
+
+def _sibling_pages(
+    first_limit: int | None,
+    second_limit: int | None,
+    *,
+    first_offset: int | None = None,
+    nested: bool = False,
+    counted: bool = False,
+) -> Select[Any]:
+    """Selects two user pages per group, with each page's departments count if ``nested``, its user count if ``counted``."""
+    group = aliased(Group, name="group")
+    first = _users_page(group, "a", first_limit, first_offset, descending=False)
+    second = _users_page(group, "b", second_limit, None, descending=True)
+    statement = (
+        select(group.id, first.c.name, second.c.name).select_from(group).join(first, true()).join(second, true())
+    )
+    if nested:
+        first_count, second_count = _departments_count(first, "a_count"), _departments_count(second, "b_count")
+        statement = statement.add_columns(first_count.c.n, second_count.c.n)
+        statement = statement.join(first_count, true()).join(second_count, true())
+    if counted:
+        user = aliased(User)
+        count = select(func.count().label("n")).select_from(user).where(user.group_id == group.id).lateral("count")
+        statement = statement.add_columns(count.c.n).join(count, true())
+    return statement
+
+
+@pytest.mark.parametrize(("first_limit", "second_limit"), [(2, 2), (4, 4), (1, 16)])
+def test_allows_small_page_sibling_laterals(first_limit: int, second_limit: int) -> None:
+    """Two sibling LATERALs of one relation, with pages multiplying to at most 16 rows, are allowed duplicate 7."""
+    assert duplicate_reads(_sibling_pages(first_limit, second_limit), DIALECT) == []
+
+
+@pytest.mark.parametrize(
+    ("first_limit", "first_offset", "second_limit"), [(5, None, 10), (4, None, 5), (1, None, 17), (2, 7, 2)]
+)
+def test_flags_large_page_sibling_laterals(first_limit: int, first_offset: int | None, second_limit: int) -> None:
+    """Two sibling LATERALs of one relation whose ``offset + limit`` multiply to more than 16 rows are reported."""
+    messages = duplicate_reads(_sibling_pages(first_limit, second_limit, first_offset=first_offset), DIALECT)
+
+    assert any("table 'user'" in message for message in messages)
+
+
+@pytest.mark.parametrize(("first_limit", "second_limit"), [(None, None), (2, None)], ids=["both", "one"])
+def test_flags_unbounded_sibling_laterals(first_limit: int | None, second_limit: int | None) -> None:
+    """Two sibling LATERALs of one relation, one of them or both without a LIMIT, are reported."""
+    messages = duplicate_reads(_sibling_pages(first_limit, second_limit), DIALECT)
+
+    assert any("table 'user'" in message for message in messages)
+
+
+def test_allows_reads_nested_under_small_page_siblings() -> None:
+    """An aggregate LATERAL correlated to each of two small-page sibling LATERALs is allowed with them."""
+    assert duplicate_reads(_sibling_pages(2, 2, nested=True), DIALECT) == []
+
+
+def test_flags_reads_nested_under_large_page_siblings() -> None:
+    """An aggregate LATERAL correlated to each of two large-page sibling LATERALs is reported."""
+    messages = duplicate_reads(_sibling_pages(5, 10, nested=True), DIALECT)
+
+    assert any("user_department_join_table" in message for message in messages)
+
+
+def test_allows_small_page_siblings_next_to_an_aggregate_of_their_relation() -> None:
+    """An aggregate LATERAL of the relation next to two small-page sibling LATERALs leaves them allowed duplicate 7."""
+    assert duplicate_reads(_sibling_pages(2, 2, counted=True), DIALECT) == []
+
+
+def _ranked_wrapper(rows: Select[Any], name: str) -> LateralFromClause:
+    """Wraps ``rows`` ranked by ``id``, as a shared LATERAL does, keeping the first two ranks."""
+    ranked = rows.add_columns(func.row_number().over(order_by=rows.selected_columns[0]).label("rank_1")).subquery()
+    return select(ranked.c.id, ranked.c.rank_1).where(ranked.c.rank_1 <= 2).lateral(name)
+
+
+def test_tells_apart_ranked_wrappers_of_other_tables() -> None:
+    """Two ranked LATERALs over different tables, whose wrappers select the same columns, are not reported."""
+    group, user, color = aliased(Group, name="group"), aliased(User), aliased(Color)
+    users = _ranked_wrapper(select(user.id).where(user.group_id == group.id), "users")
+    colors = _ranked_wrapper(select(color.id).where(color.id == group.color_id), "colors")
+    statement = select(group.id, users.c.id, colors.c.id).select_from(group).join(users, true()).join(colors, true())
+
+    assert duplicate_reads(statement, DIALECT) == []

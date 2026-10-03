@@ -9,8 +9,9 @@ Alias names never count; columns are compared by the base table they belong to.
 from __future__ import annotations
 
 import warnings
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import combinations
+from math import prod
 from typing import TYPE_CHECKING, Any, TypeAlias, cast
 
 from sqlalchemy import Select, Table
@@ -20,8 +21,8 @@ from sqlalchemy.sql import operators
 from sqlalchemy.sql import table as core_table
 from sqlalchemy.sql.elements import BinaryExpression, BooleanClauseList, ColumnClause, Over, True_
 from sqlalchemy.sql.functions import FunctionElement
-from sqlalchemy.sql.selectable import CTE, AliasedReturnsRows, FromClause, FromGrouping, Join
-from sqlalchemy.sql.visitors import replacement_traverse
+from sqlalchemy.sql.selectable import CTE, AliasedReturnsRows, FromClause, FromGrouping, Join, Lateral
+from sqlalchemy.sql.visitors import iterate, replacement_traverse
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
@@ -34,6 +35,8 @@ __all__ = ("ALLOWED", "Read", "assert_no_duplicate_reads", "duplicate_reads")
 
 _ColumnNode: TypeAlias = "tuple[int, str, str]"
 """A column: the key of its FROM, the base table label and the column name."""
+_SmallPage: TypeAlias = "tuple[tuple[object, ...], str]"
+"""A LATERAL of allowed duplicate 7: the group it forms with its siblings, and its normalized body."""
 
 # Module state because ``plan_sql`` and ``QueryTracker`` run the check without the test's markers at hand; the
 # ``allow_duplicate_reads`` fixture sets it for one test only.
@@ -45,6 +48,10 @@ _ADDED_KEY_PREFIXES = ("outer ", "via ")
 """Mark the correlations a read takes from its SELECT's WHERE or from its subquery rather than from its ON clause."""
 _DERIVED = "sub"
 """Stands for the alias of a LATERAL, CTE or derived table in normalized text."""
+_PAGE_PREFIXES = ("LIMIT ", "OFFSET ")
+"""Start the filters that bound a page of rows rather than select other rows."""
+_SMALL_PAGES_ROWS = 16
+"""The most rows the pages of sibling LATERALs may multiply to and still be read separately."""
 _AGGREGATES = frozenset(
     {
         "count",
@@ -77,10 +84,24 @@ class _Path:
     """Keys of the FROM targets of the enclosing SELECTs, which a subquery correlates to instead of reading."""
     filters: frozenset[str] = frozenset()
     """What restricts the rows of the SELECT reading this one as a derived table."""
+    small_pages: tuple[tuple[int, _SmallPage], ...] = ()
+    """The LATERALs of allowed duplicate 7 among the FROM targets of the enclosing SELECTs, by key."""
+    small_page: _SmallPage | None = None
+    """The LATERAL of allowed duplicate 7 this SELECT lies under."""
 
-    def extend(self, select: Select[Any], kind: str, alias: str, targets: set[int], filters: frozenset[str]) -> _Path:
+    def extend(
+        self,
+        select: Select[Any],
+        kind: str,
+        alias: str,
+        targets: set[int],
+        filters: frozenset[str],
+        small_pages: dict[int, _SmallPage],
+    ) -> _Path:
         lineage, kinds, aliases = (*self.lineage, id(select)), (*self.kinds, kind), (*self.aliases, alias)
-        return _Path(lineage, kinds, aliases, self.enclosing | targets, filters)
+        return _Path(
+            lineage, kinds, aliases, self.enclosing | targets, filters, tuple(small_pages.items()), self.small_page
+        )
 
 
 @dataclass(frozen=True)
@@ -119,6 +140,8 @@ class Read:
     """Identifies the body of a CTE target, which every alias of that CTE shares."""
     cte_join: str = ""
     """The ON clause of a CTE target, its own columns read from one placeholder and every other FROM told apart."""
+    small_page: _SmallPage | None = None
+    """The LATERAL of allowed duplicate 7 the read is, lies under or is correlated to."""
 
     @property
     def derived(self) -> bool:
@@ -163,7 +186,8 @@ def _duplicate(first: Read, second: Read) -> bool:
         for copy, other in pairs
     ):
         return True
-    if first.in_subquery and second.in_subquery and first.filters != second.filters:
+    # Pages of one table's rows read those rows again: only what selects other rows tells two subqueries apart.
+    if first.in_subquery and second.in_subquery and _row_filters(first) != _row_filters(second):
         return False
     on_clause_keys = {key for key in first.keys if not key.startswith(_ADDED_KEY_PREFIXES)}
     if first.keys == second.keys and (on_clause_keys or first.extras == second.extras):
@@ -171,6 +195,10 @@ def _duplicate(first: Read, second: Read) -> bool:
     return any(
         copy.is_copy and not other.is_copy and not other.keys and other.select in copy.lineage for copy, other in pairs
     )
+
+
+def _row_filters(read: Read) -> frozenset[str]:
+    return frozenset(entry for entry in read.filters if not entry.startswith(_PAGE_PREFIXES))
 
 
 def _walk(select: Select[Any], dialect: Dialect, path: _Path, kind: str, alias: str, reads: list[Read]) -> None:
@@ -188,7 +216,8 @@ def _walk(select: Select[Any], dialect: Dialect, path: _Path, kind: str, alias: 
     # A SELECT restricts the rows of a derived table it reads alone, such as an emulated DISTINCT ON's rank; next to
     # other FROM clauses it restricts their combination, not the derived table's rows.
     inherited = filters if len(targets) == 1 else frozenset()
-    inner = path.extend(select, kind, alias, keys_of_targets, inherited)
+    small_pages = {**dict(path.small_pages), **_small_pages(select, targets, keys_of_targets, dialect)}
+    inner = path.extend(select, kind, alias, keys_of_targets, inherited, small_pages)
     joined = {id(target) for target, onclause, _ in targets if onclause is not None}
     correlated = {
         id(target): _correlation(target, where, keys_of_targets, dialect, in_where=True)[0] for target, _, _ in targets
@@ -208,6 +237,9 @@ def _walk(select: Select[Any], dialect: Dialect, path: _Path, kind: str, alias: 
         copies = {key for key in keys if key[0] == key[1]}
         read_keys = frozenset(f"{left} = {right}" for left, right in keys - copies)
         is_copy = bool(copies) and keys == copies
+        small_page = path.small_page or next(
+            (small_pages[key] for key in (_key(target), *_referenced(target, onclause)) if key in small_pages), None
+        )
         # Prefixed so that they never equal ON clause keys, which normalization could otherwise make equal; with these
         # keys alone, ``_duplicate`` still compares the extras, so they only ever tell two reads apart.
         if onclause is not None:
@@ -233,12 +265,62 @@ def _walk(select: Select[Any], dialect: Dialect, path: _Path, kind: str, alias: 
                 filters=filters,
                 cte=cte,
                 cte_join="" if cte is None or onclause is None else _cte_join(target, onclause, dialect),
+                small_page=small_page,
             )
         )
         if not walked and isinstance(body := _body(target), Select):
-            _walk(body, dialect, inner, "from", _alias_name(target), reads)
+            _walk(body, dialect, replace(inner, small_page=small_page), "from", _alias_name(target), reads)
     for subselect in _subselects(select):
         _walk(subselect, dialect, inner, "where", "", reads)
+
+
+def _small_pages(
+    select: Select[Any],
+    targets: list[tuple[FromClause, ClauseElement | None, bool]],
+    own: set[int],
+    dialect: Dialect,
+) -> dict[int, _SmallPage]:
+    """Maps the LATERALs of ``select`` that allowed duplicate 7 covers to their sibling group and body, by key.
+
+    Siblings select rows of the same tables correlated to the same FROM clauses of ``select``; a group of two or more is
+    covered when every sibling has a LIMIT and their ``offset + limit`` multiply to at most ``_SMALL_PAGES_ROWS``.
+    """
+    groups: dict[tuple[object, ...], list[tuple[int, str, int | None]]] = {}
+    for target, onclause, _ in targets:
+        if isinstance(target, Lateral) and isinstance(body := _body(target), Select) and not _aggregates(body):
+            correlation = _referenced_keys(body.whereclause) | _referenced_keys(onclause)
+            parents = frozenset(key for key in correlation if key in own and key != _key(target))
+            tables = frozenset(_table_label(from_) for from_ in body.get_final_froms())
+            group = groups.setdefault((id(select), tables, parents), [])
+            group.append((_key(target), _base(target, dialect), _rows_bound(body)))
+    covered: dict[int, _SmallPage] = {}
+    for group, siblings in groups.items():
+        bounds = [bound for _, _, bound in siblings]
+        if len(siblings) > 1 and None not in bounds and prod(cast("list[int]", bounds)) <= _SMALL_PAGES_ROWS:
+            covered.update((key, (group, base)) for key, base, _ in siblings)
+    return covered
+
+
+def _aggregates(select: Select[Any]) -> bool:
+    """Tells whether ``select`` computes aggregates or groups its rows rather than selecting a page of them."""
+    return _is_grouped(select) or bool(select._group_by_clauses)  # noqa: SLF001
+
+
+def _rows_bound(select: Select[Any]) -> int | None:
+    """Returns ``offset + limit`` of ``select``, ``None`` without a LIMIT."""
+    limit = select._limit  # noqa: SLF001
+    return None if limit is None else limit + (select._offset or 0)  # noqa: SLF001
+
+
+def _referenced(target: FromClause, onclause: ClauseElement | None) -> set[int]:
+    """Returns the keys of the FROM clauses whose columns the ON clause of ``target`` or its body reads."""
+    return _referenced_keys(onclause) | _referenced_keys(_body(target))
+
+
+def _referenced_keys(element: ClauseElement | None) -> set[int]:
+    if element is None:
+        return set()
+    return {_key(node.table) for node in iterate(element) if isinstance(node, ColumnClause) and node.table is not None}
 
 
 def _equal_columns(conjuncts: list[ClauseElement]) -> dict[_ColumnNode, set[_ColumnNode]]:
@@ -405,7 +487,13 @@ def _base(target: FromClause, dialect: Dialect) -> str:
     label = _table_label(target)
     if label != _DERIVED:
         return label
-    return f"({_normalized(_body(target), dialect)})"
+    body = _body(target)
+    # Normalizing names every derived table ``sub``, so the bases of those the body reads tell two wrappers apart.
+    wrapped: list[tuple[FromClause, ClauseElement | None, bool]] = []
+    for from_ in body.get_final_froms() if isinstance(body, Select) else ():
+        _flatten(from_, None, False, wrapped)
+    inner = "".join(f" {_base(from_, dialect)}" for from_, _, _ in wrapped if _table_label(from_) == _DERIVED)
+    return f"({_normalized(body, dialect)}{inner})"
 
 
 def _cte_join(target: FromClause, onclause: ClauseElement, dialect: Dialect) -> str:
@@ -488,12 +576,23 @@ def custom_filter_subquery(first: Read, second: Read) -> bool:
     return "custom_filter" in {first.name, second.name}
 
 
+def small_page_sibling_laterals(first: Read, second: Read) -> bool:
+    """Allowed 7: sibling LATERALs of one relation with small pages, each an index-backed top N, and the reads under them."""
+    return (
+        first.small_page is not None
+        and second.small_page is not None
+        and first.small_page[0] == second.small_page[0]
+        and first.small_page[1] != second.small_page[1]
+    )
+
+
 ALLOWED: tuple[Callable[[Read, Read], bool], ...] = (
     hooked_to_one_relation,
     filtered_or_aggregated_and_selected,
     user_statement_primary_key_join,
     dml_derived_table,
     custom_filter_subquery,
+    small_page_sibling_laterals,
 )
 
 
