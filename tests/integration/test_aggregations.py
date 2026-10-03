@@ -693,13 +693,6 @@ async def test_same_aggregate_on_root_and_under_relation(
     assert query_tracker.query_count == 1
 
 
-@pytest.mark.allow_duplicate_reads(
-    reason=(
-        "on postgresql, aliases a and b of colors.fruits each compute farmsAggregate in a LATERAL correlated to "
-        "their own LATERAL (Ruling V); the CTE databases share one rank CTE and one grouped CTE"
-    ),
-    dialects=("postgresql",),
-)
 async def test_aggregate_under_aliases_differing_in_limit(
     any_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
@@ -737,13 +730,6 @@ async def test_aggregate_under_aliases_differing_in_limit(
         assert len(re.findall(r"\banon_\d+ AS\s*\(", query_tracker[0].statement_str)) == 2
 
 
-@pytest.mark.allow_duplicate_reads(
-    reason=(
-        "aliases a and b of colors.fruits, ordered differently, each read fruit through their own LATERAL "
-        "or rank CTE and each group fruit_farm for farmsAggregate; one grouped read could serve both "
-        "(Ruling V)"
-    )
-)
 async def test_nested_aggregation_under_aliased_relations_with_arguments(
     any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
 ) -> None:
