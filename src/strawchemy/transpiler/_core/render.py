@@ -20,12 +20,14 @@ if TYPE_CHECKING:
     from sqlalchemy import Select, SQLColumnExpression
     from sqlalchemy.orm import QueryableAttribute
     from sqlalchemy.orm.strategy_options import _AbstractLoad
+    from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement, FromClause
     from sqlalchemy.sql.elements import KeyedColumnElement
 
     from strawchemy.config.databases import DatabaseFeatures
     from strawchemy.transpiler._core.plan import QueryPlan
     from strawchemy.transpiler._core.rowset import Join, OrderPriority, Projection, RowSet, StatementEdit
+    from strawchemy.transpiler.hook import QueryHook
 
 __all__ = (
     "RenderedRows",
@@ -34,6 +36,8 @@ __all__ = (
     "clause_element",
     "distinct_rows",
     "order_terms",
+    "ordered_column",
+    "priority_sorted",
     "render_plan",
     "render_rows",
     "require_corresponding_column",
@@ -51,12 +55,6 @@ class RenderedRows:
 
 def _by_depth(joins: Mapping[Any, Join]) -> list[Join]:
     return sorted(joins.values(), key=lambda join: join.key[1].level)
-
-
-def _priority_sorted(
-    order_by: Iterable[tuple[OrderPriority, UnaryExpression[Any]]],
-) -> list[tuple[OrderPriority, UnaryExpression[Any]]]:
-    return sorted(order_by, key=lambda item: item[0])
 
 
 def _assemble(
@@ -89,9 +87,9 @@ def _assemble(
     terms = (*edit_order_by, *order_by)
     if not distinct_on:
         if select_order_columns:
-            statement = add_missing_columns(statement, [_ordered_column(term) for term in terms])
+            statement = add_missing_columns(statement, [ordered_column(term) for term in terms])
     elif _is_native_distinct(distinct_on, terms, db_features):
-        statement = add_missing_columns(statement, [_ordered_column(term) for term in terms]).distinct(*distinct_on)
+        statement = add_missing_columns(statement, [ordered_column(term) for term in terms]).distinct(*distinct_on)
     else:
         statement, adapter = distinct_rows(statement, distinct_on, terms, partition_by)
         terms = tuple(adapter.traverse(term) for term in terms)
@@ -116,14 +114,6 @@ def _run_edits(
     return statement.order_by(None), order_by
 
 
-def _ordered_column(term: UnaryExpression[Any]) -> ColumnElement[Any]:
-    """Returns the expression ``term`` orders, without its ASC, DESC and NULLS modifiers."""
-    expression: Any = term
-    while isinstance(expression, UnaryExpression) and expression.modifier is not None:
-        expression = expression.element
-    return expression
-
-
 def _is_native_distinct(
     distinct_on: Sequence[ColumnElement[Any]], order_by: Sequence[UnaryExpression[Any]], db_features: DatabaseFeatures
 ) -> bool:
@@ -135,25 +125,37 @@ def _is_native_distinct(
     if len(order_by) < len(distinct_on):
         return False
     return all(
-        same_column(clause_element(_ordered_column(term)), clause_element(column))
+        same_column(clause_element(ordered_column(term)), clause_element(column))
         for term, column in zip(order_by, distinct_on, strict=False)
     )
 
 
 def _loader_options(projection: Projection) -> list[_AbstractLoad]:
-    """Builds ``load_only`` and hook loader options; the root's are top-level, the others' scoped to their alias."""
+    """Builds ``load_only`` and hook loader options per entity, for all its nodes; the root's are top-level."""
+    aliases: dict[int, AliasedClass[Any]] = {}
+    loaded: dict[int, list[str] | None] = {}
+    hooks: dict[int, list[QueryHook[Any]]] = {}
+    for node, alias in projection.entities.items():
+        key = id(alias)
+        aliases.setdefault(key, alias)
+        node_keys = projection.loaded.get(node)
+        if (keys := loaded.setdefault(key, [])) is not None:
+            # A node loading no explicit keys loads every column, and so does its entity.
+            loaded[key] = [*keys, *(name for name in node_keys if name not in keys)] if node_keys else None
+        alias_hooks = hooks.setdefault(key, [])
+        alias_hooks.extend(hook for hook in projection.hooks.get(node, ()) if all(hook is not h for h in alias_hooks))
     options: list[_AbstractLoad] = []
-    for index, (node, alias) in enumerate(projection.entities.items()):
-        node_options: list[_AbstractLoad] = []
-        if keys := projection.loaded.get(node):
-            node_options.append(load_only(*[getattr(alias, key) for key in keys]))
-        for hook in projection.hooks.get(node, ()):
-            node_options.extend(hook.column_load_options(alias))
-            node_options.extend(hook.load_relationships(alias))
+    for index, (key, alias) in enumerate(aliases.items()):
+        alias_options: list[_AbstractLoad] = []
+        if keys := loaded[key]:
+            alias_options.append(load_only(*[getattr(alias, name) for name in keys]))
+        for hook in hooks[key]:
+            alias_options.extend(hook.column_load_options(alias))
+            alias_options.extend(hook.load_relationships(alias))
         if index == 0:
-            options.extend(node_options)
-        elif node_options:
-            options.append(Load(alias).options(*node_options))
+            options.extend(alias_options)
+        elif alias_options:
+            options.append(Load(alias).options(*alias_options))
     return options
 
 
@@ -181,16 +183,20 @@ def order_terms(
     return ((is_null.desc() if nulls_first else is_null.asc()), ordered)
 
 
+def ordered_column(term: UnaryExpression[Any]) -> ColumnElement[Any]:
+    """Returns the expression ``term`` orders, without its ASC, DESC and NULLS modifiers."""
+    expression: Any = term
+    while isinstance(expression, UnaryExpression) and expression.modifier is not None:
+        expression = expression.element
+    return expression
+
+
 def add_missing_columns(statement: Select[Any], columns: Sequence[ColumnElement[Any]]) -> Select[Any]:
     """Adds to ``statement`` the ``columns`` it does not select; a CAST adds its operand, whose name it takes."""
-    columns = [column.clause if isinstance(column, Cast) else column for column in columns]
-    return statement.add_columns(
-        *[
-            column
-            for column in columns
-            if not any(same_column(column, selected) for selected in statement.selected_columns)
-        ]
-    )
+    for column in (column.clause if isinstance(column, Cast) else column for column in columns):
+        if not any(same_column(column, selected) for selected in statement.selected_columns):
+            statement = statement.add_columns(column)
+    return statement
 
 
 def adapt_clauses(clauses: Sequence[UnaryExpression[Any]], selectable: FromClause) -> tuple[UnaryExpression[Any], ...]:
@@ -212,11 +218,17 @@ def distinct_rows(
         A SELECT of the kept rows, and an adapter mapping the columns of ``statement`` onto it.
     """
     rank = func.row_number().over(partition_by=[*partition_by, *distinct_on], order_by=order_by or None).label(None)
-    ranked_statement = add_missing_columns(statement, [_ordered_column(expression) for expression in order_by])
+    ranked_statement = add_missing_columns(statement, [ordered_column(expression) for expression in order_by])
     ranked = ranked_statement.add_columns(rank).subquery()
     ranked_rank = require_corresponding_column(ranked, rank)
     kept_rows = select(*[column for column in ranked.c if column is not ranked_rank]).where(ranked_rank == 1)
     return kept_rows, ClauseAdapter(ranked)
+
+
+def priority_sorted(
+    order_by: Iterable[tuple[OrderPriority, UnaryExpression[Any]]],
+) -> list[tuple[OrderPriority, UnaryExpression[Any]]]:
+    return sorted(order_by, key=lambda item: item[0])
 
 
 def render_rows(
@@ -235,7 +247,7 @@ def render_rows(
         rows=rows,
         joins=_by_depth(rows.joins),
         where=rows.where,
-        order_by=[term for _, term in _priority_sorted(rows.order_by)],
+        order_by=[term for _, term in priority_sorted(rows.order_by)],
         distinct_on=rows.distinct_on,
         db_features=db_features,
         partition_by=partition_by,
@@ -249,7 +261,12 @@ def render_plan(plan: QueryPlan) -> Select[Any]:
     rows, projection, db_features = plan.rows, plan.projection, plan.context.db_features
     # The executor reads relation entities by position, and columns selected from a LATERAL make it a FROM candidate,
     # so the left side of the joins must be explicit.
-    statement = select(*projection.entities.values()).select_from(rows.source).add_columns(*projection.columns)
+    entities = list({id(alias): alias for alias in projection.entities.values()}.values())
+    statement = select(*entities).select_from(rows.source).add_columns(*projection.columns)
+    ranks = {id(page.rank): page.rank for page in projection.pages.values()}
+    statement = statement.add_columns(
+        *[rank for rank in ranks.values() if all(rank is not selected for selected in statement.selected_columns)]
+    )
     if rows.distinct_on:
         msg = "rows with DISTINCT ON must be wrapped before rendering the plan"
         raise TranspilingError(msg)
@@ -258,7 +275,7 @@ def render_plan(plan: QueryPlan) -> Select[Any]:
         rows=rows,
         joins=[*_by_depth(rows.joins), *_by_depth(projection.joins)],
         where=rows.where,
-        order_by=[term for _, term in (*_priority_sorted(rows.order_by), *projection.order_by)],
+        order_by=[term for _, term in (*priority_sorted(rows.order_by), *projection.order_by)],
         db_features=db_features,
     )
     if projection.root_aggregations:

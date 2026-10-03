@@ -2,25 +2,37 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import Result, Select
+from sqlalchemy import Result, Select, func
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import MultipleResultsFound
+from sqlalchemy.orm import aliased
 
+from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.exceptions import QueryResultError
 from strawchemy.transpiler._core.level import Level, PlanContext
+from strawchemy.transpiler._core.plan import QueryPlan
 from strawchemy.transpiler._core.request import QueryRequest
+from strawchemy.transpiler._core.rowset import AliasPage, Projection, RowSet
 from strawchemy.transpiler._executor import NodeResult, SyncQueryExecutor
 from strawchemy.transpiler._passes import DEFAULT_PIPELINES
-from tests.unit.models import Fruit
+from tests.unit.models import Color, Fruit
 
 if TYPE_CHECKING:
-    from strawchemy.transpiler._core.plan import QueryPlan
+    from sqlalchemy.sql import ColumnElement
+
+    from strawchemy.typing import QueryNodeType
+
+
+class _Node:
+    def __init__(self, parent: object = None) -> None:
+        self.parent = parent
 
 
 def _plan(limit: int | None = None) -> QueryPlan:
@@ -45,6 +57,98 @@ def _result(*models: object) -> MagicMock:
     result = MagicMock(spec=Result)
     result.all.return_value = rows
     return result
+
+
+def _shared_fruit_plan(
+    page_a: AliasPage | None, page_b: AliasPage | None
+) -> tuple[QueryPlan, QueryNodeType, QueryNodeType]:
+    """Plans colors whose relation nodes ``a`` and ``b`` both read one fruit alias.
+
+    Returns:
+        The plan, and the nodes ``a`` and ``b``.
+    """
+    color, fruit = aliased(Color.__mapper__, name="color"), aliased(Fruit.__mapper__, name="fruit")
+    root = cast("QueryNodeType", _Node())
+    a, b = cast("QueryNodeType", _Node(root)), cast("QueryNodeType", _Node(root))
+    projection = Projection.over(root, color)
+    for node, page in ((a, page_a), (b, page_b)):
+        projection = replace(projection, entities={**projection.entities, node: fruit})
+        if page is not None:
+            projection = projection.with_page(node, page)
+    plan = QueryPlan(
+        rows=RowSet.over(color),
+        projection=projection,
+        context=cast("Any", SimpleNamespace(db_features=DatabaseFeatures(dialect="postgresql"))),
+    )
+    return plan, a, b
+
+
+def _ranked_result(
+    color: Color, ranks: tuple[ColumnElement[int], ColumnElement[int]], *fruits: tuple[Fruit, int, int]
+) -> MagicMock:
+    """Builds a mock ``Result`` with one ``(color, fruit, rank_a, rank_b)`` row per fruit.
+
+    Returns:
+        A ``MagicMock`` standing in for a SQLAlchemy ``Result``.
+    """
+    rank_a, rank_b = ranks
+    rows: list[MagicMock] = []
+    for fruit, value_a, value_b in fruits:
+        row = MagicMock()
+        row.__getitem__.side_effect = (color, fruit, value_a, value_b).__getitem__
+        row._mapping = {rank_a: value_a, rank_b: value_b}  # noqa: SLF001  # Row exposes ranks only via _mapping.
+        rows.append(row)
+    result = MagicMock(spec=Result)
+    result.all.return_value = rows
+    return result
+
+
+def _ranks() -> tuple[ColumnElement[int], ColumnElement[int]]:
+    return func.row_number().over().label("rank_a"), func.row_number().over().label("rank_b")
+
+
+def test_shared_entity_fills_each_alias_by_its_page() -> None:
+    """Two nodes on one fruit entity each keep only the fruits whose rank falls inside their own page."""
+    ranks = _ranks()
+    rank_a, rank_b = ranks
+    plan, a, b = _shared_fruit_plan(AliasPage(rank_a, None, 2), AliasPage(rank_b, 1, 1))
+    color, fruits = Color(), [Fruit(), Fruit(), Fruit()]
+    session = MagicMock()
+    session.execute.return_value = _ranked_result(color, ranks, (fruits[0], 1, 3), (fruits[1], 2, 2), (fruits[2], 3, 1))
+
+    related = SyncQueryExecutor(plan=plan, id_field_definitions=[]).list(session).related_objects
+
+    assert related[id(a)][id(color)] == fruits[:2]
+    assert related[id(b)][id(color)] == [fruits[1]]
+
+
+def test_shared_entity_orders_each_alias_by_its_rank() -> None:
+    """Rows arriving in the rank order of ``a`` fill ``b`` in its own rank order; ``a``, without a page, keeps row order."""
+    ranks = _ranks()
+    _, rank_b = ranks
+    plan, a, b = _shared_fruit_plan(None, AliasPage(rank_b, None, None))
+    color, fruits = Color(), [Fruit(), Fruit(), Fruit()]
+    session = MagicMock()
+    session.execute.return_value = _ranked_result(color, ranks, (fruits[0], 1, 3), (fruits[1], 2, 2), (fruits[2], 3, 1))
+
+    related = SyncQueryExecutor(plan=plan, id_field_definitions=[]).list(session).related_objects
+
+    assert related[id(a)][id(color)] == fruits
+    assert related[id(b)][id(color)] == fruits[::-1]
+
+
+def test_repeated_object_keeps_its_first_rank() -> None:
+    """An object on several shared rows with different ranks is placed by its smallest rank."""
+    ranks = _ranks()
+    _, rank_b = ranks
+    plan, _, b = _shared_fruit_plan(None, AliasPage(rank_b, None, None))
+    color, fruits = Color(), [Fruit(), Fruit()]
+    session = MagicMock()
+    session.execute.return_value = _ranked_result(color, ranks, (fruits[0], 1, 1), (fruits[1], 2, 2), (fruits[0], 3, 3))
+
+    related = SyncQueryExecutor(plan=plan, id_field_definitions=[]).list(session).related_objects
+
+    assert related[id(b)][id(color)] == fruits
 
 
 def test_executor_emits_plan_in_statement() -> None:

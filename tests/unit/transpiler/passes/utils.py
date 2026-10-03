@@ -56,7 +56,9 @@ def outer_projection(lines: list[str]) -> list[str]:
     return columns
 
 
-def plan_sql(query: str, dialect_name: str, pipelines: Pipelines | None = None) -> list[str]:
+def plan_sql(
+    query: str, dialect_name: str, pipelines: Pipelines | None = None, *, literal_binds: bool = False
+) -> list[str]:
     """Plans ``query`` with ``pipelines``, by default the pass pipelines, and returns its statement as SQL lines.
 
     Raises:
@@ -83,4 +85,5 @@ def plan_sql(query: str, dialect_name: str, pipelines: Pipelines | None = None) 
     assert len(captured) == 1
     dialect = SQLA_DIALECTS[dialect_name]
     assert_no_duplicate_reads(captured[0], dialect)
-    return format_sql(str(captured[0].compile(dialect=dialect))).splitlines()
+    compiled = captured[0].compile(dialect=dialect, compile_kwargs={"literal_binds": literal_binds})
+    return format_sql(str(compiled)).splitlines()

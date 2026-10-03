@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from sqlalchemy.sql import ColumnElement
 
     from strawchemy.transpiler._core.level import PlanContext
-    from strawchemy.transpiler._core.rowset import Join, Projection, RowSet
+    from strawchemy.transpiler._core.rowset import AliasPage, Join, Projection, RowSet
     from strawchemy.typing import QueryNodeType
 
 __all__ = ("QueryPlan",)
@@ -52,6 +52,10 @@ class QueryPlan:
     def relation_entities(self) -> Mapping[QueryNodeType, AliasedClass[Any]]:
         root = next(iter(self.projection.entities), None)
         return {node: alias for node, alias in self.projection.entities.items() if node is not root}
+
+    @property
+    def relation_pages(self) -> Mapping[QueryNodeType, AliasPage]:
+        return self.projection.pages
 
     @property
     def root_aggregation_functions(self) -> tuple[Label[Any], ...]:

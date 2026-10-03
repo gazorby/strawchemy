@@ -2,25 +2,39 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+import operator
+import re
+from dataclasses import dataclass, replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
 
-from sqlalchemy import exists, literal, select
+import pytest
+from sqlalchemy import and_, exists, func, inspect, literal, or_, select
+from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql import visitors
+from sqlalchemy.sql.elements import BinaryExpression
 from sqlalchemy.sql.selectable import CTE
 
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.transpiler._core.plan import QueryPlan
-from strawchemy.transpiler._core.rowset import Join, Projection, RowSet
+from strawchemy.transpiler._core.render import render_plan
+from strawchemy.transpiler._core.rowset import AliasPage, Join, Projection, RowSet
 from strawchemy.transpiler._core.share import share_ctes
 from tests.unit.models import Color, Fruit
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+    from typing import TypeAlias
+
+    from sqlalchemy import Label, Select
     from sqlalchemy.orm.util import AliasedClass
+    from sqlalchemy.sql.elements import KeyedColumnElement
 
     from strawchemy.typing import QueryNodeType
+
+_Edit: TypeAlias = "Callable[[Select[Any], type[Fruit]], Select[Any]]"
+_RankBy: TypeAlias = "Callable[[type[Fruit]], list[Any]]"
 
 _SQLITE = DatabaseFeatures(dialect="sqlite")
 
@@ -61,6 +75,78 @@ def _plan(*, with_other: bool) -> QueryPlan:
     return QueryPlan(RowSet.over(color), projection, cast("Any", SimpleNamespace(db_features=_SQLITE)))
 
 
+def _unedited(statement: Select[Any], _: type[Fruit]) -> Select[Any]:
+    return statement
+
+
+def _no_leading_terms(_: type[Fruit]) -> list[Any]:
+    return []
+
+
+def _by_count(fruit: type[Fruit]) -> list[Any]:
+    other = aliased(Fruit, flat=True)
+    return [select(func.count(other.id)).where(other.color_id == fruit.color_id).scalar_subquery()]
+
+
+def _by_any_color_name(_: type[Fruit]) -> list[Any]:
+    return [aliased(Color, flat=True).name]
+
+
+@dataclass(frozen=True)
+class _Ranked:
+    """A rank CTE of fruit and the nodes reading it, each with its page, as a CTE join builds them."""
+
+    windows: tuple[tuple[bool, int], ...]
+    """Per node, whether it ranks by descending sweetness, and its limit."""
+    edit: _Edit = _unedited
+    """Edits the body before it is grouped and ranked."""
+    rank_by: _RankBy = _no_leading_terms
+    """The terms each rank orders by before sweetness."""
+
+
+def _rank_cte(ranked: _Ranked) -> tuple[CTE, AliasedClass[Any], list[KeyedColumnElement[Any]]]:
+    """Builds the CTE of ``ranked``, ranked per color, the entity reading it and its rank per window."""
+    fruit = aliased(Fruit, flat=True)
+    statement = select(fruit.id, fruit.color_id, fruit.sweetness).where(fruit.color_id.is_not(None))
+    first_descending = ranked.windows[0][0]
+    statement = ranked.edit(statement, fruit).order_by(
+        fruit.sweetness.desc() if first_descending else fruit.sweetness.asc()
+    )
+    ranks: list[Label[int]] = []
+    for number, (descending, _) in enumerate(ranked.windows, 1):
+        order_by = [*ranked.rank_by(fruit), fruit.sweetness.desc() if descending else fruit.sweetness.asc(), fruit.id]
+        name = "rank" if len(ranked.windows) == 1 else f"rank_{number}"
+        ranks.append(func.dense_rank().over(partition_by=[fruit.color_id], order_by=order_by).label(name))
+    cte = statement.group_by(*statement.selected_columns).add_columns(*ranks).cte()
+    return cte, cast("AliasedClass[Any]", aliased(Fruit, cte)), [cte.c[rank.name] for rank in ranks]
+
+
+def _rank_plan(*ctes: _Ranked) -> QueryPlan:
+    """Builds a plan joining rank CTEs of fruit to the root, by default top 2 by sweetness, then top 3 by sourness.
+
+    Each CTE is joined once, keyed by its first node, on the bounds of all its windows.
+    """
+    color = cast("AliasedClass[Any]", aliased(Color, name="color"))
+    projection = Projection.over(_node(), color)
+    for ranked in ctes or (_Ranked(((True, 2),)), _Ranked(((False, 3),))):
+        cte, entity, ranks = _rank_cte(ranked)
+        nodes = [_node(1) for _ in ranked.windows]
+        bounds = [rank <= limit for rank, (_, limit) in zip(ranks, ranked.windows, strict=True)]
+        onclause = and_(cte.c.color_id == color.id, or_(*bounds))
+        projection = projection.with_join(Join(("relation", nodes[0]), entity, onclause, True, entity))
+        for node, rank, (_, limit) in zip(nodes, ranks, ranked.windows, strict=True):
+            projection = replace(projection, entities={**projection.entities, node: entity})
+            projection = projection.with_page(node, AliasPage(rank, None, limit))
+    return QueryPlan(
+        RowSet.over(color), projection, cast("Any", SimpleNamespace(db_features=_SQLITE, dialect="sqlite"))
+    )
+
+
+def _sql(plan: QueryPlan) -> str:
+    compiled = render_plan(plan).compile(dialect=sqlite.dialect(), compile_kwargs={"literal_binds": True})
+    return " ".join(str(compiled).split())
+
+
 def test_identical_bodies_are_shared() -> None:
     """Two CTEs with identical bodies over one alias of fruit become one CTE and an alias of it."""
     plan = share_ctes(_plan(with_other=False))
@@ -89,3 +175,101 @@ def test_subquery_reading_a_dropped_cte_reads_the_kept_cte() -> None:
     read = [element for element in visitors.iterate(shared.rows.where[0]) if isinstance(element, CTE)]
     assert any(cte is second.target for cte in read)
     assert not any(cte is dropped for cte in read)
+
+
+def test_rank_ctes_differing_only_in_windows_merge() -> None:
+    """Two rank CTEs differing only in their windows are one CTE ranked twice, each join keeping its own bounds."""
+    plan = share_ctes(_rank_plan())
+
+    sql = _sql(plan)
+    assert sql.count("WITH") == 1
+    assert sql.count(" AS (") == 1
+    assert "ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank_1" in sql
+    assert "ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank_2" in sql
+    assert "ON anon_1.color_id = color.id AND anon_1.rank_1 <= 2" in sql
+    assert "ON anon_2.color_id = color.id AND anon_2.rank_2 <= 3" in sql
+    second_node, second = list(plan.projection.joins.items())[1]
+    shared_alias = inspect(second.target).selectable  # ty: ignore[unresolved-attribute]
+    assert plan.projection.pages[second_node[1]].rank is shared_alias.c.rank_2
+
+
+@pytest.mark.parametrize(
+    "ctes",
+    [
+        pytest.param((_Ranked(((True, 2),)), _Ranked(((False, 3), (True, 4)))), id="single-then-shared"),
+        pytest.param((_Ranked(((False, 3), (True, 4))), _Ranked(((True, 2),))), id="shared-then-single"),
+        pytest.param((_Ranked(((True, 2),)), _Ranked(((False, 3),)), _Ranked(((False, 5),))), id="second-repeated"),
+    ],
+)
+def test_merged_rank_ctes_keep_each_page_on_its_own_rank(ctes: tuple[_Ranked, ...]) -> None:
+    """Merged rank CTEs, sibling ranks or a repeated body among them, give each page its own rank and bounds."""
+    plan = share_ctes(_rank_plan(*ctes))
+
+    sql = _sql(plan)
+    assert sql.count(" AS (") == 1
+    pages = iter(plan.projection.pages.values())
+    for ranked, join in zip(ctes, plan.projection.joins.values(), strict=True):
+        target = inspect(join.target).selectable  # ty: ignore[unresolved-attribute]
+        bounds = [
+            (bound.left, bound.right.value)
+            for bound in visitors.iterate(join.onclause)
+            if isinstance(bound, BinaryExpression) and bound.operator is operator.le
+        ]
+        for descending, limit in ranked.windows:
+            rank = next(pages).rank
+            assert rank.table is target
+            assert any(left is rank and value == limit for left, value in bounds)
+            direction = "DESC" if descending else "ASC"
+            assert re.search(rf"ORDER BY fruit_1\.sweetness {direction}, fruit_1\.id\) AS {rank.name}\b", sql)
+
+
+def test_rank_ctes_whose_ranks_read_another_from_clause_stay_separate() -> None:
+    """A rank CTE whose rank alone reads a FROM clause, which multiplies its rows, keeps its CTE."""
+    plan = _rank_plan(_Ranked(((True, 2),)), _Ranked(((False, 3),), rank_by=_by_any_color_name))
+
+    assert share_ctes(plan) is plan
+
+
+def test_rank_ctes_over_a_join_merge() -> None:
+    """Rank CTEs whose bodies join another table merge, the windows reading the first body's FROM clauses."""
+
+    def joined(statement: Select[Any], fruit: type[Fruit]) -> Select[Any]:
+        color = aliased(Color, flat=True)
+        return statement.join(color, color.id == fruit.color_id).where(color.name != "red")
+
+    sql = _sql(share_ctes(_rank_plan(_Ranked(((True, 2),), edit=joined), _Ranked(((False, 3),), edit=joined))))
+
+    assert sql.count(" AS (") == 1
+    assert "ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank_2" in sql
+
+
+def test_rank_ctes_with_different_bodies_stay_separate() -> None:
+    """Rank CTEs whose bodies differ beyond their windows, here in a WHERE, keep a CTE each."""
+
+    def sweet_only(statement: Select[Any], fruit: type[Fruit]) -> Select[Any]:
+        return statement.where(fruit.sweetness > 5)
+
+    plan = _rank_plan(_Ranked(((True, 2),)), _Ranked(((False, 3),), edit=sweet_only))
+
+    assert share_ctes(plan) is plan
+
+
+@pytest.mark.parametrize("first_rows", [lambda statement: statement.limit(5), lambda statement: statement.fetch(5)])
+def test_rank_ctes_keeping_first_rows_ordered_differently_stay_separate(
+    first_rows: Callable[[Select[Any]], Select[Any]],
+) -> None:
+    """Rank CTEs whose bodies keep their first rows by a LIMIT or FETCH, differently ordered, keep a CTE each."""
+
+    def limited(statement: Select[Any], _: type[Fruit]) -> Select[Any]:
+        return first_rows(statement)
+
+    plan = _rank_plan(_Ranked(((True, 2),), edit=limited), _Ranked(((False, 3),), edit=limited))
+
+    assert share_ctes(plan) is plan
+
+
+def test_rank_ctes_with_windows_reading_a_subquery_stay_separate() -> None:
+    """A rank CTE whose window reads a subquery keeps its CTE: the subquery's FROM clauses are not the body's."""
+    plan = _rank_plan(_Ranked(((True, 2),)), _Ranked(((False, 3),), rank_by=_by_count))
+
+    assert share_ctes(plan) is plan

@@ -5,38 +5,65 @@ from __future__ import annotations
 import dataclasses
 from typing import TYPE_CHECKING, Any, cast
 
-from sqlalchemy import and_, func, inspect, null, select, true
+from sqlalchemy import and_, func, inspect, null, or_, select, true
 from sqlalchemy.orm import RelationshipProperty, aliased
 from sqlalchemy.orm import join as orm_join
 from sqlalchemy.sql.functions import count as sqla_count
+from sqlalchemy.sql.util import ClauseAdapter
 
 from strawchemy.dto.inspectors.sqlalchemy import SQLAlchemyInspector
+from strawchemy.dto.strawberry import OrderByEnum
 from strawchemy.exceptions import TranspilingError
 from strawchemy.transpiler._core.render import (
     adapt_clauses,
+    add_missing_columns,
     clause_element,
+    order_terms,
+    ordered_column,
     render_rows,
     require_corresponding_column,
     same_column,
 )
-from strawchemy.transpiler._core.rowset import AggregateJoin, Join
+from strawchemy.transpiler._core.rowset import AggregateJoin, AliasPage, Join
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, Sequence
+    from collections.abc import Callable, Mapping, Sequence
     from typing import Literal
 
     from sqlalchemy import Label, Select, SQLColumnExpression
     from sqlalchemy.orm import QueryableAttribute
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement
-    from sqlalchemy.sql.elements import UnaryExpression
+    from sqlalchemy.sql.elements import Over, UnaryExpression
     from sqlalchemy.sql.selectable import Join as SQLJoin
 
     from strawchemy.config.databases import DatabaseFeatures
     from strawchemy.transpiler._core.rowset import RowSet
     from strawchemy.typing import QueryNodeType
 
-__all__ = ("attach_grouped", "attach_rows", "correlate_relation")
+__all__ = ("RankWindow", "attach_grouped", "attach_rows", "attach_shared_rows", "correlate_relation")
+
+
+@dataclasses.dataclass(frozen=True)
+class RankWindow:
+    """A relation node sharing a read, the ORDER BY ranking its rows, and the page it keeps of them."""
+
+    node: QueryNodeType
+    order_by: tuple[UnaryExpression[Any], ...]
+    offset: int | None
+    limit: int | None
+
+    def bounds(self, rank: ColumnElement[Any]) -> list[ColumnElement[bool]]:
+        """Builds the predicates on ``rank`` keeping the page."""
+        condition: list[ColumnElement[bool]] = []
+        if self.offset is not None:
+            condition.append(rank > self.offset)
+        if self.limit is not None:
+            condition.append(rank <= (self.offset or 0) + self.limit)
+        return condition
+
+    def page(self, rank: ColumnElement[int]) -> AliasPage:
+        return AliasPage(rank, self.offset, self.limit)
 
 
 def _relationship(relation: QueryableAttribute[Any]) -> RelationshipProperty[Any]:
@@ -60,6 +87,13 @@ def _key_attributes(
         )
         raise TranspilingError(msg)
     return [attrs[key].class_attribute.adapt_to_entity(alias_insp) for key in keys]
+
+
+def _primary_keys(target: AliasedClass[Any]) -> list[ColumnElement[Any]]:
+    target_insp = inspect(target)
+    return [
+        clause_element(pk.adapt_to_entity(target_insp)) for pk in SQLAlchemyInspector.pk_attributes(target_insp.mapper)
+    ]
 
 
 def _selected(statement: Select[Any], column: ColumnElement[Any] | QueryableAttribute[Any]) -> ColumnElement[Any]:
@@ -100,22 +134,22 @@ def _lateral_rows(  # noqa: PLR0917
 
 def _cte_rows(  # noqa: PLR0917
     rows: RowSet,
-    node: QueryNodeType,
+    windows: Sequence[RankWindow],
     columns: Sequence[ColumnElement[Any]],
     relation: QueryableAttribute[Any],
     parent_alias: AliasedClass[Any],
     db_features: DatabaseFeatures,
     *,
     is_outer: bool,
-) -> tuple[Join, tuple[UnaryExpression[Any], ...]]:
-    """Builds a CTE running ``rows`` over all parents at once.
+    shared: bool,
+) -> tuple[Join, tuple[UnaryExpression[Any], ...], dict[QueryNodeType, ColumnElement[int]]]:
+    """Builds a CTE running ``rows`` over all parents at once, ranked per parent by each window, and its rank columns.
 
-    The CTE ranks rows per parent; the join condition applies the limit and offset on that rank.
+    The join condition keeps the rows inside the page of any window, or every row when one window is unbounded.
     """
     target = rows.source
-    target_insp = inspect(target)
     remote_fks = _key_attributes(_relationship(relation), "target", target)
-    primary_keys = [pk.adapt_to_entity(target_insp) for pk in SQLAlchemyInspector.pk_attributes(target_insp.mapper)]
+    primary_keys = _primary_keys(target)
     selection = list(columns)
     for extra in (*remote_fks, *primary_keys):
         if not any(same_column(clause_element(column), clause_element(extra)) for column in selection):
@@ -125,50 +159,77 @@ def _cte_rows(  # noqa: PLR0917
         rows, limit=None, offset=None, edits=(*rows.edits, lambda statement: statement.where(not_null))
     )
     rendered = render_rows(unpaged, selection, db_features, partition_by=[clause_element(fk) for fk in remote_fks])
-    statement = rendered.statement.group_by(*rendered.statement.selected_columns)
-    rank_column = _rank_column(
-        [_selected(statement, fk) for fk in remote_fks],
-        rendered.order_by,
-        [_selected(statement, pk) for pk in primary_keys],
-        rows,
+    statement = add_missing_columns(
+        rendered.statement, [ordered_column(term) for window in windows for term in window.order_by]
     )
-    if rank_column is not None:
-        statement = statement.add_columns(rank_column)
-    cte = statement.cte()
+    statement = statement.group_by(*statement.selected_columns)
+    partition = [_selected(statement, fk) for fk in remote_fks]
+
+    def rank(terms: Sequence[UnaryExpression[Any] | SQLColumnExpression[Any]]) -> Over[int]:
+        return func.dense_rank().over(partition_by=partition, order_by=terms)
+
+    if shared:
+        ranks = _rank_labels(windows, rendered.order_by, rank, primary_keys, db_features)
+    else:
+        ranks = _rank_column(windows[0], rendered.order_by, [_selected(statement, pk) for pk in primary_keys], rank)
+    cte = statement.add_columns(*ranks.values()).cte()
     cte_alias = aliased(target, cte)
     # Read after creating the CTE alias, so that the ON clause targets the CTE rather than a new alias.
     onclause: ColumnElement[bool] = getattr(parent_alias, relation.key).of_type(cte_alias)
-    if rank_column is not None:
-        onclause = and_(onclause, *_limit_offset_condition(require_corresponding_column(cte, rank_column), rows))
-    join = Join(("relation", node), cte_alias, onclause, is_outer, cte_alias)
-    return join, adapt_clauses(rendered.order_by, cte)
+    rank_columns: dict[QueryNodeType, ColumnElement[int]] = {
+        node: require_corresponding_column(cte, rank) for node, rank in ranks.items()
+    }
+    bounds = [window.bounds(rank_columns[window.node]) for window in windows if window.node in rank_columns]
+    if len(bounds) == 1:
+        onclause = and_(onclause, *bounds[0])
+    elif bounds and all(bounds):
+        onclause = and_(onclause, or_(*(and_(*bound) for bound in bounds)))
+    join = Join(("relation", windows[0].node), cte_alias, onclause, is_outer, cte_alias)
+    return join, adapt_clauses(rendered.order_by, cte), rank_columns
 
 
 def _rank_column(
-    remote_fks: Sequence[SQLColumnExpression[Any]],
-    order_by: Sequence[SQLColumnExpression[Any]],
+    window: RankWindow,
+    order_by: Sequence[UnaryExpression[Any]],
     primary_keys: Sequence[SQLColumnExpression[Any]],
-    rows: RowSet,
-) -> Label[int] | None:
-    """Builds the ``dense_rank()`` column, per parent, that limit and offset are applied on.
+    rank: Callable[[Sequence[UnaryExpression[Any] | SQLColumnExpression[Any]]], Over[int]],
+) -> dict[QueryNodeType, Label[int]]:
+    """Builds the ``rank`` of an unshared read, by ``order_by`` then the ``primary_keys``, none without order or page.
 
-    ``primary_keys`` break ties on ``order_by``, so that limit and offset count each row, as with LATERAL.
-
-    Returns ``None`` when there is no ``order_by``, limit or offset.
+    The primary keys make limit and offset count each row, as with LATERAL.
     """
-    if not (order_by or rows.limit is not None or rows.offset is not None):
-        return None
-    return func.dense_rank().over(partition_by=remote_fks, order_by=[*order_by, *primary_keys]).label(name="rank")
+    if not (order_by or window.offset is not None or window.limit is not None):
+        return {}
+    return {window.node: rank([*order_by, *primary_keys]).label("rank")}
 
 
-def _limit_offset_condition(rank_column: ColumnElement[Any], rows: RowSet) -> list[ColumnElement[bool]]:
-    """Builds the predicates on ``rank_column`` that apply the limit and offset of ``rows``."""
-    condition: list[ColumnElement[bool]] = []
-    if rows.offset is not None:
-        condition.append(rank_column > rows.offset)
-    if rows.limit is not None:
-        condition.append(rank_column <= (rows.offset + rows.limit if rows.offset else rows.limit))
-    return condition
+def _rank_labels(
+    windows: Sequence[RankWindow],
+    order_by: Sequence[UnaryExpression[Any]],
+    rank: Callable[[Sequence[UnaryExpression[Any]]], Over[int]],
+    primary_keys: Sequence[ColumnElement[Any]],
+    db_features: DatabaseFeatures,
+) -> dict[QueryNodeType, Label[int]]:
+    """Builds ``rank_1`` onward, one ``rank`` per node of ``windows``, by ``order_by``, its terms, then missing keys."""
+    ranks: dict[QueryNodeType, Label[int]] = {}
+    for window in windows:
+        # An equal node has the same arguments, hence the same window.
+        if window.node not in ranks:
+            terms = _tie_broken([*order_by, *window.order_by], primary_keys, db_features)
+            ranks[window.node] = rank(terms).label(f"rank_{len(ranks) + 1}")
+    return ranks
+
+
+def _tie_broken(
+    terms: Sequence[UnaryExpression[Any]], primary_keys: Sequence[ColumnElement[Any]], db_features: DatabaseFeatures
+) -> list[UnaryExpression[Any]]:
+    """Returns ``terms`` then the ascending ``primary_keys`` they lack, so that no two rows tie."""
+    tie_broken = list(terms)
+    for key in primary_keys:
+        key_terms = order_terms(key, OrderByEnum.ASC, db_features)
+        if not any(key_term.compare(term) for key_term in key_terms for term in tie_broken):
+            tie_broken.extend(key_terms)
+    return tie_broken
 
 
 def _grouped_cte(
@@ -263,7 +324,11 @@ def attach_rows(  # noqa: PLR0917
     """
     if db_features.supports_lateral:
         return _lateral_rows(rows, node, columns, relation, parent_alias, db_features, is_outer=is_outer)
-    return _cte_rows(rows, node, columns, relation, parent_alias, db_features, is_outer=is_outer)
+    windows = [RankWindow(node, (), rows.offset, rows.limit)]
+    join, order_by, _ = _cte_rows(
+        rows, windows, columns, relation, parent_alias, db_features, is_outer=is_outer, shared=False
+    )
+    return join, order_by
 
 
 def attach_grouped(  # noqa: PLR0917
@@ -275,7 +340,7 @@ def attach_grouped(  # noqa: PLR0917
     db_features: DatabaseFeatures,
 ) -> AggregateJoin:
     """Joins the aggregate ``functions``, built against ``function_alias``, computed for each row of ``parent_alias``."""
-    labels = list(functions.values())
+    labels = list({id(label): label for label in functions.values()}.values())
     if db_features.supports_lateral:
         aliased_relation = getattr(parent_alias, relation.key).of_type(inspect(function_alias))
         statement = correlate_relation(select(*labels), aliased_relation, function_alias)
@@ -291,3 +356,55 @@ def attach_grouped(  # noqa: PLR0917
         is_count = isinstance(label.element, sqla_count)
         columns[function_node] = func.coalesce(column, 0) if is_outer and is_count else column
     return AggregateJoin(("aggregate", node), join_target, onclause, is_outer, None, columns, left=parent_alias)
+
+
+def attach_shared_rows(  # noqa: PLR0917
+    rows: RowSet,
+    windows: Sequence[RankWindow],
+    columns: Sequence[ColumnElement[Any]],
+    relation: QueryableAttribute[Any],
+    parent_alias: AliasedClass[Any],
+    db_features: DatabaseFeatures,
+    *,
+    is_outer: bool,
+) -> tuple[Join, Mapping[QueryNodeType, AliasPage]]:
+    """Joins ``rows``, unordered and unpaged, once for the nodes of ``windows``, each ranked by its own window.
+
+    Returns:
+        The join, keyed by the first node, and the page of each node, which reads its rank from the join.
+
+    Raises:
+        TranspilingError: If ``relation`` goes through a secondary table and the database has no LATERAL.
+    """
+    if not db_features.supports_lateral:
+        join, _, ranks = _cte_rows(
+            rows, windows, columns, relation, parent_alias, db_features, is_outer=is_outer, shared=True
+        )
+        return join, {window.node: window.page(ranks[window.node]) for window in windows}
+    target = rows.source
+    target_insp = inspect(target)
+    aliased_relation = getattr(parent_alias, relation.key).of_type(target_insp)
+    correlated = dataclasses.replace(
+        rows, edits=(*rows.edits, lambda statement: correlate_relation(statement, aliased_relation, target))
+    )
+    rendered = render_rows(correlated, columns, db_features)
+    ranks = _rank_labels(
+        windows,
+        rendered.order_by,
+        lambda terms: func.row_number().over(order_by=terms),
+        _primary_keys(target),
+        db_features,
+    )
+    statement = rendered.statement.order_by(None).add_columns(*ranks.values())
+    bounds = [window.bounds(ranks[window.node]) for window in windows]
+    if all(bounds):
+        # Explicit, so that the derived table, unlike the LATERAL wrapping it, still reads the parent's row.
+        ranked = statement.correlate(parent_alias).subquery()
+        page_filter = or_(*(and_(*bound) for bound in bounds))
+        statement = select(*ranked.c).where(ClauseAdapter(ranked).traverse(page_filter))
+    lateral = statement.lateral()
+    pages = {window.node: window.page(require_corresponding_column(lateral, ranks[window.node])) for window in windows}
+    join = Join(
+        ("relation", windows[0].node), lateral, true(), is_outer, aliased(target_insp.mapper, lateral, flat=True)
+    )
+    return join, pages

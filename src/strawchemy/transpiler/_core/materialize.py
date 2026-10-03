@@ -14,7 +14,7 @@ from sqlalchemy.sql.elements import ColumnClause
 from sqlalchemy.sql.util import ClauseAdapter, surface_selectables
 
 from strawchemy.dto.inspectors import SQLAlchemyInspector
-from strawchemy.transpiler._core.attach import attach_rows
+from strawchemy.transpiler._core.attach import attach_rows, attach_shared_rows
 from strawchemy.transpiler._core.plan import QueryPlan
 from strawchemy.transpiler._core.render import adapt_clauses, clause_element, render_rows, same_column
 from strawchemy.transpiler._core.rewrite import PlanRewriter
@@ -28,10 +28,12 @@ if TYPE_CHECKING:
     from sqlalchemy.sql import ColumnElement
     from sqlalchemy.sql.visitors import ExternallyTraversible
 
+    from strawchemy.transpiler._core.attach import RankWindow
     from strawchemy.transpiler._core.level import Level
+    from strawchemy.transpiler._core.rowset import Join
     from strawchemy.transpiler.hook import QueryHook
 
-__all__ = ("materialize",)
+__all__ = ("materialize", "materialize_shared")
 
 
 class _Rebase(PlanRewriter):
@@ -103,14 +105,12 @@ def _materialize(level: Level, rows: RowSet, projection: Projection) -> QueryPla
             db_features,
             is_outer=True,
         )
-        assert join.alias is not None
-        entities = _entities_over(_selectable(join.target), row_aliases, {rows.source: join.alias})
-        join = replace(join, alias=entities[rows.source])
-        projection = _Rebase(_selectable(join.target), rows, entities).projection(projection)
+        join, projection = _rebased(join, rows, projection, row_aliases)
         # This level's own ordering goes before that of the relations below it, already in the projection.
         own_order_by = tuple((OrderPriority.CLIENT, term) for term in order_by)
         projection = replace(projection, order_by=(*own_order_by, *projection.order_by))
-        return QueryPlan(RowSet.over(entities[rows.source]), projection, level.context, join_to_parent=join)
+        assert join.alias is not None
+        return QueryPlan(RowSet.over(join.alias), projection, level.context, join_to_parent=join)
     rendered = render_rows(rows, exported, db_features)
     page = rendered.statement.subquery(level.request.model.__tablename__)
     entities = _entities_over(page, row_aliases)
@@ -118,6 +118,16 @@ def _materialize(level: Level, rows: RowSet, projection: Projection) -> QueryPla
         OrderPriority.CLIENT, *adapt_clauses(rendered.order_by, page)
     )
     return QueryPlan(page_rows, _Rebase(page, rows, entities).projection(projection), level.context)
+
+
+def _rebased(
+    join: Join, rows: RowSet, projection: Projection, row_aliases: Sequence[AliasedClass[Any]]
+) -> tuple[Join, Projection]:
+    """Moves ``projection`` onto the target of ``join``, which renders ``rows``, and gives ``join`` its entity."""
+    assert join.alias is not None
+    entities = _entities_over(_selectable(join.target), row_aliases, {rows.source: join.alias})
+    join = replace(join, alias=entities[rows.source])
+    return join, _Rebase(_selectable(join.target), rows, entities).projection(projection)
 
 
 def _row_aliases(rows: RowSet) -> list[AliasedClass[Any]]:
@@ -220,3 +230,20 @@ def materialize(level: Level, rows: RowSet, projection: Projection) -> QueryPlan
     """
     plan = _materialize(level, rows, projection)
     return share_ctes(plan) if level.kind == "root" else plan
+
+
+def materialize_shared(
+    parent: Level, rows: RowSet, projection: Projection, windows: Sequence[RankWindow]
+) -> tuple[Join, Projection]:
+    """Joins ``rows``, read once for the nodes of ``windows``, to ``parent``, and moves what they read onto it.
+
+    Returns:
+        The join, and ``projection`` with the page of each node.
+    """
+    row_aliases = _row_aliases(rows)
+    exported = _read_columns(projection, rows, row_aliases)
+    relation = windows[0].node.value.model_field
+    db_features = parent.context.db_features
+    join, pages = attach_shared_rows(rows, windows, exported, relation, parent.alias, db_features, is_outer=True)
+    join, projection = _rebased(join, rows, projection, row_aliases)
+    return join, replace(projection, pages={**projection.pages, **pages})

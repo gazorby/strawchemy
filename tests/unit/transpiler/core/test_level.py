@@ -3,21 +3,25 @@
 from __future__ import annotations
 
 import typing
+from dataclasses import replace
+from functools import partial
 from typing import Any, cast
 
 from sqlalchemy import inspect
 from sqlalchemy.dialects import postgresql, sqlite
+from sqlalchemy.orm import aliased
 
 from strawchemy import Strawchemy
 from strawchemy.dto.strawberry import QueryNode
 from strawchemy.schema.filters.inputs import TextComparison
-from strawchemy.transpiler._core.level import Level, PlanContext
+from strawchemy.transpiler._core.level import Level, PlanContext, _same_rows
 from strawchemy.transpiler._core.pipeline import Pipeline, Pipelines
 from strawchemy.transpiler._core.render import clause_element
 from strawchemy.transpiler._core.request import QueryRequest
-from strawchemy.transpiler._core.rowset import AggregateJoin, Projection, RowSet
+from strawchemy.transpiler._core.rowset import AggregateJoin, Join, OrderPriority, Projection, RowSet
+from strawchemy.transpiler.hook import QueryHook
 from strawchemy.typing import QueryNodeType
-from tests.unit.models import Color, SQLDataTypes, User
+from tests.unit.models import Color, Fruit, SQLDataTypes, User
 from tests.utils import as_dto
 
 if typing.TYPE_CHECKING:
@@ -247,3 +251,29 @@ def test_projected_aggregate_joins_on_the_projection() -> None:
     assert isinstance(join, AggregateJoin)
     assert column is join.columns[count.node]
     assert not rows.joins
+
+
+def test_same_rows_ignores_order_and_page() -> None:
+    """Rows differing in ORDER BY, limit and offset only, with partials of one hook on one alias, are the same rows."""
+    fruit = aliased(Fruit.__mapper__, flat=True)
+    hook = QueryHook[Fruit]()
+    first = RowSet.over(fruit).with_edit(partial(hook.apply_hook, alias=fruit))
+    second = replace(
+        RowSet.over(fruit).with_edit(partial(hook.apply_hook, alias=fruit)), limit=2, offset=1
+    ).with_order_by(OrderPriority.CLIENT, fruit.name.asc())
+
+    assert _same_rows(first, first)
+    assert _same_rows(first, second)
+
+
+def test_same_rows_tells_other_edits_and_joins_apart() -> None:
+    """Rows whose hook runs on another alias, or with a join of their own, are other rows."""
+    fruit, other = aliased(Fruit.__mapper__, flat=True), aliased(Fruit.__mapper__, flat=True)
+    hook = QueryHook[Fruit]()
+    rows = RowSet.over(fruit).with_edit(partial(hook.apply_hook, alias=fruit))
+    color = aliased(Color.__mapper__, flat=True)
+    joined = rows.with_join(Join(("relation", cast("Any", object())), color, None, True, color))
+
+    assert not _same_rows(rows, RowSet.over(fruit).with_edit(partial(hook.apply_hook, alias=other)))
+    assert not _same_rows(rows, RowSet.over(fruit).with_edit(lambda statement: statement))
+    assert not _same_rows(rows, joined)

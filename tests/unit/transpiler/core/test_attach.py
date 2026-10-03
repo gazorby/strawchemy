@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
-from sqlalchemy import func, select
+from sqlalchemy import func, inspect, select
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.exc import SAWarning
 from sqlalchemy.orm import aliased
@@ -16,7 +16,13 @@ from sqlalchemy.sql.compiler import FROM_LINTING
 
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.exceptions import TranspilingError
-from strawchemy.transpiler._core.attach import attach_grouped, attach_rows, correlate_relation
+from strawchemy.transpiler._core.attach import (
+    RankWindow,
+    attach_grouped,
+    attach_rows,
+    attach_shared_rows,
+    correlate_relation,
+)
 from strawchemy.transpiler._core.rowset import AggregateJoin, Join, OrderPriority, RowSet
 from tests.unit.models import Color, Department, Fruit, User
 from tests.utils import format_sql
@@ -347,3 +353,136 @@ def test_attach_rows_secondary_relation_without_lateral_is_unsupported() -> None
 
     with pytest.raises(TranspilingError, match="without LATERAL"):
         attach_rows(rows, _node(), [target.id], User.departments, parent, SQLITE, is_outer=True)
+
+
+def test_attach_shared_rows_lateral_pages() -> None:
+    """One LATERAL ranks the rows once per window, keeps those inside a page, and each page reads its rank from it."""
+    parent = aliased(Color.__mapper__, name="color")
+    target = aliased(Fruit.__mapper__, name="fruit_1")
+    first, second = _node(), _node()
+    windows = [
+        RankWindow(first, (target.sweetness.asc(),), None, 2),
+        RankWindow(second, (target.sweetness.desc(),), 5, 5),
+    ]
+
+    join, pages = attach_shared_rows(
+        RowSet.over(target), windows, [target.name, target.id], Color.fruits, parent, POSTGRES, is_outer=True
+    )
+
+    assert join.key == ("relation", first)
+    assert join.is_outer is True
+    assert join.alias is not None
+    assert inspect(join.alias).selectable is join.target
+    assert [(page.offset, page.limit) for page in pages.values()] == [(None, 2), (5, 5)]
+    assert all(any(page.rank is column for column in join.target.c) for page in pages.values())
+    sql = _sql(_outer(parent, join, join.alias.name, *(page.rank for page in pages.values())), POSTGRES)
+    assert "WHERE color.id = fruit_1.color_id" in sql
+    assert "row_number() OVER (ORDER BY fruit_1.sweetness ASC, fruit_1.id ASC) AS rank_1" in sql
+    assert "row_number() OVER (ORDER BY fruit_1.sweetness DESC, fruit_1.id ASC) AS rank_2" in sql
+    assert "WHERE anon_2.rank_1 <= 2 OR anon_2.rank_2 > 5 AND anon_2.rank_2 <= 10" in sql
+    assert sql.endswith(") AS anon_1 ON TRUE")
+
+
+def test_attach_shared_rows_unbounded_window_keeps_every_row() -> None:
+    """A window without offset or limit needs every ranked row: the LATERAL is the ranked SELECT itself."""
+    parent = aliased(Color.__mapper__, name="color")
+    target = aliased(Fruit.__mapper__, name="fruit_1")
+    windows = [
+        RankWindow(_node(), (target.sweetness.asc(),), None, 2),
+        RankWindow(_node(), (target.id.asc(),), None, None),
+    ]
+
+    join, _ = attach_shared_rows(
+        RowSet.over(target), windows, [target.id], Color.fruits, parent, POSTGRES, is_outer=True
+    )
+
+    sql = _sql(_outer(parent, join), POSTGRES)
+    assert sql.count("SELECT") == 2
+    assert "rank_1 <=" not in sql
+
+
+def test_attach_shared_rows_cte_pages() -> None:
+    """Without LATERAL, one CTE ranks the rows once per window per parent, joined on the OR of the pages."""
+    parent = aliased(Color.__mapper__, name="color")
+    target = aliased(Fruit.__mapper__, name="fruit_1")
+    first, second = _node(), _node()
+    windows = [
+        RankWindow(first, (target.sweetness.asc(),), None, 2),
+        RankWindow(second, (target.sweetness.desc(),), 5, 5),
+    ]
+
+    join, pages = attach_shared_rows(
+        RowSet.over(target), windows, [target.name, target.id], Color.fruits, parent, SQLITE, is_outer=True
+    )
+
+    assert join.key == ("relation", first)
+    assert join.is_outer is True
+    assert join.alias is not None
+    cte = inspect(join.alias).selectable
+    assert [(page.offset, page.limit) for page in pages.values()] == [(None, 2), (5, 5)]
+    assert all(any(page.rank is column for column in cte.c) for page in pages.values())
+    sql = _sql(_outer(parent, join, join.alias.name, *(page.rank for page in pages.values())), SQLITE)
+    assert sql.count("dense_rank()") == 2
+    assert (
+        "dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id ASC) AS rank_1"
+        in sql
+    )
+    assert (
+        "dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id ASC) AS rank_2"
+        in sql
+    )
+    assert sql.endswith(
+        "ON color.id = anon_1.color_id AND (anon_1.rank_1 <= 2 OR anon_1.rank_2 > 5 AND anon_1.rank_2 <= 10)"
+    )
+
+
+def test_attach_shared_rows_cte_unbounded_window_keeps_every_row() -> None:
+    """Without LATERAL, a window without offset or limit joins every ranked row, on the relationship alone."""
+    parent = aliased(Color.__mapper__, name="color")
+    target = aliased(Fruit.__mapper__, name="fruit_1")
+    windows = [
+        RankWindow(_node(), (target.sweetness.asc(),), None, 2),
+        RankWindow(_node(), (target.id.asc(),), None, None),
+    ]
+
+    join, pages = attach_shared_rows(
+        RowSet.over(target), windows, [target.id], Color.fruits, parent, SQLITE, is_outer=True
+    )
+
+    sql = _sql(_outer(parent, join), SQLITE)
+    assert sql.count("dense_rank()") == 2
+    assert sql.endswith("ON color.id = anon_1.color_id")
+    assert [(page.offset, page.limit) for page in pages.values()] == [(None, 2), (None, None)]
+
+
+def test_attach_shared_rows_cte_offset_without_limit() -> None:
+    """Without LATERAL, a window with an offset and no limit keeps the ranks after the offset inside the OR."""
+    parent = aliased(Color.__mapper__, name="color")
+    target = aliased(Fruit.__mapper__, name="fruit_1")
+    windows = [
+        RankWindow(_node(), (target.sweetness.asc(),), None, 2),
+        RankWindow(_node(), (target.id.asc(),), 3, None),
+    ]
+
+    join, _ = attach_shared_rows(RowSet.over(target), windows, [target.id], Color.fruits, parent, SQLITE, is_outer=True)
+
+    assert _sql(_outer(parent, join), SQLITE).endswith(
+        "ON color.id = anon_1.color_id AND (anon_1.rank_1 <= 2 OR anon_1.rank_2 > 3)"
+    )
+
+
+def test_attach_shared_rows_ranks_equal_nodes_once() -> None:
+    """Two windows of one node, whose arguments and so whose windows are equal, share one rank column."""
+    parent = aliased(Color.__mapper__, name="color")
+    target = aliased(Fruit.__mapper__, name="fruit_1")
+    node = _node()
+    windows = [RankWindow(node, (target.id.asc(),), None, None), RankWindow(node, (target.id.asc(),), None, None)]
+
+    join, pages = attach_shared_rows(
+        RowSet.over(target), windows, [target.id], Color.fruits, parent, POSTGRES, is_outer=True
+    )
+
+    assert list(pages) == [node]
+    sql = _sql(_outer(parent, join), POSTGRES)
+    assert sql.count("row_number()") == 1
+    assert "row_number() OVER (ORDER BY fruit_1.id ASC) AS rank_1" in sql

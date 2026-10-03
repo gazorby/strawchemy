@@ -22,6 +22,7 @@ if TYPE_CHECKING:
 
 __all__ = (
     "AggregateJoin",
+    "AliasPage",
     "Join",
     "JoinKey",
     "JoinKind",
@@ -67,6 +68,19 @@ class AggregateJoin(Join):
     """A join to the grouped aggregates of a node; ``columns`` maps each function node to its column on ``target``."""
 
     columns: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class AliasPage:
+    """The objects a relation node keeps of the rows of an entity it may share, by the ``rank`` of each object."""
+
+    rank: ColumnElement[int]
+    offset: int | None
+    limit: int | None
+
+    def contains(self, rank: int) -> bool:
+        offset = self.offset or 0
+        return offset < rank and (self.limit is None or rank <= offset + self.limit)
 
 
 @dataclass(frozen=True)
@@ -146,6 +160,7 @@ class Projection:
     column_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
     identity_columns: Mapping[QueryNodeType, tuple[ColumnElement[Any], ...]] = field(default_factory=dict)
     root_aggregations: tuple[Label[Any], ...] = ()
+    pages: Mapping[QueryNodeType, AliasPage] = field(default_factory=dict)
 
     @classmethod
     def over(cls, root_node: QueryNodeType, alias: AliasedClass[Any]) -> Self:
@@ -178,6 +193,9 @@ class Projection:
     def with_order_by(self, priority: OrderPriority, *expressions: UnaryExpression[Any]) -> Projection:
         return replace(self, order_by=_with_order_by(self.order_by, priority, expressions))
 
+    def with_page(self, node: QueryNodeType, page: AliasPage) -> Projection:
+        return replace(self, pages={**self.pages, node: page})
+
     def merge(self, other: Projection) -> Projection:
         """Unions every mapping and tuple of ``other`` after those of ``self``."""
         joins = self.joins
@@ -199,6 +217,7 @@ class Projection:
             column_map={**self.column_map, **other.column_map},
             identity_columns={**self.identity_columns, **other.identity_columns},
             root_aggregations=(*self.root_aggregations, *other.root_aggregations),
+            pages={**self.pages, **other.pages},
         )
 
 

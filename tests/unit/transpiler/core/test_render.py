@@ -9,14 +9,14 @@ from typing import TYPE_CHECKING, Any, cast
 import pytest
 from sqlalchemy import func, select, true
 from sqlalchemy.dialects import mysql, postgresql, sqlite
-from sqlalchemy.orm import aliased
+from sqlalchemy.orm import Load, aliased, load_only
 
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.dto.strawberry import OrderByEnum
 from strawchemy.exceptions import TranspilingError
 from strawchemy.transpiler._core.plan import QueryPlan
 from strawchemy.transpiler._core.render import order_terms, render_plan, render_rows, same_column
-from strawchemy.transpiler._core.rowset import AggregateJoin, Join, OrderPriority, Projection, RowSet
+from strawchemy.transpiler._core.rowset import AggregateJoin, AliasPage, Join, OrderPriority, Projection, RowSet
 from tests.unit.models import Color, Fruit
 from tests.utils import format_sql
 
@@ -194,6 +194,79 @@ def test_render_plan_selects_entities_columns_and_options() -> None:
     assert sql.index("color.name") < sql.index("total")
     assert "WHERE color.name = 'red'" in sql
     assert len(statement._with_options) == 2  # noqa: SLF001
+
+
+def test_render_plan_selects_a_shared_entity_once() -> None:
+    """Two nodes on one entity select its columns once, and each page's rank column with the projection columns."""
+    color, fruit = aliased(Color.__mapper__, name="color"), aliased(Fruit.__mapper__, name="fruit")
+    root, first, second = _node(), _node(1), _node(1)
+    rank = func.row_number().over(order_by=fruit.name).label("fruit_rank")
+    projection = Projection.over(root, color).with_page(second, AliasPage(rank, None, 2))
+    plan = QueryPlan(
+        rows=RowSet.over(color),
+        projection=replace(projection, entities={**projection.entities, first: fruit, second: fruit}),
+        context=cast("Any", SimpleNamespace(db_features=POSTGRES, dialect="postgresql")),
+    )
+
+    statement = render_plan(plan)
+
+    selected = _sql(statement, POSTGRES).split(" FROM ")[0]
+    assert selected.count("fruit.id") == 1
+    assert "fruit_rank" in selected
+
+
+def test_render_plan_selects_each_rank_object() -> None:
+    """A rank equal to a selected column, but another object, is selected too: the executor reads it by object."""
+    color, fruit = aliased(Color.__mapper__, name="color"), aliased(Fruit.__mapper__, name="fruit")
+    root, first, second = _node(), _node(1), _node(1)
+    first_rank = fruit.sweetness.label("rank")
+    second_rank = fruit.sweetness.label("rank")
+    projection = (
+        Projection.over(root, color)
+        .with_columns(first_rank)
+        .with_page(first, AliasPage(first_rank, None, 2))
+        .with_page(second, AliasPage(second_rank, None, 3))
+    )
+    plan = QueryPlan(
+        rows=RowSet.over(color),
+        projection=replace(projection, entities={**projection.entities, first: fruit, second: fruit}),
+        context=cast("Any", SimpleNamespace(db_features=POSTGRES, dialect="postgresql")),
+    )
+
+    selected = list(render_plan(plan).selected_columns)
+
+    assert [column for column in selected if column is first_rank] == [first_rank]
+    assert [column for column in selected if column is second_rank] == [second_rank]
+
+
+def test_render_plan_merges_loader_options_of_a_shared_entity() -> None:
+    """Nodes on one entity load the union of their keys and their hooks through one option on that entity."""
+    color, fruit = aliased(Color.__mapper__, name="color"), aliased(Fruit.__mapper__, name="fruit")
+    root, first, second = _node(), _node(1), _node(1)
+    hook = SimpleNamespace(
+        column_load_options=lambda alias: [load_only(alias.color_id)], load_relationships=lambda _: []
+    )
+    projection = (
+        Projection.over(root, color)
+        .with_loaded(first, "id", "name")
+        .with_loaded(second, "id", "sweetness")
+        .with_hooks(first, cast("Any", hook))
+        .with_hooks(second, cast("Any", hook))
+    )
+    plan = QueryPlan(
+        rows=RowSet.over(color),
+        projection=replace(projection, entities={**projection.entities, first: fruit, second: fruit}),
+        context=cast("Any", SimpleNamespace(db_features=POSTGRES, dialect="postgresql")),
+    )
+
+    options = render_plan(plan)._with_options  # noqa: SLF001
+
+    assert len(options) == 2
+    scoped = cast("Load", options[1])
+    undeferred = [
+        cast("Any", load.path[-1]).key for load in scoped.context if dict(load.strategy or ()).get("deferred") is False
+    ]
+    assert undeferred == ["id", "name", "sweetness", "color_id"]
 
 
 def test_render_plan_keeps_projection_order_by_in_insertion_order() -> None:

@@ -55,15 +55,22 @@ class Pipeline:
             seen.add(pass_type)
 
     def plan(self, level: Level) -> QueryPlan:
-        rows = RowSet.over(level.alias)
-        for pass_ in self.passes:
-            rows = pass_.rows(level, rows)
+        rows = self.rows(level)
+        return level.materialize(rows, self.project(level, rows))
 
+    def project(self, level: Level, rows: RowSet) -> Projection:
+        """Runs every projection stage on the finished ``rows``."""
         projection = Projection.over(level.node, level.alias)
         for pass_ in self.passes:
             projection = pass_.project(level, rows, projection)
+        return projection
 
-        return level.materialize(rows, projection)
+    def rows(self, level: Level) -> RowSet:
+        """Runs every rows stage."""
+        rows = RowSet.over(level.alias)
+        for pass_ in self.passes:
+            rows = pass_.rows(level, rows)
+        return rows
 
     def replace(self, old: type[Pass], new: Pass) -> Pipeline:
         """Returns a pipeline with ``new`` in place of the pass of type ``old``."""

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field, replace
+from functools import partial
 from typing import TYPE_CHECKING, Any, Literal, TypeVar, cast
 
 from sqlalchemy import and_, func, inspect, literal_column, not_, select, true
@@ -13,9 +15,9 @@ from sqlalchemy.orm import QueryableAttribute, RelationshipProperty, aliased
 from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector, SQLAlchemyInspector
 from strawchemy.exceptions import TranspilingError
 from strawchemy.transpiler._core import functions
-from strawchemy.transpiler._core.attach import attach_grouped, correlate_relation
-from strawchemy.transpiler._core.materialize import materialize
-from strawchemy.transpiler._core.render import clause_element, render_rows
+from strawchemy.transpiler._core.attach import RankWindow, attach_grouped, correlate_relation
+from strawchemy.transpiler._core.materialize import materialize, materialize_shared
+from strawchemy.transpiler._core.render import clause_element, priority_sorted, render_rows
 from strawchemy.transpiler._core.request import QueryRequest
 from strawchemy.transpiler._core.rowset import AggregateJoin, Join, Projection, RowSet
 from strawchemy.utils.postgres import as_jsonb
@@ -23,7 +25,7 @@ from strawchemy.utils.postgres import as_jsonb
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from sqlalchemy import Dialect, Select
+    from sqlalchemy import Dialect, Label, Select
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement
@@ -33,7 +35,7 @@ if TYPE_CHECKING:
     from strawchemy.transpiler._core.functions import AggregateFunction
     from strawchemy.transpiler._core.pipeline import Pipelines
     from strawchemy.transpiler._core.plan import QueryPlan
-    from strawchemy.transpiler._core.rowset import JoinKey
+    from strawchemy.transpiler._core.rowset import JoinKey, StatementEdit
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.typing import OrderByExpr, QueryNodeType, SupportedDialect
 
@@ -145,15 +147,24 @@ class Level:
         is_outer = node not in self.request.filter_split.join_path
         return Join(("relation", node), target, onclause, is_outer, target)
 
-    def _aggregate_join(self, aggregation_node: QueryNodeType, parent_alias: AliasedClass[Any]) -> AggregateJoin:
-        """Builds the join computing every function the request uses on ``aggregation_node``, at once."""
+    def _aggregate_join(
+        self,
+        aggregation_node: QueryNodeType,
+        parent_alias: AliasedClass[Any],
+        computed: Mapping[QueryNodeType, AggregateFunction] | None = None,
+    ) -> AggregateJoin:
+        """Builds the join computing ``computed``, by default every function the request uses on the node."""
         relation: QueryableAttribute[Any] = aggregation_node.value.model_field
         relationship = cast("RelationshipProperty[Any]", relation.property)
         function_alias = aliased(relationship.mapper, flat=True)
-        labels = {
-            function_node: functions.build(function, function_alias, self._dialect)
-            for function_node, function in self.request.aggregate_functions(aggregation_node).items()
-        }
+        if computed is None:
+            computed = self.request.aggregate_functions(aggregation_node)
+        calls: dict[tuple[Any, ...], Label[Any]] = {}
+        labels: dict[QueryNodeType, Label[Any]] = {}
+        for function_node, function in computed.items():
+            if (call := _call(function)) not in calls:
+                calls[call] = functions.build(function, function_alias, self._dialect)
+            labels[function_node] = calls[call]
         return attach_grouped(
             labels, aggregation_node, relation, parent_alias, function_alias, self.context.db_features
         )
@@ -171,7 +182,16 @@ class Level:
         alias: AliasedClass[Any],
         row_joins: Mapping[JoinKey, Join] | None = None,
     ) -> QueryPlan:
-        child = Level(
+        return self.context.pipelines.relation.plan(self._relation_level(node, request, alias, row_joins))
+
+    def _relation_level(
+        self,
+        node: QueryNodeType,
+        request: QueryRequest,
+        alias: AliasedClass[Any],
+        row_joins: Mapping[JoinKey, Join] | None = None,
+    ) -> Level:
+        return Level(
             request=request,
             context=self.context,
             node=node,
@@ -180,7 +200,49 @@ class Level:
             kind="relation",
             row_joins=row_joins or {},
         )
-        return self.context.pipelines.relation.plan(child)
+
+    def _sibling_joins(self, requests: Sequence[QueryRequest]) -> dict[JoinKey, Join]:
+        """Builds one join per relation path that several sibling ``requests`` read, keyed under each reading node."""
+        by_relation: dict[tuple[bool, QueryableAttribute[Any]], list[tuple[QueryNodeType, QueryRequest]]] = {}
+        for request in requests:
+            relations = Counter(
+                child.value.model_field
+                for child in request.selection.children
+                if child.value.is_relation and not child.value.is_computed
+            )
+            for child in request.selection.children:
+                # ``plan_child`` reuses a relation join only for a relation without arguments or hooks of its own, and
+                # not aliased in its parent, whose aliases ``plan_siblings`` plans under a join key of their own.
+                if child.value.is_aggregate or (
+                    child.value.is_relation
+                    and not child.value.is_computed
+                    and relations[child.value.model_field] == 1
+                    and not QueryRequest.for_relation(child).orders_rows
+                    and not self.hooks(child)
+                ):
+                    key = (child.value.is_aggregate, child.value.model_field)
+                    by_relation.setdefault(key, []).append((child, request))
+        joins: dict[JoinKey, Join] = {}
+        for (is_aggregate, _), readers in by_relation.items():
+            if len(readers) < 2:  # noqa: PLR2004
+                continue
+            first = readers[0][0]
+            if is_aggregate:
+                computed = {
+                    function_node: function
+                    for child, request in readers
+                    for function_node, function in request.aggregate_functions(child).items()
+                }
+                join: Join = self._aggregate_join(first, self.alias, computed)
+            else:
+                join = self._relation_join(first, self.alias)
+            joins.update({(join.key[0], child): join for child, _ in readers})
+            if not is_aggregate:
+                assert join.alias is not None
+                child_requests = [QueryRequest.for_relation(child) for child, _ in readers]
+                child_level = self._relation_level(first, child_requests[0], join.alias)
+                joins.update(child_level._sibling_joins(child_requests))  # noqa: SLF001
+        return joins
 
     def _plain_join(self, node: QueryNodeType, rows: RowSet) -> Join:
         """Left-joins the inlined ``rows`` of relation ``node``, their WHERE and their hooks' in the ON clause."""
@@ -243,6 +305,11 @@ class Level:
             statement = select(literal_column("1")).select_from(derived)
         correlation = [column == getattr(self.alias, key) for column, key in zip(matched, keys, strict=True)]
         return statement.where(and_(*correlation)).exists().correlate(self.alias)
+
+    def _plan_children(self, nodes: Sequence[QueryNodeType], rows: RowSet, projection: Projection) -> Projection:
+        for node in nodes:
+            projection = self.plan_child(node, rows, projection)
+        return projection
 
     @classmethod
     def root(cls, request: QueryRequest, context: PlanContext) -> Level:
@@ -328,6 +395,31 @@ class Level:
         join = plan.join_to_parent or self._plain_join(node, plan.rows)
         return projection.with_join(join).merge(plan.projection)
 
+    def plan_siblings(self, nodes: tuple[QueryNodeType, ...], rows: RowSet, projection: Projection) -> Projection:
+        """Plans ``nodes``, aliases of one relation of this level's model, as one read merged into ``projection``."""
+        pipeline = self.context.pipelines.relation
+        relationship = cast("RelationshipProperty[Any]", nodes[0].value.model_field.property)
+        target = aliased(relationship.mapper, flat=True)
+        requests = [QueryRequest.for_relation(node) for node in nodes]
+        levels = [self._relation_level(node, request, target) for node, request in zip(nodes, requests, strict=True)]
+        level_rows = [pipeline.rows(level) for level in levels]
+        shared = replace(level_rows[0], order_by=(), limit=None, offset=None)
+        # Ranks are computed before an edit's LIMIT, DISTINCT or GROUP BY, which would then keep arbitrary rows.
+        if shared.edits_shape_rows() or not all(_same_rows(alias_rows, shared) for alias_rows in level_rows):
+            return self._plan_children(nodes, rows, projection)
+        joins = levels[0]._sibling_joins(requests)  # noqa: SLF001
+        merged = Projection()
+        windows: list[RankWindow] = []
+        for level, alias_rows in zip(levels, level_rows, strict=True):
+            merged = merged.merge(pipeline.project(replace(level, row_joins=joins), alias_rows))
+            order_by = tuple(term for _, term in priority_sorted(alias_rows.order_by))
+            # An offset of 0 bounds nothing; as a bound it would keep the page filter that an unbounded alias drops.
+            windows.append(RankWindow(level.node, order_by, alias_rows.offset or None, alias_rows.limit))
+        for join in {id(join): join for join in joins.values()}.values():
+            merged = merged.with_join(join)
+        join, shared_projection = materialize_shared(self, shared, merged, windows)
+        return projection.with_join(join).merge(shared_projection)
+
     def plan_exists(self, dto_filter: BooleanFilterDTO, *, negated: bool = False) -> ColumnElement[bool]:
         """Returns an EXISTS testing ``dto_filter`` on the relations of this level's rows, correlated to its alias.
 
@@ -377,6 +469,11 @@ def _aggregate_column(join: Join, function: AggregateFunction) -> ColumnElement[
     return join.columns[function.node]
 
 
+def _call(function: AggregateFunction) -> tuple[Any, ...]:
+    """Returns what tells the SQL calls of two functions apart, so that two nodes asking for one share its column."""
+    return function.name, tuple(argument.value.model_field_name for argument in function.arguments), function.distinct
+
+
 def _extract_json(attribute: QueryableAttribute[Any], json_path: str, dialect: SupportedDialect) -> ColumnElement[Any]:
     """Extracts ``json_path`` from a JSON column, giving an empty object when the value is missing."""
     if dialect == "postgresql":
@@ -387,6 +484,36 @@ def _extract_json(attribute: QueryableAttribute[Any], json_path: str, dialect: S
     else:
         transform = func.coalesce(attribute.op("->")(json_path), func.json_object())
     return transform.label(None)
+
+
+def _same_edit(left: StatementEdit, right: StatementEdit) -> bool:
+    """Tells whether two edits are one, or partials of one function with the same arguments, as hooks' are."""
+    if left is right:
+        return True
+    return (
+        isinstance(left, partial)
+        and isinstance(right, partial)
+        and left.func == right.func
+        and _same_objects(left.args, right.args)
+        and left.keywords.keys() == right.keywords.keys()
+        and all(left.keywords[name] is right.keywords[name] for name in left.keywords)
+    )
+
+
+def _same_objects(left: Sequence[object], right: Sequence[object]) -> bool:
+    return len(left) == len(right) and all(first is second for first, second in zip(left, right, strict=True))
+
+
+def _same_rows(left: RowSet, right: RowSet) -> bool:
+    """Tells whether ``left`` and ``right`` select the same rows, whatever their order, limit and offset."""
+    return (
+        left.source is right.source
+        and _same_objects(tuple(left.joins.values()), tuple(right.joins.values()))
+        and _same_objects(left.where, right.where)
+        and _same_objects(left.distinct_on, right.distinct_on)
+        and len(left.edits) == len(right.edits)
+        and all(_same_edit(first, second) for first, second in zip(left.edits, right.edits, strict=True))
+    )
 
 
 def _is_bare(rows: RowSet) -> bool:

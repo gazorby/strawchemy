@@ -98,4 +98,5 @@ class PlanRewriter(ABC):
                 node: tuple(map(self._expression, columns)) for node, columns in projection.identity_columns.items()
             },
             root_aggregations=tuple(map(self._expression, projection.root_aggregations)),
+            pages={node: replace(page, rank=self._expression(page.rank)) for node, page in projection.pages.items()},
         )

@@ -31,6 +31,12 @@ class SweetFruitHook(QueryHook[Fruit]):
         return statement.where(alias.sweetness > 5)
 
 
+class FirstFruitsHook(QueryHook[Fruit]):
+    @override
+    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+        return statement.order_by(alias.name.asc()).limit(3)
+
+
 class VisibleColorHook(QueryHook[Color]):
     @override
     def apply_hook(self, statement: Select[tuple[Color]], alias: AliasedClass[Color]) -> Select[tuple[Color]]:
@@ -68,6 +74,10 @@ class ColorType: ...
 class ColorPaginatedFruitsType: ...
 
 
+@strawchemy.type(Color, include="all", order="all", paginate=["fruits"])
+class ColorOrderedPaginatedFruitsType: ...
+
+
 @strawchemy.aggregate(Color, include="all")
 class ColorAggregationType: ...
 
@@ -92,6 +102,20 @@ class ColorOrder: ...
 @strawchemy.type(Color, include="all")
 class ColorSweetFruitsType:
     fruits: list[FruitType] = strawchemy.field(query_hook=SweetFruitHook())
+
+
+@strawchemy.order(Fruit, include="all")
+class FruitOrder: ...
+
+
+@strawchemy.type(Color, include="all")
+class ColorOrderedSweetFruitsType:
+    fruits: list[FruitType] = strawchemy.field(query_hook=SweetFruitHook(), order_by_input=FruitOrder)
+
+
+@strawchemy.type(Color, include="all")
+class ColorOrderedFirstFruitsType:
+    fruits: list[FruitType] = strawchemy.field(query_hook=FirstFruitsHook(), order_by_input=FruitOrder)
 
 
 @strawchemy.type(Fruit, include="all", query_hook=ColoredFruitHook(load=[Fruit.sweetness]))
@@ -120,6 +144,10 @@ class GroupNameOrderedColorType:
     color: ColorType = strawchemy.field(query_hook=NameOrderedColorHook())
 
 
+@strawchemy.type(Group, include="all", order="all")
+class GroupOrderedUsersType: ...
+
+
 @strawchemy.filter(Group, include="all")
 class GroupFilter: ...
 
@@ -137,13 +165,17 @@ class Query:
     color_aggregations_paginated: ColorAggregationType = strawchemy.field(root_aggregations=True, pagination=True)
     colors_custom_filter: list[ColorType] = strawchemy.field(filter_input=ColorCustomFilter)
     colors_paginated_fruits: list[ColorPaginatedFruitsType] = strawchemy.field()
+    colors_ordered_paginated_fruits: list[ColorOrderedPaginatedFruitsType] = strawchemy.field()
     colors_by_name_desc: list[ColorType] = strawchemy.field(
         order_by_input=ColorOrder, default_order_by=[Color.name.desc()]
     )
     colors_distinct: list[ColorType] = strawchemy.field(order_by_input=ColorOrder, distinct_on="all")
     groups: list[GroupType] = strawchemy.field(filter_input=GroupFilter)
     groups_paginated: list[GroupType] = strawchemy.field(order_by_input=GroupOrder, pagination=True)
+    groups_ordered_users: list[GroupOrderedUsersType] = strawchemy.field()
     colors_sweet_fruits: list[ColorSweetFruitsType] = strawchemy.field()
+    colors_ordered_sweet_fruits: list[ColorOrderedSweetFruitsType] = strawchemy.field()
+    colors_ordered_first_fruits: list[ColorOrderedFirstFruitsType] = strawchemy.field()
     colored_fruits: list[ColoredFruitType] = strawchemy.field()
     colored_fruits_paginated: list[ColoredFruitType] = strawchemy.field(pagination=True)
     groups_visible_color: list[GroupVisibleColorType] = strawchemy.field(filter_input=GroupFilter)
