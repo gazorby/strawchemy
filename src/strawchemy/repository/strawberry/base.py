@@ -37,7 +37,7 @@ from strawchemy.repository.strawberry._node import StrawberryQueryNode
 from strawchemy.schema.mutation import error_type_names
 from strawchemy.transpiler import QueryHook
 from strawchemy.utils.graph import NodeMetadata
-from strawchemy.utils.strawberry import dto_model_from_type, strawberry_contained_user_type
+from strawchemy.utils.strawberry import dto_model_from_type, response_path, strawberry_contained_user_type
 from strawchemy.utils.text import camel_to_snake, snake_keys
 
 if TYPE_CHECKING:
@@ -198,7 +198,13 @@ class StrawchemyRepository(Generic[T]):
             self._add_query_hooks(self.query_hook, node)
             for hook in self._query_hooks[node]:
                 hook.check_model(model)
-        self._build(inner_root_type, _composite_type(self._raw_info.return_type), root_selections, node)
+        self._build(
+            inner_root_type,
+            _composite_type(self._raw_info.return_type),
+            root_selections,
+            node,
+            response_path(self.info),
+        )
         self._tree = node
 
     @property
@@ -280,6 +286,7 @@ class StrawchemyRepository(Generic[T]):
         graphql_type: GraphQLCompositeType,
         selections: Sequence[SelectionNode],
         node: QueryNodeType,
+        path: tuple[str, ...],
     ) -> None:
         selection_type = strawberry_contained_user_type(strawberry_type)
         if isinstance(selection_type, LazyType):
@@ -294,7 +301,7 @@ class StrawchemyRepository(Generic[T]):
             if isinstance(selection, (FragmentSpreadNode, InlineFragmentNode)):
                 fragment_type, fragment_selections = self._fragment_selection(selection, graphql_type)
                 if fragment_type.name not in error_type_names():
-                    self._build(strawberry_type, fragment_type, fragment_selections, node)
+                    self._build(strawberry_type, fragment_type, fragment_selections, node, path)
                 continue
             if selection.name.value in self._ignored_field_names:
                 continue
@@ -331,7 +338,8 @@ class StrawchemyRepository(Generic[T]):
                 ),
             )
             child = self._upsert_child(node, child_node)
-            child.metadata.data.response_keys += ((selection.alias or selection.name).value,)
+            child_path = (*path, (selection.alias or selection.name).value)
+            child.metadata.data.response_paths += (child_path,)
             # A relation field's hook targets the related model; a column or resolver field's hook the owning one.
             is_relation_field = field_definition.is_relation and strawberry_field.base_resolver is None
             self._add_query_hooks(hooks, child if is_relation_field else node)
@@ -341,6 +349,7 @@ class StrawchemyRepository(Generic[T]):
                     _composite_type(graphql_field.type),
                     selection.selection_set.selections,
                     child,
+                    child_path,
                 )
 
 

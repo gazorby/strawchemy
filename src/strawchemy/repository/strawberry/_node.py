@@ -79,15 +79,15 @@ class StrawberryQueryNode(QueryNode, Generic[T]):
     def node_result_to_strawberry_type(self, node_result: NodeResult[Any]) -> T:
         kwargs = self._default_type_kwargs(self)
         shared_field_names = self._shared_field_names
-        response_values: dict[str, Any] = {}
+        response_values: dict[tuple[str, ...], Any] = {}
         for child in [child for child in self.children if isinstance(child, StrawberryQueryNode)]:
             kwargs[child.value.name] = value = self._child_value(child, node_result)
             if child.value.name in shared_field_names:
-                response_values.update(dict.fromkeys(child.metadata.data.response_keys, value))
+                response_values.update(dict.fromkeys(child.metadata.data.response_paths, value))
         if attribute := self._model_instance_attribute():
             kwargs[attribute] = node_result.model
         instance = self.strawberry_type(**kwargs)
-        # Children sharing a field name differ by arguments; the field resolver picks the value by response key.
+        # Children sharing a field name differ by arguments; the field resolver picks the value by response path.
         if response_values:
             setattr(instance, RESPONSE_VALUES_ATTRIBUTE, response_values)
         return instance

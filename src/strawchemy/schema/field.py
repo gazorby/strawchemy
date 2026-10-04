@@ -41,6 +41,7 @@ from strawchemy.utils.annotation import is_type_hint_optional
 from strawchemy.utils.strawberry import (
     dto_model_from_type,
     is_list,
+    response_path,
     strawberry_contained_types,
     strawberry_contained_user_type,
 )
@@ -738,6 +739,6 @@ class StrawchemyField(StrawberryField):
             return self.resolver(info, *args, **kwargs)
         if info is not None and self.base_resolver is None:
             response_values = getattr(source, RESPONSE_VALUES_ATTRIBUTE, {})
-            if info.path.key in response_values:
-                return response_values[info.path.key]
+            if response_values and (path := response_path(info)) in response_values:
+                return response_values[path]
         return super().get_result(source, info, args, kwargs)

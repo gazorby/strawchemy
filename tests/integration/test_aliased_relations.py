@@ -591,3 +591,104 @@ async def test_relation_aliased_under_one_shared_alias(
         a_color = {"x": by_id, "y": by_sweetness[::-1]}
         assert color["a"] == [{"id": fruit["id"], "color": a_color} for fruit in by_id]
         assert color["b"] == [{"id": fruit["id"], "color": {"fruits": by_id}} for fruit in by_id[::-1]]
+
+
+async def test_argless_aliases_with_different_nested_selections(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData
+) -> None:
+    """Test that argument-free aliases of a relation each keep their own nested selection."""
+    data = await _data(
+        any_query,
+        """
+        {
+            colors {
+                id
+                a: fruits { id color { fruits(orderBy: { id: ASC }) { id name } } }
+                b: fruits { id color { fruits(orderBy: { id: DESC }) { id } } }
+            }
+        }
+        """,
+    )
+    for color in data["colors"]:
+        fruits = _fruits_of(raw_fruits, color["id"])
+        a_color = {"fruits": [{"id": fruit["id"], "name": fruit["name"]} for fruit in fruits]}
+        b_color = {"fruits": [{"id": fruit["id"]} for fruit in fruits[::-1]]}
+        assert sorted(color["a"], key=lambda fruit: fruit["id"]) == [
+            {"id": fruit["id"], "color": a_color} for fruit in fruits
+        ]
+        assert sorted(color["b"], key=lambda fruit: fruit["id"]) == [
+            {"id": fruit["id"], "color": b_color} for fruit in fruits
+        ]
+
+
+async def test_argless_to_one_aliases_with_different_nested_selections(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
+) -> None:
+    """Test that argument-free aliases of a to-one relation each keep their own nested relations and selections."""
+    data = await _data(
+        any_query,
+        """
+        {
+            fruits {
+                colorId
+                x: color { fruits(orderBy: { id: ASC }) { id farms { id } } }
+                y: color { fruits(orderBy: { id: DESC }) { id } }
+            }
+        }
+        """,
+    )
+    for fruit in data["fruits"]:
+        siblings = _fruits_of(raw_fruits, fruit["colorId"])
+        x_fruits = [
+            {
+                "id": sibling["id"],
+                "farms": sorted(farm["id"] for farm in raw_farms if farm["fruit_id"] == sibling["id"]),
+            }
+            for sibling in siblings
+        ]
+        assert [
+            {"id": sibling["id"], "farms": sorted(farm["id"] for farm in sibling["farms"])}
+            for sibling in fruit["x"]["fruits"]
+        ] == x_fruits
+        assert fruit["y"] == {"fruits": [{"id": sibling["id"]} for sibling in siblings[::-1]]}
+
+
+@pytest.mark.allow_duplicate_reads(
+    reason=(
+        "the aliases of fruits.color.fruits read the fruits of the root color again through the color round trip; "
+        "round trips are never detected as the same rows on LATERAL databases"
+    ),
+    dialects=("postgresql",),
+)
+async def test_argless_aliases_with_partly_shared_nested_arguments(
+    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+) -> None:
+    """Test that argument-free aliases keep their own nested selections when only some share nested arguments."""
+    data = await _data(
+        any_query,
+        """
+        {
+            colors {
+                id
+                a: fruits { id color { fruits(orderBy: { id: ASC }) { id } } }
+                b: fruits { id name color { fruits(orderBy: { id: ASC }) { name } } }
+                c: fruits { id color { fruits(orderBy: { id: DESC }) { id } } }
+            }
+        }
+        """,
+    )
+    assert query_tracker.query_count == 1
+    for color in data["colors"]:
+        fruits = _fruits_of(raw_fruits, color["id"])
+        a_color = {"fruits": [{"id": fruit["id"]} for fruit in fruits]}
+        b_color = {"fruits": [{"name": fruit["name"]} for fruit in fruits]}
+        c_color = {"fruits": [{"id": fruit["id"]} for fruit in fruits[::-1]]}
+        assert sorted(color["a"], key=lambda fruit: fruit["id"]) == [
+            {"id": fruit["id"], "color": a_color} for fruit in fruits
+        ]
+        assert sorted(color["b"], key=lambda fruit: fruit["id"]) == [
+            {"id": fruit["id"], "name": fruit["name"], "color": b_color} for fruit in fruits
+        ]
+        assert sorted(color["c"], key=lambda fruit: fruit["id"]) == [
+            {"id": fruit["id"], "color": c_color} for fruit in fruits
+        ]

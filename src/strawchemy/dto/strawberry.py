@@ -107,8 +107,8 @@ class QueryNodeMetadata:
     order_by: OrderByEnum | None = None
     strawberry_type: type[Any] | None = None
     json_path: str | None = None
-    response_keys: tuple[str, ...] = ()
-    """Names under which the node's value appears in the GraphQL response: the field name or its aliases."""
+    response_paths: tuple[tuple[str, ...], ...] = ()
+    """Response keys leading to the node's value in the GraphQL response, one path per alias of it or its parents."""
 
     @property
     def is_transform(self) -> bool:
