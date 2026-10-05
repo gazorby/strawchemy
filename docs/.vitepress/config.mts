@@ -64,6 +64,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'Architecture', link: '/learn/architecture' },
+            { text: 'Transpiler internals', link: '/learn/transpiler' },
             { text: 'Geometry', link: '/learn/geometry' },
             { text: 'Async sessions', link: '/learn/async' },
           ],

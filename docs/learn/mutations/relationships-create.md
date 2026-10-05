@@ -35,7 +35,7 @@ mutation {
 
 ## Creating the related record
 
-The same field also accepts `create`, writing the related user in the same mutation as the post:
+The same field accepts `create`, which writes the related user in the same mutation as the post:
 
 ```graphql
 mutation {
@@ -92,7 +92,7 @@ class Mutation:
     create_user_with_posts: UserType = strawchemy.create(UserCreateWithPostsInput)
 ```
 
-Creating posts alongside the user needs an `id` for each one, for the same reason as the to-one case above:
+Each post created alongside the user needs an `id`, for the same reason as the to-one case above:
 
 ```graphql
 mutation {
@@ -115,7 +115,7 @@ mutation {
 
 ## Creating a whole tree
 
-Nesting goes to any depth: creating a user can create its posts, and each of those posts can in turn create its tags, all in one mutation. Every created record along the way still needs its own `id`:
+Nesting goes to any depth: creating a user can create its posts, and each of those posts can in turn create its tags, all in one mutation. Every created record still needs its own `id`:
 
 ```graphql
 mutation {
@@ -148,7 +148,7 @@ mutation {
 
 ## Empty relationships
 
-`author` is optional on `Post`. Leave it out of `data` entirely, or pass it explicitly as `author: { set: null }`, to create a post without one:
+`author` is optional on `Post`. To create a post without one, leave it out of `data` or pass `author: { set: null }`:
 
 ```graphql
 mutation {

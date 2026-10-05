@@ -4,7 +4,7 @@ A query hook reaches into the statement Strawchemy is already building, either t
 
 ## Base filter
 
-A `QueryHook` subclass overriding `apply_hook` applies to every query against a type, unlike a `filter_statement` written into a single [resolver](/learn/resolvers) — so `PublishedPostType` can only ever return published posts, however it's queried:
+A `QueryHook` subclass overriding `apply_hook` applies to every query against a type, unlike a `filter_statement` written into a single [resolver](/learn/resolvers) — so `PublishedPostType` returns only published posts, however a client queries it:
 
 ```python
 from strawchemy import QueryHook
@@ -27,21 +27,25 @@ Pass a `QueryHook` instance to `@strawchemy.field`'s `query_hook` argument inste
 ::: warning
 When implementing `apply_hook`:
 
-- You must use the provided `alias` parameter to refer to columns of the model on which the hook is applied. Otherwise,
-  the statement may fail.
+- Use the provided `alias` parameter to refer to columns of the model the hook applies to; otherwise, the statement
+  may fail.
 - The GraphQL context is available through `self.info` within hook methods.
 - A hook on a related type, or on a relation field, only restricts the related rows: a parent without matching rows is
   still returned, with an empty list or `null`.
 - An `ORDER BY` added by a hook sorts ahead of the client's `orderBy`, on the root field as on a relation, so it
   decides which rows a page keeps and which row `distinctOn` keeps from each group.
-- A filter on a relation ignores the hooks of that relation: it tests every related row, hidden or not.
-- You must set a `ModelInstance` typed attribute if you want to access the model instance values.
-  The `instance` attribute is matched by the `ModelInstance[Post]` type hint, so you can give it any name you want.
+- A filter on a relation ignores the hooks of that relation: it tests every related row, hidden or not. So does a
+  relationship aggregate (`postsAggregate`), whether selected, filtered or ordered on.
+- `apply_hook` may run several times while one query is planned, on differently shaped statements: keep it free of
+  side effects, depending only on `statement`, `alias` and `self.info`.
+- A hook that adds `LIMIT`, `OFFSET`, `DISTINCT` or `GROUP BY` turns the rows it applies to into a subquery.
+- Set a `ModelInstance`-typed attribute to access the model instance values. Strawchemy matches the attribute by its
+  `ModelInstance[Post]` type hint, so any name works.
 :::
 
 ## Loading extra data
 
-`apply_hook` returns the statement unchanged by default — loading columns or relationships doesn't go through it at all. A `QueryHook`'s `load` parameter loads them instead, even when the GraphQL query didn't request them — needed whenever a custom `@strawchemy.field` reads model attributes the query selection wouldn't otherwise touch, such as a computed `summary` field built from `title` and `views`. Relations selected in the GraphQL query are not set on the instance, so a custom resolver reading `self.instance.<relation>`, or code reading relations of `GraphQLResult.instance(s)`, must declare them in `load`:
+A `QueryHook`'s `load` parameter loads columns or relationships, even when the GraphQL query didn't request them. Loading never goes through `apply_hook`, which returns the statement unchanged by default. Use `load` whenever a custom `@strawchemy.field` reads model attributes the query selection wouldn't otherwise touch, such as a computed `summary` field built from `title` and `views`. Relations selected in the GraphQL query are not set on the instance, so a custom resolver reading `self.instance.<relation>`, or code reading relations of `GraphQLResult.instance(s)`, must declare them in `load`. Strawchemy reads each relationship in `load` with one extra `SELECT … IN` query after the main statement:
 
 ```python
 from strawchemy import ModelInstance, QueryHook

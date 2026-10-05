@@ -50,7 +50,7 @@ mutation {
 
 ## Updating by filter
 
-`@strawchemy.filter_update_input` builds an input with no `id` field; `strawchemy.update` pairs it with a filter input instead, so one `data` payload is applied to every record the filter matches:
+`@strawchemy.filter_update_input` builds an input whose fields are all optional; `strawchemy.update` pairs it with a filter input instead, so one `data` payload applies to every record the filter matches:
 
 ```python
 @strawchemy.filter_update_input(Post, include=["title"])
@@ -75,4 +75,4 @@ mutation {
 }
 ```
 
-The filter takes the same input as a query filter, [related records](/learn/filtering#filtering-related-records) included; each matching record is updated once.
+The filter takes the same input as a query filter, [related records](/learn/filtering#filtering-related-records) included; the mutation updates each matching record once.

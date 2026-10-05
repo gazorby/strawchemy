@@ -136,7 +136,7 @@ def test_spec_claims_the_exports_of_all_its_pages(docs_reference: ModuleType) ->
     spec = docs_reference.ReferenceSpec(
         repo_root=REPO_ROOT,
         layout=docs_reference.DEFAULT_SPEC.layout,
-        pages=(docs_reference.PageSpec("reference/api/mapper", "Mapper", ("Strawchemy",)),),
+        pages=(docs_reference.PageSpec("reference/api/mapper", "Mapper", "", ("Strawchemy",)),),
         operator_exports=("EqualityOperator",),
     )
     assert spec.documented_exports == {"Strawchemy", "EqualityOperator"}

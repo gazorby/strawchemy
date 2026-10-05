@@ -1,5 +1,7 @@
 # Upsert
 
+An upsert inserts a record, or updates the existing one when the insert hits a conflict.
+
 ## Upserting a record
 
 Three decorators build the pieces an upsert needs:
@@ -8,8 +10,8 @@ Three decorators build the pieces an upsert needs:
 - which fields can be updated on conflict
 - which field detects a conflict
 
-Together with `strawchemy.upsert`, they give you a mutation that inserts a new record, or updates
-the matching one if a conflict is found:
+`strawchemy.upsert` combines them into a mutation that inserts a new record or, on conflict,
+updates the matching one:
 
 ```python
 @strawchemy.create_input(Post, include=["id", "title", "content", "views"])
@@ -31,9 +33,11 @@ class Mutation:
     )
 ```
 
-`conflictFields` can only name a column covered by a unique constraint — a primary key, or a column
-declared with `UniqueConstraint`. `Post` has no unique columns of its own, so `id` is the only
-usable conflict field here, and `PostUpsertInput` includes it so the caller can supply a value to
+Each `conflictFields` value names one unique constraint — the primary key, a `UniqueConstraint`
+or `unique=True` column, or a PostgreSQL `ExcludeConstraint` — after its columns joined with `_`.
+Without it, the primary key is the conflict target. MySQL's `ON DUPLICATE KEY UPDATE` takes no
+target, so on MySQL any unique key collision updates the row. `Post` has no unique columns of its
+own, so `id` is the only usable conflict field here; `PostUpsertInput` includes it so the caller can supply a value to
 check.
 
 ```graphql
@@ -48,7 +52,7 @@ mutation {
 
 Calling it again with the same `id` updates the existing record instead of creating a second one.
 Leaving out `updateFields` updates every field present in `data`, including `title`, even though
-`title` isn't one of `PostUpsertFields`' members:
+`title` is not a member of `PostUpsertFields`:
 
 ```graphql
 mutation {
@@ -67,9 +71,9 @@ Conflict handling runs at the database level:
 - **SQLite** — `ON CONFLICT DO UPDATE`.
 - **MySQL** — `ON DUPLICATE KEY UPDATE`.
 
-Naming a field with no unique constraint in `conflictFields` never reaches the mutation: `title`
-was never added to the enum in the first place, since `Post.title` has no unique constraint —
-`PostConflictFields` only has an `id` member. GraphQL rejects the request before execution:
+Naming a field with no unique constraint in `conflictFields` never reaches the mutation.
+`Post.title` has no unique constraint, so `PostConflictFields` has only an `id` member, and
+GraphQL rejects the request before execution:
 
 ```graphql
 mutation {
@@ -121,7 +125,7 @@ mutation {
 
 ## Update fields
 
-Passing `updateFields` narrows a conflict update down to the fields you list, leaving the rest of
+Passing `updateFields` narrows a conflict update to the fields you list, leaving the rest of
 the existing record untouched:
 
 ```graphql

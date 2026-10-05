@@ -1,5 +1,7 @@
 # Mapping models
 
+`@strawchemy.type` builds a GraphQL type from a SQLAlchemy model. This page covers choosing its fields, adding your own, and overriding the types Strawchemy generates.
+
 ## Exposing a model
 
 `@strawchemy.type` turns a SQLAlchemy model into a GraphQL type. Two lines expose every column and relationship on `User`:
@@ -61,7 +63,7 @@ class UserType: ...
 
 ## Custom fields
 
-A `ModelInstance[User]` attribute gives a resolver access to the underlying model instance, and `@strawchemy.field` doubles as a method decorator, not just a function you call — decorating a method exposes it as a GraphQL field alongside the auto-generated ones. The statement Strawchemy builds loads what the client selected, not what the method reads, so pass a `QueryHook` naming what the method needs — `name` and `email` here:
+A `ModelInstance[User]` attribute gives a resolver access to the underlying model instance. `@strawchemy.field` doubles as a method decorator, not just a function you call: decorating a method exposes it as a GraphQL field alongside the auto-generated ones. The statement Strawchemy builds loads what the client selected, not what the method reads, so pass a `QueryHook` naming what the method needs — `name` and `email` here:
 
 ```python
 from strawchemy import ModelInstance, QueryHook
@@ -76,7 +78,7 @@ class UserType:
         return f"{self.instance.name} <{self.instance.email}>"
 ```
 
-Without the hook, `{ users { displayName } }` fails with `sqlalchemy.exc.MissingGreenlet` unless the client also happens to select `name` and `email`. A relationship always needs the hook, since relationships the client selects are not set on the instance:
+Without the hook, `{ users { displayName } }` fails with `sqlalchemy.exc.MissingGreenlet` unless the client also selects `name` and `email` (a sync session instead runs one extra query per row). A relationship always needs the hook, since relationships the client selects are not set on the instance:
 
 ```python
     @strawchemy.field(query_hook=QueryHook(load=[User.posts]))
@@ -110,11 +112,11 @@ strawchemy.exceptions.StrawchemyError: Type `PostType` is already registered
 class PostType: ...
 ```
 
-`override=True` tells Strawchemy to use your definition instead of the one it generated automatically.
+`override=True` tells Strawchemy to use your definition instead of the generated one.
 
 ## Reusing the same type
 
-`scope="schema"` is an alternative to `override=True`, not an addition to it: instead of overriding the auto-generated type after the fact, it registers your type as the canonical one for a model and purpose (a `type`, `filter`, `input`, …) up front, so nothing auto-generates one to override. Declare `TagType` as schema-scoped before anything maps `Post`, and its `tags` field picks it up automatically. Scope it with `SCALARS` rather than `"all"` — a relationship field on a schema-scoped type would still walk into its target model and auto-register a type for it, the same collision `override=True` exists to solve:
+`scope="schema"` is an alternative to `override=True`, not an addition to it: instead of overriding the auto-generated type after the fact, it registers your type as the canonical one for a model and purpose (a `type`, `filter`, `input`, …) up front, so nothing auto-generates one to override. Declare `TagType` as schema-scoped before anything maps `Post`, and its `tags` field picks it up automatically. Include only `SCALARS`, not `"all"` — a relationship field on a schema-scoped type would still walk into its target model and auto-register a type for it, the same collision `override=True` exists to solve:
 
 ```python
 @strawchemy.type(Tag, include=SCALARS, scope="schema")
@@ -127,7 +129,7 @@ class PostType: ...
 
 ## Mapping strictness
 
-By default (`strict=True`), a column with no GraphQL mapping doesn't fail until `strawberry.Schema(...)` builds the schema — the class itself decorates without complaint. Mapping `complex`, stored through SQLAlchemy's `PickleType`, is one such column:
+By default (`strict=True`), a column with no GraphQL mapping fails only when `strawberry.Schema(...)` builds the schema; the class itself decorates without complaint. A `complex` column stored through SQLAlchemy's `PickleType` is one such column:
 
 ```python
 from sqlalchemy import PickleType

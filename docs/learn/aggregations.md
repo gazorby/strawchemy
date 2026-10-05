@@ -1,5 +1,7 @@
 # Aggregations
 
+Aggregations compute counts, sums, averages and extremes over a relationship or over a whole result set, inside the same SQL statement as the rows around them.
+
 ## Aggregating a relationship
 
 Every list relationship Strawchemy maps gets an automatic `<field>Aggregate` field on its
@@ -88,9 +90,9 @@ The same `users` field, filtered on users whose posts cover more than 2 distinct
 By default, a generated aggregate filter exposes every supported function for every included
 column. `@strawchemy.aggregate_filter` declares a dedicated aggregation filter input for a
 relationship instead, the same way `@strawchemy.filter` declares a column filter. It has two
-independent axes: `functions=` selects which aggregation functions the input exposes, while
+independent axes: `functions=` selects which aggregation functions the input exposes;
 `include`/`exclude` keep their usual column meaning and narrow which columns *every* selected
-function is allowed to aggregate over.
+function may aggregate over.
 
 ```python
 @strawchemy.aggregate_filter(
@@ -123,7 +125,7 @@ class Query:
 
 `posts_aggregate: PostFineGrainedAggregateFilter` swaps the generated aggregate bool expression on
 that one field for the declared one above; any other list relationship on `User` keeps its full
-generated aggregate bool expression untouched. Declaring `<field>_aggregate` for a to-one
+generated aggregate bool expression. Declaring `<field>_aggregate` for a to-one
 relationship raises `StrawchemyFieldError`.
 
 Inside the class body, `strawchemy.filter_field()` refines one function at a time:
@@ -144,8 +146,8 @@ The generated GraphQL *field* is camelCased as usual (e.g. `min_datetime` become
 The annotation on a declared function names either the value its predicate compares (`int` for `count`, `float` for
 `sum`, `avg` and the statistical functions, `datetime`/`date`/`time`/`str` for the typed `min`/`max` variants) or the
 comparison input itself (`OrderComparison`). Anything else — including `Any` — raises `StrawchemyFieldError` at
-import time, so an annotation always states something the factory has verified. A bare marker needs no annotation,
-having nothing to describe.
+import time, so an annotation always states something the factory has verified. A bare marker describes nothing, so it
+needs no annotation.
 
 Custom `apply=` filters are column-only: putting one on a function inside a class decorated with
 `aggregate_filter` raises `StrawchemyFieldError`.
@@ -153,8 +155,10 @@ Custom `apply=` filters are column-only: putting one on a function inside a clas
 
 ## Aggregating a result set
 
-You can also aggregate an entire list at the query root, without filtering by any of it — total
-count, sums, extremes — alongside the matching rows themselves.
+You can also aggregate the rows a root field returns — total count, sums, extremes — alongside
+the matching rows themselves. The aggregates cover the rows left after filtering and pagination:
+on a paginated field, the current page. When no row matches, every aggregate is `null`, `count`
+included.
 
 ```python
 @strawchemy.aggregate(Post, include="all")
@@ -203,7 +207,6 @@ aggregation type.") when the field is defined.
 
 ::: warning
 `stddevSamp`, `stddevPop`, `varSamp` and `varPop` exist on PostgreSQL and MySQL but not on SQLite —
-the dialect this running example uses. Each dialect's supported aggregation functions
-narrow which of these fields the schema actually generates; requesting one your dialect doesn't
-support is a GraphQL validation error.
+the dialect this running example uses. The schema generates only the ones your dialect
+supports; requesting any other is a GraphQL validation error.
 :::

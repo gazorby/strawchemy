@@ -7,8 +7,8 @@ a mapped model, and the two places a generated type and a hand-written field sha
 
 ## What still works
 
-A Strawchemy type is a Strawberry type: nothing stops you from adding your own `@strawberry.type`
-classes beside the generated ones, or a plain resolver that never touches a mapped model. `Query`
+A Strawchemy type is a Strawberry type: you can add your own `@strawberry.type` classes beside
+the generated ones, or a plain resolver that never touches a mapped model. `Query`
 and `Mutation` are ordinary Strawberry classes too — fields Strawchemy builds sit next to fields
 you wrote yourself.
 
@@ -47,7 +47,7 @@ filter/order-by/pagination arguments those resolvers accept.
 users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by_input=UserOrderBy, pagination=True)
 ```
 
-One declaration is the resolver, the `filter`/`orderBy`/`limit`/`offset` arguments, and the
+One declaration provides the resolver, the `filter`/`orderBy`/`limit`/`offset` arguments, and the
 session-fetching code all at once. See [architecture](/learn/architecture#generated-fields) for
 what the generated resolver does, and [filtering](/learn/filtering), [ordering](/learn/ordering) and
 [pagination](/learn/pagination) for the arguments it adds. Mutations get the same treatment —
@@ -85,7 +85,7 @@ Strawchemy has registered takes precedence over a module-level name when the ann
 ## What doesn't apply
 
 Dataloaders batch a relationship across the N+1 resolver calls a naive implementation would make.
-Strawchemy never resolves a relationship with a call of its own to batch: it compiles the whole
+Strawchemy makes no separate call per relationship for a dataloader to batch: it compiles the whole
 selection set into one SQL statement before running it, so a nested `posts` selection is a join in
 that same statement. A three-level selection plus a relationship aggregate still compiles to one
 statement:
@@ -107,7 +107,7 @@ statement:
 }
 ```
 
-There's nothing here to batch — see [architecture](/learn/architecture) for the execution model
+This query leaves nothing to batch — see [architecture](/learn/architecture) for the execution model
 that makes it so.
 
 `strawberry.auto` also changes meaning on a Strawchemy input. In plain Strawberry it means "infer
@@ -146,7 +146,7 @@ class UserType:
 ```
 
 `post_count` needs `instance.posts` loaded, which the generated query never does: relationships
-the client selects are not set on the instance. A `QueryHook` loads it, by adding the load to the
+the client selects are not set on the instance. A `QueryHook` loads it by adding the load to the
 statement Strawchemy is already building:
 
 ```python

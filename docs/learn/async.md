@@ -1,9 +1,11 @@
 # Async sessions
 
+Strawchemy runs against a synchronous or an asynchronous SQLAlchemy session. This page shows how to switch a schema to async, write async resolvers, and mix both kinds of field.
+
 ## Async repository
 
-Make every generated field run async by setting `repository_type` on `StrawchemyConfig` —
-it's the option that decides whether a schema's fields run through `StrawchemySyncRepository` or
+Set `repository_type` on `StrawchemyConfig` to make every generated field run async. This option
+decides whether a schema's fields run through `StrawchemySyncRepository` or
 `StrawchemyAsyncRepository`:
 
 ```python
@@ -17,11 +19,11 @@ strawchemy = Strawchemy(
 )
 ```
 
-`StrawchemySyncRepository` is the default when `repository_type` is left unset, so an async session needs it set explicitly.
+Left unset, `repository_type` defaults to `StrawchemySyncRepository`, so an async session needs it set explicitly.
 
 ::: warning
-`repository_type` and the session it runs against have to agree. A schema left at the sync
-default, run against an async session, builds without complaint — the mismatch only surfaces once
+`repository_type` and the session it runs against must agree. A schema left at the sync
+default, run against an async session, builds without complaint — the mismatch surfaces only once
 a request executes a query, as a `GraphQLError` in the response:
 
 ```
@@ -69,8 +71,8 @@ class Query:
 :::
 
 The async form adds `async` to the resolver, awaits the repository call, and constructs
-`StrawchemyAsyncRepository` in place of `StrawchemySyncRepository` — nothing else about the
-resolver changes.
+`StrawchemyAsyncRepository` in place of `StrawchemySyncRepository`; the rest of the resolver
+stays the same.
 
 ## Mixing sync and async
 

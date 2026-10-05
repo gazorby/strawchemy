@@ -124,7 +124,7 @@ mutation {
 }
 ```
 
-`posts` accepts `create` the same way, adding brand new posts to the collection:
+`posts` accepts `create` the same way, adding new posts to the collection:
 
 ```graphql
 mutation {
@@ -141,7 +141,7 @@ mutation {
 
 ## Combining operations
 
-`add` and `create` can be combined in the same update:
+An update can combine `add` and `create`:
 
 ```graphql
 mutation {
@@ -162,7 +162,7 @@ mutation {
 }
 ```
 
-`set` cannot be combined with `create`, `upsert`, `add` or `remove` on the same to-many field — it raises:
+Combining `set` with `create`, `upsert`, `add` or `remove` on the same to-many field raises an error:
 
 ```graphql
 mutation {

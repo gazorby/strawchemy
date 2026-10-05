@@ -1,6 +1,6 @@
 # Geometry
 
-Before any of this works, you need:
+Geometry filtering requires:
 
 - the `geo` extra: `uv add "strawchemy[geo]"`, which brings in [GeoAlchemy2](https://github.com/geoalchemy/geoalchemy2)
 - PostgreSQL as the dialect — geometry filters work on no other
@@ -9,8 +9,7 @@ Before any of this works, you need:
 
 ## Filtering geometry
 
-Strawchemy supports spatial filtering capabilities for geometry fields
-using [GeoJSON](https://datatracker.ietf.org/doc/html/rfc7946). This page defines its own model:
+Geometry fields accept spatial filters expressed in [GeoJSON](https://datatracker.ietf.org/doc/html/rfc7946). This page defines its own model:
 
 ```python
 from uuid import UUID, uuid4
@@ -78,13 +77,13 @@ schema = strawberry.Schema(query=Query, scalar_overrides=GEO_SCALAR_OVERRIDES)
 
 ## Operations
 
-Strawchemy supports the following geo filter operations:
+Strawchemy supports three geo filter operations:
 
 - **containsGeometry**: Filters for geometries that contain the specified GeoJSON geometry
-- **withinGeometry**: Filters for geometries that are within the specified GeoJSON geometry
+- **withinGeometry**: Filters for geometries within the specified GeoJSON geometry
 - **isNull**: Filters for null (`true`) or non-null (`false`) geometry values
 
-These filters work with all geometry types supported by PostGIS, including:
+These filters work with every geometry type PostGIS supports, including:
 
 - `Point`
 - `LineString`

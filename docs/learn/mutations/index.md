@@ -1,6 +1,6 @@
 # Mutations
 
-With a model mapped to a type, your schema can also create, update and delete records, not just query them. Mutations are built the same way queries are: an input type from the model, then a field on a `Mutation` type.
+Once a model maps to a type, your schema can create, update and delete records as well as query them. You build mutations the same way as queries: an input type from the model, then a field on a `Mutation` type.
 
 ## Declaring an input
 
@@ -37,7 +37,7 @@ class PostFilter: ...
 
 ## Adding the fields
 
-Each field pairs one of those inputs with a mutation method. Whether a mutation acts on a single record or a batch is decided by its return annotation — `PostType` for one, `list[PostType]` for many:
+Each field pairs one of those inputs with a mutation method. For create, update by id and upsert, the return annotation decides whether a mutation acts on a single record or a batch — `PostType` for one, `list[PostType]` for many. Update by filter and delete always return a list:
 
 ```python
 @strawberry.type

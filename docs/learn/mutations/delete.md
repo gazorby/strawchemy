@@ -1,6 +1,6 @@
 # Delete
 
-`strawchemy.delete()` turns into a mutation field that removes records. The returned data is the set of records that were deleted, so the same field selection used for a query works here too.
+`strawchemy.delete()` builds a mutation field that removes records. The field returns the deleted records, so the field selection of a query works here too.
 
 ## Deleting by filter
 

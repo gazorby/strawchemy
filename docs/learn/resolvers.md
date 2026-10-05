@@ -1,8 +1,10 @@
 # Custom resolvers
 
+When a generated field cannot express a query, write the resolver yourself and keep Strawchemy's data access by calling a repository from it.
+
 ## Fetching one record
 
-`strawchemy.field()` used as a function builds a resolver for you, backed by the repository. Decorating your own method with `@strawchemy.field` instead gives you the same repository, with room to add your own logic around it — a lookup by title, say, that `strawchemy.field()` alone has no argument for:
+Called as a function, `strawchemy.field()` builds a repository-backed resolver for you. Decorate your own method with `@strawchemy.field` to build that repository yourself and add your own logic around it — a lookup by title, say, which `strawchemy.field()` alone has no argument for:
 
 ```python
 from sqlalchemy import select
@@ -17,9 +19,9 @@ class Query:
         return repo.get_one_or_none().graphql_type_or_none()
 ```
 
-`filter_statement` narrows the query before Strawchemy's own filtering, ordering and field-selection logic runs on top of it. `get_one_or_none()` runs it and returns a `GraphQLResult`; `graphql_type_or_none()` converts that into `PostType | None`.
+`filter_statement` narrows the query before Strawchemy's own filtering, ordering and field-selection logic runs on top of it. A statement that only adds `WHERE` clauses to `select(Post)` has them copied into the query; any other statement is joined on the primary key, so its own `ORDER BY` doesn't order the result. The repository takes none of the field's arguments or the mapper's configuration: pass `query_hook`, `execution_options` or `deterministic_ordering` to it when you need them. `get_one_or_none()` runs it and returns a `GraphQLResult`; `graphql_type_or_none()` converts that into `PostType | None`.
 
-Fetching by primary key needs no `filter_statement` at all — pass the key as a keyword argument to `get_by_id()` instead:
+Fetching by primary key needs no `filter_statement`: pass the key as a keyword argument to `get_by_id()`:
 
 ```python
 @strawchemy.field
@@ -41,13 +43,12 @@ def published_posts(self, info: strawberry.Info) -> list[PostType]:
 
 The repository has four methods for fetching data, each paired with its own conversion call:
 
-- `get_one()` — returns a single result, raises if none is found
-- `get_one_or_none()` — returns a single result or `None`
+- `get_one()`, `get_one_or_none()` — return at most one result, and raise `MultipleResultsFound` if several rows match; `graphql_type()` then raises `QueryResultError` on no match, while `graphql_type_or_none()` returns `None`
 - `get_by_id()` — returns a single result filtered on primary key
 - `list()` — returns every matching result
 
 `instance` and `instances` on the returned `GraphQLResult` give the model instances instead. Relationships the GraphQL query selected are not set on them: declare the ones your code reads in [`QueryHook(load=...)`](/learn/query-hooks).
 
-See [async sessions](/learn/async) for how the same resolvers look written against `StrawchemyAsyncRepository`.
+See [async sessions](/learn/async) for the same resolvers written against `StrawchemyAsyncRepository`.
 
 See [query hooks](/learn/query-hooks) for constraining every query against a type, and for loading data a custom field needs.

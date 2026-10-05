@@ -1,5 +1,7 @@
 # Validation
 
+A mutation can validate its input with a Pydantic model before writing to the database, and return the failures to the client as data.
+
 ## Validating input
 
 Declare a Pydantic model with `@strawchemy.pydantic.create` — or `.pk_update`/`.filter_update` for
@@ -39,14 +41,14 @@ class Mutation:
     )
 ```
 
-`id` is excluded from both models because `PostCreateInput` never provides one — with
-`include="all"` and no exclusion, `id` would be a required pydantic field, and validation would
-reject every call with `id: Field required` before `title` is even checked. `tags` mirrors the
+Both models exclude `id` because `PostCreateInput` never provides one. With `include="all"` and
+no exclusion, `id` would be a required pydantic field, and validation would reject every call
+with `id: Field required` before it checks `title`. `tags` mirrors the
 shape a relationship-carrying create input would send, but `PostCreateInput` has no `tags` field,
 so this mutation never reaches that branch.
 
 ::: warning
-`ValidationErrorType` must be added to the mutation field's return union — as in `PostType | ValidationErrorType` above. Without it, a validation failure still returns a `ValidationErrorType`, which doesn't match the field's declared return type, and GraphQL raises "Expected value of type…" instead of exposing the errors to the client.
+Add `ValidationErrorType` to the mutation field's return union, as in `PostType | ValidationErrorType` above. Without it, a validation failure still returns a `ValidationErrorType`, which the field's declared type cannot resolve: the client gets an execution error, such as `'ValidationErrorType' object has no attribute 'title'`, instead of the validation errors.
 :::
 
 ## What the client receives

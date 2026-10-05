@@ -1,5 +1,7 @@
 # Pagination
 
+Pagination gives a list field `offset` and `limit` arguments, on root fields and on nested relationships alike.
+
 ## Paginating a list
 
 ```python
@@ -56,7 +58,11 @@ class UserType: ...
 }
 ```
 
-Pagination applies per parent row, and each alias of a relationship gets its own page. A relationship selected without `offset`/`limit`, or with them bound to unset variables, still gets its defaults; `default_pagination=DefaultOffsetPagination(…)` on `@strawchemy.type` changes them for that type's relationships. Rows tied on `orderBy` count one by one: PostgreSQL returns any of the tied rows, MySQL and SQLite the first by primary key. End `orderBy` on a unique field for stable pages.
+Pagination applies per parent row, and each alias of a relationship gets its own page. A relationship selected without `offset`/`limit`, or with them bound to unset variables, still gets its defaults; `default_pagination=DefaultOffsetPagination(…)` on `@strawchemy.type` changes them for that type's relationships. Rows tied on `orderBy` count one by one, and the database decides which of them a page keeps: MySQL and SQLite break ties by primary key on relationships; PostgreSQL may not. End `orderBy` on a unique field for stable pages.
+
+::: warning
+On SQLite and MySQL, a many-to-many relationship (one with a `secondary` table) cannot have its own ordering or pagination: the query fails with a `TranspilingError`. With `pagination="all"`, its default `limit` triggers the same error even when the client passes none.
+:::
 
 An `ORDER BY` added by a [query hook](/learn/query-hooks) sorts ahead of the client's `orderBy`, so it decides which rows each page keeps.
 
@@ -81,7 +87,7 @@ class Query:
     users: list[UserType] = strawchemy.field()
 ```
 
-Two defaults every paginated field falls back to when a query omits `offset`/`limit`:
+Every paginated field falls back to two defaults when a query omits `offset`/`limit`:
 
 - `pagination_default_limit` — rows returned per page (100 unless changed).
 - `pagination_default_offset` — rows skipped before the page starts (0 unless changed).

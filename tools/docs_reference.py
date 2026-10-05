@@ -71,6 +71,7 @@ class PageSpec:
 
     path: str
     title: str
+    intro: str
     objects: tuple[str, ...]
     heading_level: int = 2
 
@@ -183,7 +184,7 @@ class ObjectPageEmitter:
         """
         pages: list[Page] = []
         for spec in self.specs:
-            sections = [self.header, f"# {spec.title}"]
+            sections = [self.header, f"# {spec.title}", spec.intro]
             for path in spec.objects:
                 try:
                     obj = self.package[path]
@@ -362,20 +363,28 @@ DEFAULT_SPEC = ReferenceSpec(
         },
     ),
     pages=(
-        PageSpec("reference/api/mapper", "Mapper", ("Strawchemy", "ModelInstance")),
+        PageSpec(
+            "reference/api/mapper",
+            "Mapper",
+            "The `Strawchemy` mapper, whose decorators and field factories generate a schema from SQLAlchemy models.",
+            ("Strawchemy", "ModelInstance"),
+        ),
         PageSpec(
             "reference/api/config",
             "Field groups",
+            "The field groups that `include` and `exclude` accept in place of a list of field names.",
             ("FieldGroup", "ALL", "RELATIONSHIPS", "SCALARS"),
         ),
         PageSpec(
             "reference/api/repositories",
             "Repositories",
+            "The repositories that run a field's query against the session, in sync and async variants.",
             ("StrawchemyAsyncRepository", "StrawchemySyncRepository"),
         ),
         PageSpec(
             "reference/api/comparisons",
             "Comparisons",
+            "The comparison types behind each filter operator, one per family of column types.",
             (
                 "GraphQLComparison",
                 "ArrayComparison",
@@ -391,6 +400,7 @@ DEFAULT_SPEC = ReferenceSpec(
         PageSpec(
             "reference/api/mutation-inputs",
             "Mutation inputs",
+            "The inputs mutations take for records and their relationships, and the error type validation returns.",
             (
                 "Input",
                 "RequiredToManyUpdateInput",
@@ -401,9 +411,24 @@ DEFAULT_SPEC = ReferenceSpec(
                 "ValidationErrorType",
             ),
         ),
-        PageSpec("reference/api/hooks", "Hooks", ("QueryHook",)),
-        PageSpec("reference/api/errors", "Errors", ("ErrorType", "InputValidationError")),
-        PageSpec("reference/config", "Configuration options", ("StrawchemyConfig", "dto.types.DTOConfig")),
+        PageSpec(
+            "reference/api/hooks",
+            "Hooks",
+            "The query hook that restricts or extends the statement behind a field.",
+            ("QueryHook",),
+        ),
+        PageSpec(
+            "reference/api/errors",
+            "Errors",
+            "The base type of the errors a mutation returns as data, and the exception that validation converts into one.",
+            ("ErrorType", "InputValidationError"),
+        ),
+        PageSpec(
+            "reference/config",
+            "Configuration options",
+            "The mapper-wide configuration, and the configuration behind each generated type.",
+            ("StrawchemyConfig", "dto.types.DTOConfig"),
+        ),
     ),
     operator_exports=(
         "ArrayOperator",

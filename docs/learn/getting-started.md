@@ -103,9 +103,8 @@ class TagType: ...
 - The mapper's dialect is `sqlite`.
 - `repository_type` must be `StrawchemyAsyncRepository` because the session used below is async —
   the default is `StrawchemySyncRepository`.
-- `override=True` is needed on `PostType` and `TagType` because mapping `UserType` already
-  generated types for the related `Post` and `Tag` models, and again below for `PostFilter` and
-  `PostOrderBy` since mapping `UserFilter` and `UserOrderBy` does the same.
+- `PostType` and `TagType` need `override=True` because mapping `UserType` already generated
+  types for the related `Post` and `Tag` models.
 
 ## Filtering and sorting
 
@@ -201,7 +200,7 @@ def create_app() -> Litestar:
 
 :::
 
-`context_getter` is what `session_getter` reads the session from. Run the server:
+`session_getter` reads the session from the context `context_getter` returns. Run the server:
 
 ```console
 uv run litestar --app quickstart.app:create_app run --reload
