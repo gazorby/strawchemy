@@ -15,14 +15,6 @@
    WHERE color.name = %s
   '''
 # ---
-# name: test_get_one[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.name = $1::VARCHAR
-  '''
-# ---
 # name: test_get_one[session-async-tracked-psycopg_async_engine]
   '''
   SELECT color.name,

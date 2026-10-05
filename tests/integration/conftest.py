@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from tests.integration.fixtures import (
     aiosqlite_engine,
+    any_async_query,
+    any_async_session,
     any_query,
     any_session,
     async_engine,
@@ -22,7 +24,6 @@ from tests.integration.fixtures import (
     mysql_service,
     namespaced_postgis_service,
     namespaced_postgres_service,
-    no_session_query,
     postgis_image,
     postgis_service,
     postgres_database_service,
@@ -54,6 +55,8 @@ from tests.integration.fixtures import (
 
 __all__ = (
     "aiosqlite_engine",
+    "any_async_query",
+    "any_async_session",
     "any_query",
     "any_session",
     "async_engine",
@@ -74,7 +77,6 @@ __all__ = (
     "mysql_service",
     "namespaced_postgis_service",
     "namespaced_postgres_service",
-    "no_session_query",
     "postgis_image",
     "postgis_service",
     "postgres_database_service",

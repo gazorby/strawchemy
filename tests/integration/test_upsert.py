@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.integration]
 
 @pytest.mark.snapshot
 async def test_upsert_one_new(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test upserting a single new fruit record.
 
@@ -43,7 +43,7 @@ async def test_upsert_one_new(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["upsertFruit"] == {
@@ -189,7 +189,10 @@ async def test_upsert_one_existing(
 
 @pytest.mark.snapshot
 async def test_upsert_many_new(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Test upserting multiple new fruit records.
 
@@ -223,7 +226,7 @@ async def test_upsert_many_new(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["upsertFruits"] == [
@@ -242,7 +245,10 @@ async def test_upsert_many_new(
 
 @pytest.mark.snapshot
 async def test_upsert_many_new_and_existing(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Test upserting multiple fruits with mixed new and existing records.
 
@@ -279,7 +285,7 @@ async def test_upsert_many_new_and_existing(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["upsertFruits"] == [
@@ -301,7 +307,7 @@ async def test_upsert_many_new_and_existing(
 
 @pytest.mark.snapshot
 async def test_to_one_upsert_create_new(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Tests upsert mutation that creates a new record when no match is found."""
     query = """
@@ -327,7 +333,7 @@ async def test_to_one_upsert_create_new(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["updateFruit"] == {
@@ -343,7 +349,7 @@ async def test_to_one_upsert_create_new(
 
 @pytest.mark.snapshot
 async def test_to_one_upsert_update_existing(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Tests upsert mutation that updates an existing record when a match is found."""
     query = """
@@ -368,7 +374,7 @@ async def test_to_one_upsert_update_existing(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["updateFruit"] == {
@@ -387,7 +393,10 @@ async def test_to_one_upsert_update_existing(
 
 @pytest.mark.snapshot
 async def test_to_many_upsert_create_new(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Tests to-many upsert mutation that creates new records."""
     query = """
@@ -415,7 +424,7 @@ async def test_to_many_upsert_create_new(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -436,7 +445,10 @@ async def test_to_many_upsert_create_new(
 
 @pytest.mark.snapshot
 async def test_to_many_upsert_update_existing(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Tests to-many upsert mutation that updates existing records."""
     query = """
@@ -464,7 +476,7 @@ async def test_to_many_upsert_update_existing(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -485,7 +497,10 @@ async def test_to_many_upsert_update_existing(
 
 @pytest.mark.snapshot
 async def test_to_many_upsert_mixed_create_and_update(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Tests to-many upsert mutation that both creates new records and updates existing ones."""
     query = """
@@ -513,7 +528,7 @@ async def test_to_many_upsert_mixed_create_and_update(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 

@@ -23,9 +23,9 @@ def _fruit_ids_of(raw_fruits: RawRecordData, color_id: int) -> list[dict[str, An
     ]
 
 
-async def test_pagination(any_query: AnyQueryExecutor) -> None:
+async def test_pagination(any_async_query: AnyQueryExecutor) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 fruitsPaginated(offset: 1, limit: 1) {
@@ -42,9 +42,9 @@ async def test_pagination(any_query: AnyQueryExecutor) -> None:
     assert result.data["fruitsPaginated"] == [{"name": "Cherry"}]
 
 
-async def test_nested_pagination(any_query: AnyQueryExecutor) -> None:
+async def test_nested_pagination(any_async_query: AnyQueryExecutor) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colorsPaginated(limit: 1) {
@@ -64,9 +64,9 @@ async def test_nested_pagination(any_query: AnyQueryExecutor) -> None:
     assert len(result.data["colorsPaginated"][0]["fruits"]) == 1
 
 
-async def test_pagination_on_aggregation_query(any_query: AnyQueryExecutor) -> None:
+async def test_pagination_on_aggregation_query(any_async_query: AnyQueryExecutor) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 fruitAggregationsPaginated(offset: 1, limit: 1) {
@@ -85,10 +85,10 @@ async def test_pagination_on_aggregation_query(any_query: AnyQueryExecutor) -> N
     assert result.data["fruitAggregationsPaginated"]["nodes"] == [{"name": "Cherry"}]
 
 
-async def test_paginated_aggregate_only_selection(any_query: AnyQueryExecutor) -> None:
+async def test_paginated_aggregate_only_selection(any_async_query: AnyQueryExecutor) -> None:
     """Keep aggregate-only selections on the pagination subquery alias."""
     plain = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colors {
@@ -100,7 +100,7 @@ async def test_paginated_aggregate_only_selection(any_query: AnyQueryExecutor) -
         )
     )
     paginated = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colorsPaginated {
@@ -118,10 +118,10 @@ async def test_paginated_aggregate_only_selection(any_query: AnyQueryExecutor) -
     assert paginated.data["colorsPaginated"] == plain.data["colors"]
 
 
-async def test_paginated_relationship_and_aggregate_selection(any_query: AnyQueryExecutor) -> None:
+async def test_paginated_relationship_and_aggregate_selection(any_async_query: AnyQueryExecutor) -> None:
     """Keep relation loading and its aggregate compatible across pagination."""
     plain = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colors {
@@ -134,7 +134,7 @@ async def test_paginated_relationship_and_aggregate_selection(any_query: AnyQuer
         )
     )
     paginated = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colorsPaginated {
@@ -154,11 +154,11 @@ async def test_paginated_relationship_and_aggregate_selection(any_query: AnyQuer
 
 
 async def test_ordered_relationship_and_aggregate_selection(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that a relation with its own ordering can be selected next to an aggregate of the same relation."""
     result = await maybe_async(
-        any_query("{ colors { id fruits(orderBy: { id: DESC }) { id } fruitsAggregate { count } } }")
+        any_async_query("{ colors { id fruits(orderBy: { id: DESC }) { id } fruitsAggregate { count } } }")
     )
     assert not result.errors
     assert result.data
@@ -169,14 +169,14 @@ async def test_ordered_relationship_and_aggregate_selection(
         assert color["fruitsAggregate"] == {"count": len(fruits)}
 
 
-async def test_pagination_ordered_by_aggregation(any_query: AnyQueryExecutor) -> None:
+async def test_pagination_ordered_by_aggregation(any_async_query: AnyQueryExecutor) -> None:
     """Test paginating a query ordered by an aggregation of a relation.
 
     Guards the order-by-aggregation KeyError fix in ``SubqueryBuilder.build``: combining a
     LIMIT with an aggregation order key must resolve the aggregation column rather than raise.
     """
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colorsFilteredPaginated(limit: 2, orderBy: { fruitsAggregate: { sum: { sweetness: ASC } } }) {
@@ -199,11 +199,11 @@ async def test_pagination_ordered_by_aggregation(any_query: AnyQueryExecutor) ->
 
 
 async def test_pagination_ordered_by_unselected_aggregation(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """An aggregation used only as an order key is computed once, inside the pagination subquery."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colorsFilteredPaginated(limit: 2, orderBy: { fruitsAggregate: { sum: { sweetness: ASC } } }) {
@@ -221,10 +221,10 @@ async def test_pagination_ordered_by_unselected_aggregation(
     assert query_tracker[0].statement_formatted.count("sum(") == 1
 
 
-async def test_pagination_with_relation_filter(any_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
+async def test_pagination_with_relation_filter(any_async_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
     """A relation filter under pagination selects the filtered rows, without duplicating them."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 fruitsPaginated(limit: 5, filter: { color: { name: { eq: "Red" } } }) {
@@ -241,10 +241,10 @@ async def test_pagination_with_relation_filter(any_query: AnyQueryExecutor, quer
 
 
 async def test_nested_pagination_default_limit_and_offset(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that a nested paginated relation selected without arguments gets its default limit and offset."""
-    result = await maybe_async(any_query("{ colorsWithDefaultPaginatedFruits { id fruits { id } } }"))
+    result = await maybe_async(any_async_query("{ colorsWithDefaultPaginatedFruits { id fruits { id } } }"))
     assert not result.errors
     assert result.data
     assert query_tracker.query_count == 1
@@ -253,11 +253,11 @@ async def test_nested_pagination_default_limit_and_offset(
 
 
 async def test_nested_pagination_explicit_null_limit_disables_default(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData
 ) -> None:
     """Test that an explicit null limit on a nested paginated relation lifts its default limit."""
     result = await maybe_async(
-        any_query("{ colorsWithDefaultPaginatedFruits { id fruits(limit: null, offset: 0) { id } } }")
+        any_async_query("{ colorsWithDefaultPaginatedFruits { id fruits(limit: null, offset: 0) { id } } }")
     )
     assert not result.errors
     assert result.data
@@ -275,13 +275,13 @@ async def test_nested_pagination_explicit_null_limit_disables_default(
 async def test_nested_pagination_explicit_default_shares_join_with_omitted(
     root_field: str,
     explicit_arguments: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     raw_fruits: RawRecordData,
 ) -> None:
     """Test that an alias spelling out the default pagination shares the join of an alias omitting it."""
     result = await maybe_async(
-        any_query(f"{{ {root_field} {{ id a: fruits {{ id }} b: fruits({explicit_arguments}) {{ id }} }} }}")
+        any_async_query(f"{{ {root_field} {{ id a: fruits {{ id }} b: fruits({explicit_arguments}) {{ id }} }} }}")
     )
     assert not result.errors
     assert result.data
@@ -297,11 +297,11 @@ async def test_nested_pagination_explicit_default_shares_join_with_omitted(
 
 
 async def test_nested_pagination_variables_holding_defaults_share_join_with_omitted(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that nested pagination arguments bound to variables holding the defaults share the omitted form's join."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             query ($l: Int, $o: Int!) {
                 colorsWithDefaultPaginatedFruits { id a: fruits { id } b: fruits(limit: $l, offset: $o) { id } }
@@ -319,11 +319,11 @@ async def test_nested_pagination_variables_holding_defaults_share_join_with_omit
 
 
 async def test_nested_pagination_defaults_apply_in_fragment(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that a nested paginated relation selected through a fragment gets its default limit and offset."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             fragment ColorFruits on ColorWithDefaultPaginatedFruits { fruits { id } }
             { colorsWithDefaultPaginatedFruits { id ...ColorFruits } }
@@ -350,13 +350,13 @@ async def test_nested_pagination_variables(
     operation: str,
     variables: dict[str, Any],
     expected: slice,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     raw_fruits: RawRecordData,
 ) -> None:
     """Test that nested pagination variables fall back to their operation default, then the argument default."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             f"{operation} {{ colorsWithDefaultPaginatedFruits {{ id fruits(limit: $l, offset: $o) {{ id }} }} }}",
             variables,
         )
@@ -369,11 +369,11 @@ async def test_nested_pagination_variables(
 
 
 async def test_nested_config_default_limit_with_omitted_variable(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that a nested limit bound to an omitted variable keeps the configured default limit."""
     result = await maybe_async(
-        any_query("query ($l: Int) { colorsPaginated { id a: fruits { id } b: fruits(limit: $l) { id } } }", {})
+        any_async_query("query ($l: Int) { colorsPaginated { id a: fruits { id } b: fruits(limit: $l) { id } } }", {})
     )
     assert not result.errors
     assert result.data
@@ -402,13 +402,15 @@ async def test_nested_pagination_counts_tied_rows(
     order_by: str,
     pagination: str,
     expected: slice,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     raw_fruits: RawRecordData,
     db_features: DatabaseFeatures,
 ) -> None:
     """Test that nested limit and offset count rows tied on the ordering one by one."""
-    result = await maybe_async(any_query(f"{{ colorsPaginated {{ id fruits({order_by} {pagination}) {{ id }} }} }}"))
+    result = await maybe_async(
+        any_async_query(f"{{ colorsPaginated {{ id fruits({order_by} {pagination}) {{ id }} }} }}")
+    )
     assert not result.errors
     assert result.data
     assert query_tracker.query_count == 1
@@ -432,7 +434,7 @@ async def test_nested_pagination_counts_tied_rows(
 async def test_nested_pagination_counts_tied_rows_with_to_many_child(
     pagination: str,
     expected: slice,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
@@ -440,7 +442,7 @@ async def test_nested_pagination_counts_tied_rows_with_to_many_child(
 ) -> None:
     """Test that the to-many children of a nested paginated relation do not count as rows of that relation."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             f"""
             {{
                 colorsPaginated {{

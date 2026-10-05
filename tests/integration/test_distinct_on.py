@@ -61,14 +61,14 @@ def _fruits_by_color(data: dict[str, Any]) -> dict[str, list[Any]]:
 )
 @pytest.mark.snapshot
 async def test_distinct_on(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     config: StrawchemyConfig,
     deterministic_ordering: bool,
 ) -> None:
     config.deterministic_ordering = deterministic_ordering
-    result = await maybe_async(any_query("{ users(distinctOn: [name]) { id name } }"))
+    result = await maybe_async(any_async_query("{ users(distinctOn: [name]) { id name } }"))
     assert not result.errors
     assert result.data
 
@@ -82,10 +82,10 @@ async def test_distinct_on(
 
 @pytest.mark.snapshot
 async def test_distinct_and_order_by(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     result = await maybe_async(
-        any_query("{ users(distinctOn: [name], orderBy: [{name: ASC}, {id: DESC}]) { id name } }")
+        any_async_query("{ users(distinctOn: [name], orderBy: [{name: ASC}, {id: DESC}]) { id name } }")
     )
     assert not result.errors
     assert result.data
@@ -98,11 +98,11 @@ async def test_distinct_and_order_by(
 
 @pytest.mark.snapshot
 async def test_distinct_on_projects_every_aggregation_order_by_column(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that an aggregation ORDER BY column is selected even when another aggregation of the node is."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colors(distinctOn: [name], orderBy: [{ name: ASC }, { fruitsAggregate: { sum: { sweetness: ASC } } }]) {
@@ -148,13 +148,13 @@ async def test_distinct_on_paginates_distinct_rows(
     arguments: str,
     deterministic_ordering: bool,
     expected: list[dict[str, object]],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     config: StrawchemyConfig,
 ) -> None:
     config.deterministic_ordering = deterministic_ordering
-    result = await maybe_async(any_query(f"{{ usersPaginated(distinctOn: [name], {arguments}) {{ id name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ usersPaginated(distinctOn: [name], {arguments}) {{ id name }} }}"))
     assert not result.errors
     assert result.data
 
@@ -169,11 +169,14 @@ async def test_distinct_on_paginates_distinct_rows(
     [pytest.param(True, id="deterministic-ordering"), pytest.param(False, id="non-deterministic-ordering")],
 )
 async def test_nested_distinct_on(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, config: StrawchemyConfig, deterministic_ordering: bool
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    config: StrawchemyConfig,
+    deterministic_ordering: bool,
 ) -> None:
     config.deterministic_ordering = deterministic_ordering
     result = await maybe_async(
-        any_query("{ colorsNestedDistinct { name fruits(distinctOn: [sweetness]) { sweetness } } }")
+        any_async_query("{ colorsNestedDistinct { name fruits(distinctOn: [sweetness]) { sweetness } } }")
     )
     assert not result.errors
     assert result.data
@@ -191,10 +194,10 @@ async def test_nested_distinct_on(
 
 @pytest.mark.snapshot
 async def test_nested_distinct_on_and_order_by(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colorsNestedDistinct {
@@ -216,10 +219,10 @@ async def test_nested_distinct_on_and_order_by(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_nested_distinct_on_on_one_alias(any_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
+async def test_nested_distinct_on_on_one_alias(any_async_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
     """Test that distinct on applied to one alias of a relation leaves another alias of it unaffected."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colorsNestedDistinct {
@@ -251,7 +254,7 @@ async def test_nested_distinct_on_on_one_alias(any_query: AnyQueryExecutor, quer
 )
 @pytest.mark.snapshot
 async def test_nested_distinct_on_paginated(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     pagination: str,
@@ -259,7 +262,7 @@ async def test_nested_distinct_on_paginated(
     expected_yellow: list[str],
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             f"""
             {{
                 colorsNestedDistinct {{
@@ -290,7 +293,7 @@ async def test_nested_distinct_on_paginated(
     ],
 )
 async def test_nested_distinct_on_paginated_by_primary_key(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     config: StrawchemyConfig,
     pagination: str,
@@ -299,7 +302,9 @@ async def test_nested_distinct_on_paginated_by_primary_key(
 ) -> None:
     config.deterministic_ordering = True
     result = await maybe_async(
-        any_query(f"{{ colorsNestedDistinct {{ name fruits(distinctOn: [sweetness], {pagination}) {{ name }} }} }}")
+        any_async_query(
+            f"{{ colorsNestedDistinct {{ name fruits(distinctOn: [sweetness], {pagination}) {{ name }} }} }}"
+        )
     )
     assert not result.errors
     assert result.data
@@ -345,12 +350,12 @@ async def test_distinct_on_keeps_every_child_of_a_to_many_relation(
     query: str,
     field: str,
     expected: dict[str, list[str]],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a root distinctOn deduplicates the root rows only, keeping every child of a to-many relation."""
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -362,11 +367,11 @@ async def test_distinct_on_keeps_every_child_of_a_to_many_relation(
 
 @pytest.mark.snapshot
 async def test_distinct_on_keeps_every_child_of_a_to_many_relation_behind_a_to_one(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a root distinctOn keeps every child of a to-many relation selected through a to-one relation."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             "{ fruitsDefaultOrderDistinct(distinctOn: [name], orderBy: [{ name: ASC }]) { name color { fruits { name } } } }"
         )
     )
@@ -391,11 +396,11 @@ async def test_distinct_on_keeps_every_child_of_a_to_many_relation_behind_a_to_o
 
 @pytest.mark.snapshot
 async def test_distinct_on_deduplicates_root_rows_selecting_a_to_many_relation(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a root distinctOn drops duplicate root rows and keeps every child of the selected to-many relation."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 fruitsDefaultOrderDistinct(distinctOn: [sweetness], orderBy: [{ sweetness: ASC }, { name: ASC }]) {
@@ -423,11 +428,13 @@ async def test_distinct_on_deduplicates_root_rows_selecting_a_to_many_relation(
 
 @pytest.mark.snapshot
 async def test_distinct_on_ordered_by_an_unselected_to_many_relation(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a root distinctOn ordered by a to-many relation it does not select returns one row per group."""
     result = await maybe_async(
-        any_query("{ colors(distinctOn: [name], orderBy: [{ name: ASC }, { fruits: { name: DESC } }]) { id name } }")
+        any_async_query(
+            "{ colors(distinctOn: [name], orderBy: [{ name: ASC }, { fruits: { name: DESC } }]) { id name } }"
+        )
     )
     assert not result.errors
     assert result.data
@@ -466,12 +473,12 @@ async def test_distinct_on_ordered_by_an_unselected_to_many_relation(
 async def test_distinct_on_ordered_by_other_fields(
     query: str,
     expected: list[dict[str, Any]],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that distinctOn keeps the first row of each group by an order by not starting with the distinct fields."""
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -480,9 +487,11 @@ async def test_distinct_on_ordered_by_other_fields(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_distinct_on_ordered_by_tied_fields(any_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
+async def test_distinct_on_ordered_by_tied_fields(
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
+) -> None:
     """Test that distinctOn keeps one row per group when the order by ties within the group."""
-    result = await maybe_async(any_query("{ users(distinctOn: [name], orderBy: [{ bio: ASC }]) { id name } }"))
+    result = await maybe_async(any_async_query("{ users(distinctOn: [name], orderBy: [{ bio: ASC }]) { id name } }"))
     assert not result.errors
     assert result.data
 
@@ -495,11 +504,11 @@ async def test_distinct_on_ordered_by_tied_fields(any_query: AnyQueryExecutor, q
 
 @pytest.mark.snapshot
 async def test_distinct_on_ordered_by_other_fields_selecting_a_to_many_relation(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a root distinctOn ordered by other fields keeps every child of a to-many relation behind a to-one."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 fruitsDefaultOrderDistinct(distinctOn: [colorId], orderBy: [{ name: DESC }]) {
@@ -526,11 +535,11 @@ async def test_distinct_on_ordered_by_other_fields_selecting_a_to_many_relation(
 
 @pytest.mark.snapshot
 async def test_distinct_on_ordered_by_an_aggregation(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that distinctOn keeps the first row of each group by an order by starting with an aggregation."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 fruitsDefaultOrderDistinct(
@@ -564,13 +573,15 @@ async def test_nested_distinct_on_ordered_by_other_fields(
     arguments: str,
     expected_red: list[str],
     expected_yellow: list[str],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a nested distinctOn keeps the first row of each group by an order by not starting with it."""
     result = await maybe_async(
-        any_query(f"{{ colorsNestedDistinct {{ name fruits(distinctOn: [sweetness], {arguments}) {{ name }} }} }}")
+        any_async_query(
+            f"{{ colorsNestedDistinct {{ name fruits(distinctOn: [sweetness], {arguments}) {{ name }} }} }}"
+        )
     )
     assert not result.errors
     assert result.data
@@ -593,10 +604,12 @@ async def test_nested_distinct_on_ordered_by_other_fields(
 )
 @pytest.mark.snapshot
 async def test_nested_distinct_on_with_hook_order_by(
-    arguments: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    arguments: str, any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a nested distinctOn keeps the first row of each group by the hook ordering, then the client's."""
-    result = await maybe_async(any_query(f"{{ colorsWithOrderedFruits {{ name fruits({arguments}) {{ name }} }} }}"))
+    result = await maybe_async(
+        any_async_query(f"{{ colorsWithOrderedFruits {{ name fruits({arguments}) {{ name }} }} }}")
+    )
     assert not result.errors
     assert result.data
 
@@ -641,12 +654,12 @@ async def test_nested_distinct_on_with_hook_order_by(
 async def test_distinct_on_with_hook_order_by(
     query: str,
     expected: list[str],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a root distinctOn keeps the first row of each group by the hook ordering, then the client's."""
-    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {query} {{ name }} }}"))
     assert not result.errors
     assert result.data
 

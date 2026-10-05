@@ -24,7 +24,7 @@ pytestmark = [pytest.mark.integration]
 
 @pytest.mark.snapshot
 async def test_count_aggregation(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
@@ -40,7 +40,7 @@ async def test_count_aggregation(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["color"]["fruitsAggregate"]["count"] == len(
@@ -50,13 +50,13 @@ async def test_count_aggregation(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_aggregation_without_related_rows(any_query: AnyQueryExecutor) -> None:
+async def test_aggregation_without_related_rows(any_async_query: AnyQueryExecutor) -> None:
     """Test that a parent with no related rows is returned with a zero count and null extrema."""
-    created = await maybe_async(any_query('mutation { createColor(data: { name: "Blue" }) { id } }'))
+    created = await maybe_async(any_async_query('mutation { createColor(data: { name: "Blue" }) { id } }'))
     assert not created.errors
 
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colors(filter: { name: { eq: "Blue" } }) {
@@ -76,11 +76,11 @@ async def test_aggregation_without_related_rows(any_query: AnyQueryExecutor) -> 
 
 
 async def test_count_aggregation_many_to_many(
-    any_query: AnyQueryExecutor, raw_user_departments: RawRecordData, raw_users: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_user_departments: RawRecordData, raw_users: RawRecordData
 ) -> None:
     """Test that a many-to-many count matches the number of join-table rows of each user."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 users {
@@ -99,14 +99,14 @@ async def test_count_aggregation_many_to_many(
 
 
 async def test_count_aggregation_many_to_many_join_predicates(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_user_departments: RawRecordData,
     raw_users: RawRecordData,
     raw_departments: RawRecordData,
 ) -> None:
     """Test that a many-to-many count honours the relationship primaryjoin and secondaryjoin predicates."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 users {
@@ -131,14 +131,14 @@ async def test_count_aggregation_many_to_many_join_predicates(
 
 
 async def test_nested_aggregation_correlates_to_its_own_element(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
 ) -> None:
     """Test that an aggregate nested under a to-many relation reports the value of its own element."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colors {
@@ -166,11 +166,11 @@ async def test_nested_aggregation_correlates_to_its_own_element(
 
 
 async def test_count_aggregation_many_to_many_nested(
-    any_query: AnyQueryExecutor, raw_user_departments: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_user_departments: RawRecordData
 ) -> None:
     """Test that a nested many-to-many count matches the number of users of each department."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 users {
@@ -209,7 +209,7 @@ async def test_count_aggregation_many_to_many_nested(
 async def test_sum_aggregation(
     field_name: str,
     raw_field_name: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     raw_colors: RawRecordData,
     query_tracker: QueryTracker,
@@ -227,7 +227,7 @@ async def test_sum_aggregation(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -258,7 +258,7 @@ async def test_sum_aggregation(
 async def test_min_aggregation(
     field_name: str,
     raw_field_name: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     raw_colors: RawRecordData,
     query_tracker: QueryTracker,
@@ -276,7 +276,7 @@ async def test_min_aggregation(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -310,7 +310,7 @@ async def test_min_aggregation(
 async def test_max_aggregation(
     field_name: str,
     raw_field_name: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     raw_colors: RawRecordData,
     query_tracker: QueryTracker,
@@ -328,7 +328,7 @@ async def test_max_aggregation(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -364,7 +364,7 @@ async def test_statistical_aggregation(
     agg_type: Literal["avg", "stddevSamp", "stddevPop", "varSamp", "varPop"],
     field_name: str,
     raw_field_name: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
@@ -386,7 +386,7 @@ async def test_statistical_aggregation(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -424,7 +424,7 @@ async def test_root_aggregation(
     field_name: str,
     raw_field_name: str,
     pagination: DefaultOffsetPagination | None,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -450,7 +450,7 @@ async def test_root_aggregation(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -475,8 +475,8 @@ async def test_root_aggregation(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def _data(any_query: AnyQueryExecutor, query: str) -> dict[str, Any]:
-    result = await maybe_async(any_query(query))
+async def _data(any_async_query: AnyQueryExecutor, query: str) -> dict[str, Any]:
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     return result.data
@@ -498,14 +498,14 @@ def _farms_aggregate(raw_farms: RawRecordData, fruit_id: int) -> dict[str, Any]:
 async def test_nested_aggregation_under_relation_with_arguments(
     root: str,
     arguments: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
     query_tracker: QueryTracker,
 ) -> None:
     """Test that an aggregate under a relation that gets its own subquery is computed per related row."""
     data = await _data(
-        any_query,
+        any_async_query,
         f"""
         {{
             {root} {{
@@ -525,11 +525,11 @@ async def test_nested_aggregation_under_relation_with_arguments(
 
 
 async def test_nested_aggregation_under_relation_with_distinct_on(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
 ) -> None:
     """Test that an aggregate under a relation with DISTINCT ON is computed per kept row."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colorsNestedDistinct {
@@ -574,11 +574,11 @@ def _assert_nested_aggregates(
 
 
 async def test_root_aggregation_filter_next_to_nested_aggregation(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
 ) -> None:
     """Test a root aggregation filter next to an aggregate under an ordered relation."""
     data = await _data(
-        any_query,
+        any_async_query,
         _ROOT_AGGREGATION_NEXT_TO_NESTED.format(
             arguments="(filter: { fruitsAggregate: { count: { predicate: { gt: 1 } } } })"
         ),
@@ -592,11 +592,11 @@ async def test_root_aggregation_filter_next_to_nested_aggregation(
 
 
 async def test_root_aggregation_order_by_next_to_nested_aggregation(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
 ) -> None:
     """Test a root aggregation ordering next to an aggregate under an ordered relation."""
     data = await _data(
-        any_query,
+        any_async_query,
         _ROOT_AGGREGATION_NEXT_TO_NESTED.format(arguments="(orderBy: { fruitsAggregate: { count: DESC } })"),
     )
     counts = [color["fruitsAggregate"]["count"] for color in data["colors"]]
@@ -615,13 +615,13 @@ async def test_root_aggregation_order_by_next_to_nested_aggregation(
 async def test_nested_aggregation_under_hooked_relation(
     root: str,
     expected_fruit_ids: set[int] | None,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
     query_tracker: QueryTracker,
 ) -> None:
     """Test that an aggregate under a relation whose query hook is not WHERE-only is computed per related row."""
-    data = await _data(any_query, f"{{ {root} {{ id fruits {{ id farmsAggregate {{ count }} }} }} }}")
+    data = await _data(any_async_query, f"{{ {root} {{ id fruits {{ id farmsAggregate {{ count }} }} }} }}")
     fruits = [fruit for color in data[root] for fruit in color["fruits"]]
     colored_fruit_ids = {fruit["id"] for fruit in raw_fruits if fruit["color_id"] is not None}
     assert {fruit["id"] for fruit in fruits} == (expected_fruit_ids or colored_fruit_ids)
@@ -631,11 +631,11 @@ async def test_nested_aggregation_under_hooked_relation(
 
 
 async def test_aggregation_two_levels_under_relation_with_arguments(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker
 ) -> None:
     """Test that an aggregate under a to-one relation of an ordered relation reports its own parent's value."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colors {
@@ -676,11 +676,13 @@ async def test_aggregation_two_levels_under_relation_with_arguments(
     dialects=("postgresql",),
 )
 async def test_same_aggregate_on_root_and_under_relation(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker
 ) -> None:
     """Test that one aggregate selected on the root and under a relation reports each parent's value."""
     result = await maybe_async(
-        any_query("{ colors { id fruitsAggregate { count } fruits { id color { id fruitsAggregate { count } } } } }")
+        any_async_query(
+            "{ colors { id fruitsAggregate { count } fruits { id color { id fruitsAggregate { count } } } } }"
+        )
     )
     assert not result.errors
     assert result.data
@@ -694,7 +696,7 @@ async def test_same_aggregate_on_root_and_under_relation(
 
 
 async def test_aggregate_under_aliases_differing_in_limit(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
     query_tracker: QueryTracker,
@@ -702,7 +704,7 @@ async def test_aggregate_under_aliases_differing_in_limit(
 ) -> None:
     """Test that aliases of a relation differing in limit each count their farms, sharing one grouped CTE without LATERAL."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colorsPaginated {
@@ -731,11 +733,11 @@ async def test_aggregate_under_aliases_differing_in_limit(
 
 
 async def test_nested_aggregation_under_aliased_relations_with_arguments(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, query_tracker: QueryTracker
 ) -> None:
     """Test that each alias of an ordered relation computes its own nested aggregate."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colors {

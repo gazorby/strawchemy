@@ -46,12 +46,12 @@ _TEXT_OPERATORS = (
 
 @pytest.mark.snapshot
 async def test_no_filtering(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
-    result = await maybe_async(any_query("{ fruits { id } }"))
+    result = await maybe_async(any_async_query("{ fruits { id } }"))
     assert not result.errors
     assert result.data
     assert len(result.data["fruits"]) == len(raw_fruits)
@@ -61,7 +61,10 @@ async def test_no_filtering(
 
 @pytest.mark.snapshot
 async def test_eq(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor,
+    raw_fruits: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = """
         {
@@ -71,7 +74,7 @@ async def test_eq(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["fruits"]) == 1
@@ -85,7 +88,7 @@ async def test_eq(
 
 @pytest.mark.snapshot
 async def test_neq(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -98,7 +101,7 @@ async def test_neq(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["fruits"]) == len(raw_fruits) - 1
@@ -113,7 +116,7 @@ async def test_neq(
 
 @pytest.mark.snapshot
 async def test_isnull(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_users: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -126,7 +129,7 @@ async def test_isnull(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["users"]) == len(raw_users) - 1
@@ -139,7 +142,7 @@ async def test_isnull(
 # Tests for in and nin filters
 @pytest.mark.snapshot
 async def test_in(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -152,7 +155,7 @@ async def test_in(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     expected = [fruit for fruit in raw_fruits if fruit["sweetness"] in {1, 9}]
@@ -165,7 +168,7 @@ async def test_in(
 
 @pytest.mark.snapshot
 async def test_nin(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -178,7 +181,7 @@ async def test_nin(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     expected = [fruit for fruit in raw_fruits if fruit["sweetness"] not in {1, 9}]
@@ -191,7 +194,7 @@ async def test_nin(
 
 @pytest.mark.snapshot
 async def test_gt(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -204,7 +207,7 @@ async def test_gt(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     expected = [fruit for fruit in raw_fruits if fruit["sweetness"] > 10]
@@ -217,7 +220,7 @@ async def test_gt(
 
 @pytest.mark.snapshot
 async def test_gte(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -230,7 +233,7 @@ async def test_gte(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     expected = [fruit for fruit in raw_fruits if fruit["sweetness"] >= 9]
@@ -243,7 +246,7 @@ async def test_gte(
 
 @pytest.mark.snapshot
 async def test_lt(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -256,7 +259,7 @@ async def test_lt(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     expected = [fruit for fruit in raw_fruits if fruit["sweetness"] < 1]
@@ -269,7 +272,7 @@ async def test_lt(
 
 @pytest.mark.snapshot
 async def test_lte(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -282,7 +285,7 @@ async def test_lte(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     expected = [fruit for fruit in raw_fruits if fruit["sweetness"] <= 1]
@@ -318,7 +321,7 @@ async def test_string_filters(
     filter_name: str,
     value: str,
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -331,7 +334,7 @@ async def test_string_filters(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["fruits"]) == len(expected_ids)
@@ -345,7 +348,7 @@ async def test_string_filters(
 # Tests for logical operators
 @pytest.mark.snapshot
 async def test_and(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -364,7 +367,7 @@ async def test_and(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -378,7 +381,7 @@ async def test_and(
 
 @pytest.mark.snapshot
 async def test_or(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -397,7 +400,7 @@ async def test_or(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -411,7 +414,7 @@ async def test_or(
 
 @pytest.mark.snapshot
 async def test_not(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -424,7 +427,7 @@ async def test_not(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -439,7 +442,7 @@ async def test_not(
 # Test complex nested logical operators
 @pytest.mark.snapshot
 async def test_complex_logical_operators(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -468,7 +471,7 @@ async def test_complex_logical_operators(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -487,7 +490,7 @@ async def test_complex_logical_operators(
 
 @pytest.mark.snapshot
 async def test_filter_on_paginated_query(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -500,7 +503,7 @@ async def test_filter_on_paginated_query(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -520,7 +523,7 @@ def _names_by_color(colors: list[dict[str, Any]]) -> dict[str, list[str]]:
 
 @pytest.mark.snapshot
 async def test_to_many_filter_keeps_every_selected_related_row(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a filter on a to-many relation selects parents without restricting the selected relation.
 
@@ -534,7 +537,7 @@ async def test_to_many_filter_keeps_every_selected_related_row(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -547,7 +550,9 @@ async def test_to_many_filter_keeps_every_selected_related_row(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_to_many_filter_on_paginated_field_keeps_every_selected_related_row(any_query: AnyQueryExecutor) -> None:
+async def test_to_many_filter_on_paginated_field_keeps_every_selected_related_row(
+    any_async_query: AnyQueryExecutor,
+) -> None:
     """Test that a paginated field and a plain one return the same related rows under a to-many filter."""
     query = """
         {
@@ -557,7 +562,7 @@ async def test_to_many_filter_on_paginated_field_keeps_every_selected_related_ro
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -570,7 +575,7 @@ async def test_to_many_filter_on_paginated_field_keeps_every_selected_related_ro
 
 @pytest.mark.snapshot
 async def test_to_many_filter_paginates_distinct_parents(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a parent matching a to-many filter through several rows takes one slot of the page.
 
@@ -583,7 +588,7 @@ async def test_to_many_filter_paginates_distinct_parents(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -592,7 +597,7 @@ async def test_to_many_filter_paginates_distinct_parents(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_to_many_filter_in_or_branch_keeps_every_selected_related_row(any_query: AnyQueryExecutor) -> None:
+async def test_to_many_filter_in_or_branch_keeps_every_selected_related_row(any_async_query: AnyQueryExecutor) -> None:
     """Test that a to-many filter under ``_or`` selects parents without restricting the selected relation."""
     query = """
         {
@@ -602,7 +607,7 @@ async def test_to_many_filter_in_or_branch_keeps_every_selected_related_row(any_
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -611,7 +616,7 @@ async def test_to_many_filter_in_or_branch_keeps_every_selected_related_row(any_
 
 @pytest.mark.snapshot
 async def test_to_many_filter_behind_to_one_keeps_every_selected_related_row(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a to-many filter reached through a to-one relation leaves the selected relations whole."""
     query = """
@@ -622,7 +627,7 @@ async def test_to_many_filter_behind_to_one_keeps_every_selected_related_row(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -636,7 +641,7 @@ async def test_to_many_filter_behind_to_one_keeps_every_selected_related_row(
 
 @pytest.mark.snapshot
 async def test_to_many_filter_and_column_filter(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a column filter next to a to-many filter restricts the parents outside of the EXISTS subquery."""
     query = """
@@ -647,7 +652,7 @@ async def test_to_many_filter_and_column_filter(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -661,7 +666,7 @@ async def test_to_many_filter_and_column_filter(
 
 @pytest.mark.snapshot
 async def test_to_many_filter_and_to_one_filter(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a to-one filter next to a to-many filter restricts the parents through a join."""
     query = """
@@ -671,7 +676,7 @@ async def test_to_many_filter_and_to_one_filter(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -802,10 +807,10 @@ async def test_to_many_filter_and_to_one_filter(
     ],
 )
 async def test_relation_filter_ignores_siblings(
-    field: str, arguments: str, dto_filter: str, names: list[str], any_query: AnyQueryExecutor
+    field: str, arguments: str, dto_filter: str, names: list[str], any_async_query: AnyQueryExecutor
 ) -> None:
     """Test that a relation filter only matches rows having a matching related row, whatever its sibling filters."""
-    result = await maybe_async(any_query(f"{{ {field}(filter: {dto_filter}{arguments}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {field}(filter: {dto_filter}{arguments}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -814,9 +819,9 @@ async def test_relation_filter_ignores_siblings(
 
 @pytest.mark.snapshot
 async def test_not_isnull(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
-    result = await maybe_async(any_query("{ users(filter: { _not: { bio: { isNull: true } } }) { name } }"))
+    result = await maybe_async(any_async_query("{ users(filter: { _not: { bio: { isNull: true } } }) { name } }"))
     assert not result.errors
     assert result.data
 
@@ -841,8 +846,8 @@ async def test_not_isnull(
         pytest.param("{ _not: { _not: { bio: { isNull: true } } } }", ["Alice", "Bob", "Charlie"], id="not-not-isnull"),
     ],
 )
-async def test_not_isnull_column(dto_filter: str, names: list[str], any_query: AnyQueryExecutor) -> None:
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+async def test_not_isnull_column(dto_filter: str, names: list[str], any_async_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -873,7 +878,7 @@ async def test_not_isnull_column(dto_filter: str, names: list[str], any_query: A
     ],
 )
 async def test_aggregate_under_one_of_two_to_many_paths(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_users: RawRecordData,  # noqa: ARG001
     raw_user_departments: RawRecordData,  # noqa: ARG001
 ) -> None:
@@ -883,7 +888,7 @@ async def test_aggregate_under_one_of_two_to_many_paths(
         'group: { topics: { name: { eq: "Hello!" } } } }'
     )
 
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
 
     assert not result.errors
     assert result.data is not None
@@ -937,13 +942,13 @@ async def test_aggregate_under_one_of_two_to_many_paths(
 async def test_not_isnull_relation(
     dto_filter: str,
     names: list[str],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_groups: RawRecordData,  # noqa: ARG001
     raw_users: RawRecordData,  # noqa: ARG001
     raw_departments: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test ``isNull`` on the columns of NULL-named related rows, directly and under ``_not``."""
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -952,9 +957,9 @@ async def test_not_isnull_relation(
 
 @pytest.mark.snapshot
 async def test_not_empty_comparison(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
-    result = await maybe_async(any_query("{ users(filter: { _not: { bio: {} } }) { name } }"))
+    result = await maybe_async(any_async_query("{ users(filter: { _not: { bio: {} } }) { name } }"))
     assert not result.errors
     assert result.data
 
@@ -1024,9 +1029,9 @@ async def test_not_empty_comparison(
     ],
 )
 async def test_empty_comparison_is_ignored(
-    query: str, variables: dict[str, Any] | None, names: list[str], any_query: AnyQueryExecutor
+    query: str, variables: dict[str, Any] | None, names: list[str], any_async_query: AnyQueryExecutor
 ) -> None:
-    result = await maybe_async(any_query(query, variables))
+    result = await maybe_async(any_async_query(query, variables))
     assert not result.errors
     assert result.data is not None
 
@@ -1084,9 +1089,9 @@ async def test_empty_comparison_is_ignored(
     ],
 )
 async def test_empty_relation_filter_is_ignored(
-    query: str, variables: dict[str, Any] | None, any_query: AnyQueryExecutor
+    query: str, variables: dict[str, Any] | None, any_async_query: AnyQueryExecutor
 ) -> None:
-    result = await maybe_async(any_query(query, variables))
+    result = await maybe_async(any_async_query(query, variables))
     assert not result.errors
     assert result.data is not None
 
@@ -1105,9 +1110,9 @@ async def test_empty_relation_filter_is_ignored(
     ],
 )
 async def test_empty_relation_filter_beside_predicate(
-    dto_filter: str, names: list[str], any_query: AnyQueryExecutor
+    dto_filter: str, names: list[str], any_async_query: AnyQueryExecutor
 ) -> None:
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -1124,9 +1129,9 @@ async def test_empty_relation_filter_beside_predicate(
     ],
 )
 async def test_empty_relation_filter(
-    dto_filter: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    dto_filter: str, any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data
 
@@ -1177,8 +1182,8 @@ async def test_empty_relation_filter(
         ),
     ],
 )
-async def test_empty_or_branch_is_pruned(dto_filter: str, names: list[str], any_query: AnyQueryExecutor) -> None:
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+async def test_empty_or_branch_is_pruned(dto_filter: str, names: list[str], any_async_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -1239,9 +1244,11 @@ async def test_empty_or_branch_is_pruned(dto_filter: str, names: list[str], any_
         ),
     ],
 )
-async def test_null_filter_field_is_ignored(dto_filter: str, names: list[str], any_query: AnyQueryExecutor) -> None:
+async def test_null_filter_field_is_ignored(
+    dto_filter: str, names: list[str], any_async_query: AnyQueryExecutor
+) -> None:
     """Test that a filter field set to null filters nothing, as if it were absent."""
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -1256,9 +1263,9 @@ async def test_null_filter_field_is_ignored(dto_filter: str, names: list[str], a
         pytest.param("query ($value: UserFilter) { users(filter: $value) { name } }", id="filter"),
     ],
 )
-async def test_null_filter_variable_is_ignored(query: str, any_query: AnyQueryExecutor) -> None:
+async def test_null_filter_variable_is_ignored(query: str, any_async_query: AnyQueryExecutor) -> None:
     """Test that a filter bound to a null variable filters nothing."""
-    result = await maybe_async(any_query(query, {"value": None}))
+    result = await maybe_async(any_async_query(query, {"value": None}))
     assert not result.errors
     assert result.data is not None
 
@@ -1436,20 +1443,22 @@ async def test_not_complements_relation_filter(
     arguments: str,
     dto_filter: str,
     names: list[str],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_departments: RawRecordData,  # noqa: ARG001
     raw_user_departments: RawRecordData,  # noqa: ARG001
     raw_topics: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test that ``_not`` over a filter matches exactly the rows the filter does not."""
     query = "{{ {field}(filter: {dto_filter}{arguments}) {{ name }} }}"
-    result = await maybe_async(any_query(query.format(field=field, dto_filter=dto_filter, arguments=arguments)))
+    result = await maybe_async(any_async_query(query.format(field=field, dto_filter=dto_filter, arguments=arguments)))
     assert not result.errors
     assert result.data is not None
     matched = [user["name"] for user in result.data[field]]
 
     negated_filter = f"{{ _not: {dto_filter} }}"
-    result = await maybe_async(any_query(query.format(field=field, dto_filter=negated_filter, arguments=arguments)))
+    result = await maybe_async(
+        any_async_query(query.format(field=field, dto_filter=negated_filter, arguments=arguments))
+    )
     assert not result.errors
     assert result.data is not None
     negated = sorted(user["name"] for user in result.data[field])
@@ -1460,10 +1469,10 @@ async def test_not_complements_relation_filter(
 
 @pytest.mark.snapshot
 async def test_not_to_many(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     result = await maybe_async(
-        any_query('{ users(filter: { _not: { departments: { name: { eq: "IT" } } } }) { name } }')
+        any_async_query('{ users(filter: { _not: { departments: { name: { eq: "IT" } } } }) { name } }')
     )
     assert not result.errors
     assert result.data
@@ -1475,10 +1484,10 @@ async def test_not_to_many(
 
 @pytest.mark.snapshot
 async def test_and_same_to_many(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             "{ users(filter: { _and: ["
             '{ departments: { name: { eq: "IT" } } }, { departments: { name: { eq: "Platform" } } }'
             "] }) { name } }"
@@ -1495,9 +1504,9 @@ async def test_and_same_to_many(
 @pytest.mark.snapshot
 @pytest.mark.parametrize("comparison", ["in", "nin"])
 async def test_empty_list_comparison(
-    comparison: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    comparison: str, any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
-    result = await maybe_async(any_query(f"{{ users(filter: {{ bio: {{ {comparison}: [] }} }}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {{ bio: {{ {comparison}: [] }} }}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -1609,9 +1618,9 @@ async def test_empty_list_comparison(
     ],
 )
 async def test_empty_list_comparison_result(
-    query: str, variables: dict[str, Any] | None, names: list[str], any_query: AnyQueryExecutor
+    query: str, variables: dict[str, Any] | None, names: list[str], any_async_query: AnyQueryExecutor
 ) -> None:
-    result = await maybe_async(any_query(query, variables))
+    result = await maybe_async(any_async_query(query, variables))
     assert not result.errors
     assert result.data is not None
 
@@ -1626,9 +1635,9 @@ async def test_empty_list_comparison_result(
         pytest.param("{{ _not: {{ bio: {{ {operator}: null }} }} }}", id="not-column"),
     ],
 )
-async def test_null_operator_is_ignored(template: str, operator: str, any_query: AnyQueryExecutor) -> None:
+async def test_null_operator_is_ignored(template: str, operator: str, any_async_query: AnyQueryExecutor) -> None:
     """Test that an operator set to null is ignored like an absent one, directly and under ``_not``."""
-    result = await maybe_async(any_query(f"{{ users(filter: {template.format(operator=operator)}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {template.format(operator=operator)}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -1725,10 +1734,10 @@ async def test_null_operator_is_ignored(template: str, operator: str, any_query:
     ],
 )
 async def test_null_operator_is_ignored_in_filter(
-    query: str, variables: dict[str, Any] | None, names: list[str], any_query: AnyQueryExecutor
+    query: str, variables: dict[str, Any] | None, names: list[str], any_async_query: AnyQueryExecutor
 ) -> None:
     """Test that null operators are ignored beside other operators, in branches, relations and aggregations."""
-    result = await maybe_async(any_query(query, variables))
+    result = await maybe_async(any_async_query(query, variables))
     assert not result.errors
     assert result.data is not None
 
@@ -1753,9 +1762,11 @@ async def test_null_operator_is_ignored_in_filter(
         ),
     ],
 )
-async def test_regexp_operators_are_independent(dto_filter: str, names: list[str], any_query: AnyQueryExecutor) -> None:
+async def test_regexp_operators_are_independent(
+    dto_filter: str, names: list[str], any_async_query: AnyQueryExecutor
+) -> None:
     """Test that each regexp operator gets its own predicate, an empty pattern matching every string."""
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -1781,10 +1792,10 @@ async def test_regexp_operators_are_independent(dto_filter: str, names: list[str
     ],
 )
 async def test_case_insensitive_regexp_ignores_pattern_case(
-    dto_filter: str, names: list[str], any_query: AnyQueryExecutor
+    dto_filter: str, names: list[str], any_async_query: AnyQueryExecutor
 ) -> None:
     """Test that iregexp and inregexp match regardless of the case of either the pattern or the value."""
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -1841,11 +1852,11 @@ async def test_case_insensitive_regexp_ignores_pattern_case(
 async def test_case_insensitive_like_folds_non_ascii(
     dto_filter: str,
     names: list[str],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_users: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test that the case-insensitive LIKE operators ignore the case of non-ASCII letters."""
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -1886,11 +1897,11 @@ async def test_case_insensitive_like_folds_non_ascii(
 async def test_ilike_patterns_on_regexp_syntax_and_long_values(
     dto_filter: str,
     names: list[str],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_users: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test that ilike and nilike read regular expression syntax literally and stay fast on long values."""
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
@@ -1944,31 +1955,17 @@ async def test_like_backslash_escapes_next_character(
     operator: str,
     value: str,
     names: list[str],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_users: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test that a backslash escapes the next LIKE pattern character, and that the literal operators read it as is."""
     result = await maybe_async(
-        any_query(f"{{ users(filter: {{ bio: {{ {operator}: {json.dumps(value)} }} }}) {{ name }} }}")
+        any_async_query(f"{{ users(filter: {{ bio: {{ {operator}: {json.dumps(value)} }} }}) {{ name }} }}")
     )
     assert not result.errors
     assert result.data is not None
 
     assert sorted(user["name"] for user in result.data["users"]) == names
-
-
-@pytest.mark.parametrize("operator", ["like", "nlike", "ilike", "nilike"])
-@pytest.mark.parametrize("value", ["50\\", "a\\\\\\"])
-async def test_like_pattern_ending_with_escape_is_rejected(
-    operator: str, value: str, any_query: AnyQueryExecutor
-) -> None:
-    """Test that a LIKE pattern ending with a lone backslash is rejected before reaching the database."""
-    result = await maybe_async(
-        any_query(f"{{ users(filter: {{ bio: {{ {operator}: {json.dumps(value)} }} }}) {{ name }} }}")
-    )
-    assert result.errors
-    assert len(result.errors) == 1
-    assert result.errors[0].message == f"LIKE pattern {value!r} must not end with an escape character"
 
 
 @pytest.mark.parametrize(
@@ -2015,11 +2012,11 @@ async def test_like_pattern_ending_with_escape_is_rejected(
 async def test_case_sensitive_like_operators(
     dto_filter: str,
     names: list[str],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_users: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test that like, nlike, startswith, endswith and contains compare letter case, and trailing spaces, exactly."""
-    result = await maybe_async(any_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 

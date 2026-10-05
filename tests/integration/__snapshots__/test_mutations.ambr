@@ -27,20 +27,6 @@
    WHERE color.id IN (__[POSTCOMPILE_id_1])
   '''
 # ---
-# name: test_column_override[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_column_override[session-async-tracked-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
 # name: test_column_override[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO color (name, created_at, updated_at, id)
@@ -48,34 +34,6 @@
   '''
 # ---
 # name: test_column_override[session-async-tracked-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_column_override[session-sync-tracked-psycopg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_column_override[session-sync-tracked-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_column_override[session-sync-tracked-sqlite_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_column_override[session-sync-tracked-sqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -105,21 +63,6 @@
   '''
 # ---
 # name: test_create[session-async-tracked-createColor-asyncmy_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_create[session-async-tracked-createColor-asyncpg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-async-tracked-createColor-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -173,21 +116,6 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_create[session-async-tracked-createValidatedColor-asyncpg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-async-tracked-createValidatedColor-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
 # name: test_create[session-async-tracked-createValidatedColor-manual-aiosqlite_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
@@ -209,20 +137,6 @@
   '''
 # ---
 # name: test_create[session-async-tracked-createValidatedColor-manual-asyncmy_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-async-tracked-createValidatedColor-manual-asyncpg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-async-tracked-createValidatedColor-manual-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -289,21 +203,6 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_create[session-async-tracked-createValidatedColorAllFragments-asyncpg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-async-tracked-createValidatedColorAllFragments-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
 # name: test_create[session-async-tracked-createValidatedColorAllFragments-manual-aiosqlite_engine]
   '''
   INSERT INTO color (name, created_at, updated_at)
@@ -325,20 +224,6 @@
   '''
 # ---
 # name: test_create[session-async-tracked-createValidatedColorAllFragments-manual-asyncmy_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-async-tracked-createValidatedColorAllFragments-manual-asyncpg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-async-tracked-createValidatedColorAllFragments-manual-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -375,152 +260,6 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_create[session-sync-tracked-createColor-psycopg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-sync-tracked-createColor-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_create[session-sync-tracked-createColor-sqlite_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create[session-sync-tracked-createColor-sqlite_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColor-manual-psycopg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColor-manual-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColor-manual-sqlite_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColor-manual-sqlite_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColor-psycopg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColor-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColor-sqlite_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColor-sqlite_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColorAllFragments-manual-psycopg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColorAllFragments-manual-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColorAllFragments-manual-sqlite_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColorAllFragments-manual-sqlite_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColorAllFragments-psycopg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColorAllFragments-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColorAllFragments-sqlite_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create[session-sync-tracked-createValidatedColorAllFragments-sqlite_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
 # name: test_create_init_defaults[session-async-tracked-aiosqlite_engine]
   '''
   INSERT INTO USER (name, bio, created_at, updated_at)
@@ -533,28 +272,10 @@
   VALUES (%s, %s, %s, %s)
   '''
 # ---
-# name: test_create_init_defaults[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO "user" (name, bio, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::VARCHAR, $3::TIMESTAMP WITHOUT TIME ZONE, $4::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
-  '''
-# ---
 # name: test_create_init_defaults[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO "user" (name, bio, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(bio)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
-  '''
-# ---
-# name: test_create_init_defaults[session-sync-tracked-psycopg_engine]
-  '''
-  INSERT INTO "user" (name, bio, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(bio)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
-  '''
-# ---
-# name: test_create_init_defaults[session-sync-tracked-sqlite_engine]
-  '''
-  INSERT INTO USER (name, bio, created_at, updated_at)
-  VALUES (?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_create_many[session-async-tracked-aiosqlite_engine]
@@ -593,21 +314,6 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_create_many[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_many[session-async-tracked-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
 # name: test_create_many[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO color (name, created_at, updated_at, id)
@@ -615,36 +321,6 @@
   '''
 # ---
 # name: test_create_many[session-async-tracked-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_create_many[session-sync-tracked-psycopg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_many[session-sync-tracked-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_create_many[session-sync-tracked-sqlite_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_many[session-sync-tracked-sqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -705,34 +381,6 @@
      SET color_id = %s,
          updated_at = %s
    WHERE fruit.id = %s
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-async-tracked-add-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-async-tracked-add-asyncpg_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-async-tracked-add-asyncpg_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = $3::INTEGER
   '''
 # ---
 # name: test_create_with_existing_to_many[session-async-tracked-add-psycopg_async_engine]
@@ -817,34 +465,6 @@
    WHERE fruit.id = %s
   '''
 # ---
-# name: test_create_with_existing_to_many[session-async-tracked-set-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-async-tracked-set-asyncpg_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-async-tracked-set-asyncpg_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = $3::INTEGER
-  '''
-# ---
 # name: test_create_with_existing_to_many[session-async-tracked-set-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -871,116 +491,6 @@
          updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
     ZONE
    WHERE fruit.id = %(fruit_id)s::INTEGER
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-add-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-add-psycopg_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-add-psycopg_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = %(color_id)s::INTEGER,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = %(fruit_id)s::INTEGER
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-add-sqlite_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-add-sqlite_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-add-sqlite_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = ?,
-         updated_at = ?
-   WHERE fruit.id = ?
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-set-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-set-psycopg_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-set-psycopg_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = %(color_id)s::INTEGER,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = %(fruit_id)s::INTEGER
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-set-sqlite_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-set-sqlite_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_existing_to_many[session-sync-tracked-set-sqlite_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = ?,
-         updated_at = ?
-   WHERE fruit.id = ?
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-async-tracked-aiosqlite_engine]
@@ -1091,60 +601,6 @@
             fruit_farm_1.id ASC
   '''
 # ---
-# name: test_create_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO derived_product (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('derived_product_id_seq')) RETURNING derived_product.id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::INTEGER, $5::FLOAT, $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine].3
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine].4
-  '''
-  INSERT INTO fruit_farm (name, fruit_id, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::TIMESTAMP WITHOUT TIME ZONE, $4::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_farm_id_seq')) RETURNING fruit_farm.id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine].5
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         derived_product_1.name AS name_2,
-         derived_product_1.id AS id_2,
-         fruit_farm_1.name AS name_3,
-         fruit_farm_1.id AS id_3
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN derived_product AS derived_product_1
-      ON derived_product_1.id = fruit_1.derived_product_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_4])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            derived_product_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
 # name: test_create_with_nested_mixed_relations_create[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO derived_product (name, created_at, updated_at, id)
@@ -1176,114 +632,6 @@
   '''
 # ---
 # name: test_create_with_nested_mixed_relations_create[session-async-tracked-psycopg_async_engine].5
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         derived_product_1.name AS name_2,
-         derived_product_1.id AS id_2,
-         fruit_farm_1.name AS name_3,
-         fruit_farm_1.id AS id_3
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN derived_product AS derived_product_1
-      ON derived_product_1.id = fruit_1.derived_product_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_4])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            derived_product_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine]
-  '''
-  INSERT INTO derived_product (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('derived_product_id_seq')) RETURNING derived_product.id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(derived_product_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine].3
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine].4
-  '''
-  INSERT INTO fruit_farm (name, fruit_id, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(fruit_id)s::INTEGER, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_farm_id_seq')) RETURNING fruit_farm.id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine].5
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         derived_product_1.name AS name_2,
-         derived_product_1.id AS id_2,
-         fruit_farm_1.name AS name_3,
-         fruit_farm_1.id AS id_3
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN derived_product AS derived_product_1
-      ON derived_product_1.id = fruit_1.derived_product_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_4])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            derived_product_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine]
-  '''
-  INSERT INTO derived_product (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine].3
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine].4
-  '''
-  INSERT INTO fruit_farm (name, fruit_id, created_at, updated_at)
-  VALUES (?, ?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine].5
   '''
   SELECT color.name,
          color.id,
@@ -1368,38 +716,6 @@
       ON user.id = user_department_join_table_1.user_id
    WHERE user.id IN (__[POSTCOMPILE_id_2])
    ORDER BY user.id ASC,
-            department_1.id ASC
-  '''
-# ---
-# name: test_create_with_secondary_table_create[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO "user" (name, bio, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::VARCHAR, $3::TIMESTAMP WITHOUT TIME ZONE, $4::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
-  '''
-# ---
-# name: test_create_with_secondary_table_create[session-async-tracked-asyncpg_engine].1
-  '''
-  INSERT INTO department (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('department_id_seq')) RETURNING department.id
-  '''
-# ---
-# name: test_create_with_secondary_table_create[session-async-tracked-asyncpg_engine].2
-  '''
-  INSERT INTO user_department_join_table (user_id, department_id)
-  VALUES ($1::INTEGER, $2::INTEGER)
-  '''
-# ---
-# name: test_create_with_secondary_table_create[session-async-tracked-asyncpg_engine].3
-  '''
-  SELECT "user".name,
-         "user".id,
-         department_1.name AS name_1,
-         department_1.id AS id_1
-    FROM "user" AS "user"
-    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
-      ON "user".id = user_department_join_table_1.user_id
-   WHERE "user".id IN (__[POSTCOMPILE_id_2])
-   ORDER BY "user".id ASC,
             department_1.id ASC
   '''
 # ---
@@ -1539,26 +855,6 @@
             department_1.id ASC
   '''
 # ---
-# name: test_create_with_secondary_table_set[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO "user" (name, bio, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::VARCHAR, $3::TIMESTAMP WITHOUT TIME ZONE, $4::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
-  '''
-# ---
-# name: test_create_with_secondary_table_set[session-async-tracked-asyncpg_engine].1
-  '''
-  SELECT "user".name,
-         "user".id,
-         department_1.name AS name_1,
-         department_1.id AS id_1
-    FROM "user" AS "user"
-    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
-      ON "user".id = user_department_join_table_1.user_id
-   WHERE "user".id IN (__[POSTCOMPILE_id_2])
-   ORDER BY "user".id ASC,
-            department_1.id ASC
-  '''
-# ---
 # name: test_create_with_secondary_table_set[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO "user" (name, bio, created_at, updated_at, id)
@@ -1677,32 +973,6 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_create_with_to_many_create[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_to_many_create[session-async-tracked-asyncpg_engine].1
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_to_many_create[session-async-tracked-asyncpg_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
 # name: test_create_with_to_many_create[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO color (name, created_at, updated_at, id)
@@ -1716,58 +986,6 @@
   '''
 # ---
 # name: test_create_with_to_many_create[session-async-tracked-psycopg_async_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_many_create[session-sync-tracked-psycopg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_to_many_create[session-sync-tracked-psycopg_engine].1
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_to_many_create[session-sync-tracked-psycopg_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_many_create[session-sync-tracked-sqlite_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_to_many_create[session-sync-tracked-sqlite_engine].1
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_to_many_create[session-sync-tracked-sqlite_engine].2
   '''
   SELECT color.name,
          color.id,
@@ -1841,36 +1059,6 @@
   VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
-# name: test_create_with_to_many_create_and_nested_set[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         fruit_farm_1.id AS id_2
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_3])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_many_create_and_nested_set[session-async-tracked-asyncpg_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_to_many_create_and_nested_set[session-async-tracked-asyncpg_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
 # name: test_create_with_to_many_create_and_nested_set[session-async-tracked-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -1899,66 +1087,6 @@
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_to_many_create_and_nested_set[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         fruit_farm_1.id AS id_2
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_3])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_many_create_and_nested_set[session-sync-tracked-psycopg_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_to_many_create_and_nested_set[session-sync-tracked-psycopg_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_to_many_create_and_nested_set[session-sync-tracked-sqlite_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         fruit_farm_1.id AS id_2
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_3])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_many_create_and_nested_set[session-sync-tracked-sqlite_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_to_many_create_and_nested_set[session-sync-tracked-sqlite_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_create_with_to_one_create[session-async-tracked-aiosqlite_engine]
@@ -2013,32 +1141,6 @@
   VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
-# name: test_create_with_to_one_create[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.name AS name_1,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_create[session-async-tracked-asyncpg_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_to_one_create[session-async-tracked-asyncpg_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
 # name: test_create_with_to_one_create[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.name,
@@ -2063,58 +1165,6 @@
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_to_one_create[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.name AS name_1,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_create[session-sync-tracked-psycopg_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_create_with_to_one_create[session-sync-tracked-psycopg_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_to_one_create[session-sync-tracked-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.name AS name_1,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_create[session-sync-tracked-sqlite_engine].1
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_to_one_create[session-sync-tracked-sqlite_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_create_with_to_one_create_and_nested_set[session-async-tracked-aiosqlite_engine]
@@ -2177,36 +1227,6 @@
   VALUES (%s, %s, %s, %s, %s)
   '''
 # ---
-# name: test_create_with_to_one_create_and_nested_set[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT "user".name,
-         "user".id,
-         group_1.name AS name_1,
-         group_1.id AS id_1,
-         topic_1.id AS id_2
-    FROM "user" AS "user"
-    LEFT OUTER JOIN "group" AS group_1
-      ON group_1.id = "user".group_id
-    LEFT OUTER JOIN topic AS topic_1
-      ON group_1.id = topic_1.group_id
-   WHERE "user".id IN (__[POSTCOMPILE_id_3])
-   ORDER BY "user".id ASC,
-            group_1.id ASC,
-            topic_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_create_and_nested_set[session-async-tracked-asyncpg_engine].1
-  '''
-  INSERT INTO "group" (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('group_id_seq')) RETURNING "group".id
-  '''
-# ---
-# name: test_create_with_to_one_create_and_nested_set[session-async-tracked-asyncpg_engine].2
-  '''
-  INSERT INTO "user" (name, group_id, bio, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::VARCHAR, $4::TIMESTAMP WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
-  '''
-# ---
 # name: test_create_with_to_one_create_and_nested_set[session-async-tracked-psycopg_async_engine]
   '''
   SELECT "user".name,
@@ -2235,66 +1255,6 @@
   '''
   INSERT INTO "user" (name, group_id, bio, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(group_id)s::INTEGER, %(bio)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
-  '''
-# ---
-# name: test_create_with_to_one_create_and_nested_set[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT "user".name,
-         "user".id,
-         group_1.name AS name_1,
-         group_1.id AS id_1,
-         topic_1.id AS id_2
-    FROM "user" AS "user"
-    LEFT OUTER JOIN "group" AS group_1
-      ON group_1.id = "user".group_id
-    LEFT OUTER JOIN topic AS topic_1
-      ON group_1.id = topic_1.group_id
-   WHERE "user".id IN (__[POSTCOMPILE_id_3])
-   ORDER BY "user".id ASC,
-            group_1.id ASC,
-            topic_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_create_and_nested_set[session-sync-tracked-psycopg_engine].1
-  '''
-  INSERT INTO "group" (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('group_id_seq')) RETURNING "group".id
-  '''
-# ---
-# name: test_create_with_to_one_create_and_nested_set[session-sync-tracked-psycopg_engine].2
-  '''
-  INSERT INTO "user" (name, group_id, bio, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(group_id)s::INTEGER, %(bio)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('user_id_seq')) RETURNING "user".id
-  '''
-# ---
-# name: test_create_with_to_one_create_and_nested_set[session-sync-tracked-sqlite_engine]
-  '''
-  SELECT user.name,
-         user.id,
-         group_1.name AS name_1,
-         group_1.id AS id_1,
-         topic_1.id AS id_2
-    FROM USER AS USER
-    LEFT OUTER JOIN "group" AS group_1
-      ON group_1.id = user.group_id
-    LEFT OUTER JOIN topic AS topic_1
-      ON group_1.id = topic_1.group_id
-   WHERE user.id IN (__[POSTCOMPILE_id_3])
-   ORDER BY user.id ASC,
-            group_1.id ASC,
-            topic_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_create_and_nested_set[session-sync-tracked-sqlite_engine].1
-  '''
-  INSERT INTO "group" (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_create_with_to_one_create_and_nested_set[session-sync-tracked-sqlite_engine].2
-  '''
-  INSERT INTO USER (name, group_id, bio, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_create_with_to_one_set[session-async-tracked-aiosqlite_engine]
@@ -2335,25 +1295,6 @@
   VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
-# name: test_create_with_to_one_set[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_set[session-async-tracked-asyncpg_engine].1
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
 # name: test_create_with_to_one_set[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.name,
@@ -2371,44 +1312,6 @@
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_to_one_set[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_set[session-sync-tracked-psycopg_engine].1
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_to_one_set[session-sync-tracked-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_set[session-sync-tracked-sqlite_engine].1
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_create_with_to_one_set_null[session-async-tracked-aiosqlite_engine]
@@ -2449,25 +1352,6 @@
   VALUES (%s, %s, %s, %s, %s, %s, %s)
   '''
 # ---
-# name: test_create_with_to_one_set_null[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_set_null[session-async-tracked-asyncpg_engine].1
-  '''
-  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::FLOAT, $4::TIME WITHOUT TIME ZONE, $5::TIMESTAMP WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
 # name: test_create_with_to_one_set_null[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.name,
@@ -2485,44 +1369,6 @@
   '''
   INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
   VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_to_one_set_null[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_set_null[session-sync-tracked-psycopg_engine].1
-  '''
-  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_create_with_to_one_set_null[session-sync-tracked-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_create_with_to_one_set_null[session-sync-tracked-sqlite_engine].1
-  '''
-  INSERT INTO fruit (name, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?) RETURNING id
   '''
 # ---
 # name: test_delete_all[session-async-tracked-aiosqlite_engine]
@@ -2569,25 +1415,6 @@
     FROM USER
   '''
 # ---
-# name: test_delete_all[session-async-tracked-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user" RETURNING "user".id
-  '''
-# ---
-# name: test_delete_all[session-async-tracked-asyncpg_engine].1
-  '''
-  SELECT "user".name,
-         "user".id,
-         group_1.name AS name_1,
-         group_1.id AS id_1
-    FROM "user" AS "user"
-    LEFT OUTER JOIN "group" AS group_1
-      ON group_1.id = "user".group_id
-   ORDER BY "user".id ASC,
-            group_1.id ASC
-  '''
-# ---
 # name: test_delete_all[session-async-tracked-psycopg_async_engine]
   '''
   DELETE
@@ -2604,44 +1431,6 @@
     LEFT OUTER JOIN "group" AS group_1
       ON group_1.id = "user".group_id
    ORDER BY "user".id ASC,
-            group_1.id ASC
-  '''
-# ---
-# name: test_delete_all[session-sync-tracked-psycopg_engine]
-  '''
-  DELETE
-    FROM "user" RETURNING "user".id
-  '''
-# ---
-# name: test_delete_all[session-sync-tracked-psycopg_engine].1
-  '''
-  SELECT "user".name,
-         "user".id,
-         group_1.name AS name_1,
-         group_1.id AS id_1
-    FROM "user" AS "user"
-    LEFT OUTER JOIN "group" AS group_1
-      ON group_1.id = "user".group_id
-   ORDER BY "user".id ASC,
-            group_1.id ASC
-  '''
-# ---
-# name: test_delete_all[session-sync-tracked-sqlite_engine]
-  '''
-  DELETE
-    FROM USER RETURNING id
-  '''
-# ---
-# name: test_delete_all[session-sync-tracked-sqlite_engine].1
-  '''
-  SELECT user.name,
-         user.id,
-         group_1.name AS name_1,
-         group_1.id AS id_1
-    FROM USER AS USER
-    LEFT OUTER JOIN "group" AS group_1
-      ON group_1.id = user.group_id
-   ORDER BY user.id ASC,
             group_1.id ASC
   '''
 # ---
@@ -2694,27 +1483,6 @@
    WHERE user.name = %s
   '''
 # ---
-# name: test_delete_filter[session-async-tracked-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name = $1::VARCHAR RETURNING "user".id
-  '''
-# ---
-# name: test_delete_filter[session-async-tracked-asyncpg_engine].1
-  '''
-  SELECT "user".name,
-         "user".id,
-         group_1.name AS name_1,
-         group_1.id AS id_1
-    FROM "user" AS "user"
-    LEFT OUTER JOIN "group" AS group_1
-      ON group_1.id = "user".group_id
-   WHERE "user".name = $1::VARCHAR
-   ORDER BY "user".id ASC,
-            group_1.id ASC
-  '''
-# ---
 # name: test_delete_filter[session-async-tracked-psycopg_async_engine]
   '''
   DELETE
@@ -2733,48 +1501,6 @@
       ON group_1.id = "user".group_id
    WHERE "user".name = %(name_2)s::VARCHAR
    ORDER BY "user".id ASC,
-            group_1.id ASC
-  '''
-# ---
-# name: test_delete_filter[session-sync-tracked-psycopg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name = %(name_1)s::VARCHAR RETURNING "user".id
-  '''
-# ---
-# name: test_delete_filter[session-sync-tracked-psycopg_engine].1
-  '''
-  SELECT "user".name,
-         "user".id,
-         group_1.name AS name_1,
-         group_1.id AS id_1
-    FROM "user" AS "user"
-    LEFT OUTER JOIN "group" AS group_1
-      ON group_1.id = "user".group_id
-   WHERE "user".name = %(name_2)s::VARCHAR
-   ORDER BY "user".id ASC,
-            group_1.id ASC
-  '''
-# ---
-# name: test_delete_filter[session-sync-tracked-sqlite_engine]
-  '''
-  DELETE
-    FROM USER
-   WHERE user.name = ? RETURNING id
-  '''
-# ---
-# name: test_delete_filter[session-sync-tracked-sqlite_engine].1
-  '''
-  SELECT user.name,
-         user.id,
-         group_1.name AS name_1,
-         group_1.id AS id_1
-    FROM USER AS USER
-    LEFT OUTER JOIN "group" AS group_1
-      ON group_1.id = user.group_id
-   WHERE user.name = ?
-   ORDER BY user.id ASC,
             group_1.id ASC
   '''
 # ---
@@ -2827,26 +1553,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-aggregation-arguments-null-field-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM "user" AS user_1
-            JOIN LATERAL (
-                  SELECT count(*) AS count_1
-                    FROM department AS department_1
-                    JOIN user_department_join_table AS user_department_join_table_1
-                      ON department_1.id = user_department_join_table_1.department_id
-                   WHERE user_1.id = user_department_join_table_1.user_id
-                 ) AS anon_1
-              ON TRUE
-           WHERE anon_1.count_1 > $1::INTEGER
-             AND user_1.id = "user".id
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-aggregation-arguments-null-field-psycopg_async_engine]
   '''
   DELETE
@@ -2879,12 +1585,6 @@
     FROM USER
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-aggregation-empty-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user" RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-aggregation-empty-psycopg_async_engine]
   '''
   DELETE
@@ -2901,12 +1601,6 @@
   '''
   DELETE
     FROM USER
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-aggregation-null-field-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user" RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-aggregation-null-field-psycopg_async_engine]
@@ -2929,14 +1623,6 @@
     FROM USER
    WHERE user.name = %s
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %s) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-and-column-relation-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name = $1::VARCHAR
-     AND (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name = $2::VARCHAR)) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-and-column-relation-psycopg_async_engine]
@@ -2988,14 +1674,6 @@
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN anon_1 ON user_1.id = anon_1.id WHERE coalesce(anon_1.count_1, %s) > %s) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-column-and-aggregation-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name != $1::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN LATERAL (SELECT count(department_1.id) AS count_1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE user_1.id = user_department_join_table_1.user_id) AS anon_1 ON TRUE WHERE anon_1.count_1 > $2::INTEGER AND user_1.id = "user".id)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-and-aggregation-psycopg_async_engine]
   '''
   DELETE
@@ -3018,14 +1696,6 @@
     FROM USER
    WHERE user.name != %s
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 WHERE NOT (EXISTS (SELECT 1 FROM department AS department_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE user_1.id = user_department_join_table_1.user_id AND department_1.name = %s))) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-many-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name != $1::VARCHAR
-     AND NOT (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name = $2::VARCHAR)) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-many-psycopg_async_engine]
@@ -3052,14 +1722,6 @@
      AND NOT (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name = %s) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-one-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name != $1::VARCHAR
-     AND NOT (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name = $2::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-one-null-aiosqlite_engine]
   '''
   DELETE
@@ -3074,14 +1736,6 @@
     FROM USER
    WHERE user.name != %s
      AND NOT (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-one-null-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name != $1::VARCHAR
-     AND NOT (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name IS NULL)) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-and-not-to-one-null-psycopg_async_engine]
@@ -3116,14 +1770,6 @@
      AND (user.name = %s OR (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name = %s) AS dml_matched WHERE dml_matched.id = user.id)))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-column-and-or-column-relation-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name != $1::VARCHAR
-     AND ("user".name = $2::VARCHAR OR (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name = $3::VARCHAR))) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-and-or-column-relation-psycopg_async_engine]
   '''
   DELETE
@@ -3148,14 +1794,6 @@
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %s) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name != $1::VARCHAR
-     AND (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name = $2::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-null-aiosqlite_engine]
   '''
   DELETE
@@ -3170,14 +1808,6 @@
     FROM USER
    WHERE user.name != %s
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name IS NULL) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-null-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name != $1::VARCHAR
-     AND (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name IS NULL)) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-null-psycopg_async_engine]
@@ -3202,14 +1832,6 @@
     FROM USER
    WHERE user.name != %s
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE (department_1.name IS NULL OR department_1.name = %s)) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-or-null-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name != $1::VARCHAR
-     AND (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND (department_1.name IS NULL OR department_1.name = $2::VARCHAR))) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-and-to-many-or-null-psycopg_async_engine]
@@ -3244,14 +1866,6 @@
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-column-and-to-one-null-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name != $1::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name IS NULL)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-and-to-one-null-psycopg_async_engine]
   '''
   DELETE
@@ -3265,13 +1879,6 @@
   DELETE
     FROM USER
    WHERE user.name = %s
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-column-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name = $1::VARCHAR RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-column-psycopg_async_engine]
@@ -3297,15 +1904,6 @@
    WHERE user.name != %s
      AND user.name != %s
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name IN (__[POSTCOMPILE_name_3])) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-nested-and-column-relation-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name != $1::VARCHAR
-     AND "user".name != $2::VARCHAR
-     AND (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name IN (__[POSTCOMPILE_name_3]))) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-nested-and-column-relation-psycopg_async_engine]
@@ -3358,24 +1956,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-nested-to-many-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-            JOIN user_department_join_table AS user_department_join_table_2
-              ON department_1.id = user_department_join_table_2.department_id
-            JOIN "user" AS user_1
-              ON user_1.id = user_department_join_table_2.user_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND user_1.name = $1::VARCHAR
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-nested-to-many-psycopg_async_engine]
   '''
   DELETE
@@ -3410,14 +1990,6 @@
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name IN (__[POSTCOMPILE_name_2])) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-not-column-and-relation-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE NOT ("user".name = $1::VARCHAR AND "user".name IS NOT NULL)
-     AND (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name IN (__[POSTCOMPILE_name_2]))) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-not-column-and-relation-psycopg_async_engine]
   '''
   DELETE
@@ -3448,13 +2020,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-not-nested-to-many-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE NOT (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id JOIN user_department_join_table AS user_department_join_table_2 ON department_1.id = user_department_join_table_2.department_id JOIN "user" AS user_1 ON user_1.id = user_department_join_table_2.user_id WHERE "user".id = user_department_join_table_1.user_id AND user_1.name = $1::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-not-nested-to-many-psycopg_async_engine]
   '''
   DELETE
@@ -3474,13 +2039,6 @@
   DELETE
     FROM USER
    WHERE user.name = %s
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-not-null-field-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name = $1::VARCHAR RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-not-null-field-psycopg_async_engine]
@@ -3512,13 +2070,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-not-to-many-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE NOT (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name = $1::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-not-to-many-empty-aiosqlite_engine]
   '''
   DELETE
@@ -3529,12 +2080,6 @@
   '''
   DELETE
     FROM USER
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-not-to-many-empty-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user" RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-not-to-many-empty-psycopg_async_engine]
@@ -3562,13 +2107,6 @@
   DELETE
     FROM USER
    WHERE NOT (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name = %s) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-not-to-one-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE NOT (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name = $1::VARCHAR)) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-not-to-one-psycopg_async_engine]
@@ -3612,14 +2150,6 @@
       OR (EXISTS (SELECT 1 FROM (SELECT user_3.id AS id FROM USER AS user_3 INNER JOIN `group` AS group_1 ON group_1.id = user_3.group_id WHERE group_1.name = %s) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-or-aggregation-and-to-one-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN LATERAL (SELECT count(department_1.id) AS count_1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE user_1.id = user_department_join_table_1.user_id) AS anon_1 ON TRUE WHERE anon_1.count_1 = $1::INTEGER AND user_1.id = "user".id))
-      OR (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name = $2::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-or-aggregation-and-to-one-null-aiosqlite_engine]
   '''
   WITH anon_1 AS (
@@ -3654,14 +2184,6 @@
       OR (EXISTS (SELECT 1 FROM (SELECT user_3.id AS id FROM USER AS user_3 INNER JOIN `group` AS group_1 ON group_1.id = user_3.group_id WHERE group_1.name IS NULL) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-or-aggregation-and-to-one-null-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN LATERAL (SELECT count(department_1.id) AS count_1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE user_1.id = user_department_join_table_1.user_id) AS anon_1 ON TRUE WHERE anon_1.count_1 = $1::INTEGER AND user_1.id = "user".id))
-      OR (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name IS NULL)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-or-aggregation-and-to-one-null-psycopg_async_engine]
   '''
   DELETE
@@ -3694,14 +2216,6 @@
       OR (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name = %s) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-or-column-relation-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name = $1::VARCHAR
-      OR (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name = $2::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-or-column-relation-psycopg_async_engine]
   '''
   DELETE
@@ -3724,13 +2238,6 @@
    WHERE user.name = %s
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-or-to-many-empty-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name = $1::VARCHAR RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-or-to-many-empty-psycopg_async_engine]
   '''
   DELETE
@@ -3750,13 +2257,6 @@
   DELETE
     FROM USER
    WHERE user.name = %s
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-or-to-many-null-field-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name = $1::VARCHAR RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-or-to-many-null-field-psycopg_async_engine]
@@ -3794,14 +2294,6 @@
       OR (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id LEFT OUTER JOIN anon_1 ON group_1.id = anon_1.group_id WHERE coalesce(anon_1.count_1, %s) = %s) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-or-to-one-aggregation-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name = $1::VARCHAR
-      OR (EXISTS (SELECT 1 FROM "group" AS group_1 JOIN LATERAL (SELECT count(topic_1.id) AS count_1 FROM topic AS topic_1 WHERE group_1.id = topic_1.group_id) AS anon_1 ON TRUE WHERE group_1.id = "user".group_id AND anon_1.count_1 = $2::INTEGER)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-or-to-one-aggregation-psycopg_async_engine]
   '''
   DELETE
@@ -3826,14 +2318,6 @@
       OR (EXISTS (SELECT 1 FROM (SELECT user_2.id AS id FROM USER AS user_2 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_2.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %s) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-or-to-one-and-to-many-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name = $1::VARCHAR))
-      OR (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name = $2::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-or-to-one-and-to-many-psycopg_async_engine]
   '''
   DELETE
@@ -3856,14 +2340,6 @@
     FROM USER
    WHERE user.name = %s
       OR (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-or-to-one-null-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE "user".name = $1::VARCHAR
-      OR (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name IS NULL)) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-or-to-one-null-psycopg_async_engine]
@@ -3929,28 +2405,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-many-aggregation-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-            JOIN LATERAL (
-                  SELECT count(user_1.id) AS count_1
-                    FROM "user" AS user_1
-                    JOIN user_department_join_table AS user_department_join_table_2
-                      ON user_1.id = user_department_join_table_2.user_id
-                   WHERE department_1.id = user_department_join_table_2.department_id
-                 ) AS anon_1
-              ON TRUE
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND anon_1.count_1 < $1::INTEGER
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-many-aggregation-psycopg_async_engine]
   '''
   DELETE
@@ -4006,20 +2460,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-many-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND department_1.name = $1::VARCHAR
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-many-empty-aiosqlite_engine]
   '''
   DELETE
@@ -4030,12 +2470,6 @@
   '''
   DELETE
     FROM USER
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-many-empty-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user" RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-many-empty-psycopg_async_engine]
@@ -4077,20 +2511,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-many-not-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND NOT (department_1.name = $1::VARCHAR AND department_1.name IS NOT NULL)
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-many-not-nested-to-many-aiosqlite_engine]
   '''
   DELETE
@@ -4122,20 +2542,6 @@
                  ) AS dml_matched
            WHERE dml_matched.id = user.id
          )
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-many-not-nested-to-many-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND NOT (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_2 ON user_1.id = user_department_join_table_2.user_id WHERE department_1.id = user_department_join_table_2.department_id AND user_1.name = $1::VARCHAR))
-         ) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-many-not-nested-to-many-psycopg_async_engine]
@@ -4199,20 +2605,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-many-null-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND department_1.name IS NULL
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-many-null-field-aiosqlite_engine]
   '''
   DELETE
@@ -4223,12 +2615,6 @@
   '''
   DELETE
     FROM USER
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-many-null-field-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user" RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-many-null-field-psycopg_async_engine]
@@ -4282,20 +2668,6 @@
                  ) AS dml_matched
            WHERE dml_matched.id = user.id
          )
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-many-or-not-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND (department_1.name = $1::VARCHAR OR department_1.name IS NULL)
-         ) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-many-or-not-psycopg_async_engine]
@@ -4371,24 +2743,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-one-aggregation-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM "group" AS group_1
-            JOIN LATERAL (
-                  SELECT count(topic_1.id) AS count_1
-                    FROM topic AS topic_1
-                   WHERE group_1.id = topic_1.group_id
-                 ) AS anon_1
-              ON TRUE
-           WHERE group_1.id = "user".group_id
-             AND anon_1.count_1 = $1::INTEGER
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-one-aggregation-psycopg_async_engine]
   '''
   DELETE
@@ -4436,18 +2790,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-one-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM "group" AS group_1
-           WHERE group_1.id = "user".group_id
-             AND group_1.name = $1::VARCHAR
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-one-empty-aiosqlite_engine]
   '''
   DELETE
@@ -4458,12 +2800,6 @@
   '''
   DELETE
     FROM USER
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-one-empty-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user" RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-one-empty-psycopg_async_engine]
@@ -4499,18 +2835,6 @@
                  ) AS dml_matched
            WHERE dml_matched.id = user.id
          )
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-one-not-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM "group" AS group_1
-           WHERE group_1.id = "user".group_id
-             AND NOT (group_1.name = $1::VARCHAR AND group_1.name IS NOT NULL)
-         ) RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-one-not-psycopg_async_engine]
@@ -4576,23 +2900,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-one-null-and-to-many-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM "group" AS group_1,
-                 department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE group_1.id = "user".group_id
-             AND "user".id = user_department_join_table_1.user_id
-             AND group_1.name IS NULL
-             AND department_1.name = $1::VARCHAR
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-one-null-and-to-many-psycopg_async_engine]
   '''
   DELETE
@@ -4627,18 +2934,6 @@
          )
   '''
 # ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-one-null-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user"
-   WHERE EXISTS (
-          SELECT 1
-            FROM "group" AS group_1
-           WHERE group_1.id = "user".group_id
-             AND group_1.name IS NULL
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-one-null-field-aiosqlite_engine]
   '''
   DELETE
@@ -4649,12 +2944,6 @@
   '''
   DELETE
     FROM USER
-  '''
-# ---
-# name: test_delete_filter_on_relation[session-async-tracked-to-one-null-field-asyncpg_engine]
-  '''
-  DELETE
-    FROM "user" RETURNING "user".id
   '''
 # ---
 # name: test_delete_filter_on_relation[session-async-tracked-to-one-null-field-psycopg_async_engine]
@@ -5636,24 +3925,6 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_update[session-async-tracked-no-validation-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update[session-async-tracked-no-validation-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
 # name: test_update[session-async-tracked-no-validation-psycopg_async_engine]
   '''
   UPDATE color
@@ -5698,24 +3969,6 @@
   '''
 # ---
 # name: test_update[session-async-tracked-validation-fragment-asyncmy_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update[session-async-tracked-validation-fragment-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update[session-async-tracked-validation-fragment-asyncpg_engine].1
   '''
   SELECT color.name,
          color.id
@@ -5776,24 +4029,6 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_update[session-async-tracked-validation-no-fragment-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update[session-async-tracked-validation-no-fragment-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
 # name: test_update[session-async-tracked-validation-no-fragment-psycopg_async_engine]
   '''
   UPDATE color
@@ -5804,111 +4039,6 @@
   '''
 # ---
 # name: test_update[session-async-tracked-validation-no-fragment-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update[session-sync-tracked-no-validation-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = %(color_id)s::INTEGER
-  '''
-# ---
-# name: test_update[session-sync-tracked-no-validation-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update[session-sync-tracked-no-validation-sqlite_engine]
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.id = ?
-  '''
-# ---
-# name: test_update[session-sync-tracked-no-validation-sqlite_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update[session-sync-tracked-validation-fragment-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = %(color_id)s::INTEGER
-  '''
-# ---
-# name: test_update[session-sync-tracked-validation-fragment-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update[session-sync-tracked-validation-fragment-sqlite_engine]
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.id = ?
-  '''
-# ---
-# name: test_update[session-sync-tracked-validation-fragment-sqlite_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update[session-sync-tracked-validation-no-fragment-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = %(color_id)s::INTEGER
-  '''
-# ---
-# name: test_update[session-sync-tracked-validation-no-fragment-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update[session-sync-tracked-validation-no-fragment-sqlite_engine]
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.id = ?
-  '''
-# ---
-# name: test_update[session-sync-tracked-validation-no-fragment-sqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -5958,24 +4088,6 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_update_by_filter[session-async-tracked-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.name = $3::VARCHAR RETURNING color.id
-  '''
-# ---
-# name: test_update_by_filter[session-async-tracked-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
 # name: test_update_by_filter[session-async-tracked-psycopg_async_engine]
   '''
   UPDATE color
@@ -5986,41 +4098,6 @@
   '''
 # ---
 # name: test_update_by_filter[session-async-tracked-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update_by_filter[session-sync-tracked-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.name = %(name_1)s::VARCHAR RETURNING color.id
-  '''
-# ---
-# name: test_update_by_filter[session-sync-tracked-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update_by_filter[session-sync-tracked-sqlite_engine]
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.name = ? RETURNING id
-  '''
-# ---
-# name: test_update_by_filter[session-sync-tracked-sqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -6074,26 +4151,6 @@
          )
   '''
 # ---
-# name: test_update_by_filter_on_to_many_relation[session-async-tracked-aggregation-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM color AS color_1
-            JOIN LATERAL (
-                  SELECT count(fruit_1.id) AS count_1
-                    FROM fruit AS fruit_1
-                   WHERE color_1.id = fruit_1.color_id
-                 ) AS anon_1
-              ON TRUE
-           WHERE anon_1.count_1 > $3::INTEGER
-             AND color_1.id = color.id
-         ) RETURNING color.id
-  '''
-# ---
 # name: test_update_by_filter_on_to_many_relation[session-async-tracked-aggregation-psycopg_async_engine]
   '''
   UPDATE color
@@ -6144,16 +4201,6 @@
      AND (EXISTS (SELECT 1 FROM (SELECT color_1.id AS id FROM color AS color_1 LEFT OUTER JOIN anon_1 ON color_1.id = anon_1.color_id WHERE coalesce(anon_1.count_1, %s) > %s) AS dml_matched WHERE dml_matched.id = color.id))
   '''
 # ---
-# name: test_update_by_filter_on_to_many_relation[session-async-tracked-column-and-aggregation-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.name = $3::VARCHAR
-     AND (EXISTS (SELECT 1 FROM color AS color_1 JOIN LATERAL (SELECT count(fruit_1.id) AS count_1 FROM fruit AS fruit_1 WHERE color_1.id = fruit_1.color_id) AS anon_1 ON TRUE WHERE anon_1.count_1 > $4::INTEGER AND color_1.id = color.id)) RETURNING color.id
-  '''
-# ---
 # name: test_update_by_filter_on_to_many_relation[session-async-tracked-column-and-aggregation-psycopg_async_engine]
   '''
   UPDATE color
@@ -6195,20 +4242,6 @@
          )
   '''
 # ---
-# name: test_update_by_filter_on_to_many_relation[session-async-tracked-relation-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-             AND fruit_1.name IN (__[POSTCOMPILE_name_1])
-         ) RETURNING color.id
-  '''
-# ---
 # name: test_update_by_filter_on_to_many_relation[session-async-tracked-relation-psycopg_async_engine]
   '''
   UPDATE color
@@ -6221,99 +4254,6 @@
            WHERE color.id = fruit_1.color_id
              AND fruit_1.name IN (__[POSTCOMPILE_name_1])
          ) RETURNING color.id
-  '''
-# ---
-# name: test_update_by_filter_on_to_many_relation[session-sync-tracked-aggregation-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM color AS color_1
-            JOIN LATERAL (
-                  SELECT count(fruit_1.id) AS count_1
-                    FROM fruit AS fruit_1
-                   WHERE color_1.id = fruit_1.color_id
-                 ) AS anon_1
-              ON TRUE
-           WHERE anon_1.count_1 > %(param_1)s::INTEGER
-             AND color_1.id = color.id
-         ) RETURNING color.id
-  '''
-# ---
-# name: test_update_by_filter_on_to_many_relation[session-sync-tracked-aggregation-sqlite_engine]
-  '''
-  WITH anon_1 AS (
-          SELECT count(fruit_1.id) AS count_1,
-                 fruit_1.color_id AS color_id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id
-         ) UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE EXISTS (
-          SELECT 1
-            FROM color AS color_1
-            LEFT OUTER JOIN anon_1
-              ON color_1.id = anon_1.color_id
-           WHERE coalesce(anon_1.count_1, ?) > ?
-             AND color_1.id = color.id
-         ) RETURNING id
-  '''
-# ---
-# name: test_update_by_filter_on_to_many_relation[session-sync-tracked-column-and-aggregation-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.name = %(name_1)s::VARCHAR
-     AND (EXISTS (SELECT 1 FROM color AS color_1 JOIN LATERAL (SELECT count(fruit_1.id) AS count_1 FROM fruit AS fruit_1 WHERE color_1.id = fruit_1.color_id) AS anon_1 ON TRUE WHERE anon_1.count_1 > %(param_1)s::INTEGER AND color_1.id = color.id)) RETURNING color.id
-  '''
-# ---
-# name: test_update_by_filter_on_to_many_relation[session-sync-tracked-column-and-aggregation-sqlite_engine]
-  '''
-  WITH anon_1 AS (
-          SELECT count(fruit_1.id) AS count_1,
-                 fruit_1.color_id AS color_id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id
-         ) UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.name = ?
-     AND (EXISTS (SELECT 1 FROM color AS color_1 LEFT OUTER JOIN anon_1 ON color_1.id = anon_1.color_id WHERE coalesce(anon_1.count_1, ?) > ? AND color_1.id = color.id)) RETURNING id
-  '''
-# ---
-# name: test_update_by_filter_on_to_many_relation[session-sync-tracked-relation-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-             AND fruit_1.name IN (__[POSTCOMPILE_name_1])
-         ) RETURNING color.id
-  '''
-# ---
-# name: test_update_by_filter_on_to_many_relation[session-sync-tracked-relation-sqlite_engine]
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-             AND fruit_1.name IN (__[POSTCOMPILE_name_1])
-         ) RETURNING id
   '''
 # ---
 # name: test_update_by_filter_on_to_one_relation[session-async-tracked-column-and-relation-aiosqlite_engine]
@@ -6332,16 +4272,6 @@
          updated_at = %s
    WHERE fruit.sweetness > %s
      AND (EXISTS (SELECT 1 FROM (SELECT fruit_1.id AS id FROM fruit AS fruit_1 INNER JOIN color AS color_1 ON color_1.id = fruit_1.color_id WHERE color_1.name = %s) AS dml_matched WHERE dml_matched.id = fruit.id))
-  '''
-# ---
-# name: test_update_by_filter_on_to_one_relation[session-async-tracked-column-and-relation-asyncpg_engine]
-  '''
-  UPDATE fruit
-     SET sweetness = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.sweetness > $3::INTEGER
-     AND (EXISTS (SELECT 1 FROM color AS color_1 WHERE color_1.id = fruit.color_id AND color_1.name = $4::VARCHAR)) RETURNING fruit.id
   '''
 # ---
 # name: test_update_by_filter_on_to_one_relation[session-async-tracked-column-and-relation-psycopg_async_engine]
@@ -6385,20 +4315,6 @@
          )
   '''
 # ---
-# name: test_update_by_filter_on_to_one_relation[session-async-tracked-relation-asyncpg_engine]
-  '''
-  UPDATE fruit
-     SET sweetness = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM color AS color_1
-           WHERE color_1.id = fruit.color_id
-             AND color_1.name = $3::VARCHAR
-         ) RETURNING fruit.id
-  '''
-# ---
 # name: test_update_by_filter_on_to_one_relation[session-async-tracked-relation-psycopg_async_engine]
   '''
   UPDATE fruit
@@ -6411,52 +4327,6 @@
            WHERE color_1.id = fruit.color_id
              AND color_1.name = %(name_1)s::VARCHAR
          ) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_by_filter_on_to_one_relation[session-sync-tracked-column-and-relation-psycopg_engine]
-  '''
-  UPDATE fruit
-     SET sweetness = %(sweetness)s::INTEGER,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.sweetness > %(sweetness_1)s::INTEGER
-     AND (EXISTS (SELECT 1 FROM color AS color_1 WHERE color_1.id = fruit.color_id AND color_1.name = %(name_1)s::VARCHAR)) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_by_filter_on_to_one_relation[session-sync-tracked-column-and-relation-sqlite_engine]
-  '''
-  UPDATE fruit
-     SET sweetness = ?,
-         updated_at = ?
-   WHERE fruit.sweetness > ?
-     AND (EXISTS (SELECT 1 FROM color AS color_1 WHERE color_1.id = fruit.color_id AND color_1.name = ?)) RETURNING id
-  '''
-# ---
-# name: test_update_by_filter_on_to_one_relation[session-sync-tracked-relation-psycopg_engine]
-  '''
-  UPDATE fruit
-     SET sweetness = %(sweetness)s::INTEGER,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM color AS color_1
-           WHERE color_1.id = fruit.color_id
-             AND color_1.name = %(name_1)s::VARCHAR
-         ) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_by_filter_on_to_one_relation[session-sync-tracked-relation-sqlite_engine]
-  '''
-  UPDATE fruit
-     SET sweetness = ?,
-         updated_at = ?
-   WHERE EXISTS (
-          SELECT 1
-            FROM color AS color_1
-           WHERE color_1.id = fruit.color_id
-             AND color_1.name = ?
-         ) RETURNING id
   '''
 # ---
 # name: test_update_by_filter_only_return_affected_objects[session-async-tracked-aiosqlite_engine]
@@ -6500,24 +4370,6 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_update_by_filter_only_return_affected_objects[session-async-tracked-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.name = $3::VARCHAR RETURNING color.id
-  '''
-# ---
-# name: test_update_by_filter_only_return_affected_objects[session-async-tracked-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
 # name: test_update_by_filter_only_return_affected_objects[session-async-tracked-psycopg_async_engine]
   '''
   UPDATE color
@@ -6528,41 +4380,6 @@
   '''
 # ---
 # name: test_update_by_filter_only_return_affected_objects[session-async-tracked-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update_by_filter_only_return_affected_objects[session-sync-tracked-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.name = %(name_1)s::VARCHAR RETURNING color.id
-  '''
-# ---
-# name: test_update_by_filter_only_return_affected_objects[session-sync-tracked-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update_by_filter_only_return_affected_objects[session-sync-tracked-sqlite_engine]
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.name = ? RETURNING id
-  '''
-# ---
-# name: test_update_by_filter_only_return_affected_objects[session-sync-tracked-sqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -6605,24 +4422,6 @@
    ORDER BY color.id ASC
   '''
 # ---
-# name: test_update_many[session-async-tracked-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_many[session-async-tracked-asyncpg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
 # name: test_update_many[session-async-tracked-psycopg_async_engine]
   '''
   UPDATE color
@@ -6633,41 +4432,6 @@
   '''
 # ---
 # name: test_update_many[session-async-tracked-psycopg_async_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update_many[session-sync-tracked-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = %(color_id)s::INTEGER
-  '''
-# ---
-# name: test_update_many[session-sync-tracked-psycopg_engine].1
-  '''
-  SELECT color.name,
-         color.id
-    FROM color AS color
-   WHERE color.id IN (__[POSTCOMPILE_id_1])
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_update_many[session-sync-tracked-sqlite_engine]
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.id = ?
-  '''
-# ---
-# name: test_update_many[session-sync-tracked-sqlite_engine].1
   '''
   SELECT color.name,
          color.id
@@ -6692,15 +4456,6 @@
    WHERE user.id = %s
   '''
 # ---
-# name: test_update_no_init_defaults[session-async-tracked-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".id = $3::INTEGER
-  '''
-# ---
 # name: test_update_no_init_defaults[session-async-tracked-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -6708,23 +4463,6 @@
          updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
     ZONE
    WHERE "user".id = %(user_id)s::INTEGER
-  '''
-# ---
-# name: test_update_no_init_defaults[session-sync-tracked-psycopg_engine]
-  '''
-  UPDATE "user"
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".id = %(user_id)s::INTEGER
-  '''
-# ---
-# name: test_update_no_init_defaults[session-sync-tracked-sqlite_engine]
-  '''
-  UPDATE USER
-     SET name = ?,
-         updated_at = ?
-   WHERE user.id = ?
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-aggregation-arguments-null-field-aiosqlite_engine]
@@ -6778,28 +4516,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-aggregation-arguments-null-field-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM "user" AS user_1
-            JOIN LATERAL (
-                  SELECT count(*) AS count_1
-                    FROM department AS department_1
-                    JOIN user_department_join_table AS user_department_join_table_1
-                      ON department_1.id = user_department_join_table_1.department_id
-                   WHERE user_1.id = user_department_join_table_1.user_id
-                 ) AS anon_1
-              ON TRUE
-           WHERE anon_1.count_1 > $3::INTEGER
-             AND user_1.id = "user".id
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-aggregation-arguments-null-field-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -6836,14 +4552,6 @@
          updated_at = %s
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-aggregation-empty-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-aggregation-empty-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -6864,14 +4572,6 @@
   UPDATE USER
      SET name = %s,
          updated_at = %s
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-aggregation-null-field-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-aggregation-null-field-psycopg_async_engine]
@@ -6919,23 +4619,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-and-same-to-many-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND department_1.name = $3::VARCHAR
-             AND (EXISTS (SELECT 1 FROM department AS department_2 JOIN user_department_join_table AS user_department_join_table_2 ON department_2.id = user_department_join_table_2.department_id WHERE "user".id = user_department_join_table_2.user_id AND department_2.name = $4::VARCHAR))
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-and-same-to-many-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -6971,16 +4654,6 @@
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 WHERE NOT (EXISTS (SELECT 1 FROM department AS department_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE user_1.id = user_department_join_table_1.user_id AND department_1.name = %s))) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-column-and-not-to-many-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".name != $3::VARCHAR
-     AND NOT (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name = $4::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-not-to-many-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -7007,16 +4680,6 @@
          updated_at = %s
    WHERE user.name != %s
      AND NOT (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-column-and-not-to-one-null-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".name != $3::VARCHAR
-     AND NOT (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name IS NULL)) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-not-to-one-null-psycopg_async_engine]
@@ -7047,16 +4710,6 @@
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name IS NULL) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-null-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".name != $3::VARCHAR
-     AND (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name IS NULL)) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-null-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -7085,16 +4738,6 @@
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_1.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE (department_1.name IS NULL OR department_1.name = %s)) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-or-null-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".name != $3::VARCHAR
-     AND (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND (department_1.name IS NULL OR department_1.name = $4::VARCHAR))) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-to-many-or-null-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -7121,16 +4764,6 @@
          updated_at = %s
    WHERE user.name != %s
      AND (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-column-and-to-one-null-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".name != $3::VARCHAR
-     AND (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name IS NULL)) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-column-and-to-one-null-psycopg_async_engine]
@@ -7167,15 +4800,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-not-and-same-to-many-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE NOT (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name = $3::VARCHAR AND (EXISTS (SELECT 1 FROM department AS department_2 JOIN user_department_join_table AS user_department_join_table_2 ON department_2.id = user_department_join_table_2.department_id WHERE "user".id = user_department_join_table_2.user_id AND department_2.name = $4::VARCHAR)))) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-not-and-same-to-many-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -7209,15 +4833,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-not-nested-to-many-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE NOT (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id JOIN user_department_join_table AS user_department_join_table_2 ON department_1.id = user_department_join_table_2.department_id JOIN "user" AS user_1 ON user_1.id = user_department_join_table_2.user_id WHERE "user".id = user_department_join_table_1.user_id AND user_1.name = $3::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-not-nested-to-many-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -7241,15 +4856,6 @@
      SET name = %s,
          updated_at = %s
    WHERE user.name = %s
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-not-null-field-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".name = $3::VARCHAR RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-not-null-field-psycopg_async_engine]
@@ -7285,15 +4891,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-not-to-many-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE NOT (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name = $3::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-not-to-many-empty-aiosqlite_engine]
   '''
   UPDATE USER
@@ -7306,14 +4903,6 @@
   UPDATE USER
      SET name = %s,
          updated_at = %s
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-not-to-many-empty-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-not-to-many-empty-psycopg_async_engine]
@@ -7369,16 +4958,6 @@
       OR (EXISTS (SELECT 1 FROM (SELECT user_3.id AS id FROM USER AS user_3 INNER JOIN `group` AS group_1 ON group_1.id = user_3.group_id WHERE group_1.name = %s) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-or-aggregation-and-to-one-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN LATERAL (SELECT count(department_1.id) AS count_1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE user_1.id = user_department_join_table_1.user_id) AS anon_1 ON TRUE WHERE anon_1.count_1 = $3::INTEGER AND user_1.id = "user".id))
-      OR (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name = $4::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-or-aggregation-and-to-one-null-aiosqlite_engine]
   '''
   WITH anon_1 AS (
@@ -7413,16 +4992,6 @@
          updated_at = %s
    WHERE (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 LEFT OUTER JOIN anon_1 ON user_1.id = anon_1.id WHERE coalesce(anon_1.count_1, %s) = %s) AS dml_matched WHERE dml_matched.id = user.id))
       OR (EXISTS (SELECT 1 FROM (SELECT user_3.id AS id FROM USER AS user_3 INNER JOIN `group` AS group_1 ON group_1.id = user_3.group_id WHERE group_1.name IS NULL) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-or-aggregation-and-to-one-null-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN LATERAL (SELECT count(department_1.id) AS count_1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE user_1.id = user_department_join_table_1.user_id) AS anon_1 ON TRUE WHERE anon_1.count_1 = $3::INTEGER AND user_1.id = "user".id))
-      OR (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name IS NULL)) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-or-aggregation-and-to-one-null-psycopg_async_engine]
@@ -7461,15 +5030,6 @@
    WHERE user.name = %s
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-or-to-many-empty-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".name = $3::VARCHAR RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-or-to-many-empty-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -7493,15 +5053,6 @@
      SET name = %s,
          updated_at = %s
    WHERE user.name = %s
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-or-to-many-null-field-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".name = $3::VARCHAR RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-or-to-many-null-field-psycopg_async_engine]
@@ -7543,16 +5094,6 @@
       OR (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id LEFT OUTER JOIN anon_1 ON group_1.id = anon_1.group_id WHERE coalesce(anon_1.count_1, %s) = %s) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-or-to-one-aggregation-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".name = $3::VARCHAR
-      OR (EXISTS (SELECT 1 FROM "group" AS group_1 JOIN LATERAL (SELECT count(topic_1.id) AS count_1 FROM topic AS topic_1 WHERE group_1.id = topic_1.group_id) AS anon_1 ON TRUE WHERE group_1.id = "user".group_id AND anon_1.count_1 = $4::INTEGER)) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-or-to-one-aggregation-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -7581,16 +5122,6 @@
       OR (EXISTS (SELECT 1 FROM (SELECT user_2.id AS id FROM USER AS user_2 INNER JOIN user_department_join_table AS user_department_join_table_1 ON user_2.id = user_department_join_table_1.user_id INNER JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id WHERE department_1.name = %s) AS dml_matched WHERE dml_matched.id = user.id))
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-or-to-one-and-to-many-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name = $3::VARCHAR))
-      OR (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name = $4::VARCHAR)) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-or-to-one-and-to-many-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -7617,16 +5148,6 @@
          updated_at = %s
    WHERE user.name = %s
       OR (EXISTS (SELECT 1 FROM (SELECT user_1.id AS id FROM USER AS user_1 INNER JOIN `group` AS group_1 ON group_1.id = user_1.group_id WHERE group_1.name IS NULL) AS dml_matched WHERE dml_matched.id = user.id))
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-or-to-one-null-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".name = $3::VARCHAR
-      OR (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name IS NULL)) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-or-to-one-null-psycopg_async_engine]
@@ -7696,30 +5217,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-many-aggregation-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-            JOIN LATERAL (
-                  SELECT count(user_1.id) AS count_1
-                    FROM "user" AS user_1
-                    JOIN user_department_join_table AS user_department_join_table_2
-                      ON user_1.id = user_department_join_table_2.user_id
-                   WHERE department_1.id = user_department_join_table_2.department_id
-                 ) AS anon_1
-              ON TRUE
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND anon_1.count_1 < $3::INTEGER
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-many-aggregation-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -7756,14 +5253,6 @@
   UPDATE USER
      SET name = %s,
          updated_at = %s
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-many-empty-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-many-empty-psycopg_async_engine]
@@ -7809,22 +5298,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-many-not-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND NOT (department_1.name = $3::VARCHAR AND department_1.name IS NOT NULL)
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-many-not-nested-to-many-aiosqlite_engine]
   '''
   UPDATE USER
@@ -7858,22 +5331,6 @@
                  ) AS dml_matched
            WHERE dml_matched.id = user.id
          )
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-many-not-nested-to-many-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND NOT (EXISTS (SELECT 1 FROM "user" AS user_1 JOIN user_department_join_table AS user_department_join_table_2 ON user_1.id = user_department_join_table_2.user_id WHERE department_1.id = user_department_join_table_2.department_id AND user_1.name = $3::VARCHAR))
-         ) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-many-not-nested-to-many-psycopg_async_engine]
@@ -7943,22 +5400,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-many-null-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND department_1.name IS NULL
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-many-null-field-aiosqlite_engine]
   '''
   UPDATE USER
@@ -7971,14 +5412,6 @@
   UPDATE USER
      SET name = %s,
          updated_at = %s
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-many-null-field-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-many-null-field-psycopg_async_engine]
@@ -8038,22 +5471,6 @@
                  ) AS dml_matched
            WHERE dml_matched.id = user.id
          )
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-many-or-not-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE "user".id = user_department_join_table_1.user_id
-             AND (department_1.name = $3::VARCHAR OR department_1.name IS NULL)
-         ) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-many-or-not-psycopg_async_engine]
@@ -8119,26 +5536,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-one-aggregation-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM "group" AS group_1
-            JOIN LATERAL (
-                  SELECT count(topic_1.id) AS count_1
-                    FROM topic AS topic_1
-                   WHERE group_1.id = topic_1.group_id
-                 ) AS anon_1
-              ON TRUE
-           WHERE group_1.id = "user".group_id
-             AND anon_1.count_1 = $3::INTEGER
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-one-aggregation-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -8171,14 +5568,6 @@
   UPDATE USER
      SET name = %s,
          updated_at = %s
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-one-empty-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-one-empty-psycopg_async_engine]
@@ -8218,20 +5607,6 @@
                  ) AS dml_matched
            WHERE dml_matched.id = user.id
          )
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-one-not-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM "group" AS group_1
-           WHERE group_1.id = "user".group_id
-             AND NOT (group_1.name = $3::VARCHAR AND group_1.name IS NOT NULL)
-         ) RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-one-not-psycopg_async_engine]
@@ -8302,25 +5677,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-one-null-and-to-many-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM "group" AS group_1,
-                 department AS department_1
-            JOIN user_department_join_table AS user_department_join_table_1
-              ON department_1.id = user_department_join_table_1.department_id
-           WHERE group_1.id = "user".group_id
-             AND "user".id = user_department_join_table_1.user_id
-             AND group_1.name IS NULL
-             AND department_1.name = $3::VARCHAR
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-one-null-and-to-many-psycopg_async_engine]
   '''
   UPDATE "user"
@@ -8358,20 +5714,6 @@
          )
   '''
 # ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-one-null-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE EXISTS (
-          SELECT 1
-            FROM "group" AS group_1
-           WHERE group_1.id = "user".group_id
-             AND group_1.name IS NULL
-         ) RETURNING "user".id
-  '''
-# ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-one-null-field-aiosqlite_engine]
   '''
   UPDATE USER
@@ -8384,14 +5726,6 @@
   UPDATE USER
      SET name = %s,
          updated_at = %s
-  '''
-# ---
-# name: test_update_users_by_split_filter[session-async-tracked-to-one-null-field-asyncpg_engine]
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE RETURNING "user".id
   '''
 # ---
 # name: test_update_users_by_split_filter[session-async-tracked-to-one-null-field-psycopg_async_engine]
@@ -9334,63 +6668,6 @@
             fruit_farm_1.id ASC
   '''
 # ---
-# name: test_update_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO derived_product (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('derived_product_id_seq')) RETURNING derived_product.id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine].1
-  '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::INTEGER, $5::FLOAT, $6::TIME WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, $8::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine].3
-  '''
-  INSERT INTO fruit_farm (name, fruit_id, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::TIMESTAMP WITHOUT TIME ZONE, $4::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_farm_id_seq')) RETURNING fruit_farm.id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine].4
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-async-tracked-asyncpg_engine].5
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         derived_product_1.name AS name_2,
-         derived_product_1.id AS id_2,
-         fruit_farm_1.name AS name_3,
-         fruit_farm_1.id AS id_3
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN derived_product AS derived_product_1
-      ON derived_product_1.id = fruit_1.derived_product_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_4])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            derived_product_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
 # name: test_update_with_nested_mixed_relations_create[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO derived_product (name, created_at, updated_at, id)
@@ -9425,119 +6702,6 @@
   '''
 # ---
 # name: test_update_with_nested_mixed_relations_create[session-async-tracked-psycopg_async_engine].5
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         derived_product_1.name AS name_2,
-         derived_product_1.id AS id_2,
-         fruit_farm_1.name AS name_3,
-         fruit_farm_1.id AS id_3
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN derived_product AS derived_product_1
-      ON derived_product_1.id = fruit_1.derived_product_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_4])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            derived_product_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine]
-  '''
-  INSERT INTO derived_product (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('derived_product_id_seq')) RETURNING derived_product.id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine].1
-  '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(derived_product_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine].3
-  '''
-  INSERT INTO fruit_farm (name, fruit_id, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(fruit_id)s::INTEGER, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_farm_id_seq')) RETURNING fruit_farm.id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine].4
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = %(color_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-psycopg_engine].5
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         derived_product_1.name AS name_2,
-         derived_product_1.id AS id_2,
-         fruit_farm_1.name AS name_3,
-         fruit_farm_1.id AS id_3
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN derived_product AS derived_product_1
-      ON derived_product_1.id = fruit_1.derived_product_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_4])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            derived_product_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine]
-  '''
-  INSERT INTO derived_product (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine].1
-  '''
-  INSERT INTO fruit (name, color_id, derived_product_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine].2
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine].3
-  '''
-  INSERT INTO fruit_farm (name, fruit_id, created_at, updated_at)
-  VALUES (?, ?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine].4
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.id = ?
-  '''
-# ---
-# name: test_update_with_nested_mixed_relations_create[session-sync-tracked-sqlite_engine].5
   '''
   SELECT color.name,
          color.id,
@@ -9612,33 +6776,6 @@
       ON user.id = user_department_join_table_1.user_id
    WHERE user.id IN (__[POSTCOMPILE_id_2])
    ORDER BY user.id ASC,
-            department_1.id ASC
-  '''
-# ---
-# name: test_update_with_secondary_table_set[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO user_department_join_table (user_id, department_id)
-  VALUES ($1::INTEGER, $2::INTEGER)
-  '''
-# ---
-# name: test_update_with_secondary_table_set[session-async-tracked-asyncpg_engine].1
-  '''
-  DELETE
-    FROM user_department_join_table
-   WHERE user_department_join_table.user_id IN (__[POSTCOMPILE_user_id_1])
-  '''
-# ---
-# name: test_update_with_secondary_table_set[session-async-tracked-asyncpg_engine].2
-  '''
-  SELECT "user".name,
-         "user".id,
-         department_1.name AS name_1,
-         department_1.id AS id_1
-    FROM "user" AS "user"
-    LEFT OUTER JOIN (user_department_join_table AS user_department_join_table_1 JOIN department AS department_1 ON department_1.id = user_department_join_table_1.department_id)
-      ON "user".id = user_department_join_table_1.user_id
-   WHERE "user".id IN (__[POSTCOMPILE_id_2])
-   ORDER BY "user".id ASC,
             department_1.id ASC
   '''
 # ---
@@ -9781,37 +6918,6 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_update_with_to_many_add[session-async-tracked-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_add[session-async-tracked-asyncpg_engine].1
-  '''
-  UPDATE fruit
-     SET color_id = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_add[session-async-tracked-asyncpg_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
 # name: test_update_with_to_many_add[session-async-tracked-psycopg_async_engine]
   '''
   UPDATE color
@@ -9831,66 +6937,6 @@
   '''
 # ---
 # name: test_update_with_to_many_add[session-async-tracked-psycopg_async_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_add[session-sync-tracked-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = %(color_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_add[session-sync-tracked-psycopg_engine].1
-  '''
-  UPDATE fruit
-     SET color_id = %(color_id)s::INTEGER,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = %(fruit_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_add[session-sync-tracked-psycopg_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_add[session-sync-tracked-sqlite_engine]
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.id = ?
-  '''
-# ---
-# name: test_update_with_to_many_add[session-sync-tracked-sqlite_engine].1
-  '''
-  UPDATE fruit
-     SET color_id = ?,
-         updated_at = ?
-   WHERE fruit.id = ?
-  '''
-# ---
-# name: test_update_with_to_many_add[session-sync-tracked-sqlite_engine].2
   '''
   SELECT color.name,
          color.id,
@@ -9975,44 +7021,6 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_update_with_to_many_add_and_create[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-async-tracked-asyncpg_engine].1
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-async-tracked-asyncpg_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-async-tracked-asyncpg_engine].3
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
 # name: test_update_with_to_many_add_and_create[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
@@ -10038,80 +7046,6 @@
   '''
 # ---
 # name: test_update_with_to_many_add_and_create[session-async-tracked-psycopg_async_engine].3
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-sync-tracked-psycopg_engine]
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-sync-tracked-psycopg_engine].1
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = %(color_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-sync-tracked-psycopg_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = %(color_id)s::INTEGER,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = %(fruit_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-sync-tracked-psycopg_engine].3
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-sync-tracked-sqlite_engine]
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-sync-tracked-sqlite_engine].1
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.id = ?
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-sync-tracked-sqlite_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = ?,
-         updated_at = ?
-   WHERE fruit.id = ?
-  '''
-# ---
-# name: test_update_with_to_many_add_and_create[session-sync-tracked-sqlite_engine].3
   '''
   SELECT color.name,
          color.id,
@@ -10187,35 +7121,6 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_update_with_to_many_create[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_with_to_many_create[session-async-tracked-asyncpg_engine].1
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_create[session-async-tracked-asyncpg_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
 # name: test_update_with_to_many_create[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
@@ -10232,63 +7137,6 @@
   '''
 # ---
 # name: test_update_with_to_many_create[session-async-tracked-psycopg_async_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_create[session-sync-tracked-psycopg_engine]
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_with_to_many_create[session-sync-tracked-psycopg_engine].1
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = %(color_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_create[session-sync-tracked-psycopg_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_create[session-sync-tracked-sqlite_engine]
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_update_with_to_many_create[session-sync-tracked-sqlite_engine].1
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.id = ?
-  '''
-# ---
-# name: test_update_with_to_many_create[session-sync-tracked-sqlite_engine].2
   '''
   SELECT color.name,
          color.id,
@@ -10382,48 +7230,6 @@
             fruit_farm_1.id ASC
   '''
 # ---
-# name: test_update_with_to_many_create_and_nested_set[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::INTEGER, $3::INTEGER, $4::FLOAT, $5::TIME WITHOUT TIME ZONE, $6::TIMESTAMP WITHOUT TIME ZONE, $7::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-async-tracked-asyncpg_engine].1
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-async-tracked-asyncpg_engine].2
-  '''
-  UPDATE fruit_farm
-     SET fruit_id = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit_farm.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-async-tracked-asyncpg_engine].3
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         fruit_farm_1.id AS id_2
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_3])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
 # name: test_update_with_to_many_create_and_nested_set[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
@@ -10449,88 +7255,6 @@
   '''
 # ---
 # name: test_update_with_to_many_create_and_nested_set[session-async-tracked-psycopg_async_engine].3
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         fruit_farm_1.id AS id_2
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_3])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-sync-tracked-psycopg_engine]
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(color_id)s::INTEGER, %(sweetness)s::INTEGER, %(water_percent)s, %(best_time_to_pick)s::TIME WITHOUT TIME ZONE, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('fruit_id_seq')) RETURNING fruit.id
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-sync-tracked-psycopg_engine].1
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = %(color_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-sync-tracked-psycopg_engine].2
-  '''
-  UPDATE fruit_farm
-     SET fruit_id = %(fruit_id)s::INTEGER,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit_farm.id = %(fruit_farm_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-sync-tracked-psycopg_engine].3
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1,
-         fruit_farm_1.id AS id_2
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit_1.id = fruit_farm_1.fruit_id
-   WHERE color.id IN (__[POSTCOMPILE_id_3])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC,
-            fruit_farm_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-sync-tracked-sqlite_engine]
-  '''
-  INSERT INTO fruit (name, color_id, sweetness, water_percent, best_time_to_pick, created_at, updated_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-sync-tracked-sqlite_engine].1
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.id = ?
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-sync-tracked-sqlite_engine].2
-  '''
-  UPDATE fruit_farm
-     SET fruit_id = ?,
-         updated_at = ?
-   WHERE fruit_farm.id = ?
-  '''
-# ---
-# name: test_update_with_to_many_create_and_nested_set[session-sync-tracked-sqlite_engine].3
   '''
   SELECT color.name,
          color.id,
@@ -10606,37 +7330,6 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_update_with_to_many_remove[session-async-tracked-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_remove[session-async-tracked-asyncpg_engine].1
-  '''
-  UPDATE fruit
-     SET color_id = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_remove[session-async-tracked-asyncpg_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
 # name: test_update_with_to_many_remove[session-async-tracked-psycopg_async_engine]
   '''
   UPDATE color
@@ -10656,66 +7349,6 @@
   '''
 # ---
 # name: test_update_with_to_many_remove[session-async-tracked-psycopg_async_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_remove[session-sync-tracked-psycopg_engine]
-  '''
-  UPDATE color
-     SET name = %(name)s::VARCHAR,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = %(color_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_remove[session-sync-tracked-psycopg_engine].1
-  '''
-  UPDATE fruit
-     SET color_id = %(color_id)s::INTEGER,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = %(fruit_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_remove[session-sync-tracked-psycopg_engine].2
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_remove[session-sync-tracked-sqlite_engine]
-  '''
-  UPDATE color
-     SET name = ?,
-         updated_at = ?
-   WHERE color.id = ?
-  '''
-# ---
-# name: test_update_with_to_many_remove[session-sync-tracked-sqlite_engine].1
-  '''
-  UPDATE fruit
-     SET color_id = ?,
-         updated_at = ?
-   WHERE fruit.id = ?
-  '''
-# ---
-# name: test_update_with_to_many_remove[session-sync-tracked-sqlite_engine].2
   '''
   SELECT color.name,
          color.id,
@@ -10790,46 +7423,6 @@
   '''
 # ---
 # name: test_update_with_to_many_set[session-async-tracked-asyncmy_engine].3
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   WHERE color.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_many_set[session-async-tracked-asyncpg_engine]
-  '''
-  UPDATE color
-     SET name = $1::VARCHAR,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE color.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_set[session-async-tracked-asyncpg_engine].1
-  '''
-  UPDATE fruit
-     SET color_id = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.color_id IN (__[POSTCOMPILE_color_id_1])
-  '''
-# ---
-# name: test_update_with_to_many_set[session-async-tracked-asyncpg_engine].2
-  '''
-  UPDATE fruit
-     SET color_id = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_many_set[session-async-tracked-asyncpg_engine].3
   '''
   SELECT color.name,
          color.id,
@@ -11017,36 +7610,6 @@
             color_1.id ASC
   '''
 # ---
-# name: test_update_with_to_one_create[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_update_with_to_one_create[session-async-tracked-asyncpg_engine].1
-  '''
-  UPDATE fruit
-     SET name = $1::VARCHAR,
-         color_id = $2::INTEGER,
-         updated_at = $3::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = $4::INTEGER
-  '''
-# ---
-# name: test_update_with_to_one_create[session-async-tracked-asyncpg_engine].2
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.name AS name_1,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
 # name: test_update_with_to_one_create[session-async-tracked-psycopg_async_engine]
   '''
   INSERT INTO color (name, created_at, updated_at, id)
@@ -11064,65 +7627,6 @@
   '''
 # ---
 # name: test_update_with_to_one_create[session-async-tracked-psycopg_async_engine].2
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.name AS name_1,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_one_create[session-sync-tracked-psycopg_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at, id)
-  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
-  '''
-# ---
-# name: test_update_with_to_one_create[session-sync-tracked-psycopg_engine].1
-  '''
-  UPDATE fruit
-     SET name = %(name)s::VARCHAR,
-         color_id = %(color_id)s::INTEGER,
-         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = %(fruit_id)s::INTEGER
-  '''
-# ---
-# name: test_update_with_to_one_create[session-sync-tracked-psycopg_engine].2
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.name AS name_1,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_one_create[session-sync-tracked-sqlite_engine]
-  '''
-  INSERT INTO color (name, created_at, updated_at)
-  VALUES (?, ?, ?) RETURNING id
-  '''
-# ---
-# name: test_update_with_to_one_create[session-sync-tracked-sqlite_engine].1
-  '''
-  UPDATE fruit
-     SET name = ?,
-         color_id = ?,
-         updated_at = ?
-   WHERE fruit.id = ?
-  '''
-# ---
-# name: test_update_with_to_one_create[session-sync-tracked-sqlite_engine].2
   '''
   SELECT fruit.name,
          fruit.id,
@@ -11214,49 +7718,6 @@
       ON group_1.id = topic_1.group_id
    WHERE user.id IN (__[POSTCOMPILE_id_3])
    ORDER BY user.id ASC,
-            group_1.id ASC,
-            topic_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_one_create_and_nested_set[session-async-tracked-asyncpg_engine]
-  '''
-  INSERT INTO "group" (name, created_at, updated_at, id)
-  VALUES ($1::VARCHAR, $2::TIMESTAMP WITHOUT TIME ZONE, $3::TIMESTAMP WITHOUT TIME ZONE, nextval('group_id_seq')) RETURNING "group".id
-  '''
-# ---
-# name: test_update_with_to_one_create_and_nested_set[session-async-tracked-asyncpg_engine].1
-  '''
-  UPDATE "user"
-     SET name = $1::VARCHAR,
-         group_id = $2::INTEGER,
-         updated_at = $3::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE "user".id = $4::INTEGER
-  '''
-# ---
-# name: test_update_with_to_one_create_and_nested_set[session-async-tracked-asyncpg_engine].2
-  '''
-  UPDATE topic
-     SET group_id = $1::INTEGER,
-         updated_at = $2::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE topic.id = $3::INTEGER
-  '''
-# ---
-# name: test_update_with_to_one_create_and_nested_set[session-async-tracked-asyncpg_engine].3
-  '''
-  SELECT "user".name,
-         "user".id,
-         group_1.name AS name_1,
-         group_1.id AS id_1,
-         topic_1.id AS id_2
-    FROM "user" AS "user"
-    LEFT OUTER JOIN "group" AS group_1
-      ON group_1.id = "user".group_id
-    LEFT OUTER JOIN topic AS topic_1
-      ON group_1.id = topic_1.group_id
-   WHERE "user".id IN (__[POSTCOMPILE_id_3])
-   ORDER BY "user".id ASC,
             group_1.id ASC,
             topic_1.id ASC
   '''
@@ -11432,29 +7893,6 @@
             color_1.id ASC
   '''
 # ---
-# name: test_update_with_to_one_set[session-async-tracked-asyncpg_engine]
-  '''
-  UPDATE fruit
-     SET name = $1::VARCHAR,
-         color_id = $2::INTEGER,
-         updated_at = $3::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = $4::INTEGER
-  '''
-# ---
-# name: test_update_with_to_one_set[session-async-tracked-asyncpg_engine].1
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
 # name: test_update_with_to_one_set[session-async-tracked-psycopg_async_engine]
   '''
   UPDATE fruit
@@ -11555,29 +7993,6 @@
   '''
 # ---
 # name: test_update_with_to_one_set_null[session-async-tracked-asyncmy_engine].1
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         color_1.id AS id_1
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
-   ORDER BY fruit.id ASC,
-            color_1.id ASC
-  '''
-# ---
-# name: test_update_with_to_one_set_null[session-async-tracked-asyncpg_engine]
-  '''
-  UPDATE fruit
-     SET name = $1::VARCHAR,
-         color_id = $2::INTEGER,
-         updated_at = $3::TIMESTAMP WITHOUT TIME
-    ZONE
-   WHERE fruit.id = $4::INTEGER
-  '''
-# ---
-# name: test_update_with_to_one_set_null[session-async-tracked-asyncpg_engine].1
   '''
   SELECT fruit.name,
          fruit.id,

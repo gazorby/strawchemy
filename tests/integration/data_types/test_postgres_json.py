@@ -80,7 +80,7 @@ async def test_postgres_json_filters(
     comparison: dict[str, Any],
     expected_ids: list[int],
     negated: bool,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -90,7 +90,7 @@ async def test_postgres_json_filters(
     if negated:
         dto_filter = f"{{ _not: {dto_filter} }}"
         expected_ids = [row["id"] for row in _ROWS if row["id"] not in expected_ids]
-    result = await maybe_async(any_query(f"{{ json(filter: {dto_filter}) {{ id }} }}"))
+    result = await maybe_async(any_async_query(f"{{ json(filter: {dto_filter}) {{ id }} }}"))
     assert not result.errors
     assert result.data
     assert sorted(row["id"] for row in result.data["json"]) == expected_ids
@@ -101,9 +101,9 @@ async def test_postgres_json_filters(
 
 @pytest.mark.snapshot
 async def test_postgres_json_extract_path(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
-    result = await maybe_async(any_query('{ json { id dictCol(path: "$.nested.inner") } }'))
+    result = await maybe_async(any_async_query('{ json { id dictCol(path: "$.nested.inner") } }'))
     assert not result.errors
     assert result.data
     assert {row["id"]: row["dictCol"] for row in result.data["json"]} == {1: "value", 2: {}, 3: {}, 4: {}}
@@ -192,12 +192,12 @@ def _children(**children_ids: list[int]) -> list[dict[str, Any]]:
 async def test_postgres_json_order_by_and_distinct_on(
     query: str,
     expected: list[dict[str, Any]],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that ordering, DISTINCT ON and distinct counts on a PostgreSQL ``json`` column compare it as ``jsonb``."""
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert next(iter(result.data.values())) == expected
@@ -221,10 +221,10 @@ async def test_postgres_json_order_by_and_distinct_on(
 )
 @pytest.mark.snapshot
 async def test_postgres_json_distinct_on_selects_stored_values(
-    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query: str, any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that DISTINCT ON returns the ``json`` values as stored, not their ``jsonb`` cast, whose keys are sorted."""
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     rows = {row["id"]: row for row in next(iter(result.data.values()))}

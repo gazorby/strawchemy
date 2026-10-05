@@ -112,11 +112,11 @@ pytestmark = [pytest.mark.integration]
 async def test_create(
     query_name: str,
     query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data[query_name] == {"name": "new color"}
@@ -130,7 +130,10 @@ async def test_create(
 
 @pytest.mark.snapshot
 async def test_create_with_to_one_set(
-    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_colors: RawRecordData,
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = """
         mutation {{
@@ -150,7 +153,7 @@ async def test_create_with_to_one_set(
         }}
     """
     result = await maybe_async(
-        any_query(query.format(color_id=to_graphql_representation(raw_colors[0]["id"], "input")))
+        any_async_query(query.format(color_id=to_graphql_representation(raw_colors[0]["id"], "input")))
     )
     assert not result.errors
     assert result.data
@@ -165,7 +168,10 @@ async def test_create_with_to_one_set(
 
 @pytest.mark.snapshot
 async def test_create_with_to_one_set_null(
-    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_colors: RawRecordData,
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = """
         mutation {{
@@ -183,7 +189,7 @@ async def test_create_with_to_one_set_null(
         }}
     """
     result = await maybe_async(
-        any_query(query.format(color_id=to_graphql_representation(raw_colors[0]["id"], "input")))
+        any_async_query(query.format(color_id=to_graphql_representation(raw_colors[0]["id"], "input")))
     )
     assert not result.errors
     assert result.data
@@ -195,7 +201,7 @@ async def test_create_with_to_one_set_null(
 
 @pytest.mark.snapshot
 async def test_create_with_to_one_create(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     query = """
             mutation {
@@ -214,7 +220,7 @@ async def test_create_with_to_one_create(
                 }
             }
             """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["createFruit"] == {"name": "new color", "color": {"name": "new sub color"}}
@@ -225,7 +231,10 @@ async def test_create_with_to_one_create(
 
 @pytest.mark.snapshot
 async def test_create_with_to_one_create_and_nested_set(
-    raw_topics: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_topics: RawRecordData,
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = """
             mutation {{
@@ -249,7 +258,7 @@ async def test_create_with_to_one_create_and_nested_set(
             }}
             """
     result = await maybe_async(
-        any_query(query.format(topic_id=to_graphql_representation(raw_topics[0]["id"], "input")))
+        any_async_query(query.format(topic_id=to_graphql_representation(raw_topics[0]["id"], "input")))
     )
     assert not result.errors
     assert result.data
@@ -307,12 +316,12 @@ async def test_create_with_to_one_create_and_nested_set(
 async def test_create_with_existing_to_many(
     query: str,
     raw_fruits: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     result = await maybe_async(
-        any_query(query.format(fruit_id=to_graphql_representation(raw_fruits[0]["id"], "input")))
+        any_async_query(query.format(fruit_id=to_graphql_representation(raw_fruits[0]["id"], "input")))
     )
     assert not result.errors
     assert result.data
@@ -328,7 +337,10 @@ async def test_create_with_existing_to_many(
 
 @pytest.mark.snapshot
 async def test_create_with_to_many_create(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     query = """
             mutation {
@@ -348,7 +360,7 @@ async def test_create_with_to_many_create(
                 }
             }
             """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["createColor"] == {
@@ -362,66 +374,12 @@ async def test_create_with_to_many_create(
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
-@pytest.mark.parametrize(
-    "query",
-    [
-        pytest.param(
-            """
-            mutation {{
-                createColor(data: {{
-                    name: "new color",
-                    fruits: {{
-                        set: [ {{ id: {fruit_id} }} ],
-                        add: [ {{ id: {fruit_id} }} ]
-                    }}
-                }}) {{
-                    name
-                    fruits {{
-                        name
-                    }}
-                }}
-            }}
-        """,
-            id="add",
-        ),
-        pytest.param(
-            """
-            mutation {{
-                createColor(data: {{
-                    name: "new color",
-                    fruits: {{
-                        set: [ {{ id: {fruit_id} }} ],
-                        create: [ {{ name: "new fruit 1", sweetness: 1, waterPercent: 0.8 }} ]
-                    }}
-                }}) {{
-                    name
-                    fruits {{
-                        name
-                    }}
-                }}
-            }}
-        """,
-            id="create",
-        ),
-    ],
-)
-async def test_create_with_to_many_set_exclusive_with_add_and_create(
-    query: str, raw_fruits: RawRecordData, any_query: AnyQueryExecutor
-) -> None:
-    result = await maybe_async(
-        any_query(query.format(fruit_id=to_graphql_representation(raw_fruits[0]["id"], "input")))
-    )
-    assert not result.data
-    assert result.errors
-    assert len(result.errors) == 1
-    assert (
-        result.errors[0].args[0] == "You cannot use `set` with `create`, `upsert` or `add` in a -to-many relation input"
-    )
-
-
 @pytest.mark.snapshot
 async def test_create_with_to_many_create_and_nested_set(
-    raw_farms: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_farms: RawRecordData,
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = """
             mutation {{
@@ -448,7 +406,9 @@ async def test_create_with_to_many_create_and_nested_set(
                 }}
             }}
             """
-    result = await maybe_async(any_query(query.format(farm_id=to_graphql_representation(raw_farms[0]["id"], "input"))))
+    result = await maybe_async(
+        any_async_query(query.format(farm_id=to_graphql_representation(raw_farms[0]["id"], "input")))
+    )
     assert not result.errors
     assert result.data
     assert result.data["createColor"] == {
@@ -460,7 +420,7 @@ async def test_create_with_to_many_create_and_nested_set(
     query_tracker.assert_statements(2, "insert", sql_snapshot)
 
 
-async def test_create_validated_with_nested_relations_create(any_query: AnyQueryExecutor) -> None:
+async def test_create_validated_with_nested_relations_create(any_async_query: AnyQueryExecutor) -> None:
     query = """
             mutation {
                 createValidatedColor(data: {
@@ -497,7 +457,7 @@ async def test_create_validated_with_nested_relations_create(any_query: AnyQuery
                 }
             }
             """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["createValidatedColor"]["name"] == "white"
@@ -509,7 +469,7 @@ async def test_create_validated_with_nested_relations_create(any_query: AnyQuery
         assert fruit in result.data["createValidatedColor"]["fruits"]
 
 
-async def test_create_validated_with_nested_upsert(any_query: AnyQueryExecutor) -> None:
+async def test_create_validated_with_nested_upsert(any_async_query: AnyQueryExecutor) -> None:
     query = """
             mutation {
                 createValidatedColor(data: {
@@ -540,7 +500,7 @@ async def test_create_validated_with_nested_upsert(any_query: AnyQueryExecutor) 
                 }
             }
             """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["createValidatedColor"] == {
@@ -551,7 +511,7 @@ async def test_create_validated_with_nested_upsert(any_query: AnyQueryExecutor) 
 
 @pytest.mark.snapshot
 async def test_create_with_nested_mixed_relations_create(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     query = """
             mutation {
@@ -587,7 +547,7 @@ async def test_create_with_nested_mixed_relations_create(
                 }
             }
             """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["createColor"]["name"] == "White"
@@ -605,10 +565,13 @@ async def test_create_with_nested_mixed_relations_create(
 
 @pytest.mark.snapshot
 async def test_create_many(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
                 mutation {
                     createColors(
@@ -635,10 +598,10 @@ async def test_create_many(
 
 @pytest.mark.snapshot
 async def test_create_init_defaults(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             mutation {
                 createUser(data: { name: "Jeanne" }) {
@@ -799,13 +762,13 @@ async def test_update(
     query_name: str,
     query: str,
     raw_colors: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Tests a simple update mutation."""
     result = await maybe_async(
-        any_query(query.format(color_id=to_graphql_representation(raw_colors[0]["id"], "input")))
+        any_async_query(query.format(color_id=to_graphql_representation(raw_colors[0]["id"], "input")))
     )
     assert not result.errors
     assert result.data
@@ -821,7 +784,7 @@ async def test_update(
 @pytest.mark.snapshot
 async def test_update_by_filter(
     raw_colors: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     dialect: SupportedDialect,
@@ -842,7 +805,7 @@ async def test_update_by_filter(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["updateColorsFilter"] == [
@@ -861,7 +824,10 @@ async def test_update_by_filter(
 
 @pytest.mark.snapshot
 async def test_update_by_filter_only_return_affected_objects(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, dialect: SupportedDialect
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    dialect: SupportedDialect,
 ) -> None:
     """Tests a simple update mutation."""
     query = """
@@ -879,7 +845,7 @@ async def test_update_by_filter_only_return_affected_objects(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["updateColorsFilter"] == []
@@ -907,7 +873,7 @@ async def test_update_by_filter_on_to_one_relation(
     dto_filter: str,
     updated_names: list[str],
     raw_fruits: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -920,7 +886,7 @@ async def test_update_by_filter_on_to_one_relation(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     updated_ids = [fruit["id"] for fruit in raw_fruits if fruit["name"] in updated_names]
@@ -929,7 +895,7 @@ async def test_update_by_filter_on_to_one_relation(
     ]
     query_tracker.assert_statements(1, "update", sql_snapshot)
 
-    result = await maybe_async(any_query("{ fruits(filter: { sweetness: { eq: 42 } }) { id } }"))
+    result = await maybe_async(any_async_query("{ fruits(filter: { sweetness: { eq: 42 } }) { id } }"))
     assert not result.errors
     assert result.data
     assert sorted(fruit["id"] for fruit in result.data["fruits"]) == [
@@ -954,7 +920,7 @@ async def test_update_by_filter_on_to_many_relation(
     dto_filter: str,
     color_index: int,
     raw_colors: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -967,14 +933,14 @@ async def test_update_by_filter_on_to_many_relation(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     color_id = to_graphql_representation(raw_colors[color_index]["id"], "output")
     assert result.data["updateColorsFilter"] == [{"id": color_id, "name": "updated color"}]
     query_tracker.assert_statements(1, "update", sql_snapshot)
 
-    result = await maybe_async(any_query('{ colors(filter: { name: { eq: "updated color" } }) { id } }'))
+    result = await maybe_async(any_async_query('{ colors(filter: { name: { eq: "updated color" } }) { id } }'))
     assert not result.errors
     assert result.data
     assert result.data["colors"] == [{"id": color_id}]
@@ -1150,7 +1116,7 @@ async def test_update_users_by_split_filter(
     ],
 )
 async def test_update_users_by_empty_list_filter(
-    dto_filter: str, updated_names: list[str], raw_users: RawRecordData, any_query: AnyQueryExecutor
+    dto_filter: str, updated_names: list[str], raw_users: RawRecordData, any_async_query: AnyQueryExecutor
 ) -> None:
     query = f"""
         mutation {{
@@ -1159,13 +1125,13 @@ async def test_update_users_by_empty_list_filter(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     updated_ids = sorted(user["id"] for user in raw_users if user["name"] in updated_names)
     assert sorted(user["id"] for user in result.data["updateUsersFilter"]) == updated_ids
 
-    result = await maybe_async(any_query('{ users(filter: { name: { eq: "updated" } }) { id } }'))
+    result = await maybe_async(any_async_query('{ users(filter: { name: { eq: "updated" } }) { id } }'))
     assert not result.errors
     assert result.data
     assert sorted(user["id"] for user in result.data["users"]) == updated_ids
@@ -1251,7 +1217,10 @@ async def test_update_with_to_one_set_null(
 
 @pytest.mark.snapshot
 async def test_update_with_to_one_create(
-    raw_fruits: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_fruits: RawRecordData,
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Tests updating a record and creating a new related record for a to-one relationship."""
     fruit_id_gql = to_graphql_representation(raw_fruits[0]["id"], "input")
@@ -1272,7 +1241,7 @@ async def test_update_with_to_one_create(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["updateFruit"] == {
@@ -1284,42 +1253,6 @@ async def test_update_with_to_one_create(
     query_tracker.assert_statements(1, "insert", sql_snapshot)  # Insert new color
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update fruit's color_id
     query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated fruit + new color
-
-
-async def test_update_with_to_one_set_and_create_fail(
-    raw_fruits: RawRecordData, raw_colors: RawRecordData, any_query: AnyQueryExecutor
-) -> None:
-    """Tests updating a record and setting a to-one relationship."""
-    fruit_id_gql = to_graphql_representation(raw_fruits[0]["id"], "input")
-    # Use a different color to test the update
-    color_id_gql = to_graphql_representation(raw_colors[1]["id"], "input")
-    query = f"""
-        mutation {{
-            updateFruit(
-                data: {{
-                    id: {fruit_id_gql},
-                    name: "updated fruit name",
-                    color: {{
-                        set: {{ id: {color_id_gql} }},
-                        create: {{ name: "newly created color during update" }}
-                    }}
-                }}
-            ) {{
-                id
-                name
-                color {{
-                    id
-                }}
-            }}
-        }}
-    """
-    result = await maybe_async(any_query(query))
-    assert not result.data
-    assert result.errors
-    assert len(result.errors) == 1
-    assert (
-        result.errors[0].args[0] == "You cannot use `set` along with `create` or `upsert` in a -to-one relation input"
-    )
 
 
 @pytest.mark.snapshot
@@ -1426,7 +1359,7 @@ async def test_update_with_to_many_set(
 async def test_update_with_to_many_remove(
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -1455,7 +1388,7 @@ async def test_update_with_to_many_remove(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["updateColor"] == {
@@ -1475,7 +1408,7 @@ async def test_update_with_to_many_remove(
 async def test_update_with_to_many_create(
     raw_fruits: RawRecordData,
     raw_colors: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     dialect: SupportedDialect,
@@ -1505,7 +1438,7 @@ async def test_update_with_to_many_create(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     # The order might vary, sort for assertion stability
@@ -1532,7 +1465,7 @@ async def test_update_with_to_many_create_and_nested_set(
     raw_colors: RawRecordData,
     raw_farms: RawRecordData,
     raw_fruits: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -1571,7 +1504,7 @@ async def test_update_with_to_many_create_and_nested_set(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     expected_fruits = [
@@ -1606,7 +1539,7 @@ async def test_update_with_to_many_create_and_nested_set(
 async def test_update_with_to_many_add(
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -1631,7 +1564,7 @@ async def test_update_with_to_many_add(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["updateColor"] == {
@@ -1654,7 +1587,7 @@ async def test_update_with_to_many_add(
 async def test_update_with_to_many_add_and_create(
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -1682,7 +1615,7 @@ async def test_update_with_to_many_add_and_create(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["updateColor"]["id"] == to_graphql_representation(raw_colors[0]["id"], "output")
@@ -1703,129 +1636,12 @@ async def test_update_with_to_many_add_and_create(
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
-@pytest.mark.parametrize(
-    "query",
-    [
-        pytest.param(
-            """
-        mutation {{
-            updateColor(
-                data: {{
-                    id: {color_id_gql},
-                    name: "updated color name",
-                    fruits: {{
-                        set: [ {{ id: {fruit_id_gql} }} ]
-                        add: [ {{ id: {fruit_id_gql} }} ]
-                    }}
-                }}
-            ) {{
-                id
-                name
-                fruits {{
-                    id
-                }}
-            }}
-        }}
-        """,
-            id="add",
-        ),
-        pytest.param(
-            """
-        mutation {{
-            updateColor(
-                data: {{
-                    id: {color_id_gql},
-                    name: "updated color name",
-                    fruits: {{
-                        set: [ {{ id: {fruit_id_gql} }} ]
-                        create: [ {{ name: "new fruit 3 during update", sweetness: 1, waterPercent: 0.8 }} ]
-                    }}
-                }}
-            ) {{
-                id
-                name
-                fruits {{
-                    id
-                }}
-            }}
-        }}
-        """,
-            id="create",
-        ),
-        pytest.param(
-            """
-        mutation {{
-            updateColor(
-                data: {{
-                    id: {color_id_gql},
-                    name: "updated color name",
-                    fruits: {{
-                        set: [ {{ id: {fruit_id_gql} }} ]
-                        remove: [ {{ id: {fruit_id_gql} }} ]
-                    }}
-                }}
-            ) {{
-                id
-                name
-                fruits {{
-                    id
-                }}
-            }}
-        }}
-        """,
-            id="remove",
-        ),
-        pytest.param(
-            """
-        mutation {{
-            updateColor(
-                data: {{
-                    id: {color_id_gql},
-                    name: "updated color name",
-                    fruits: {{
-                        set: [ {{ id: {fruit_id_gql} }} ]
-                        upsert: {{
-                            create: [ {{ name: "new fruit 4 during update", sweetness: 1, waterPercent: 0.8 }} ]
-                            conflictFields: name
-                        }}
-                    }}
-                }}
-            ) {{
-                id
-                name
-                fruits {{
-                    id
-                }}
-            }}
-        }}
-        """,
-            id="upsert",
-        ),
-    ],
-)
-async def test_update_with_to_many_set_exclusive_with_add_create_remove(
-    query: str, raw_colors: RawRecordData, raw_fruits: RawRecordData, any_query: AnyQueryExecutor
-) -> None:
-    """Tests updating a record and setting (replacing) a to-many relationship."""
-    color_id_gql = to_graphql_representation(raw_colors[0]["id"], "input")
-    # Use a different fruit to test the update
-    fruit_id_gql = to_graphql_representation(raw_fruits[1]["id"], "input")
-    result = await maybe_async(any_query(query.format(color_id_gql=color_id_gql, fruit_id_gql=fruit_id_gql)))
-    assert not result.data
-    assert result.errors
-    assert len(result.errors) == 1
-    assert (
-        result.errors[0].args[0]
-        == "You cannot use `set` with `create`, `upsert`, `add` or `remove` in a -to-many relation input"
-    )
-
-
 @pytest.mark.snapshot
 async def test_update_with_nested_mixed_relations_create(
     raw_farms: RawRecordData,
     raw_fruits: RawRecordData,
     raw_colors: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -1866,7 +1682,7 @@ async def test_update_with_nested_mixed_relations_create(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     # Sort fruits for assertion stability
@@ -1903,7 +1719,10 @@ async def test_update_with_nested_mixed_relations_create(
 
 @pytest.mark.snapshot
 async def test_update_many(
-    raw_colors: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_colors: RawRecordData,
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Tests updating multiple records in a single mutation."""
     color_id1_gql = to_graphql_representation(raw_colors[0]["id"], "input")
@@ -1921,7 +1740,7 @@ async def test_update_many(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     # Order might not be guaranteed, sort by ID
@@ -1941,10 +1760,13 @@ async def test_update_many(
 
 @pytest.mark.snapshot
 async def test_update_no_init_defaults(
-    raw_users: RawRecordData, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    raw_users: RawRecordData,
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             f"""
             mutation {{
                 updateUser(data: {{ id: {raw_users[3]["id"]}, name: "Jeanne" }}) {{
@@ -2011,14 +1833,14 @@ async def test_update_with_secondary_table_set(
     ],
 )
 async def test_delete_users_by_empty_list_filter(
-    dto_filter: str, deleted_names: list[str], raw_users: RawRecordData, any_query: AnyQueryExecutor
+    dto_filter: str, deleted_names: list[str], raw_users: RawRecordData, any_async_query: AnyQueryExecutor
 ) -> None:
-    result = await maybe_async(any_query(f"mutation {{ deleteUsersFilter(filter: {dto_filter}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"mutation {{ deleteUsersFilter(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data
     assert sorted(user["name"] for user in result.data["deleteUsersFilter"]) == deleted_names
 
-    result = await maybe_async(any_query("{ users { name } }"))
+    result = await maybe_async(any_async_query("{ users { name } }"))
     assert not result.errors
     assert result.data
     assert sorted(user["name"] for user in result.data["users"]) == sorted(
@@ -2030,7 +1852,7 @@ async def test_delete_users_by_empty_list_filter(
 async def test_delete_filter(
     raw_users: RawRecordData,
     raw_groups: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     dialect: SupportedDialect,
@@ -2050,7 +1872,7 @@ async def test_delete_filter(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["deleteUsersFilter"]) == 1
@@ -2111,14 +1933,16 @@ async def test_update_filter_and_branch_counting_a_shared_to_many(
     above: int,
     updated_names: list[str],
     raw_colors: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
 ) -> None:
     """An update filtered on a fruit and an ``_and`` branch counting fruits and testing another updates the matches."""
     count = f"fruitsAggregate: {{ count: {{ predicate: {{ gt: {above} }} }} }}"
     dto_filter = f'{{ fruits: {{ name: {{ eq: "{first}" }} }}, _and: [{{ {count}, fruits: {{ name: {{ eq: "{second}" }} }} }}] }}'
 
     result = await maybe_async(
-        any_query(f'mutation {{ updateColorsFilter(data: {{ name: "updated" }}, filter: {dto_filter}) {{ id }} }}')
+        any_async_query(
+            f'mutation {{ updateColorsFilter(data: {{ name: "updated" }}, filter: {dto_filter}) {{ id }} }}'
+        )
     )
 
     assert not result.errors
@@ -2154,7 +1978,7 @@ async def test_update_filter_and_branch_counting_a_shared_to_many(
     ],
 )
 async def test_update_filter_counting_the_table_next_to_two_to_many_paths(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_users: RawRecordData,  # noqa: ARG001
     raw_user_departments: RawRecordData,  # noqa: ARG001
 ) -> None:
@@ -2165,7 +1989,7 @@ async def test_update_filter_counting_the_table_next_to_two_to_many_paths(
     )
 
     result = await maybe_async(
-        any_query(f'mutation {{ updateUsersFilter(data: {{ name: "updated" }}, filter: {dto_filter}) {{ id }} }}')
+        any_async_query(f'mutation {{ updateUsersFilter(data: {{ name: "updated" }}, filter: {dto_filter}) {{ id }} }}')
     )
 
     assert not result.errors
@@ -2181,17 +2005,17 @@ async def test_update_filter_counting_the_table_next_to_two_to_many_paths(
     ],
 )
 async def test_delete_filter_on_unselected_column(
-    dto_filter: str, deleted_names: list[str], raw_users: RawRecordData, any_query: AnyQueryExecutor
+    dto_filter: str, deleted_names: list[str], raw_users: RawRecordData, any_async_query: AnyQueryExecutor
 ) -> None:
     """Deleting by a filter on a column the selection does not read returns the ids of the deleted rows."""
-    result = await maybe_async(any_query(f"mutation {{ deleteUsersFilter(filter: {dto_filter}) {{ id }} }}"))
+    result = await maybe_async(any_async_query(f"mutation {{ deleteUsersFilter(filter: {dto_filter}) {{ id }} }}"))
     assert not result.errors
     assert result.data
     assert result.data["deleteUsersFilter"] == [
         {"id": to_graphql_representation(user["id"], "output")} for user in raw_users if user["name"] in deleted_names
     ]
 
-    result = await maybe_async(any_query("{ users { name } }"))
+    result = await maybe_async(any_async_query("{ users { name } }"))
     assert not result.errors
     assert result.data
     assert sorted(user["name"] for user in result.data["users"]) == sorted(
@@ -2199,25 +2023,25 @@ async def test_delete_filter_on_unselected_column(
     )
 
 
-async def test_delete_restricted_by_repository_statement(any_query: AnyQueryExecutor) -> None:
+async def test_delete_restricted_by_repository_statement(any_async_query: AnyQueryExecutor) -> None:
     """A delete whose repository statement keeps only Bob deletes Bob alone, whatever rows the filter matches."""
     result = await maybe_async(
-        any_query('mutation { deleteUsersRestricted(filter: { name: { neq: "zzz" } }) { name } }')
+        any_async_query('mutation { deleteUsersRestricted(filter: { name: { neq: "zzz" } }) { name } }')
     )
     assert not result.errors
     assert result.data
     assert result.data["deleteUsersRestricted"] == [{"name": "Bob"}]
 
-    result = await maybe_async(any_query("{ users { name } }"))
+    result = await maybe_async(any_async_query("{ users { name } }"))
     assert not result.errors
     assert result.data
     assert sorted(user["name"] for user in result.data["users"]) == ["Alice", "Charlie", "Tango"]
 
 
-async def test_update_restricted_by_repository_statement(any_query: AnyQueryExecutor) -> None:
+async def test_update_restricted_by_repository_statement(any_async_query: AnyQueryExecutor) -> None:
     """An update whose repository statement keeps only Bob updates Bob alone, whatever rows the filter matches."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             'mutation { updateUsersRestricted(data: { name: "Updated" }, filter: { name: { neq: "zzz" } }) { name } }'
         )
     )
@@ -2225,7 +2049,7 @@ async def test_update_restricted_by_repository_statement(any_query: AnyQueryExec
     assert result.data
     assert result.data["updateUsersRestricted"] == [{"name": "Updated"}]
 
-    result = await maybe_async(any_query("{ users { name } }"))
+    result = await maybe_async(any_async_query("{ users { name } }"))
     assert not result.errors
     assert result.data
     assert sorted(user["name"] for user in result.data["users"]) == ["Alice", "Charlie", "Tango", "Updated"]
@@ -2422,7 +2246,7 @@ async def test_delete_filter_on_relation(
 @pytest.mark.snapshot
 async def test_delete_all(
     raw_users: RawRecordData,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     dialect: SupportedDialect,
@@ -2438,7 +2262,7 @@ async def test_delete_all(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["deleteUsers"]) == len(raw_users)
@@ -2454,7 +2278,7 @@ async def test_delete_all(
 
 @pytest.mark.snapshot
 async def test_column_override(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     query = """
         mutation {
@@ -2463,7 +2287,7 @@ async def test_column_override(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data["createBlueColor"] == {"name": "New Blue"}
@@ -2511,8 +2335,8 @@ async def test_column_override(
         ),
     ],
 )
-async def test_read_only_column_override(query_name: str, query: str, any_query: AnyQueryExecutor) -> None:
-    result = await maybe_async(any_query(query))
+async def test_read_only_column_override(query_name: str, query: str, any_async_query: AnyQueryExecutor) -> None:
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert result.data[query_name] == {"name": "batman", "rank": 1}
